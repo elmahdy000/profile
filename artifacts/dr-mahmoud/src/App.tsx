@@ -12,8 +12,10 @@ import { Courses } from "@/components/Courses";
 import { TeachingStyle } from "@/components/TeachingStyle";
 import { Portfolio } from "@/components/Portfolio";
 import { Testimonials } from "@/components/Testimonials";
+import { FAQ } from "@/components/FAQ";
 import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
+import { FloatingButtons } from "@/components/FloatingButtons";
 
 const queryClient = new QueryClient();
 
@@ -33,9 +35,11 @@ function App() {
             <TeachingStyle />
             <Portfolio />
             <Testimonials />
+            <FAQ />
             <Contact />
           </main>
           <Footer />
+          <FloatingButtons />
         </div>
         <Toaster />
       </TooltipProvider>

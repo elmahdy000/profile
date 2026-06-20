@@ -1,12 +1,42 @@
-import { motion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
+import { useRef, useEffect, useState } from "react";
 
 const stats = [
-  { value: "+5", label: "سنوات خبرة" },
-  { value: "+200", label: "طالب متخرج" },
-  { value: "6", label: "مسارات تدريبية" },
-  { value: "100%", label: "تدريب عملي" },
+  { end: 5, prefix: "+", suffix: "", label: "سنوات خبرة" },
+  { end: 200, prefix: "+", suffix: "", label: "طالب متخرج" },
+  { end: 6, prefix: "", suffix: "", label: "مسارات تدريبية" },
+  { end: 100, prefix: "", suffix: "%", label: "تدريب عملي" },
 ];
+
+function CountUp({ end, prefix, suffix }: { end: number; prefix: string; suffix: string }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true });
+
+  useEffect(() => {
+    if (!inView) return;
+    let start = 0;
+    const duration = 1500;
+    const step = Math.ceil(end / (duration / 16));
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= end) {
+        setCount(end);
+        clearInterval(timer);
+      } else {
+        setCount(start);
+      }
+    }, 16);
+    return () => clearInterval(timer);
+  }, [inView, end]);
+
+  return (
+    <span ref={ref} className="font-bold text-xl text-primary">
+      {prefix}{count}{suffix}
+    </span>
+  );
+}
 
 export function About() {
   const points = [
@@ -33,6 +63,7 @@ export function About() {
               <img
                 src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&q=80"
                 alt="محاضرة تعليمية"
+                loading="lazy"
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-tr from-black/60 to-transparent" />
@@ -42,7 +73,7 @@ export function About() {
               <div className="bg-[#111] border border-white/10 rounded-2xl p-4 grid grid-cols-4 gap-2 shadow-xl">
                 {stats.map((stat) => (
                   <div key={stat.label} className="text-center">
-                    <p className="font-bold text-xl text-primary">{stat.value}</p>
+                    <CountUp end={stat.end} prefix={stat.prefix} suffix={stat.suffix} />
                     <p className="text-xs text-foreground/50 leading-tight mt-0.5">{stat.label}</p>
                   </div>
                 ))}
