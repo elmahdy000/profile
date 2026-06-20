@@ -4,19 +4,21 @@ import { Button } from "@/components/ui/button";
 
 export function Contact() {
   return (
-    <section id="contact" className="py-24 bg-white">
+    <section id="contact" className="py-24 bg-[#0f0f0f]">
       <div className="container mx-auto px-4 lg:px-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">ابدأ رحلتك في البرمجة</h2>
-            <p className="text-lg text-foreground/70">
+            <span className="text-primary font-bold text-sm uppercase tracking-wider mb-4 block">تواصل معنا</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">ابدأ رحلتك في البرمجة</h2>
+            <p className="text-lg text-foreground/55">
               احجز أول سيشن مجانًا واعرف البرنامج المناسب لسن الطالب ومستواه.
             </p>
+            <div className="w-24 h-0.5 bg-primary mx-auto rounded-full mt-4" />
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-8">
@@ -24,58 +26,61 @@ export function Contact() {
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="space-y-6"
+              className="space-y-4"
             >
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
-                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0">
-                    <MessageCircle className="w-6 h-6 text-[#25D366]" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-foreground/60 mb-1">واتساب</p>
-                    <a href="https://wa.me/201044348610" dir="ltr" className="font-bold text-lg hover:text-accent transition-colors block">
-                      +20 10 4434 8610
-                    </a>
-                  </div>
+              <a
+                href="https://wa.me/201044348610"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-4 p-5 rounded-2xl bg-card border border-white/10 hover:border-[#25D366]/40 transition-all duration-300 group"
+                data-testid="link-whatsapp"
+              >
+                <div className="w-12 h-12 bg-[#25D366]/10 border border-[#25D366]/20 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-[#25D366]/20 transition-colors">
+                  <MessageCircle className="w-6 h-6 text-[#25D366]" />
                 </div>
-
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
-                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0">
-                    <Phone className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-foreground/60 mb-1">مكالمات</p>
-                    <a href="tel:+201066711545" dir="ltr" className="font-bold text-lg hover:text-accent transition-colors block">
-                      +20 10 6671 1545
-                    </a>
-                    <a href="tel:+201272047933" dir="ltr" className="font-bold text-lg hover:text-accent transition-colors block">
-                      +20 12 7204 7933
-                    </a>
-                  </div>
+                <div>
+                  <p className="text-xs text-foreground/45 mb-0.5">واتساب</p>
+                  <p className="font-bold text-lg text-foreground group-hover:text-[#25D366] transition-colors" dir="ltr">+20 10 4434 8610</p>
                 </div>
+              </a>
 
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
-                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0">
-                    <MapPin className="w-6 h-6 text-accent" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-foreground/60 mb-1">المكان</p>
-                    <p className="font-bold text-lg">Eduverse، فلل الجامعة، الزقازيق</p>
-                  </div>
+              <div className="flex items-center gap-4 p-5 rounded-2xl bg-card border border-white/10 hover:border-primary/30 transition-all duration-300 group">
+                <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                  <Phone className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-foreground/45 mb-0.5">مكالمات</p>
+                  <a href="tel:+201066711545" className="font-bold text-lg text-foreground hover:text-primary transition-colors block" dir="ltr">+20 10 6671 1545</a>
+                  <a href="tel:+201272047933" className="font-bold text-lg text-foreground hover:text-primary transition-colors block" dir="ltr">+20 12 7204 7933</a>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                <Button asChild size="lg" className="bg-[#25D366] hover:bg-[#20bd5a] text-white flex-1">
-                  <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
-                    تواصل واتساب
-                  </a>
+              <div className="flex items-center gap-4 p-5 rounded-2xl bg-card border border-white/10">
+                <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center shrink-0">
+                  <MapPin className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-foreground/45 mb-0.5">المكان</p>
+                  <p className="font-bold text-lg text-foreground">Eduverse، فلل الجامعة، الزقازيق</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <Button
+                  asChild
+                  size="lg"
+                  className="bg-[#25D366] hover:bg-[#20bd5a] text-white flex-1 font-bold"
+                  data-testid="button-whatsapp-contact"
+                >
+                  <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">تواصل واتساب</a>
                 </Button>
-                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-white flex-1">
+                <Button
+                  asChild
+                  size="lg"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground flex-1 font-bold"
+                  data-testid="button-call"
+                >
                   <a href="tel:+201066711545">اتصل الآن</a>
-                </Button>
-                <Button asChild variant="outline" size="lg" className="border-accent text-accent hover:bg-accent/10 flex-1">
-                  <a href="#eduverse">اعرف مكان Eduverse</a>
                 </Button>
               </div>
             </motion.div>
@@ -84,15 +89,19 @@ export function Contact() {
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="h-full min-h-[300px] rounded-2xl overflow-hidden bg-muted border border-border relative"
+              className="rounded-2xl overflow-hidden border border-white/10 relative min-h-[350px]"
             >
-              {/* Map Placeholder */}
-              <div className="absolute inset-0 bg-[url('https://api.dicebear.com/7.x/shapes/svg?seed=map&backgroundColor=f8f9fa')] opacity-20" />
-              <div className="absolute inset-0 flex items-center justify-center bg-primary/5">
-                <div className="text-center p-6 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-border/50 max-w-[80%]">
-                  <MapPin className="w-10 h-10 text-accent mx-auto mb-3" />
-                  <h3 className="font-bold text-primary mb-1">مقر Eduverse</h3>
-                  <p className="text-sm text-foreground/70">فلل الجامعة، الزقازيق، مصر</p>
+              <img
+                src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80"
+                alt="Eduverse مقر"
+                className="w-full h-full object-cover absolute inset-0"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+              <div className="absolute bottom-6 right-6 left-6">
+                <div className="bg-black/70 backdrop-blur-sm border border-white/10 rounded-xl p-4 text-center">
+                  <MapPin className="w-8 h-8 text-primary mx-auto mb-2" />
+                  <h3 className="font-bold text-white mb-1">مقر Eduverse</h3>
+                  <p className="text-sm text-white/60">فلل الجامعة، الزقازيق، مصر</p>
                 </div>
               </div>
             </motion.div>
