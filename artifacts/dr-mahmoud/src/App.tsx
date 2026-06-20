@@ -16,6 +16,7 @@ import { Portfolio } from "@/components/Portfolio";
 import { Testimonials } from "@/components/Testimonials";
 import { FAQ } from "@/components/FAQ";
 import { Pricing } from "@/components/Pricing";
+import { Podcast } from "@/components/Podcast";
 import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
 import { FloatingButtons } from "@/components/FloatingButtons";
@@ -40,6 +41,7 @@ function App() {
               <TeachingStyle />
               <Portfolio />
               <Testimonials />
+              <Podcast />
               <Pricing />
               <FAQ />
               <Contact />
