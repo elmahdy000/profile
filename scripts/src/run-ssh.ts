@@ -12,14 +12,14 @@ const runCommand = (cmd: string): Promise<string> => {
           return reject(err);
         }
         stream
-          .on("close", (code, signal) => {
+          .on("close", (_code: number | null, _signal: string | null) => {
             conn.end();
             resolve(output);
           })
-          .on("data", (data) => {
+          .on("data", (data: Buffer) => {
             output += data.toString();
           })
-          .stderr.on("data", (data) => {
+          .stderr.on("data", (data: Buffer) => {
             output += data.toString();
           });
       });
