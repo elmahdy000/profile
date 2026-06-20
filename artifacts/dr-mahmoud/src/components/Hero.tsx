@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { MessageCircle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import drMahmoudPhoto from "@assets/ChatGPT_Image_Jun_20,_2026,_12_44_50_PM_1781948725554.png";
 
 export function Hero() {
   const container = {
@@ -108,9 +109,9 @@ export function Hero() {
           >
             <div className="relative aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10">
               <img
-                src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&q=80"
-                alt="مدرب برمجة احترافي"
-                className="w-full h-full object-cover"
+                src={drMahmoudPhoto}
+                alt="د. محمود المهدي"
+                className="w-full h-full object-cover object-top"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
               <div className="absolute bottom-6 right-6 left-6">
