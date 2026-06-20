@@ -1,10 +1,10 @@
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { MessageCircle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import drMahmoudPhoto from "@assets/ChatGPT_Image_Jun_20,_2026,_12_44_50_PM_1781948725554.png";
 
 export function Hero() {
-  const container = {
+  const container: Variants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
@@ -12,7 +12,7 @@ export function Hero() {
     },
   };
 
-  const item = {
+  const item: Variants = {
     hidden: { opacity: 0, y: 24 },
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 280, damping: 22 } },
   };

@@ -20,34 +20,43 @@ import { Podcast } from "@/components/Podcast";
 import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
 import { FloatingButtons } from "@/components/FloatingButtons";
+import AdminDashboard from "@/components/AdminDashboard";
 
 const queryClient = new QueryClient();
 
 function App() {
+  const isAdmin = window.location.pathname === "/admin";
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <div className="font-sans min-h-screen text-foreground bg-background overflow-x-hidden selection:bg-accent selection:text-white">
-            <ScrollProgress />
-            <Navbar />
-            <main>
-              <Hero />
-              <About />
-              <Services />
-              <WhyChooseMe />
-              <Eduverse />
-              <Courses />
-              <TeachingStyle />
-              <Portfolio />
-              <Testimonials />
-              <Podcast />
-              <Pricing />
-              <FAQ />
-              <Contact />
-            </main>
-            <Footer />
-            <FloatingButtons />
+            {isAdmin ? (
+              <AdminDashboard />
+            ) : (
+              <>
+                <ScrollProgress />
+                <Navbar />
+                <main>
+                  <Hero />
+                  <About />
+                  <Services />
+                  <WhyChooseMe />
+                  <Eduverse />
+                  <Courses />
+                  <TeachingStyle />
+                  <Portfolio />
+                  <Testimonials />
+                  <Podcast />
+                  <Pricing />
+                  <FAQ />
+                  <Contact />
+                </main>
+                <Footer />
+                <FloatingButtons />
+              </>
+            )}
           </div>
           <Toaster />
         </TooltipProvider>

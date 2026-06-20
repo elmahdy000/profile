@@ -2,13 +2,28 @@ import { motion } from "framer-motion";
 import { MessageCircle, Phone, MapPin, Send, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useCreateBooking } from "@workspace/api-client-react";
 
 export function Contact() {
   const [form, setForm] = useState({ name: "", phone: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
+  const { mutateAsync: createBooking, isPending } = useCreateBooking();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    try {
+      await createBooking({
+        data: {
+          name: form.name,
+          phone: form.phone,
+          message: form.message,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to save booking to database:", error);
+    }
+
     const text = encodeURIComponent(
       `مرحبًا د. محمود 👋\n\nاسمي: ${form.name}\nرقم التليفون: ${form.phone}\n\n${form.message}`
     );
@@ -156,13 +171,14 @@ export function Contact() {
                     />
                   </div>
 
-                  <Button
+                   <Button
                     type="submit"
                     size="lg"
+                    disabled={isPending}
                     className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
                   >
                     <Send className="w-4 h-4 me-2" />
-                    إرسال عبر واتساب
+                    {isPending ? "جاري الحفظ..." : "إرسال عبر واتساب"}
                   </Button>
                 </form>
               )}

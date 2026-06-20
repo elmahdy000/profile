@@ -6,6 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
+export interface Booking {
+  id: number;
+  name: string;
+  phone: string;
+  message: string;
   status: string;
+  createdAt: string;
 }

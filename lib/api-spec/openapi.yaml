@@ -1,6 +1,5 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
   description: API specification
@@ -10,6 +9,12 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: bookings
+    description: Booking operations
+  - name: podcasts
+    description: Podcast operations
+  - name: courses
+    description: Course operations
 paths:
   /healthz:
     get:
@@ -24,6 +29,254 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /bookings:
+    get:
+      operationId: listBookings
+      tags: [bookings]
+      summary: List bookings
+      description: Returns all bookings
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Create booking
+      description: Submits a new booking request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsertBooking"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+  /bookings/{id}:
+    put:
+      operationId: updateBookingStatus
+      tags: [bookings]
+      summary: Update booking status
+      description: Updates the status of an existing booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+              required:
+                - status
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+    delete:
+      operationId: deleteBooking
+      tags: [bookings]
+      summary: Delete booking
+      description: Deletes a booking from the database
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                required:
+                  - success
+  /podcasts:
+    get:
+      operationId: listPodcasts
+      tags: [podcasts]
+      summary: List podcasts
+      description: Returns all podcast episodes
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Podcast"
+    post:
+      operationId: createPodcast
+      tags: [podcasts]
+      summary: Create podcast
+      description: Creates a new podcast episode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsertPodcast"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Podcast"
+  /podcasts/{id}:
+    put:
+      operationId: updatePodcast
+      tags: [podcasts]
+      summary: Update podcast
+      description: Updates an existing podcast episode
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsertPodcast"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Podcast"
+    delete:
+      operationId: deletePodcast
+      tags: [podcasts]
+      summary: Delete podcast
+      description: Deletes a podcast episode
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                required:
+                  - success
+  /courses:
+    get:
+      operationId: listCourses
+      tags: [courses]
+      summary: List courses
+      description: Returns all courses
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Course"
+    post:
+      operationId: createCourse
+      tags: [courses]
+      summary: Create course
+      description: Creates a new course
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsertCourse"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Course"
+  /courses/{id}:
+    put:
+      operationId: updateCourse
+      tags: [courses]
+      summary: Update course
+      description: Updates an existing course
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsertCourse"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Course"
+    delete:
+      operationId: deleteCourse
+      tags: [courses]
+      summary: Delete course
+      description: Deletes a course
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                required:
+                  - success
 components:
   schemas:
     HealthStatus:
@@ -33,4 +286,145 @@ components:
           type: string
       required:
         - status
-
+    InsertBooking:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        message:
+          type: string
+      required:
+        - name
+        - phone
+        - message
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        message:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - phone
+        - message
+        - status
+        - createdAt
+    InsertPodcast:
+      type: object
+      properties:
+        title:
+          type: string
+        desc:
+          type: string
+        duration:
+          type: string
+        youtubeUrl:
+          type: string
+          nullable: true
+        audioUrl:
+          type: string
+          nullable: true
+      required:
+        - title
+        - desc
+        - duration
+    Podcast:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        desc:
+          type: string
+        duration:
+          type: string
+        youtubeUrl:
+          type: string
+          nullable: true
+        audioUrl:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - title
+        - desc
+        - duration
+        - createdAt
+    InsertCourse:
+      type: object
+      properties:
+        title:
+          type: string
+        age:
+          type: string
+        duration:
+          type: string
+        sessions:
+          type: string
+        level:
+          type: string
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        img:
+          type: string
+      required:
+        - title
+        - age
+        - duration
+        - sessions
+        - level
+        - category
+        - tags
+        - img
+    Course:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        age:
+          type: string
+        duration:
+          type: string
+        sessions:
+          type: string
+        level:
+          type: string
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        img:
+          type: string
+      required:
+        - id
+        - title
+        - age
+        - duration
+        - sessions
+        - level
+        - category
+        - tags
+        - img

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, Users, BookOpen, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useListCourses } from "@workspace/api-client-react";
 
 const categories = [
   { id: "all", label: "الكل" },
@@ -139,8 +140,10 @@ const courses = [
 
 export function Courses() {
   const [active, setActive] = useState("all");
+  const { data: dbCourses } = useListCourses();
 
-  const filtered = active === "all" ? courses : courses.filter(c => c.category === active);
+  const activeCourses = dbCourses && dbCourses.length > 0 ? dbCourses : courses;
+  const filtered = active === "all" ? activeCourses : activeCourses.filter(c => c.category === active);
 
   return (
     <section id="courses" className="py-24 bg-[#0f0f0f]">
