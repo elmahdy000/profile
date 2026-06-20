@@ -1,27 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://profile.replit.app/</loc>
+    <loc>https://drelmahdy.com/</loc>
     <lastmod>2026-06-20</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://drelmahdy.com/dr-mahmoud-photo.png</image:loc>
+      <image:title>د. محمود المهدي — مدرب برمجة وذكاء اصطناعي الزقازيق</image:title>
+      <image:caption>د. محمود المهدي، مدرب برمجة في Eduverse الزقازيق، متخصص في تدريس الثانوية العامة والبكالوريا والجامعة</image:caption>
+    </image:image>
   </url>
   <url>
-    <loc>https://profile.replit.app/#about</loc>
+    <loc>https://drelmahdy.com/#about</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://profile.replit.app/#courses</loc>
+    <loc>https://drelmahdy.com/#courses</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+  <url>
+    <loc>https://drelmahdy.com/#pricing</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://drelmahdy.com/#faq</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://drelmahdy.com/#contact</loc>
     <lastmod>2026-06-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://profile.replit.app/#contact</loc>
+    <loc>https://drelmahdy.com/#podcast</loc>
     <lastmod>2026-06-20</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
   </url>
 </urlset>

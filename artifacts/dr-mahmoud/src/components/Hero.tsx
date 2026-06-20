@@ -44,10 +44,13 @@ export function Hero() {
             <motion.h1 variants={item} className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-foreground">
               تعلم البرمجة والذكاء الاصطناعي{" "}
               <span className="text-primary">مع د. محمود المهدي</span>
+              <span className="block text-2xl md:text-3xl lg:text-4xl mt-2 text-foreground/70 font-semibold">
+                الزقازيق — تدريس الثانوية والبكالوريا والجامعة
+              </span>
             </motion.h1>
 
             <motion.p variants={item} className="text-lg md:text-xl text-foreground/60 leading-relaxed max-w-2xl">
-              من الصفر لحد بناء مشاريع حقيقية بأسلوب بسيط ومنظم يناسب الأطفال، طلاب المدارس، وطلاب الجامعة.
+              متخصص في تدريس البرمجة لطلاب <strong className="text-foreground/80">الثانوية العامة والبكالوريا</strong> (الصف الأول والثاني والثالث الثانوي)، الأطفال من سن 4 سنين، وطلاب الجامعة. Python، Scratch، AI، C++، ICDL — من الصفر لبناء مشاريع حقيقية.
             </motion.p>
 
             <motion.div variants={item} className="flex flex-wrap gap-4 pt-2">
