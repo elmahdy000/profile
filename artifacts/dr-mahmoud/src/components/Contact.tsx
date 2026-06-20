@@ -1,8 +1,25 @@
 import { motion } from "framer-motion";
-import { MessageCircle, Phone, MapPin } from "lucide-react";
+import { MessageCircle, Phone, MapPin, Send, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 export function Contact() {
+  const [form, setForm] = useState({ name: "", phone: "", message: "" });
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const text = encodeURIComponent(
+      `مرحبًا د. محمود 👋\n\nاسمي: ${form.name}\nرقم التليفون: ${form.phone}\n\n${form.message}`
+    );
+    window.open(`https://wa.me/201044348610?text=${text}`, "_blank");
+    setSubmitted(true);
+    setTimeout(() => {
+      setSubmitted(false);
+      setForm({ name: "", phone: "", message: "" });
+    }, 4000);
+  };
+
   return (
     <section id="contact" className="py-24 bg-[#0f0f0f]">
       <div className="container mx-auto px-4 lg:px-8">
@@ -89,21 +106,66 @@ export function Contact() {
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="rounded-2xl overflow-hidden border border-white/10 relative min-h-[350px]"
+              className="bg-card border border-white/10 rounded-2xl p-6"
             >
-              <img
-                src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80"
-                alt="Eduverse مقر"
-                className="w-full h-full object-cover absolute inset-0"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-              <div className="absolute bottom-6 right-6 left-6">
-                <div className="bg-black/70 backdrop-blur-sm border border-white/10 rounded-xl p-4 text-center">
-                  <MapPin className="w-8 h-8 text-primary mx-auto mb-2" />
-                  <h3 className="font-bold text-white mb-1">مقر Eduverse</h3>
-                  <p className="text-sm text-white/60">فلل الجامعة، الزقازيق، مصر</p>
+              <h3 className="text-lg font-bold text-foreground mb-1">أرسل رسالة مباشرة</h3>
+              <p className="text-sm text-foreground/45 mb-6">هيتحولك على واتساب بشكل تلقائي</p>
+
+              {submitted ? (
+                <div className="flex flex-col items-center justify-center h-48 gap-4 text-center">
+                  <CheckCircle2 className="w-14 h-14 text-primary" />
+                  <p className="font-bold text-foreground text-lg">تم الإرسال!</p>
+                  <p className="text-foreground/50 text-sm">هيتحولك على واتساب دلوقتي</p>
                 </div>
-              </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground/70 mb-1.5">الاسم</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="اسمك الكامل"
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-primary/50 transition-colors text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground/70 mb-1.5">رقم التليفون</label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="01xxxxxxxxx"
+                      dir="ltr"
+                      value={form.phone}
+                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-primary/50 transition-colors text-sm text-right"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground/70 mb-1.5">رسالتك</label>
+                    <textarea
+                      required
+                      rows={4}
+                      placeholder="اكتب استفساري عن الكورس المناسب لي / لابني..."
+                      value={form.message}
+                      onChange={(e) => setForm({ ...form, message: e.target.value })}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-foreground placeholder:text-foreground/30 focus:outline-none focus:border-primary/50 transition-colors text-sm resize-none"
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
+                  >
+                    <Send className="w-4 h-4 me-2" />
+                    إرسال عبر واتساب
+                  </Button>
+                </form>
+              )}
             </motion.div>
           </div>
         </div>

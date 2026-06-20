@@ -1,6 +1,13 @@
 import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
 
+const stats = [
+  { value: "+5", label: "سنوات خبرة" },
+  { value: "+200", label: "طالب متخرج" },
+  { value: "6", label: "مسارات تدريبية" },
+  { value: "100%", label: "تدريب عملي" },
+];
+
 export function About() {
   const points = [
     "ماجستير نظم معلومات",
@@ -15,7 +22,6 @@ export function About() {
     <section id="about" className="py-24 bg-[#0a0a0a]">
       <div className="container mx-auto px-4 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
-          {/* Image side */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -31,19 +37,25 @@ export function About() {
               />
               <div className="absolute inset-0 bg-gradient-to-tr from-black/60 to-transparent" />
             </div>
-            {/* Gold accent card */}
-            <div className="absolute -bottom-6 -right-6 bg-primary text-primary-foreground rounded-2xl p-5 shadow-xl shadow-primary/25 border border-primary/30">
-              <p className="font-bold text-2xl">+5</p>
-              <p className="text-sm font-medium opacity-80">سنوات خبرة</p>
+
+            <div className="absolute -bottom-8 right-0 left-0 mx-4">
+              <div className="bg-[#111] border border-white/10 rounded-2xl p-4 grid grid-cols-4 gap-2 shadow-xl">
+                {stats.map((stat) => (
+                  <div key={stat.label} className="text-center">
+                    <p className="font-bold text-xl text-primary">{stat.value}</p>
+                    <p className="text-xs text-foreground/50 leading-tight mt-0.5">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </motion.div>
 
-          {/* Text side */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
+            className="mt-8 lg:mt-0"
           >
             <span className="text-primary font-bold text-sm uppercase tracking-wider mb-4 block">من هو الدكتور؟</span>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">مين د. محمود المهدي؟</h2>
