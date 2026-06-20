@@ -19,6 +19,7 @@ export function Eduverse() {
         <img
           src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=1600&q=80"
           alt="Eduverse مساحة تعليمية"
+          loading="lazy"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/40" />
