@@ -1,7 +1,8 @@
 import { motion, Variants } from "framer-motion";
 import { MessageCircle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import drMahmoudPhoto from "@assets/ChatGPT_Image_Jun_20,_2026,_12_44_50_PM_1781948725554.png";
+
+const drMahmoudPhoto = "/dr-mahmoud-photo.png";
 
 export function Hero() {
   const container: Variants = {
@@ -111,6 +112,10 @@ export function Hero() {
               <img
                 src={drMahmoudPhoto}
                 alt="د. محمود المهدي"
+                fetchPriority="high"
+                decoding="async"
+                width={480}
+                height={600}
                 className="w-full h-full object-cover object-top"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />

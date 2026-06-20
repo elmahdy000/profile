@@ -199,11 +199,16 @@ export function Courses() {
                 transition={{ duration: 0.25, delay: index * 0.04 }}
                 className="group bg-card border border-white/10 rounded-2xl overflow-hidden hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 flex flex-col"
               >
-                <div className="relative h-40 overflow-hidden">
+                <div className="relative h-40 overflow-hidden bg-white/5">
                   <img
-                    src={course.img}
+                    src={course.img?.includes("unsplash.com")
+                      ? course.img.replace(/\?.*$/, "?w=400&h=160&q=75&auto=format&fm=webp&fit=crop")
+                      : course.img}
                     alt={course.title}
                     loading="lazy"
+                    decoding="async"
+                    width={400}
+                    height={160}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80" />

@@ -10,10 +10,12 @@
   },
   "dependencies": {
     "@workspace/db": "workspace:*",
-    "drizzle-orm": "catalog:"
+    "drizzle-orm": "catalog:",
+    "ssh2": "^1.17.0"
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "@types/ssh2": "^1.15.5",
     "tsx": "catalog:"
   }
 }
