@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "د. محمود المهدي — الموقع الشخصي"
+version = "1.0.0"
+id = "artifacts/dr-mahmoud"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18099
+
+[services.development]
+run = "pnpm --filter @workspace/dr-mahmoud run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/dr-mahmoud", "run", "build" ]
+publicDir = "artifacts/dr-mahmoud/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18099"
+BASE_PATH = "/"

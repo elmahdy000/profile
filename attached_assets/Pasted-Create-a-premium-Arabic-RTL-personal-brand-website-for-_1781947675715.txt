@@ -1,0 +1,284 @@
+Create a premium Arabic RTL personal brand website for:
+
+Dr. Mahmoud Elmahdy
+Information Systems Master
+Programming Instructor
+AI Trainer
+Founder of Eduverse in Zagazig, Egypt
+
+The website should present him as a trusted academic instructor, technology trainer, and educational entrepreneur. The goal is to build trust with parents, students, university learners, and anyone interested in programming, AI, ICDL, and practical technology education.
+
+The website must be modern, elegant, clean, professional, and conversion-focused. Avoid cartoon style completely. Avoid dark backgrounds. Avoid childish visuals. Use a premium educational technology style.
+
+Brand style:
+- Arabic RTL layout
+- Clean white background
+- Navy blue, white, and orange accent color #FF6B00
+- Professional typography
+- Soft rounded cards
+- Realistic educational visuals
+- Premium instructor personal brand
+- Smooth animations
+- Mobile-first responsive design
+- Clear CTA buttons
+- No visual clutter
+- No exaggerated gradients
+- No cartoon icons
+- Use professional line icons and real photos placeholders
+
+Main website objective:
+Make visitors immediately understand that Dr. Mahmoud Elmahdy is a professional instructor who teaches programming, AI, ICDL, school programming, university courses, kids coding, and practical technology skills through Eduverse in Zagazig.
+
+Website sections:
+
+1. Hero Section
+
+Headline:
+"تعلم البرمجة والذكاء الاصطناعي مع د. محمود المهدي"
+
+Subheadline:
+"من الصفر لحد بناء مشاريع حقيقية بأسلوب بسيط ومنظم يناسب الأطفال، طلاب المدارس، وطلاب الجامعة."
+
+Add professional profile photo area for Dr. Mahmoud Elmahdy.
+
+CTA buttons:
+"احجز أول سيشن مجانًا"
+"شوف البرامج التدريبية"
+"تواصل واتساب"
+
+Add trust badges:
+- ماجستير نظم معلومات
+- خبرة أكاديمية وتدريبية
+- تدريب عملي بمشاريع حقيقية
+- داخل Eduverse في الزقازيق
+
+2. About Section
+
+Title:
+"مين د. محمود المهدي؟"
+
+Content:
+"د. محمود المهدي، ماجستير نظم معلومات، ومدرب برمجة وذكاء اصطناعي. بيقدم محتوى تعليمي عملي للطلاب والأطفال وطلاب الجامعة، بأسلوب بسيط ومنظم بعيد عن الحفظ والتلقين. الهدف إن الطالب يفهم، يطبق، ويطلع بمشروع حقيقي يقدر يفتخر بيه."
+
+Show key points:
+- Information Systems Master
+- Programming and AI Instructor
+- Founder of Eduverse
+- Practical teaching style
+- Focus on projects, not memorization
+- Suitable for kids, school students, and university students
+
+3. Services Section
+
+Title:
+"البرامج والخدمات التعليمية"
+
+Create elegant service cards:
+
+Card 1:
+Title: "Programming for Kids"
+Description:
+"تعليم الأطفال البرمجة بطريقة ممتعة وتفاعلية باستخدام Scratch وPython ومشاريع بسيطة مناسبة للسن."
+
+Card 2:
+Title: "Python & Problem Solving"
+Description:
+"تأسيس قوي في Python والتفكير البرمجي وحل المشكلات من الصفر حتى المشاريع العملية."
+
+Card 3:
+Title: "AI Basics"
+Description:
+"تعليم مبادئ الذكاء الاصطناعي وأدواته واستخداماته بطريقة بسيطة تناسب الطلاب والمبتدئين."
+
+Card 4:
+Title: "ICDL Skills"
+Description:
+"تدريب عملي على Word وPowerPoint وExcel لاستخدامهم في الدراسة والشغل والعروض الاحترافية."
+
+Card 5:
+Title: "University Courses"
+Description:
+"شرح عملي لمواد C++, OOP, Data Structures, Algorithms, Database, Discrete Math."
+
+Card 6:
+Title: "Baccalaureate Programming"
+Description:
+"تأسيس طلاب البكالوريا في البرمجة من الصفر بأسلوب واضح ومنظم ومناسب للمنهج."
+
+4. Why Choose Me Section
+
+Title:
+"ليه تتعلم معايا؟"
+
+Create professional bullet cards:
+- شرح بسيط ومنظم
+- تطبيق عملي في كل حصة
+- مشاريع حقيقية مش كلام نظري
+- متابعة للطالب خطوة بخطوة
+- مناسب للأطفال وطلاب المدارس والجامعة
+- خبرة أكاديمية في نظم المعلومات
+- تدريب داخل مكان مجهز Eduverse
+- محتوى تعليمي حديث ومناسب لسوق العمل
+
+5. Eduverse Section
+
+Title:
+"Eduverse — مساحة تعليم وتكنولوجيا في الزقازيق"
+
+Content:
+"Eduverse مساحة تعليمية مجهزة للتدريب، المذاكرة، الورش، الاجتماعات، والكورسات العملية. المكان مصمم علشان يربط التعليم بالتطبيق، ويخلي الطالب يتعلم التكنولوجيا في بيئة احترافية ومريحة."
+
+Include features:
+- Training rooms
+- Coworking space
+- Interactive screens
+- Educational workshops
+- Programming courses
+- Kids activities
+- Podcast and content area
+- Practical learning environment
+
+6. Courses Section
+
+Title:
+"الكورسات والمسارات التدريبية"
+
+Create clean course cards:
+
+Course 1:
+"Kids Programming Package"
+Age: "من 4 إلى 18 سنة"
+Topics:
+Scratch, Python basics, AI basics, mini projects, creative thinking.
+
+Course 2:
+"Python Track"
+Level: "من الصفر"
+Topics:
+Variables, Conditions, Loops, Functions, Lists, Problem Solving, Projects.
+
+Course 3:
+"ICDL Practical Track"
+Topics:
+Word, PowerPoint, Excel, presentations, reports, spreadsheets.
+
+Course 4:
+"AI Starter Track"
+Topics:
+AI concepts, tools, prompts, practical use cases, student projects.
+
+Course 5:
+"University Support"
+Topics:
+C++, OOP, Data Structures, Algorithms, Database, Discrete Math.
+
+Course 6:
+"Baccalaureate Programming"
+Topics:
+Programming basics, logic, Python, problem solving, practical exercises.
+
+7. Portfolio Section
+
+Title:
+"نماذج من شغلي"
+
+Show portfolio categories:
+- Educational posters
+- Scratch lesson designs
+- Python explanation images
+- HTML lesson images
+- University course explanations
+- AI and programming content
+- Podcast covers
+- Eduverse designs
+- Landing page concepts
+- Student projects
+
+Design this section as premium visual cards with image placeholders.
+
+8. Teaching Style Section
+
+Title:
+"طريقة الشرح"
+
+Content:
+"الشرح بيبدأ من أبسط نقطة، وبعدها الطالب يطبق بنفسه خطوة بخطوة. كل درس لازم يطلع منه الطالب بحاجة واضحة: كود، فكرة، مشروع، أو مهارة يقدر يستخدمها."
+
+Show process:
+Step 1: نفهم الفكرة
+Step 2: نشوف مثال بسيط
+Step 3: نكتب الكود
+Step 4: نحل تدريب
+Step 5: نعمل مشروع صغير
+
+9. Testimonials Section
+
+Title:
+"آراء الطلاب وأولياء الأمور"
+
+Add testimonial cards with examples:
+
+"الشرح بسيط جدًا وابني بدأ يحب البرمجة."
+
+"طريقة الدكتور منظمة وبتخلي الطالب يطبق بنفسه."
+
+"أفضل تأسيس للبرمجة والكمبيوتر في الزقازيق."
+
+"المحتوى عملي ومناسب جدًا للطلبة."
+
+10. Contact Section
+
+Title:
+"ابدأ رحلتك في البرمجة"
+
+Content:
+"احجز أول سيشن مجانًا واعرف البرنامج المناسب لسن الطالب ومستواه."
+
+Contact details:
+WhatsApp: 01044348610
+Phone: 01066711545
+Phone: 01272047933
+Location: Eduverse, فلل الجامعة، الزقازيق
+
+CTA buttons:
+"تواصل واتساب"
+"اتصل الآن"
+"اعرف مكان Eduverse"
+
+Add a map placeholder.
+
+11. Footer
+
+Include:
+Dr. Mahmoud Elmahdy
+Programming | AI | ICDL | Eduverse
+Zagazig, Egypt
+
+Footer links:
+الرئيسية
+عن الدكتور
+الكورسات
+Eduverse
+نماذج الشغل
+تواصل معنا
+
+Design requirements:
+- Make the website feel premium and trustworthy.
+- Use large clear headings.
+- Keep paragraphs short.
+- Make CTA buttons obvious.
+- Use consistent spacing.
+- Use elegant shadows.
+- Use modern cards.
+- Keep everything readable on mobile.
+- Make the design suitable for parents, students, and university learners.
+- The overall feeling should be: academic, modern, practical, confident, and premium.
+
+Important:
+The website must not look like a generic course website. It must look like a strong personal brand website for a real instructor and founder.
+
+Tone:
+Professional Arabic with simple Egyptian-friendly wording.
+Not too formal.
+Not childish.
+Clear, direct, and convincing.
