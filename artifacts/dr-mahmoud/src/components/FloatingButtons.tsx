@@ -14,20 +14,20 @@ export function FloatingButtons() {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
-    <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-3 items-center">
+    <div className="fixed bottom-4 sm:bottom-6 left-4 sm:left-6 z-50 flex flex-col gap-2.5 sm:gap-3 items-center">
       <AnimatePresence>
         {showTop && (
           <motion.button
             key="top"
-            initial={{ opacity: 0, scale: 0.5, y: 20 }}
+            initial={{ opacity: 0, scale: 0.5, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.5, y: 20 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            exit={{ opacity: 0, scale: 0.5, y: 15 }}
+            transition={{ type: "spring", stiffness: 300, damping: 22 }}
             onClick={scrollToTop}
-            className="w-12 h-12 rounded-full bg-white/10 border border-white/20 text-foreground hover:bg-primary hover:border-primary hover:text-primary-foreground transition-all duration-300 flex items-center justify-center shadow-lg backdrop-blur-sm"
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 border border-white/20 text-foreground hover:bg-primary hover:border-primary hover:text-primary-foreground transition-all duration-300 flex items-center justify-center shadow-lg backdrop-blur-sm"
             aria-label="العودة للأعلى"
           >
-            <ArrowUp className="w-5 h-5" />
+            <ArrowUp className="w-4 h-4 sm:w-5 sm:h-5" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -39,12 +39,12 @@ export function FloatingButtons() {
         aria-label="تواصل على واتساب"
         initial={{ opacity: 0, scale: 0.5 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.5, type: "spring", stiffness: 300, damping: 20 }}
-        whileHover={{ scale: 1.1 }}
+        transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 22 }}
+        whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
-        className="w-14 h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-xl shadow-[#25D366]/30 hover:bg-[#20bd5a] transition-colors"
+        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-xl shadow-[#25D366]/20 hover:bg-[#20bd5a] transition-colors"
       >
-        <MessageCircle className="w-7 h-7 fill-white" />
+        <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7 fill-white" />
       </motion.a>
     </div>
   );

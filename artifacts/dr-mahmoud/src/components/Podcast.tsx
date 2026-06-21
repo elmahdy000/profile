@@ -110,7 +110,7 @@ export function Podcast() {
   };
 
   return (
-    <section id="podcast" className="py-24 bg-[#0a0a0a] relative overflow-hidden">
+    <section id="podcast" className="py-20 lg:py-24 bg-background relative overflow-hidden">
       {/* Hidden audio element */}
       <audio
         ref={audioRef}
@@ -233,7 +233,7 @@ export function Podcast() {
 
                     <button
                       onClick={() => handlePlayPause(currentEpisode)}
-                      className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 transition-all"
+                      className="w-10 h-10 rounded-full bg-primary/10 text-primary border border-primary/30 flex items-center justify-center shadow-lg shadow-primary/10 hover:bg-primary/20 hover:scale-105 transition-all"
                     >
                       {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ms-0.5" />}
                     </button>
@@ -299,7 +299,7 @@ export function Podcast() {
             >
               <Button
                 asChild
-                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/25"
+                className="bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] hover:from-[#D6A84F] hover:to-[#F2C76E] text-[#070B12] font-bold shadow-lg shadow-[#D6A84F]/20 transition-all duration-300 hover:scale-[1.01]"
               >
                 <a href="https://youtube.com/@dr-mahmoud" target="_blank" rel="noreferrer">
                   <Youtube className="w-4 h-4 me-2" />
@@ -309,7 +309,7 @@ export function Podcast() {
               <Button
                 asChild
                 variant="outline"
-                className="border-white/20 hover:border-primary/40 hover:text-primary font-bold"
+                className="bg-[#121A27] text-foreground border border-[#D6A84F]/28 hover:border-[#D6A84F]/60 transition-all hover:bg-[#121A27]/80 font-bold"
               >
                 <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
                   <ExternalLink className="w-4 h-4 me-2" />

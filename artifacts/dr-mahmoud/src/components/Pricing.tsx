@@ -52,7 +52,7 @@ const plans = [
 
 export function Pricing() {
   return (
-    <section id="pricing" className="py-24 bg-[#0f0f0f] relative overflow-hidden">
+    <section id="pricing" className="py-20 lg:py-24 bg-background relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-primary/5 rounded-full blur-[120px]" />
       </div>
@@ -113,10 +113,10 @@ export function Pricing() {
 
               <Button
                 asChild
-                className={`w-full font-bold ${
+                className={`w-full font-bold transition-all duration-300 ${
                   plan.badge
-                    ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25"
-                    : "bg-white/5 hover:bg-primary/10 text-foreground border border-white/10 hover:border-primary/40"
+                    ? "bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] hover:from-[#D6A84F] hover:to-[#F2C76E] text-[#070B12] shadow-lg shadow-[#D6A84F]/20 hover:scale-[1.01]"
+                    : "bg-[#121A27] text-foreground border border-[#D6A84F]/28 hover:border-[#D6A84F]/60 hover:bg-[#121A27]/80"
                 }`}
               >
                 <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">

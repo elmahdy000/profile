@@ -34,7 +34,7 @@ const testimonials = [
 
 export function Testimonials() {
   return (
-    <section className="py-24 bg-[#0a0a0a] relative overflow-hidden">
+    <section className="py-20 lg:py-24 bg-background relative overflow-hidden">
       <div className="absolute inset-0 opacity-5">
         <img
           src="https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=1400&q=50"

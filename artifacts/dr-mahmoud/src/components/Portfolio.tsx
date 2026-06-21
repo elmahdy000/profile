@@ -75,7 +75,7 @@ export function Portfolio() {
   const filtered = active === "الكل" ? items : items.filter((i) => i.category === active);
 
   return (
-    <section id="portfolio" className="py-24 bg-[#0f0f0f]">
+    <section id="portfolio" className="py-20 lg:py-24 bg-background relative">
       <div className="container mx-auto px-4 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -95,8 +95,8 @@ export function Portfolio() {
               onClick={() => setActive(cat)}
               className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-200 border ${
                 active === cat
-                  ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25"
-                  : "bg-white/5 text-foreground/60 border-white/10 hover:border-primary/30 hover:text-foreground"
+                  ? "bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] text-[#070B12] border-transparent shadow-lg shadow-[#D6A84F]/20"
+                  : "bg-[#121A27] text-foreground/60 border border-[#D6A84F]/28 hover:border-[#D6A84F]/60 hover:text-foreground"
               }`}
             >
               {categoryAr[cat] ?? cat}
@@ -116,7 +116,7 @@ export function Portfolio() {
                 transition={{ duration: 0.25 }}
                 className="group relative overflow-hidden rounded-xl cursor-pointer border border-white/10 hover:border-primary/50 transition-all duration-300"
               >
-                <div className="aspect-[4/3] relative">
+                <div className="aspect-[4/3] relative bg-white/5">
                   <img
                     src={item.img}
                     alt={item.title}

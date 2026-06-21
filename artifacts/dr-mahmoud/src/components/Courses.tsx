@@ -146,7 +146,7 @@ export function Courses() {
   const filtered = active === "all" ? activeCourses : activeCourses.filter(c => c.category === active);
 
   return (
-    <section id="courses" className="py-24 bg-[#0f0f0f]">
+    <section id="courses" className="py-20 lg:py-24 bg-background relative">
       <div className="container mx-auto px-4 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -173,8 +173,8 @@ export function Courses() {
               onClick={() => setActive(cat.id)}
               className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 border ${
                 active === cat.id
-                  ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25"
-                  : "bg-white/5 text-foreground/60 border-white/10 hover:border-primary/40 hover:text-foreground"
+                  ? "bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] text-[#070B12] border-transparent shadow-lg shadow-[#D6A84F]/20"
+                  : "bg-[#121A27] text-foreground/60 border border-[#D6A84F]/28 hover:border-[#D6A84F]/60 hover:text-foreground"
               }`}
             >
               {cat.label}
@@ -212,7 +212,7 @@ export function Courses() {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80" />
-                  <span className="absolute top-3 left-3 px-3 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full">
+                  <span className="absolute top-3 left-3 px-3 py-1 bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] text-[#070B12] text-xs font-bold rounded-full">
                     {course.age}
                   </span>
                 </div>
@@ -247,7 +247,7 @@ export function Courses() {
 
                   <Button
                     asChild
-                    className="w-full bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground border border-primary/30 hover:border-primary transition-all duration-300 font-bold"
+                    className="w-full bg-[#0B111C] hover:bg-gradient-to-r hover:from-[#F2C76E] hover:to-[#D6A84F] text-primary hover:text-[#070B12] border border-[#D6A84F]/28 hover:border-transparent transition-all duration-300 font-bold"
                   >
                     <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
                       <MessageCircle className="w-4 h-4 me-2" />

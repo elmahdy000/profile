@@ -14,7 +14,7 @@ export function WhyChooseMe() {
   ];
 
   return (
-    <section className="py-24 relative overflow-hidden bg-[#0a0a0a]">
+    <section className="py-20 lg:py-24 relative overflow-hidden bg-background">
       {/* Background image with overlay */}
       <div className="absolute inset-0">
         <img
@@ -23,7 +23,7 @@ export function WhyChooseMe() {
           loading="lazy"
           className="w-full h-full object-cover opacity-10"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-[#0a0a0a]/80 to-[#0a0a0a]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/80 to-background" />
       </div>
 
       <div className="container mx-auto px-4 lg:px-8 relative z-10">

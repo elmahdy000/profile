@@ -42,7 +42,7 @@ const services = [
 
 export function Services() {
   return (
-    <section id="services" className="py-24 bg-[#0f0f0f]">
+    <section id="services" className="py-20 lg:py-24 bg-muted relative">
       <div className="container mx-auto px-4 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -66,10 +66,11 @@ export function Services() {
               className="group relative bg-card border border-white/10 rounded-2xl overflow-hidden hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10"
             >
               {/* Top image */}
-              <div className="relative h-44 overflow-hidden">
+               <div className="relative h-44 overflow-hidden bg-white/5">
                 <img
                   src={service.img}
                   alt={service.title}
+                  loading="lazy"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/70" />
@@ -84,7 +85,7 @@ export function Services() {
                 <p className="text-sm text-foreground/55 leading-relaxed">{service.description}</p>
               </div>
 
-              {/* Gold bottom accent on hover */}
+              {/* Cyan bottom accent on hover */}
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right" />
             </motion.div>
           ))}

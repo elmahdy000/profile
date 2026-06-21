@@ -36,7 +36,7 @@ export function Contact() {
   };
 
   return (
-    <section id="contact" className="py-24 bg-[#0f0f0f]">
+    <section id="contact" className="py-20 lg:py-24 bg-background relative">
       <div className="container mx-auto px-4 lg:px-8">
         <div className="max-w-5xl mx-auto">
           <motion.div
@@ -109,7 +109,7 @@ export function Contact() {
                 <Button
                   asChild
                   size="lg"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground flex-1 font-bold"
+                  className="bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] hover:from-[#D6A84F] hover:to-[#F2C76E] text-[#070B12] flex-1 font-bold shadow-lg shadow-[#D6A84F]/10 hover:shadow-[#D6A84F]/20 transition-all duration-300 hover:scale-[1.01]"
                   data-testid="button-call"
                 >
                   <a href="tel:+201066711545">اتصل الآن</a>
@@ -175,7 +175,7 @@ export function Contact() {
                     type="submit"
                     size="lg"
                     disabled={isPending}
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
+                    className="w-full bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] hover:from-[#D6A84F] hover:to-[#F2C76E] text-[#070B12] font-bold shadow-lg shadow-[#D6A84F]/20 transition-all duration-300 hover:scale-[1.01]"
                   >
                     <Send className="w-4 h-4 me-2" />
                     {isPending ? "جاري الحفظ..." : "إرسال عبر واتساب"}

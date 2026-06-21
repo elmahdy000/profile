@@ -343,29 +343,29 @@ export default function AdminDashboard() {
   // Render Login view if not authenticated
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4 dir-rtl">
+      <div className="min-h-screen flex items-center justify-center bg-background px-4 dir-rtl">
         {/* Decorative elements */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
 
-        <div className="w-full max-w-md bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 relative overflow-hidden shadow-2xl">
+        <div className="w-full max-w-md bg-card/60 backdrop-blur-xl border border-border rounded-3xl p-8 relative overflow-hidden shadow-2xl">
           <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-tr from-amber-500 to-amber-300 rounded-2xl flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/20 mb-4 animate-pulse">
+            <div className="w-16 h-16 bg-gradient-to-tr from-primary to-cyan-300 rounded-2xl flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20 mb-4 animate-pulse">
               <Lock className="w-8 h-8" />
             </div>
             <h1 className="text-2xl font-bold text-white font-outfit">بوابة المسؤول</h1>
-            <p className="text-sm text-slate-400 mt-2">يرجى إدخال رمز التحقق للوصول إلى لوحة التحكم</p>
+            <p className="text-sm text-muted-foreground mt-2">يرجى إدخال رمز التحقق للوصول إلى لوحة التحكم</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">كلمة المرور</label>
+              <label className="block text-sm font-medium text-foreground/90 mb-2">كلمة المرور</label>
               <input
                 type="password"
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-slate-950/80 border border-slate-800 text-white rounded-xl px-4 py-3.5 focus:outline-none focus:border-amber-500 transition-colors placeholder-slate-700 text-center text-lg tracking-widest font-sans"
+                className="w-full bg-background/80 border border-border text-white rounded-xl px-4 py-3.5 focus:outline-none focus:border-primary transition-colors placeholder-slate-700 text-center text-lg tracking-widest font-sans"
               />
               {authError && (
                 <p className="text-red-400 text-xs mt-2 text-right">{authError}</p>
@@ -375,7 +375,7 @@ export default function AdminDashboard() {
             <button
               type="submit"
               disabled={isLoggingIn}
-              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold rounded-xl py-3.5 transition-all shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-primary to-cyan-600 hover:from-primary/90 hover:to-cyan-600 text-primary-foreground font-bold rounded-xl py-3.5 transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 flex items-center justify-center gap-2"
             >
               {isLoggingIn ? (
                 <>
@@ -391,7 +391,7 @@ export default function AdminDashboard() {
           <div className="mt-8 text-center">
             <a
               href="/"
-              className="text-xs text-slate-500 hover:text-slate-300 flex items-center justify-center gap-1 transition-colors"
+              className="text-xs text-slate-500 hover:text-foreground/90 flex items-center justify-center gap-1 transition-colors"
             >
               <ChevronRight className="w-4 h-4" /> العودة للموقع الرئيسي
             </a>
@@ -402,17 +402,17 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col dir-rtl">
+    <div className="min-h-screen bg-background text-foreground flex flex-col dir-rtl">
       {/* Top Admin Header */}
-      <header className="bg-slate-900/60 backdrop-blur-xl border-b border-slate-800 sticky top-0 z-40 px-6 py-4">
+      <header className="bg-card/60 backdrop-blur-xl border-b border-border sticky top-0 z-40 px-6 py-4">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-center text-amber-400">
+            <div className="w-10 h-10 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center text-primary">
               <Lock className="w-5 h-5" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-white">لوحة تحكم د. محمود المهدي</h1>
-              <p className="text-xs text-slate-400">إدارة محتوى الكورسات، البودكاست والحجوزات</p>
+              <p className="text-xs text-muted-foreground">إدارة محتوى الكورسات، البودكاست والحجوزات</p>
             </div>
           </div>
 
@@ -421,7 +421,7 @@ export default function AdminDashboard() {
               href="/"
               target="_blank"
               rel="noreferrer"
-              className="px-4 py-2 border border-slate-800 rounded-xl text-xs hover:bg-slate-800/50 transition-colors flex items-center gap-1.5"
+              className="px-4 py-2 border border-border rounded-xl text-xs hover:bg-muted/50 transition-colors flex items-center gap-1.5"
             >
               <ExternalLink className="w-4 h-4" /> عرض الموقع
             </a>
@@ -439,19 +439,19 @@ export default function AdminDashboard() {
       <div className="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col lg:flex-row gap-8">
         {/* Navigation Sidebar */}
         <aside className="lg:w-64 flex-shrink-0">
-          <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-4 sticky top-24 space-y-2">
+          <div className="bg-card/40 border border-border/80 rounded-2xl p-4 sticky top-24 space-y-2">
             <button
               onClick={() => setActiveTab("bookings")}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right text-sm font-medium transition-all ${
                 activeTab === "bookings"
-                  ? "bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-500/10"
-                  : "hover:bg-slate-800/60 text-slate-400 hover:text-slate-200"
+                  ? "bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/10"
+                  : "hover:bg-muted/60 text-muted-foreground hover:text-foreground/80"
               }`}
             >
               <Calendar className="w-5 h-5" />
               <span>الحجوزات</span>
               {bookingsQuery.data && bookingsQuery.data.filter(b => b.status === "pending").length > 0 && (
-                <span className={`mr-auto px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === "bookings" ? "bg-slate-950 text-amber-500" : "bg-amber-500 text-slate-950"}`}>
+                <span className={`mr-auto px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === "bookings" ? "bg-background text-primary" : "bg-primary text-primary-foreground"}`}>
                   {bookingsQuery.data.filter(b => b.status === "pending").length}
                 </span>
               )}
@@ -461,8 +461,8 @@ export default function AdminDashboard() {
               onClick={() => setActiveTab("courses")}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right text-sm font-medium transition-all ${
                 activeTab === "courses"
-                  ? "bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-500/10"
-                  : "hover:bg-slate-800/60 text-slate-400 hover:text-slate-200"
+                  ? "bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/10"
+                  : "hover:bg-muted/60 text-muted-foreground hover:text-foreground/80"
               }`}
             >
               <BookOpen className="w-5 h-5" />
@@ -473,8 +473,8 @@ export default function AdminDashboard() {
               onClick={() => setActiveTab("podcasts")}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right text-sm font-medium transition-all ${
                 activeTab === "podcasts"
-                  ? "bg-amber-500 text-slate-950 font-bold shadow-lg shadow-amber-500/10"
-                  : "hover:bg-slate-800/60 text-slate-400 hover:text-slate-200"
+                  ? "bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/10"
+                  : "hover:bg-muted/60 text-muted-foreground hover:text-foreground/80"
               }`}
             >
               <Mic className="w-5 h-5" />
@@ -490,19 +490,19 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-white">إدارة الحجوزات</h2>
-                  <p className="text-xs text-slate-400 mt-1">تلقي ومتابعة طلبات التسجيل للطلاب</p>
+                  <p className="text-xs text-muted-foreground mt-1">تلقي ومتابعة طلبات التسجيل للطلاب</p>
                 </div>
               </div>
 
               {bookingsQuery.isLoading ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-slate-900/20 border border-slate-900 rounded-3xl">
-                  <Loader2 className="w-10 h-10 animate-spin text-amber-500 mb-4" />
-                  <p className="text-slate-400 text-sm">جاري تحميل الحجوزات...</p>
+                <div className="flex flex-col items-center justify-center py-20 bg-card/20 border border-border rounded-3xl">
+                  <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+                  <p className="text-muted-foreground text-sm">جاري تحميل الحجوزات...</p>
                 </div>
               ) : bookingsQuery.data?.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-slate-900/20 border border-slate-900 rounded-3xl text-center px-4">
+                <div className="flex flex-col items-center justify-center py-20 bg-card/20 border border-border rounded-3xl text-center px-4">
                   <Calendar className="w-12 h-12 text-slate-600 mb-4" />
-                  <p className="text-slate-400 font-medium">لا توجد حجوزات مسجلة حتى الآن</p>
+                  <p className="text-muted-foreground font-medium">لا توجد حجوزات مسجلة حتى الآن</p>
                   <p className="text-slate-600 text-xs mt-2">عند قيام الطلاب بالتسجيل ستظهر طلباتهم هنا</p>
                 </div>
               ) : (
@@ -510,7 +510,7 @@ export default function AdminDashboard() {
                   {bookingsQuery.data?.map((booking) => (
                     <div
                       key={booking.id}
-                      className="bg-slate-900/40 border border-slate-800/60 hover:border-slate-800 rounded-2xl p-6 transition-all relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6"
+                      className="bg-card/40 border border-border/60 hover:border-border rounded-2xl p-6 transition-all relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6"
                     >
                       {/* Left side details */}
                       <div className="space-y-2 flex-1">
@@ -522,7 +522,7 @@ export default function AdminDashboard() {
                                 ? "bg-green-500/10 text-green-400 border border-green-500/20"
                                 : booking.status === "completed"
                                 ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
-                                : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                : "bg-primary/10 text-primary border border-primary/20"
                             }`}
                           >
                             {booking.status === "confirmed"
@@ -532,8 +532,8 @@ export default function AdminDashboard() {
                               : "قيد الانتظار"}
                           </span>
                         </div>
-                        <p className="text-slate-300 text-sm font-sans" dir="ltr">{booking.phone}</p>
-                        <p className="text-slate-400 text-sm bg-slate-950/40 rounded-xl p-3 border border-slate-900/50 mt-2">
+                        <p className="text-foreground/90 text-sm font-sans" dir="ltr">{booking.phone}</p>
+                        <p className="text-muted-foreground text-sm bg-background/40 rounded-xl p-3 border border-border/50 mt-2">
                           {booking.message}
                         </p>
                         <p className="text-slate-600 text-[10px]">
@@ -542,7 +542,7 @@ export default function AdminDashboard() {
                       </div>
 
                       {/* Quick Action controls */}
-                      <div className="flex items-center gap-2 flex-shrink-0 self-stretch md:self-auto justify-end border-t md:border-t-0 border-slate-800/60 pt-4 md:pt-0">
+                      <div className="flex items-center gap-2 flex-shrink-0 self-stretch md:self-auto justify-end border-t md:border-t-0 border-border/60 pt-4 md:pt-0">
                         {booking.status === "pending" && (
                           <button
                             onClick={() => handleBookingStatusUpdate(booking.id, "confirmed")}
@@ -581,28 +581,28 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-white">إدارة الكورسات</h2>
-                  <p className="text-xs text-slate-400 mt-1">إضافة وتحديث باقة البرامج التدريبية</p>
+                  <p className="text-xs text-muted-foreground mt-1">إضافة وتحديث باقة البرامج التدريبية</p>
                 </div>
                 <button
                   onClick={() => openCourseModal("add")}
-                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl px-4 py-2.5 text-sm transition-all shadow-lg shadow-amber-500/10 hover:shadow-amber-500/20 flex items-center gap-1.5"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl px-4 py-2.5 text-sm transition-all shadow-lg shadow-primary/10 hover:shadow-primary/20 flex items-center gap-1.5"
                 >
                   <Plus className="w-4 h-4" /> إضافة كورس
                 </button>
               </div>
 
               {coursesQuery.isLoading ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-slate-900/20 border border-slate-900 rounded-3xl">
-                  <Loader2 className="w-10 h-10 animate-spin text-amber-500 mb-4" />
-                  <p className="text-slate-400 text-sm">جاري تحميل الكورسات...</p>
+                <div className="flex flex-col items-center justify-center py-20 bg-card/20 border border-border rounded-3xl">
+                  <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+                  <p className="text-muted-foreground text-sm">جاري تحميل الكورسات...</p>
                 </div>
               ) : coursesQuery.data?.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-slate-900/20 border border-slate-900 rounded-3xl text-center px-4">
+                <div className="flex flex-col items-center justify-center py-20 bg-card/20 border border-border rounded-3xl text-center px-4">
                   <BookOpen className="w-12 h-12 text-slate-600 mb-4" />
-                  <p className="text-slate-400 font-medium">لا توجد كورسات مضافة</p>
+                  <p className="text-muted-foreground font-medium">لا توجد كورسات مضافة</p>
                   <button
                     onClick={() => openCourseModal("add")}
-                    className="mt-4 text-xs text-amber-500 hover:text-amber-400 flex items-center gap-1"
+                    className="mt-4 text-xs text-primary hover:text-primary flex items-center gap-1"
                   >
                     إضافة أول كورس الآن <ChevronRight className="w-4 h-4 rotate-180" />
                   </button>
@@ -612,15 +612,15 @@ export default function AdminDashboard() {
                   {coursesQuery.data?.map((course) => (
                     <div
                       key={course.id}
-                      className="bg-slate-900/30 border border-slate-800/80 rounded-2xl overflow-hidden flex flex-col justify-between"
+                      className="bg-card/30 border border-border/80 rounded-2xl overflow-hidden flex flex-col justify-between"
                     >
-                      <div className="relative h-48 bg-slate-950">
+                      <div className="relative h-48 bg-background">
                         <img
                           src={course.img}
                           alt={course.title}
                           className="w-full h-full object-cover opacity-70"
                         />
-                        <div className="absolute top-3 right-3 bg-slate-950/80 backdrop-blur-md border border-slate-800 px-3 py-1 rounded-full text-xs font-bold text-amber-400">
+                        <div className="absolute top-3 right-3 bg-background/80 backdrop-blur-md border border-border px-3 py-1 rounded-full text-xs font-bold text-primary">
                           {course.category}
                         </div>
                       </div>
@@ -630,12 +630,12 @@ export default function AdminDashboard() {
                           <h3 className="font-bold text-white text-lg">{course.title}</h3>
                           <div className="flex flex-wrap gap-1.5">
                             {course.tags.map((tag, idx) => (
-                              <span key={idx} className="bg-slate-800 text-slate-300 text-[10px] px-2 py-0.5 rounded-md">
+                              <span key={idx} className="bg-slate-800 text-foreground/90 text-[10px] px-2 py-0.5 rounded-md">
                                 {tag}
                               </span>
                             ))}
                           </div>
-                          <div className="grid grid-cols-2 gap-2 text-xs text-slate-400 pt-2 border-t border-slate-800/50">
+                          <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground pt-2 border-t border-border/50">
                             <div>السن: {course.age}</div>
                             <div>المدة: {course.duration}</div>
                             <div>الحصص: {course.sessions}</div>
@@ -643,10 +643,10 @@ export default function AdminDashboard() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 border-t border-slate-800/80 pt-3">
+                        <div className="flex items-center gap-2 border-t border-border/80 pt-3">
                           <button
                             onClick={() => openCourseModal("edit", course)}
-                            className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5 border border-slate-700/50"
+                            className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-foreground/80 rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5 border border-slate-700/50"
                           >
                             <Edit2 className="w-3.5 h-3.5" /> تعديل
                           </button>
@@ -670,28 +670,28 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-white">إدارة البودكاست</h2>
-                  <p className="text-xs text-slate-400 mt-1">رفع وتحديث الحلقات النقاشية والبودكاست</p>
+                  <p className="text-xs text-muted-foreground mt-1">رفع وتحديث الحلقات النقاشية والبودكاست</p>
                 </div>
                 <button
                   onClick={() => openPodcastModal("add")}
-                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl px-4 py-2.5 text-sm transition-all shadow-lg shadow-amber-500/10 hover:shadow-amber-500/20 flex items-center gap-1.5"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl px-4 py-2.5 text-sm transition-all shadow-lg shadow-primary/10 hover:shadow-primary/20 flex items-center gap-1.5"
                 >
                   <Plus className="w-4 h-4" /> إضافة حلقة
                 </button>
               </div>
 
               {podcastsQuery.isLoading ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-slate-900/20 border border-slate-900 rounded-3xl">
-                  <Loader2 className="w-10 h-10 animate-spin text-amber-500 mb-4" />
-                  <p className="text-slate-400 text-sm">جاري تحميل الحلقات...</p>
+                <div className="flex flex-col items-center justify-center py-20 bg-card/20 border border-border rounded-3xl">
+                  <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+                  <p className="text-muted-foreground text-sm">جاري تحميل الحلقات...</p>
                 </div>
               ) : podcastsQuery.data?.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-slate-900/20 border border-slate-900 rounded-3xl text-center px-4">
+                <div className="flex flex-col items-center justify-center py-20 bg-card/20 border border-border rounded-3xl text-center px-4">
                   <Mic className="w-12 h-12 text-slate-600 mb-4" />
-                  <p className="text-slate-400 font-medium">لا توجد حلقات مضافة</p>
+                  <p className="text-muted-foreground font-medium">لا توجد حلقات مضافة</p>
                   <button
                     onClick={() => openPodcastModal("add")}
-                    className="mt-4 text-xs text-amber-500 hover:text-amber-400 flex items-center gap-1"
+                    className="mt-4 text-xs text-primary hover:text-primary flex items-center gap-1"
                   >
                     إضافة أول حلقة الآن <ChevronRight className="w-4 h-4 rotate-180" />
                   </button>
@@ -701,22 +701,22 @@ export default function AdminDashboard() {
                   {podcastsQuery.data?.map((ep) => (
                     <div
                       key={ep.id}
-                      className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6"
+                      className="bg-card/40 border border-border/60 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6"
                     >
                       <div className="space-y-1.5 flex-1">
                         <h3 className="font-bold text-white text-lg">{ep.title}</h3>
-                        <p className="text-slate-400 text-sm line-clamp-2">{ep.desc}</p>
+                        <p className="text-muted-foreground text-sm line-clamp-2">{ep.desc}</p>
                         <div className="flex items-center gap-4 text-xs text-slate-500 pt-2">
                           <span>المدة: {ep.duration}</span>
-                          {ep.youtubeUrl && <span className="text-amber-400/80">رابط يوتيوب متاح</span>}
+                          {ep.youtubeUrl && <span className="text-primary/80">رابط يوتيوب متاح</span>}
                           {ep.audioUrl && <span className="text-green-400/80">رابط الصوت متاح</span>}
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 flex-shrink-0 self-stretch md:self-auto justify-end border-t md:border-t-0 border-slate-800/60 pt-4 md:pt-0">
+                      <div className="flex items-center gap-2 flex-shrink-0 self-stretch md:self-auto justify-end border-t md:border-t-0 border-border/60 pt-4 md:pt-0">
                         <button
                           onClick={() => openPodcastModal("edit", ep)}
-                          className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs transition-colors flex items-center gap-1.5 border border-slate-700/50"
+                          className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-foreground/80 rounded-xl text-xs transition-colors flex items-center gap-1.5 border border-slate-700/50"
                         >
                           <Edit2 className="w-3.5 h-3.5" /> تعديل
                         </button>
@@ -740,17 +740,17 @@ export default function AdminDashboard() {
       {isCourseModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="fixed inset-0 bg-slate-950/80 backdrop-blur-md"
+            className="fixed inset-0 bg-background/80 backdrop-blur-md"
             onClick={() => setIsCourseModalOpen(false)}
           />
-          <div className="bg-slate-900 border border-slate-850 w-full max-w-2xl rounded-3xl p-6 relative z-10 max-h-[90vh] overflow-y-auto shadow-2xl space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div className="bg-card border border-border w-full max-w-2xl rounded-3xl p-6 relative z-10 max-h-[90vh] overflow-y-auto shadow-2xl space-y-6">
+            <div className="flex items-center justify-between border-b border-border pb-4">
               <h3 className="text-lg font-bold text-white">
                 {courseModalMode === "edit" ? "تعديل الكورس" : "إضافة كورس جديد"}
               </h3>
               <button
                 onClick={() => setIsCourseModalOpen(false)}
-                className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-200 transition-colors"
+                className="p-1.5 hover:bg-slate-800 rounded-lg text-muted-foreground hover:text-foreground/80 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -759,66 +759,66 @@ export default function AdminDashboard() {
             <form onSubmit={handleCourseSubmit} className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">اسم الكورس</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">اسم الكورس</label>
                   <input
                     type="text"
                     required
                     value={courseForm.title}
                     onChange={(e) => setCourseForm({ ...courseForm, title: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">الفئة العمرية</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">الفئة العمرية</label>
                   <input
                     type="text"
                     required
                     value={courseForm.age}
                     onChange={(e) => setCourseForm({ ...courseForm, age: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">مدة البرنامج</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">مدة البرنامج</label>
                   <input
                     type="text"
                     required
                     value={courseForm.duration}
                     onChange={(e) => setCourseForm({ ...courseForm, duration: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">عدد الحصص</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">عدد الحصص</label>
                   <input
                     type="text"
                     required
                     value={courseForm.sessions}
                     onChange={(e) => setCourseForm({ ...courseForm, sessions: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">المستوى</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">المستوى</label>
                   <input
                     type="text"
                     required
                     value={courseForm.level}
                     onChange={(e) => setCourseForm({ ...courseForm, level: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">التصنيف الرئيسي</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">التصنيف الرئيسي</label>
                   <select
                     value={courseForm.category}
                     onChange={(e) => setCourseForm({ ...courseForm, category: e.target.value })}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
                   >
                     <option value="kids">المسار البرمجي للأطفال</option>
                     <option value="python">برمجة بايثون والذكاء الاصطناعي</option>
@@ -831,15 +831,15 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="md:col-span-2 space-y-2">
-                  <label className="block text-xs font-semibold text-slate-400">صورة الكورس</label>
+                  <label className="block text-xs font-semibold text-muted-foreground">صورة الكورس</label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <span className="block text-[10px] text-slate-500 mb-1">خيار 1: تحميل صورة من جهازك</span>
-                      <div className="relative border border-dashed border-slate-800 hover:border-amber-500/50 rounded-xl p-3 bg-slate-950/40 transition-colors flex flex-col items-center justify-center min-h-[90px]">
+                      <div className="relative border border-dashed border-border hover:border-primary/50 rounded-xl p-3 bg-background/40 transition-colors flex flex-col items-center justify-center min-h-[90px]">
                         {isUploadingImage ? (
                           <div className="flex flex-col items-center gap-2">
-                            <Loader2 className="w-5 h-5 animate-spin text-amber-500" />
-                            <span className="text-xs text-slate-400">جاري الرفع...</span>
+                            <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                            <span className="text-xs text-muted-foreground">جاري الرفع...</span>
                           </div>
                         ) : (
                           <>
@@ -849,7 +849,7 @@ export default function AdminDashboard() {
                               onChange={handleImageUpload}
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                             />
-                            <span className="text-xs text-slate-400 text-center">انقر هنا أو اسحب الصورة لرفعها</span>
+                            <span className="text-xs text-muted-foreground text-center">انقر هنا أو اسحب الصورة لرفعها</span>
                             <span className="text-[10px] text-slate-600 mt-1">PNG, JPG حتى 5MB</span>
                           </>
                         )}
@@ -863,22 +863,22 @@ export default function AdminDashboard() {
                         value={courseForm.img}
                         onChange={(e) => setCourseForm({ ...courseForm, img: e.target.value })}
                         placeholder="https://example.com/image.jpg"
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 text-sm h-[90px]"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary text-sm h-[90px]"
                       />
                     </div>
                   </div>
                   {courseForm.img && (
-                    <div className="flex items-center gap-3 p-2 bg-slate-950/20 border border-slate-900 rounded-xl mt-2">
+                    <div className="flex items-center gap-3 p-2 bg-background/20 border border-border rounded-xl mt-2">
                       <img
                         src={courseForm.img}
                         alt="Preview"
-                        className="w-12 h-12 rounded-lg object-cover border border-slate-800"
+                        className="w-12 h-12 rounded-lg object-cover border border-border"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=600";
                         }}
                       />
                       <div className="flex-1 min-w-0">
-                        <span className="block text-xs font-semibold text-slate-300 truncate">{courseForm.img}</span>
+                        <span className="block text-xs font-semibold text-foreground/90 truncate">{courseForm.img}</span>
                         <span className="block text-[10px] text-green-400">جاهز ومعاين</span>
                       </div>
                     </div>
@@ -886,30 +886,30 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">الوسوم (مفصولة بفواصل)</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">الوسوم (مفصولة بفواصل)</label>
                   <input
                     type="text"
                     required
                     value={courseForm.tags}
                     onChange={(e) => setCourseForm({ ...courseForm, tags: e.target.value })}
                     placeholder="برمجة, أطفال, بايثون"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 justify-end border-t border-slate-800 pt-4 mt-6">
+              <div className="flex items-center gap-2 justify-end border-t border-border pt-4 mt-6">
                 <button
                   type="button"
                   onClick={() => setIsCourseModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs transition-colors border border-slate-700/50"
+                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-foreground/80 rounded-xl text-xs transition-colors border border-slate-700/50"
                 >
                   إلغاء
                 </button>
                 <button
                   type="submit"
                   disabled={createCourseMutation.isPending || updateCourseMutation.isPending}
-                  className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition-colors shadow-lg shadow-amber-500/10 flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-xs transition-colors shadow-lg shadow-primary/10 flex items-center gap-1.5"
                 >
                   {(createCourseMutation.isPending || updateCourseMutation.isPending) && (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -926,17 +926,17 @@ export default function AdminDashboard() {
       {isPodcastModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="fixed inset-0 bg-slate-950/80 backdrop-blur-md"
+            className="fixed inset-0 bg-background/80 backdrop-blur-md"
             onClick={() => setIsPodcastModalOpen(false)}
           />
-          <div className="bg-slate-900 border border-slate-850 w-full max-w-2xl rounded-3xl p-6 relative z-10 max-h-[90vh] overflow-y-auto shadow-2xl space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div className="bg-card border border-border w-full max-w-2xl rounded-3xl p-6 relative z-10 max-h-[90vh] overflow-y-auto shadow-2xl space-y-6">
+            <div className="flex items-center justify-between border-b border-border pb-4">
               <h3 className="text-lg font-bold text-white">
                 {podcastModalMode === "edit" ? "تعديل الحلقة" : "إضافة حلقة جديدة"}
               </h3>
               <button
                 onClick={() => setIsPodcastModalOpen(false)}
-                className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-200 transition-colors"
+                className="p-1.5 hover:bg-slate-800 rounded-lg text-muted-foreground hover:text-foreground/80 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -944,75 +944,75 @@ export default function AdminDashboard() {
 
             <form onSubmit={handlePodcastSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">عنوان الحلقة</label>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1">عنوان الحلقة</label>
                 <input
                   type="text"
                   required
                   value={podcastForm.title}
                   onChange={(e) => setPodcastForm({ ...podcastForm, title: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-sm"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">وصف الحلقة</label>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1">وصف الحلقة</label>
                 <textarea
                   required
                   rows={4}
                   value={podcastForm.desc}
                   onChange={(e) => setPodcastForm({ ...podcastForm, desc: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-sm resize-none"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm resize-none"
                 />
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">مدة الحلقة (دقيقة:ثانية)</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">مدة الحلقة (دقيقة:ثانية)</label>
                   <input
                     type="text"
                     required
                     value={podcastForm.duration}
                     onChange={(e) => setPodcastForm({ ...podcastForm, duration: e.target.value })}
                     placeholder="12:30"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">رابط يوتيوب (اختياري)</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">رابط يوتيوب (اختياري)</label>
                   <input
                     type="text"
                     value={podcastForm.youtubeUrl}
                     onChange={(e) => setPodcastForm({ ...podcastForm, youtubeUrl: e.target.value })}
                     placeholder="https://youtube.com/..."
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">رابط ملف الصوت MP3 (اختياري)</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">رابط ملف الصوت MP3 (اختياري)</label>
                   <input
                     type="text"
                     value={podcastForm.audioUrl}
                     onChange={(e) => setPodcastForm({ ...podcastForm, audioUrl: e.target.value })}
                     placeholder="https://domain.com/audio.mp3"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 justify-end border-t border-slate-800 pt-4 mt-6">
+              <div className="flex items-center gap-2 justify-end border-t border-border pt-4 mt-6">
                 <button
                   type="button"
                   onClick={() => setIsPodcastModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs transition-colors border border-slate-700/50"
+                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-foreground/80 rounded-xl text-xs transition-colors border border-slate-700/50"
                 >
                   إلغاء
                 </button>
                 <button
                   type="submit"
                   disabled={createPodcastMutation.isPending || updatePodcastMutation.isPending}
-                  className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition-colors shadow-lg shadow-amber-500/10 flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-xs transition-colors shadow-lg shadow-primary/10 flex items-center gap-1.5"
                 >
                   {(createPodcastMutation.isPending || updatePodcastMutation.isPending) && (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
