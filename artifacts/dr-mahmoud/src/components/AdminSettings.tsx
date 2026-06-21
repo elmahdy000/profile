@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSiteSettings, useUpdateSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
-import { Loader2, Save, CheckCircle2 } from "lucide-react";
+import { Loader2, Save, CheckCircle2, UploadCloud } from "lucide-react";
 
 export function AdminSettings() {
   const { settings, isLoading, get } = useSiteSettings();
@@ -8,6 +8,7 @@ export function AdminSettings() {
   
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [isSaved, setIsSaved] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Initialize form data when settings load
   useEffect(() => {
@@ -23,6 +24,37 @@ export function AdminSettings() {
   const handleChange = (key: string, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
     setIsSaved(false);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, key: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const form = new FormData();
+    form.append("image", file);
+
+    setIsUploading(true);
+    try {
+      const token = localStorage.getItem("dr_mahmoud_admin_pwd") || "";
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: form,
+      });
+
+      const data = await res.json();
+      if (res.ok && data.url) {
+        handleChange(key, data.url);
+      } else {
+        alert("حدث خطأ أثناء رفع الصورة: " + (data.error || ""));
+      }
+    } catch (err) {
+      alert("فشل الرفع. تأكد من اتصالك بالإنترنت.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -109,14 +141,32 @@ export function AdminSettings() {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">صورة البطل (URL)</label>
-            <input
-              type="text"
-              value={formData[SETTINGS_KEYS.HERO_PHOTO_URL] || ""}
-              onChange={(e) => handleChange(SETTINGS_KEYS.HERO_PHOTO_URL, e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
-              dir="ltr"
-            />
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">صورة البطل (URL أو رفع)</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={formData[SETTINGS_KEYS.HERO_PHOTO_URL] || ""}
+                onChange={(e) => handleChange(SETTINGS_KEYS.HERO_PHOTO_URL, e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                dir="ltr"
+              />
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileUpload(e, SETTINGS_KEYS.HERO_PHOTO_URL)}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  disabled={isUploading}
+                />
+                <button
+                  type="button"
+                  className="h-full px-4 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 rounded-xl flex items-center gap-2 transition-colors"
+                  disabled={isUploading}
+                >
+                  {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -130,8 +180,35 @@ export function AdminSettings() {
               value={formData[SETTINGS_KEYS.ABOUT_DESC] || ""}
               onChange={(e) => handleChange(SETTINGS_KEYS.ABOUT_DESC, e.target.value)}
               rows={4}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
             />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">صورة القسم (URL أو رفع)</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={formData[SETTINGS_KEYS.ABOUT_IMAGE_URL] || ""}
+                onChange={(e) => handleChange(SETTINGS_KEYS.ABOUT_IMAGE_URL, e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                dir="ltr"
+              />
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileUpload(e, SETTINGS_KEYS.ABOUT_IMAGE_URL)}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  disabled={isUploading}
+                />
+                <button
+                  type="button"
+                  className="h-full px-4 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 rounded-xl flex items-center gap-2 transition-colors"
+                  disabled={isUploading}
+                >
+                  {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
