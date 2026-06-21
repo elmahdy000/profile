@@ -9,27 +9,30 @@ export function Hero() {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: { staggerChildren: 0.08 },
+      transition: { staggerChildren: 0.09 },
     },
   };
 
   const item: Variants = {
-    hidden: { opacity: 0, y: 16 },
-    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 260, damping: 25 } },
+    hidden: { opacity: 0, y: 14 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 240, damping: 26 } },
   };
 
   return (
-    <section id="hero" className="relative pt-24 pb-12 lg:pt-36 lg:pb-20 overflow-hidden bg-gradient-to-b from-[#0a0f1d] via-background to-background">
-      {/* Background glow and depth */}
+    <section
+      id="hero"
+      className="relative pt-24 pb-14 lg:pt-32 lg:pb-20 overflow-hidden bg-gradient-to-b from-[#080C18] via-background to-background"
+    >
+      {/* Background glows — reduced intensity */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-primary/8 rounded-full blur-[120px]" />
-        <div className="absolute bottom-10 left-1/4 w-[350px] h-[350px] bg-accent/4 rounded-full blur-[100px]" />
+        <div className="absolute top-1/4 right-1/3 w-[420px] h-[420px] bg-[#D6A84F]/6 rounded-full blur-[130px]" />
+        <div className="absolute bottom-10 left-1/4 w-[280px] h-[280px] bg-[#D6A84F]/4 rounded-full blur-[100px]" />
       </div>
 
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-          
-          {/* Hero Content */}
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+
+          {/* ─── CONTENT (right side / RTL order 2→1) ─── */}
           <motion.div
             variants={container}
             initial="hidden"
@@ -37,40 +40,62 @@ export function Hero() {
             viewport={{ once: true }}
             className="flex flex-col gap-5 order-2 lg:order-1 text-right"
           >
+            {/* Badge */}
             <motion.div variants={item}>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 border border-primary/20 text-primary text-xs sm:text-sm font-bold rounded-full mb-2">
-                <Code className="w-4 h-4" />
-                مدرب برمجة وذكاء اصطناعي — Eduverse، الزقازيق
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#D6A84F]/10 border border-[#D6A84F]/22 text-[#D6A84F] text-xs font-semibold rounded-full">
+                <Code className="w-3.5 h-3.5 shrink-0" />
+                برمجة | AI | Eduverse الزقازيق
               </span>
             </motion.div>
 
-            <motion.h1 variants={item} className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-extrabold leading-tight text-foreground">
+            {/* Headline — reduced size, tighter line-height */}
+            <motion.h1
+              variants={item}
+              className="text-[1.85rem] sm:text-[2.25rem] md:text-4xl lg:text-[2.6rem] xl:text-5xl font-extrabold leading-[1.25] text-[#F8F5EE]"
+            >
               تعلم البرمجة والذكاء الاصطناعي{" "}
-              <span className="text-primary block mt-1">مع د. محمود المهدي</span>
-              <span className="block text-xl sm:text-2xl md:text-3xl mt-3 text-foreground/75 font-semibold">
-                الزقازيق — تدريس الثانوية والبكالوريا والجامعة
+              <span className="text-transparent bg-clip-text bg-gradient-to-l from-[#F2C76E] to-[#D6A84F]">
+                مع د. محمود المهدي
               </span>
             </motion.h1>
 
-            <motion.p variants={item} className="text-base sm:text-lg md:text-xl text-foreground/70 leading-relaxed max-w-2xl">
-              متخصص في تدريس البرمجة لطلاب <strong className="text-foreground/90">الثانوية العامة والبكالوريا</strong> (الصف الأول والثاني والثالث الثانوي)، الأطفال من سن 4 سنين، وطلاب الجامعة. Python، Scratch، AI، C++، ICDL — من الصفر لبناء مشاريع حقيقية.
+            {/* Subheadline */}
+            <motion.p
+              variants={item}
+              className="text-base sm:text-lg text-[#F8F5EE]/60 font-medium leading-relaxed"
+            >
+              للثانوية والبكالوريا والجامعة — شرح عملي من الصفر للمشاريع
             </motion.p>
 
-            {/* CTAs */}
-            <motion.div variants={item} className="flex flex-col sm:flex-row flex-wrap gap-3.5 pt-2">
+            {/* Description — shorter, tighter */}
+            <motion.p
+              variants={item}
+              className="text-sm sm:text-base text-[#A7AFBC] leading-relaxed max-w-lg"
+            >
+              تأسيس برمجة للثانوية العامة والبكالوريا، الأطفال وطلاب الجامعة.{" "}
+              <span className="text-[#F8F5EE]/75">Python, Scratch, C++, ICDL, AI</span> — شرح بسيط وتطبيق عملي في كل حصة.
+            </motion.p>
+
+            {/* CTA Buttons */}
+            <motion.div
+              variants={item}
+              className="flex flex-col sm:flex-row flex-wrap gap-3 pt-1"
+            >
+              {/* Primary — gold gradient, strongest */}
               <Button
                 asChild
                 size="lg"
-                className="bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] hover:from-[#D6A84F] hover:to-[#F2C76E] text-[#070B12] rounded-full px-6 text-base h-13 font-bold shadow-lg shadow-[#D6A84F]/20 hover:shadow-[#D6A84F]/30 transition-all duration-300 w-full sm:w-auto justify-center hover:scale-[1.02]"
+                className="bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] hover:from-[#D6A84F] hover:to-[#F2C76E] text-[#070B12] rounded-full px-7 h-12 text-sm font-bold shadow-lg shadow-[#D6A84F]/20 hover:shadow-[#D6A84F]/30 transition-all duration-300 w-full sm:w-auto justify-center hover:scale-[1.02]"
                 data-testid="button-book-session"
               >
                 <a href="#contact">احجز أول سيشن مجانًا</a>
               </Button>
+
+              {/* Secondary — dark navy, gold border */}
               <Button
                 asChild
-                variant="outline"
                 size="lg"
-                className="bg-[#121A27] text-foreground border border-[#D6A84F]/28 hover:border-[#D6A84F]/60 rounded-full px-6 text-base h-13 w-full sm:w-auto justify-center transition-all duration-300 hover:bg-[#121A27]/85"
+                className="bg-[#0E1520] text-[#F8F5EE]/80 border border-[#D6A84F]/25 hover:border-[#D6A84F]/50 hover:text-[#F8F5EE] rounded-full px-7 h-12 text-sm w-full sm:w-auto justify-center transition-all duration-300"
                 data-testid="button-view-programs"
               >
                 <a href="#courses">
@@ -78,71 +103,81 @@ export function Hero() {
                   <ArrowLeft className="ms-2 w-4 h-4" />
                 </a>
               </Button>
+
+              {/* WhatsApp — softer, outline style */}
               <Button
                 asChild
                 size="lg"
-                className="bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-full px-6 text-base h-13 w-full sm:w-auto justify-center"
+                className="bg-transparent border border-[#25D366]/40 hover:bg-[#25D366]/10 text-[#25D366] rounded-full px-7 h-12 text-sm w-full sm:w-auto justify-center transition-all duration-300"
                 data-testid="button-whatsapp"
               >
                 <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
-                  <MessageCircle className="me-2 w-5 h-5" />
+                  <MessageCircle className="me-2 w-4 h-4" />
                   تواصل واتساب
                 </a>
               </Button>
             </motion.div>
 
-            {/* Trust Badges */}
-            <motion.div variants={item} className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2.5 pt-5 mt-2 border-t border-white/10">
+            {/* Trust badges */}
+            <motion.div
+              variants={item}
+              className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 pt-5 mt-1 border-t border-white/8"
+            >
               {[
                 { text: "ماجستير نظم معلومات", icon: GraduationCap },
                 { text: "خبرة أكاديمية وتدريبية", icon: CheckCircle },
                 { text: "تدريب عملي بمشاريع", icon: Code },
-                { text: "داخل Eduverse بالزقازيق", icon: MapPin }
+                { text: "الزقازيق • أونلاين لكل مصر", icon: MapPin },
               ].map((badge, idx) => (
                 <span
                   key={idx}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-white/5 border border-white/5 text-foreground/80 text-xs sm:text-sm font-medium rounded-xl justify-center sm:justify-start"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white/4 border border-white/6 text-[#A7AFBC] text-xs font-medium rounded-xl justify-center sm:justify-start"
                 >
-                  <badge.icon className="w-4 h-4 text-primary shrink-0" />
+                  <badge.icon className="w-3.5 h-3.5 text-[#D6A84F] shrink-0" />
                   {badge.text}
                 </span>
               ))}
             </motion.div>
           </motion.div>
 
-          {/* Profile Photo Card */}
+          {/* ─── PROFILE PHOTO CARD (left side) ─── */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.96 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="relative mx-auto lg:mx-0 w-full max-w-sm sm:max-w-md order-1 lg:order-2 px-4"
+            transition={{ duration: 0.55, ease: "easeOut" }}
+            className="relative mx-auto lg:mx-0 w-full max-w-[300px] sm:max-w-[340px] order-1 lg:order-2"
           >
-            {/* Subtle glow layers */}
-            <div className="absolute -inset-1 rounded-[2.5rem] bg-gradient-to-tr from-primary/30 to-accent/10 blur-xl opacity-60 pointer-events-none" />
-            <div className="absolute -bottom-4 -left-4 w-28 h-28 bg-primary/20 rounded-full blur-2xl pointer-events-none" />
+            {/* Subtle outer glow — reduced from before */}
+            <div className="absolute -inset-1 rounded-[2rem] bg-gradient-to-tr from-[#D6A84F]/18 to-transparent blur-2xl opacity-70 pointer-events-none" />
 
-            <div className="relative aspect-[4/5] rounded-[2.2rem] overflow-hidden shadow-2xl border border-white/10 group">
+            {/* Photo frame */}
+            <div className="relative aspect-[4/5] rounded-[1.8rem] overflow-hidden shadow-2xl border border-white/8 group">
               <img
                 src={drMahmoudPhoto}
-                alt="د. محمود المهدي"
+                alt="د. محمود المهدي — مدرب برمجة وذكاء اصطناعي"
                 fetchPriority="high"
                 decoding="async"
-                width={480}
-                height={600}
-                className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                width={420}
+                height={525}
+                className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.025]"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-              <div className="absolute bottom-5 right-5 left-5">
-                <div className="bg-background/80 backdrop-blur-md border border-white/10 rounded-2xl p-4 shadow-xl">
-                  <p className="text-primary font-extrabold text-lg">د. محمود المهدي</p>
-                  <p className="text-foreground/80 text-sm mt-0.5 font-medium">ماجستير نظم معلومات | مدرب برمجة وذكاء اصطناعي</p>
+              {/* Gradient overlay — slightly lighter than before */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
+
+              {/* Info card — smaller and more refined */}
+              <div className="absolute bottom-4 right-4 left-4">
+                <div className="bg-[#080C18]/85 backdrop-blur-md border border-white/10 rounded-xl p-3.5 shadow-lg">
+                  <p className="text-[#D6A84F] font-bold text-base leading-tight">د. محمود المهدي</p>
+                  <p className="text-[#A7AFBC] text-xs mt-0.5 leading-snug">
+                    ماجستير نظم معلومات · مدرب برمجة وذكاء اصطناعي
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Decorative outer frame */}
-            <div className="absolute -inset-2 rounded-[2.5rem] border border-primary/15 pointer-events-none" />
+            {/* Thin outer border ring */}
+            <div className="absolute -inset-1.5 rounded-[2rem] border border-[#D6A84F]/12 pointer-events-none" />
           </motion.div>
 
         </div>
