@@ -568,7 +568,7 @@ export default function AdminDashboard() {
                           </span>
                         </div>
                         <p className="text-foreground/90 text-sm font-sans" dir="ltr">{booking.phone}</p>
-                        <p className="text-muted-foreground text-sm bg-background/40 rounded-xl p-3 border border-border/50 mt-2">
+                        <p className="text-muted-foreground text-sm bg-background/40 rounded-xl p-3 border border-border/50 mt-2 whitespace-pre-wrap">
                           {booking.message}
                         </p>
                         <p className="text-slate-600 text-[10px]">

@@ -4,25 +4,25 @@ const socialLinks = [
   {
     icon: Facebook,
     label: "Facebook",
-    href: "https://facebook.com",
+    href: "#",
     color: "hover:text-[#1877F2]"
   },
   {
     icon: Instagram,
     label: "Instagram",
-    href: "https://instagram.com",
+    href: "#",
     color: "hover:text-[#E1306C]"
   },
   {
     icon: Youtube,
     label: "YouTube",
-    href: "https://youtube.com",
+    href: "#",
     color: "hover:text-[#FF0000]"
   },
   {
     icon: Linkedin,
     label: "LinkedIn",
-    href: "https://linkedin.com",
+    href: "#",
     color: "hover:text-[#0A66C2]"
   },
   {
