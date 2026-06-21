@@ -5,7 +5,7 @@ const services = [
   {
     icon: MonitorPlay,
     title: "Programming for Kids",
-    description: "تعليم الأطفال البرمجة بطريقة ممتعة وتفاعلية باستخدام Scratch وPython ومشاريع بسيطة مناسبة للسن.",
+    description: "تعليم الأطفال البرمجة بطريقة ممتعة وتفاعلية باستخدام Scratch و Python ومشاريع بسيطة مناسبة للسن.",
     img: "https://images.unsplash.com/photo-1587620962725-abab7fe55159?w=400&q=70"
   },
   {
@@ -23,14 +23,14 @@ const services = [
   {
     icon: FileText,
     title: "ICDL Skills",
-    description: "تدريب عملي على Word وPowerPoint وExcel لاستخدامهم في الدراسة والشغل والعروض الاحترافية.",
+    description: "تدريب عملي على Word و PowerPoint و Excel لاستخدامهم في الدراسة والشغل والعروض الاحترافية.",
     img: "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=400&q=70"
   },
   {
     icon: GraduationCap,
     title: "University Courses",
-    description: "شرح عملي لمواد C++ وOOP وData Structures وAlgorithms وDatabase وDiscrete Math.",
-    img: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=400&q=70"
+    description: "شرح عملي لمواد C++ و OOP و Data Structures و Algorithms و Database و Discrete Math.",
+    img: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&q=70"
   },
   {
     icon: Code2,

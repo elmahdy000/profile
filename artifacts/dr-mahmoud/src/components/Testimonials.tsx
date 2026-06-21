@@ -24,7 +24,7 @@ const testimonials = [
     initials: "ع"
   },
   {
-    quote: "ابنتي اتعلمت Scratch وPython في 3 شهور وعملت مشروع كامل. الدكتور بيعرف يتعامل مع الأطفال بشكل ممتاز.",
+    quote: "ابنتي اتعلمت Scratch و Python في 3 شهور وعملت مشروع كامل. الدكتور بيعرف يتعامل مع الأطفال بشكل ممتاز.",
     author: "أبو يوسف",
     role: "ولي أمر — Kids Package",
     stars: 5,

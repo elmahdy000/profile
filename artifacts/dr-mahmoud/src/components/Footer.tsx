@@ -1,4 +1,4 @@
-import { Facebook, Instagram, Linkedin, Youtube, MessageCircle } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Youtube, MessageCircle, Phone, MapPin } from "lucide-react";
 
 const socialLinks = [
   {
@@ -84,19 +84,43 @@ export function Footer() {
             </ul>
           </div>
 
-          <div className="text-center md:text-left">
+          <div className="text-center md:text-right">
             <h3 className="font-bold text-white mb-4 text-sm uppercase tracking-wider">تواصل معنا</h3>
-            <div className="space-y-2 text-sm text-white/45">
-              <p dir="ltr">📞 01044348610</p>
-              <p dir="ltr">📞 01066711545</p>
-              <p dir="ltr">📞 01272047933</p>
-              <p className="mt-3">📍 Eduverse، فلل الجامعة، الزقازيق</p>
+            <div className="space-y-3 text-sm text-white/45 flex flex-col items-center md:items-start">
+              <a
+                href="tel:+201044348610"
+                className="flex items-center gap-2 hover:text-primary transition-colors"
+                dir="ltr"
+              >
+                <Phone className="w-4 h-4 text-primary shrink-0" />
+                <span>01044348610</span>
+              </a>
+              <a
+                href="tel:+201066711545"
+                className="flex items-center gap-2 hover:text-primary transition-colors"
+                dir="ltr"
+              >
+                <Phone className="w-4 h-4 text-primary shrink-0" />
+                <span>01066711545</span>
+              </a>
+              <a
+                href="tel:+201272047933"
+                className="flex items-center gap-2 hover:text-primary transition-colors"
+                dir="ltr"
+              >
+                <Phone className="w-4 h-4 text-primary shrink-0" />
+                <span>01272047933</span>
+              </a>
+              <div className="mt-2 flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-primary shrink-0" />
+                <span>Eduverse، فلل الجامعة، الزقازيق</span>
+              </div>
             </div>
             <a
               href="https://wa.me/201044348610"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-[#25D366]/10 border border-[#25D366]/20 text-[#25D366] text-sm font-bold rounded-full hover:bg-[#25D366]/20 transition-colors"
+              className="inline-flex items-center gap-2 mt-5 px-5 py-2.5 bg-[#25D366]/10 border border-[#25D366]/20 text-[#25D366] text-sm font-bold rounded-full hover:bg-[#25D366] hover:text-white transition-all duration-300"
             >
               <MessageCircle className="w-4 h-4" />
               احجز مجانًا على واتساب

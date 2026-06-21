@@ -49,12 +49,12 @@ const faqs = [
     a: "أيوه، د. محمود المهدي متخصص في شرح كل مواد قسم حاسبات ومعلومات: C++، Java، OOP، Data Structures، Algorithms، Database، SQL، Discrete Math، Operating Systems. الشرح أونلاين لكل الجامعات في مصر."
   },
   {
-    q: "هل في تدريس Flutter وAndroid لبناء تطبيقات موبايل؟",
-    a: "أيوه، متاح كورس Flutter Development لبناء تطبيقات iOS وAndroid باستخدام Dart وFlutter، وكورس Android Native بـ Java وKotlin. الكورسات متاحة حضوريًا في الزقازيق وأونلاين لكل مصر."
+    q: "هل في تدريس Flutter و Android لبناء تطبيقات موبايل؟",
+    a: "أيوه، متاح كورس Flutter Development لبناء تطبيقات iOS و Android باستخدام Dart و Flutter، وكورس Android Native بـ Java و Kotlin. الكورسات متاحة حضوريًا في الزقازيق وأونلاين لكل مصر."
   },
   {
-    q: "هل بيتم تدريس مواد الجامعة زي Data Structures وAlgorithms؟",
-    a: "أيوه، بندرّس C++، OOP، Data Structures، Algorithms، Database، وDiscrete Math لطلاب الجامعة. لو عندك مادة تانية تواصل معنا ونشوف إمكانية تغطيتها."
+    q: "هل بيتم تدريس مواد الجامعة زي Data Structures و Algorithms؟",
+    a: "أيوه، بندرّس C++، OOP، Data Structures، Algorithms، Database، و Discrete Math لطلاب الجامعة. لو عندك مادة تانية تواصل معنا ونشوف إمكانية تغطيتها."
   }
 ];
 
