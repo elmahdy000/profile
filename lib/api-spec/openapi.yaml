@@ -15,7 +15,70 @@ tags:
     description: Podcast operations
   - name: courses
     description: Course operations
+  - name: settings
+    description: Site settings operations
 paths:
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      summary: Get all settings
+      description: Returns all site settings as a key-value map
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: "#/components/schemas/SiteSetting"
+    post:
+      operationId: setSetting
+      tags: [settings]
+      summary: Update setting
+      description: Update or create a site setting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsertSiteSetting"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiteSettingModel"
+  /settings/batch:
+    put:
+      operationId: updateSettingsBatch
+      tags: [settings]
+      summary: Update settings batch
+      description: Update multiple settings at once
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                settings:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/InsertSiteSetting"
+              required:
+                - settings
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SiteSettingModel"
   /healthz:
     get:
       operationId: healthCheck
@@ -428,3 +491,41 @@ components:
         - category
         - tags
         - img
+    InsertSiteSetting:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+          nullable: true
+        type:
+          type: string
+      required:
+        - key
+    SiteSetting:
+      type: object
+      properties:
+        value:
+          type: string
+          nullable: true
+        type:
+          type: string
+    SiteSettingModel:
+      type: object
+      properties:
+        id:
+          type: integer
+        key:
+          type: string
+        value:
+          type: string
+          nullable: true
+        type:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - key
+        - updatedAt

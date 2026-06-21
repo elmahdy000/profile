@@ -1,10 +1,19 @@
 import { motion, Variants } from "framer-motion";
 import { MessageCircle, ArrowLeft, GraduationCap, Code, CheckCircle, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
 
-const drMahmoudPhoto = "/dr-mahmoud-photo.png";
+const drMahmoudPhotoDefault = "/dr-mahmoud-photo.png";
 
 export function Hero() {
+  const { get } = useSiteSettings();
+  
+  const title = get(SETTINGS_KEYS.HERO_TITLE, "تعلم البرمجة والذكاء الاصطناعي");
+  const subtitle = get(SETTINGS_KEYS.HERO_SUBTITLE, "مع د. محمود المهدي");
+  const desc = get(SETTINGS_KEYS.HERO_DESC, "تأسيس برمجة للثانوية العامة والبكالوريا، الأطفال وطلاب الجامعة.");
+  const badge = get(SETTINGS_KEYS.HERO_BADGE, "برمجة | AI | Eduverse الزقازيق");
+  const photo = get(SETTINGS_KEYS.HERO_PHOTO_URL, drMahmoudPhotoDefault);
+  const whatsapp = get(SETTINGS_KEYS.CONTACT_WHATSAPP, "201044348610");
   const container: Variants = {
     hidden: { opacity: 0 },
     show: {
@@ -44,7 +53,7 @@ export function Hero() {
             <motion.div variants={item}>
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#D6A84F]/10 border border-[#D6A84F]/22 text-[#D6A84F] text-xs font-semibold rounded-full">
                 <Code className="w-3.5 h-3.5 shrink-0" />
-                برمجة | AI | Eduverse الزقازيق
+                {badge}
               </span>
             </motion.div>
 
@@ -53,9 +62,9 @@ export function Hero() {
               variants={item}
               className="text-[1.85rem] sm:text-[2.25rem] md:text-4xl lg:text-[2.6rem] xl:text-5xl font-extrabold leading-[1.25] text-[#F8F5EE]"
             >
-              تعلم البرمجة والذكاء الاصطناعي{" "}
+              {title}{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-l from-[#F2C76E] to-[#D6A84F]">
-                مع د. محمود المهدي
+                {subtitle}
               </span>
             </motion.h1>
 
@@ -70,10 +79,9 @@ export function Hero() {
             {/* Description — shorter, tighter */}
             <motion.p
               variants={item}
-              className="text-sm sm:text-base text-[#A7AFBC] leading-relaxed max-w-lg"
+              className="text-sm sm:text-base text-[#A7AFBC] leading-relaxed max-w-lg whitespace-pre-wrap"
             >
-              تأسيس برمجة للثانوية العامة والبكالوريا، الأطفال وطلاب الجامعة.{" "}
-              <span className="text-[#F8F5EE]/75">Python, Scratch, C++, ICDL, AI</span> — شرح بسيط وتطبيق عملي في كل حصة.
+              {desc}
             </motion.p>
 
             {/* CTA Buttons */}
@@ -111,7 +119,7 @@ export function Hero() {
                 className="bg-transparent border border-[#25D366]/40 hover:bg-[#25D366]/10 text-[#25D366] rounded-full px-7 h-12 text-sm w-full sm:w-auto justify-center transition-all duration-300"
                 data-testid="button-whatsapp"
               >
-                <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
+                <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noreferrer">
                   <MessageCircle className="me-2 w-4 h-4" />
                   تواصل واتساب
                 </a>
@@ -154,7 +162,7 @@ export function Hero() {
             {/* Photo frame */}
             <div className="relative aspect-[4/5] rounded-[1.8rem] overflow-hidden shadow-2xl border border-white/8 group">
               <img
-                src={drMahmoudPhoto}
+                src={photo}
                 alt="د. محمود المهدي — مدرب برمجة وذكاء اصطناعي"
                 fetchPriority="high"
                 decoding="async"

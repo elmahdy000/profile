@@ -33,7 +33,9 @@ import {
   Loader2,
   ExternalLink,
   ChevronRight,
+  Settings,
 } from "lucide-react";
+import { AdminSettings } from "./AdminSettings";
 
 export default function AdminDashboard() {
   const queryClient = useQueryClient();
@@ -41,7 +43,7 @@ export default function AdminDashboard() {
   const [passwordInput, setPasswordInput] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [authError, setAuthError] = useState("");
-  const [activeTab, setActiveTab] = useState<"bookings" | "courses" | "podcasts">("bookings");
+  const [activeTab, setActiveTab] = useState<"bookings" | "courses" | "podcasts" | "settings">("bookings");
 
   // Local storage cache for the admin session
   useEffect(() => {
@@ -515,6 +517,18 @@ export default function AdminDashboard() {
               <Mic className="w-5 h-5" />
               <span>البودكاست</span>
             </button>
+
+            <button
+              onClick={() => setActiveTab("settings")}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right text-sm font-medium transition-all ${
+                activeTab === "settings"
+                  ? "bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/10"
+                  : "hover:bg-muted/60 text-muted-foreground hover:text-foreground/80"
+              }`}
+            >
+              <Settings className="w-5 h-5" />
+              <span>إعدادات الموقع</span>
+            </button>
           </div>
         </aside>
 
@@ -768,6 +782,8 @@ export default function AdminDashboard() {
               )}
             </div>
           )}
+
+          {activeTab === "settings" && <AdminSettings />}
         </main>
       </div>
 

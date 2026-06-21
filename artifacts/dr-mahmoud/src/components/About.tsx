@@ -1,13 +1,7 @@
 import { motion, useInView } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
-
-const stats = [
-  { end: 5, prefix: "+", suffix: "", label: "سنوات خبرة" },
-  { end: 200, prefix: "+", suffix: "", label: "طالب متخرج" },
-  { end: 6, prefix: "", suffix: "", label: "مسارات تدريبية" },
-  { end: 100, prefix: "", suffix: "%", label: "تدريب عملي" },
-];
+import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
 
 function CountUp({ end, prefix, suffix }: { end: number; prefix: string; suffix: string }) {
   const [count, setCount] = useState(0);
@@ -39,6 +33,19 @@ function CountUp({ end, prefix, suffix }: { end: number; prefix: string; suffix:
 }
 
 export function About() {
+  const { get } = useSiteSettings();
+  
+  const desc = get(SETTINGS_KEYS.ABOUT_DESC, "د. محمود المهدي، ماجستير نظم معلومات، ومدرب برمجة وذكاء اصطناعي. بيقدم محتوى تعليمي عملي للطلاب والأطفال وطلاب الجامعة، بأسلوب بسيط ومنظم بعيد عن الحفظ والتلقين. الهدف إن الطالب يفهم، يطبق، ويطلع بمشروع حقيقي يقدر يفتخر بيه.");
+  const years = parseInt(get(SETTINGS_KEYS.ABOUT_YEARS, "5"));
+  const students = parseInt(get(SETTINGS_KEYS.ABOUT_STUDENTS, "200"));
+  
+  const stats = [
+    { end: years, prefix: "+", suffix: "", label: "سنوات خبرة" },
+    { end: students, prefix: "+", suffix: "", label: "طالب متخرج" },
+    { end: 6, prefix: "", suffix: "", label: "مسارات تدريبية" },
+    { end: 100, prefix: "", suffix: "%", label: "تدريب عملي" },
+  ];
+
   const points = [
     "ماجستير نظم معلومات",
     "مدرب برمجة وذكاء اصطناعي",
@@ -90,8 +97,8 @@ export function About() {
           >
             <span className="text-primary font-bold text-sm uppercase tracking-wider mb-4 block">من هو الدكتور؟</span>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">مين د. محمود المهدي؟</h2>
-            <p className="text-lg text-foreground/60 leading-relaxed mb-10">
-              د. محمود المهدي، ماجستير نظم معلومات، ومدرب برمجة وذكاء اصطناعي. بيقدم محتوى تعليمي عملي للطلاب والأطفال وطلاب الجامعة، بأسلوب بسيط ومنظم بعيد عن الحفظ والتلقين. الهدف إن الطالب يفهم، يطبق، ويطلع بمشروع حقيقي يقدر يفتخر بيه.
+            <p className="text-lg text-foreground/60 leading-relaxed mb-10 whitespace-pre-wrap">
+              {desc}
             </p>
 
             <motion.div

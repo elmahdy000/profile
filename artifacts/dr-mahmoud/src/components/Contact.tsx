@@ -3,6 +3,7 @@ import { MessageCircle, Phone, MapPin, Send, CheckCircle2, ChevronDown } from "l
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useCreateBooking } from "@workspace/api-client-react";
+import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
 
 export function Contact() {
   const [form, setForm] = useState({
@@ -15,6 +16,12 @@ export function Contact() {
   });
   const [submitted, setSubmitted] = useState(false);
   const { mutateAsync: createBooking, isPending } = useCreateBooking();
+  const { get } = useSiteSettings();
+
+  const whatsapp = get(SETTINGS_KEYS.CONTACT_WHATSAPP, "201044348610");
+  const phone1 = get(SETTINGS_KEYS.CONTACT_PHONE1, "01066711545");
+  const phone2 = get(SETTINGS_KEYS.CONTACT_PHONE2, "01272047933");
+  const address = get(SETTINGS_KEYS.CONTACT_ADDRESS, "Eduverse، فلل الجامعة، الزقازيق");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +43,7 @@ export function Contact() {
     const text = encodeURIComponent(
       `مرحبًا د. محمود 👋\n\nأود حجز تقييم مجاني:\n- الاسم الكامل: ${form.name}\n- رقم الهاتف: ${form.phone}\n- سن الطالب: ${form.age || "غير محدد"}\n- المرحلة الدراسية: ${form.grade || "غير محدد"}\n- البرنامج المختار: ${form.program}\n- رسالة إضافية: ${form.message || "لا توجد"}`
     );
-    window.open(`https://wa.me/201044348610?text=${text}`, "_blank");
+    window.open(`https://wa.me/${whatsapp}?text=${text}`, "_blank");
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);
@@ -194,7 +201,7 @@ export function Contact() {
             >
               {/* WhatsApp Card */}
               <a
-                href="https://wa.me/201044348610"
+                href={`https://wa.me/${whatsapp}`}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-4 p-5 rounded-2xl bg-card border border-white/5 hover:border-[#25D366]/40 transition-all duration-300 group block relative"
@@ -205,14 +212,14 @@ export function Contact() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-foreground/45 mb-0.5">واتساب</p>
-                  <p className="font-bold text-lg text-foreground group-hover:text-[#25D366] transition-colors" dir="ltr">01044348610</p>
+                  <p className="font-bold text-lg text-foreground group-hover:text-[#25D366] transition-colors" dir="ltr">{whatsapp}</p>
                 </div>
                 <span className="text-xs font-bold text-[#25D366] bg-[#25D366]/10 px-2.5 py-1 rounded-lg">تواصل واتساب</span>
               </a>
 
               {/* Calls Card */}
               <a
-                href="tel:+201066711545"
+                href={`tel:+2${phone1}`}
                 className="flex items-center gap-4 p-5 rounded-2xl bg-card border border-white/5 hover:border-primary/40 transition-all duration-300 group block relative"
               >
                 <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
@@ -220,15 +227,15 @@ export function Contact() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-foreground/45 mb-0.5">مكالمات هاتفية</p>
-                  <p className="font-bold text-lg text-foreground group-hover:text-primary transition-colors" dir="ltr">01066711545</p>
-                  <p className="text-sm text-foreground/60" dir="ltr">01272047933</p>
+                  <p className="font-bold text-lg text-foreground group-hover:text-primary transition-colors" dir="ltr">{phone1}</p>
+                  <p className="text-sm text-foreground/60" dir="ltr">{phone2}</p>
                 </div>
                 <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-lg">اتصل الآن</span>
               </a>
 
               {/* Location Card */}
               <a
-                href="https://maps.google.com/?q=Eduverse،+فلل+الجامعة،+الزقازيق"
+                href={`https://maps.google.com/?q=${encodeURIComponent(address)}`}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-4 p-5 rounded-2xl bg-card border border-white/5 hover:border-primary/40 transition-all duration-300 group block"
@@ -239,7 +246,7 @@ export function Contact() {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-foreground/45 mb-0.5">المقر الرئيسي</p>
                   <p className="font-bold text-sm md:text-base text-foreground group-hover:text-primary transition-colors">
-                    Eduverse، فلل الجامعة، الزقازيق
+                    {address}
                   </p>
                 </div>
                 <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded">عرض الخريطة</span>
