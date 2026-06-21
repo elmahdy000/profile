@@ -4,137 +4,205 @@ import { Button } from "@/components/ui/button";
 
 const plans = [
   {
+    id: "kids",
     name: "Kids Package",
     subtitle: "للأطفال من 4 إلى 18 سنة",
-    price: "تواصل للسعر",
-    note: "حسب العمر والمستوى",
-    color: "border-white/10",
+    headline: "تعلم البرمجة بطريقة ممتعة",
+    desc: null,
     badge: null,
+    featured: false,
     features: [
-      "Scratch + Python مبسّط",
-      "مشاريع إبداعية",
+      "Scratch + Python مبسط",
+      "مشاريع صغيرة",
       "حصص أسبوعية",
-      "تقرير تقدم للوالدين",
-      "أول سيشن مجانًا"
-    ]
+      "متابعة للوالدين",
+      "أول سيشن تقييم مجانًا",
+    ],
   },
   {
+    id: "bac",
+    name: "تأسيس البكالوريا",
+    subtitle: "للصف الأول والثاني والثالث الثانوي",
+    headline: "ابدأ صح من الأول",
+    desc: "شرح عملي للبرمجة خطوة بخطوة بدون تعقيد.",
+    badge: "مناسب للبكالوريا",
+    featured: true,
+    features: [
+      "أساسيات البرمجة",
+      "Python خطوة بخطوة",
+      "حل تدريبات عملية",
+      "متابعة مستوى الطالب",
+      "تجهيز للامتحانات",
+      "أول سيشن تقييم مجانًا",
+    ],
+  },
+  {
+    id: "ai",
     name: "Python & AI Track",
-    subtitle: "من الصفر للمشاريع الحقيقية",
-    price: "تواصل للسعر",
-    note: "أفضل قيمة",
-    color: "border-primary/60",
-    badge: "الأكثر طلبًا",
+    subtitle: "من الصفر للمشاريع",
+    headline: "تعلم عملي بمشروع حقيقي",
+    desc: null,
+    badge: null,
+    featured: false,
     features: [
       "Python من الأساس",
       "ذكاء اصطناعي تطبيقي",
-      "مشروع حقيقي في النهاية",
-      "حصص عملية 100%",
-      "أول سيشن مجانًا"
-    ]
+      "تدريبات عملية",
+      "مشروع في النهاية",
+      "أول سيشن تقييم مجانًا",
+    ],
   },
   {
+    id: "uni",
     name: "University Support",
-    subtitle: "طلاب الجامعة والبكالوريا",
-    price: "تواصل للسعر",
-    note: "جلسات فردية أو جروب",
-    color: "border-white/10",
+    subtitle: "لطلاب الجامعة",
+    headline: "شرح عملي للمواد الصعبة",
+    desc: null,
     badge: null,
+    featured: false,
     features: [
       "C++ / OOP / Data Structures",
       "Algorithms & Database",
       "Discrete Math",
       "تحضير للامتحانات",
-      "أول سيشن مجانًا"
-    ]
-  }
+      "جلسات فردية أو جروب",
+      "أول سيشن تقييم مجانًا",
+    ],
+  },
 ];
 
 export function Pricing() {
   return (
-    <section id="pricing" className="py-20 lg:py-24 bg-background relative overflow-hidden">
+    <section id="pricing" className="py-20 lg:py-28 bg-background relative overflow-hidden">
+      {/* Subtle background glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-primary/5 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-[#D6A84F]/6 rounded-full blur-[140px]" />
       </div>
 
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-6"
+          className="text-center mb-14"
         >
-          <span className="text-primary font-bold text-sm uppercase tracking-wider mb-4 block">الأسعار</span>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">اختار البرنامج المناسب</h2>
-          <p className="text-foreground/50 text-lg max-w-xl mx-auto">
-            الأسعار مرنة ومتفق عليها حسب البرنامج والمستوى — تواصل معنا واحجز أول سيشن مجانًا
+          <span className="text-primary font-bold text-sm uppercase tracking-wider mb-3 block">
+            المسارات
+          </span>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+            اختار المسار اللي يناسبك
+          </h2>
+          <p className="text-foreground/50 text-base max-w-lg mx-auto leading-relaxed">
+            أول سيشن تقييم مجانية علشان نحدد المستوى والخطة المناسبة.
           </p>
-          <div className="w-24 h-0.5 bg-primary mx-auto rounded-full mt-4" />
+          <div className="w-20 h-0.5 bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] mx-auto rounded-full mt-5" />
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mt-12">
+        {/* Cards grid — 4 cols on lg, 2 on md, 1 on mobile */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 max-w-6xl mx-auto">
           {plans.map((plan, index) => (
             <motion.div
-              key={plan.name}
-              initial={{ opacity: 0, y: 24 }}
+              key={plan.id}
+              initial={{ opacity: 0, y: 28 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className={`relative bg-card border-2 ${plan.color} rounded-3xl p-7 flex flex-col hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 ${plan.badge ? "scale-[1.02]" : ""}`}
+              transition={{ delay: index * 0.08 }}
+              className={`relative flex flex-col rounded-2xl p-6 transition-all duration-300 ${
+                plan.featured
+                  ? "bg-gradient-to-b from-[#1A1400] to-[#121A27] border-2 border-[#D6A84F]/50 shadow-xl shadow-[#D6A84F]/10 ring-1 ring-[#D6A84F]/20"
+                  : "bg-[#0E1520] border border-white/8 hover:border-[#D6A84F]/30 hover:shadow-lg hover:shadow-[#D6A84F]/5"
+              }`}
             >
+              {/* Featured badge */}
               {plan.badge && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="px-4 py-1.5 bg-primary text-primary-foreground text-xs font-bold rounded-full shadow-lg shadow-primary/30">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10">
+                  <span className="px-4 py-1 bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] text-[#070B12] text-xs font-bold rounded-full shadow-md whitespace-nowrap">
                     {plan.badge}
                   </span>
                 </div>
               )}
 
-              <div className="mb-6">
-                <h3 className="text-xl font-bold text-foreground mb-1">{plan.name}</h3>
-                <p className="text-sm text-foreground/50">{plan.subtitle}</p>
+              {/* Card header */}
+              <div className={`mb-5 ${plan.badge ? "mt-3" : ""}`}>
+                <h3
+                  className={`text-lg font-bold mb-1 ${
+                    plan.featured ? "text-[#F2C76E]" : "text-foreground"
+                  }`}
+                >
+                  {plan.name}
+                </h3>
+                <p className="text-xs text-foreground/45 mb-3">{plan.subtitle}</p>
+
+                {/* Headline value line */}
+                <p
+                  className={`text-sm font-semibold leading-snug ${
+                    plan.featured ? "text-[#D6A84F]" : "text-foreground/75"
+                  }`}
+                >
+                  {plan.headline}
+                </p>
+
+                {/* Optional short description */}
+                {plan.desc && (
+                  <p className="text-xs text-foreground/40 mt-2 leading-relaxed">
+                    {plan.desc}
+                  </p>
+                )}
               </div>
 
-              <div className="mb-6 pb-6 border-b border-white/10">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold text-primary">{plan.price}</span>
-                </div>
-                <p className="text-xs text-foreground/40 mt-1">{plan.note}</p>
-              </div>
+              {/* Divider */}
+              <div
+                className={`w-full h-px mb-5 ${
+                  plan.featured
+                    ? "bg-gradient-to-r from-transparent via-[#D6A84F]/30 to-transparent"
+                    : "bg-white/6"
+                }`}
+              />
 
-              <ul className="space-y-3 flex-grow mb-8">
+              {/* Features list */}
+              <ul className="space-y-2.5 flex-grow mb-7">
                 {plan.features.map((f) => (
-                  <li key={f} className="flex items-center gap-3 text-sm text-foreground/70">
-                    <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                  <li
+                    key={f}
+                    className="flex items-center gap-2.5 text-xs text-foreground/65"
+                  >
+                    <CheckCircle2
+                      className={`w-3.5 h-3.5 shrink-0 ${
+                        plan.featured ? "text-[#D6A84F]" : "text-primary/60"
+                      }`}
+                    />
                     {f}
                   </li>
                 ))}
               </ul>
 
+              {/* CTA Button */}
               <Button
                 asChild
-                className={`w-full font-bold transition-all duration-300 ${
-                  plan.badge
+                className={`w-full font-bold text-sm transition-all duration-300 ${
+                  plan.featured
                     ? "bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] hover:from-[#D6A84F] hover:to-[#F2C76E] text-[#070B12] shadow-lg shadow-[#D6A84F]/20 hover:scale-[1.01]"
-                    : "bg-[#121A27] text-foreground border border-[#D6A84F]/28 hover:border-[#D6A84F]/60 hover:bg-[#121A27]/80"
+                    : "bg-transparent text-primary border border-[#D6A84F]/30 hover:border-[#D6A84F]/60 hover:bg-[#D6A84F]/6"
                 }`}
               >
                 <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
                   <MessageCircle className="w-4 h-4 me-2" />
-                  احجز مجانًا
+                  احجز تقييم مجاني
                 </a>
               </Button>
             </motion.div>
           ))}
         </div>
 
+        {/* Bottom note */}
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-center text-foreground/35 text-sm mt-10"
+          className="text-center text-foreground/30 text-xs mt-10"
         >
-          ✅ أول سيشن مجانًا في كل البرامج — بدون التزام
+          السعر يُحدد بعد جلسة التقييم المجانية حسب المستوى والبرنامج
         </motion.p>
       </div>
     </section>
