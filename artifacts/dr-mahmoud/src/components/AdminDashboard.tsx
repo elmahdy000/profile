@@ -229,6 +229,41 @@ export default function AdminDashboard() {
       setIsUploadingImage(false);
     }
   };
+  // Audio Upload handler for podcasts
+  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
+
+  const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingAudio(true);
+    const formData = new FormData();
+    formData.append("audio", file);
+
+    try {
+      const response = await fetch("/api/upload/audio", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("dr_mahmoud_admin_pwd") || ""}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to upload audio");
+      }
+
+      const data = await response.json();
+      if (data.url) {
+        setPodcastForm((prev) => ({ ...prev, audioUrl: data.url }));
+      }
+    } catch (err: any) {
+      alert(err.message || "حدث خطأ أثناء تحميل الملف الصوتي. يرجى التأكد من أن الملف بصيغة صوتية مناسبة (مثل MP3) وبحجم أقل من 150 ميجابايت.");
+    } finally {
+      setIsUploadingAudio(false);
+    }
+  };
 
   // Submit Course Form
   const handleCourseSubmit = async (e: React.FormEvent) => {
@@ -989,15 +1024,53 @@ export default function AdminDashboard() {
                   />
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-muted-foreground mb-1">رابط ملف الصوت MP3 (اختياري)</label>
-                  <input
-                    type="text"
-                    value={podcastForm.audioUrl}
-                    onChange={(e) => setPodcastForm({ ...podcastForm, audioUrl: e.target.value })}
-                    placeholder="https://domain.com/audio.mp3"
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
-                  />
+                <div className="md:col-span-2 space-y-2">
+                  <label className="block text-xs font-semibold text-muted-foreground">ملف الصوت للحلقة</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <span className="block text-[10px] text-slate-500 mb-1">خيار 1: تحميل ملف صوتي من جهازك</span>
+                      <div className="relative border border-dashed border-border hover:border-primary/50 rounded-xl p-3 bg-background/40 transition-colors flex flex-col items-center justify-center min-h-[90px]">
+                        {isUploadingAudio ? (
+                          <div className="flex flex-col items-center gap-2">
+                            <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                            <span className="text-xs text-muted-foreground">جاري الرفع...</span>
+                          </div>
+                        ) : (
+                          <>
+                            <input
+                              type="file"
+                              accept="audio/*"
+                              onChange={handleAudioUpload}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            />
+                            <span className="text-xs text-muted-foreground text-center">انقر هنا أو اسحب الملف لرفعه</span>
+                            <span className="text-[10px] text-slate-600 mt-1">MP3, WAV حتى 150MB</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] text-slate-500 mb-1">خيار 2: رابط ملف صوتي مباشر</span>
+                      <input
+                        type="text"
+                        value={podcastForm.audioUrl}
+                        onChange={(e) => setPodcastForm({ ...podcastForm, audioUrl: e.target.value })}
+                        placeholder="https://domain.com/audio.mp3"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary text-sm h-[90px]"
+                      />
+                    </div>
+                  </div>
+                  {podcastForm.audioUrl && (
+                    <div className="flex items-center gap-3 p-2 bg-background/20 border border-border rounded-xl mt-2">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                        <Mic className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="block text-xs font-semibold text-foreground/90 truncate">{podcastForm.audioUrl}</span>
+                        <span className="block text-[10px] text-green-400">تم اختيار الملف الصوتي بنجاح</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

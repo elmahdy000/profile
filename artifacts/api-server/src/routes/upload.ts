@@ -24,9 +24,9 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({
+const imageUpload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit for images
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith("image/")) {
       cb(null, true);
@@ -34,9 +34,35 @@ const upload = multer({
       cb(new Error("Only images are allowed"));
     }
   },
+}).single("image");
+
+const audioUpload = multer({
+  storage,
+  limits: { fileSize: 150 * 1024 * 1024 }, // 150MB limit for audio
+  fileFilter: (req, file, cb) => {
+    // Allow various audio formats
+    const isAudioMime = file.mimetype.startsWith("audio/");
+    const isAudioExt = /\.(mp3|wav|m4a|ogg|aac|flac)$/i.test(file.originalname);
+    if (isAudioMime || isAudioExt) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only audio files are allowed (.mp3, .wav, .m4a, .ogg, .aac, .flac)"));
+    }
+  },
+}).single("audio");
+
+// Image upload route
+router.post("/upload", requireAdmin, imageUpload, (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: "No file uploaded" });
+  }
+
+  const fileUrl = `/uploads/${req.file.filename}`;
+  return res.json({ url: fileUrl });
 });
 
-router.post("/upload", requireAdmin, upload.single("image"), (req, res) => {
+// Audio upload route
+router.post("/upload/audio", requireAdmin, audioUpload, (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded" });
   }
