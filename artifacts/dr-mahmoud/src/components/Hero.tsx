@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion, Variants } from "framer-motion";
 import { MessageCircle, ArrowLeft, GraduationCap, Code, CheckCircle, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
 const drMahmoudPhotoDefault = "/dr-mahmoud-photo.png";
 
 export function Hero() {
+  const [imageError, setImageError] = useState(false);
   const { get } = useSiteSettings();
   
   const title = get(SETTINGS_KEYS.HERO_TITLE, "تعلم البرمجة والذكاء الاصطناعي");
@@ -160,22 +162,31 @@ export function Hero() {
             <div className="absolute -inset-1 rounded-[2rem] bg-gradient-to-tr from-[#D6A84F]/18 to-transparent blur-2xl opacity-70 pointer-events-none" />
 
             {/* Photo frame */}
-            <div className="relative aspect-[4/5] rounded-[1.8rem] overflow-hidden shadow-2xl border border-white/8 group">
-              <img
-                src={photo}
-                alt="د. محمود المهدي — مدرب برمجة وذكاء اصطناعي"
-                fetchPriority="high"
-                decoding="async"
-                width={420}
-                height={525}
-                className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.025]"
-              />
-              {/* Gradient overlay — slightly lighter than before */}
+            <div className="relative aspect-[4/5] rounded-[1.8rem] overflow-hidden shadow-2xl border border-[#D6A84F]/10 group bg-[#080C18] flex items-center justify-center">
+              {!imageError ? (
+                <img
+                  src={photo}
+                  alt="د. محمود المهدي — مدرب برمجة وذكاء اصطناعي"
+                  fetchPriority="high"
+                  decoding="async"
+                  width={420}
+                  height={525}
+                  onError={() => setImageError(true)}
+                  className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.025]"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-[#080C18] to-[#0A0F1D]">
+                  <div className="w-24 h-24 rounded-full bg-[#D6A84F]/10 border border-[#D6A84F]/20 flex items-center justify-center mb-6">
+                    <span className="text-4xl font-bold text-[#D6A84F]">م</span>
+                  </div>
+                </div>
+              )}
+              {/* Gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
 
               {/* Info card — smaller and more refined */}
               <div className="absolute bottom-4 right-4 left-4">
-                <div className="bg-[#080C18]/85 backdrop-blur-md border border-white/10 rounded-xl p-3.5 shadow-lg">
+                <div className="bg-[#080C18]/85 backdrop-blur-md border border-[#D6A84F]/20 rounded-xl p-3.5 shadow-lg">
                   <p className="text-[#D6A84F] font-bold text-base leading-tight">د. محمود المهدي</p>
                   <p className="text-[#A7AFBC] text-xs mt-0.5 leading-snug">
                     ماجستير نظم معلومات · مدرب برمجة وذكاء اصطناعي

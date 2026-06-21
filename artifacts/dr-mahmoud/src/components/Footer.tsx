@@ -16,50 +16,28 @@ export function Footer() {
   const linkedin = get(SETTINGS_KEYS.SOCIAL_LINKEDIN, "#");
 
   const socialLinks = [
-    {
-      icon: Facebook,
-      label: "Facebook",
-      href: facebook,
-      color: "hover:text-[#1877F2]"
-    },
-    {
-      icon: Instagram,
-      label: "Instagram",
-      href: instagram,
-      color: "hover:text-[#E1306C]"
-    },
-    {
-      icon: Youtube,
-      label: "YouTube",
-      href: youtube,
-      color: "hover:text-[#FF0000]"
-    },
-    {
-      icon: Linkedin,
-      label: "LinkedIn",
-      href: linkedin,
-      color: "hover:text-[#0A66C2]"
-    },
-    {
-      icon: MessageCircle,
-      label: "WhatsApp",
-      href: `https://wa.me/${whatsapp}`,
-      color: "hover:text-[#25D366]"
-    },
+    { icon: Facebook, label: "Facebook", href: facebook, color: "hover:text-[#D6A84F]" },
+    { icon: Instagram, label: "Instagram", href: instagram, color: "hover:text-[#D6A84F]" },
+    { icon: Youtube, label: "YouTube", href: youtube, color: "hover:text-[#D6A84F]" },
+    { icon: Linkedin, label: "LinkedIn", href: linkedin, color: "hover:text-[#D6A84F]" },
   ];
 
   return (
-    <footer className="bg-background text-white/70 py-10 border-t border-white/10">
+    <footer className="bg-[#080C18] text-white/70 pt-12 pb-24 md:pb-8 border-t border-white/10 relative z-10">
       <div className="container mx-auto px-4 lg:px-8">
-        <div className="grid md:grid-cols-3 gap-8 mb-8">
-          <div className="text-center md:text-right">
-            <div className="flex items-center gap-2 justify-center md:justify-start mb-3">
-              <div className="w-9 h-9 bg-primary text-primary-foreground rounded-lg flex items-center justify-center font-bold text-lg">م</div>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-8 mb-10 text-right">
+          
+          {/* Right Column: Brand (takes up 5 cols) */}
+          <div className="md:col-span-5 flex flex-col order-1">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-[#D6A84F]/10 border border-[#D6A84F]/20 text-[#D6A84F] rounded-lg flex items-center justify-center font-bold text-xl shrink-0">م</div>
               <h2 className="text-xl font-bold text-white">د. محمود المهدي</h2>
             </div>
-            <p className="text-sm text-white/45 mb-1">البرمجة | الذكاء الاصطناعي | ICDL | Eduverse</p>
-            <p className="text-sm text-white/45 mb-4">الزقازيق، مصر</p>
-            <div className="flex items-center gap-3 justify-center md:justify-start">
+            <p className="text-sm font-semibold text-[#D6A84F] mb-2">مدرب برمجة وذكاء اصطناعي — مؤسس Eduverse</p>
+            <p className="text-sm text-white/60 leading-relaxed mb-6 max-w-sm">
+              تأسيس عملي في البرمجة والذكاء الاصطناعي للثانوية، البكالوريا، الأطفال وطلاب الجامعة.
+            </p>
+            <div className="flex items-center gap-3 mt-auto">
               {socialLinks.map((s) => (
                 <a
                   key={s.label}
@@ -67,27 +45,30 @@ export function Footer() {
                   target="_blank"
                   rel="noreferrer"
                   aria-label={s.label}
-                  className={`w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-300 hover:border-white/30 ${s.color}`}
+                  className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-300 hover:border-[#D6A84F]/50 text-white/60"
                 >
-                  <s.icon className="w-4 h-4" />
+                  <s.icon className="w-[18px] h-[18px]" />
                 </a>
               ))}
             </div>
           </div>
 
-          <div className="text-center">
-            <h3 className="font-bold text-white mb-4 text-sm uppercase tracking-wider">روابط سريعة</h3>
-            <ul className="space-y-2">
+          {/* Middle Column: Quick Links (takes up 3 cols) */}
+          <div className="md:col-span-3 flex flex-col order-3 md:order-2">
+            <h3 className="font-bold text-white mb-5 text-sm uppercase tracking-wider">روابط سريعة</h3>
+            <ul className="space-y-3">
               {[
                 { label: "الرئيسية", href: "#hero" },
                 { label: "عن الدكتور", href: "#about" },
-                { label: "الخدمات", href: "#services" },
-                { label: "الكورسات", href: "#courses" },
+                { label: "البرامج التدريبية", href: "#courses" },
+                { label: "نظام البكالوريا", href: "#" },
+                { label: "نماذج الشغل", href: "#" },
                 { label: "الأسئلة الشائعة", href: "#faq" },
                 { label: "تواصل معنا", href: "#contact" },
               ].map((link) => (
-                <li key={link.href}>
-                  <a href={link.href} className="text-sm text-white/45 hover:text-primary transition-colors">
+                <li key={link.label}>
+                  <a href={link.href} className="text-sm text-white/60 hover:text-[#D6A84F] transition-colors flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#D6A84F]/50"></span>
                     {link.label}
                   </a>
                 </li>
@@ -95,52 +76,45 @@ export function Footer() {
             </ul>
           </div>
 
-          <div className="text-center md:text-right">
-            <h3 className="font-bold text-white mb-4 text-sm uppercase tracking-wider">تواصل معنا</h3>
-            <div className="space-y-3 text-sm text-white/45 flex flex-col items-center md:items-start">
-              <a
-                href={`tel:+2${whatsapp}`}
-                className="flex items-center gap-2 hover:text-primary transition-colors"
-                dir="ltr"
-              >
-                <Phone className="w-4 h-4 text-primary shrink-0" />
-                <span>{whatsapp}</span>
-              </a>
-              <a
-                href={`tel:+2${phone1}`}
-                className="flex items-center gap-2 hover:text-primary transition-colors"
-                dir="ltr"
-              >
-                <Phone className="w-4 h-4 text-primary shrink-0" />
-                <span>{phone1}</span>
-              </a>
-              <a
-                href={`tel:+2${phone2}`}
-                className="flex items-center gap-2 hover:text-primary transition-colors"
-                dir="ltr"
-              >
-                <Phone className="w-4 h-4 text-primary shrink-0" />
-                <span>{phone2}</span>
-              </a>
-              <div className="mt-2 flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-primary shrink-0" />
-                <span>{address}</span>
+          {/* Left Column: Contact (takes up 4 cols) */}
+          <div className="md:col-span-4 flex flex-col order-2 md:order-3">
+            <h3 className="font-bold text-white mb-5 text-sm uppercase tracking-wider">تواصل معنا</h3>
+            <div className="space-y-4 text-sm text-white/70">
+              <div className="flex items-start gap-3">
+                <MapPin className="w-5 h-5 text-[#D6A84F] shrink-0 mt-0.5" />
+                <span className="leading-snug">{address}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Phone className="w-5 h-5 text-[#D6A84F] shrink-0" />
+                <div className="flex flex-col gap-1" dir="ltr">
+                  <a href={`tel:+2${whatsapp}`} className="hover:text-[#D6A84F] transition-colors text-right">{whatsapp}</a>
+                  <a href={`tel:+2${phone1}`} className="hover:text-[#D6A84F] transition-colors text-right">{phone1}</a>
+                  <a href={`tel:+2${phone2}`} className="hover:text-[#D6A84F] transition-colors text-right">{phone2}</a>
+                </div>
               </div>
             </div>
-            <a
-              href={`https://wa.me/${whatsapp}`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 mt-5 px-5 py-2.5 bg-[#25D366]/10 border border-[#25D366]/20 text-[#25D366] text-sm font-bold rounded-full hover:bg-[#25D366] hover:text-white transition-all duration-300"
-            >
-              <MessageCircle className="w-4 h-4" />
-              احجز مجانًا على واتساب
-            </a>
+            
+            <div className="mt-6">
+              <a
+                href={`https://wa.me/${whatsapp}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-[#25D366]/10 border border-[#25D366]/20 text-[#25D366] text-sm font-bold rounded-xl hover:bg-[#25D366] hover:text-white transition-all duration-300 w-full justify-center md:w-auto"
+              >
+                <MessageCircle className="w-5 h-5" />
+                احجز تقييم مجاني عبر واتساب
+              </a>
+            </div>
           </div>
+          
         </div>
 
-        <div className="pt-6 border-t border-white/10 text-center text-sm text-white/30">
+        {/* Copyright Row */}
+        <div className="pt-6 border-t border-white/10 text-center text-sm text-white/40 flex flex-col md:flex-row justify-between items-center gap-4">
           <p>© {currentYear} د. محمود المهدي — جميع الحقوق محفوظة.</p>
+          <p className="text-xs">
+            تصميم وتطوير بكل فخر لـ Eduverse
+          </p>
         </div>
       </div>
     </footer>
