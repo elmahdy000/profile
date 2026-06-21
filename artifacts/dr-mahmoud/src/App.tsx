@@ -9,7 +9,6 @@ import { Hero } from "@/components/Hero";
 import { About } from "@/components/About";
 import { Services } from "@/components/Services";
 import { WhyChooseMe } from "@/components/WhyChooseMe";
-import { Eduverse } from "@/components/Eduverse";
 import { Courses } from "@/components/Courses";
 import { TeachingStyle } from "@/components/TeachingStyle";
 import { Portfolio } from "@/components/Portfolio";
@@ -43,7 +42,6 @@ function App() {
                   <About />
                   <Services />
                   <WhyChooseMe />
-                  <Eduverse />
                   <Courses />
                   <TeachingStyle />
                   <Portfolio />

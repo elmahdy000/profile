@@ -71,7 +71,6 @@ export function Footer() {
                 { label: "عن الدكتور", href: "#about" },
                 { label: "الخدمات", href: "#services" },
                 { label: "الكورسات", href: "#courses" },
-                { label: "Eduverse", href: "#eduverse" },
                 { label: "الأسئلة الشائعة", href: "#faq" },
                 { label: "تواصل معنا", href: "#contact" },
               ].map((link) => (

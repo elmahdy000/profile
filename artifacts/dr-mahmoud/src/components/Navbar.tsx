@@ -11,7 +11,6 @@ export function Navbar() {
     { label: "الرئيسية", href: "#hero", id: "hero" },
     { label: "عن الدكتور", href: "#about", id: "about" },
     { label: "الخدمات", href: "#services", id: "services" },
-    { label: "Eduverse", href: "#eduverse", id: "eduverse" },
     { label: "الكورسات", href: "#courses", id: "courses" },
     { label: "نماذج الشغل", href: "#portfolio", id: "portfolio" },
     { label: "تواصل", href: "#contact", id: "contact" },
