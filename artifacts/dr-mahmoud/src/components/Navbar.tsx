@@ -1,11 +1,15 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
+import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("hero");
+  const { get } = useSiteSettings();
+  const logoUrl = get(SETTINGS_KEYS.SITE_LOGO_URL, "/logo.jpg");
+  const siteName = get(SETTINGS_KEYS.SITE_NAME, "د. محمود المهدي");
 
   const navLinks = [
     { label: "الرئيسية", href: "#hero", id: "hero" },
@@ -41,8 +45,8 @@ export function Navbar() {
       <nav className="sticky top-0 z-50 w-full bg-background/85 backdrop-blur-md border-b border-white/10">
         <div className="container mx-auto px-4 lg:px-8 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary text-primary-foreground rounded-lg flex items-center justify-center font-bold text-xl">م</div>
-            <span className="font-bold text-xl text-primary">د. محمود المهدي</span>
+            <img src={logoUrl} alt="Logo" className="w-10 h-10 object-cover rounded-full border border-primary/20 shrink-0" />
+            <span className="font-bold text-xl text-primary">{siteName}</span>
           </div>
 
           <div className="hidden lg:flex items-center gap-8">

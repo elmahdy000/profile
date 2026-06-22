@@ -15,6 +15,10 @@ export function Footer() {
   const youtube = get(SETTINGS_KEYS.SOCIAL_YOUTUBE, "#");
   const linkedin = get(SETTINGS_KEYS.SOCIAL_LINKEDIN, "#");
 
+  const logoUrl = get(SETTINGS_KEYS.SITE_LOGO_URL, "/logo.jpg");
+  const siteName = get(SETTINGS_KEYS.SITE_NAME, "د. محمود المهدي");
+  const siteTagline = get(SETTINGS_KEYS.SITE_TAGLINE, "مدرب برمجة وذكاء اصطناعي — مؤسس Eduverse");
+
   const socialLinks = [
     { icon: Facebook, label: "Facebook", href: facebook, color: "hover:text-[#D6A84F]" },
     { icon: Instagram, label: "Instagram", href: instagram, color: "hover:text-[#D6A84F]" },
@@ -30,10 +34,10 @@ export function Footer() {
           {/* Right Column: Brand (takes up 5 cols) */}
           <div className="md:col-span-5 flex flex-col order-1">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-[#D6A84F]/10 border border-[#D6A84F]/20 text-[#D6A84F] rounded-lg flex items-center justify-center font-bold text-xl shrink-0">م</div>
-              <h2 className="text-xl font-bold text-white">د. محمود المهدي</h2>
+              <img src={logoUrl} alt="Logo" className="w-10 h-10 object-cover rounded-full border border-primary/20 shrink-0" />
+              <h2 className="text-xl font-bold text-white">{siteName}</h2>
             </div>
-            <p className="text-sm font-semibold text-[#D6A84F] mb-2">مدرب برمجة وذكاء اصطناعي — مؤسس Eduverse</p>
+            <p className="text-sm font-semibold text-[#D6A84F] mb-2">{siteTagline}</p>
             <p className="text-sm text-white/60 leading-relaxed mb-6 max-w-sm">
               تأسيس عملي في البرمجة والذكاء الاصطناعي للثانوية، البكالوريا، الأطفال وطلاب الجامعة.
             </p>

@@ -109,5 +109,6 @@ export const SETTINGS_KEYS = {
   SITE_NAME: "site_name",
   SITE_TAGLINE: "site_tagline",
   SITE_SEO_DESC: "site_seo_desc",
+  SITE_LOGO_URL: "site_logo_url",
 } as const;
 

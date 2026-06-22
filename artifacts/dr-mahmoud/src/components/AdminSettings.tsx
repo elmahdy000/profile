@@ -215,8 +215,8 @@ export function AdminSettings() {
   const updateSettingsMutation = useUpdateSiteSettings();
 
   const [activeTab, setActiveTab] = useState<
-    "hero" | "about" | "services" | "pricing" | "testimonials" | "faq" | "contact" | "social" | "portfolio" | "eduverse" | "why-choose-me"
-  >("hero");
+    "general" | "hero" | "about" | "services" | "pricing" | "testimonials" | "faq" | "contact" | "social" | "portfolio" | "eduverse" | "why-choose-me"
+  >("general");
 
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [isSaved, setIsSaved] = useState(false);
@@ -373,6 +373,7 @@ export function AdminSettings() {
   }
 
   const subTabs = [
+    { id: "general", label: "الإعدادات العامة" },
     { id: "hero", label: "القسم الرئيسي (Hero)" },
     { id: "about", label: "عن الدكتور (About)" },
     { id: "services", label: "الخدمات (Services)" },
@@ -430,6 +431,74 @@ export function AdminSettings() {
       {/* Main Tab Content */}
       <div className="bg-card/25 border border-border/40 rounded-2xl p-6">
         
+        {/* GENERAL SETTINGS */}
+        {activeTab === "general" && (
+          <div className="space-y-5">
+            <h3 className="text-lg font-bold text-white">الإعدادات العامة وشعار الموقع</h3>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5 font-bold">اسم الموقع (Site Name)</label>
+                <input
+                  type="text"
+                  value={formData[SETTINGS_KEYS.SITE_NAME] || ""}
+                  onChange={(e) => handleChange(SETTINGS_KEYS.SITE_NAME, e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                  placeholder="د. محمود المهدي"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5 font-bold">شعار الموقع الفرعي (Site Tagline)</label>
+                <input
+                  type="text"
+                  value={formData[SETTINGS_KEYS.SITE_TAGLINE] || ""}
+                  onChange={(e) => handleChange(SETTINGS_KEYS.SITE_TAGLINE, e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                  placeholder="مدرب برمجة وذكاء اصطناعي"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5 font-bold">وصف الموقع لمحركات البحث (SEO Description)</label>
+              <textarea
+                value={formData[SETTINGS_KEYS.SITE_SEO_DESC] || ""}
+                onChange={(e) => handleChange(SETTINGS_KEYS.SITE_SEO_DESC, e.target.value)}
+                rows={3}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                placeholder="كورسات برمجة وتأسيس ذكاء اصطناعي في الزقازيق..."
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5 font-sans font-bold">شعار الموقع (Logo URL)</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={formData[SETTINGS_KEYS.SITE_LOGO_URL] || ""}
+                  onChange={(e) => handleChange(SETTINGS_KEYS.SITE_LOGO_URL, e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                  dir="ltr"
+                />
+                <div className="relative flex-shrink-0">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(e, SETTINGS_KEYS.SITE_LOGO_URL)}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    disabled={isUploading}
+                  />
+                  <button
+                    type="button"
+                    className="h-full px-4 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 rounded-xl flex items-center gap-2 transition-colors font-bold text-xs"
+                    disabled={isUploading}
+                  >
+                    {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
+                    <span>رفع شعار</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* HERO SECTION */}
         {activeTab === "hero" && (
           <div className="space-y-5">
