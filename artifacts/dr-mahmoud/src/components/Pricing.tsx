@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
 import { CheckCircle2, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
 
-const plans = [
+const defaultPlans = [
   {
     id: "kids",
     name: "Kids Package",
@@ -72,6 +73,9 @@ const plans = [
 ];
 
 export function Pricing() {
+  const { getJson } = useSiteSettings();
+  const plans = getJson(SETTINGS_KEYS.PRICING_LIST, defaultPlans);
+
   return (
     <section id="pricing" className="py-20 lg:py-28 bg-background relative overflow-hidden">
       {/* Subtle background glow */}

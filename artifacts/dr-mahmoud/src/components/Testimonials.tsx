@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import { Quote, Star } from "lucide-react";
+import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
 
-const testimonials = [
+const defaultTestimonials = [
   {
     quote: "الشرح بسيط جدًا وابني بدأ يحب البرمجة بعد أسبوعين بس. الأسلوب العملي مختلف تمامًا عن أي مكان تاني.",
     author: "أم أحمد",
@@ -33,11 +34,15 @@ const testimonials = [
 ];
 
 export function Testimonials() {
+  const { getJson, get } = useSiteSettings();
+  const testimonials = getJson(SETTINGS_KEYS.TESTIMONIALS_LIST, defaultTestimonials);
+  const bgImg = get(SETTINGS_KEYS.TESTIMONIALS_BG_URL, "https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=1400&q=50");
+
   return (
     <section className="py-20 lg:py-24 bg-background relative overflow-hidden">
       <div className="absolute inset-0 opacity-5">
         <img
-          src="https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=1400&q=50"
+          src={bgImg}
           alt=""
           className="w-full h-full object-cover"
         />

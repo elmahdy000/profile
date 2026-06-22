@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
 
-const items = [
+const defaultItems = [
   {
     category: "Kids",
     title: "Scratch lesson designs",
@@ -54,8 +55,6 @@ const items = [
   },
 ];
 
-const allCategories = ["الكل", ...Array.from(new Set(items.map((i) => i.category)))];
-
 const categoryAr: Record<string, string> = {
   "الكل": "الكل",
   "Kids": "الأطفال",
@@ -71,7 +70,10 @@ const categoryAr: Record<string, string> = {
 
 export function Portfolio() {
   const [active, setActive] = useState("الكل");
+  const { getJson } = useSiteSettings();
 
+  const items = getJson(SETTINGS_KEYS.PORTFOLIO_LIST, defaultItems);
+  const allCategories = ["الكل", ...Array.from(new Set(items.map((i) => i.category)))];
   const filtered = active === "الكل" ? items : items.filter((i) => i.category === active);
 
   return (

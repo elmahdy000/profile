@@ -1,6 +1,10 @@
 import { motion } from "framer-motion";
+import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
 
 export function Eduverse() {
+  const { get } = useSiteSettings();
+  const bgImg = get(SETTINGS_KEYS.EDUVERSE_IMAGE_URL, "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1600&q=80");
+
   const tags = [
     "قاعات تدريب",
     "Coworking Space",
@@ -17,7 +21,7 @@ export function Eduverse() {
       {/* Full-bleed image background */}
       <div className="relative h-[600px] lg:h-[700px]">
         <img
-          src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=1600&q=80"
+          src={bgImg}
           alt="Eduverse مساحة تعليمية"
           loading="lazy"
           className="w-full h-full object-cover"

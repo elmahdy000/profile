@@ -1,7 +1,11 @@
 import { motion } from "framer-motion";
 import { CheckCircle2 } from "lucide-react";
+import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
 
 export function WhyChooseMe() {
+  const { get } = useSiteSettings();
+  const bgImg = get(SETTINGS_KEYS.WHY_CHOOSE_ME_BG_URL, "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1400&q=60");
+
   const features = [
     "شرح بسيط ومنظم",
     "تطبيق عملي في كل حصة",
@@ -18,7 +22,7 @@ export function WhyChooseMe() {
       {/* Background image with overlay */}
       <div className="absolute inset-0">
         <img
-          src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1400&q=60"
+          src={bgImg}
           alt=""
           loading="lazy"
           className="w-full h-full object-cover opacity-10"

@@ -17,13 +17,23 @@ export function useSiteSettings() {
   const query = useQuery<SiteSettingsMap>({
     queryKey: ["site-settings"],
     queryFn: fetchSettings,
-    staleTime: 1000 * 60 * 5, // 5 minutes cache
+    staleTime: 1000 * 5, // 5 seconds cache for fast updates
   });
 
   const get = (key: string, fallback = "") =>
     query.data?.[key]?.value ?? fallback;
 
-  return { settings: query.data, get, isLoading: query.isLoading, isError: query.isError };
+  const getJson = <T>(key: string, fallback: T): T => {
+    const val = query.data?.[key]?.value;
+    if (!val) return fallback;
+    try {
+      return JSON.parse(val) as T;
+    } catch {
+      return fallback;
+    }
+  };
+
+  return { settings: query.data, get, getJson, isLoading: query.isLoading, isError: query.isError };
 }
 
 export function useUpdateSiteSettings() {
@@ -67,6 +77,20 @@ export const SETTINGS_KEYS = {
   ABOUT_STUDENTS: "about_students",
   ABOUT_TRACKS: "about_tracks",
 
+  // Services, Pricing, Testimonials, FAQ
+  SERVICES_LIST: "services_list",
+  PRICING_LIST: "pricing_list",
+  TESTIMONIALS_LIST: "testimonials_list",
+  FAQ_LIST: "faq_list",
+
+  // Portfolio
+  PORTFOLIO_LIST: "portfolio_list",
+
+  // Background Images
+  EDUVERSE_IMAGE_URL: "eduverse_image_url",
+  WHY_CHOOSE_ME_BG_URL: "why_choose_me_bg_url",
+  TESTIMONIALS_BG_URL: "testimonials_bg_url",
+
   // Contact
   CONTACT_WHATSAPP: "contact_whatsapp",
   CONTACT_PHONE1: "contact_phone1",
@@ -86,3 +110,4 @@ export const SETTINGS_KEYS = {
   SITE_TAGLINE: "site_tagline",
   SITE_SEO_DESC: "site_seo_desc",
 } as const;
+

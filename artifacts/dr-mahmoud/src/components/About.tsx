@@ -38,6 +38,7 @@ export function About() {
   const desc = get(SETTINGS_KEYS.ABOUT_DESC, "د. محمود المهدي، ماجستير نظم معلومات، ومدرب برمجة وذكاء اصطناعي. بيقدم محتوى تعليمي عملي للطلاب والأطفال وطلاب الجامعة، بأسلوب بسيط ومنظم بعيد عن الحفظ والتلقين. الهدف إن الطالب يفهم، يطبق، ويطلع بمشروع حقيقي يقدر يفتخر بيه.");
   const years = parseInt(get(SETTINGS_KEYS.ABOUT_YEARS, "5"));
   const students = parseInt(get(SETTINGS_KEYS.ABOUT_STUDENTS, "200"));
+  const aboutImage = get(SETTINGS_KEYS.ABOUT_IMAGE_URL, "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&q=80");
   
   const stats = [
     { end: years, prefix: "+", suffix: "", label: "سنوات خبرة" },
@@ -68,7 +69,7 @@ export function About() {
           >
             <div className="relative rounded-3xl overflow-hidden aspect-[4/3] shadow-2xl border border-white/10">
               <img
-                src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&q=80"
+                src={aboutImage}
                 alt="محاضرة تعليمية"
                 loading="lazy"
                 className="w-full h-full object-cover"

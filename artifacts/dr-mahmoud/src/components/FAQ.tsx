@@ -2,8 +2,9 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
 
-const faqs = [
+const defaultFaqs = [
   {
     q: "هل د. محمود المهدي بيدرس طلاب الثانوية العامة والبكالوريا؟",
     a: "نعم، د. محمود المهدي متخصص في تدريس البرمجة لطلاب الثانوية العامة والبكالوريا — الصف الأول والثاني والثالث الثانوي. يدرّس Python، C++، وأساسيات البرمجة بأسلوب مبسط يناسب المناهج الدراسية ويساعد الطالب على الفهم العميق وليس الحفظ."
@@ -38,7 +39,7 @@ const faqs = [
   },
   {
     q: "هل ممكن حصص برمجة خصوصي فردية في الزقازيق؟",
-    a: "أيوه، متاح حصص فردية وجروبات صغيرة. الحصص الفردية بتكون أكثر تركيزًا على احتياج الطالب بالتحديد، سواء كان طالب ثانوي يحتاج تدريب على البرمجة أو طالب جامعي في مادة محددة."
+    a: "أيوه، متاح حصص فردية وجروبات صغيرة. החصص الفردية بتكون أكثر تركيزًا على احتياج الطالب بالتحديد، سواء كان طالب ثانوي يحتاج تدريب على البرمجة أو طالب جامعي في مادة محددة."
   },
   {
     q: "هل ممكن كورسات برمجة أونلاين للي مش في الزقازيق؟",
@@ -60,6 +61,9 @@ const faqs = [
 
 export function FAQ() {
   const [open, setOpen] = useState<number | null>(null);
+  const { getJson } = useSiteSettings();
+  const faqs = getJson(SETTINGS_KEYS.FAQ_LIST, defaultFaqs);
+
 
   return (
     <section id="faq" className="py-20 lg:py-24 bg-background relative">
