@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, Variants } from "framer-motion";
-import { MessageCircle, ArrowLeft, GraduationCap, Code, CheckCircle, MapPin, Youtube } from "lucide-react";
+import { MessageCircle, ArrowLeft, GraduationCap, Code, CheckCircle, MapPin, Youtube, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
 
@@ -107,11 +107,24 @@ export function Hero() {
               variants={item}
               className="flex flex-col sm:flex-row flex-wrap gap-3 pt-1"
             >
-              {/* Primary — Royal Blue gradient */}
+              {/* Primary — Orange to Red Gradient (Platform) */}
               <Button
                 asChild
                 size="lg"
-                className="bg-gradient-to-r from-primary to-blue-700 hover:from-blue-700 hover:to-primary text-white rounded-full px-7 h-12 text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300 w-full sm:w-auto justify-center hover:scale-[1.02]"
+                className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-red-600 hover:to-orange-500 text-white rounded-full px-8 h-14 text-base font-bold shadow-xl shadow-red-500/20 hover:shadow-red-500/40 transition-all duration-300 w-full sm:w-auto justify-center hover:scale-[1.02] border-2 border-red-400/20"
+                data-testid="button-enter-platform"
+              >
+                <a href="/#youtube-lectures">
+                  <PlayCircle className="me-2 w-5 h-5 shrink-0" />
+                  دخول المنصة والكورسات
+                </a>
+              </Button>
+
+              {/* Secondary — Royal Blue gradient */}
+              <Button
+                asChild
+                size="lg"
+                className="bg-gradient-to-r from-primary to-blue-700 hover:from-blue-700 hover:to-primary text-white rounded-full px-7 h-14 text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-300 w-full sm:w-auto justify-center hover:scale-[1.02]"
                 data-testid="button-book-session"
               >
                 <a href="#contact">احجز أول سيشن مجانًا</a>
