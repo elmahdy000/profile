@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Youtube, Play, ExternalLink, Library, Tv, ChevronLeft, Loader2, Lock, Unlock
@@ -91,6 +91,35 @@ function VideoPlayerModal({
   item: VideoItem;
   onClose: () => void;
 }) {
+  const [isFocused, setIsFocused] = useState(true);
+
+  useEffect(() => {
+    const handleFocus = () => setIsFocused(true);
+    const handleBlur = () => setIsFocused(false);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Block common screenshot/recording shortcuts (PrintScreen, Ctrl+S, Ctrl+P, Mac equivalents)
+      if (
+        e.key === "PrintScreen" ||
+        (e.ctrlKey && (e.key === "s" || e.key === "p" || e.key === "c")) ||
+        (e.metaKey && (e.key === "s" || e.key === "p" || e.key === "c" || e.shiftKey))
+      ) {
+        e.preventDefault();
+        alert("عذراً، غير مسموح بالتقاط أو تسجيل الشاشة لحماية حقوق الملكية.");
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
   const vidId = getYouTubeVideoId(item.youtubeUrl);
   const playlistId = getYouTubePlaylistId(item.youtubeUrl);
 
@@ -140,13 +169,36 @@ function VideoPlayerModal({
           </div>
 
           {/* Player Container */}
-          <div className="relative w-full aspect-video bg-black">
+          <div className="relative w-full aspect-video bg-black select-none" onContextMenu={(e) => e.preventDefault()}>
+            {/* Anti-Screen Recording / Blur Overlay */}
+            {!isFocused && (
+              <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md text-white text-center p-6 flex-col transition-all duration-300">
+                <Lock className="w-16 h-16 text-red-500 mb-4 animate-pulse" />
+                <h3 className="text-2xl font-bold mb-2">تم إيقاف العرض مؤقتاً</h3>
+                <p className="text-slate-400">يرجى العودة إلى نافذة المتصفح لمتابعة مشاهدة الفيديو.</p>
+                <p className="text-xs text-red-500/80 mt-4 font-mono bg-red-500/10 px-3 py-1 rounded-md border border-red-500/20">نظام الحماية ضد التسجيل مفعل</p>
+              </div>
+            )}
+
+            {/* Dynamic Watermark Overlay */}
+            {isStreamUrl && (
+              <div className="absolute inset-0 z-40 pointer-events-none overflow-hidden opacity-25 flex items-center justify-center mix-blend-overlay">
+                <div className="text-white font-black text-4xl rotate-[-30deg] select-none text-center leading-relaxed">
+                  د. محمود المهدي <br /> 
+                  <span className="text-2xl font-mono block opacity-70 mt-2 tracking-widest text-red-300">
+                    {studentKeys ? studentKeys.split(",")[0] : "PROTECTED CONTENT"}
+                  </span>
+                </div>
+              </div>
+            )}
+
             {isStreamUrl ? (
               <video
                 className="absolute inset-0 w-full h-full object-contain bg-black"
                 src={streamUrl}
                 controls
-                controlsList="nodownload"
+                controlsList="nodownload noplaybackrate"
+                disablePictureInPicture
                 onContextMenu={(e) => e.preventDefault()}
                 autoPlay
               />
