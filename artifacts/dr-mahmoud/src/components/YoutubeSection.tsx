@@ -485,9 +485,8 @@ export function YoutubeSection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-16 space-y-4 relative z-10"
         >
-<div className="text-center space-y-4 mb-16 relative z-10">
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               whileInView={{ scale: 1, opacity: 1 }}
@@ -507,7 +506,7 @@ export function YoutubeSection() {
             <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
               تصفح أحدث الكورسات، الشروحات، وقوائم التشغيل الحصرية المتاحة على منصتنا بأعلى جودة وحماية.
             </p>
-          </div>
+        </motion.div>
 
         {/* Tab Filters */}
         <div className="flex justify-center mb-12">
