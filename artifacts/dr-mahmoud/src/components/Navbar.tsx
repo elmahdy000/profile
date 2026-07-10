@@ -85,8 +85,10 @@ export function Navbar() {
               <Button asChild variant="outline" size="sm" className="rounded-full font-bold h-10 text-xs border-primary text-primary hover:bg-primary/5">
                 <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">تواصل واتساب</a>
               </Button>
-              <Button asChild size="sm" className="bg-primary hover:bg-primary/95 text-primary-foreground rounded-full px-4 font-bold h-10 text-xs shadow-md transition-all">
-                <a href="#contact">ابدأ التعلم</a>
+              <Button asChild size="sm" className="bg-primary hover:bg-primary/95 text-primary-foreground rounded-full px-5 font-bold h-10 text-xs shadow-md transition-all gap-2">
+                <a href="#youtube-lectures">
+                  دخول المنصة
+                </a>
               </Button>
             </div>
           </div>
@@ -127,8 +129,8 @@ export function Navbar() {
                 </li>
               ))}
               <li className="mt-6 flex flex-col gap-3 w-full">
-                <Button asChild size="lg" className="w-full bg-primary hover:bg-primary/95 text-primary-foreground rounded-full font-bold h-14 text-base shadow-md transition-all">
-                  <a href="#contact" onClick={() => setIsOpen(false)}>ابدأ التعلم</a>
+                <Button asChild size="lg" className="w-full bg-primary hover:bg-primary/95 text-primary-foreground rounded-full font-bold h-14 text-base shadow-md transition-all gap-2">
+                  <a href="#youtube-lectures" onClick={() => setIsOpen(false)}>دخول المنصة</a>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="w-full rounded-full font-bold h-14 text-base border-primary text-primary hover:bg-primary/5">
                   <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer" onClick={() => setIsOpen(false)}>تواصل واتساب</a>

@@ -487,15 +487,27 @@ export function YoutubeSection() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <span className="text-primary font-bold text-sm uppercase tracking-wider mb-3 flex items-center justify-center gap-2">
-            <Youtube className="w-5 h-5 text-red-500 animate-pulse" /> شروحات ومحاضرات يوتيوب
-          </span>
-          <h2 className="text-3xl md:text-5xl font-extrabold text-foreground mb-4">قناتنا التعليمية Learn to Code</h2>
-          <p className="text-foreground/50 max-w-xl mx-auto text-sm leading-relaxed">
-            دروس تطبيقية ومناهج دراسية متكاملة وقوائم تشغيل متسلسلة لمساعدتك على التفوق.
-          </p>
-          <div className="w-24 h-0.5 bg-gradient-to-r from-primary/80 to-secondary/80 mx-auto rounded-full mt-4" />
-        </motion.div>
+<div className="text-center space-y-4 mb-16 relative z-10">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary font-medium text-sm mb-4"
+            >
+              <Tv className="w-4 h-4" />
+              المنصة التعليمية
+            </motion.div>
+            <h2 className="text-3xl md:text-5xl font-black text-white">
+              <span className="text-transparent bg-clip-text bg-gradient-to-l from-primary to-orange-400">
+                منصة د. محمود
+              </span>{" "}
+              للكورسات
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
+              تصفح أحدث الكورسات، الشروحات، وقوائم التشغيل الحصرية المتاحة على منصتنا بأعلى جودة وحماية.
+            </p>
+          </div>
 
         {/* Tab Filters */}
         <div className="flex justify-center mb-12">
