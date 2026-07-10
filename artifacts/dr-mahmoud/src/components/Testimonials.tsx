@@ -74,7 +74,7 @@ export function Testimonials() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="bg-card border border-white/10 p-6 rounded-2xl flex flex-col h-full hover:border-primary/30 transition-all duration-300 group"
+              className="bg-card border border-border p-6 rounded-2xl flex flex-col h-full hover:border-primary/40 hover:shadow-md transition-all duration-300 group"
               data-testid={`card-testimonial-${index}`}
             >
               <Quote className="w-8 h-8 text-primary/30 mb-3 group-hover:text-primary/50 transition-colors" />

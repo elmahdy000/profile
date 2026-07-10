@@ -20,10 +20,10 @@ export function Footer() {
   const siteTagline = get(SETTINGS_KEYS.SITE_TAGLINE, "مدرب برمجة وذكاء اصطناعي — مؤسس Eduverse");
 
   const socialLinks = [
-    { icon: Facebook, label: "Facebook", href: facebook, color: "hover:text-[#D6A84F]" },
-    { icon: Instagram, label: "Instagram", href: instagram, color: "hover:text-[#D6A84F]" },
-    { icon: Youtube, label: "YouTube", href: youtube, color: "hover:text-[#D6A84F]" },
-    { icon: Linkedin, label: "LinkedIn", href: linkedin, color: "hover:text-[#D6A84F]" },
+    { icon: Facebook, label: "Facebook", href: facebook, color: "hover:text-primary" },
+    { icon: Instagram, label: "Instagram", href: instagram, color: "hover:text-primary" },
+    { icon: Youtube, label: "YouTube", href: youtube, color: "hover:text-primary" },
+    { icon: Linkedin, label: "LinkedIn", href: linkedin, color: "hover:text-primary" },
   ];
 
   return (
@@ -37,7 +37,7 @@ export function Footer() {
               <img src={logoUrl} alt="Logo" className="w-10 h-10 object-cover rounded-full border border-primary/20 shrink-0" />
               <h2 className="text-xl font-bold text-white">{siteName}</h2>
             </div>
-            <p className="text-sm font-semibold text-[#D6A84F] mb-2">{siteTagline}</p>
+            <p className="text-sm font-semibold text-primary mb-2">{siteTagline}</p>
             <p className="text-sm text-white/60 leading-relaxed mb-6 max-w-sm">
               تأسيس عملي في البرمجة والذكاء الاصطناعي للثانوية، البكالوريا، الأطفال وطلاب الجامعة.
             </p>
@@ -49,7 +49,7 @@ export function Footer() {
                   target="_blank"
                   rel="noreferrer"
                   aria-label={s.label}
-                  className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-300 hover:border-[#D6A84F]/50 text-white/60"
+                  className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-300 hover:border-primary/50 text-white/60"
                 >
                   <s.icon className="w-[18px] h-[18px]" />
                 </a>
@@ -62,17 +62,16 @@ export function Footer() {
             <h3 className="font-bold text-white mb-5 text-sm uppercase tracking-wider">روابط سريعة</h3>
             <ul className="space-y-3">
               {[
-                { label: "الرئيسية", href: "#hero" },
-                { label: "عن الدكتور", href: "#about" },
-                { label: "البرامج التدريبية", href: "#courses" },
-                { label: "نظام البكالوريا", href: "#" },
-                { label: "نماذج الشغل", href: "#" },
-                { label: "الأسئلة الشائعة", href: "#faq" },
-                { label: "تواصل معنا", href: "#contact" },
+                { label: "الرئيسية", href: "/" },
+                { label: "عن الدكتور", href: "/#about" },
+                { label: "البرامج التدريبية", href: "/#courses" },
+                { label: "المناهج التعليمية", href: "/curriculum" },
+                { label: "الأسئلة الشائعة", href: "/#faq" },
+                { label: "تواصل معنا", href: "/#contact" },
               ].map((link) => (
                 <li key={link.label}>
-                  <a href={link.href} className="text-sm text-white/60 hover:text-[#D6A84F] transition-colors flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#D6A84F]/50"></span>
+                  <a href={link.href} className="text-sm text-white/60 hover:text-primary transition-colors flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary/50"></span>
                     {link.label}
                   </a>
                 </li>
@@ -85,15 +84,15 @@ export function Footer() {
             <h3 className="font-bold text-white mb-5 text-sm uppercase tracking-wider">تواصل معنا</h3>
             <div className="space-y-4 text-sm text-white/70">
               <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-[#D6A84F] shrink-0 mt-0.5" />
+                <MapPin className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                 <span className="leading-snug">{address}</span>
               </div>
               <div className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-[#D6A84F] shrink-0" />
+                <Phone className="w-5 h-5 text-primary shrink-0" />
                 <div className="flex flex-col gap-1" dir="ltr">
-                  <a href={`tel:+2${whatsapp}`} className="hover:text-[#D6A84F] transition-colors text-right">{whatsapp}</a>
-                  <a href={`tel:+2${phone1}`} className="hover:text-[#D6A84F] transition-colors text-right">{phone1}</a>
-                  <a href={`tel:+2${phone2}`} className="hover:text-[#D6A84F] transition-colors text-right">{phone2}</a>
+                  <a href={`tel:+2${whatsapp}`} className="hover:text-primary transition-colors text-right">{whatsapp}</a>
+                  <a href={`tel:+2${phone1}`} className="hover:text-primary transition-colors text-right">{phone1}</a>
+                  <a href={`tel:+2${phone2}`} className="hover:text-primary transition-colors text-right">{phone2}</a>
                 </div>
               </div>
             </div>

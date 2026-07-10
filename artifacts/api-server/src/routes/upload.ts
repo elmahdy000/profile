@@ -12,43 +12,72 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Multer storage configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-    cb(null, uniqueName);
-  },
-});
+// Whitelist of allowed extensions per upload type, mapped to their canonical
+// safe MIME type. We derive the STORED extension from this map (never from the
+// client-supplied filename), so a disguised .html/.svg/.js file can't be saved
+// and later served as executable content (stored-XSS).
+const IMAGE_TYPES: Record<string, string> = {
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".webp": "image/webp",
+  ".gif": "image/gif",
+};
 
-const imageUpload = multer({
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit for images
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith("image/")) {
+const AUDIO_TYPES: Record<string, string> = {
+  ".mp3": "audio/mpeg",
+  ".wav": "audio/wav",
+  ".m4a": "audio/mp4",
+  ".ogg": "audio/ogg",
+  ".aac": "audio/aac",
+  ".flac": "audio/flac",
+};
+
+function makeStorage(allowed: Record<string, string>) {
+  return multer.diskStorage({
+    destination: (_req, _file, cb) => {
+      cb(null, uploadDir);
+    },
+    filename: (_req, file, cb) => {
+      // Use the canonical extension for the validated MIME type rather than
+      // trusting the original filename's extension.
+      const ext =
+        Object.entries(allowed).find(
+          ([, mime]) => mime === file.mimetype,
+        )?.[0] ?? path.extname(file.originalname).toLowerCase();
+      const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+      cb(null, uniqueName);
+    },
+  });
+}
+
+function makeFileFilter(
+  allowed: Record<string, string>,
+  label: string,
+): multer.Options["fileFilter"] {
+  const validExts = Object.keys(allowed);
+  const validMimes = new Set(Object.values(allowed));
+  return (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    // Require BOTH a whitelisted extension AND a matching whitelisted MIME.
+    if (validExts.includes(ext) && validMimes.has(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error("Only images are allowed"));
+      cb(new Error(`Only ${label} are allowed (${validExts.join(", ")})`));
     }
-  },
+  };
+}
+
+const imageUpload = multer({
+  storage: makeStorage(IMAGE_TYPES),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit for images
+  fileFilter: makeFileFilter(IMAGE_TYPES, "images"),
 }).single("image");
 
 const audioUpload = multer({
-  storage,
+  storage: makeStorage(AUDIO_TYPES),
   limits: { fileSize: 150 * 1024 * 1024 }, // 150MB limit for audio
-  fileFilter: (req, file, cb) => {
-    // Allow various audio formats
-    const isAudioMime = file.mimetype.startsWith("audio/");
-    const isAudioExt = /\.(mp3|wav|m4a|ogg|aac|flac)$/i.test(file.originalname);
-    if (isAudioMime || isAudioExt) {
-      cb(null, true);
-    } else {
-      cb(new Error("Only audio files are allowed (.mp3, .wav, .m4a, .ogg, .aac, .flac)"));
-    }
-  },
+  fileFilter: makeFileFilter(AUDIO_TYPES, "audio files"),
 }).single("audio");
 
 // Image upload route

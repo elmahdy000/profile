@@ -21,7 +21,7 @@ export function useSiteSettings() {
   });
 
   const get = (key: string, fallback = "") =>
-    query.data?.[key]?.value ?? fallback;
+    query.data?.[key]?.value || fallback;
 
   const getJson = <T>(key: string, fallback: T): T => {
     const val = query.data?.[key]?.value;

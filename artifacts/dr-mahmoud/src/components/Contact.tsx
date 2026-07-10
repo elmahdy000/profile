@@ -80,7 +80,7 @@ export function Contact() {
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="md:col-span-7 bg-[#0b111e]/90 border border-white/[0.06] shadow-[0_0_60px_rgba(214,168,79,0.06),0_1px_3px_rgba(0,0,0,0.3)] rounded-3xl p-6 md:p-8 order-1"
+              className="md:col-span-7 bg-card border border-border shadow-xl rounded-3xl p-6 md:p-8 order-1"
             >
               <h3 className="text-xl font-bold text-foreground mb-1">احجز تقييم مجاني</h3>
               <p className="text-xs text-foreground/60 mb-6">املأ البيانات وسيتم التواصل معك على واتساب.</p>
@@ -106,7 +106,7 @@ export function Contact() {
                         placeholder="اسم الطالب أو ولي الأمر"
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-foreground placeholder:text-foreground/35 focus:outline-none focus:border-primary/50 transition-colors text-sm"
+                        className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 transition-colors text-sm"
                       />
                     </div>
 
@@ -119,7 +119,7 @@ export function Contact() {
                         dir="ltr"
                         value={form.phone}
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-foreground placeholder:text-foreground/35 focus:outline-none focus:border-primary/50 transition-colors text-sm text-right"
+                        className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 transition-colors text-sm text-right"
                       />
                     </div>
                   </div>
@@ -133,7 +133,7 @@ export function Contact() {
                         placeholder="مثال: 12 سنة"
                         value={form.age}
                         onChange={(e) => setForm({ ...form, age: e.target.value })}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-foreground placeholder:text-foreground/35 focus:outline-none focus:border-primary/50 transition-colors text-sm"
+                        className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 transition-colors text-sm"
                       />
                     </div>
 
@@ -145,7 +145,7 @@ export function Contact() {
                         placeholder="مثال: الصف السادس الابتدائي"
                         value={form.grade}
                         onChange={(e) => setForm({ ...form, grade: e.target.value })}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-foreground placeholder:text-foreground/35 focus:outline-none focus:border-primary/50 transition-colors text-sm"
+                        className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 transition-colors text-sm"
                       />
                     </div>
                   </div>
@@ -156,7 +156,7 @@ export function Contact() {
                       <select
                         value={form.program}
                         onChange={(e) => setForm({ ...form, program: e.target.value })}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-primary/50 transition-colors text-sm appearance-none cursor-pointer pr-10"
+                        className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-primary/60 transition-colors text-sm appearance-none cursor-pointer pr-10"
                       >
                         <option value="برمجة الأطفال" className="bg-[#070B12]">برمجة الأطفال</option>
                         <option value="نظام البكالوريا" className="bg-[#070B12]">نظام البكالوريا</option>
@@ -176,7 +176,7 @@ export function Contact() {
                       placeholder="أي تفاصيل أو استفسارات إضافية تود مشاركتها..."
                       value={form.message}
                       onChange={(e) => setForm({ ...form, message: e.target.value })}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-foreground placeholder:text-foreground/35 focus:outline-none focus:border-primary/50 transition-colors text-sm resize-none"
+                      className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 transition-colors text-sm resize-none"
                     />
                   </div>
 

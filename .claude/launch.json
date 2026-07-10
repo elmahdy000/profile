@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dr-mahmoud",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "dr-mahmoud", "run", "dev"],
+      "port": 18099
+    }
+  ]
+}

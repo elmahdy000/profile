@@ -87,7 +87,7 @@ export function WhyChooseMe() {
           className="text-center mb-16 max-w-2xl mx-auto"
         >
           <span className="text-primary font-bold text-sm uppercase tracking-wider mb-4 block">الميزات</span>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">ليه تختار د. محمود المهدي؟</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">لماذا تتدرب معنا؟</h2>
           <p className="text-muted-foreground text-base md:text-lg leading-relaxed mb-6">
             مش مجرد شرح وخلاص. خطة واضحة حسب سن الطالب ومستواه، تدريب عملي، متابعة، ومشروع يثبت الفهم.
           </p>
@@ -107,7 +107,7 @@ export function WhyChooseMe() {
                 className={`flex items-start gap-4 p-5 rounded-2xl transition-all duration-300 group ${
                   feature.highlight 
                     ? "bg-primary/5 border-2 border-primary shadow-lg shadow-primary/5 hover:bg-primary/8" 
-                    : "bg-white/5 border border-white/10 hover:border-primary/45 hover:bg-white/8"
+                    : "bg-card border border-border hover:border-primary/45 hover:shadow-md"
                 }`}
               >
                 <div className={`p-3 rounded-xl shrink-0 ${
@@ -135,7 +135,7 @@ export function WhyChooseMe() {
         >
           <a
             href="#contact"
-            className="inline-flex items-center justify-center bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] hover:from-[#D6A84F] hover:to-[#F2C76E] text-[#070B12] rounded-full px-8 py-3.5 font-bold text-base shadow-lg shadow-[#D6A84F]/10 hover:scale-[1.02] transition-all"
+            className="inline-flex items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-3.5 font-bold text-base shadow-lg shadow-primary/10 hover:scale-[1.02] transition-all"
           >
             احجز تقييم مجاني
           </a>

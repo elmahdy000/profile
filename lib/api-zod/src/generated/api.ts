@@ -9,6 +9,57 @@ import * as zod from 'zod';
 
 
 /**
+ * Returns all site settings as a key-value map
+ * @summary Get all settings
+ */
+export const GetSettingsResponse = zod.record(zod.string(), zod.object({
+  "value": zod.string().nullish(),
+  "type": zod.string().optional()
+}))
+
+
+/**
+ * Update or create a site setting
+ * @summary Update setting
+ */
+export const SetSettingBody = zod.object({
+  "key": zod.string(),
+  "value": zod.string().nullish(),
+  "type": zod.string().optional()
+})
+
+export const SetSettingResponse = zod.object({
+  "id": zod.number(),
+  "key": zod.string(),
+  "value": zod.string().nullish(),
+  "type": zod.string().optional(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * Update multiple settings at once
+ * @summary Update settings batch
+ */
+export const UpdateSettingsBatchBody = zod.object({
+  "settings": zod.array(zod.object({
+  "key": zod.string(),
+  "value": zod.string().nullish(),
+  "type": zod.string().optional()
+}))
+})
+
+export const UpdateSettingsBatchResponseItem = zod.object({
+  "id": zod.number(),
+  "key": zod.string(),
+  "value": zod.string().nullish(),
+  "type": zod.string().optional(),
+  "updatedAt": zod.string()
+})
+export const UpdateSettingsBatchResponse = zod.array(UpdateSettingsBatchResponseItem)
+
+
+/**
  * Returns server health status
  * @summary Health check
  */
@@ -160,7 +211,9 @@ export const ListCoursesResponseItem = zod.object({
   "level": zod.string(),
   "category": zod.string(),
   "tags": zod.array(zod.string()),
-  "img": zod.string()
+  "img": zod.string(),
+  "lessonsCount": zod.number(),
+  "videosCount": zod.number()
 })
 export const ListCoursesResponse = zod.array(ListCoursesResponseItem)
 
@@ -209,7 +262,9 @@ export const UpdateCourseResponse = zod.object({
   "level": zod.string(),
   "category": zod.string(),
   "tags": zod.array(zod.string()),
-  "img": zod.string()
+  "img": zod.string(),
+  "lessonsCount": zod.number(),
+  "videosCount": zod.number()
 })
 
 
@@ -222,6 +277,148 @@ export const DeleteCourseParams = zod.object({
 })
 
 export const DeleteCourseResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * Returns all videos and playlists
+ * @summary List videos and playlists
+ */
+export const ListVideosResponseItem = zod.object({
+  "id": zod.number(),
+  "category": zod.string(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "youtubeUrl": zod.string(),
+  "type": zod.string(),
+  "order": zod.number(),
+  "createdAt": zod.string()
+})
+export const ListVideosResponse = zod.array(ListVideosResponseItem)
+
+
+/**
+ * Creates a new video or playlist entry
+ * @summary Create video or playlist
+ */
+export const CreateVideoBody = zod.object({
+  "category": zod.string(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "youtubeUrl": zod.string(),
+  "type": zod.string(),
+  "order": zod.number().optional()
+})
+
+
+/**
+ * Updates an existing video or playlist entry
+ * @summary Update video or playlist
+ */
+export const UpdateVideoParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateVideoBody = zod.object({
+  "category": zod.string(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "youtubeUrl": zod.string(),
+  "type": zod.string(),
+  "order": zod.number().optional()
+})
+
+export const UpdateVideoResponse = zod.object({
+  "id": zod.number(),
+  "category": zod.string(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "youtubeUrl": zod.string(),
+  "type": zod.string(),
+  "order": zod.number(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * Deletes a video or playlist entry
+ * @summary Delete video or playlist
+ */
+export const DeleteVideoParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteVideoResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * Returns all curriculum lessons
+ * @summary List curriculums
+ */
+export const ListCurriculumsResponseItem = zod.object({
+  "id": zod.number(),
+  "subject": zod.string(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "images": zod.array(zod.string()),
+  "order": zod.number(),
+  "createdAt": zod.string()
+})
+export const ListCurriculumsResponse = zod.array(ListCurriculumsResponseItem)
+
+
+/**
+ * Creates a new curriculum lesson with images
+ * @summary Create curriculum lesson
+ */
+export const CreateCurriculumBody = zod.object({
+  "subject": zod.string(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "images": zod.array(zod.string()),
+  "order": zod.number().optional()
+})
+
+
+/**
+ * Updates an existing curriculum lesson
+ * @summary Update curriculum lesson
+ */
+export const UpdateCurriculumParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateCurriculumBody = zod.object({
+  "subject": zod.string(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "images": zod.array(zod.string()),
+  "order": zod.number().optional()
+})
+
+export const UpdateCurriculumResponse = zod.object({
+  "id": zod.number(),
+  "subject": zod.string(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "images": zod.array(zod.string()),
+  "order": zod.number(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * Deletes a curriculum lesson
+ * @summary Delete curriculum lesson
+ */
+export const DeleteCurriculumParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteCurriculumResponse = zod.object({
   "success": zod.boolean()
 })
 

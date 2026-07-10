@@ -77,10 +77,10 @@ export function Pricing() {
   const plans = getJson(SETTINGS_KEYS.PRICING_LIST, defaultPlans);
 
   return (
-    <section id="pricing" className="py-20 lg:py-28 bg-background relative overflow-hidden">
+    <section id="pricing" className="py-20 lg:py-28 bg-[#070B12] relative overflow-hidden">
       {/* Subtle background glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-[#D6A84F]/6 rounded-full blur-[140px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-primary/6 rounded-full blur-[140px]" />
       </div>
 
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
@@ -94,13 +94,13 @@ export function Pricing() {
           <span className="text-primary font-bold text-sm uppercase tracking-wider mb-3 block">
             المسارات
           </span>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             اختار المسار اللي يناسبك
           </h2>
-          <p className="text-foreground/50 text-base max-w-lg mx-auto leading-relaxed">
+          <p className="text-slate-400 text-base max-w-lg mx-auto leading-relaxed">
             أول سيشن تقييم مجانية علشان نحدد المستوى والخطة المناسبة.
           </p>
-          <div className="w-20 h-0.5 bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] mx-auto rounded-full mt-5" />
+          <div className="w-20 h-0.5 bg-gradient-to-r from-primary/80 to-secondary/80 mx-auto rounded-full mt-5" />
         </motion.div>
 
         {/* Cards grid — 4 cols on lg, 2 on md, 1 on mobile */}
@@ -114,14 +114,14 @@ export function Pricing() {
               transition={{ delay: index * 0.08 }}
               className={`relative flex flex-col rounded-2xl p-6 transition-all duration-300 ${
                 plan.featured
-                  ? "bg-gradient-to-b from-[#1A1400] to-[#121A27] border-2 border-[#D6A84F]/50 shadow-xl shadow-[#D6A84F]/10 ring-1 ring-[#D6A84F]/20"
-                  : "bg-[#0E1520] border border-white/8 hover:border-[#D6A84F]/30 hover:shadow-lg hover:shadow-[#D6A84F]/5"
+                  ? "bg-gradient-to-b from-[#061827] to-[#0A1628] border-2 border-primary/50 shadow-xl shadow-primary/10 ring-1 ring-[#06B6D4]/20"
+                  : "bg-[#141D2E] border border-white/12 hover:border-primary/40 hover:shadow-lg hover:shadow-[#06B6D4]/5"
               }`}
             >
               {/* Featured badge */}
               {plan.badge && (
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10">
-                  <span className="px-4 py-1 bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] text-[#070B12] text-xs font-bold rounded-full shadow-md whitespace-nowrap">
+                  <span className="px-4 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full shadow-md whitespace-nowrap">
                     {plan.badge}
                   </span>
                 </div>
@@ -131,17 +131,17 @@ export function Pricing() {
               <div className={`mb-5 ${plan.badge ? "mt-3" : ""}`}>
                 <h3
                   className={`text-lg font-bold mb-1 ${
-                    plan.featured ? "text-[#F2C76E]" : "text-foreground"
+                    plan.featured ? "text-primary" : "text-white"
                   }`}
                 >
                   {plan.name}
                 </h3>
-                <p className="text-xs text-foreground/45 mb-3">{plan.subtitle}</p>
+                <p className="text-xs text-slate-300 mb-3">{plan.subtitle}</p>
 
                 {/* Headline value line */}
                 <p
                   className={`text-sm font-semibold leading-snug ${
-                    plan.featured ? "text-[#D6A84F]" : "text-foreground/75"
+                    plan.featured ? "text-primary" : "text-slate-100"
                   }`}
                 >
                   {plan.headline}
@@ -149,7 +149,7 @@ export function Pricing() {
 
                 {/* Optional short description */}
                 {plan.desc && (
-                  <p className="text-xs text-foreground/40 mt-2 leading-relaxed">
+                  <p className="text-xs text-foreground/60 mt-2 leading-relaxed">
                     {plan.desc}
                   </p>
                 )}
@@ -159,8 +159,8 @@ export function Pricing() {
               <div
                 className={`w-full h-px mb-5 ${
                   plan.featured
-                    ? "bg-gradient-to-r from-transparent via-[#D6A84F]/30 to-transparent"
-                    : "bg-white/6"
+                    ? "bg-gradient-to-r from-transparent via-[#06B6D4]/30 to-transparent"
+                    : "bg-border"
                 }`}
               />
 
@@ -169,11 +169,11 @@ export function Pricing() {
                 {plan.features.map((f) => (
                   <li
                     key={f}
-                    className="flex items-center gap-2.5 text-xs text-foreground/65"
+                    className="flex items-center gap-2.5 text-xs text-slate-200"
                   >
                     <CheckCircle2
                       className={`w-3.5 h-3.5 shrink-0 ${
-                        plan.featured ? "text-[#D6A84F]" : "text-primary/60"
+                        plan.featured ? "text-primary" : "text-primary/60"
                       }`}
                     />
                     {f}
@@ -186,8 +186,8 @@ export function Pricing() {
                 asChild
                 className={`w-full font-bold text-sm transition-all duration-300 ${
                   plan.featured
-                    ? "bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] hover:from-[#D6A84F] hover:to-[#F2C76E] text-[#070B12] shadow-lg shadow-[#D6A84F]/20 hover:scale-[1.01]"
-                    : "bg-transparent text-primary border border-[#D6A84F]/30 hover:border-[#D6A84F]/60 hover:bg-[#D6A84F]/6"
+                    ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 hover:scale-[1.01]"
+                    : "bg-transparent text-primary border border-primary/30 hover:border-primary/60 hover:bg-primary/6"
                 }`}
               >
                 <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
@@ -204,7 +204,7 @@ export function Pricing() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-center text-foreground/30 text-xs mt-10"
+          className="text-center text-slate-400 text-xs mt-10"
         >
           السعر يُحدد بعد جلسة التقييم المجانية حسب المستوى والبرنامج
         </motion.p>

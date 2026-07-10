@@ -340,6 +340,168 @@ paths:
                     type: boolean
                 required:
                   - success
+  /videos:
+    get:
+      operationId: listVideos
+      tags: [videos]
+      summary: List videos and playlists
+      description: Returns all videos and playlists
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Video"
+    post:
+      operationId: createVideo
+      tags: [videos]
+      summary: Create video or playlist
+      description: Creates a new video or playlist entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsertVideo"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Video"
+  /videos/{id}:
+    put:
+      operationId: updateVideo
+      tags: [videos]
+      summary: Update video or playlist
+      description: Updates an existing video or playlist entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsertVideo"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Video"
+    delete:
+      operationId: deleteVideo
+      tags: [videos]
+      summary: Delete video or playlist
+      description: Deletes a video or playlist entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                required:
+                  - success
+  /curriculums:
+    get:
+      operationId: listCurriculums
+      tags: [curriculums]
+      summary: List curriculums
+      description: Returns all curriculum lessons
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Curriculum"
+    post:
+      operationId: createCurriculum
+      tags: [curriculums]
+      summary: Create curriculum lesson
+      description: Creates a new curriculum lesson with images
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsertCurriculum"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Curriculum"
+  /curriculums/{id}:
+    put:
+      operationId: updateCurriculum
+      tags: [curriculums]
+      summary: Update curriculum lesson
+      description: Updates an existing curriculum lesson
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsertCurriculum"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Curriculum"
+    delete:
+      operationId: deleteCurriculum
+      tags: [curriculums]
+      summary: Delete curriculum lesson
+      description: Deletes a curriculum lesson
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                required:
+                  - success
 components:
   schemas:
     HealthStatus:
@@ -481,6 +643,10 @@ components:
             type: string
         img:
           type: string
+        lessonsCount:
+          type: integer
+        videosCount:
+          type: integer
       required:
         - id
         - title
@@ -491,6 +657,8 @@ components:
         - category
         - tags
         - img
+        - lessonsCount
+        - videosCount
     InsertSiteSetting:
       type: object
       properties:
@@ -529,3 +697,100 @@ components:
         - id
         - key
         - updatedAt
+    InsertCurriculum:
+      type: object
+      properties:
+        subject:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        images:
+          type: array
+          items:
+            type: string
+        order:
+          type: integer
+      required:
+        - subject
+        - title
+        - images
+    Curriculum:
+      type: object
+      properties:
+        id:
+          type: integer
+        subject:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        images:
+          type: array
+          items:
+            type: string
+        order:
+          type: integer
+        createdAt:
+          type: string
+      required:
+        - id
+        - subject
+        - title
+        - images
+        - order
+        - createdAt
+    InsertVideo:
+      type: object
+      properties:
+        category:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        youtubeUrl:
+          type: string
+        type:
+          type: string
+        order:
+          type: integer
+      required:
+        - category
+        - title
+        - youtubeUrl
+        - type
+    Video:
+      type: object
+      properties:
+        id:
+          type: integer
+        category:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        youtubeUrl:
+          type: string
+        type:
+          type: string
+        order:
+          type: integer
+        createdAt:
+          type: string
+      required:
+        - id
+        - category
+        - title
+        - youtubeUrl
+        - type
+        - order
+        - createdAt
+

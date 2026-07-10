@@ -35,7 +35,7 @@ function CountUp({ end, prefix, suffix }: { end: number; prefix: string; suffix:
 export function About() {
   const { get } = useSiteSettings();
   
-  const desc = get(SETTINGS_KEYS.ABOUT_DESC, "د. محمود المهدي، ماجستير نظم معلومات، ومدرب برمجة وذكاء اصطناعي. بيقدم محتوى تعليمي عملي للطلاب والأطفال وطلاب الجامعة، بأسلوب بسيط ومنظم بعيد عن الحفظ والتلقين. الهدف إن الطالب يفهم، يطبق، ويطلع بمشروع حقيقي يقدر يفتخر بيه.");
+  const desc = get(SETTINGS_KEYS.ABOUT_DESC, "د. محمود المهدي، ماجستير نظم معلومات ومدرب برمجة. متخصص في تقديم كورسات برمجة وشرح مواد حاسبات ومعلومات ومقدمة فى البرمجة لطلاب الجامعة والتعليم الثانوي وبكالوريا برمجة أونلاين بمصر وحضوري بالزقازيق.");
   const years = parseInt(get(SETTINGS_KEYS.ABOUT_YEARS, "5"));
   const students = parseInt(get(SETTINGS_KEYS.ABOUT_STUDENTS, "200"));
   const aboutImage = get(SETTINGS_KEYS.ABOUT_IMAGE_URL, "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&q=80");
@@ -57,7 +57,7 @@ export function About() {
   ];
 
   return (
-    <section id="about" className="py-20 lg:py-24 bg-card/30 relative">
+    <section id="about" className="py-20 lg:py-24 pb-28 lg:pb-32 bg-card/30 relative">
       <div className="container mx-auto px-4 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
           <motion.div
@@ -78,11 +78,11 @@ export function About() {
             </div>
 
             <div className="absolute -bottom-8 right-0 left-0 mx-4">
-              <div className="bg-card/90 backdrop-blur-md border border-white/10 rounded-2xl p-4 grid grid-cols-4 gap-2 shadow-xl">
+              <div className="bg-card/95 backdrop-blur-md border border-border rounded-2xl p-4 grid grid-cols-4 gap-2 shadow-xl">
                 {stats.map((stat) => (
                   <div key={stat.label} className="text-center">
                     <CountUp end={stat.end} prefix={stat.prefix} suffix={stat.suffix} />
-                    <p className="text-xs text-foreground/50 leading-tight mt-0.5">{stat.label}</p>
+                    <p className="text-xs text-muted-foreground leading-tight mt-0.5">{stat.label}</p>
                   </div>
                 ))}
               </div>
@@ -98,7 +98,7 @@ export function About() {
           >
             <span className="text-primary font-bold text-sm uppercase tracking-wider mb-4 block">من هو الدكتور؟</span>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">مين د. محمود المهدي؟</h2>
-            <p className="text-lg text-foreground/60 leading-relaxed mb-10 whitespace-pre-wrap">
+            <p className="text-lg text-foreground/70 leading-relaxed mb-10 whitespace-pre-wrap">
               {desc}
             </p>
 
@@ -119,7 +119,7 @@ export function About() {
                     hidden: { opacity: 0, y: 10 },
                     show: { opacity: 1, y: 0 }
                   }}
-                  className="flex items-center gap-2.5 bg-white/5 border border-white/10 p-3 rounded-xl hover:border-primary/30 transition-colors"
+                  className="flex items-center gap-2.5 bg-card border border-border p-3 rounded-xl hover:border-primary/30 transition-colors"
                 >
                   <CheckCircle2 className="text-primary w-5 h-5 shrink-0" />
                   <span className="font-medium text-foreground/80 text-sm">{point}</span>

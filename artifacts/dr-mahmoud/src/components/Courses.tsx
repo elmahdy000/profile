@@ -142,7 +142,7 @@ export function Courses() {
   const [active, setActive] = useState("all");
   const { data: dbCourses } = useListCourses();
 
-  const activeCourses = dbCourses && dbCourses.length > 0 ? dbCourses : courses;
+  const activeCourses = dbCourses && dbCourses.length > 0 ? dbCourses : (courses as any[]);
   const filtered = active === "all" ? activeCourses : activeCourses.filter(c => c.category === active);
 
   return (
@@ -156,7 +156,7 @@ export function Courses() {
         >
           <span className="text-primary font-bold text-sm uppercase tracking-wider mb-4 block">المسارات</span>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">الكورسات والمسارات التدريبية</h2>
-          <p className="text-foreground/50 mt-2">احجز أول سيشن مجانًا لتحديد البرنامج المناسب</p>
+          <p className="text-muted-foreground mt-2">احجز أول سيشن مجانًا لتحديد البرنامج المناسب</p>
           <div className="w-24 h-0.5 bg-primary mx-auto rounded-full mt-4" />
         </motion.div>
 
@@ -173,8 +173,8 @@ export function Courses() {
               onClick={() => setActive(cat.id)}
               className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 border ${
                 active === cat.id
-                  ? "bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] text-[#070B12] border-transparent shadow-lg shadow-[#D6A84F]/20"
-                  : "bg-[#121A27] text-foreground/60 border border-[#D6A84F]/28 hover:border-[#D6A84F]/60 hover:text-foreground"
+                  ? "bg-primary text-primary-foreground border-transparent shadow-md shadow-primary/20"
+                  : "bg-muted text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
               }`}
             >
               {cat.label}
@@ -197,9 +197,9 @@ export function Courses() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.25, delay: index * 0.04 }}
-                className="group bg-card border border-white/10 rounded-2xl overflow-hidden hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 flex flex-col"
+                className="group bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 flex flex-col"
               >
-                <div className="relative h-40 overflow-hidden bg-white/5">
+                <div className="relative h-40 overflow-hidden bg-muted">
                   <img
                     src={course.img?.includes("unsplash.com")
                       ? course.img.replace(/\?.*$/, "?w=400&h=160&q=75&auto=format&fm=webp&fit=crop")
@@ -212,7 +212,7 @@ export function Courses() {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80" />
-                  <span className="absolute top-3 left-3 px-3 py-1 bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] text-[#070B12] text-xs font-bold rounded-full">
+                  <span className="absolute top-3 left-3 px-3 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full shadow-sm">
                     {course.age}
                   </span>
                 </div>
@@ -222,14 +222,16 @@ export function Courses() {
                     {course.title}
                   </h3>
 
-                  <div className="flex flex-wrap gap-3 mb-3 text-xs text-foreground/55">
+                  <div className="flex flex-wrap gap-3 mb-3 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5 text-primary/70" />
                       {course.duration}
                     </span>
                     <span className="flex items-center gap-1">
                       <BookOpen className="w-3.5 h-3.5 text-primary/70" />
-                      {course.sessions}
+                      {course.lessonsCount && course.lessonsCount > 0
+                        ? `${course.lessonsCount} درس مصور`
+                        : course.sessions}
                     </span>
                     <span className="flex items-center gap-1">
                       <Users className="w-3.5 h-3.5 text-primary/70" />
@@ -238,22 +240,45 @@ export function Courses() {
                   </div>
 
                   <div className="flex flex-wrap gap-1.5 mb-5 flex-grow">
-                    {course.tags.map((tag) => (
-                      <span key={tag} className="px-2 py-0.5 bg-white/5 border border-white/10 text-foreground/55 text-xs rounded-md">
+                    {course.tags.map((tag: string) => (
+                      <span key={tag} className="px-2 py-0.5 bg-muted border border-border text-muted-foreground text-xs rounded-md">
                         {tag}
                       </span>
                     ))}
                   </div>
 
-                  <Button
-                    asChild
-                    className="w-full bg-[#0B111C] hover:bg-gradient-to-r hover:from-[#F2C76E] hover:to-[#D6A84F] text-primary hover:text-[#070B12] border border-[#D6A84F]/28 hover:border-transparent transition-all duration-300 font-bold"
-                  >
-                    <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
-                      <MessageCircle className="w-4 h-4 me-2" />
-                      استفسر وسجّل
-                    </a>
-                  </Button>
+                  {course.title.toLowerCase().includes("baccalaureate") ? (
+                    <div className="flex flex-col sm:flex-row gap-2 w-full mt-auto">
+                      <Button
+                        asChild
+                        className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 font-bold text-xs py-5"
+                      >
+                        <a href="/baccalaureate">
+                          عرض المنهج والتفاصيل
+                        </a>
+                      </Button>
+                      <Button
+                        asChild
+                        variant="outline"
+                        className="flex-1 border-primary/30 text-primary hover:bg-primary/5 transition-all duration-300 font-bold text-xs py-5"
+                      >
+                        <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
+                          <MessageCircle className="w-3.5 h-3.5 me-1.5 shrink-0" />
+                          احجز الآن
+                        </a>
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      asChild
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 font-bold mt-auto"
+                    >
+                      <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
+                        <MessageCircle className="w-4 h-4 me-2" />
+                        استفسر وسجّل
+                      </a>
+                    </Button>
+                  )}
                 </div>
               </motion.div>
             ))}
@@ -264,7 +289,7 @@ export function Courses() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-center text-foreground/35 text-sm mt-10"
+          className="text-center text-muted-foreground text-sm mt-10"
         >
           ✅ أول سيشن مجانًا في كل البرامج — بدون التزام
         </motion.p>

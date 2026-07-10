@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, coursesTable } from "@workspace/db";
+import { db, coursesTable, curriculumsTable, videosTable } from "@workspace/db";
 import { CreateCourseBody, UpdateCourseBody } from "@workspace/api-zod";
 import { requireAdmin } from "../middleware/auth";
 import { eq } from "drizzle-orm";
@@ -9,18 +9,40 @@ const router: IRouter = Router();
 // List courses
 router.get("/courses", async (_req, res, next) => {
   try {
-    const courses = await db.select().from(coursesTable);
-    const formatted = courses.map(c => ({
-      id: c.id,
-      title: c.title,
-      age: c.age,
-      duration: c.duration,
-      sessions: c.sessions,
-      level: c.level,
-      category: c.category,
-      tags: c.tags,
-      img: c.img,
-    }));
+    const [courses, curriculums, videos] = await Promise.all([
+      db.select().from(coursesTable),
+      db.select().from(curriculumsTable),
+      db.select().from(videosTable)
+    ]);
+
+    const formatted = courses.map(c => {
+      // Find matching curriculum lessons
+      const matchingCurriculums = curriculums.filter(curr => 
+        curr.subject.toLowerCase() === c.category.toLowerCase() ||
+        c.title.toLowerCase().includes(curr.subject.toLowerCase()) ||
+        c.tags.some(tag => tag.toLowerCase() === curr.subject.toLowerCase())
+      );
+
+      // Find matching YouTube videos/playlists
+      const matchingVideos = videos.filter(vid => 
+        vid.category.toLowerCase() === c.category.toLowerCase() ||
+        c.title.toLowerCase().includes(vid.category.toLowerCase())
+      );
+
+      return {
+        id: c.id,
+        title: c.title,
+        age: c.age,
+        duration: c.duration,
+        sessions: c.sessions,
+        level: c.level,
+        category: c.category,
+        tags: c.tags,
+        img: c.img,
+        lessonsCount: matchingCurriculums.length,
+        videosCount: matchingVideos.length
+      };
+    });
     res.json(formatted);
   } catch (error) {
     next(error);

@@ -5,6 +5,8 @@ import podcastsRouter from "./podcasts";
 import coursesRouter from "./courses";
 import uploadRouter from "./upload";
 import settingsRouter from "./settings";
+import curriculumsRouter from "./curriculums";
+import videosRouter from "./videos";
 const router: IRouter = Router();
 
 router.use(healthRouter);
@@ -13,5 +15,7 @@ router.use(podcastsRouter);
 router.use(coursesRouter);
 router.use(uploadRouter);
 router.use(settingsRouter);
+router.use(curriculumsRouter);
+router.use(videosRouter);
 
 export default router;

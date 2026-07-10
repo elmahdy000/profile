@@ -141,10 +141,10 @@ function AudioPlayer({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 16 }}
-      className="w-full bg-[#0E1520] border border-[#D6A84F]/20 rounded-2xl p-5 shadow-xl"
+      className="w-full bg-[#0E1520] border border-primary/20 rounded-2xl p-5 shadow-xl"
     >
       <div className="text-center mb-3">
-        <p className="text-xs text-[#D6A84F] font-bold mb-0.5 flex items-center justify-center gap-1">
+        <p className="text-xs text-primary font-bold mb-0.5 flex items-center justify-center gap-1">
           <Radio className="w-3 h-3" />
           شغال حالياً
         </p>
@@ -156,7 +156,7 @@ function AudioPlayer({
         {[...Array(11)].map((_, idx) => (
           <motion.div
             key={idx}
-            className="w-1 bg-[#D6A84F] rounded-full"
+            className="w-1 bg-[#06B6D4] rounded-full"
             animate={isPlaying ? { height: [6, 22, 6] } : { height: 6 }}
             transition={{ duration: 0.9 + idx * 0.08, repeat: Infinity, ease: "easeInOut" }}
           />
@@ -171,7 +171,7 @@ function AudioPlayer({
           max={duration || 100}
           value={currentTime}
           onChange={(e) => onSeek(parseFloat(e.target.value))}
-          className="w-full h-1 rounded-lg appearance-none cursor-pointer accent-[#D6A84F] bg-white/10"
+          className="w-full h-1 rounded-lg appearance-none cursor-pointer accent-[#06B6D4] bg-white/10"
         />
         <div className="flex justify-between text-xs text-foreground/35 font-mono">
           <span>{fmt(currentTime)}</span>
@@ -192,13 +192,13 @@ function AudioPlayer({
             step={0.05}
             value={isMuted ? 0 : volume}
             onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
-            className="w-16 h-1 rounded-lg appearance-none cursor-pointer accent-[#D6A84F] bg-white/10"
+            className="w-16 h-1 rounded-lg appearance-none cursor-pointer accent-[#06B6D4] bg-white/10"
           />
         </div>
 
         <button
           onClick={onPlayPause}
-          className="w-11 h-11 rounded-full bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] text-[#070B12] flex items-center justify-center shadow-lg shadow-[#D6A84F]/20 hover:scale-105 transition-all"
+          className="w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 transition-all"
         >
           {isPlaying
             ? <Pause className="w-5 h-5 fill-current" />
@@ -280,7 +280,7 @@ export function Podcast() {
 
       {/* Glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[450px] h-[450px] bg-[#D6A84F]/5 rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[450px] h-[450px] bg-primary/5 rounded-full blur-[120px]" />
       </div>
 
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
@@ -298,7 +298,7 @@ export function Podcast() {
           <p className="text-foreground/50 max-w-xl mx-auto">
             حلقات صريحة عن البرمجة والتعليم وسوق العمل — مع د. محمود المهدي
           </p>
-          <div className="w-24 h-0.5 bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] mx-auto rounded-full mt-4" />
+          <div className="w-24 h-0.5 bg-gradient-to-r from-primary/80 to-secondary/80 mx-auto rounded-full mt-4" />
         </motion.div>
 
         <div className="grid lg:grid-cols-2 gap-12 items-start max-w-6xl mx-auto">
@@ -310,11 +310,11 @@ export function Podcast() {
             className="flex flex-col items-center lg:order-2 space-y-6"
           >
             <div className="relative max-w-xs w-full">
-              <div className="absolute -inset-3 bg-[#D6A84F]/8 rounded-3xl blur-2xl" />
+              <div className="absolute -inset-3 bg-primary/8 rounded-3xl blur-2xl" />
               <img
                 src="/podcast-cover.png"
                 alt="بودكاست د. محمود المهدي"
-                className="relative rounded-2xl shadow-2xl shadow-[#D6A84F]/15 w-full object-cover border border-[#D6A84F]/15"
+                className="relative rounded-2xl shadow-2xl shadow-[#06B6D4]/15 w-full object-cover border border-[#06B6D4]/15"
               />
             </div>
 
@@ -364,8 +364,8 @@ export function Podcast() {
                   transition={{ delay: i * 0.1 }}
                   className={`group p-5 border rounded-2xl transition-all duration-300 ${
                     isAudioSelected
-                      ? "bg-[#D6A84F]/8 border-[#D6A84F]/35"
-                      : "bg-white/4 border-white/8 hover:border-[#D6A84F]/30 hover:bg-white/6"
+                      ? "bg-primary/5 border-primary/35"
+                      : "bg-card border border-border hover:border-primary/40 hover:shadow-md"
                   }`}
                 >
                   <div className="flex gap-4 items-start">
@@ -385,8 +385,8 @@ export function Podcast() {
                           : action.type === "youtube"
                           ? "bg-red-600/15 border-red-500/30 hover:bg-red-600/25 text-red-400"
                           : isAudioSelected
-                          ? "bg-[#D6A84F]/20 border-[#D6A84F]/40 text-[#D6A84F]"
-                          : "bg-[#D6A84F]/10 border-[#D6A84F]/25 hover:bg-[#D6A84F]/20 text-[#D6A84F]"
+                          ? "bg-primary/20 border-primary/40 text-primary"
+                          : "bg-primary/10 border-primary/25 hover:bg-primary/20 text-primary"
                       }`}
                     >
                       {action.type === "youtube" ? (
@@ -402,7 +402,7 @@ export function Podcast() {
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <h3
                           className={`font-bold text-sm leading-snug transition-colors ${
-                            isAudioSelected ? "text-[#D6A84F]" : "text-foreground"
+                            isAudioSelected ? "text-primary" : "text-foreground"
                           }`}
                         >
                           {ep.title}
@@ -421,7 +421,7 @@ export function Podcast() {
                           </span>
                         )}
                         {ep.audioUrl && (
-                          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 bg-[#D6A84F]/10 border border-[#D6A84F]/20 text-[#D6A84F] rounded-full">
+                          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 bg-primary/10 border border-primary/20 text-primary rounded-full">
                             <Mic className="w-3 h-3" /> صوتي
                           </span>
                         )}
@@ -444,16 +444,16 @@ export function Podcast() {
             >
               <Button
                 asChild
-                className="bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] hover:from-[#D6A84F] hover:to-[#F2C76E] text-[#070B12] font-bold shadow-lg shadow-[#D6A84F]/20 transition-all duration-300 hover:scale-[1.01]"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-[1.01]"
               >
-                <a href="https://youtube.com/@dr-mahmoud" target="_blank" rel="noreferrer">
+                <a href="https://www.youtube.com/@learntocode9453" target="_blank" rel="noopener noreferrer me">
                   <Youtube className="w-4 h-4 me-2" />
                   تابع البودكاست على YouTube
                 </a>
               </Button>
               <Button
                 asChild
-                className="bg-transparent border border-[#D6A84F]/28 hover:border-[#D6A84F]/60 text-foreground/75 hover:text-foreground transition-all font-medium"
+                className="bg-transparent border border-primary/30 hover:border-primary/60 text-foreground/75 hover:text-foreground transition-all font-medium"
               >
                 <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
                   <ExternalLink className="w-4 h-4 me-2" />

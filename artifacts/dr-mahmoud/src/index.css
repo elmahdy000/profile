@@ -4,6 +4,18 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ── Self-hosted Cairo (no network dependency) ── */
+/* Arabic subset */
+@font-face { font-family: 'Cairo'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/cairo-arabic-400.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FDFC-FDFD; }
+@font-face { font-family: 'Cairo'; font-style: normal; font-weight: 600; font-display: swap; src: url('/fonts/cairo-arabic-600.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FDFC-FDFD; }
+@font-face { font-family: 'Cairo'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/cairo-arabic-700.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FDFC-FDFD; }
+@font-face { font-family: 'Cairo'; font-style: normal; font-weight: 800; font-display: swap; src: url('/fonts/cairo-arabic-800.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FDFC-FDFD; }
+/* Latin subset (code snippets, English terms) */
+@font-face { font-family: 'Cairo'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/cairo-latin-400.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Cairo'; font-style: normal; font-weight: 600; font-display: swap; src: url('/fonts/cairo-latin-600.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Cairo'; font-style: normal; font-weight: 700; font-display: swap; src: url('/fonts/cairo-latin-700.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Cairo'; font-style: normal; font-weight: 800; font-display: swap; src: url('/fonts/cairo-latin-800.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
 @theme inline {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -38,6 +50,9 @@
   --color-destructive: hsl(var(--destructive));
   --color-destructive-foreground: hsl(var(--destructive-foreground));
   --color-destructive-border: var(--destructive-border);
+
+  --color-gold: hsl(var(--gold));
+  --color-success: hsl(var(--success));
 
   --color-chart-1: hsl(var(--chart-1));
   --color-chart-2: hsl(var(--chart-2));
@@ -93,184 +108,174 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* DARK NAVY & CYAN TECHNOLOGY THEME */
+/* LIGHT THEME BY DEFAULT (Modern Academic Tech) */
 :root {
-  --button-outline: rgba(255,255,255, .12);
-  --badge-outline: rgba(255,255,255, .06);
+  --button-outline: rgba(15, 23, 42, 0.08);
+  --badge-outline: rgba(15, 23, 42, 0.05);
 
-  --opaque-button-border-intensity: 9;
+  --opaque-button-border-intensity: 4;
 
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
+  --elevate-1: rgba(15, 23, 42, 0.02);
+  --elevate-2: rgba(15, 23, 42, 0.04);
 
-  /* Deep dark navy background */
-  --background: 218 44% 5%;
+  /* Soft Background: #F8FAFC */
+  --background: 210 40% 98%;
 
-  /* Off-white text */
-  --foreground: 42 27% 95%;
+  /* Dark Text: #0F172A */
+  --foreground: 222 47% 11%;
 
-  /* Subtle dark border */
-  --border: 218 20% 15%;
+  /* Subtle border: #E2E8F0 */
+  --border: 214 32% 91%;
 
-  /* Card: slightly lighter than background */
-  --card: 217 37% 11%;
+  /* Card: #FFFFFF */
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --card-border: 214 32% 91%;
 
-  --card-foreground: 42 27% 95%;
+  --sidebar: 210 40% 98%;
+  --sidebar-foreground: 222 47% 11%;
+  --sidebar-border: 214 32% 91%;
 
-  --card-border: 218 20% 15%;
+  /* Royal Blue primary: #2563EB */
+  --sidebar-primary: 221 83% 53%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 210 40% 96.1%;
+  --sidebar-accent-foreground: 222 47% 11%;
+  --sidebar-ring: 221 83% 53%;
 
-  --sidebar: 218 44% 5%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --popover-border: 214 32% 91%;
 
-  --sidebar-foreground: 42 27% 95%;
+  /* Royal Blue primary: #2563EB */
+  --primary: 221 83% 53%;
+  --primary-foreground: 0 0% 100%;
 
-  --sidebar-border: 218 20% 15%;
+  /* Electric Cyan secondary: #06B6D4 */
+  --secondary: 189 94% 43%;
+  --secondary-foreground: 0 0% 100%;
 
-  /* Cyan primary */
-  --sidebar-primary: 40 63% 57%;
+  /* Muted background: #F1F5F9 */
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215 16% 47%; /* Muted text: #64748B */
 
-  --sidebar-primary-foreground: 218 44% 5%;
+  /* Deep Navy accent: #0B1F3A */
+  --accent: 214 68% 14%;
+  --accent-foreground: 0 0% 100%;
 
-  --sidebar-accent: 219 44% 8%;
-
-  --sidebar-accent-foreground: 42 27% 95%;
-
-  --sidebar-ring: 40 63% 57%;
-
-  --popover: 217 37% 11%;
-
-  --popover-foreground: 42 27% 95%;
-
-  --popover-border: 218 20% 15%;
-
-  /* Cyan primary color #22D3EE */
-  --primary: 40 63% 57%;
-
-  --primary-foreground: 218 44% 5%;
-
-  /* Dark secondary */
-  --secondary: 40 82% 69%;
-
-  --secondary-foreground: 218 44% 5%;
-
-  --muted: 219 44% 8%;
-
-  --muted-foreground: 217 15% 70%;
-
-  /* Cyan accent */
-  --accent: 40 63% 57%;
-
-  --accent-foreground: 218 44% 5%;
+  /* Success green: #16A34A, Accent gold: #F59E0B */
+  --success: 142 76% 36%;
+  --gold: 38 92% 50%;
 
   --destructive: 0 72% 51%;
-
   --destructive-foreground: 0 0% 100%;
 
-  --input: 218 20% 15%;
-  --ring: 40 63% 57%;
-  --chart-1: 40 63% 57%;
-  --chart-2: 40 82% 69%;
-  --chart-3: 36 64% 37%;
-  --chart-4: 150 70% 45%;
-  --chart-5: 280 60% 55%;
+  --input: 214 32% 91%;
+  --ring: 221 83% 53%;
+  --chart-1: 221 83% 53%;
+  --chart-2: 189 94% 43%;
+  --chart-3: 214 68% 14%;
+  --chart-4: 142 76% 36%;
+  --chart-5: 38 92% 50%;
 
   --app-font-sans: 'Cairo', sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
   --radius: .75rem;
-  --shadow-2xs: 0px 1px 2px 0px rgba(0,0,0,0.4);
-  --shadow-xs: 0px 1px 2px 0px rgba(0,0,0,0.4);
-  --shadow-sm: 0px 1px 3px 0px rgba(0,0,0,0.5), 0px 1px 2px -1px rgba(0,0,0,0.4);
-  --shadow: 0px 4px 6px -1px rgba(0,0,0,0.5), 0px 2px 4px -2px rgba(0,0,0,0.4);
-  --shadow-md: 0px 4px 6px -1px rgba(0,0,0,0.5), 0px 2px 4px -2px rgba(0,0,0,0.4);
-  --shadow-lg: 0px 10px 15px -3px rgba(0,0,0,0.6), 0px 4px 6px -4px rgba(0,0,0,0.4);
-  --shadow-xl: 0px 20px 25px -5px rgba(0,0,0,0.6), 0px 8px 10px -6px rgba(0,0,0,0.4);
-  --shadow-2xl: 0px 25px 50px -12px rgba(0,0,0,0.7);
+  --shadow-2xs: 0px 1px 2px 0px rgba(0,0,0,0.05);
+  --shadow-xs: 0px 1px 2px 0px rgba(0,0,0,0.05);
+  --shadow-sm: 0px 1px 3px 0px rgba(0,0,0,0.08), 0px 1px 2px -1px rgba(0,0,0,0.04);
+  --shadow: 0px 4px 6px -1px rgba(0,0,0,0.08), 0px 2px 4px -2px rgba(0,0,0,0.04);
+  --shadow-md: 0px 4px 6px -1px rgba(0,0,0,0.08), 0px 2px 4px -2px rgba(0,0,0,0.04);
+  --shadow-lg: 0px 10px 15px -3px rgba(0,0,0,0.1), 0px 4px 6px -4px rgba(0,0,0,0.05);
+  --shadow-xl: 0px 20px 25px -5px rgba(0,0,0,0.1), 0px 8px 10px -6px rgba(0,0,0,0.05);
+  --shadow-2xl: 0px 25px 50px -12px rgba(0,0,0,0.15);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 
-  /* Automatically computed borders - intensity can be controlled by the user by the --opaque-button-border-intensity setting */
-
-  /* Fallback for older browsers */
   --sidebar-primary-border: hsl(var(--sidebar-primary));
-  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
   --sidebar-accent-border: hsl(var(--sidebar-accent));
-  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
   --primary-border: hsl(var(--primary));
-  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
   --secondary-border: hsl(var(--secondary));
-  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
   --muted-border: hsl(var(--muted));
-  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
   --accent-border: hsl(var(--accent));
-  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
-
-  /* Fallback for older browsers */
   --destructive-border: hsl(var(--destructive));
-  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
 }
 
+/* DARK MODE (Deep Navy Academic Theme) */
 .dark {
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
-  --background: 218 44% 5%;
-  --foreground: 42 27% 95%;
-  --border: 218 20% 15%;
-  --card: 217 37% 11%;
-  --card-foreground: 42 27% 95%;
-  --card-border: 218 20% 15%;
-  --sidebar: 218 44% 5%;
-  --sidebar-foreground: 42 27% 95%;
-  --sidebar-border: 218 20% 15%;
-  --sidebar-primary: 40 63% 57%;
-  --sidebar-primary-foreground: 218 44% 5%;
-  --sidebar-accent: 219 44% 8%;
-  --sidebar-accent-foreground: 42 27% 95%;
-  --sidebar-ring: 40 63% 57%;
-  --popover: 217 37% 11%;
-  --popover-foreground: 42 27% 95%;
-  --popover-border: 218 20% 15%;
-  --primary: 40 63% 57%;
-  --primary-foreground: 218 44% 5%;
-  --secondary: 40 82% 69%;
-  --secondary-foreground: 218 44% 5%;
-  --muted: 219 44% 8%;
-  --muted-foreground: 217 15% 70%;
-  --accent: 40 63% 57%;
-  --accent-foreground: 218 44% 5%;
-  --destructive: 0 72% 51%;
-  --destructive-foreground: 0 0% 100%;
-  --input: 218 20% 15%;
-  --ring: 40 63% 57%;
-  --chart-1: 40 63% 57%;
-  --chart-2: 40 82% 69%;
-  --chart-3: 36 64% 37%;
-  --chart-4: 150 70% 45%;
-  --chart-5: 280 60% 55%;
-  --shadow-2xs: 0px 1px 2px 0px rgba(0,0,0,0.4);
-  --shadow-xs: 0px 1px 2px 0px rgba(0,0,0,0.4);
-  --shadow-sm: 0px 1px 3px 0px rgba(0,0,0,0.5), 0px 1px 2px -1px rgba(0,0,0,0.4);
-  --shadow: 0px 4px 6px -1px rgba(0,0,0,0.5), 0px 2px 4px -2px rgba(0,0,0,0.4);
-  --shadow-md: 0px 4px 6px -1px rgba(0,0,0,0.5), 0px 2px 4px -2px rgba(0,0,0,0.4);
-  --shadow-lg: 0px 10px 15px -3px rgba(0,0,0,0.6), 0px 4px 6px -4px rgba(0,0,0,0.4);
-  --shadow-xl: 0px 20px 25px -5px rgba(0,0,0,0.6), 0px 8px 10px -6px rgba(0,0,0,0.4);
-  --shadow-2xl: 0px 25px 50px -12px rgba(0,0,0,0.7);
+
+  /* Deep Navy background: #0B1F3A */
+  --background: 214 68% 14%;
+  --foreground: 210 40% 98%;
+
+  --border: 214 40% 20%;
+
+  /* Slightly lighter navy for cards */
+  --card: 214 60% 18%;
+  --card-foreground: 210 40% 98%;
+  --card-border: 214 40% 20%;
+
+  --sidebar: 214 68% 14%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-border: 214 40% 20%;
+  --sidebar-primary: 189 94% 43%;
+  --sidebar-primary-foreground: 214 68% 14%;
+  --sidebar-accent: 214 60% 18%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-ring: 189 94% 43%;
+
+  --popover: 214 60% 18%;
+  --popover-foreground: 210 40% 98%;
+  --popover-border: 214 40% 20%;
+
+  --primary: 189 94% 43%; /* Electric Cyan in dark mode */
+  --primary-foreground: 214 68% 14%;
+  --secondary: 221 83% 53%; /* Royal Blue */
+  --secondary-foreground: 0 0% 100%;
+
+  --muted: 214 60% 18%;
+  --muted-foreground: 215 20% 65%;
+  --accent: 221 83% 53%;
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+
+  --input: 214 40% 20%;
+  --ring: 189 94% 43%;
 }
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.35);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.6);
+}
+
+/* Better focus rings */
+:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 @layer base {

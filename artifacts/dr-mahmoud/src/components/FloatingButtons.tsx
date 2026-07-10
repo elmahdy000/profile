@@ -14,7 +14,7 @@ export function FloatingButtons() {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
-    <div className="fixed bottom-4 sm:bottom-6 left-4 sm:left-6 z-50 flex flex-col gap-2.5 sm:gap-3 items-center">
+    <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50 flex flex-col gap-2.5 sm:gap-3 items-center">
       <AnimatePresence>
         {showTop && (
           <motion.button
@@ -24,7 +24,7 @@ export function FloatingButtons() {
             exit={{ opacity: 0, scale: 0.5, y: 15 }}
             transition={{ type: "spring", stiffness: 300, damping: 22 }}
             onClick={scrollToTop}
-            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 border border-white/20 text-foreground hover:bg-primary hover:border-primary hover:text-primary-foreground transition-all duration-300 flex items-center justify-center shadow-lg backdrop-blur-sm"
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-700 border border-slate-600 text-white hover:bg-primary hover:border-primary hover:text-primary-foreground transition-all duration-300 flex items-center justify-center shadow-lg"
             aria-label="العودة للأعلى"
           >
             <ArrowUp className="w-4 h-4 sm:w-5 sm:h-5" />

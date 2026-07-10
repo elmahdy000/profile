@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, MessageCircle, ArrowRight, Star, Clock, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,14 @@ const faqs = [
 ];
 
 export default function KidsPage() {
+  useEffect(() => {
+    document.title = "كورسات برمجة للأطفال من سن 4 سنين | د. محمود المهدي";
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute('content', 'كورسات برمجة للأطفال من الصفر بـ Scratch و Python للأطفال والناشئين. أسلوب تفاعلي ممتع وعملي بمشاريع حقيقية مع د. محمود المهدي.');
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-background text-foreground font-sans" dir="rtl">
       {/* Minimal Navbar */}
@@ -41,7 +50,7 @@ export default function KidsPage() {
             <div className="w-9 h-9 bg-primary text-primary-foreground rounded-lg flex items-center justify-center font-bold text-lg">م</div>
             <span className="font-bold text-lg text-primary">د. محمود المهدي</span>
           </a>
-          <Button asChild className="bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] text-[#070B12] font-bold rounded-full px-5 h-9 text-sm shadow-md hover:scale-[1.03] transition-all">
+          <Button asChild className="bg-primary text-primary-foreground font-bold rounded-full px-5 h-9 text-sm shadow-md hover:scale-[1.03] transition-all">
             <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
               <MessageCircle className="w-4 h-4 me-2" />
               احجز تقييم مجاني
@@ -53,7 +62,7 @@ export default function KidsPage() {
       {/* Hero */}
       <section className="py-16 lg:py-24 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#D6A84F]/8 rounded-full blur-[120px]" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/8 rounded-full blur-[120px]" />
         </div>
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
           <motion.div
@@ -68,13 +77,13 @@ export default function KidsPage() {
               <span className="text-primary">برمجة الأطفال</span>
             </div>
 
-            <span className="inline-block px-4 py-1.5 bg-[#D6A84F]/12 border border-[#D6A84F]/30 text-[#D6A84F] text-xs font-bold rounded-full mb-6">
+            <span className="inline-block px-4 py-1.5 bg-primary/12 border border-primary/30 text-primary text-xs font-bold rounded-full mb-6">
               من سن 4 إلى 18 سنة
             </span>
 
             <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-6 leading-snug">
               تعلم البرمجة<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F2C76E] to-[#D6A84F]">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary/80 to-secondary/80">
                 بطريقة ممتعة للأطفال
               </span>
             </h1>
@@ -84,13 +93,13 @@ export default function KidsPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] hover:from-[#D6A84F] hover:to-[#F2C76E] text-[#070B12] font-bold rounded-full px-8 shadow-lg shadow-[#D6A84F]/20 hover:scale-[1.02] transition-all">
+              <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-full px-8 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all">
                 <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
                   <MessageCircle className="w-5 h-5 me-2" />
                   احجز أول سيشن مجانًا
                 </a>
               </Button>
-              <Button asChild variant="outline" size="lg" className="bg-transparent border border-[#D6A84F]/30 hover:border-[#D6A84F]/60 text-foreground rounded-full px-8">
+              <Button asChild variant="outline" size="lg" className="bg-transparent border border-primary/30 hover:border-primary/60 text-foreground rounded-full px-8">
                 <a href="/">العودة للرئيسية</a>
               </Button>
             </div>
@@ -108,8 +117,8 @@ export default function KidsPage() {
               { icon: Users, label: "متابعة للوالدين" },
             ].map(({ icon: Icon, label }) => (
               <div key={label} className="flex flex-col items-center gap-2">
-                <div className="w-10 h-10 rounded-full bg-[#D6A84F]/10 border border-[#D6A84F]/20 flex items-center justify-center">
-                  <Icon className="w-5 h-5 text-[#D6A84F]" />
+                <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                  <Icon className="w-5 h-5 text-primary" />
                 </div>
                 <p className="text-xs text-foreground/50">{label}</p>
               </div>
@@ -132,7 +141,7 @@ export default function KidsPage() {
               <ul className="space-y-4">
                 {features.map((f) => (
                   <li key={f} className="flex items-center gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-[#D6A84F] shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
                     <span className="text-foreground/75 text-sm">{f}</span>
                   </li>
                 ))}
@@ -143,9 +152,9 @@ export default function KidsPage() {
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-gradient-to-b from-[#1A1400] to-[#121A27] border-2 border-[#D6A84F]/40 rounded-2xl p-8 shadow-xl shadow-[#D6A84F]/8"
+              className="bg-gradient-to-b from-[#061827] to-[#0A1628] border-2 border-primary/40 rounded-2xl p-8 shadow-xl shadow-primary/8"
             >
-              <span className="inline-block px-3 py-1 bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] text-[#070B12] text-xs font-bold rounded-full mb-6">
+              <span className="inline-block px-3 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full mb-6">
                 Kids Package
               </span>
               <h3 className="text-xl font-bold text-foreground mb-2">برمجة الأطفال</h3>
@@ -155,23 +164,23 @@ export default function KidsPage() {
 
               <div className="space-y-3 mb-8">
                 <div className="flex items-center gap-2 text-sm text-foreground/55">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D6A84F]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#06B6D4]" />
                   Scratch (4–8 سنين)
                 </div>
                 <div className="flex items-center gap-2 text-sm text-foreground/55">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D6A84F]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#06B6D4]" />
                   Python مبسط (8–18 سنة)
                 </div>
                 <div className="flex items-center gap-2 text-sm text-foreground/55">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D6A84F]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#06B6D4]" />
                   متابعة دورية للوالدين
                 </div>
               </div>
 
-              <p className="text-[#D6A84F] font-bold text-lg mb-1">السعر بعد التقييم المجاني</p>
+              <p className="text-primary font-bold text-lg mb-1">السعر بعد التقييم المجاني</p>
               <p className="text-foreground/35 text-xs mb-6">يُحدد حسب سن الطفل والمستوى</p>
 
-              <Button asChild className="w-full bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] hover:from-[#D6A84F] hover:to-[#F2C76E] text-[#070B12] font-bold shadow-lg shadow-[#D6A84F]/20 transition-all hover:scale-[1.01]">
+              <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01]">
                 <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
                   <MessageCircle className="w-4 h-4 me-2" />
                   احجز تقييم مجاني
@@ -210,7 +219,7 @@ export default function KidsPage() {
         <div className="container mx-auto px-4">
           <h2 className="text-2xl font-bold text-foreground mb-3">ابنك جاهز يبدأ؟</h2>
           <p className="text-foreground/45 mb-8 text-sm">احجز أول سيشن تقييم مجاني — هنحدد المستوى المناسب لسنه</p>
-          <Button asChild size="lg" className="bg-gradient-to-r from-[#F2C76E] to-[#D6A84F] hover:from-[#D6A84F] hover:to-[#F2C76E] text-[#070B12] font-bold rounded-full px-10 shadow-lg shadow-[#D6A84F]/20 hover:scale-[1.02] transition-all">
+          <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-full px-10 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all">
             <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
               <MessageCircle className="w-5 h-5 me-2" />
               تواصل على واتساب

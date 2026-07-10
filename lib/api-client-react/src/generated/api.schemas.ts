@@ -63,7 +63,72 @@ export interface Course {
   category: string;
   tags: string[];
   img: string;
+  lessonsCount: number;
+  videosCount: number;
 }
+
+export interface InsertSiteSetting {
+  key: string;
+  value?: string | null;
+  type?: string;
+}
+
+export interface SiteSetting {
+  value?: string | null;
+  type?: string;
+}
+
+export interface SiteSettingModel {
+  id: number;
+  key: string;
+  value?: string | null;
+  type?: string;
+  updatedAt: string;
+}
+
+export interface InsertCurriculum {
+  subject: string;
+  title: string;
+  description?: string | null;
+  images: string[];
+  order?: number;
+}
+
+export interface Curriculum {
+  id: number;
+  subject: string;
+  title: string;
+  description?: string | null;
+  images: string[];
+  order: number;
+  createdAt: string;
+}
+
+export interface InsertVideo {
+  category: string;
+  title: string;
+  description?: string | null;
+  youtubeUrl: string;
+  type: string;
+  order?: number;
+}
+
+export interface Video {
+  id: number;
+  category: string;
+  title: string;
+  description?: string | null;
+  youtubeUrl: string;
+  type: string;
+  order: number;
+  createdAt: string;
+}
+
+export type GetSettings200 = {[key: string]: SiteSetting};
+
+export type UpdateSettingsBatchBody = {
+  settings: InsertSiteSetting[];
+};
 
 export type UpdateBookingStatusBody = {
   status: string;
@@ -78,6 +143,14 @@ export type DeletePodcast200 = {
 };
 
 export type DeleteCourse200 = {
+  success: boolean;
+};
+
+export type DeleteVideo200 = {
+  success: boolean;
+};
+
+export type DeleteCurriculum200 = {
   success: boolean;
 };
 
