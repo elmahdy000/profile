@@ -111,6 +111,8 @@ export interface InsertVideo {
   youtubeUrl: string;
   type: string;
   order?: number;
+  isProtected?: boolean;
+  accessKey?: string | null;
 }
 
 export interface Video {
@@ -121,6 +123,8 @@ export interface Video {
   youtubeUrl: string;
   type: string;
   order: number;
+  isProtected: boolean;
+  accessKey?: string | null;
   createdAt: string;
 }
 

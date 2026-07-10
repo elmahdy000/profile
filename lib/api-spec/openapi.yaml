@@ -760,6 +760,12 @@ components:
           type: string
         order:
           type: integer
+        isProtected:
+          type: boolean
+          default: false
+        accessKey:
+          type: string
+          nullable: true
       required:
         - category
         - title
@@ -783,6 +789,11 @@ components:
           type: string
         order:
           type: integer
+        isProtected:
+          type: boolean
+        accessKey:
+          type: string
+          nullable: true
         createdAt:
           type: string
       required:
@@ -792,5 +803,6 @@ components:
         - youtubeUrl
         - type
         - order
+        - isProtected
         - createdAt
 

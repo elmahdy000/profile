@@ -21,10 +21,13 @@ function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(bufA, bufB);
 }
 
-export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+export function isAdminRequest(req: Request): boolean {
   const authHeader = req.headers.authorization;
+  return !!(authHeader && safeEqual(authHeader, expectedHeader));
+}
 
-  if (!authHeader || !safeEqual(authHeader, expectedHeader)) {
+export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!isAdminRequest(req)) {
     res.status(401).json({ error: "Unauthorized: Invalid admin password" });
     return;
   }

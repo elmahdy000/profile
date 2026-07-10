@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Youtube, Play, ExternalLink, Library, Tv, ChevronLeft, Loader2
+  Youtube, Play, ExternalLink, Library, Tv, ChevronLeft, Loader2, Lock, Unlock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListVideos } from "@workspace/api-client-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface VideoItem {
   id?: number;
@@ -14,6 +15,7 @@ interface VideoItem {
   youtubeUrl: string;
   type: "video" | "playlist";
   order: number;
+  isProtected?: boolean;
 }
 
 // Helper to extract YouTube video ID
@@ -162,10 +164,184 @@ function VideoPlayerModal({
   );
 }
 
+// ─── Unlock Content Modal ───
+function UnlockModal({
+  item,
+  refetch,
+  onClose,
+  onSuccess,
+}: {
+  item: VideoItem;
+  refetch: () => Promise<any>;
+  onClose: () => void;
+  onSuccess: (unlockedItem: VideoItem) => void;
+}) {
+  const [keyInput, setKeyInput] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const { toast } = useToast();
+
+  const handleUnlock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!keyInput.trim()) return;
+
+    setIsVerifying(true);
+    setErrorMsg("");
+
+    try {
+      const existing = localStorage.getItem("dr_mahmoud_unlock_keys") || "";
+      const keysArray = existing
+        .split(",")
+        .map((k) => k.trim())
+        .filter(Boolean);
+
+      const newKeyClean = keyInput.trim();
+      const updatedKeys = [...keysArray];
+      if (!updatedKeys.includes(newKeyClean)) {
+        updatedKeys.push(newKeyClean);
+      }
+
+      localStorage.setItem("dr_mahmoud_unlock_keys", updatedKeys.join(","));
+
+      const refetchResult = await refetch();
+      const updatedVideos = refetchResult.data;
+
+      const updatedItem = updatedVideos?.find((v: any) => v.id === item.id);
+
+      if (updatedItem && updatedItem.youtubeUrl !== "locked") {
+        toast({
+          title: "تم تفعيل المحاضرة بنجاح 🎉",
+          description: `المحاضرة "${item.title}" متاحة للمشاهدة الآن.`,
+        });
+        onSuccess(updatedItem as VideoItem);
+      } else {
+        localStorage.setItem("dr_mahmoud_unlock_keys", keysArray.join(","));
+        setErrorMsg("كود التفعيل غير صحيح أو غير متوافق مع هذا الفيديو. يرجى التحقق منه والمحاولة مرة أخرى.");
+        toast({
+          variant: "destructive",
+          title: "فشل تفعيل المحاضرة ❌",
+          description: "كود التفعيل المدخل غير صحيح لهذا الفيديو.",
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("حدث خطأ أثناء الاتصال بالسيرفر. يرجى المحاولة لاحقاً.");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          className="relative w-full max-w-md bg-[#090D16] border border-white/10 rounded-3xl overflow-hidden shadow-2xl p-6 md:p-8 flex flex-col gap-6 text-right"
+          dir="rtl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={onClose}
+            className="absolute top-4 left-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+          >
+            ✕
+          </button>
+
+          <div className="flex flex-col items-center text-center gap-3 mt-2">
+            <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/5">
+              <Lock className="w-8 h-8" />
+            </div>
+            <h3 className="text-xl font-bold text-white">محتوى مدفوع ومحمي 🔒</h3>
+            <p className="text-xs text-muted-foreground max-w-xs leading-relaxed">
+              هذه المحاضرة جزء من المحتوى الخاص بمشتركي الكورس المدفوع. يرجى إدخال كود التفعيل المخصص لك لتتمكن من مشاهدتها.
+            </p>
+          </div>
+
+          <form onSubmit={handleUnlock} className="space-y-4">
+            <div className="space-y-1.5">
+              <label htmlFor="activationCode" className="text-xs font-bold text-foreground/80 block">
+                كود التفعيل (Access Key)
+              </label>
+              <input
+                type="text"
+                id="activationCode"
+                required
+                value={keyInput}
+                onChange={(e) => setKeyInput(e.target.value)}
+                placeholder="أدخل الكود هنا (مثال: c++-course-key-xyz)"
+                className="w-full h-11 px-4 rounded-xl border border-border bg-slate-950 focus:outline-none focus:border-primary text-sm transition-all text-center font-mono placeholder:text-muted-foreground/40 text-white"
+              />
+              {errorMsg && (
+                <p className="text-[11px] text-red-500 font-bold leading-relaxed">{errorMsg}</p>
+              )}
+            </div>
+
+            <Button
+              type="submit"
+              disabled={isVerifying}
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-11 rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2"
+            >
+              {isVerifying ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  جاري التحقق من الكود...
+                </>
+              ) : (
+                <>
+                  <Unlock className="w-4 h-4" />
+                  تفعيل ومشاهدة الآن
+                </>
+              )}
+            </Button>
+          </form>
+
+          <div className="border-t border-white/5 pt-4 flex flex-col gap-2">
+            <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
+              لم تحصل على كود تفعيل بعد؟ لا تقلق، يمكنك التواصل مع د. محمود مباشرة للحجز والحصول على الكود فوراً.
+            </p>
+            <Button
+              asChild
+              variant="outline"
+              className="w-full border-emerald-500/20 hover:border-emerald-500/50 hover:bg-emerald-500/10 text-emerald-400 font-bold h-11 rounded-xl transition-all"
+            >
+              <a
+                href={`https://wa.me/201044348610?text=${encodeURIComponent(
+                  `أهلاً دكتور محمود، أود الاشتراك في الكورس وتفعيل المحاضرة: "${item.title}"`
+                )}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                تواصل لحجز الكورس عبر واتساب
+              </a>
+            </Button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 export function YoutubeSection() {
-  const { data: dbVideos, isLoading } = useListVideos();
+  const { data: dbVideos, isLoading, refetch } = useListVideos();
   const [activeCategory, setActiveCategory] = useState("all");
   const [activePlayer, setActivePlayer] = useState<VideoItem | null>(null);
+  const [unlockModalItem, setUnlockModalItem] = useState<VideoItem | null>(null);
+
+  const handlePlayClick = (item: VideoItem) => {
+    if (item.youtubeUrl === "locked") {
+      setUnlockModalItem(item);
+    } else {
+      setActivePlayer(item);
+    }
+  };
 
   // Combine DB & Fallback (if DB empty)
   const items: VideoItem[] = dbVideos && dbVideos.length > 0 ? (dbVideos as any) : fallbackVideos;
@@ -308,15 +484,19 @@ export function YoutubeSection() {
                     {/* Play Overlay */}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300">
                       <button
-                        onClick={() => setActivePlayer(item)}
+                        onClick={() => handlePlayClick(item)}
                         className="w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-2xl scale-75 group-hover:scale-100 transition-all duration-300 hover:bg-primary/95"
                       >
-                        <Play className="w-6 h-6 fill-current ms-1" />
+                        {item.youtubeUrl === "locked" ? (
+                          <Lock className="w-6 h-6 text-amber-400" />
+                        ) : (
+                          <Play className="w-6 h-6 fill-current ms-1" />
+                        )}
                       </button>
                     </div>
 
                     {/* Badges */}
-                    <div className="absolute top-4 right-4 flex items-center gap-1.5">
+                    <div className="absolute top-4 right-4 flex flex-wrap items-center gap-1.5">
                       <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border backdrop-blur-md ${
                         item.type === "playlist"
                           ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
@@ -324,6 +504,17 @@ export function YoutubeSection() {
                       }`}>
                         {item.type === "playlist" ? "قائمة تشغيل" : "شرح منفرد"}
                       </span>
+                      {item.youtubeUrl === "locked" ? (
+                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg border backdrop-blur-md bg-amber-500/15 text-amber-400 border-amber-500/30 flex items-center gap-1">
+                          <Lock className="w-3 h-3" />
+                          محتوى مدفوع 🔒
+                        </span>
+                      ) : item.isProtected ? (
+                        <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg border backdrop-blur-md bg-emerald-500/15 text-emerald-400 border-emerald-500/30 flex items-center gap-1">
+                          <Unlock className="w-3 h-3" />
+                          تم التفعيل ✨
+                        </span>
+                      ) : null}
                     </div>
                   </div>
 
@@ -345,22 +536,34 @@ export function YoutubeSection() {
 
                     <div className="flex items-center justify-between border-t border-border/40 pt-4 mt-auto">
                       <button
-                        onClick={() => setActivePlayer(item)}
-                        className="text-xs text-primary font-bold hover:underline flex items-center gap-1 group/btn"
+                        onClick={() => handlePlayClick(item)}
+                        className={`text-xs font-bold hover:underline flex items-center gap-1 group/btn ${
+                          item.youtubeUrl === "locked" ? "text-amber-400 hover:text-amber-300" : "text-primary"
+                        }`}
                       >
-                        {item.type === "playlist" ? "مشاهدة القائمة" : "ابدأ المشاهدة"}
+                        {item.youtubeUrl === "locked" ? (
+                          <>
+                            فك قفل الفيديو 🔒
+                          </>
+                        ) : item.type === "playlist" ? (
+                          "مشاهدة القائمة"
+                        ) : (
+                          "ابدأ المشاهدة"
+                        )}
                         <ChevronLeft className="w-4 h-4 group-hover/btn:translate-x-[-2px] transition-transform" />
                       </button>
 
-                      <a
-                        href={item.youtubeUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-muted-foreground hover:text-white transition-colors"
-                        title="مشاهدة على يوتيوب مباشرة"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
+                      {item.youtubeUrl !== "locked" && (
+                        <a
+                          href={item.youtubeUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-muted-foreground hover:text-white transition-colors"
+                          title="مشاهدة على يوتيوب مباشرة"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      )}
                     </div>
                   </div>
                 </motion.div>
@@ -392,6 +595,19 @@ export function YoutubeSection() {
       {/* Video Overlay Player Modal */}
       {activePlayer && (
         <VideoPlayerModal item={activePlayer} onClose={() => setActivePlayer(null)} />
+      )}
+
+      {/* Unlock Content Modal */}
+      {unlockModalItem && (
+        <UnlockModal
+          item={unlockModalItem}
+          refetch={refetch}
+          onClose={() => setUnlockModalItem(null)}
+          onSuccess={(unlockedItem) => {
+            setUnlockModalItem(null);
+            setActivePlayer(unlockedItem);
+          }}
+        />
       )}
     </section>
   );

@@ -293,6 +293,8 @@ export const ListVideosResponseItem = zod.object({
   "youtubeUrl": zod.string(),
   "type": zod.string(),
   "order": zod.number(),
+  "isProtected": zod.boolean(),
+  "accessKey": zod.string().nullish(),
   "createdAt": zod.string()
 })
 export const ListVideosResponse = zod.array(ListVideosResponseItem)
@@ -302,13 +304,17 @@ export const ListVideosResponse = zod.array(ListVideosResponseItem)
  * Creates a new video or playlist entry
  * @summary Create video or playlist
  */
+export const createVideoBodyIsProtectedDefault = false;
+
 export const CreateVideoBody = zod.object({
   "category": zod.string(),
   "title": zod.string(),
   "description": zod.string().nullish(),
   "youtubeUrl": zod.string(),
   "type": zod.string(),
-  "order": zod.number().optional()
+  "order": zod.number().optional(),
+  "isProtected": zod.boolean().default(createVideoBodyIsProtectedDefault),
+  "accessKey": zod.string().nullish()
 })
 
 
@@ -320,13 +326,17 @@ export const UpdateVideoParams = zod.object({
   "id": zod.coerce.number()
 })
 
+export const updateVideoBodyIsProtectedDefault = false;
+
 export const UpdateVideoBody = zod.object({
   "category": zod.string(),
   "title": zod.string(),
   "description": zod.string().nullish(),
   "youtubeUrl": zod.string(),
   "type": zod.string(),
-  "order": zod.number().optional()
+  "order": zod.number().optional(),
+  "isProtected": zod.boolean().default(updateVideoBodyIsProtectedDefault),
+  "accessKey": zod.string().nullish()
 })
 
 export const UpdateVideoResponse = zod.object({
@@ -337,6 +347,8 @@ export const UpdateVideoResponse = zod.object({
   "youtubeUrl": zod.string(),
   "type": zod.string(),
   "order": zod.number(),
+  "isProtected": zod.boolean(),
+  "accessKey": zod.string().nullish(),
   "createdAt": zod.string()
 })
 

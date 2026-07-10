@@ -213,6 +213,8 @@ export default function AdminDashboard() {
     youtubeUrl: "",
     type: "video" as "video" | "playlist",
     order: 0,
+    isProtected: false,
+    accessKey: "",
   });
   const [previewVideo, setPreviewVideo] = useState<Video | null>(null);
 
@@ -247,6 +249,8 @@ export default function AdminDashboard() {
         youtubeUrl: video.youtubeUrl,
         type: video.type as "video" | "playlist",
         order: video.order,
+        isProtected: (video as any).isProtected ?? false,
+        accessKey: (video as any).accessKey || "",
       });
     } else {
       setSelectedVideoId(null);
@@ -257,6 +261,8 @@ export default function AdminDashboard() {
         youtubeUrl: "",
         type: "video",
         order: 0,
+        isProtected: false,
+        accessKey: "",
       });
     }
     setIsVideoModalOpen(true);
@@ -588,6 +594,8 @@ export default function AdminDashboard() {
       youtubeUrl: videoForm.youtubeUrl,
       type: videoForm.type,
       order: Number(videoForm.order),
+      isProtected: videoForm.isProtected,
+      accessKey: videoForm.isProtected ? videoForm.accessKey || undefined : undefined,
     };
 
     try {
@@ -1382,6 +1390,11 @@ export default function AdminDashboard() {
                             }`}>
                               {video.type === "playlist" ? "قائمة تشغيل" : "فيديو منفرد"}
                             </span>
+                            {video.isProtected && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border backdrop-blur-md bg-purple-500/20 text-purple-400 border-purple-500/35 flex items-center gap-1">
+                                <Lock className="w-3 h-3 text-purple-400" /> محمي
+                              </span>
+                            )}
                           </div>
                           <div className="absolute bottom-3 left-3 bg-black/75 text-[10px] font-mono px-2 py-0.5 rounded text-slate-300">
                             ترتيب: {video.order}
@@ -2048,6 +2061,36 @@ export default function AdminDashboard() {
                     className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm resize-none"
                   />
                 </div>
+
+                <div className="flex items-center gap-2 pt-2 md:col-span-2">
+                  <input
+                    type="checkbox"
+                    id="isProtected"
+                    checked={videoForm.isProtected}
+                    onChange={(e) => setVideoForm({ ...videoForm, isProtected: e.target.checked })}
+                    className="w-4 h-4 rounded border-border text-primary focus:ring-primary focus:ring-2 bg-background"
+                  />
+                  <label htmlFor="isProtected" className="text-xs font-semibold text-white cursor-pointer select-none">
+                    تشفير وحماية هذا الفيديو (يطلب كود تفعيل للمشاهدة بعد أول فيديو مجاني)
+                  </label>
+                </div>
+
+                {videoForm.isProtected && (
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1">كود التفعيل لتشغيل الفيديو (Access Key)</label>
+                    <input
+                      type="text"
+                      required
+                      value={videoForm.accessKey}
+                      onChange={(e) => setVideoForm({ ...videoForm, accessKey: e.target.value })}
+                      placeholder="مثال: CPP_COURSE_2026 أو KEY_XXXX"
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
+                    />
+                    <span className="text-[10px] text-slate-500 mt-1 block">
+                      سيحتاج الطالب لإدخال هذا الكود لمرة واحدة لفك القفل عن الفيديو (وجميع الفيديوهات اللاحقة التي تستخدم نفس الكود).
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-2 justify-end border-t border-border pt-4 mt-6">

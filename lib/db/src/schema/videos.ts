@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, boolean } from "drizzle-orm/pg-core";
 
 export const videosTable = pgTable("videos", {
   id: serial("id").primaryKey(),
@@ -8,6 +8,8 @@ export const videosTable = pgTable("videos", {
   youtubeUrl: text("youtube_url").notNull(), // link to youtube video/playlist
   type: text("type").notNull(),             // "video" or "playlist"
   order: integer("order").notNull().default(0),
+  isProtected: boolean("is_protected").notNull().default(false),
+  accessKey: text("access_key"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

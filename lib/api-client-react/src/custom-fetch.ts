@@ -358,6 +358,14 @@ export async function customFetch<T = unknown>(
     }
   }
 
+  // Attach unlock keys if found in localStorage
+  if (typeof window !== "undefined" && typeof localStorage !== "undefined" && !headers.has("x-unlock-keys")) {
+    const keys = localStorage.getItem("dr_mahmoud_unlock_keys");
+    if (keys) {
+      headers.set("x-unlock-keys", keys);
+    }
+  }
+
   const requestInfo = { method, url: resolveUrl(input) };
 
   const response = await fetch(input, { ...init, method, headers });
