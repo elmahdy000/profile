@@ -305,57 +305,96 @@ export default function BaccalaureatePage() {
         </div>
 
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            {/* Breadcrumb */}
-            <div className="flex items-center justify-center gap-2 text-sm text-foreground/40 mb-8">
-              <a href="/" className="hover:text-primary transition-colors">الرئيسية</a>
-              <ChevronLeft className="w-4 h-4 text-foreground/30" />
-              <span className="text-primary font-medium">تأسيس الثانوي والبكالوريا</span>
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center max-w-6xl mx-auto">
+            {/* Right Column: Text & CTA */}
+            <div className="lg:col-span-7 text-right flex flex-col items-start">
+              {/* Breadcrumb */}
+              <div className="flex items-center gap-2 text-sm text-foreground/40 mb-6">
+                <a href="/" className="hover:text-primary transition-colors">الرئيسية</a>
+                <ChevronLeft className="w-4 h-4 text-foreground/30" />
+                <span className="text-primary font-medium">تأسيس الثانوي والبكالوريا</span>
+              </div>
 
-            {/* Program Tag */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 border border-primary/20 text-primary text-xs font-bold rounded-full mb-6">
-              <Sparkles className="w-3.5 h-3.5" />
-              أقوى برنامج تأسيس برمجي لطلاب الثانوي في مصر
-            </div>
+              {/* Program Tag */}
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 border border-primary/20 text-primary text-xs font-bold rounded-full mb-6">
+                <Sparkles className="w-3.5 h-3.5" />
+                أقوى برنامج تأسيس برمجي لطلاب الثانوي في مصر
+              </div>
 
-            {/* Main Title */}
-            <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold text-foreground mb-6 leading-tight tracking-tight">
-              ابنك هيتعلم برمجة بجد..<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
-                مش بس عشان ينجح في الامتحان
-              </span>
-            </h1>
+              {/* Main Title */}
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground mb-6 leading-tight tracking-tight">
+                ابنك هيتعلم برمجة بجد..<br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
+                  مش بس عشان ينجح في الامتحان
+                </span>
+              </h1>
 
-            {/* Description */}
-            <p className="text-foreground/70 text-base md:text-xl max-w-2xl mx-auto leading-relaxed mb-10">
-              منهج تفاعلي لطلاب الثانوي العام وبكالوريا الـ STEM. بنأسس التفكير المنطقي والـ Problem Solving بلغة Python وبمشاريع حقيقية تخليهم جاهزين للمستقبل.
-            </p>
+              {/* Description */}
+              <p className="text-foreground/70 text-base md:text-lg lg:text-xl leading-relaxed mb-10 max-w-2xl">
+                منهج تفاعلي لطلاب الثانوي العام وبكالوريا الـ STEM. بنأسس التفكير المنطقي والـ Problem Solving بلغة Python وبمشاريع حقيقية تخليهم جاهزين للمستقبل.
+              </p>
 
-            {/* Hero CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button asChild size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-full px-8 h-12 shadow-lg shadow-primary/25 hover:scale-[1.02] transition-all">
-                <a href="#booking-form">
-                  <MessageCircle className="w-5 h-5 ml-2" />
-                  ابدأ جلسة تقييم وتوجيه مجانية
+              {/* Hero CTAs */}
+              <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-full px-8 h-12 shadow-lg shadow-primary/25 hover:scale-[1.02] transition-all">
+                  <a href="#booking-form">
+                    <MessageCircle className="w-5 h-5 ml-2" />
+                    ابدأ جلسة تقييم وتوجيه مجانية
+                  </a>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="border-border bg-card/50 hover:bg-card text-foreground rounded-full px-8 h-12">
+                  <a href="#curriculum">استكشف المنهج كاملاً</a>
+                </Button>
+              </div>
+
+              {/* Track quick-jump chips */}
+              <div className="flex flex-wrap gap-3 items-center mt-8 text-xs">
+                <span className="text-foreground/40">المسارات المتاحة:</span>
+                <a href="#curriculum" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold hover:bg-primary/15 transition-colors">
+                  <Code2 className="w-3.5 h-3.5" />
+                  تأسيس Python والـ Logic
                 </a>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="w-full sm:w-auto border-border bg-card/50 hover:bg-card text-foreground rounded-full px-8 h-12">
-                <a href="#curriculum">استكشف المنهج كاملاً</a>
-              </Button>
+                <a href="#tofas" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary/10 border border-secondary/20 text-secondary font-bold hover:bg-secondary/15 transition-colors">
+                  <Cpu className="w-3.5 h-3.5" />
+                  مسار ToFAS المتقدم
+                </a>
+              </div>
             </div>
 
-            {/* Track quick-jump chips */}
-            <div className="flex flex-wrap gap-3 justify-center items-center mt-8 text-xs">
-              <span className="text-foreground/40">المسارات المتاحة:</span>
-              <a href="#curriculum" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold hover:bg-primary/15 transition-colors">
-                <Code2 className="w-3.5 h-3.5" />
-                تأسيس Python والـ Logic
-              </a>
-              <a href="#tofas" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary/10 border border-secondary/20 text-secondary font-bold hover:bg-secondary/15 transition-colors">
-                <Cpu className="w-3.5 h-3.5" />
-                مسار ToFAS المتقدم
-              </a>
+            {/* Left Column: Visual Asset */}
+            <div className="lg:col-span-5 relative flex justify-center items-center">
+              {/* Decorative background glow under the image */}
+              <div className="absolute w-[80%] h-[80%] bg-gradient-to-tr from-primary/20 to-secondary/20 rounded-full blur-[60px] -z-10 animate-pulse" />
+              
+              <div className="relative rounded-3xl overflow-hidden border border-border/80 shadow-2xl bg-card p-2 max-w-[450px] w-full">
+                <img 
+                  src="/baccalaureate-hero.png" 
+                  alt="طلاب البكالوريا والثانوي يدرسون البرمجة" 
+                  className="rounded-2xl w-full h-auto object-cover aspect-[4/3] sm:aspect-square"
+                />
+                
+                {/* Floating trust badge */}
+                <div className="absolute top-6 left-6 bg-background/90 backdrop-blur-md border border-border py-2.5 px-4 rounded-2xl shadow-xl flex items-center gap-3 animate-bounce">
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                    <Check className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-foreground/50 font-medium">جلسة التوجيه</p>
+                    <p className="text-xs font-extrabold text-foreground">مجانية 100%</p>
+                  </div>
+                </div>
+
+                {/* Floating stat card */}
+                <div className="absolute bottom-6 right-6 bg-background/90 backdrop-blur-md border border-border py-2.5 px-4 rounded-2xl shadow-xl flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-foreground/50 font-medium">المنهج الدراسي</p>
+                    <p className="text-xs font-extrabold text-foreground">متوافق مع مدارس STEM</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
