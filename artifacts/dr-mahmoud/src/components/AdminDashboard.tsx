@@ -45,9 +45,9 @@ import {
   ChevronRight,
   Settings,
   Library,
-  ArrowUp,
   ArrowDown,
   Video as VideoIcon,
+  Upload,
   Play,
   Download,
 } from "lucide-react";
@@ -78,6 +78,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<"bookings" | "courses" | "podcasts" | "curriculums" | "videos" | "settings">("bookings");
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string>("all");
   const [selectedVideoCategoryFilter, setSelectedVideoCategoryFilter] = useState<string>("all");
+  const [isVideoUploading, setIsVideoUploading] = useState(false);
 
   // Local storage cache for the admin session
   useEffect(() => {
@@ -577,6 +578,42 @@ export default function AdminDashboard() {
       queryClient.invalidateQueries({ queryKey: getListCurriculumsQueryKey() });
     } catch (err) {
       alert("خطأ أثناء حذف الدرس");
+    }
+  };
+
+  const handleVideoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsVideoUploading(true);
+    const formData = new FormData();
+    formData.append("video", file);
+
+    try {
+      const response = await fetch("/api/upload/video", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("dr_mahmoud_admin_pwd") || ""}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to upload video " + file.name);
+      }
+
+      const data = await response.json();
+      if (data.url) {
+        setVideoForm(prev => ({
+          ...prev,
+          youtubeUrl: data.url
+        }));
+      }
+    } catch (err) {
+      console.error(err);
+      alert(`حدث خطأ أثناء تحميل الفيديو ${file.name}`);
+    } finally {
+      setIsVideoUploading(false);
     }
   };
 
@@ -2027,16 +2064,35 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-muted-foreground mb-1">رابط يوتيوب (URL)</label>
-                  <input
-                    type="url"
-                    required
-                    value={videoForm.youtubeUrl}
-                    onChange={(e) => setVideoForm({ ...videoForm, youtubeUrl: e.target.value })}
-                    placeholder="مثال: https://www.youtube.com/watch?v=... أو https://www.youtube.com/playlist?list=..."
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm text-left"
-                    dir="ltr"
-                  />
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">رابط يوتيوب أو ملف الفيديو المرفوع (URL/File)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      required
+                      value={videoForm.youtubeUrl}
+                      onChange={(e) => setVideoForm({ ...videoForm, youtubeUrl: e.target.value })}
+                      placeholder="رابط يوتيوب أو مسار الملف المرفوع..."
+                      className="flex-1 bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm text-left"
+                      dir="ltr"
+                    />
+                    <label className="shrink-0 flex items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl px-4 cursor-pointer transition-colors border border-primary/20">
+                      {isVideoUploading ? (
+                        <span className="flex items-center gap-2 text-xs"><Loader2 className="w-4 h-4 animate-spin" /> جاري الرفع...</span>
+                      ) : (
+                        <span className="flex items-center gap-2 text-xs"><Upload className="w-4 h-4" /> رفع ملف فيديو</span>
+                      )}
+                      <input 
+                        type="file" 
+                        accept="video/*" 
+                        className="hidden" 
+                        disabled={isVideoUploading}
+                        onChange={handleVideoFileUpload} 
+                      />
+                    </label>
+                  </div>
+                  <span className="text-[10px] text-slate-500 mt-1 block">
+                    يمكنك إدخال رابط يوتيوب أو رفع ملف فيديو من جهازك مباشرة.
+                  </span>
                 </div>
 
                 <div className="md:col-span-2">
@@ -2143,6 +2199,22 @@ export default function AdminDashboard() {
               {(() => {
                 const vidId = getYouTubeVideoId(previewVideo.youtubeUrl);
                 const playlistId = getYouTubePlaylistId(previewVideo.youtubeUrl);
+                
+                const isStreamUrl = previewVideo.youtubeUrl.startsWith("/uploads/") || previewVideo.youtubeUrl.includes("/stream");
+                
+                if (isStreamUrl) {
+                  return (
+                    <video
+                      className="absolute inset-0 w-full h-full object-contain bg-black"
+                      src={`${previewVideo.youtubeUrl}?keys=${encodeURIComponent(localStorage.getItem('dr_mahmoud_admin_pwd') || '')}`}
+                      controls
+                      controlsList="nodownload"
+                      onContextMenu={(e) => e.preventDefault()}
+                      autoPlay
+                    />
+                  );
+                }
+
                 let embedUrl = "";
                 if (previewVideo.type === "playlist" && playlistId) {
                   embedUrl = `https://www.youtube.com/embed/videoseries?list=${playlistId}&autoplay=1&rel=0`;

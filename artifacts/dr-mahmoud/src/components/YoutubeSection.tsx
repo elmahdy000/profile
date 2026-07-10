@@ -94,11 +94,17 @@ function VideoPlayerModal({
   const vidId = getYouTubeVideoId(item.youtubeUrl);
   const playlistId = getYouTubePlaylistId(item.youtubeUrl);
 
+  const isStreamUrl = item.youtubeUrl?.startsWith("/api/videos/") || item.youtubeUrl?.startsWith("/uploads/");
+  const studentKeys = typeof window !== "undefined" ? localStorage.getItem("dr_mahmoud_unlock_keys") || "" : "";
+  const streamUrl = isStreamUrl ? `${item.youtubeUrl}?keys=${encodeURIComponent(studentKeys)}` : "";
+
   let embedUrl = "";
-  if (item.type === "playlist" && playlistId) {
-    embedUrl = `https://www.youtube.com/embed/videoseries?list=${playlistId}&autoplay=1&rel=0`;
-  } else if (vidId) {
-    embedUrl = `https://www.youtube.com/embed/${vidId}?autoplay=1&rel=0`;
+  if (!isStreamUrl) {
+    if (item.type === "playlist" && playlistId) {
+      embedUrl = `https://www.youtube.com/embed/videoseries?list=${playlistId}&autoplay=1&rel=0`;
+    } else if (vidId) {
+      embedUrl = `https://www.youtube.com/embed/${vidId}?autoplay=1&rel=0`;
+    }
   }
 
   return (
@@ -135,7 +141,16 @@ function VideoPlayerModal({
 
           {/* Player Container */}
           <div className="relative w-full aspect-video bg-black">
-            {embedUrl ? (
+            {isStreamUrl ? (
+              <video
+                className="absolute inset-0 w-full h-full object-contain bg-black"
+                src={streamUrl}
+                controls
+                controlsList="nodownload"
+                onContextMenu={(e) => e.preventDefault()}
+                autoPlay
+              />
+            ) : embedUrl ? (
               <iframe
                 className="absolute inset-0 w-full h-full"
                 src={embedUrl}

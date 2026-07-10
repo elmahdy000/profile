@@ -33,6 +33,15 @@ const AUDIO_TYPES: Record<string, string> = {
   ".flac": "audio/flac",
 };
 
+const VIDEO_TYPES: Record<string, string> = {
+  ".mp4": "video/mp4",
+  ".webm": "video/webm",
+  ".ogg": "video/ogg",
+  ".mov": "video/quicktime",
+  ".avi": "video/x-msvideo",
+  ".mkv": "video/x-matroska",
+};
+
 function makeStorage(allowed: Record<string, string>) {
   return multer.diskStorage({
     destination: (_req, _file, cb) => {
@@ -80,6 +89,12 @@ const audioUpload = multer({
   fileFilter: makeFileFilter(AUDIO_TYPES, "audio files"),
 }).single("audio");
 
+const videoUpload = multer({
+  storage: makeStorage(VIDEO_TYPES),
+  limits: { fileSize: 500 * 1024 * 1024 }, // 500MB limit for videos
+  fileFilter: makeFileFilter(VIDEO_TYPES, "video files"),
+}).single("video");
+
 // Image upload route
 router.post("/upload", requireAdmin, imageUpload, (req, res) => {
   if (!req.file) {
@@ -92,6 +107,16 @@ router.post("/upload", requireAdmin, imageUpload, (req, res) => {
 
 // Audio upload route
 router.post("/upload/audio", requireAdmin, audioUpload, (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: "No file uploaded" });
+  }
+
+  const fileUrl = `/uploads/${req.file.filename}`;
+  return res.json({ url: fileUrl });
+});
+
+// Video upload route
+router.post("/upload/video", requireAdmin, videoUpload, (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded" });
   }

@@ -3,6 +3,8 @@ import { db, videosTable } from "@workspace/db";
 import { CreateVideoBody, UpdateVideoBody } from "@workspace/api-zod";
 import { requireAdmin, isAdminRequest } from "../middleware/auth";
 import { eq, asc } from "drizzle-orm";
+import fs from "fs";
+import path from "path";
 
 const router: IRouter = Router();
 
@@ -59,12 +61,17 @@ router.get("/videos", async (req, res, next) => {
         isFirstVideo ||
         (v.accessKey && studentKeys.includes(v.accessKey.toLowerCase().trim()));
 
+      const isLocalFile = v.youtubeUrl.startsWith("/uploads/");
+      const videoSrcUrl = isUnlocked
+        ? (isLocalFile ? `/api/videos/${v.id}/stream` : v.youtubeUrl)
+        : "locked";
+
       return {
         id: v.id,
         category: v.category,
         title: v.title,
         description: v.description,
-        youtubeUrl: isUnlocked ? v.youtubeUrl : "locked",
+        youtubeUrl: videoSrcUrl,
         type: v.type,
         order: v.order,
         isProtected: v.isProtected,
@@ -150,6 +157,118 @@ router.delete("/videos/:id", requireAdmin, async (req, res, next) => {
     }
 
     res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Stream locally uploaded video files securely using Range Requests
+router.get("/videos/:id/stream", async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id as string, 10);
+    const video = await db
+      .select()
+      .from(videosTable)
+      .where(eq(videosTable.id, id))
+      .then((rows) => rows[0]);
+
+    if (!video) {
+      res.status(404).json({ error: "Video entry not found" });
+      return;
+    }
+
+    if (!video.youtubeUrl.startsWith("/uploads/")) {
+      res.status(400).json({ error: "This video is not locally hosted" });
+      return;
+    }
+
+    // Determine first free video of each category
+    const videos = await db
+      .select()
+      .from(videosTable)
+      .orderBy(asc(videosTable.order));
+
+    const videosByCategory: Record<string, typeof videos> = {};
+    for (const v of videos) {
+      if (!videosByCategory[v.category]) {
+        videosByCategory[v.category] = [];
+      }
+      videosByCategory[v.category].push(v);
+    }
+
+    const firstVideoIds = new Set<number>();
+    for (const cat in videosByCategory) {
+      const list = videosByCategory[cat];
+      list.sort((a, b) => {
+        if (a.order !== b.order) return a.order - b.order;
+        return a.id - b.id;
+      });
+      if (list.length > 0) {
+        firstVideoIds.add(list[0].id);
+      }
+    }
+
+    // Check credentials (query keys or header keys)
+    const keysHeader = (req.query.keys as string || req.headers["x-unlock-keys"] as string || "").toLowerCase();
+    const isFirstVideo = firstVideoIds.has(video.id);
+    const studentKeys = keysHeader
+      .split(/[\s,]+/)
+      .map((k) => k.trim())
+      .filter(Boolean);
+
+    const isUnlocked =
+      !video.isProtected ||
+      isFirstVideo ||
+      (video.accessKey && studentKeys.includes(video.accessKey.toLowerCase().trim()));
+
+    const isAdmin = isAdminRequest(req);
+
+    if (!isUnlocked && !isAdmin) {
+      res.status(403).json({ error: "This content is protected and locked." });
+      return;
+    }
+
+    const filename = video.youtubeUrl.replace("/uploads/", "");
+    const filePath = path.join(process.cwd(), "public", "uploads", filename);
+
+    if (!fs.existsSync(filePath)) {
+      res.status(404).json({ error: "Video file not found on disk" });
+      return;
+    }
+
+    const stat = fs.statSync(filePath);
+    const fileSize = stat.size;
+    const range = req.headers.range;
+
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+      if (start >= fileSize) {
+        res.status(416).send("Requested range not satisfiable\n" + start + " >= " + fileSize);
+        return;
+      }
+
+      const chunksize = (end - start) + 1;
+      const file = fs.createReadStream(filePath, { start, end });
+      const head = {
+        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": chunksize,
+        "Content-Type": "video/mp4",
+      };
+
+      res.writeHead(206, head);
+      file.pipe(res);
+    } else {
+      const head = {
+        "Content-Length": fileSize,
+        "Content-Type": "video/mp4",
+      };
+      res.writeHead(200, head);
+      fs.createReadStream(filePath).pipe(res);
+    }
   } catch (error) {
     next(error);
   }
