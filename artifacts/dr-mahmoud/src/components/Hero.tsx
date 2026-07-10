@@ -116,7 +116,7 @@ export function Hero() {
               >
                 <a href="/#youtube-lectures">
                   <PlayCircle className="me-2 w-5 h-5 shrink-0" />
-                  دخول المنصة والكورسات
+                  دخول المنصة
                 </a>
               </Button>
 
