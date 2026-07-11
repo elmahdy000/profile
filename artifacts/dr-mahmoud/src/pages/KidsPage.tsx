@@ -164,15 +164,15 @@ export default function KidsPage() {
 
               <div className="space-y-3 mb-8">
                 <div className="flex items-center gap-2 text-sm text-foreground/55">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#06B6D4]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                   Scratch (4–8 سنين)
                 </div>
                 <div className="flex items-center gap-2 text-sm text-foreground/55">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#06B6D4]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                   Python مبسط (8–18 سنة)
                 </div>
                 <div className="flex items-center gap-2 text-sm text-foreground/55">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#06B6D4]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                   متابعة دورية للوالدين
                 </div>
               </div>

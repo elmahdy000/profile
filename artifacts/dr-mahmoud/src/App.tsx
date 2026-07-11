@@ -14,6 +14,7 @@ import { WhyChooseMe } from "@/components/WhyChooseMe";
 import { Courses } from "@/components/Courses";
 import { TeachingStyle } from "@/components/TeachingStyle";
 import { Portfolio } from "@/components/Portfolio";
+import { Articles } from "@/components/Articles";
 import { Testimonials } from "@/components/Testimonials";
 import { FAQ } from "@/components/FAQ";
 import { Pricing } from "@/components/Pricing";
@@ -53,6 +54,7 @@ function HomePage() {
         <Courses />
         <TeachingStyle />
         <Portfolio />
+        <Articles />
         <Testimonials />
         <Podcast />
         <YoutubeSection />

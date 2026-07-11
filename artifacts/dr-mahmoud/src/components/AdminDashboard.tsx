@@ -52,6 +52,7 @@ import {
   Download,
 } from "lucide-react";
 import { AdminSettings } from "./AdminSettings";
+import { useToast } from "@/hooks/use-toast";
 
 const getYoutubeThumbnail = (url: string) => {
   try {
@@ -70,6 +71,7 @@ const getYoutubeThumbnail = (url: string) => {
 };
 
 export default function AdminDashboard() {
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
@@ -79,6 +81,7 @@ export default function AdminDashboard() {
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string>("all");
   const [selectedVideoCategoryFilter, setSelectedVideoCategoryFilter] = useState<string>("all");
   const [isVideoUploading, setIsVideoUploading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   // Local storage cache for the admin session
   useEffect(() => {
@@ -87,6 +90,7 @@ export default function AdminDashboard() {
       setAuthTokenGetter(() => savedPassword);
       setIsAuthenticated(true);
     }
+    setIsInitializing(false);
   }, []);
 
   // API hooks
@@ -387,7 +391,7 @@ export default function AdminDashboard() {
         setCourseForm((prev) => ({ ...prev, img: data.url }));
       }
     } catch (err) {
-      alert("حدث خطأ أثناء تحميل الصورة. يرجى التأكد من أن الملف صورة وأقل من 5 ميجابايت.");
+      toast({ title: "خطأ", description: "حدث خطأ أثناء تحميل الصورة. يرجى التأكد من أن الملف صورة وأقل من 5 ميجابايت.", variant: "destructive" });
     } finally {
       setIsUploadingImage(false);
     }
@@ -422,7 +426,7 @@ export default function AdminDashboard() {
         setPodcastForm((prev) => ({ ...prev, audioUrl: data.url }));
       }
     } catch (err: any) {
-      alert(err.message || "حدث خطأ أثناء تحميل الملف الصوتي. يرجى التأكد من أن الملف بصيغة صوتية مناسبة (مثل MP3) وبحجم أقل من 150 ميجابايت.");
+      toast({ title: "خطأ", description: err.message || "حدث خطأ أثناء تحميل الملف الصوتي. يرجى التأكد من أن الملف بصيغة صوتية مناسبة (مثل MP3) وبحجم أقل من 150 ميجابايت.", variant: "destructive" });
     } finally {
       setIsUploadingAudio(false);
     }
@@ -460,8 +464,9 @@ export default function AdminDashboard() {
       }
       queryClient.invalidateQueries({ queryKey: getListCoursesQueryKey() });
       setIsCourseModalOpen(false);
+      toast({ title: "تم", description: courseModalMode === "edit" ? "تم تحديث الكورس بنجاح" : "تم إضافة الكورس بنجاح" });
     } catch (err) {
-      alert("خطأ أثناء حفظ الكورس");
+      toast({ title: "خطأ", description: "حدث خطأ أثناء حفظ الكورس", variant: "destructive" });
     }
   };
 
@@ -489,8 +494,9 @@ export default function AdminDashboard() {
       }
       queryClient.invalidateQueries({ queryKey: getListPodcastsQueryKey() });
       setIsPodcastModalOpen(false);
+      toast({ title: "تم", description: podcastModalMode === "edit" ? "تم تحديث الحلقة بنجاح" : "تم إضافة الحلقة بنجاح" });
     } catch (err) {
-      alert("خطأ أثناء حفظ الحلقة");
+      toast({ title: "خطأ", description: "حدث خطأ أثناء حفظ الحلقة", variant: "destructive" });
     }
   };
 
@@ -500,7 +506,7 @@ export default function AdminDashboard() {
     // Filter out empty slots
     const filteredImages = curriculumForm.images.filter((img) => img && img.trim() !== "");
     if (filteredImages.length === 0) {
-      alert("يرجى إضافة صورة واحدة على الأقل للدرس");
+      toast({ title: "تنبيه", description: "يرجى إضافة صورة واحدة على الأقل للدرس", variant: "destructive" });
       return;
     }
 
@@ -525,8 +531,9 @@ export default function AdminDashboard() {
       }
       queryClient.invalidateQueries({ queryKey: getListCurriculumsQueryKey() });
       setIsCurriculumModalOpen(false);
+      toast({ title: "تم", description: curriculumModalMode === "edit" ? "تم تحديث الدرس بنجاح" : "تم إضافة الدرس بنجاح" });
     } catch (err) {
-      alert("خطأ أثناء حفظ الدرس");
+      toast({ title: "خطأ", description: "حدث خطأ أثناء حفظ الدرس", variant: "destructive" });
     }
   };
 
@@ -565,19 +572,19 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error(err);
-      alert(`حدث خطأ أثناء تحميل الصورة ${file.name}`);
+      toast({ title: "خطأ", description: `حدث خطأ أثناء تحميل الصورة ${file.name}`, variant: "destructive" });
     } finally {
       setUploadingSlotIndex(null);
     }
   };
 
   const handleCurriculumDelete = async (id: number) => {
-    if (!confirm("هل أنت متأكد من رغبتك في حذف هذا الدرس؟")) return;
     try {
       await deleteCurriculumMutation.mutateAsync({ id });
       queryClient.invalidateQueries({ queryKey: getListCurriculumsQueryKey() });
+      toast({ title: "تم", description: "تم حذف الدرس بنجاح" });
     } catch (err) {
-      alert("خطأ أثناء حذف الدرس");
+      toast({ title: "خطأ", description: "حدث خطأ أثناء حذف الدرس", variant: "destructive" });
     }
   };
 
@@ -611,7 +618,7 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error(err);
-      alert(`حدث خطأ أثناء تحميل الفيديو ${file.name}`);
+      toast({ title: "خطأ", description: `حدث خطأ أثناء تحميل الفيديو ${file.name}`, variant: "destructive" });
     } finally {
       setIsVideoUploading(false);
     }
@@ -620,7 +627,7 @@ export default function AdminDashboard() {
   const handleVideoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!videoForm.title || !videoForm.youtubeUrl) {
-      alert("يرجى ملء جميع الحقول المطلوبة");
+      toast({ title: "تنبيه", description: "يرجى ملء جميع الحقول المطلوبة", variant: "destructive" });
       return;
     }
 
@@ -648,39 +655,40 @@ export default function AdminDashboard() {
       }
       queryClient.invalidateQueries({ queryKey: getListVideosQueryKey() });
       setIsVideoModalOpen(false);
+      toast({ title: "تم", description: videoModalMode === "edit" ? "تم تحديث الفيديو بنجاح" : "تم إضافة الفيديو بنجاح" });
     } catch (err) {
-      alert("خطأ أثناء حفظ الفيديو");
+      toast({ title: "خطأ", description: "حدث خطأ أثناء حفظ الفيديو", variant: "destructive" });
     }
   };
 
   const handleVideoDelete = async (id: number) => {
-    if (!confirm("هل أنت متأكد من رغبتك في حذف هذا الفيديو/القائمة؟")) return;
     try {
       await deleteVideoMutation.mutateAsync({ id });
       queryClient.invalidateQueries({ queryKey: getListVideosQueryKey() });
+      toast({ title: "تم", description: "تم حذف الفيديو بنجاح" });
     } catch (err) {
-      alert("خطأ أثناء حذف الفيديو/القائمة");
+      toast({ title: "خطأ", description: "حدث خطأ أثناء حذف الفيديو", variant: "destructive" });
     }
   };
 
   // Delete handlers
   const handleCourseDelete = async (id: number) => {
-    if (!confirm("هل أنت متأكد من رغبتك في حذف هذا الكورس؟")) return;
     try {
       await deleteCourseMutation.mutateAsync({ id });
       queryClient.invalidateQueries({ queryKey: getListCoursesQueryKey() });
+      toast({ title: "تم", description: "تم حذف الكورس بنجاح" });
     } catch (err) {
-      alert("خطأ أثناء حذف الكورس");
+      toast({ title: "خطأ", description: "حدث خطأ أثناء حذف الكورس", variant: "destructive" });
     }
   };
 
   const handlePodcastDelete = async (id: number) => {
-    if (!confirm("هل أنت متأكد من رغبتك في حذف هذه الحلقة؟")) return;
     try {
       await deletePodcastMutation.mutateAsync({ id });
       queryClient.invalidateQueries({ queryKey: getListPodcastsQueryKey() });
+      toast({ title: "تم", description: "تم حذف الحلقة بنجاح" });
     } catch (err) {
-      alert("خطأ أثناء حذف الحلقة");
+      toast({ title: "خطأ", description: "حدث خطأ أثناء حذف الحلقة", variant: "destructive" });
     }
   };
 
@@ -692,18 +700,19 @@ export default function AdminDashboard() {
         data: { status },
       });
       queryClient.invalidateQueries({ queryKey: getListBookingsQueryKey() });
+      toast({ title: "تم", description: "تم تحديث حالة الحجز بنجاح" });
     } catch (err) {
-      alert("خطأ أثناء تحديث حالة الحجز");
+      toast({ title: "خطأ", description: "حدث خطأ أثناء تحديث حالة الحجز", variant: "destructive" });
     }
   };
 
   const handleBookingDelete = async (id: number) => {
-    if (!confirm("هل أنت متأكد من حذف هذا الحجز؟")) return;
     try {
       await deleteBookingMutation.mutateAsync({ id });
       queryClient.invalidateQueries({ queryKey: getListBookingsQueryKey() });
+      toast({ title: "تم", description: "تم حذف الحجز بنجاح" });
     } catch (err) {
-      alert("خطأ أثناء حذف الحجز");
+      toast({ title: "خطأ", description: "حدث خطأ أثناء حذف الحجز", variant: "destructive" });
     }
   };
 
@@ -730,6 +739,15 @@ export default function AdminDashboard() {
     document.body.removeChild(link);
   };
 
+  // Show spinner during session hydration from localstorage
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   // Render Login view if not authenticated
   if (!isAuthenticated) {
     return (
@@ -755,7 +773,7 @@ export default function AdminDashboard() {
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-background/80 border border-border text-foreground rounded-xl px-4 py-3.5 focus:outline-none focus:border-primary transition-colors placeholder:text-muted-foreground text-center text-lg tracking-widest font-sans"
+                className="w-full bg-background/80 border border-border text-foreground rounded-xl px-4 py-3.5 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors placeholder:text-muted-foreground text-center text-lg tracking-widest font-sans"
               />
               {authError && (
                 <p className="text-red-400 text-xs mt-2 text-right">{authError}</p>
@@ -781,7 +799,7 @@ export default function AdminDashboard() {
           <div className="mt-8 text-center">
             <a
               href="/"
-              className="text-xs text-slate-500 hover:text-foreground/90 flex items-center justify-center gap-1 transition-colors"
+              className="text-xs text-muted-foreground hover:text-foreground/90 flex items-center justify-center gap-1 transition-colors"
             >
               <ChevronRight className="w-4 h-4" /> العودة للموقع الرئيسي
             </a>
@@ -794,14 +812,14 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col dir-rtl">
       {/* Top Admin Header */}
-      <header className="bg-card/60 backdrop-blur-xl border-b border-border sticky top-0 z-40 px-6 py-4">
+      <header className="bg-card/80 backdrop-blur-xl border-b border-border shadow-lg shadow-sm sticky top-0 z-40 px-4 py-3 lg:px-6 lg:py-4">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center text-primary">
               <Lock className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">لوحة تحكم د. محمود المهدي</h1>
+              <h1 className="text-xl font-bold text-foreground">لوحة تحكم د. محمود المهدي</h1>
               <p className="text-xs text-muted-foreground">إدارة محتوى الكورسات، البودكاست والحجوزات</p>
             </div>
           </div>
@@ -826,10 +844,10 @@ export default function AdminDashboard() {
       </header>
 
       {/* Main Container */}
-      <div className="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col lg:flex-row gap-8">
+      <div className="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-6 flex flex-col lg:flex-row gap-4 lg:gap-8">
         {/* Navigation Sidebar */}
         <aside className="lg:w-64 flex-shrink-0">
-          <div className="bg-card/40 border border-border/80 rounded-2xl p-4 sticky top-24 space-y-2">
+          <div className="bg-card border border-border shadow-xl shadow-sm rounded-2xl p-3 lg:p-4 sticky top-24 space-y-1 lg:space-y-2">
             <button
               onClick={() => setActiveTab("bookings")}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right text-sm font-medium transition-all ${
@@ -911,11 +929,12 @@ export default function AdminDashboard() {
 
         {/* Dynamic Panel Content */}
         <main className="flex-1">
+          <div key={activeTab} className="animate-[fadeIn_0.2s_ease-in-out]">
           {activeTab === "bookings" && (
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-xl font-bold text-white">إدارة الحجوزات</h2>
+                  <h2 className="text-xl font-bold text-foreground">إدارة الحجوزات</h2>
                   <p className="text-xs text-muted-foreground mt-1">تلقي ومتابعة طلبات التسجيل للطلاب</p>
                 </div>
                 {bookingsQuery.data && bookingsQuery.data.length > 0 && (
@@ -931,24 +950,24 @@ export default function AdminDashboard() {
 
               {!bookingsQuery.isLoading && bookingsQuery.data && bookingsQuery.data.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-[#0b111e]/40 border border-white/[0.06] rounded-2xl p-4 flex flex-col justify-between">
-                    <span className="text-xs text-slate-400">إجمالي الحجوزات</span>
-                    <span className="text-2xl font-bold text-white mt-2">{bookingsQuery.data.length}</span>
+                  <div className="bg-muted/40 border border-border rounded-2xl p-4 flex flex-col justify-between">
+                    <span className="text-xs text-muted-foreground">إجمالي الحجوزات</span>
+                    <span className="text-2xl font-bold text-foreground mt-2">{bookingsQuery.data.length}</span>
                   </div>
-                  <div className="bg-[#0b111e]/40 border border-white/[0.06] rounded-2xl p-4 flex flex-col justify-between">
-                    <span className="text-xs text-slate-400">قيد الانتظار</span>
+                  <div className="bg-muted/40 border border-border rounded-2xl p-4 flex flex-col justify-between">
+                    <span className="text-xs text-muted-foreground">قيد الانتظار</span>
                     <span className="text-2xl font-bold text-primary mt-2">
                       {bookingsQuery.data.filter(b => b.status === "pending").length}
                     </span>
                   </div>
-                  <div className="bg-[#0b111e]/40 border border-white/[0.06] rounded-2xl p-4 flex flex-col justify-between">
-                    <span className="text-xs text-slate-400">حجوزات مؤكدة</span>
+                  <div className="bg-muted/40 border border-border rounded-2xl p-4 flex flex-col justify-between">
+                    <span className="text-xs text-muted-foreground">حجوزات مؤكدة</span>
                     <span className="text-2xl font-bold text-primary mt-2">
                       {bookingsQuery.data.filter(b => b.status === "confirmed").length}
                     </span>
                   </div>
-                  <div className="bg-[#0b111e]/40 border border-white/[0.06] rounded-2xl p-4 flex flex-col justify-between">
-                    <span className="text-xs text-slate-400">حجوزات مكتملة</span>
+                  <div className="bg-muted/40 border border-border rounded-2xl p-4 flex flex-col justify-between">
+                    <span className="text-xs text-muted-foreground">حجوزات مكتملة</span>
                     <span className="text-2xl font-bold text-blue-400 mt-2">
                       {bookingsQuery.data.filter(b => b.status === "completed").length}
                     </span>
@@ -957,27 +976,46 @@ export default function AdminDashboard() {
               )}
 
               {bookingsQuery.isLoading ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-card/20 border border-border rounded-3xl">
-                  <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-                  <p className="text-muted-foreground text-sm">جاري تحميل الحجوزات...</p>
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-card border border-border shadow-lg shadow-sm rounded-2xl p-6 animate-pulse">
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div className="flex-1 space-y-3 w-full">
+                          <div className="flex items-center gap-3">
+                            <div className="h-6 bg-muted rounded-full w-32" />
+                            <div className="h-5 bg-muted rounded-full w-16" />
+                          </div>
+                          <div className="h-4 bg-muted rounded-lg w-40" />
+                          <div className="h-10 bg-muted rounded-xl w-full" />
+                          <div className="h-3 bg-muted rounded w-36" />
+                        </div>
+                        <div className="flex items-center gap-2 self-end md:self-auto">
+                          <div className="h-9 bg-muted rounded-xl w-9" />
+                          <div className="h-9 bg-muted rounded-xl w-9" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : bookingsQuery.data?.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-card/20 border border-border rounded-3xl text-center px-4">
-                  <Calendar className="w-12 h-12 text-slate-600 mb-4" />
-                  <p className="text-muted-foreground font-medium">لا توجد حجوزات مسجلة حتى الآن</p>
-                  <p className="text-slate-600 text-xs mt-2">عند قيام الطلاب بالتسجيل ستظهر طلباتهم هنا</p>
+                <div className="flex flex-col items-center justify-center py-24 bg-gradient-to-b from-card/20 to-transparent border border-border rounded-3xl text-center px-4">
+                  <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 border border-primary/20">
+                    <Calendar className="w-8 h-8 text-primary/60" />
+                  </div>
+                  <p className="text-foreground font-bold text-lg">لا توجد حجوزات مسجلة حتى الآن</p>
+                  <p className="text-muted-foreground text-sm mt-1">عند قيام الطلاب بالتسجيل ستظهر طلباتهم هنا</p>
                 </div>
               ) : (
                 <div className="grid gap-4">
                   {bookingsQuery.data?.map((booking) => (
                     <div
                       key={booking.id}
-                      className="bg-card/40 border border-border/60 hover:border-border rounded-2xl p-6 transition-all relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6"
+                      className="bg-card border border-border shadow-lg shadow-sm hover:border-border rounded-2xl p-6 transition-all relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6"
                     >
                       {/* Left side details */}
                       <div className="space-y-2 flex-1">
                         <div className="flex items-center gap-3">
-                          <h3 className="font-bold text-white text-lg">{booking.name}</h3>
+                          <h3 className="font-bold text-foreground text-lg">{booking.name}</h3>
                           <span
                             className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
                               booking.status === "confirmed"
@@ -995,10 +1033,10 @@ export default function AdminDashboard() {
                           </span>
                         </div>
                         <p className="text-foreground/90 text-sm font-sans" dir="ltr">{booking.phone}</p>
-                        <p className="text-muted-foreground text-sm bg-background/40 rounded-xl p-3 border border-border/50 mt-2 whitespace-pre-wrap">
+                        <p className="text-muted-foreground text-sm bg-muted/50 rounded-xl p-3 border border-border/60 mt-2 whitespace-pre-wrap">
                           {booking.message}
                         </p>
-                        <p className="text-slate-600 text-[10px]">
+                        <p className="text-muted-foreground text-[10px]">
                           تاريخ الطلب: {new Date(booking.createdAt).toLocaleString("ar-EG")}
                         </p>
                       </div>
@@ -1042,7 +1080,7 @@ export default function AdminDashboard() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-white">إدارة الكورسات</h2>
+                  <h2 className="text-xl font-bold text-foreground">إدارة الكورسات</h2>
                   <p className="text-xs text-muted-foreground mt-1">إضافة وتحديث باقة البرامج التدريبية</p>
                 </div>
                 <button
@@ -1054,19 +1092,42 @@ export default function AdminDashboard() {
               </div>
 
               {coursesQuery.isLoading ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-card/20 border border-border rounded-3xl">
-                  <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-                  <p className="text-muted-foreground text-sm">جاري تحميل الكورسات...</p>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="bg-card border border-border shadow-lg shadow-sm rounded-2xl overflow-hidden animate-pulse">
+                      <div className="h-48 bg-muted" />
+                      <div className="p-5 space-y-3">
+                        <div className="h-5 bg-muted rounded w-3/4" />
+                        <div className="flex gap-1.5">
+                          <div className="h-4 bg-muted rounded w-14" />
+                          <div className="h-4 bg-muted rounded w-14" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/60">
+                          <div className="h-3 bg-muted rounded w-20" />
+                          <div className="h-3 bg-muted rounded w-20" />
+                          <div className="h-3 bg-muted rounded w-20" />
+                          <div className="h-3 bg-muted rounded w-20" />
+                        </div>
+                        <div className="flex gap-2 pt-3 border-t border-border/80">
+                          <div className="flex-1 h-8 bg-muted rounded-xl" />
+                          <div className="h-8 bg-muted rounded-xl w-10" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : coursesQuery.data?.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-card/20 border border-border rounded-3xl text-center px-4">
-                  <BookOpen className="w-12 h-12 text-slate-600 mb-4" />
-                  <p className="text-muted-foreground font-medium">لا توجد كورسات مضافة</p>
+                <div className="flex flex-col items-center justify-center py-24 bg-gradient-to-b from-card/20 to-transparent border border-border rounded-3xl text-center px-4">
+                  <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 border border-primary/20">
+                    <BookOpen className="w-8 h-8 text-primary/60" />
+                  </div>
+                  <p className="text-foreground font-bold text-lg">لا توجد كورسات مضافة</p>
+                  <p className="text-muted-foreground text-sm mt-1">أضف أول كورس تدريبي ليظهر للطلاب في الموقع</p>
                   <button
                     onClick={() => openCourseModal("add")}
-                    className="mt-4 text-xs text-primary hover:text-primary flex items-center gap-1"
+                    className="mt-5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-5 py-2.5 rounded-xl text-xs transition-all shadow-lg shadow-primary/10"
                   >
-                    إضافة أول كورس الآن <ChevronRight className="w-4 h-4 rotate-180" />
+                    إضافة أول كورس الآن
                   </button>
                 </div>
               ) : (
@@ -1074,7 +1135,7 @@ export default function AdminDashboard() {
                   {coursesQuery.data?.map((course) => (
                     <div
                       key={course.id}
-                      className="bg-card/30 border border-border/80 rounded-2xl overflow-hidden flex flex-col justify-between"
+                      className="bg-card border border-border shadow-lg shadow-sm rounded-2xl overflow-hidden flex flex-col justify-between"
                     >
                       <div className="relative h-48 bg-background">
                         <img
@@ -1089,15 +1150,15 @@ export default function AdminDashboard() {
 
                       <div className="p-5 flex-1 flex flex-col justify-between gap-4">
                         <div className="space-y-2">
-                          <h3 className="font-bold text-white text-lg">{course.title}</h3>
+                          <h3 className="font-bold text-foreground text-lg">{course.title}</h3>
                           <div className="flex flex-wrap gap-1.5">
                             {course.tags.map((tag, idx) => (
-                              <span key={idx} className="bg-slate-800 text-foreground/90 text-[10px] px-2 py-0.5 rounded-md">
+                              <span key={idx} className="bg-muted text-foreground/90 text-[10px] px-2 py-0.5 rounded-md">
                                 {tag}
                               </span>
                             ))}
                           </div>
-                          <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground pt-2 border-t border-border/50">
+                          <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground pt-2 border-t border-border/60">
                             <div>السن: {course.age}</div>
                             <div>المدة: {course.duration}</div>
                             <div>الحصص: {course.sessions}</div>
@@ -1108,7 +1169,7 @@ export default function AdminDashboard() {
                         <div className="flex items-center gap-2 border-t border-border/80 pt-3">
                           <button
                             onClick={() => openCourseModal("edit", course)}
-                            className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-foreground/80 rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5 border border-slate-700/50"
+                            className="flex-1 py-2 bg-muted hover:bg-muted/80 text-foreground/80 rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5 border border-border"
                           >
                             <Edit2 className="w-3.5 h-3.5" /> تعديل
                           </button>
@@ -1131,7 +1192,7 @@ export default function AdminDashboard() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-white">إدارة البودكاست</h2>
+                  <h2 className="text-xl font-bold text-foreground">إدارة البودكاست</h2>
                   <p className="text-xs text-muted-foreground mt-1">رفع وتحديث الحلقات النقاشية والبودكاست</p>
                 </div>
                 <button
@@ -1143,19 +1204,38 @@ export default function AdminDashboard() {
               </div>
 
               {podcastsQuery.isLoading ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-card/20 border border-border rounded-3xl">
-                  <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-                  <p className="text-muted-foreground text-sm">جاري تحميل الحلقات...</p>
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-card border border-border shadow-lg shadow-sm rounded-2xl p-6 animate-pulse">
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div className="flex-1 space-y-3 w-full">
+                          <div className="h-6 bg-muted rounded w-48" />
+                          <div className="h-4 bg-muted rounded w-full" />
+                          <div className="flex gap-4">
+                            <div className="h-3 bg-muted rounded w-20" />
+                            <div className="h-3 bg-muted rounded w-24" />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 self-end md:self-auto">
+                          <div className="h-9 bg-muted rounded-xl w-20" />
+                          <div className="h-9 bg-muted rounded-xl w-9" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : podcastsQuery.data?.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-card/20 border border-border rounded-3xl text-center px-4">
-                  <Mic className="w-12 h-12 text-slate-600 mb-4" />
-                  <p className="text-muted-foreground font-medium">لا توجد حلقات مضافة</p>
+                <div className="flex flex-col items-center justify-center py-24 bg-gradient-to-b from-card/20 to-transparent border border-border rounded-3xl text-center px-4">
+                  <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 border border-primary/20">
+                    <Mic className="w-8 h-8 text-primary/60" />
+                  </div>
+                  <p className="text-foreground font-bold text-lg">لا توجد حلقات مضافة</p>
+                  <p className="text-muted-foreground text-sm mt-1">أضف أول حلقة بودكاست ليتم عرضها للطلاب</p>
                   <button
                     onClick={() => openPodcastModal("add")}
-                    className="mt-4 text-xs text-primary hover:text-primary flex items-center gap-1"
+                    className="mt-5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-5 py-2.5 rounded-xl text-xs transition-all shadow-lg shadow-primary/10"
                   >
-                    إضافة أول حلقة الآن <ChevronRight className="w-4 h-4 rotate-180" />
+                    إضافة أول حلقة الآن
                   </button>
                 </div>
               ) : (
@@ -1163,12 +1243,12 @@ export default function AdminDashboard() {
                   {podcastsQuery.data?.map((ep) => (
                     <div
                       key={ep.id}
-                      className="bg-card/40 border border-border/60 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6"
+                      className="bg-card border border-border shadow-lg shadow-sm rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6"
                     >
                       <div className="space-y-1.5 flex-1">
-                        <h3 className="font-bold text-white text-lg">{ep.title}</h3>
+                        <h3 className="font-bold text-foreground text-lg">{ep.title}</h3>
                         <p className="text-muted-foreground text-sm line-clamp-2">{ep.desc}</p>
-                        <div className="flex items-center gap-4 text-xs text-slate-500 pt-2">
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2">
                           <span>المدة: {ep.duration}</span>
                           {ep.youtubeUrl && <span className="text-primary/80">رابط يوتيوب متاح</span>}
                           {ep.audioUrl && <span className="text-secondary/80">رابط الصوت متاح</span>}
@@ -1178,7 +1258,7 @@ export default function AdminDashboard() {
                       <div className="flex items-center gap-2 flex-shrink-0 self-stretch md:self-auto justify-end border-t md:border-t-0 border-border/60 pt-4 md:pt-0">
                         <button
                           onClick={() => openPodcastModal("edit", ep)}
-                          className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-foreground/80 rounded-xl text-xs transition-colors flex items-center gap-1.5 border border-slate-700/50"
+                          className="px-4 py-2.5 bg-muted hover:bg-muted/80 text-foreground/80 rounded-xl text-xs transition-colors flex items-center gap-1.5 border border-border"
                         >
                           <Edit2 className="w-3.5 h-3.5" /> تعديل
                         </button>
@@ -1200,7 +1280,7 @@ export default function AdminDashboard() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-white">إدارة المناهج التعليمية</h2>
+                  <h2 className="text-xl font-bold text-foreground">إدارة المناهج التعليمية</h2>
                   <p className="text-xs text-muted-foreground mt-1">رفع وتنظيم دروس المناهج والمواد كمعارض صور</p>
                 </div>
                 <button
@@ -1244,18 +1324,36 @@ export default function AdminDashboard() {
               )}
 
               {curriculumsQuery.isLoading ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-card/20 border border-border rounded-3xl">
-                  <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-                  <p className="text-muted-foreground text-sm">جاري تحميل الدروس والمناهج...</p>
+                <div className="space-y-4">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="bg-card border border-border shadow-lg shadow-sm rounded-2xl p-6 animate-pulse">
+                      <div className="flex flex-col gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <div className="h-5 bg-muted rounded w-16" />
+                            <div className="h-3 bg-muted rounded w-20" />
+                          </div>
+                          <div className="h-6 bg-muted rounded w-64" />
+                        </div>
+                        <div className="flex gap-2.5">
+                          {[1, 2, 3, 4].map((j) => (
+                            <div key={j} className="w-20 h-24 bg-muted rounded-lg" />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : curriculumsQuery.data?.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-card/20 border border-border rounded-3xl text-center px-4">
-                  <Library className="w-12 h-12 text-slate-600 mb-4" />
-                  <p className="text-muted-foreground font-medium">لا توجد دروس أو مناهج مضافة</p>
-                  <p className="text-slate-600 text-xs mt-1">يمكنك إضافة الدروس والمناهج على شكل مجموعات صور وسيقوم النظام بعرضها للطلاب</p>
+                <div className="flex flex-col items-center justify-center py-24 bg-gradient-to-b from-card/20 to-transparent border border-border rounded-3xl text-center px-4">
+                  <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 border border-primary/20">
+                    <Library className="w-8 h-8 text-primary/60" />
+                  </div>
+                  <p className="text-foreground font-bold text-lg">لا توجد دروس أو مناهج مضافة</p>
+                  <p className="text-muted-foreground text-sm mt-1">يمكنك إضافة الدروس والمناهج على شكل مجموعات صور وسيقوم النظام بعرضها للطلاب</p>
                   <button
                     onClick={() => openCurriculumModal("add")}
-                    className="mt-4 bg-primary hover:bg-primary/95 text-primary-foreground font-bold px-4 py-2 rounded-xl text-xs transition-colors"
+                    className="mt-5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-5 py-2.5 rounded-xl text-xs transition-all shadow-lg shadow-primary/10"
                   >
                     إضافة أول درس الآن
                   </button>
@@ -1267,7 +1365,7 @@ export default function AdminDashboard() {
                     ?.map((curriculum) => (
                       <div
                         key={curriculum.id}
-                        className="bg-card/40 border border-border/60 hover:border-border rounded-2xl p-6 transition-all flex flex-col gap-4"
+                        className="bg-card border border-border shadow-lg shadow-sm hover:border-border rounded-2xl p-6 transition-all flex flex-col gap-4"
                       >
                         {/* Upper Section */}
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border/40 pb-4">
@@ -1276,9 +1374,9 @@ export default function AdminDashboard() {
                               <span className="bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold px-2 py-0.5 rounded-md">
                                 {curriculum.subject}
                               </span>
-                              <span className="text-[10px] text-slate-500">الترتيب: {curriculum.order}</span>
+                              <span className="text-[10px] text-muted-foreground">الترتيب: {curriculum.order}</span>
                             </div>
-                            <h3 className="font-bold text-white text-lg mt-1">{curriculum.title}</h3>
+                            <h3 className="font-bold text-foreground text-lg mt-1">{curriculum.title}</h3>
                             {curriculum.description && (
                               <p className="text-xs text-muted-foreground">{curriculum.description}</p>
                             )}
@@ -1287,7 +1385,7 @@ export default function AdminDashboard() {
                           <div className="flex items-center gap-2 flex-shrink-0 self-stretch md:self-auto justify-end">
                             <button
                               onClick={() => openCurriculumModal("edit", curriculum)}
-                              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-foreground/80 rounded-xl text-xs transition-colors flex items-center gap-1.5 border border-slate-700/50"
+                              className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground/80 rounded-xl text-xs transition-colors flex items-center gap-1.5 border border-border"
                             >
                               <Edit2 className="w-3.5 h-3.5" /> تعديل
                             </button>
@@ -1308,7 +1406,7 @@ export default function AdminDashboard() {
                             {curriculum.images.map((img, idx) => (
                               <div
                                 key={idx}
-                                className="relative w-20 h-24 rounded-lg overflow-hidden border border-border bg-slate-900 flex-shrink-0 group"
+                                className="relative w-20 h-24 rounded-lg overflow-hidden border border-border bg-muted flex-shrink-0 group"
                               >
                                 <img
                                   src={img}
@@ -1333,7 +1431,7 @@ export default function AdminDashboard() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-white">إدارة فيديوهات وقوائم اليوتيوب</h2>
+                  <h2 className="text-xl font-bold text-foreground">إدارة فيديوهات وقوائم اليوتيوب</h2>
                   <p className="text-xs text-muted-foreground mt-1">عرض وتنظيم شروحات المناهج وكورسات البرمجة مباشرة من قناتك</p>
                 </div>
                 <button
@@ -1377,18 +1475,28 @@ export default function AdminDashboard() {
               )}
 
               {videosQuery.isLoading ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-card/20 border border-border rounded-3xl">
-                  <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-                  <p className="text-muted-foreground text-sm">جاري تحميل الفيديوهات...</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="bg-card border border-border shadow-lg shadow-sm rounded-2xl overflow-hidden animate-pulse">
+                      <div className="aspect-video bg-muted" />
+                      <div className="p-5 space-y-3">
+                        <div className="h-5 bg-muted rounded w-24" />
+                        <div className="h-5 bg-muted rounded w-full" />
+                        <div className="h-3 bg-muted rounded w-3/4" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : videosQuery.data?.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-card/20 border border-border rounded-3xl text-center px-4">
-                  <VideoIcon className="w-12 h-12 text-slate-600 mb-4" />
-                  <p className="text-muted-foreground font-medium">لا توجد فيديوهات أو قوائم تشغيل مضافة</p>
-                  <p className="text-slate-600 text-xs mt-1">يمكنك إضافة شروحاتك وقوائم تشغيل اليوتيوب وسيتم عرضها للطلاب بشكل رائع</p>
+                <div className="flex flex-col items-center justify-center py-24 bg-gradient-to-b from-card/20 to-transparent border border-border rounded-3xl text-center px-4">
+                  <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 border border-primary/20">
+                    <VideoIcon className="w-8 h-8 text-primary/60" />
+                  </div>
+                  <p className="text-foreground font-bold text-lg">لا توجد فيديوهات أو قوائم تشغيل مضافة</p>
+                  <p className="text-muted-foreground text-sm mt-1">يمكنك إضافة شروحاتك وقوائم تشغيل اليوتيوب وسيتم عرضها للطلاب بشكل رائع</p>
                   <button
                     onClick={() => openVideoModal("add")}
-                    className="mt-4 bg-primary hover:bg-primary/95 text-primary-foreground font-bold px-4 py-2 rounded-xl text-xs transition-colors"
+                    className="mt-5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-5 py-2.5 rounded-xl text-xs transition-all shadow-lg shadow-primary/10"
                   >
                     إضافة أول فيديو الآن
                   </button>
@@ -1400,10 +1508,10 @@ export default function AdminDashboard() {
                     ?.map((video) => (
                       <div
                         key={video.id}
-                        className="bg-card/40 border border-border/60 hover:border-border rounded-2xl overflow-hidden transition-all flex flex-col group"
+                        className="bg-card border border-border shadow-lg shadow-sm hover:border-border rounded-2xl overflow-hidden transition-all flex flex-col group"
                       >
                         {/* Video Thumbnail */}
-                        <div className="relative aspect-video bg-slate-900 overflow-hidden border-b border-border/40">
+                        <div className="relative aspect-video bg-muted overflow-hidden border-b border-border/40">
                           <img
                             src={getYoutubeThumbnail(video.youtubeUrl)}
                             alt={video.title}
@@ -1444,7 +1552,7 @@ export default function AdminDashboard() {
                             <span className="bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold px-2 py-0.5 rounded-md">
                               {video.category}
                             </span>
-                            <h3 className="font-bold text-white text-base line-clamp-2 mt-1">{video.title}</h3>
+                            <h3 className="font-bold text-foreground text-base line-clamp-2 mt-1">{video.title}</h3>
                             {video.description && (
                               <p className="text-xs text-muted-foreground line-clamp-2">{video.description}</p>
                             )}
@@ -1462,7 +1570,7 @@ export default function AdminDashboard() {
                                 href={video.youtubeUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-[11px] text-muted-foreground hover:text-white hover:underline flex items-center gap-1 font-medium"
+                                className="text-[11px] text-muted-foreground hover:text-foreground hover:underline flex items-center gap-1 font-medium"
                               >
                                 <ExternalLink className="w-3 h-3" /> يوتيوب
                               </a>
@@ -1470,7 +1578,7 @@ export default function AdminDashboard() {
                             <div className="flex items-center justify-end gap-1.5 border-t border-border/20 pt-2">
                               <button
                                 onClick={() => openVideoModal("edit", video)}
-                                className="p-2 bg-slate-800 hover:bg-slate-700 text-foreground/80 rounded-xl transition-colors border border-slate-700/50 flex-1 flex justify-center items-center gap-1 text-xs"
+                                className="p-2 bg-muted hover:bg-muted/80 text-foreground/80 rounded-xl transition-colors border border-border flex-1 flex justify-center items-center gap-1 text-xs"
                                 title="تعديل"
                               >
                                 <Edit2 className="w-3 h-3" /> تعديل
@@ -1493,6 +1601,7 @@ export default function AdminDashboard() {
           )}
 
           {activeTab === "settings" && <AdminSettings />}
+          </div>
         </main>
       </div>
 
@@ -1505,12 +1614,12 @@ export default function AdminDashboard() {
           />
           <div className="bg-card border border-border w-full max-w-2xl rounded-3xl p-6 relative z-10 max-h-[90vh] overflow-y-auto shadow-2xl space-y-6">
             <div className="flex items-center justify-between border-b border-border pb-4">
-              <h3 className="text-lg font-bold text-white">
+              <h3 className="text-lg font-bold text-foreground">
                 {courseModalMode === "edit" ? "تعديل الكورس" : "إضافة كورس جديد"}
               </h3>
               <button
                 onClick={() => setIsCourseModalOpen(false)}
-                className="p-1.5 hover:bg-slate-800 rounded-lg text-muted-foreground hover:text-foreground/80 transition-colors"
+                className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground/80 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1525,7 +1634,7 @@ export default function AdminDashboard() {
                     required
                     value={courseForm.title}
                     onChange={(e) => setCourseForm({ ...courseForm, title: e.target.value })}
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   />
                 </div>
 
@@ -1536,7 +1645,7 @@ export default function AdminDashboard() {
                     required
                     value={courseForm.age}
                     onChange={(e) => setCourseForm({ ...courseForm, age: e.target.value })}
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   />
                 </div>
 
@@ -1547,7 +1656,7 @@ export default function AdminDashboard() {
                     required
                     value={courseForm.duration}
                     onChange={(e) => setCourseForm({ ...courseForm, duration: e.target.value })}
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   />
                 </div>
 
@@ -1558,7 +1667,7 @@ export default function AdminDashboard() {
                     required
                     value={courseForm.sessions}
                     onChange={(e) => setCourseForm({ ...courseForm, sessions: e.target.value })}
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   />
                 </div>
 
@@ -1569,7 +1678,7 @@ export default function AdminDashboard() {
                     required
                     value={courseForm.level}
                     onChange={(e) => setCourseForm({ ...courseForm, level: e.target.value })}
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   />
                 </div>
 
@@ -1578,7 +1687,7 @@ export default function AdminDashboard() {
                   <select
                     value={courseForm.category}
                     onChange={(e) => setCourseForm({ ...courseForm, category: e.target.value })}
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   >
                     <option value="kids">المسار البرمجي للأطفال</option>
                     <option value="python">برمجة بايثون والذكاء الاصطناعي</option>
@@ -1594,8 +1703,8 @@ export default function AdminDashboard() {
                   <label className="block text-xs font-semibold text-muted-foreground">صورة الكورس</label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <span className="block text-[10px] text-slate-500 mb-1">خيار 1: تحميل صورة من جهازك</span>
-                      <div className="relative border border-dashed border-border hover:border-primary/50 rounded-xl p-3 bg-background/40 transition-colors flex flex-col items-center justify-center min-h-[90px]">
+                      <span className="block text-[10px] text-muted-foreground mb-1">خيار 1: تحميل صورة من جهازك</span>
+                      <div className="relative border border-dashed border-border hover:border-primary/50 rounded-xl p-3 bg-muted/50 transition-colors flex flex-col items-center justify-center min-h-[90px]">
                         {isUploadingImage ? (
                           <div className="flex flex-col items-center gap-2">
                             <Loader2 className="w-5 h-5 animate-spin text-primary" />
@@ -1610,20 +1719,20 @@ export default function AdminDashboard() {
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                             />
                             <span className="text-xs text-muted-foreground text-center">انقر هنا أو اسحب الصورة لرفعها</span>
-                            <span className="text-[10px] text-slate-600 mt-1">PNG, JPG حتى 5MB</span>
+                            <span className="text-[10px] text-muted-foreground mt-1">PNG, JPG حتى 5MB</span>
                           </>
                         )}
                       </div>
                     </div>
                     <div>
-                      <span className="block text-[10px] text-slate-500 mb-1">خيار 2: رابط صورة مباشر</span>
+                      <span className="block text-[10px] text-muted-foreground mb-1">خيار 2: رابط صورة مباشر</span>
                       <input
                         type="text"
                         required
                         value={courseForm.img}
                         onChange={(e) => setCourseForm({ ...courseForm, img: e.target.value })}
                         placeholder="https://example.com/image.jpg"
-                        className="w-full bg-background border border-border rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary text-sm h-[90px]"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm h-[90px]"
                       />
                     </div>
                   </div>
@@ -1653,7 +1762,7 @@ export default function AdminDashboard() {
                     value={courseForm.tags}
                     onChange={(e) => setCourseForm({ ...courseForm, tags: e.target.value })}
                     placeholder="برمجة, أطفال, بايثون"
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   />
                 </div>
               </div>
@@ -1662,7 +1771,7 @@ export default function AdminDashboard() {
                 <button
                   type="button"
                   onClick={() => setIsCourseModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-foreground/80 rounded-xl text-xs transition-colors border border-slate-700/50"
+                  className="px-4 py-2.5 bg-muted hover:bg-muted/80 text-foreground/80 rounded-xl text-xs transition-colors border border-border"
                 >
                   إلغاء
                 </button>
@@ -1691,12 +1800,12 @@ export default function AdminDashboard() {
           />
           <div className="bg-card border border-border w-full max-w-2xl rounded-3xl p-6 relative z-10 max-h-[90vh] overflow-y-auto shadow-2xl space-y-6">
             <div className="flex items-center justify-between border-b border-border pb-4">
-              <h3 className="text-lg font-bold text-white">
+              <h3 className="text-lg font-bold text-foreground">
                 {podcastModalMode === "edit" ? "تعديل الحلقة" : "إضافة حلقة جديدة"}
               </h3>
               <button
                 onClick={() => setIsPodcastModalOpen(false)}
-                className="p-1.5 hover:bg-slate-800 rounded-lg text-muted-foreground hover:text-foreground/80 transition-colors"
+                className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground/80 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1710,7 +1819,7 @@ export default function AdminDashboard() {
                   required
                   value={podcastForm.title}
                   onChange={(e) => setPodcastForm({ ...podcastForm, title: e.target.value })}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                 />
               </div>
 
@@ -1721,7 +1830,7 @@ export default function AdminDashboard() {
                   rows={4}
                   value={podcastForm.desc}
                   onChange={(e) => setPodcastForm({ ...podcastForm, desc: e.target.value })}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm resize-none"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm resize-none"
                 />
               </div>
 
@@ -1734,7 +1843,7 @@ export default function AdminDashboard() {
                     value={podcastForm.duration}
                     onChange={(e) => setPodcastForm({ ...podcastForm, duration: e.target.value })}
                     placeholder="12:30"
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   />
                 </div>
 
@@ -1745,7 +1854,7 @@ export default function AdminDashboard() {
                     value={podcastForm.youtubeUrl}
                     onChange={(e) => setPodcastForm({ ...podcastForm, youtubeUrl: e.target.value })}
                     placeholder="https://youtube.com/..."
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   />
                 </div>
 
@@ -1753,8 +1862,8 @@ export default function AdminDashboard() {
                   <label className="block text-xs font-semibold text-muted-foreground">ملف الصوت للحلقة</label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <span className="block text-[10px] text-slate-500 mb-1">خيار 1: تحميل ملف صوتي من جهازك</span>
-                      <div className="relative border border-dashed border-border hover:border-primary/50 rounded-xl p-3 bg-background/40 transition-colors flex flex-col items-center justify-center min-h-[90px]">
+                      <span className="block text-[10px] text-muted-foreground mb-1">خيار 1: تحميل ملف صوتي من جهازك</span>
+                      <div className="relative border border-dashed border-border hover:border-primary/50 rounded-xl p-3 bg-muted/50 transition-colors flex flex-col items-center justify-center min-h-[90px]">
                         {isUploadingAudio ? (
                           <div className="flex flex-col items-center gap-2">
                             <Loader2 className="w-5 h-5 animate-spin text-primary" />
@@ -1769,19 +1878,19 @@ export default function AdminDashboard() {
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                             />
                             <span className="text-xs text-muted-foreground text-center">انقر هنا أو اسحب الملف لرفعه</span>
-                            <span className="text-[10px] text-slate-600 mt-1">MP3, WAV حتى 150MB</span>
+                            <span className="text-[10px] text-muted-foreground mt-1">MP3, WAV حتى 150MB</span>
                           </>
                         )}
                       </div>
                     </div>
                     <div>
-                      <span className="block text-[10px] text-slate-500 mb-1">خيار 2: رابط ملف صوتي مباشر</span>
+                      <span className="block text-[10px] text-muted-foreground mb-1">خيار 2: رابط ملف صوتي مباشر</span>
                       <input
                         type="text"
                         value={podcastForm.audioUrl}
                         onChange={(e) => setPodcastForm({ ...podcastForm, audioUrl: e.target.value })}
                         placeholder="https://domain.com/audio.mp3"
-                        className="w-full bg-background border border-border rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary text-sm h-[90px]"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm h-[90px]"
                       />
                     </div>
                   </div>
@@ -1803,7 +1912,7 @@ export default function AdminDashboard() {
                 <button
                   type="button"
                   onClick={() => setIsPodcastModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-foreground/80 rounded-xl text-xs transition-colors border border-slate-700/50"
+                  className="px-4 py-2.5 bg-muted hover:bg-muted/80 text-foreground/80 rounded-xl text-xs transition-colors border border-border"
                 >
                   إلغاء
                 </button>
@@ -1832,12 +1941,12 @@ export default function AdminDashboard() {
           />
           <div className="bg-card border border-border w-full max-w-2xl rounded-3xl p-6 relative z-10 max-h-[90vh] overflow-y-auto shadow-2xl space-y-6">
             <div className="flex items-center justify-between border-b border-border pb-4">
-              <h3 className="text-lg font-bold text-white">
+              <h3 className="text-lg font-bold text-foreground">
                 {curriculumModalMode === "edit" ? "تعديل الدرس" : "إضافة درس جديد للمنهج"}
               </h3>
               <button
                 onClick={() => setIsCurriculumModalOpen(false)}
-                className="p-1.5 hover:bg-slate-800 rounded-lg text-muted-foreground hover:text-foreground/80 transition-colors"
+                className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground/80 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1854,7 +1963,7 @@ export default function AdminDashboard() {
                     value={curriculumForm.subject}
                     onChange={(e) => setCurriculumForm({ ...curriculumForm, subject: e.target.value })}
                     placeholder="مثال: C++، Python، Java"
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   />
                   <datalist id="subjects-list">
                     <option value="C++" />
@@ -1873,7 +1982,7 @@ export default function AdminDashboard() {
                     required
                     value={curriculumForm.order}
                     onChange={(e) => setCurriculumForm({ ...curriculumForm, order: Number(e.target.value) })}
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   />
                 </div>
 
@@ -1885,7 +1994,7 @@ export default function AdminDashboard() {
                     value={curriculumForm.title}
                     onChange={(e) => setCurriculumForm({ ...curriculumForm, title: e.target.value })}
                     placeholder="مثال: الدرس الأول: المتغيرات وأنواع البيانات"
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   />
                 </div>
 
@@ -1896,7 +2005,7 @@ export default function AdminDashboard() {
                     onChange={(e) => setCurriculumForm({ ...curriculumForm, description: e.target.value })}
                     placeholder="اكتب وصفاً أو ملاحظات إضافية حول هذا الدرس..."
                     rows={3}
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm resize-none"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm resize-none"
                   />
                 </div>
 
@@ -1907,7 +2016,7 @@ export default function AdminDashboard() {
                     {Array.from({ length: 10 }).map((_, idx) => {
                       const currentUrl = curriculumForm.images[idx] || "";
                       return (
-                        <div key={idx} className="bg-slate-900/60 border border-border/50 rounded-xl p-3 space-y-2 relative">
+                        <div key={idx} className="bg-muted/60 border border-border/60 rounded-xl p-3 space-y-2 relative">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-primary">شريحة {idx + 1}</span>
                             {currentUrl && (
@@ -1925,11 +2034,11 @@ export default function AdminDashboard() {
                             )}
                           </div>
 
-                          <div className="aspect-[4/3] w-full bg-slate-950 rounded-lg overflow-hidden border border-border/40 flex items-center justify-center relative">
+                          <div className="aspect-[4/3] w-full bg-muted rounded-lg overflow-hidden border border-border/40 flex items-center justify-center relative">
                             {currentUrl ? (
                               <img src={currentUrl} alt={`Slide ${idx + 1}`} className="w-full h-full object-cover" />
                             ) : (
-                              <span className="text-[10px] text-slate-500">فارغة</span>
+                              <span className="text-[10px] text-muted-foreground">فارغة</span>
                             )}
                             {uploadingSlotIndex === idx && (
                               <div className="absolute inset-0 bg-black/80 flex items-center justify-center gap-2">
@@ -1950,7 +2059,7 @@ export default function AdminDashboard() {
                               />
                               <button
                                 type="button"
-                                className="w-full bg-[#121A27] hover:bg-slate-800 text-foreground border border-border rounded-lg py-1.5 text-[10px] font-medium transition-all"
+                                className="w-full bg-[#121A27] hover:bg-muted text-foreground border border-border rounded-lg py-1.5 text-[10px] font-medium transition-all"
                               >
                                 تحميل صورة
                               </button>
@@ -1965,7 +2074,7 @@ export default function AdminDashboard() {
                                 setCurriculumForm({ ...curriculumForm, images: newImages });
                               }}
                               placeholder="أو اكتب رابط الصورة هنا..."
-                              className="w-full bg-background border border-border rounded-lg px-2.5 py-1 text-white text-[10px] focus:outline-none focus:border-primary"
+                              className="w-full bg-background border border-border rounded-lg px-2.5 py-1 text-foreground text-[10px] focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                             />
                           </div>
                         </div>
@@ -1979,7 +2088,7 @@ export default function AdminDashboard() {
                 <button
                   type="button"
                   onClick={() => setIsCurriculumModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-foreground/80 rounded-xl text-xs transition-colors border border-slate-700/50"
+                  className="px-4 py-2.5 bg-muted hover:bg-muted/80 text-foreground/80 rounded-xl text-xs transition-colors border border-border"
                 >
                   إلغاء
                 </button>
@@ -2008,12 +2117,12 @@ export default function AdminDashboard() {
           />
           <div className="bg-card border border-border w-full max-w-2xl rounded-3xl p-6 relative z-10 max-h-[90vh] overflow-y-auto shadow-2xl space-y-6">
             <div className="flex items-center justify-between border-b border-border pb-4">
-              <h3 className="text-lg font-bold text-white">
+              <h3 className="text-lg font-bold text-foreground">
                 {videoModalMode === "edit" ? "تعديل الفيديو / القائمة" : "إضافة فيديو أو قائمة يوتيوب"}
               </h3>
               <button
                 onClick={() => setIsVideoModalOpen(false)}
-                className="p-1.5 hover:bg-slate-800 rounded-lg text-muted-foreground hover:text-foreground/80 transition-colors"
+                className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground/80 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2030,7 +2139,7 @@ export default function AdminDashboard() {
                     value={videoForm.category}
                     onChange={(e) => setVideoForm({ ...videoForm, category: e.target.value })}
                     placeholder="مثال: سي بلس بلس C++، هياكل البيانات"
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   />
                   <datalist id="video-categories">
                     <option value="سي بلس بلس C++" />
@@ -2045,7 +2154,7 @@ export default function AdminDashboard() {
                   <select
                     value={videoForm.type}
                     onChange={(e) => setVideoForm({ ...videoForm, type: e.target.value as "video" | "playlist" })}
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   >
                     <option value="video">فيديو منفرد</option>
                     <option value="playlist">قائمة تشغيل كاملة</option>
@@ -2059,7 +2168,7 @@ export default function AdminDashboard() {
                     required
                     value={videoForm.order}
                     onChange={(e) => setVideoForm({ ...videoForm, order: Number(e.target.value) })}
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   />
                 </div>
 
@@ -2072,7 +2181,7 @@ export default function AdminDashboard() {
                       value={videoForm.youtubeUrl}
                       onChange={(e) => setVideoForm({ ...videoForm, youtubeUrl: e.target.value })}
                       placeholder="رابط يوتيوب أو مسار الملف المرفوع..."
-                      className="flex-1 bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm text-left"
+                      className="flex-1 bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm text-left"
                       dir="ltr"
                     />
                     <label className="shrink-0 flex items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl px-4 cursor-pointer transition-colors border border-primary/20">
@@ -2090,7 +2199,7 @@ export default function AdminDashboard() {
                       />
                     </label>
                   </div>
-                  <span className="text-[10px] text-slate-500 mt-1 block">
+                  <span className="text-[10px] text-muted-foreground mt-1 block">
                     يمكنك إدخال رابط يوتيوب أو رفع ملف فيديو من جهازك مباشرة.
                   </span>
                 </div>
@@ -2103,7 +2212,7 @@ export default function AdminDashboard() {
                     value={videoForm.title}
                     onChange={(e) => setVideoForm({ ...videoForm, title: e.target.value })}
                     placeholder="مثال: أساسيات لغة C++ ومفهوم المتغيرات"
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   />
                 </div>
 
@@ -2114,7 +2223,7 @@ export default function AdminDashboard() {
                     onChange={(e) => setVideoForm({ ...videoForm, description: e.target.value })}
                     placeholder="اكتب وصفاً مختصراً لمحتوى هذا الفيديو أو قائمة التشغيل..."
                     rows={3}
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm resize-none"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm resize-none"
                   />
                 </div>
 
@@ -2126,7 +2235,7 @@ export default function AdminDashboard() {
                     onChange={(e) => setVideoForm({ ...videoForm, isProtected: e.target.checked })}
                     className="w-4 h-4 rounded border-border text-primary focus:ring-primary focus:ring-2 bg-background"
                   />
-                  <label htmlFor="isProtected" className="text-xs font-semibold text-white cursor-pointer select-none">
+                  <label htmlFor="isProtected" className="text-xs font-semibold text-foreground cursor-pointer select-none">
                     تشفير وحماية هذا الفيديو (يطلب كود تفعيل للمشاهدة بعد أول فيديو مجاني)
                   </label>
                 </div>
@@ -2140,9 +2249,9 @@ export default function AdminDashboard() {
                       value={videoForm.accessKey}
                       onChange={(e) => setVideoForm({ ...videoForm, accessKey: e.target.value })}
                       placeholder="مثال: CPP_COURSE_2026 أو KEY_XXXX"
-                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-primary text-sm"
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                     />
-                    <span className="text-[10px] text-slate-500 mt-1 block">
+                    <span className="text-[10px] text-muted-foreground mt-1 block">
                       سيحتاج الطالب لإدخال هذا الكود لمرة واحدة لفك القفل عن الفيديو (وجميع الفيديوهات اللاحقة التي تستخدم نفس الكود).
                     </span>
                   </div>
@@ -2153,7 +2262,7 @@ export default function AdminDashboard() {
                 <button
                   type="button"
                   onClick={() => setIsVideoModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-foreground/80 rounded-xl text-xs transition-colors border border-slate-700/50"
+                  className="px-4 py-2.5 bg-muted hover:bg-muted/80 text-foreground/80 rounded-xl text-xs transition-colors border border-border"
                 >
                   إلغاء
                 </button>
@@ -2180,19 +2289,19 @@ export default function AdminDashboard() {
             className="fixed inset-0 bg-black/85 backdrop-blur-md"
             onClick={() => setPreviewVideo(null)}
           />
-          <div className="bg-[#090D16] border border-white/10 w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl relative z-10 flex flex-col">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-slate-950/30">
+          <div className="bg-[#090D16] border border-border w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl relative z-10 flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30">
               <div className="space-y-0.5 max-w-[85%]">
                 <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
                   معاينة: {previewVideo.type === "playlist" ? "قائمة تشغيل" : "فيديو منفرد"}
                 </span>
-                <h3 className="text-base font-bold text-white line-clamp-1">{previewVideo.title}</h3>
+                <h3 className="text-base font-bold text-foreground line-clamp-1">{previewVideo.title}</h3>
               </div>
               <button
                 onClick={() => setPreviewVideo(null)}
-                className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-foreground/70 hover:text-foreground transition-all border border-white/5"
+                className="w-9 h-9 rounded-xl bg-muted/20 hover:bg-muted/40 flex items-center justify-center text-foreground/70 hover:text-foreground transition-all border border-border"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
             <div className="relative w-full aspect-video bg-black">

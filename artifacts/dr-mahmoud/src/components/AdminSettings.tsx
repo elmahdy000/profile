@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSiteSettings, useUpdateSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
 import { Loader2, Save, CheckCircle2, UploadCloud, Plus, Trash2, ArrowUp, ArrowDown, HelpCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 // Default Fallbacks
 const defaultServices = [
@@ -211,6 +212,7 @@ const defaultPortfolio = [
 ];
 
 export function AdminSettings() {
+  const { toast } = useToast();
   const { settings, isLoading } = useSiteSettings();
   const updateSettingsMutation = useUpdateSiteSettings();
 
@@ -314,10 +316,10 @@ export function AdminSettings() {
           handleChange(key, data.url);
         }
       } else {
-        alert("حدث خطأ أثناء رفع الصورة: " + (data.error || ""));
+        toast({ title: "خطأ", description: "حدث خطأ أثناء رفع الصورة: " + (data.error || ""), variant: "destructive" });
       }
     } catch (err) {
-      alert("فشل الرفع. تأكد من اتصالك بالإنترنت.");
+      toast({ title: "خطأ", description: "فشل الرفع. تأكد من اتصالك بالإنترنت.", variant: "destructive" });
     } finally {
       setIsUploading(false);
     }
@@ -340,7 +342,7 @@ export function AdminSettings() {
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 3000);
     } catch (err) {
-      alert("حدث خطأ أثناء حفظ الإعدادات");
+      toast({ title: "خطأ", description: "حدث خطأ أثناء حفظ الإعدادات", variant: "destructive" });
     }
   };
 
@@ -356,16 +358,16 @@ export function AdminSettings() {
   };
 
   const deleteItem = (list: any[], setList: React.Dispatch<React.SetStateAction<any[]>>, idx: number, setIdx?: React.Dispatch<React.SetStateAction<number | null>>) => {
-    if (!confirm("هل أنت متأكد من حذف هذا العنصر؟")) return;
     const newList = list.filter((_, i) => i !== idx);
     setList(newList);
     if (setIdx) setIdx(null);
     setIsSaved(false);
+    toast({ title: "تم", description: "تم حذف العنصر بنجاح" });
   };
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 bg-card/20 border border-border rounded-3xl">
+      <div className="flex flex-col items-center justify-center py-20 bg-muted/20 border border-border rounded-3xl">
         <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
         <p className="text-muted-foreground text-sm">جاري تحميل الإعدادات...</p>
       </div>
@@ -390,9 +392,9 @@ export function AdminSettings() {
   return (
     <div className="space-y-6">
       {/* Top Header & Save Button */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/50 pb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/60 pb-4">
         <div>
-          <h2 className="text-2xl font-bold text-white">تعديل محتوى الموقع</h2>
+          <h2 className="text-2xl font-bold text-foreground">تعديل محتوى الموقع</h2>
           <p className="text-xs text-muted-foreground mt-1">تعديل كل سكشن في الصفحة الرئيسية بشكل مباشر وسريع</p>
         </div>
         <button
@@ -412,7 +414,7 @@ export function AdminSettings() {
       </div>
 
       {/* Sub Tabs Navigation */}
-      <div className="flex flex-wrap gap-2 border-b border-border/40 pb-3 overflow-x-auto">
+      <div className="flex flex-wrap gap-2 border-b border-border/60 pb-3 overflow-x-auto">
         {subTabs.map((tab) => (
           <button
             key={tab.id}
@@ -420,7 +422,7 @@ export function AdminSettings() {
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
               activeTab === tab.id
                 ? "bg-primary text-primary-foreground shadow-md shadow-primary/10"
-                : "bg-card/40 text-muted-foreground border border-border/50 hover:bg-card/60 hover:text-foreground"
+                : "bg-muted/40 text-muted-foreground border border-border/60 hover:bg-card/60 hover:text-foreground"
             }`}
           >
             {tab.label}
@@ -429,12 +431,12 @@ export function AdminSettings() {
       </div>
 
       {/* Main Tab Content */}
-      <div className="bg-card/25 border border-border/40 rounded-2xl p-6">
+      <div className="bg-card border border-border shadow-sm rounded-2xl p-6">
         
         {/* GENERAL SETTINGS */}
         {activeTab === "general" && (
           <div className="space-y-5">
-            <h3 className="text-lg font-bold text-white">الإعدادات العامة وشعار الموقع</h3>
+            <h3 className="text-lg font-bold text-foreground">الإعدادات العامة وشعار الموقع</h3>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1.5 font-bold">اسم الموقع (Site Name)</label>
@@ -442,7 +444,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.SITE_NAME] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.SITE_NAME, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                   placeholder="د. محمود المهدي"
                 />
               </div>
@@ -452,7 +454,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.SITE_TAGLINE] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.SITE_TAGLINE, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                   placeholder="مدرب برمجة وذكاء اصطناعي"
                 />
               </div>
@@ -463,7 +465,7 @@ export function AdminSettings() {
                 value={formData[SETTINGS_KEYS.SITE_SEO_DESC] || ""}
                 onChange={(e) => handleChange(SETTINGS_KEYS.SITE_SEO_DESC, e.target.value)}
                 rows={3}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                 placeholder="كورسات برمجة وتأسيس ذكاء اصطناعي في الزقازيق..."
               />
             </div>
@@ -474,7 +476,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.SITE_LOGO_URL] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.SITE_LOGO_URL, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                   dir="ltr"
                 />
                 <div className="relative flex-shrink-0">
@@ -502,7 +504,7 @@ export function AdminSettings() {
         {/* HERO SECTION */}
         {activeTab === "hero" && (
           <div className="space-y-5">
-            <h3 className="text-lg font-bold text-white">إعدادات القسم الرئيسي (Hero)</h3>
+            <h3 className="text-lg font-bold text-foreground">إعدادات القسم الرئيسي (Hero)</h3>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1.5">العنوان الرئيسي (Hero Title)</label>
@@ -510,7 +512,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.HERO_TITLE] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.HERO_TITLE, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                   placeholder="تعلم البرمجة والذكاء الاصطناعي"
                 />
               </div>
@@ -520,7 +522,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.HERO_SUBTITLE] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.HERO_SUBTITLE, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                   placeholder="مع د. محمود المهدي"
                 />
               </div>
@@ -531,7 +533,7 @@ export function AdminSettings() {
                 type="text"
                 value={formData[SETTINGS_KEYS.HERO_BADGE] || ""}
                 onChange={(e) => handleChange(SETTINGS_KEYS.HERO_BADGE, e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                 placeholder="حجز تقييم مجاني بالكامل"
               />
             </div>
@@ -541,7 +543,7 @@ export function AdminSettings() {
                 value={formData[SETTINGS_KEYS.HERO_DESC] || ""}
                 onChange={(e) => handleChange(SETTINGS_KEYS.HERO_DESC, e.target.value)}
                 rows={4}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                 placeholder="أول سيشن مجاناً لتحديد المستوى والمشاريع العملية..."
               />
             </div>
@@ -552,7 +554,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.HERO_PHOTO_URL] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.HERO_PHOTO_URL, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                   dir="ltr"
                 />
                 <div className="relative flex-shrink-0">
@@ -580,7 +582,7 @@ export function AdminSettings() {
         {/* ABOUT SECTION */}
         {activeTab === "about" && (
           <div className="space-y-5">
-            <h3 className="text-lg font-bold text-white">إعدادات قسم "عن الدكتور" (About)</h3>
+            <h3 className="text-lg font-bold text-foreground">إعدادات قسم "عن الدكتور" (About)</h3>
             
             <div className="grid gap-4 md:grid-cols-3">
               <div>
@@ -589,7 +591,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.ABOUT_TITLE] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.ABOUT_TITLE, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                   placeholder="من هو د. محمود المهدي؟"
                 />
               </div>
@@ -599,7 +601,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.ABOUT_YEARS] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.ABOUT_YEARS, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                 />
               </div>
               <div>
@@ -608,7 +610,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.ABOUT_STUDENTS] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.ABOUT_STUDENTS, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                 />
               </div>
             </div>
@@ -619,7 +621,7 @@ export function AdminSettings() {
                 value={formData[SETTINGS_KEYS.ABOUT_DESC] || ""}
                 onChange={(e) => handleChange(SETTINGS_KEYS.ABOUT_DESC, e.target.value)}
                 rows={5}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                 placeholder="حاصل على ماجستير ودكتوراه في هندسة البرمجيات..."
               />
             </div>
@@ -631,7 +633,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.ABOUT_IMAGE_URL] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.ABOUT_IMAGE_URL, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                   dir="ltr"
                 />
                 <div className="relative flex-shrink-0">
@@ -660,7 +662,7 @@ export function AdminSettings() {
         {activeTab === "services" && (
           <div className="space-y-6">
             <div className="flex justify-between items-center border-b border-border/30 pb-3">
-              <h3 className="text-lg font-bold text-white font-outfit">البرامج والخدمات التعليمية</h3>
+              <h3 className="text-lg font-bold text-foreground font-outfit">البرامج والخدمات التعليمية</h3>
               <button
                 onClick={() => {
                   const newService = {
@@ -688,8 +690,8 @@ export function AdminSettings() {
                     onClick={() => setSelServiceIdx(index)}
                     className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 ${
                       selServiceIdx === index
-                        ? "bg-primary/10 border-primary text-white"
-                        : "bg-white/5 border-white/10 hover:bg-white/10 text-muted-foreground"
+                        ? "bg-primary/10 border-primary text-primary"
+                        : "bg-background border-border hover:bg-muted/80 text-muted-foreground"
                     }`}
                   >
                     <div className="flex items-center gap-2 truncate">
@@ -702,14 +704,14 @@ export function AdminSettings() {
                     <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => moveItem(services, setServices, index, "up", setSelServiceIdx)}
-                        className="p-1 hover:text-white transition-colors"
+                        className="p-1 hover:text-foreground transition-colors"
                         disabled={index === 0}
                       >
                         <ArrowUp className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => moveItem(services, setServices, index, "down", setSelServiceIdx)}
-                        className="p-1 hover:text-white transition-colors"
+                        className="p-1 hover:text-foreground transition-colors"
                         disabled={index === services.length - 1}
                       >
                         <ArrowDown className="w-3.5 h-3.5" />
@@ -728,8 +730,8 @@ export function AdminSettings() {
               {/* Edit Detail */}
               <div className="md:col-span-2">
                 {selServiceIdx !== null && services[selServiceIdx] ? (
-                  <div className="space-y-4 bg-white/5 p-5 rounded-2xl border border-white/10">
-                    <h4 className="font-bold text-white border-b border-border/20 pb-2">تعديل تفاصيل البرنامج</h4>
+                  <div className="space-y-4 bg-background p-5 rounded-2xl border border-border">
+                    <h4 className="font-bold text-foreground border-b border-border/20 pb-2">تعديل تفاصيل البرنامج</h4>
                     
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
@@ -743,7 +745,7 @@ export function AdminSettings() {
                             setServices(copy);
                             setIsSaved(false);
                           }}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                         />
                       </div>
 
@@ -757,7 +759,7 @@ export function AdminSettings() {
                             setServices(copy);
                             setIsSaved(false);
                           }}
-                          className="w-full bg-background border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 font-sans"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary font-sans"
                         >
                           <option value="MonitorPlay">MonitorPlay (شاشة ألعاب)</option>
                           <option value="Terminal">Terminal (شاشة كود)</option>
@@ -781,7 +783,7 @@ export function AdminSettings() {
                             setServices(copy);
                             setIsSaved(false);
                           }}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                           dir="ltr"
                         />
                         <div className="relative flex-shrink-0">
@@ -822,12 +824,12 @@ export function AdminSettings() {
                           setIsSaved(false);
                         }}
                         rows={4}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                       />
                     </div>
                   </div>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-center p-8 border border-dashed border-white/10 rounded-2xl bg-white/5">
+                  <div className="h-full flex items-center justify-center text-center p-8 border border-dashed border-border rounded-2xl bg-background">
                     <p className="text-muted-foreground text-sm">اختر برنامجاً من القائمة الجانبية لتعديله أو أضف برنامجاً جديداً.</p>
                   </div>
                 )}
@@ -840,7 +842,7 @@ export function AdminSettings() {
         {activeTab === "pricing" && (
           <div className="space-y-6">
             <div className="flex justify-between items-center border-b border-border/30 pb-3">
-              <h3 className="text-lg font-bold text-white">إعدادات أسعار المسارات (Pricing Plans)</h3>
+              <h3 className="text-lg font-bold text-foreground">إعدادات أسعار المسارات (Pricing Plans)</h3>
               <button
                 onClick={() => {
                   const newPlan = {
@@ -872,8 +874,8 @@ export function AdminSettings() {
                     onClick={() => setSelPlanIdx(index)}
                     className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 ${
                       selPlanIdx === index
-                        ? "bg-primary/10 border-primary text-white"
-                        : "bg-white/5 border-white/10 hover:bg-white/10 text-muted-foreground"
+                        ? "bg-primary/10 border-primary text-primary"
+                        : "bg-background border-border hover:bg-muted/80 text-muted-foreground"
                     }`}
                   >
                     <div className="truncate">
@@ -884,14 +886,14 @@ export function AdminSettings() {
                     <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => moveItem(pricing, setPricing, index, "up", setSelPlanIdx)}
-                        className="p-1 hover:text-white transition-colors"
+                        className="p-1 hover:text-foreground transition-colors"
                         disabled={index === 0}
                       >
                         <ArrowUp className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => moveItem(pricing, setPricing, index, "down", setSelPlanIdx)}
-                        className="p-1 hover:text-white transition-colors"
+                        className="p-1 hover:text-foreground transition-colors"
                         disabled={index === pricing.length - 1}
                       >
                         <ArrowDown className="w-3.5 h-3.5" />
@@ -910,8 +912,8 @@ export function AdminSettings() {
               {/* Edit Detail */}
               <div className="md:col-span-2">
                 {selPlanIdx !== null && pricing[selPlanIdx] ? (
-                  <div className="space-y-4 bg-white/5 p-5 rounded-2xl border border-white/10">
-                    <h4 className="font-bold text-white border-b border-border/20 pb-2">تعديل تفاصيل الباقة</h4>
+                  <div className="space-y-4 bg-background p-5 rounded-2xl border border-border">
+                    <h4 className="font-bold text-foreground border-b border-border/20 pb-2">تعديل تفاصيل الباقة</h4>
                     
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
@@ -925,7 +927,7 @@ export function AdminSettings() {
                             setPricing(copy);
                             setIsSaved(false);
                           }}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                         />
                       </div>
                       <div>
@@ -939,7 +941,7 @@ export function AdminSettings() {
                             setPricing(copy);
                             setIsSaved(false);
                           }}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 font-sans"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary font-sans"
                         />
                       </div>
                     </div>
@@ -956,7 +958,7 @@ export function AdminSettings() {
                             setPricing(copy);
                             setIsSaved(false);
                           }}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                         />
                       </div>
                       <div>
@@ -970,7 +972,7 @@ export function AdminSettings() {
                             setPricing(copy);
                             setIsSaved(false);
                           }}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                         />
                       </div>
                     </div>
@@ -987,7 +989,7 @@ export function AdminSettings() {
                             setPricing(copy);
                             setIsSaved(false);
                           }}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                           placeholder="مثال: الأكثر طلباً"
                         />
                       </div>
@@ -1002,7 +1004,7 @@ export function AdminSettings() {
                             setPricing(copy);
                             setIsSaved(false);
                           }}
-                          className="w-4 h-4 rounded text-primary focus:ring-primary bg-white/5 border-white/10"
+                          className="w-4 h-4 rounded text-primary focus:ring-primary bg-background border-border"
                         />
                         <label htmlFor="planFeatured" className="text-xs font-semibold text-foreground cursor-pointer select-none">تمييز هذه الباقة (Featured)</label>
                       </div>
@@ -1019,7 +1021,7 @@ export function AdminSettings() {
                           setPricing(copy);
                           setIsSaved(false);
                         }}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                       />
                     </div>
 
@@ -1034,13 +1036,13 @@ export function AdminSettings() {
                           setIsSaved(false);
                         }}
                         rows={5}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 font-sans"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary font-sans"
                         placeholder="مميزات الكورس..."
                       />
                     </div>
                   </div>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-center p-8 border border-dashed border-white/10 rounded-2xl bg-white/5">
+                  <div className="h-full flex items-center justify-center text-center p-8 border border-dashed border-border rounded-2xl bg-background">
                     <p className="text-muted-foreground text-sm">اختر باقة أسعار من القائمة لتعديلها أو أضف باقة جديدة.</p>
                   </div>
                 )}
@@ -1053,7 +1055,7 @@ export function AdminSettings() {
         {activeTab === "testimonials" && (
           <div className="space-y-6">
             <div className="flex justify-between items-center border-b border-border/30 pb-3">
-              <h3 className="text-lg font-bold text-white">إعدادات آراء الطلاب (Testimonials)</h3>
+              <h3 className="text-lg font-bold text-foreground">إعدادات آراء الطلاب (Testimonials)</h3>
               <button
                 onClick={() => {
                   const newTestimonial = {
@@ -1082,8 +1084,8 @@ export function AdminSettings() {
                     onClick={() => setSelTestimonialIdx(index)}
                     className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 ${
                       selTestimonialIdx === index
-                        ? "bg-primary/10 border-primary text-white"
-                        : "bg-white/5 border-white/10 hover:bg-white/10 text-muted-foreground"
+                        ? "bg-primary/10 border-primary text-primary"
+                        : "bg-background border-border hover:bg-muted/80 text-muted-foreground"
                     }`}
                   >
                     <div className="truncate">
@@ -1094,14 +1096,14 @@ export function AdminSettings() {
                     <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => moveItem(testimonials, setTestimonials, index, "up", setSelTestimonialIdx)}
-                        className="p-1 hover:text-white transition-colors"
+                        className="p-1 hover:text-foreground transition-colors"
                         disabled={index === 0}
                       >
                         <ArrowUp className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => moveItem(testimonials, setTestimonials, index, "down", setSelTestimonialIdx)}
-                        className="p-1 hover:text-white transition-colors"
+                        className="p-1 hover:text-foreground transition-colors"
                         disabled={index === testimonials.length - 1}
                       >
                         <ArrowDown className="w-3.5 h-3.5" />
@@ -1120,8 +1122,8 @@ export function AdminSettings() {
               {/* Edit Detail */}
               <div className="md:col-span-2">
                 {selTestimonialIdx !== null && testimonials[selTestimonialIdx] ? (
-                  <div className="space-y-4 bg-white/5 p-5 rounded-2xl border border-white/10">
-                    <h4 className="font-bold text-white border-b border-border/20 pb-2">تعديل تفاصيل الرأي</h4>
+                  <div className="space-y-4 bg-background p-5 rounded-2xl border border-border">
+                    <h4 className="font-bold text-foreground border-b border-border/20 pb-2">تعديل تفاصيل الرأي</h4>
                     
                     <div className="grid grid-cols-3 gap-4">
                       <div className="col-span-2">
@@ -1139,7 +1141,7 @@ export function AdminSettings() {
                             setTestimonials(copy);
                             setIsSaved(false);
                           }}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                         />
                       </div>
                       <div>
@@ -1154,7 +1156,7 @@ export function AdminSettings() {
                             setIsSaved(false);
                           }}
                           maxLength={2}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground text-center focus:outline-none focus:border-primary/50"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground text-center focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                         />
                       </div>
                     </div>
@@ -1171,7 +1173,7 @@ export function AdminSettings() {
                             setTestimonials(copy);
                             setIsSaved(false);
                           }}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                           placeholder="طالب ثانوي، ولي أمر..."
                         />
                       </div>
@@ -1185,7 +1187,7 @@ export function AdminSettings() {
                             setTestimonials(copy);
                             setIsSaved(false);
                           }}
-                          className="w-full bg-background border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                         >
                           <option value="5">⭐⭐⭐⭐⭐ (5 نجوم)</option>
                           <option value="4">⭐⭐⭐⭐ (4 نجوم)</option>
@@ -1205,12 +1207,12 @@ export function AdminSettings() {
                           setIsSaved(false);
                         }}
                         rows={4}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                       />
                     </div>
                   </div>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-center p-8 border border-dashed border-white/10 rounded-2xl bg-white/5">
+                  <div className="h-full flex items-center justify-center text-center p-8 border border-dashed border-border rounded-2xl bg-background">
                     <p className="text-muted-foreground text-sm">اختر رأياً من القائمة لتعديله أو أضف رأياً جديداً.</p>
                   </div>
                 )}
@@ -1225,7 +1227,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.TESTIMONIALS_BG_URL] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.TESTIMONIALS_BG_URL, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                   dir="ltr"
                 />
                 <div className="relative flex-shrink-0">
@@ -1255,7 +1257,7 @@ export function AdminSettings() {
         {activeTab === "faq" && (
           <div className="space-y-6">
             <div className="flex justify-between items-center border-b border-border/30 pb-3">
-              <h3 className="text-lg font-bold text-white">إعدادات الأسئلة الشائعة (FAQ)</h3>
+              <h3 className="text-lg font-bold text-foreground">إعدادات الأسئلة الشائعة (FAQ)</h3>
               <button
                 onClick={() => {
                   const newFaq = {
@@ -1281,8 +1283,8 @@ export function AdminSettings() {
                     onClick={() => setSelFaqIdx(index)}
                     className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 ${
                       selFaqIdx === index
-                        ? "bg-primary/10 border-primary text-white"
-                        : "bg-white/5 border-white/10 hover:bg-white/10 text-muted-foreground"
+                        ? "bg-primary/10 border-primary text-primary"
+                        : "bg-background border-border hover:bg-muted/80 text-muted-foreground"
                     }`}
                   >
                     <span className="text-sm font-bold truncate block">{item.q || "بدون سؤال"}</span>
@@ -1290,14 +1292,14 @@ export function AdminSettings() {
                     <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => moveItem(faq, setFaq, index, "up", setSelFaqIdx)}
-                        className="p-1 hover:text-white transition-colors"
+                        className="p-1 hover:text-foreground transition-colors"
                         disabled={index === 0}
                       >
                         <ArrowUp className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => moveItem(faq, setFaq, index, "down", setSelFaqIdx)}
-                        className="p-1 hover:text-white transition-colors"
+                        className="p-1 hover:text-foreground transition-colors"
                         disabled={index === faq.length - 1}
                       >
                         <ArrowDown className="w-3.5 h-3.5" />
@@ -1316,8 +1318,8 @@ export function AdminSettings() {
               {/* Edit Detail */}
               <div className="md:col-span-2">
                 {selFaqIdx !== null && faq[selFaqIdx] ? (
-                  <div className="space-y-4 bg-white/5 p-5 rounded-2xl border border-white/10">
-                    <h4 className="font-bold text-white border-b border-border/20 pb-2">تعديل تفاصيل السؤال</h4>
+                  <div className="space-y-4 bg-background p-5 rounded-2xl border border-border">
+                    <h4 className="font-bold text-foreground border-b border-border/20 pb-2">تعديل تفاصيل السؤال</h4>
                     
                     <div>
                       <label className="block text-xs font-semibold text-muted-foreground mb-1.5">السؤال</label>
@@ -1330,7 +1332,7 @@ export function AdminSettings() {
                           setFaq(copy);
                           setIsSaved(false);
                         }}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                       />
                     </div>
 
@@ -1345,12 +1347,12 @@ export function AdminSettings() {
                           setIsSaved(false);
                         }}
                         rows={5}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                       />
                     </div>
                   </div>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-center p-8 border border-dashed border-white/10 rounded-2xl bg-white/5">
+                  <div className="h-full flex items-center justify-center text-center p-8 border border-dashed border-border rounded-2xl bg-background">
                     <p className="text-muted-foreground text-sm">اختر سؤالاً من القائمة لتعديله أو أضف سؤالاً جديداً.</p>
                   </div>
                 )}
@@ -1363,7 +1365,7 @@ export function AdminSettings() {
         {activeTab === "portfolio" && (
           <div className="space-y-6">
             <div className="flex justify-between items-center border-b border-border/30 pb-3">
-              <h3 className="text-lg font-bold text-white">إعدادات معرض الأعمال (Portfolio)</h3>
+              <h3 className="text-lg font-bold text-foreground">إعدادات معرض الأعمال (Portfolio)</h3>
               <button
                 onClick={() => {
                   const newItem = {
@@ -1390,8 +1392,8 @@ export function AdminSettings() {
                     onClick={() => setSelPortfolioIdx(index)}
                     className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 ${
                       selPortfolioIdx === index
-                        ? "bg-primary/10 border-primary text-white"
-                        : "bg-white/5 border-white/10 hover:bg-white/10 text-muted-foreground"
+                        ? "bg-primary/10 border-primary text-primary"
+                        : "bg-background border-border hover:bg-muted/80 text-muted-foreground"
                     }`}
                   >
                     <div className="truncate flex items-center gap-2">
@@ -1407,14 +1409,14 @@ export function AdminSettings() {
                     <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => moveItem(portfolio, setPortfolio, index, "up", setSelPortfolioIdx)}
-                        className="p-1 hover:text-white transition-colors"
+                        className="p-1 hover:text-foreground transition-colors"
                         disabled={index === 0}
                       >
                         <ArrowUp className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => moveItem(portfolio, setPortfolio, index, "down", setSelPortfolioIdx)}
-                        className="p-1 hover:text-white transition-colors"
+                        className="p-1 hover:text-foreground transition-colors"
                         disabled={index === portfolio.length - 1}
                       >
                         <ArrowDown className="w-3.5 h-3.5" />
@@ -1433,8 +1435,8 @@ export function AdminSettings() {
               {/* Edit Detail */}
               <div className="md:col-span-2">
                 {selPortfolioIdx !== null && portfolio[selPortfolioIdx] ? (
-                  <div className="space-y-4 bg-white/5 p-5 rounded-2xl border border-white/10">
-                    <h4 className="font-bold text-white border-b border-border/20 pb-2">تعديل تفاصيل العمل</h4>
+                  <div className="space-y-4 bg-background p-5 rounded-2xl border border-border">
+                    <h4 className="font-bold text-foreground border-b border-border/20 pb-2">تعديل تفاصيل العمل</h4>
                     
                     <div>
                       <label className="block text-xs font-semibold text-muted-foreground mb-1.5">عنوان العمل (Title)</label>
@@ -1447,7 +1449,7 @@ export function AdminSettings() {
                           setPortfolio(copy);
                           setIsSaved(false);
                         }}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                       />
                     </div>
 
@@ -1461,7 +1463,7 @@ export function AdminSettings() {
                           setPortfolio(copy);
                           setIsSaved(false);
                         }}
-                        className="w-full bg-background border border-white/10 rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-primary/50 font-sans"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary font-sans"
                       >
                         <option value="Kids">الأطفال (Kids)</option>
                         <option value="Programming">برمجة (Programming)</option>
@@ -1487,7 +1489,7 @@ export function AdminSettings() {
                             setPortfolio(copy);
                             setIsSaved(false);
                           }}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                          className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                           dir="ltr"
                         />
                         <div className="relative flex-shrink-0">
@@ -1516,7 +1518,7 @@ export function AdminSettings() {
                     </div>
                   </div>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-center p-8 border border-dashed border-white/10 rounded-2xl bg-white/5">
+                  <div className="h-full flex items-center justify-center text-center p-8 border border-dashed border-border rounded-2xl bg-background">
                     <p className="text-muted-foreground text-sm">اختر عملاً من القائمة لتعديله أو أضف عملاً جديداً.</p>
                   </div>
                 )}
@@ -1528,7 +1530,7 @@ export function AdminSettings() {
         {/* EDUVERSE SECTION */}
         {activeTab === "eduverse" && (
           <div className="space-y-5">
-            <h3 className="text-lg font-bold text-white">إعدادات سكن إيدوفيرس (Eduverse)</h3>
+            <h3 className="text-lg font-bold text-foreground">إعدادات سكن إيدوفيرس (Eduverse)</h3>
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5 font-sans font-bold">صورة خلفية القسم (Background Image)</label>
               <div className="flex gap-2">
@@ -1536,7 +1538,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.EDUVERSE_IMAGE_URL] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.EDUVERSE_IMAGE_URL, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                   dir="ltr"
                 />
                 <div className="relative flex-shrink-0">
@@ -1564,7 +1566,7 @@ export function AdminSettings() {
         {/* WHY CHOOSE ME SECTION */}
         {activeTab === "why-choose-me" && (
           <div className="space-y-5">
-            <h3 className="text-lg font-bold text-white">إعدادات سكن "ليه تختارني" (Why Choose Me)</h3>
+            <h3 className="text-lg font-bold text-foreground">إعدادات سكن "ليه تختارني" (Why Choose Me)</h3>
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5 font-sans font-bold">صورة خلفية القسم (Background Image)</label>
               <div className="flex gap-2">
@@ -1572,7 +1574,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.WHY_CHOOSE_ME_BG_URL] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.WHY_CHOOSE_ME_BG_URL, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                   dir="ltr"
                 />
                 <div className="relative flex-shrink-0">
@@ -1600,7 +1602,7 @@ export function AdminSettings() {
         {/* CONTACT SECTION */}
         {activeTab === "contact" && (
           <div className="space-y-5">
-            <h3 className="text-lg font-bold text-white">بيانات التواصل (Contact Info)</h3>
+            <h3 className="text-lg font-bold text-foreground">بيانات التواصل (Contact Info)</h3>
             
             <div className="grid gap-4 md:grid-cols-2">
               <div>
@@ -1609,7 +1611,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.CONTACT_WHATSAPP] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.CONTACT_WHATSAPP, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50 text-left font-sans"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-left font-sans"
                   dir="ltr"
                   placeholder="201044348610"
                 />
@@ -1620,7 +1622,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.CONTACT_ADDRESS] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.CONTACT_ADDRESS, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                   placeholder="Eduverse، فلل الجامعة، الزقازيق"
                 />
               </div>
@@ -1633,7 +1635,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.CONTACT_PHONE1] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.CONTACT_PHONE1, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50 text-left font-sans"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-left font-sans"
                   dir="ltr"
                 />
               </div>
@@ -1643,7 +1645,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.CONTACT_PHONE2] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.CONTACT_PHONE2, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50 text-left font-sans"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-left font-sans"
                   dir="ltr"
                 />
               </div>
@@ -1653,7 +1655,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.CONTACT_PHONE3] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.CONTACT_PHONE3, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50 text-left font-sans"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-left font-sans"
                   dir="ltr"
                 />
               </div>
@@ -1665,7 +1667,7 @@ export function AdminSettings() {
                 type="text"
                 value={formData[SETTINGS_KEYS.CONTACT_MAPS_URL] || ""}
                 onChange={(e) => handleChange(SETTINGS_KEYS.CONTACT_MAPS_URL, e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50 text-left font-sans"
+                className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-left font-sans"
                 dir="ltr"
                 placeholder="https://maps.google.com/..."
               />
@@ -1676,7 +1678,7 @@ export function AdminSettings() {
         {/* SOCIAL SECTION */}
         {activeTab === "social" && (
           <div className="space-y-5">
-            <h3 className="text-lg font-bold text-white">مواقع التواصل الاجتماعي (Social Media links)</h3>
+            <h3 className="text-lg font-bold text-foreground">مواقع التواصل الاجتماعي (Social Media links)</h3>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1.5">فيسبوك (Facebook URL)</label>
@@ -1684,7 +1686,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.SOCIAL_FACEBOOK] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.SOCIAL_FACEBOOK, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50 text-left font-sans"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-left font-sans"
                   dir="ltr"
                   placeholder="https://facebook.com/..."
                 />
@@ -1695,7 +1697,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.SOCIAL_INSTAGRAM] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.SOCIAL_INSTAGRAM, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50 text-left font-sans"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-left font-sans"
                   dir="ltr"
                   placeholder="https://instagram.com/..."
                 />
@@ -1706,7 +1708,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.SOCIAL_YOUTUBE] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.SOCIAL_YOUTUBE, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50 text-left font-sans"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-left font-sans"
                   dir="ltr"
                   placeholder="https://youtube.com/..."
                 />
@@ -1717,7 +1719,7 @@ export function AdminSettings() {
                   type="text"
                   value={formData[SETTINGS_KEYS.SOCIAL_LINKEDIN] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.SOCIAL_LINKEDIN, e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-primary/50 text-left font-sans"
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-left font-sans"
                   dir="ltr"
                   placeholder="https://linkedin.com/in/..."
                 />

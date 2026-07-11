@@ -19,10 +19,31 @@ const allowedOrigins = (process.env.CORS_ORIGINS ?? "")
 const corsOptions: CorsOptions = {
   origin(origin, callback) {
     // Allow same-origin / non-browser requests (no Origin header).
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin) {
       callback(null, true);
       return;
     }
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    try {
+      const url = new URL(origin);
+      if (
+        url.hostname === "localhost" ||
+        url.hostname === "127.0.0.1" ||
+        url.hostname === "drelmahdy.com" ||
+        url.hostname === "www.drelmahdy.com"
+      ) {
+        callback(null, true);
+        return;
+      }
+    } catch (e) {
+      // Ignore invalid URLs
+    }
+
     callback(new Error("Not allowed by CORS"));
   },
 };
