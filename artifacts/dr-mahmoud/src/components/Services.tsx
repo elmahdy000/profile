@@ -18,8 +18,8 @@ export function Services() {
       ],
       ctaText: "تفاصيل منهج البكالوريا",
       ctaLink: "/baccalaureate",
-      color: "border-blue-400/40 hover:border-blue-400",
-      iconBg: "bg-blue-500/15 text-blue-400",
+      color: "border-primary/30 hover:border-primary/60",
+      iconBg: "bg-primary/10 text-primary",
     },
     {
       icon: Award,
@@ -35,8 +35,8 @@ export function Services() {
       ],
       ctaText: "شاهد مناهج الجامعة",
       ctaLink: "/curriculum",
-      color: "border-cyan-400/40 hover:border-cyan-400",
-      iconBg: "bg-cyan-500/15 text-cyan-400",
+      color: "border-secondary/30 hover:border-secondary/60",
+      iconBg: "bg-secondary/10 text-secondary",
     },
     {
       icon: TrendingUp,
@@ -53,8 +53,8 @@ export function Services() {
       ctaText: "تواصل واستفسر الآن",
       ctaLink: "https://wa.me/201044348610",
       external: true,
-      color: "border-emerald-400/40 hover:border-emerald-400",
-      iconBg: "bg-emerald-500/15 text-emerald-400",
+      color: "border-primary/30 hover:border-primary/60",
+      iconBg: "bg-primary/10 text-primary",
     }
   ];
 

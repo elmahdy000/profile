@@ -154,7 +154,7 @@ export default function CurriculumPage() {
   return (
     <div className="min-h-screen bg-background text-foreground font-sans" dir="rtl">
       {/* Minimal Navbar */}
-      <nav className="sticky top-0 z-50 w-full bg-background/90 backdrop-blur-md border-b border-white/8">
+      <nav className="sticky top-0 z-50 w-full bg-background/90 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">
           <a href="/" className="flex items-center gap-3">
             <img src={logoUrl} alt="Logo" className="w-9 h-9 object-cover rounded-full border border-primary/20 shrink-0" />
@@ -188,7 +188,7 @@ export default function CurriculumPage() {
 
             <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-6 leading-snug">
               مكتبة المناهج والملخصات البرمجية <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary/80 to-secondary/80">
+              <span className="text-primary">
                 تصفح الدروس كشرائح تفاعلية
               </span>
             </h1>
@@ -208,9 +208,9 @@ export default function CurriculumPage() {
             <p className="text-muted-foreground text-sm">جاري تحميل المناهج والدروس المصورة...</p>
           </div>
         ) : !curriculums || curriculums.length === 0 ? (
-          <div className="text-center py-20 bg-card border border-border rounded-3xl max-w-xl mx-auto px-6">
+          <div className="text-center py-20 bg-card border border-border rounded-3xl max-w-xl mx-auto px-6 shadow-sm">
             <BookOpen className="w-12 h-12 mx-auto text-slate-600 mb-4" />
-            <h3 className="font-bold text-white text-lg">لم يتم رفع مناهج تعليمية بعد</h3>
+            <h3 className="font-bold text-foreground text-lg">لم يتم رفع مناهج تعليمية بعد</h3>
             <p className="text-xs text-muted-foreground mt-2">
               تابعنا باستمرار، سيقوم الدكتور بإضافة شروحات برمجية بصرية رائعة قريبًا جدًا!
             </p>
@@ -227,7 +227,7 @@ export default function CurriculumPage() {
                 placeholder="ابحث عن درس أو موضوع معين..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#121A27] border border-white/5 rounded-full px-5 py-3 pr-11 text-sm text-foreground placeholder:text-foreground/35 focus:outline-none focus:border-primary/50 transition-colors"
+                className="w-full bg-card border border-border rounded-full px-5 py-3 pr-11 text-sm text-foreground placeholder:text-foreground/35 focus:outline-none focus:border-primary/50 transition-colors shadow-sm"
               />
               <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/45 pointer-events-none" />
             </div>
@@ -239,7 +239,7 @@ export default function CurriculumPage() {
                 className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
                   selectedSubject === "all"
                     ? "bg-primary text-primary-foreground border-transparent shadow-lg shadow-primary/20"
-                    : "bg-[#121A27] text-foreground/60 border border-border/80 hover:text-foreground"
+                    : "bg-card text-foreground/80 border border-border hover:bg-muted hover:text-foreground"
                 }`}
               >
                 جميع المواد ({curriculums.length})
@@ -253,7 +253,7 @@ export default function CurriculumPage() {
                     className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
                       selectedSubject === subj
                         ? "bg-primary text-primary-foreground border-transparent shadow-lg shadow-primary/20"
-                        : "bg-[#121A27] text-foreground/60 border border-border/80 hover:text-foreground"
+                        : "bg-card text-foreground/80 border border-border hover:bg-muted hover:text-foreground"
                     }`}
                   >
                     {subj} ({count})
@@ -267,7 +267,7 @@ export default function CurriculumPage() {
               {filteredCurriculums.map((lesson) => (
                 <div
                   key={lesson.id}
-                  className="group bg-card border border-white/10 hover:border-primary/30 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 flex flex-col justify-between"
+                  className="group bg-card border border-border hover:border-primary/30 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 flex flex-col justify-between"
                 >
                   <div className="p-6 space-y-4">
                     <div className="flex items-center justify-between">
@@ -280,7 +280,7 @@ export default function CurriculumPage() {
                       </span>
                     </div>
 
-                    <h3 className="text-lg font-bold text-white group-hover:text-primary transition-colors">
+                    <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
                       {lesson.title}
                     </h3>
 
@@ -292,20 +292,20 @@ export default function CurriculumPage() {
                   </div>
 
                   {/* Thumbnail Row & View Action */}
-                  <div className="px-6 pb-6 pt-2 border-t border-border/30 bg-background/20 space-y-4">
+                  <div className="px-6 pb-6 pt-2 border-t border-border bg-background/25 space-y-4">
                     <div className="flex items-center gap-1.5 overflow-hidden py-1">
                       {lesson.images.slice(0, 4).map((img, idx) => (
                         <div
                           key={idx}
-                          className="relative w-12 h-14 rounded-md overflow-hidden border border-border bg-slate-900 flex-shrink-0"
+                          className="relative w-12 h-14 rounded-md overflow-hidden border border-border bg-muted flex-shrink-0"
                         >
                           <img
                             src={img}
                             alt=""
-                            className="w-full h-full object-cover opacity-70"
+                            className="w-full h-full object-cover opacity-80"
                           />
                           {idx === 3 && lesson.images.length > 4 && (
-                            <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center text-[10px] font-bold text-white">
+                            <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center text-[10px] font-bold text-white">
                               +{lesson.images.length - 4}
                             </div>
                           )}
@@ -315,7 +315,7 @@ export default function CurriculumPage() {
 
                     <Button
                       onClick={() => openLesson(lesson)}
-                      className="w-full bg-[#0B111C] hover:bg-gradient-to-r hover:from-primary hover:to-[#06B6D4] text-primary hover:text-[#070B12] border border-[#06B6D4]/28 hover:border-transparent transition-all duration-300 font-bold text-xs py-5"
+                      className="w-full bg-muted/65 hover:bg-primary text-primary hover:text-white border border-border hover:border-transparent transition-all duration-300 font-bold text-xs py-5"
                     >
                       <Maximize2 className="w-3.5 h-3.5 me-2" />
                       عرض الدرس كشرائح صور

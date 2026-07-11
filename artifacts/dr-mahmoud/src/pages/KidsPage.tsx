@@ -44,7 +44,7 @@ export default function KidsPage() {
   return (
     <div className="min-h-screen bg-background text-foreground font-sans" dir="rtl">
       {/* Minimal Navbar */}
-      <nav className="sticky top-0 z-50 w-full bg-background/90 backdrop-blur-md border-b border-white/8">
+      <nav className="sticky top-0 z-50 w-full bg-background/90 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">
           <a href="/" className="flex items-center gap-3">
             <div className="w-9 h-9 bg-primary text-primary-foreground rounded-lg flex items-center justify-center font-bold text-lg">م</div>
@@ -83,7 +83,7 @@ export default function KidsPage() {
 
             <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-6 leading-snug">
               تعلم البرمجة<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary/80 to-secondary/80">
+              <span className="text-primary">
                 بطريقة ممتعة للأطفال
               </span>
             </h1>
@@ -108,8 +108,8 @@ export default function KidsPage() {
       </section>
 
       {/* Stats */}
-      <section className="border-y border-white/6 bg-[#0B111C]">
-        <div className="container mx-auto px-4 lg:px-8 py-8">
+      <section className="border-y border-border bg-muted/40 py-8">
+        <div className="container mx-auto px-4 lg:px-8">
           <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto text-center">
             {[
               { icon: Star, label: "من 4 سنين" },
@@ -152,7 +152,7 @@ export default function KidsPage() {
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-gradient-to-b from-[#061827] to-[#0A1628] border-2 border-primary/40 rounded-2xl p-8 shadow-xl shadow-primary/8"
+              className="bg-card border-2 border-primary/30 rounded-2xl p-8 shadow-xl shadow-primary/5"
             >
               <span className="inline-block px-3 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full mb-6">
                 Kids Package
@@ -193,7 +193,7 @@ export default function KidsPage() {
       </section>
 
       {/* FAQ */}
-      <section className="py-14 bg-[#0B111C]">
+      <section className="py-14 bg-muted/40 border-y border-border">
         <div className="container mx-auto px-4 lg:px-8 max-w-2xl">
           <h2 className="text-2xl font-bold text-foreground text-center mb-10">أسئلة الوالدين</h2>
           <div className="space-y-3">
@@ -204,7 +204,7 @@ export default function KidsPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.07 }}
-                className="bg-[#121A27] border border-white/6 rounded-xl p-5"
+                className="bg-card border border-border rounded-xl p-5 shadow-sm"
               >
                 <p className="font-bold text-foreground/90 text-sm mb-2">{faq.q}</p>
                 <p className="text-foreground/50 text-sm leading-relaxed">{faq.a}</p>
@@ -228,7 +228,7 @@ export default function KidsPage() {
         </div>
       </section>
 
-      <footer className="border-t border-white/6 py-6 text-center text-xs text-foreground/25">
+      <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground/60 bg-muted/20">
         © {new Date().getFullYear()} د. محمود المهدي — جميع الحقوق محفوظة
       </footer>
     </div>

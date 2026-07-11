@@ -76,11 +76,11 @@ function YouTubeModal({
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="relative w-full max-w-3xl bg-[#070B12] border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
+          className="relative w-full max-w-3xl bg-card border border-border rounded-2xl overflow-hidden shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-white/8">
+          <div className="flex items-center justify-between p-4 border-b border-border">
             <h3 className="text-sm font-bold text-foreground/90 line-clamp-1">{title}</h3>
             <button
               onClick={onClose}
@@ -141,7 +141,7 @@ function AudioPlayer({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 16 }}
-      className="w-full bg-[#0E1520] border border-primary/20 rounded-2xl p-5 shadow-xl"
+      className="w-full bg-card border border-primary/20 rounded-2xl p-5 shadow-xl"
     >
       <div className="text-center mb-3">
         <p className="text-xs text-primary font-bold mb-0.5 flex items-center justify-center gap-1">
@@ -156,7 +156,7 @@ function AudioPlayer({
         {[...Array(11)].map((_, idx) => (
           <motion.div
             key={idx}
-            className="w-1 bg-[#06B6D4] rounded-full"
+            className="w-1 bg-primary rounded-full"
             animate={isPlaying ? { height: [6, 22, 6] } : { height: 6 }}
             transition={{ duration: 0.9 + idx * 0.08, repeat: Infinity, ease: "easeInOut" }}
           />
@@ -171,7 +171,7 @@ function AudioPlayer({
           max={duration || 100}
           value={currentTime}
           onChange={(e) => onSeek(parseFloat(e.target.value))}
-          className="w-full h-1 rounded-lg appearance-none cursor-pointer accent-[#06B6D4] bg-white/10"
+          className="w-full h-1 rounded-lg appearance-none cursor-pointer accent-primary bg-muted"
         />
         <div className="flex justify-between text-xs text-foreground/35 font-mono">
           <span>{fmt(currentTime)}</span>
@@ -192,7 +192,7 @@ function AudioPlayer({
             step={0.05}
             value={isMuted ? 0 : volume}
             onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
-            className="w-16 h-1 rounded-lg appearance-none cursor-pointer accent-[#06B6D4] bg-white/10"
+            className="w-16 h-1 rounded-lg appearance-none cursor-pointer accent-primary bg-muted"
           />
         </div>
 
@@ -298,7 +298,7 @@ export function Podcast() {
           <p className="text-foreground/50 max-w-xl mx-auto">
             حلقات صريحة عن البرمجة والتعليم وسوق العمل — مع د. محمود المهدي
           </p>
-          <div className="w-24 h-0.5 bg-gradient-to-r from-primary/80 to-secondary/80 mx-auto rounded-full mt-4" />
+          <div className="w-24 h-0.5 bg-primary/60 mx-auto rounded-full mt-4" />
         </motion.div>
 
         <div className="grid lg:grid-cols-2 gap-12 items-start max-w-6xl mx-auto">
@@ -314,7 +314,7 @@ export function Podcast() {
               <img
                 src="/podcast-cover.png"
                 alt="بودكاست د. محمود المهدي"
-                className="relative rounded-2xl shadow-2xl shadow-[#06B6D4]/15 w-full object-cover border border-[#06B6D4]/15"
+                className="relative rounded-2xl shadow-2xl shadow-primary/10 w-full object-cover border border-border"
               />
             </div>
 
@@ -381,7 +381,7 @@ export function Podcast() {
                       disabled={!hasAction}
                       className={`shrink-0 w-12 h-12 rounded-full flex items-center justify-center border transition-all ${
                         !hasAction
-                          ? "bg-white/5 border-white/10 opacity-40 cursor-not-allowed"
+                          ? "bg-muted border-border opacity-40 cursor-not-allowed"
                           : action.type === "youtube"
                           ? "bg-red-600/15 border-red-500/30 hover:bg-red-600/25 text-red-400"
                           : isAudioSelected

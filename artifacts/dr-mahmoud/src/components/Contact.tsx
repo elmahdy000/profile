@@ -71,7 +71,7 @@ export function Contact() {
             <p className="text-base md:text-lg text-foreground/70 max-w-2xl mx-auto leading-relaxed">
               سيشن قصيرة نعرف منها مستوى الطالب ونرشح البرنامج الأنسب لعمره وهدفه.
             </p>
-            <div className="w-20 h-1 bg-gradient-to-r from-transparent via-primary to-transparent mx-auto rounded-full mt-6" />
+            <div className="w-20 h-1 bg-primary/40 mx-auto rounded-full mt-6" />
           </motion.div>
 
           <div className="grid md:grid-cols-12 gap-8 items-start">
@@ -158,12 +158,12 @@ export function Contact() {
                         onChange={(e) => setForm({ ...form, program: e.target.value })}
                         className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-primary/60 transition-colors text-sm appearance-none cursor-pointer pr-10"
                       >
-                        <option value="برمجة الأطفال" className="bg-[#070B12]">برمجة الأطفال</option>
-                        <option value="نظام البكالوريا" className="bg-[#070B12]">نظام البكالوريا</option>
-                        <option value="Python & AI" className="bg-[#070B12]">Python & AI</option>
-                        <option value="دعم الجامعة" className="bg-[#070B12]">دعم الجامعة</option>
-                        <option value="ICDL" className="bg-[#070B12]">ICDL</option>
-                        <option value="مش عارف أختار" className="bg-[#070B12]">مش عارف أختار</option>
+                        <option value="برمجة الأطفال">برمجة الأطفال</option>
+                        <option value="نظام البكالوريا">نظام البكالوريا</option>
+                        <option value="Python & AI">Python & AI</option>
+                        <option value="دعم الجامعة">دعم الجامعة</option>
+                        <option value="ICDL">ICDL</option>
+                        <option value="مش عارف أختار">مش عارف أختار</option>
                       </select>
                       <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50 pointer-events-none" />
                     </div>
@@ -204,7 +204,7 @@ export function Contact() {
                 href={`https://wa.me/${whatsapp}`}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-4 p-5 rounded-2xl bg-card border border-white/5 hover:border-[#25D366]/40 transition-all duration-300 group block relative"
+                className="flex items-center gap-4 p-5 rounded-2xl bg-card border border-border hover:border-[#25D366]/40 transition-all duration-300 group block relative"
                 data-testid="link-whatsapp"
               >
                 <div className="w-12 h-12 bg-[#25D366]/10 border border-[#25D366]/20 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-[#25D366]/20 transition-colors">
@@ -220,7 +220,7 @@ export function Contact() {
               {/* Calls Card */}
               <a
                 href={`tel:+2${phone1}`}
-                className="flex items-center gap-4 p-5 rounded-2xl bg-card border border-white/5 hover:border-primary/40 transition-all duration-300 group block relative"
+                className="flex items-center gap-4 p-5 rounded-2xl bg-card border border-border hover:border-primary/40 transition-all duration-300 group block relative"
               >
                 <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
                   <Phone className="w-6 h-6 text-primary" />
@@ -238,7 +238,7 @@ export function Contact() {
                 href={`https://maps.google.com/?q=${encodeURIComponent(address)}`}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-4 p-5 rounded-2xl bg-card border border-white/5 hover:border-primary/40 transition-all duration-300 group block"
+                className="flex items-center gap-4 p-5 rounded-2xl bg-card border border-border hover:border-primary/40 transition-all duration-300 group block"
               >
                 <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center shrink-0">
                   <MapPin className="w-6 h-6 text-primary" />

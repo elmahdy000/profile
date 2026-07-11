@@ -19,7 +19,7 @@ const defaultWorkshops = [
   {
     id: 2,
     type: "recorded",
-    title: "ورشة عمل: التفكير المنطقي وأساسيات حل المشكلات (Problem Solving)",
+    title: "ورشة عمل: التفكير المنطقي وأسس حل المشكلات (Problem Solving)",
     description: "شرح تطبيقي لطرق تفكير المبرمجين المحترفين وكيفية كسر العقد البرمجية وتحليل المشكلات خطوة بخطوة بالاستعانة بخوارزميات ذكية.",
     date: "مسجلة (متاحة مجانًا)",
     duration: "3 ساعات",
@@ -50,10 +50,10 @@ export function Portfolio() {
     : defaultWorkshops.filter(w => w.type === filter);
 
   return (
-    <section id="free-workshop" className="py-20 lg:py-24 bg-white relative border-b border-slate-100">
+    <section id="free-workshop" className="py-20 lg:py-24 bg-background relative border-b border-border">
       {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/3 left-0 w-72 h-72 bg-primary/3 rounded-full blur-[120px]" />
+        <div className="absolute top-1/3 left-0 w-72 h-72 bg-primary/5 rounded-full blur-[120px]" />
       </div>
 
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
@@ -67,8 +67,8 @@ export function Portfolio() {
             <Sparkles className="w-4 h-4 text-secondary animate-pulse" />
             مجتمع تعلم البرمجة
           </span>
-          <h2 className="text-3xl md:text-4xl font-bold text-[#0F172A] mb-4">الورش البرمجية المجانية</h2>
-          <p className="text-slate-500 text-base">ورش عمل أونلاين تفاعلية (مباشرة ومسجلة) تهدف لتبسيط المفاهيم الصعبة ومساعدتك على اتخاذ أولى خطواتك العملية.</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">الورش البرمجية المجانية</h2>
+          <p className="text-muted-foreground text-base">ورش عمل أونلاين تفاعلية (مباشرة ومسجلة) تهدف لتبسيط المفاهيم الصعبة ومساعدتك على اتخاذ أولى خطواتك العملية.</p>
           <div className="w-20 h-1 bg-secondary mx-auto rounded-full mt-4" />
         </motion.div>
 
@@ -84,8 +84,8 @@ export function Portfolio() {
               onClick={() => setFilter(btn.value)}
               className={`px-5 py-2 rounded-full text-xs md:text-sm font-bold transition-all duration-200 border ${
                 filter === btn.value
-                  ? "bg-[#0B1F3A] text-white border-transparent shadow-md"
-                  : "bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-400 hover:text-slate-900"
+                  ? "bg-primary text-primary-foreground border-transparent shadow-md shadow-primary/10"
+                  : "bg-card text-muted-foreground border-border hover:border-secondary hover:text-foreground"
               }`}
             >
               {btn.label}
@@ -104,23 +104,23 @@ export function Portfolio() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.3 }}
-                className="group flex flex-col justify-between bg-slate-50 border border-slate-200/60 rounded-2xl overflow-hidden hover:border-secondary/40 transition-all duration-300 hover:shadow-lg"
+                className="group flex flex-col justify-between bg-card border border-border rounded-2xl overflow-hidden hover:border-secondary/40 transition-all duration-300 hover:shadow-lg"
               >
                 <div>
                   {/* Workshop Image & Tag */}
-                  <div className="relative h-48 overflow-hidden bg-slate-200">
+                  <div className="relative h-48 overflow-hidden bg-muted">
                     <img
                       src={w.img}
                       alt={w.title}
                       loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                     
                     {/* Status Badge */}
                     <span className={`absolute top-4 right-4 text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-md ${
                       w.type === "live" 
-                        ? "bg-red-500 text-white animate-pulse" 
+                        ? "bg-secondary text-white animate-pulse" 
                         : "bg-primary text-white"
                     }`}>
                       {w.type === "live" ? <Video className="w-3.5 h-3.5 shrink-0" /> : <Play className="w-3.5 h-3.5 shrink-0" />}
@@ -130,25 +130,25 @@ export function Portfolio() {
 
                   {/* Body Content */}
                   <div className="p-6">
-                    <h3 className="text-lg font-bold text-[#0F172A] mb-3 leading-snug group-hover:text-secondary transition-colors">
+                    <h3 className="text-lg font-bold text-foreground mb-3 leading-snug group-hover:text-secondary transition-colors">
                       {w.title}
                     </h3>
-                    <p className="text-xs md:text-sm text-slate-500 leading-relaxed mb-6">
+                    <p className="text-xs md:text-sm text-muted-foreground leading-relaxed mb-6">
                       {w.description}
                     </p>
 
                     {/* Metadata */}
-                    <div className="space-y-2 border-t border-slate-200/80 pt-4 text-slate-600 text-xs">
+                    <div className="space-y-2 border-t border-border pt-4 text-muted-foreground text-xs">
                       <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
-                        <span className="font-semibold text-slate-700">{w.date}</span>
+                        <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <span className="font-semibold text-foreground">{w.date}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-slate-400 shrink-0" />
+                        <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
                         <span>المدة: {w.duration}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-slate-400 shrink-0" />
+                        <Users className="w-4 h-4 text-muted-foreground shrink-0" />
                         <span>الفئة المستهدفة: {w.audience}</span>
                       </div>
                     </div>
@@ -162,7 +162,7 @@ export function Portfolio() {
                     variant={w.type === "live" ? "default" : "outline"}
                     className={`w-full py-5 rounded-xl font-bold text-xs md:text-sm transition-all duration-300 flex items-center justify-center gap-1.5 ${
                       w.type === "live" 
-                        ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/10" 
+                        ? "bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/10" 
                         : "border-primary text-primary hover:bg-primary hover:text-white"
                     }`}
                   >

@@ -56,7 +56,7 @@ export default function UniversityPage() {
   return (
     <div className="min-h-screen bg-background text-foreground font-sans" dir="rtl">
       {/* Minimal Navbar */}
-      <nav className="sticky top-0 z-50 w-full bg-background/90 backdrop-blur-md border-b border-white/8">
+      <nav className="sticky top-0 z-50 w-full bg-background/90 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">
           <a href="/" className="flex items-center gap-3">
             <div className="w-9 h-9 bg-primary text-primary-foreground rounded-lg flex items-center justify-center font-bold text-lg">م</div>
@@ -95,7 +95,7 @@ export default function UniversityPage() {
 
             <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-6 leading-snug">
               شرح عملي<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary/80 to-secondary/80">
+              <span className="text-primary">
                 لمواد الجامعة الصعبة
               </span>
             </h1>
@@ -120,12 +120,12 @@ export default function UniversityPage() {
       </section>
 
       {/* Subjects grid */}
-      <section className="border-y border-white/6 bg-[#0B111C] py-10">
+      <section className="border-y border-border bg-muted/40 py-10">
         <div className="container mx-auto px-4 lg:px-8">
           <p className="text-center text-foreground/40 text-xs mb-6">المواد المتاحة</p>
           <div className="flex flex-wrap justify-center gap-3 max-w-2xl mx-auto">
             {subjects.map((s) => (
-              <span key={s} className="px-3 py-1.5 bg-[#121A27] border border-primary/20 text-foreground/65 text-xs rounded-full">
+              <span key={s} className="px-3 py-1.5 bg-card border border-border text-foreground/80 text-xs rounded-full shadow-sm">
                 {s}
               </span>
             ))}
@@ -158,7 +158,7 @@ export default function UniversityPage() {
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-gradient-to-b from-[#061827] to-[#0A1628] border-2 border-primary/40 rounded-2xl p-8 shadow-xl shadow-primary/8"
+              className="bg-card border-2 border-primary/30 rounded-2xl p-8 shadow-xl shadow-primary/5"
             >
               <span className="inline-block px-3 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full mb-6">
                 University Support
@@ -199,7 +199,7 @@ export default function UniversityPage() {
       </section>
 
       {/* FAQ */}
-      <section className="py-14 bg-[#0B111C]">
+      <section className="py-14 bg-muted/40 border-y border-border">
         <div className="container mx-auto px-4 lg:px-8 max-w-2xl">
           <h2 className="text-2xl font-bold text-foreground text-center mb-10">أسئلة شائعة</h2>
           <div className="space-y-3">
@@ -210,7 +210,7 @@ export default function UniversityPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.07 }}
-                className="bg-[#121A27] border border-white/6 rounded-xl p-5"
+                className="bg-card border border-border rounded-xl p-5 shadow-sm"
               >
                 <p className="font-bold text-foreground/90 text-sm mb-2">{faq.q}</p>
                 <p className="text-foreground/50 text-sm leading-relaxed">{faq.a}</p>
@@ -234,7 +234,7 @@ export default function UniversityPage() {
         </div>
       </section>
 
-      <footer className="border-t border-white/6 py-6 text-center text-xs text-foreground/25">
+      <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground/60 bg-muted/20">
         © {new Date().getFullYear()} د. محمود المهدي — جميع الحقوق محفوظة
       </footer>
     </div>

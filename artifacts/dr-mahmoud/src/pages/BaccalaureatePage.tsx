@@ -324,7 +324,7 @@ export default function BaccalaureatePage() {
               {/* Main Title */}
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground mb-6 leading-tight tracking-tight">
                 ابنك هيتعلم برمجة بجد..<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
+                <span className="text-primary">
                   مش بس عشان ينجح في الامتحان
                 </span>
               </h1>
@@ -354,7 +354,7 @@ export default function BaccalaureatePage() {
                   <Code2 className="w-3.5 h-3.5" />
                   تأسيس Python والـ Logic
                 </a>
-                <a href="#tofas" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary/10 border border-secondary/20 text-secondary font-bold hover:bg-secondary/15 transition-colors">
+                <a href="#tofas" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold hover:bg-primary/15 transition-colors">
                   <Cpu className="w-3.5 h-3.5" />
                   مسار ToFAS المتقدم
                 </a>
@@ -364,7 +364,7 @@ export default function BaccalaureatePage() {
             {/* Left Column: Visual Asset */}
             <div className="lg:col-span-5 relative flex justify-center items-center">
               {/* Decorative background glow under the image */}
-              <div className="absolute w-[80%] h-[80%] bg-gradient-to-tr from-primary/20 to-secondary/20 rounded-full blur-[60px] -z-10 animate-pulse" />
+              <div className="absolute w-[80%] h-[80%] bg-primary/10 rounded-full blur-[60px] -z-10 animate-pulse" />
               
               <div className="relative rounded-3xl overflow-hidden border border-border/80 shadow-2xl bg-card p-2 max-w-[450px] w-full">
                 <img 
@@ -375,8 +375,8 @@ export default function BaccalaureatePage() {
                 
                 {/* Floating trust badge */}
                 <div className="absolute top-6 left-6 bg-background/90 backdrop-blur-md border border-border py-2.5 px-4 rounded-2xl shadow-xl flex items-center gap-3 animate-bounce">
-                  <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                    <Check className="w-4 h-4 text-emerald-500" />
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Check className="w-4 h-4 text-primary" />
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] text-foreground/50 font-medium">جلسة التوجيه</p>
@@ -596,26 +596,26 @@ export default function BaccalaureatePage() {
       </section>
 
       {/* ToFAS Track Section */}
-      <section id="tofas" className="py-20 relative overflow-hidden bg-gradient-to-b from-background via-secondary/[0.03] to-background">
+      <section id="tofas" className="py-20 relative overflow-hidden bg-background">
         {/* Distinctive glow */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/3 left-0 w-[350px] h-[350px] bg-secondary/10 rounded-full blur-[120px]" />
-          <div className="absolute bottom-1/4 right-0 w-[300px] h-[300px] bg-primary/8 rounded-full blur-[110px]" />
+          <div className="absolute top-1/3 left-0 w-[350px] h-[350px] bg-primary/8 rounded-full blur-[120px]" />
+          <div className="absolute bottom-1/4 right-0 w-[300px] h-[300px] bg-primary/5 rounded-full blur-[110px]" />
         </div>
 
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
           <div className="max-w-3xl mx-auto text-center mb-16">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-secondary/10 border border-secondary/20 text-secondary text-xs font-bold rounded-full mb-4">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 border border-primary/20 text-primary text-xs font-bold rounded-full mb-4">
               <Sparkles className="w-3.5 h-3.5" />
               مسار متقدم
             </span>
             <h2 className="text-2xl md:text-4xl font-bold">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-secondary to-primary">
+              <span className="text-primary">
                 مسار ToFAS
               </span>
             </h2>
             <p className="text-sm text-foreground/60 mt-3">مسار تعليمي مميز يأخذ الطالب لمستوى أعمق بخطوات منظمة</p>
-            <div className="w-16 h-1 bg-gradient-to-r from-secondary to-primary mx-auto rounded-full mt-4" />
+            <div className="w-16 h-1 bg-primary mx-auto rounded-full mt-4" />
           </div>
 
           <div className="grid lg:grid-cols-12 gap-8 max-w-5xl mx-auto items-start">
@@ -630,13 +630,13 @@ export default function BaccalaureatePage() {
                     onClick={() => setActiveTofas(module.id)}
                     className={`w-full text-right p-4 rounded-2xl border transition-all flex items-center justify-between gap-4 ${
                       isActive
-                        ? "bg-gradient-to-l from-secondary to-primary text-white border-secondary shadow-lg shadow-secondary/15"
+                        ? "bg-primary text-white border-primary shadow-lg shadow-primary/15"
                         : "bg-card border-border hover:border-foreground/20 text-foreground"
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-bold ${
-                        isActive ? "bg-white/20 text-white" : "bg-secondary/10 text-secondary"
+                        isActive ? "bg-white/20 text-white" : "bg-primary/10 text-primary"
                       }`}>
                         {module.number}
                       </div>
@@ -647,7 +647,7 @@ export default function BaccalaureatePage() {
                         </p>
                       </div>
                     </div>
-                    <IconComponent className={`w-5 h-5 shrink-0 ${isActive ? "text-white" : "text-secondary"}`} />
+                    <IconComponent className={`w-5 h-5 shrink-0 ${isActive ? "text-white" : "text-primary"}`} />
                   </button>
                 );
               })}
@@ -713,13 +713,7 @@ export default function BaccalaureatePage() {
               <div key={idx} className="bg-card border border-border/80 hover:border-primary/30 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-center gap-2 mb-4">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      project.difficulty === "مبتدئ" || project.difficulty === "سهل"
-                        ? "bg-green-500/10 text-green-600 dark:text-green-400"
-                        : project.difficulty === "متوسط"
-                        ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                        : "bg-red-500/10 text-red-600 dark:text-red-400"
-                    }`}>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary/10 text-secondary border border-secondary/20">
                       {project.difficulty}
                     </span>
                     <Code2 className="w-4 h-4 text-primary/75" />
@@ -791,7 +785,7 @@ export default function BaccalaureatePage() {
 
             {submitted ? (
               <div className="flex flex-col items-center justify-center py-10 gap-4 text-center">
-                <div className="w-16 h-16 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-500 mb-2">
+                <div className="w-16 h-16 rounded-full bg-secondary/10 border border-secondary/20 flex items-center justify-center text-secondary mb-2">
                   <Check className="w-8 h-8" />
                 </div>
                 <p className="font-bold text-foreground text-xl">تم تسجيل طلبك بنجاح!</p>

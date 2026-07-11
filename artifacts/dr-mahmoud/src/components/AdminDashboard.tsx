@@ -740,10 +740,10 @@ export default function AdminDashboard() {
 
         <div className="w-full max-w-md bg-card/60 backdrop-blur-xl border border-border rounded-3xl p-8 relative overflow-hidden shadow-2xl">
           <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-tr from-primary to-cyan-300 rounded-2xl flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20 mb-4 animate-pulse">
+            <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20 mb-4 animate-pulse">
               <Lock className="w-8 h-8" />
             </div>
-            <h1 className="text-2xl font-bold text-white font-outfit">بوابة المسؤول</h1>
+            <h1 className="text-2xl font-bold text-foreground font-outfit">بوابة المسؤول</h1>
             <p className="text-sm text-muted-foreground mt-2">يرجى إدخال رمز التحقق للوصول إلى لوحة التحكم</p>
           </div>
 
@@ -755,7 +755,7 @@ export default function AdminDashboard() {
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-background/80 border border-border text-white rounded-xl px-4 py-3.5 focus:outline-none focus:border-primary transition-colors placeholder-slate-700 text-center text-lg tracking-widest font-sans"
+                className="w-full bg-background/80 border border-border text-foreground rounded-xl px-4 py-3.5 focus:outline-none focus:border-primary transition-colors placeholder:text-muted-foreground text-center text-lg tracking-widest font-sans"
               />
               {authError && (
                 <p className="text-red-400 text-xs mt-2 text-right">{authError}</p>
@@ -765,7 +765,7 @@ export default function AdminDashboard() {
             <button
               type="submit"
               disabled={isLoggingIn}
-              className="w-full bg-gradient-to-r from-primary to-cyan-600 hover:from-primary/90 hover:to-cyan-600 text-primary-foreground font-bold rounded-xl py-3.5 transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 flex items-center justify-center gap-2"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl py-3.5 transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 flex items-center justify-center gap-2"
             >
               {isLoggingIn ? (
                 <>
@@ -921,7 +921,7 @@ export default function AdminDashboard() {
                 {bookingsQuery.data && bookingsQuery.data.length > 0 && (
                   <button
                     onClick={handleExportCSV}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl px-4 py-2.5 text-xs transition-all flex items-center gap-2 self-start sm:self-auto shrink-0 shadow-lg shadow-emerald-600/10 hover:shadow-emerald-600/20"
+                    className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold rounded-xl px-4 py-2.5 text-xs transition-all flex items-center gap-2 self-start sm:self-auto shrink-0 shadow-lg shadow-secondary/10 hover:shadow-secondary/20"
                   >
                     <Download className="w-4 h-4" />
                     تصدير الحجوزات (CSV)
@@ -937,13 +937,13 @@ export default function AdminDashboard() {
                   </div>
                   <div className="bg-[#0b111e]/40 border border-white/[0.06] rounded-2xl p-4 flex flex-col justify-between">
                     <span className="text-xs text-slate-400">قيد الانتظار</span>
-                    <span className="text-2xl font-bold text-cyan-400 mt-2">
+                    <span className="text-2xl font-bold text-primary mt-2">
                       {bookingsQuery.data.filter(b => b.status === "pending").length}
                     </span>
                   </div>
                   <div className="bg-[#0b111e]/40 border border-white/[0.06] rounded-2xl p-4 flex flex-col justify-between">
                     <span className="text-xs text-slate-400">حجوزات مؤكدة</span>
-                    <span className="text-2xl font-bold text-green-400 mt-2">
+                    <span className="text-2xl font-bold text-primary mt-2">
                       {bookingsQuery.data.filter(b => b.status === "confirmed").length}
                     </span>
                   </div>
@@ -981,10 +981,10 @@ export default function AdminDashboard() {
                           <span
                             className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
                               booking.status === "confirmed"
-                                ? "bg-green-500/10 text-green-400 border border-green-500/20"
+                                ? "bg-primary/10 text-primary border border-primary/20"
                                 : booking.status === "completed"
-                                ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
-                                : "bg-primary/10 text-primary border border-primary/20"
+                                ? "bg-secondary/10 text-secondary border-secondary/20"
+                                : "bg-muted text-muted-foreground border border-border"
                             }`}
                           >
                             {booking.status === "confirmed"
@@ -1008,7 +1008,7 @@ export default function AdminDashboard() {
                         {booking.status === "pending" && (
                           <button
                             onClick={() => handleBookingStatusUpdate(booking.id, "confirmed")}
-                            className="p-2.5 bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 rounded-xl transition-all"
+                            className="p-2.5 bg-secondary/10 hover:bg-secondary/20 border border-secondary/20 text-secondary rounded-xl transition-all"
                             title="تأكيد الحجز"
                           >
                             <Check className="w-4 h-4" />
@@ -1171,7 +1171,7 @@ export default function AdminDashboard() {
                         <div className="flex items-center gap-4 text-xs text-slate-500 pt-2">
                           <span>المدة: {ep.duration}</span>
                           {ep.youtubeUrl && <span className="text-primary/80">رابط يوتيوب متاح</span>}
-                          {ep.audioUrl && <span className="text-green-400/80">رابط الصوت متاح</span>}
+                          {ep.audioUrl && <span className="text-secondary/80">رابط الصوت متاح</span>}
                         </div>
                       </div>
 
@@ -1422,14 +1422,14 @@ export default function AdminDashboard() {
                           <div className="absolute top-3 right-3 flex items-center gap-1.5">
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border backdrop-blur-md ${
                               video.type === "playlist"
-                                ? "bg-amber-500/20 text-amber-400 border-amber-500/35"
-                                : "bg-red-500/20 text-red-400 border-red-500/35"
+                                ? "bg-primary/10 text-primary border-primary/20"
+                                : "bg-secondary/10 text-secondary border-secondary/20"
                             }`}>
                               {video.type === "playlist" ? "قائمة تشغيل" : "فيديو منفرد"}
                             </span>
                             {video.isProtected && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border backdrop-blur-md bg-purple-500/20 text-purple-400 border-purple-500/35 flex items-center gap-1">
-                                <Lock className="w-3 h-3 text-purple-400" /> محمي
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border backdrop-blur-md bg-secondary/10 text-secondary border-secondary/20 flex items-center gap-1">
+                                <Lock className="w-3 h-3 text-secondary" /> محمي
                               </span>
                             )}
                           </div>
@@ -1639,7 +1639,7 @@ export default function AdminDashboard() {
                       />
                       <div className="flex-1 min-w-0">
                         <span className="block text-xs font-semibold text-foreground/90 truncate">{courseForm.img}</span>
-                        <span className="block text-[10px] text-green-400">جاهز ومعاين</span>
+                        <span className="block text-[10px] text-secondary">جاهز ومعاين</span>
                       </div>
                     </div>
                   )}
@@ -1792,7 +1792,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <span className="block text-xs font-semibold text-foreground/90 truncate">{podcastForm.audioUrl}</span>
-                        <span className="block text-[10px] text-green-400">تم اختيار الملف الصوتي بنجاح</span>
+                        <span className="block text-[10px] text-secondary">تم اختيار الملف الصوتي بنجاح</span>
                       </div>
                     </div>
                   )}

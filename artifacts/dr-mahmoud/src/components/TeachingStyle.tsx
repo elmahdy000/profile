@@ -11,9 +11,9 @@ export function TeachingStyle() {
   ];
 
   return (
-    <section className="py-16 bg-[#070B12] relative overflow-hidden">
-      {/* Top Divider Gradient Line */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+    <section className="py-16 bg-background border-t border-border relative overflow-hidden">
+      {/* Subtle top divider */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-border" />
 
       {/* Decorative Ambient Background Glows */}
       <div className="absolute inset-0 pointer-events-none">
@@ -29,11 +29,11 @@ export function TeachingStyle() {
           className="text-center mb-12 max-w-3xl mx-auto"
         >
           <span className="text-primary font-bold text-sm uppercase tracking-wider mb-3 block">المنهجية</span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">من الفهم للتطبيق</h2>
-          <p className="text-base md:text-lg text-slate-300 leading-relaxed max-w-2xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4">من الفهم للتطبيق</h2>
+          <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
             مش بنحفظ أكواد. بنفهم الفكرة، نطبقها بإيدينا، ونخرج بمشروع يثبت إن الطالب فهم.
           </p>
-          <div className="w-20 h-0.5 bg-gradient-to-r from-primary/80 to-secondary/80 mx-auto rounded-full mt-4" />
+          <div className="w-20 h-0.5 bg-primary/60 mx-auto rounded-full mt-4" />
         </motion.div>
 
         {/* Stepper Container */}
@@ -46,7 +46,7 @@ export function TeachingStyle() {
               initial={{ right: "-100%" }}
               animate={{ right: "100%" }}
               transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
-              className="absolute top-0 bottom-0 w-1/3 bg-gradient-to-l from-transparent via-primary to-transparent"
+              className="absolute top-0 bottom-0 w-1/3 bg-primary/30"
             />
           </div>
 
@@ -68,8 +68,8 @@ export function TeachingStyle() {
                   <div className="relative z-10 mb-4 flex justify-center">
                     <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
                       isStep5 
-                        ? "bg-primary text-black border-primary font-black shadow-lg shadow-primary/30 scale-110" 
-                        : "bg-[#070B12] text-primary border-primary/30 group-hover:border-primary group-hover:text-white"
+                        ? "bg-primary text-white border-primary font-black shadow-lg shadow-primary/30 scale-110" 
+                        : "bg-background text-primary border-primary/30 group-hover:border-primary group-hover:text-primary"
                     }`}>
                       <span className="text-xl font-bold">{step.num}</span>
                     </div>
@@ -78,8 +78,8 @@ export function TeachingStyle() {
                   {/* Step Card */}
                   <div className={`flex-1 p-5 rounded-2xl border transition-all duration-300 flex flex-col ${
                     isStep5
-                      ? "bg-primary/5 border-primary/50 shadow-lg shadow-primary/5 hover:bg-primary/8"
-                      : "bg-white/5 border-white/10 hover:border-primary/30 hover:bg-white/8"
+                       ? "bg-primary/5 border-primary/50 shadow-lg shadow-primary/5 hover:bg-primary/8"
+                       : "bg-card border-border hover:border-primary/30 hover:bg-muted"
                   }`}>
                     <div className="flex items-center justify-between mb-4">
                       <div className={`p-2.5 rounded-xl ${
@@ -94,11 +94,11 @@ export function TeachingStyle() {
                       )}
                     </div>
                     <h3 className={`font-bold text-lg mb-2 transition-colors ${
-                      isStep5 ? "text-primary" : "text-white group-hover:text-primary"
+                      isStep5 ? "text-primary" : "text-foreground group-hover:text-primary"
                     }`}>
                       {step.title}
                     </h3>
-                    <p className="text-sm text-slate-200 leading-relaxed font-medium">
+                    <p className="text-sm text-muted-foreground leading-relaxed font-medium">
                       {step.desc}
                     </p>
                   </div>
@@ -122,7 +122,7 @@ export function TeachingStyle() {
                   className={`flex items-start gap-4 p-4 rounded-xl border transition-all duration-300 ${
                     isStep5
                       ? "bg-primary/5 border-primary/50 shadow-lg shadow-primary/5"
-                      : "bg-white/5 border-white/10"
+                      : "bg-card border-border"
                   }`}
                 >
                   {/* Step Number Badge & Icon */}
@@ -133,7 +133,7 @@ export function TeachingStyle() {
                       {step.num}
                     </div>
                     <div className={`p-2 rounded-lg ${
-                      isStep5 ? "bg-primary/20 text-primary" : "bg-white/5 text-slate-300"
+                      isStep5 ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
                     }`}>
                       <Icon className="w-5 h-5" />
                     </div>
@@ -142,7 +142,7 @@ export function TeachingStyle() {
                   {/* Title & Description */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className={`font-bold text-base ${isStep5 ? "text-primary" : "text-white"}`}>
+                      <h3 className={`font-bold text-base ${isStep5 ? "text-primary" : "text-foreground"}`}>
                         {step.title}
                       </h3>
                       {isStep5 && (
@@ -151,7 +151,7 @@ export function TeachingStyle() {
                         </span>
                       )}
                     </div>
-                    <p className="text-xs md:text-sm text-slate-300 leading-relaxed font-medium">
+                    <p className="text-xs md:text-sm text-muted-foreground leading-relaxed font-medium">
                       {step.desc}
                     </p>
                   </div>
