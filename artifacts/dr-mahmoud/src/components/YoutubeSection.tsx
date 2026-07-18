@@ -387,11 +387,24 @@ function UnlockModal({
 }
 
 
-export function YoutubeSection() {
+export function YoutubeSection({ student }: { student?: any }) {
   const { data: dbVideos, isLoading, isError, refetch } = useListVideos();
   const [activeCategory, setActiveCategory] = useState("all");
   const [activePlayer, setActivePlayer] = useState<VideoItem | null>(null);
   const [unlockModalItem, setUnlockModalItem] = useState<VideoItem | null>(null);
+
+  useEffect(() => {
+    if (student && student.grade && dbVideos) {
+      const grade = student.grade;
+      const rawItems = (dbVideos as any[]) || [];
+      const hasMatchingCategory = rawItems.some(
+        (item) => String(item.category).trim().toLowerCase() === String(grade).trim().toLowerCase()
+      );
+      if (hasMatchingCategory) {
+        setActiveCategory(grade);
+      }
+    }
+  }, [student, dbVideos]);
 
   // States for search, advanced filters, sorting, bookmarks, and watch progress
   const [searchQuery, setSearchQuery] = useState("");

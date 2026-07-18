@@ -57,6 +57,10 @@ function publicStudent(student: typeof studentsTable.$inferSelect) {
     phone: student.phone,
     email: student.email,
     status: student.status,
+    governorate: student.governorate,
+    city: student.city,
+    grade: student.grade,
+    otherGradeDetail: student.otherGradeDetail,
     createdAt: student.createdAt,
   };
 }
@@ -82,16 +86,43 @@ router.post("/student/register", async (req, res, next) => {
     const name = String(req.body.name ?? "").trim();
     const phone = String(req.body.phone ?? "").replace(/\s+/g, "");
     const email = String(req.body.email ?? "").trim() || null;
+    const governorate = String(req.body.governorate ?? "").trim();
+    const city = String(req.body.city ?? "").trim();
+    const grade = String(req.body.grade ?? "").trim();
+    const otherGradeDetail = String(req.body.otherGradeDetail ?? "").trim() || null;
+
     if (name.length < 2 || !/^\+?\d{10,15}$/.test(phone)) {
-      res.status(400).json({ error: "Name and a valid phone number are required" });
+      res.status(400).json({ error: "الاسم ورقم الهاتف مطلوبان بشكل صحيح" });
       return;
     }
+    if (!governorate || !city || !grade) {
+      res.status(400).json({ error: "المحافظة والمدينة والمرحلة الدراسية مطلوبة" });
+      return;
+    }
+    const allowedGrades = ["أولى بكالوريا", "تانية بكالوريا", "جامعة", "أخرى"];
+    if (!allowedGrades.includes(grade)) {
+      res.status(400).json({ error: "المرحلة الدراسية غير صالحة" });
+      return;
+    }
+    if (grade === "أخرى" && !otherGradeDetail) {
+      res.status(400).json({ error: "يرجى تحديد تفاصيل المرحلة الدراسية الأخرى" });
+      return;
+    }
+
     const [existing] = await db.select().from(studentsTable).where(eq(studentsTable.phone, phone)).limit(1);
     if (existing) {
       res.json({ status: existing.status, message: "Registration already exists" });
       return;
     }
-    const [student] = await db.insert(studentsTable).values({ name, phone, email }).returning();
+    const [student] = await db.insert(studentsTable).values({
+      name,
+      phone,
+      email,
+      governorate,
+      city,
+      grade,
+      otherGradeDetail,
+    }).returning();
     res.status(201).json({ status: student.status, message: "Registration submitted for admin approval" });
   } catch (error) {
     next(error);

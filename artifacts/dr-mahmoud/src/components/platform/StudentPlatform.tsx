@@ -4,7 +4,7 @@ import { BarChart3, Bell, BookOpen, CheckCircle2, ChevronLeft, ClipboardCheck, D
 import { Button } from "@/components/ui/button";
 import { YoutubeSection } from "@/components/YoutubeSection";
 
-type Student = { id: number; name: string; phone: string; email?: string | null; status: string; createdAt?: string };
+type Student = { id: number; name: string; phone: string; email?: string | null; status: string; governorate?: string | null; city?: string | null; grade?: string | null; otherGradeDetail?: string | null; createdAt?: string };
 type LearningFile = { id: number; title: string; description?: string | null; category: string; originalName: string; sizeBytes: number };
 type QuizQuestion = { prompt: string; options: string[] };
 type Quiz = { id: number; title: string; description?: string | null; category: string; passingScore: number; questions: QuizQuestion[] };
@@ -26,7 +26,15 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [accessCode, setAccessCode] = useState("");
-  const [form, setForm] = useState({ name: "", phone: "", email: "" });
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    governorate: "",
+    city: "",
+    grade: "",
+    otherGradeDetail: "",
+  });
 
   const submitLogin = async (event: React.FormEvent) => {
     event.preventDefault(); setLoading(true); setError("");
@@ -44,7 +52,15 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
     try {
       await api("/api/student/register", { method: "POST", body: JSON.stringify(form) });
       setMessage("طلبك اتبعت بنجاح. أول ما الأدمن يوافق هيوصلك كود الدخول بتاعك.");
-      setForm({ name: "", phone: "", email: "" });
+      setForm({
+        name: "",
+        phone: "",
+        email: "",
+        governorate: "",
+        city: "",
+        grade: "",
+        otherGradeDetail: "",
+      });
     } catch (err) { setError((err as Error).message); }
     finally { setLoading(false); }
   };
@@ -86,6 +102,26 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
               <div className="space-y-2"><label htmlFor="student-name" className="text-sm font-bold">اسم الطالب</label><input id="student-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required className="h-12 w-full rounded-xl border border-border bg-background px-4 focus:border-primary focus:outline-none" /></div>
               <div className="space-y-2"><label htmlFor="student-phone" className="text-sm font-bold">رقم الهاتف</label><input id="student-phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required inputMode="tel" placeholder="01xxxxxxxxx" className="h-12 w-full rounded-xl border border-border bg-background px-4 focus:border-primary focus:outline-none" /></div>
               <div className="space-y-2"><label htmlFor="student-email" className="text-sm font-bold">البريد الإلكتروني (اختياري)</label><input id="student-email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="h-12 w-full rounded-xl border border-border bg-background px-4 focus:border-primary focus:outline-none" /></div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2"><label htmlFor="student-governorate" className="text-sm font-bold">المحافظة</label><input id="student-governorate" value={form.governorate} onChange={(e) => setForm({ ...form, governorate: e.target.value })} required placeholder="مثال: القاهرة" className="h-12 w-full rounded-xl border border-border bg-background px-4 focus:border-primary focus:outline-none" /></div>
+                <div className="space-y-2"><label htmlFor="student-city" className="text-sm font-bold">المدينة / المركز</label><input id="student-city" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} required placeholder="مثال: حلوان" className="h-12 w-full rounded-xl border border-border bg-background px-4 focus:border-primary focus:outline-none" /></div>
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="student-grade" className="text-sm font-bold">المرحلة الدراسية</label>
+                <select id="student-grade" value={form.grade} onChange={(e) => setForm({ ...form, grade: e.target.value, otherGradeDetail: e.target.value !== "أخرى" ? "" : form.otherGradeDetail })} required className="h-12 w-full rounded-xl border border-border bg-background px-4 focus:border-primary focus:outline-none">
+                  <option value="">اختر المرحلة الدراسية</option>
+                  <option value="أولى بكالوريا">أولى بكالوريا</option>
+                  <option value="تانية بكالوريا">تانية بكالوريا</option>
+                  <option value="جامعة">جامعة</option>
+                  <option value="أخرى">أخرى (يرجى التحديد)</option>
+                </select>
+              </div>
+              {form.grade === "أخرى" && (
+                <div className="space-y-2">
+                  <label htmlFor="student-other-grade" className="text-sm font-bold">تحديد المرحلة الدراسية الأخرى</label>
+                  <input id="student-other-grade" value={form.otherGradeDetail} onChange={(e) => setForm({ ...form, otherGradeDetail: e.target.value })} required className="h-12 w-full rounded-xl border border-border bg-background px-4 focus:border-primary focus:outline-none" placeholder="اكتب مرحلتك الدراسية بالتفصيل" />
+                </div>
+              )}
               {message && <p role="status" className="rounded-xl bg-emerald-500/10 p-3 text-sm text-emerald-700">{message}</p>}
               {error && <p role="alert" className="rounded-xl bg-red-500/10 p-3 text-sm text-red-600">{error}</p>}
               <Button disabled={loading} className="h-13 w-full rounded-xl text-base font-bold">{loading ? <Loader2 className="animate-spin" /> : <UserPlus />} إرسال طلب التسجيل</Button>
@@ -139,7 +175,7 @@ function DashboardPanel({ student, files, quizzes, onOpen }: { student: Student;
 }
 
 function ProfilePanel({ student }: { student: Student }) {
-  return <div className="space-y-6 p-4 md:p-8"><article className="academy-card p-6"><div className="flex flex-col gap-5 sm:flex-row sm:items-center"><img src="/dr-mahmoud-photo.png" alt="صورة الحساب" className="h-28 w-28 rounded-full border-4 border-primary/10 object-cover"/><div><span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-700">حساب متفعّل</span><h1 className="mt-3 text-3xl font-black">{student.name}</h1><p className="text-muted-foreground">طالب في أكاديمية د. محمود المهدي</p></div></div></article><div className="grid gap-5 lg:grid-cols-[1.3fr_.7fr]"><article className="academy-card p-6"><h2 className="text-xl font-black">بيانات الحساب</h2><div className="mt-5 grid gap-4 sm:grid-cols-2"><label className="space-y-2"><span className="text-sm font-bold">الاسم</span><input value={student.name} readOnly className="h-12 w-full rounded-lg border bg-muted px-4"/></label><label className="space-y-2"><span className="text-sm font-bold">رقم الموبايل</span><input value={student.phone} readOnly className="h-12 w-full rounded-lg border bg-muted px-4"/></label><label className="space-y-2 sm:col-span-2"><span className="text-sm font-bold">الإيميل</span><input value={student.email||"مش مضاف"} readOnly className="h-12 w-full rounded-lg border bg-muted px-4"/></label></div></article><article className="academy-card p-6"><Trophy className="h-10 w-10 text-amber-500"/><h2 className="mt-4 text-xl font-black">إنجازاتك</h2><p className="mt-2 text-muted-foreground">كل اختبار تنجح فيه وشهادة تخلصها هتظهر هنا.</p></article></div></div>;
+  return <div className="space-y-6 p-4 md:p-8"><article className="academy-card p-6"><div className="flex flex-col gap-5 sm:flex-row sm:items-center"><img src="/dr-mahmoud-photo.png" alt="صورة الحساب" className="h-28 w-28 rounded-full border-4 border-primary/10 object-cover"/><div><span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-700">حساب متفعّل</span><h1 className="mt-3 text-3xl font-black">{student.name}</h1><p className="text-muted-foreground">طالب في أكاديمية د. محمود المهدي</p></div></div></article><div className="grid gap-5 lg:grid-cols-[1.3fr_.7fr]"><article className="academy-card p-6"><h2 className="text-xl font-black">بيانات الحساب</h2><div className="mt-5 grid gap-4 sm:grid-cols-2"><label className="space-y-2"><span className="text-sm font-bold">الاسم</span><input value={student.name} readOnly className="h-12 w-full rounded-lg border bg-muted px-4"/></label><label className="space-y-2"><span className="text-sm font-bold">رقم الموبايل</span><input value={student.phone} readOnly className="h-12 w-full rounded-lg border bg-muted px-4"/></label><label className="space-y-2 sm:col-span-2"><span className="text-sm font-bold">الإيميل</span><input value={student.email||"مش مضاف"} readOnly className="h-12 w-full rounded-lg border bg-muted px-4"/></label><label className="space-y-2"><span className="text-sm font-bold">المحافظة</span><input value={student.governorate||"غير محدد"} readOnly className="h-12 w-full rounded-lg border bg-muted px-4"/></label><label className="space-y-2"><span className="text-sm font-bold">المدينة / المركز</span><input value={student.city||"غير محدد"} readOnly className="h-12 w-full rounded-lg border bg-muted px-4"/></label><label className="space-y-2 sm:col-span-2"><span className="text-sm font-bold">المرحلة الدراسية</span><input value={student.grade === "أخرى" ? student.otherGradeDetail || "أخرى" : student.grade || "غير محدد"} readOnly className="h-12 w-full rounded-lg border bg-muted px-4"/></label></div></article><article className="academy-card p-6"><Trophy className="h-10 w-10 text-amber-500"/><h2 className="mt-4 text-xl font-black">إنجازاتك</h2><p className="mt-2 text-muted-foreground">كل اختبار تنجح فيه وشهادة تخلصها هتظهر هنا.</p></article></div></div>;
 }
 
 export function StudentPlatform() {
@@ -160,5 +196,5 @@ export function StudentPlatform() {
     ["quizzes","الاختبارات",ClipboardCheck],
     ["profile","حسابي",User],
   ] as const;
-  return <main className="min-h-[calc(100vh-4rem)] bg-[#f9f9ff]" dir="rtl"><div className="mx-auto grid max-w-[1500px] lg:grid-cols-[240px_1fr]"><aside className="hidden min-h-[calc(100vh-4rem)] border-l border-border bg-white p-4 lg:flex lg:flex-col"><div className="flex items-center gap-3 border-b pb-5"><img src="/logo.jpg" alt="اللوجو" className="h-12 w-12 rounded-full object-cover"/><div><strong className="block">{student.name}</strong><span className="text-xs text-muted-foreground">طالب متفعّل</span></div></div><nav className="mt-5 space-y-1">{nav.map(([value,label,Icon])=><button key={value} onClick={()=>setTab(value)} className={`flex min-h-12 w-full items-center gap-3 rounded-lg border-r-4 px-4 text-right font-bold ${tab===value?'border-primary bg-[#d7e2ff] text-primary':'border-transparent text-muted-foreground hover:bg-muted'}`}><Icon className="h-5 w-5"/>{label}</button>)}</nav><div className="mt-auto space-y-2"><a href="https://wa.me/201044348610" className="flex h-12 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white">كلم الدعم</a><button onClick={logout} className="flex h-12 w-full items-center justify-center gap-2 text-sm font-bold text-red-600"><LogOut className="h-4 w-4"/> تسجيل الخروج</button></div></aside><section className="min-w-0"><div className="sticky top-16 z-30 flex h-14 items-center justify-between border-b bg-white/95 px-4 backdrop-blur md:px-8"><div className="flex items-center gap-3"><Bell className="h-5 w-5 text-muted-foreground"/><span className="text-sm font-bold text-primary">Academy Portal</span></div><span className="text-sm text-muted-foreground">اتعلم، طبّق، واتقدم</span></div><div className="lg:hidden overflow-x-auto border-b bg-white p-2"><div className="flex min-w-max gap-1">{nav.map(([value,label,Icon])=><button key={value} onClick={()=>setTab(value)} className={`flex h-11 items-center gap-2 rounded-lg px-3 text-sm font-bold ${tab===value?'bg-primary text-white':'text-muted-foreground'}`}><Icon className="h-4 w-4"/>{label}</button>)}</div></div>{tab==='dashboard'?<DashboardPanel student={student} files={files} quizzes={quizzes} onOpen={setTab}/>:tab==='lessons'?<YoutubeSection/>:tab==='files'?<FilesPanel files={files}/>:tab==='quizzes'?<QuizzesPanel quizzes={quizzes}/>:<ProfilePanel student={student}/>}</section></div></main>;
+  return <main className="min-h-[calc(100vh-4rem)] bg-[#f9f9ff]" dir="rtl"><div className="mx-auto grid max-w-[1500px] lg:grid-cols-[240px_1fr]"><aside className="hidden min-h-[calc(100vh-4rem)] border-l border-border bg-white p-4 lg:flex lg:flex-col"><div className="flex items-center gap-3 border-b pb-5"><img src="/logo.jpg" alt="اللوجو" className="h-12 w-12 rounded-full object-cover"/><div><strong className="block">{student.name}</strong><span className="text-xs text-muted-foreground">طالب متفعّل</span></div></div><nav className="mt-5 space-y-1">{nav.map(([value,label,Icon])=><button key={value} onClick={()=>setTab(value)} className={`flex min-h-12 w-full items-center gap-3 rounded-lg border-r-4 px-4 text-right font-bold ${tab===value?'border-primary bg-[#d7e2ff] text-primary':'border-transparent text-muted-foreground hover:bg-muted'}`}><Icon className="h-5 w-5"/>{label}</button>)}</nav><div className="mt-auto space-y-2"><a href="https://wa.me/201044348610" className="flex h-12 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white">كلم الدعم</a><button onClick={logout} className="flex h-12 w-full items-center justify-center gap-2 text-sm font-bold text-red-600"><LogOut className="h-4 w-4"/> تسجيل الخروج</button></div></aside><section className="min-w-0"><div className="sticky top-16 z-30 flex h-14 items-center justify-between border-b bg-white/95 px-4 backdrop-blur md:px-8"><div className="flex items-center gap-3"><Bell className="h-5 w-5 text-muted-foreground"/><span className="text-sm font-bold text-primary">Academy Portal</span></div><span className="text-sm text-muted-foreground">اتعلم، طبّق، واتقدم</span></div><div className="lg:hidden overflow-x-auto border-b bg-white p-2"><div className="flex min-w-max gap-1">{nav.map(([value,label,Icon])=><button key={value} onClick={()=>setTab(value)} className={`flex h-11 items-center gap-2 rounded-lg px-3 text-sm font-bold ${tab===value?'bg-primary text-white':'text-muted-foreground'}`}><Icon className="h-4 w-4"/>{label}</button>)}</div></div>{tab==='dashboard'?<DashboardPanel student={student} files={files} quizzes={quizzes} onOpen={setTab}/>:tab==='lessons'?<YoutubeSection student={student}/>:tab==='files'?<FilesPanel files={files}/>:tab==='quizzes'?<QuizzesPanel quizzes={quizzes}/>:<ProfilePanel student={student}/>}</section></div></main>;
 }
