@@ -116,6 +116,8 @@ export interface InsertVideo {
   durationText?: string | null;
   lessonsCount?: number | null;
   level?: string | null;
+  pdfFileId?: number | null;
+  quizId?: number | null;
 }
 
 export interface Video {
@@ -131,6 +133,8 @@ export interface Video {
   durationText?: string | null;
   lessonsCount?: number | null;
   level?: string | null;
+  pdfFileId?: number | null;
+  quizId?: number | null;
   createdAt: string;
 }
 

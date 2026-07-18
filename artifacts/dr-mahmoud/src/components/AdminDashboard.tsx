@@ -51,6 +51,8 @@ import {
   Play,
   Download,
   Users,
+  FileText,
+  HelpCircle,
 } from "lucide-react";
 import { AdminSettings } from "./AdminSettings";
 import { AdminLearning } from "./AdminLearning";
@@ -225,7 +227,31 @@ export default function AdminDashboard() {
     durationText: "",
     lessonsCount: "",
     level: "",
+    pdfFileId: "",
+    quizId: "",
   });
+
+  const [learningFiles, setLearningFiles] = useState<{ id: number; title: string; category: string }[]>([]);
+  const [learningQuizzes, setLearningQuizzes] = useState<{ id: number; title: string }[]>([]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const fetchLinkedResources = async () => {
+      try {
+        const password = localStorage.getItem("dr_mahmoud_admin_pwd") || "";
+        const headers = { Authorization: `Bearer ${password}`, "Content-Type": "application/json" };
+        const [filesRes, quizzesRes] = await Promise.all([
+          fetch("/api/admin/learning/files", { headers }).then(r => r.json()),
+          fetch("/api/admin/learning/quizzes", { headers }).then(r => r.json())
+        ]);
+        if (Array.isArray(filesRes)) setLearningFiles(filesRes);
+        if (Array.isArray(quizzesRes)) setLearningQuizzes(quizzesRes);
+      } catch (err) {
+        console.error("Error loading resources for linking", err);
+      }
+    };
+    fetchLinkedResources();
+  }, [isAuthenticated, activeTab]); // reload when activeTab changes, e.g. if they upload files and switch back to videos
   const [previewVideo, setPreviewVideo] = useState<Video | null>(null);
 
   const getYouTubeVideoId = (url: string): string | null => {
@@ -264,6 +290,8 @@ export default function AdminDashboard() {
         durationText: (video as any).durationText || "",
         lessonsCount: (video as any).lessonsCount != null ? String((video as any).lessonsCount) : "",
         level: (video as any).level || "",
+        pdfFileId: (video as any).pdfFileId != null ? String((video as any).pdfFileId) : "",
+        quizId: (video as any).quizId != null ? String((video as any).quizId) : "",
       });
     } else {
       setSelectedVideoId(null);
@@ -279,6 +307,8 @@ export default function AdminDashboard() {
         durationText: "",
         lessonsCount: "",
         level: "",
+        pdfFileId: "",
+        quizId: "",
       });
     }
     setIsVideoModalOpen(true);
@@ -654,6 +684,8 @@ export default function AdminDashboard() {
       durationText: videoForm.durationText || undefined,
       lessonsCount: videoForm.lessonsCount ? Number(videoForm.lessonsCount) : undefined,
       level: videoForm.level || undefined,
+      pdfFileId: videoForm.pdfFileId ? Number(videoForm.pdfFileId) : null,
+      quizId: videoForm.quizId ? Number(videoForm.quizId) : null,
     };
 
     try {
@@ -2236,40 +2268,83 @@ export default function AdminDashboard() {
                   </select>
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-muted-foreground mb-1">رابط يوتيوب أو ملف الفيديو المرفوع (URL/File)</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      required
-                      value={videoForm.youtubeUrl}
-                      onChange={(e) => setVideoForm({ ...videoForm, youtubeUrl: e.target.value })}
-                      placeholder="رابط يوتيوب أو مسار الملف المرفوع..."
-                      className="flex-1 bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm text-left"
-                      dir="ltr"
-                    />
-                    <label className="shrink-0 flex items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl px-4 cursor-pointer transition-colors border border-primary/20">
-                      {isVideoUploading ? (
-                        <span className="flex items-center gap-2 text-xs"><Loader2 className="w-4 h-4 animate-spin" /> جاري الرفع...</span>
-                      ) : (
-                        <span className="flex items-center gap-2 text-xs"><Upload className="w-4 h-4" /> رفع ملف فيديو</span>
-                      )}
-                      <input 
-                        type="file" 
-                        accept="video/*" 
-                        className="hidden" 
-                        disabled={isVideoUploading}
-                        onChange={handleVideoFileUpload} 
+                <div className="md:col-span-2 space-y-3">
+                  <label className="block text-xs font-semibold text-muted-foreground text-right">رابط الفيديو أو تحميل ملف فيديو</label>
+                  <div className="grid grid-cols-1 gap-4">
+                    {/* Visual drag-drop style upload box / URL box */}
+                    <div className="border border-dashed border-border rounded-2xl p-4 bg-muted/30 hover:border-primary/50 transition-colors">
+                      <div className="flex flex-col items-center justify-center text-center space-y-2">
+                        {isVideoUploading ? (
+                          <div className="flex flex-col items-center gap-2 py-4">
+                            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                            <span className="text-xs font-semibold text-foreground">جاري رفع وتشفير الفيديو...</span>
+                            <span className="text-[10px] text-muted-foreground">الرجاء عدم إغلاق النافذة حتى اكتمال الرفع</span>
+                          </div>
+                        ) : videoForm.youtubeUrl && (videoForm.youtubeUrl.startsWith("/uploads/") || videoForm.youtubeUrl.includes("/stream")) ? (
+                          <div className="w-full space-y-3 py-2">
+                            <div className="flex items-center gap-3 justify-between bg-background border border-border p-3 rounded-xl">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
+                                  <Check className="w-5 h-5" />
+                                </div>
+                                <div className="text-right min-w-0">
+                                  <span className="block text-xs font-bold text-foreground truncate">ملف فيديو مرفوع</span>
+                                  <span className="block text-[10px] text-muted-foreground truncate" dir="ltr">{videoForm.youtubeUrl}</span>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setVideoForm(prev => ({ ...prev, youtubeUrl: "" }))}
+                                className="text-[10px] text-red-500 hover:text-red-400 font-semibold px-2 py-1 bg-red-500/5 hover:bg-red-500/10 rounded-lg border border-red-500/10 transition-colors"
+                              >
+                                حذف الملف
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-1">
+                              <Upload className="w-6 h-6" />
+                            </div>
+                            <span className="text-xs font-bold text-foreground">تحميل ملف فيديو من جهازك مباشرة</span>
+                            <span className="text-[10px] text-muted-foreground">صيغ الفيديو المدعومة (MP4, MKV, AVI)</span>
+                            <div className="pt-2">
+                              <label className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl px-4 py-2 cursor-pointer transition-colors text-xs inline-flex items-center gap-1.5 shadow-md shadow-primary/10 border border-primary/20">
+                                <Upload className="w-3.5 h-3.5" />
+                                اختر ملف فيديو
+                                <input 
+                                  type="file" 
+                                  accept="video/*" 
+                                  className="hidden" 
+                                  disabled={isVideoUploading}
+                                  onChange={handleVideoFileUpload} 
+                                />
+                              </label>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="relative">
+                      <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-muted-foreground">
+                        <VideoIcon className="w-4 h-4" />
+                      </div>
+                      <input
+                        type="text"
+                        required
+                        value={videoForm.youtubeUrl}
+                        onChange={(e) => setVideoForm({ ...videoForm, youtubeUrl: e.target.value })}
+                        placeholder="أو اكتب رابط فيديو يوتيوب أو مسار خارجي مباشر..."
+                        className="w-full bg-background border border-border rounded-xl pr-10 pl-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm text-left"
+                        dir="ltr"
                       />
-                    </label>
+                    </div>
                   </div>
-                  <span className="text-[10px] text-muted-foreground mt-1 block">
-                    يمكنك إدخال رابط يوتيوب أو رفع ملف فيديو من جهازك مباشرة.
-                  </span>
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-muted-foreground mb-1">العنوان</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1 text-right">العنوان</label>
                   <input
                     type="text"
                     required
@@ -2281,7 +2356,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-muted-foreground mb-1">الوصف (اختياري)</label>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1 text-right">الوصف (اختياري)</label>
                   <textarea
                     value={videoForm.description}
                     onChange={(e) => setVideoForm({ ...videoForm, description: e.target.value })}
@@ -2289,6 +2364,47 @@ export default function AdminDashboard() {
                     rows={3}
                     className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm resize-none"
                   />
+                </div>
+
+                {/* PDF and Quiz linked associations */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2">
+                  <div className="text-right">
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1 flex items-center justify-end gap-1.5">
+                      ملف PDF المرفق (الدرس)
+                      <FileText className="w-3.5 h-3.5 text-primary" />
+                    </label>
+                    <select
+                      value={videoForm.pdfFileId}
+                      onChange={(e) => setVideoForm({ ...videoForm, pdfFileId: e.target.value })}
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
+                    >
+                      <option value="">لا يوجد ملف مرفق</option>
+                      {learningFiles.map((file) => (
+                        <option key={file.id} value={file.id}>
+                          {file.title} ({file.category || "غير مصنف"})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="text-right">
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1 flex items-center justify-end gap-1.5">
+                      اختبار الدرس المرفق (Exercises)
+                      <HelpCircle className="w-3.5 h-3.5 text-primary" />
+                    </label>
+                    <select
+                      value={videoForm.quizId}
+                      onChange={(e) => setVideoForm({ ...videoForm, quizId: e.target.value })}
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
+                    >
+                      <option value="">لا يوجد اختبار مرفق</option>
+                      {learningQuizzes.map((quiz) => (
+                        <option key={quiz.id} value={quiz.id}>
+                          {quiz.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2 pt-2 md:col-span-2">

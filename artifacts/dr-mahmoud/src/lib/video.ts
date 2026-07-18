@@ -10,6 +10,8 @@ export interface VideoItem {
   durationText?: string | null;
   lessonsCount?: number | null;
   level?: string | null;
+  pdfFileId?: number | null;
+  quizId?: number | null;
 }
 
 export function getYouTubeVideoId(url: string): string | null {

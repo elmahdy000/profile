@@ -775,6 +775,12 @@ components:
         level:
           type: string
           nullable: true
+        pdfFileId:
+          type: integer
+          nullable: true
+        quizId:
+          type: integer
+          nullable: true
       required:
         - category
         - title
@@ -811,6 +817,12 @@ components:
           nullable: true
         level:
           type: string
+          nullable: true
+        pdfFileId:
+          type: integer
+          nullable: true
+        quizId:
+          type: integer
           nullable: true
         createdAt:
           type: string

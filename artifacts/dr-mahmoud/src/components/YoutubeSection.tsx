@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Youtube, Play, ExternalLink, Tv, ChevronLeft, Loader2, Lock, Unlock,
-  Search, SlidersHorizontal, Bookmark, Share2, Clock, BookOpen, Award, ArrowUpDown
+  Search, SlidersHorizontal, Bookmark, Share2, Clock, BookOpen, Award, ArrowUpDown,
+  FileText, ClipboardCheck, Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListVideos } from "@workspace/api-client-react";
@@ -42,9 +43,15 @@ function getVideoMeta(item: VideoItem) {
 // ─── Modal Player Component ───
 function VideoPlayerModal({
   item,
+  files = [],
+  quizzes = [],
+  onStartQuiz,
   onClose,
 }: {
   item: VideoItem;
+  files?: any[];
+  quizzes?: any[];
+  onStartQuiz?: (quiz: any) => void;
   onClose: () => void;
 }) {
   const [isFocused, setIsFocused] = useState(true);
@@ -215,6 +222,47 @@ function VideoPlayerModal({
               </div>
             )}
           </div>
+          {/* Linked Materials Footer */}
+          {(item.pdfFileId || item.quizId) && (
+            <div className="px-6 py-4 border-t border-border bg-muted/20 flex flex-col sm:flex-row gap-3 items-center justify-between text-right" dir="rtl">
+              <span className="text-xs font-bold text-muted-foreground">الملفات والتمارين الملحقة بالدرس:</span>
+              <div className="flex flex-wrap gap-2.5 w-full sm:w-auto justify-end">
+                {item.pdfFileId && (
+                  (() => {
+                    const file = files.find(f => f.id === item.pdfFileId);
+                    if (!file) return null;
+                    return (
+                      <a
+                        href={`/api/learning/files/${file.id}/download`}
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary text-white hover:bg-primary/90 px-4 py-2.5 text-xs font-bold transition-all shadow-md"
+                      >
+                        <FileText className="w-4 h-4" />
+                        تحميل ملف الـ PDF المرفق
+                      </a>
+                    );
+                  })()
+                )}
+                {item.quizId && (
+                  (() => {
+                    const quiz = quizzes.find(q => q.id === item.quizId);
+                    if (!quiz) return null;
+                    return (
+                      <button
+                        onClick={() => {
+                          onClose(); // close video modal before starting quiz
+                          onStartQuiz?.(quiz);
+                        }}
+                        className="inline-flex items-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 text-xs font-bold transition-all shadow-md"
+                      >
+                        <ClipboardCheck className="w-4 h-4" />
+                        ابدأ حل اختبار الدرس
+                      </button>
+                    );
+                  })()
+                )}
+              </div>
+            </div>
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>
@@ -387,24 +435,44 @@ function UnlockModal({
 }
 
 
-export function YoutubeSection({ student }: { student?: any }) {
+export function YoutubeSection({
+  student,
+  files = [],
+  quizzes = [],
+  onStartQuiz,
+}: {
+  student?: any;
+  files?: any[];
+  quizzes?: any[];
+  onStartQuiz?: (quiz: any) => void;
+}) {
   const { data: dbVideos, isLoading, isError, refetch } = useListVideos();
   const [activeCategory, setActiveCategory] = useState("all");
   const [activePlayer, setActivePlayer] = useState<VideoItem | null>(null);
   const [unlockModalItem, setUnlockModalItem] = useState<VideoItem | null>(null);
 
+  const studentGrade = student?.grade === "أخرى" ? student?.otherGradeDetail : student?.grade;
+  const rawItems: VideoItem[] = dbVideos ? dbVideos as VideoItem[] : [];
+  const matchedCategory = studentGrade
+    ? rawItems.find(
+        (item) => String(item.category).trim().toLowerCase() === String(studentGrade).trim().toLowerCase()
+      )?.category
+    : undefined;
+
   useEffect(() => {
-    if (student && student.grade && dbVideos) {
+    if (matchedCategory) {
+      setActiveCategory(matchedCategory);
+    } else if (student && student.grade && dbVideos) {
       const grade = student.grade;
-      const rawItems = (dbVideos as any[]) || [];
-      const hasMatchingCategory = rawItems.some(
+      const rawItemsList = (dbVideos as any[]) || [];
+      const hasMatchingCategory = rawItemsList.some(
         (item) => String(item.category).trim().toLowerCase() === String(grade).trim().toLowerCase()
       );
       if (hasMatchingCategory) {
         setActiveCategory(grade);
       }
     }
-  }, [student, dbVideos]);
+  }, [student, dbVideos, matchedCategory]);
 
   // States for search, advanced filters, sorting, bookmarks, and watch progress
   const [searchQuery, setSearchQuery] = useState("");
@@ -480,8 +548,6 @@ export function YoutubeSection({ student }: { student?: any }) {
   };
 
   // Do not render demo content while the real library is still loading.
-  const rawItems: VideoItem[] = dbVideos ? dbVideos as VideoItem[] : [];
-
   // Enhance items with real metadata (entered by admin) + real watch progress
   const items = rawItems.map((item) => ({
     ...item,
@@ -490,7 +556,9 @@ export function YoutubeSection({ student }: { student?: any }) {
   }));
 
   // Categories list
-  const categories = ["all", ...Array.from(new Set(items.map((item) => item.category)))];
+  const categories = matchedCategory
+    ? [matchedCategory]
+    : ["all", ...Array.from(new Set(items.map((item) => item.category)))];
 
   // Filtering Logic
   const filteredItems = items
@@ -1072,6 +1140,51 @@ export function YoutubeSection({ student }: { student?: any }) {
                         </div>
                       )}
 
+                      {/* Supplementary Materials (PDF & Exercises) */}
+                      {(item.pdfFileId || item.quizId) && (
+                        <div className="border-t border-border pt-4 space-y-2">
+                          <span className="text-[10px] font-bold text-muted-foreground block">الملحقات والمرفقات:</span>
+                          <div className="flex flex-col gap-2">
+                            {item.pdfFileId && (
+                              (() => {
+                                const file = files.find(f => f.id === item.pdfFileId);
+                                if (!file) return null;
+                                return (
+                                  <a
+                                    href={`/api/learning/files/${file.id}/download`}
+                                    className="flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/10 hover:border-primary/30 p-2.5 text-xs text-primary font-bold transition-all text-right w-full"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <FileText className="w-4 h-4 shrink-0 text-primary" />
+                                    <span className="line-clamp-1 flex-1 text-right">{file.title} (PDF)</span>
+                                    <Download className="w-3.5 h-3.5 shrink-0 text-primary/70" />
+                                  </a>
+                                );
+                              })()
+                            )}
+                            {item.quizId && (
+                              (() => {
+                                const quiz = quizzes.find(q => q.id === item.quizId);
+                                if (!quiz) return null;
+                                return (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onStartQuiz?.(quiz);
+                                    }}
+                                    className="flex items-center gap-2 rounded-xl bg-amber-500/5 border border-amber-500/10 hover:border-amber-500/30 p-2.5 text-xs text-amber-700 font-bold transition-all text-right w-full"
+                                  >
+                                    <ClipboardCheck className="w-4 h-4 shrink-0 text-amber-600" />
+                                    <span className="line-clamp-1 flex-1 text-right">{quiz.title} (تمارين)</span>
+                                    <Award className="w-3.5 h-3.5 shrink-0 text-amber-500" />
+                                  </button>
+                                );
+                              })()
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Actions */}
                       <div className="flex items-center justify-between border-t border-border pt-4 mt-auto">
                         <button
@@ -1134,7 +1247,13 @@ export function YoutubeSection({ student }: { student?: any }) {
 
       {/* Video Overlay Player Modal */}
       {activePlayer && (
-        <VideoPlayerModal item={activePlayer} onClose={() => setActivePlayer(null)} />
+        <VideoPlayerModal
+          item={activePlayer}
+          files={files}
+          quizzes={quizzes}
+          onStartQuiz={onStartQuiz}
+          onClose={() => setActivePlayer(null)}
+        />
       )}
 
       {/* Unlock Content Modal */}

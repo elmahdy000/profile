@@ -298,6 +298,8 @@ export const ListVideosResponseItem = zod.object({
   "durationText": zod.string().nullish(),
   "lessonsCount": zod.number().nullish(),
   "level": zod.string().nullish(),
+  "pdfFileId": zod.number().nullish(),
+  "quizId": zod.number().nullish(),
   "createdAt": zod.string()
 })
 export const ListVideosResponse = zod.array(ListVideosResponseItem)
@@ -320,7 +322,9 @@ export const CreateVideoBody = zod.object({
   "accessKey": zod.string().nullish(),
   "durationText": zod.string().nullish(),
   "lessonsCount": zod.number().nullish(),
-  "level": zod.string().nullish()
+  "level": zod.string().nullish(),
+  "pdfFileId": zod.number().nullish(),
+  "quizId": zod.number().nullish()
 })
 
 
@@ -345,7 +349,9 @@ export const UpdateVideoBody = zod.object({
   "accessKey": zod.string().nullish(),
   "durationText": zod.string().nullish(),
   "lessonsCount": zod.number().nullish(),
-  "level": zod.string().nullish()
+  "level": zod.string().nullish(),
+  "pdfFileId": zod.number().nullish(),
+  "quizId": zod.number().nullish()
 })
 
 export const UpdateVideoResponse = zod.object({
@@ -361,6 +367,8 @@ export const UpdateVideoResponse = zod.object({
   "durationText": zod.string().nullish(),
   "lessonsCount": zod.number().nullish(),
   "level": zod.string().nullish(),
+  "pdfFileId": zod.number().nullish(),
+  "quizId": zod.number().nullish(),
   "createdAt": zod.string()
 })
 

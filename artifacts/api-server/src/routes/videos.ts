@@ -134,6 +134,8 @@ router.get("/videos", async (req, res, next) => {
         durationText: v.durationText,
         lessonsCount: v.lessonsCount,
         level: v.level,
+        pdfFileId: v.pdfFileId,
+        quizId: v.quizId,
         createdAt: v.createdAt,
       };
     });
@@ -162,6 +164,8 @@ router.post("/videos", requireAdmin, async (req, res, next) => {
         durationText: validated.durationText ?? null,
         lessonsCount: validated.lessonsCount ?? null,
         level: validated.level ?? null,
+        pdfFileId: validated.pdfFileId ?? null,
+        quizId: validated.quizId ?? null,
       })
       .returning();
 
@@ -191,6 +195,8 @@ router.put("/videos/:id", requireAdmin, async (req, res, next) => {
         ...(validated.durationText !== undefined && { durationText: validated.durationText }),
         ...(validated.lessonsCount !== undefined && { lessonsCount: validated.lessonsCount }),
         ...(validated.level !== undefined && { level: validated.level }),
+        ...(validated.pdfFileId !== undefined && { pdfFileId: validated.pdfFileId }),
+        ...(validated.quizId !== undefined && { quizId: validated.quizId }),
       })
       .where(eq(videosTable.id, id))
       .returning();
