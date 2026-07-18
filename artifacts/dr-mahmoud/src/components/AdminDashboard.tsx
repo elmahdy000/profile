@@ -21,7 +21,6 @@ import {
   useUpdateVideo,
   useDeleteVideo,
   setAuthTokenGetter,
-  getListBookingsQueryOptions,
   getListBookingsQueryKey,
   getListCoursesQueryKey,
   getListPodcastsQueryKey,
@@ -85,17 +84,24 @@ export default function AdminDashboard() {
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string>("all");
   const [selectedVideoCategoryFilter, setSelectedVideoCategoryFilter] = useState<string>("all");
   const [isVideoUploading, setIsVideoUploading] = useState(false);
+  const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
+  const [selectedVideoPreviewUrl, setSelectedVideoPreviewUrl] = useState("");
   const [isInitializing, setIsInitializing] = useState(true);
 
-  // Local storage cache for the admin session
   useEffect(() => {
-    const savedPassword = localStorage.getItem("dr_mahmoud_admin_pwd");
-    if (savedPassword) {
-      setAuthTokenGetter(() => savedPassword);
-      setIsAuthenticated(true);
-    }
-    setIsInitializing(false);
+    localStorage.removeItem("dr_mahmoud_admin_pwd");
+    fetch("/api/admin/me", { credentials: "include" })
+      .then((response) => setIsAuthenticated(response.ok))
+      .catch(() => setIsAuthenticated(false))
+      .finally(() => setIsInitializing(false));
   }, []);
+
+  useEffect(() => {
+    if (!selectedVideoFile) { setSelectedVideoPreviewUrl(""); return; }
+    const url = URL.createObjectURL(selectedVideoFile);
+    setSelectedVideoPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [selectedVideoFile]);
 
   // API hooks
   // If not authenticated, we pass enabled: false to prevent queries firing on mount
@@ -143,18 +149,17 @@ export default function AdminDashboard() {
     setAuthError("");
 
     try {
-      // Set the token temporarily
-      setAuthTokenGetter(() => passwordInput);
-      
-      // Attempt to fetch bookings to verify the password
-      const result = await queryClient.fetchQuery(
-        getListBookingsQueryOptions()
-      );
-
-      if (result) {
-        setIsAuthenticated(true);
-        localStorage.setItem("dr_mahmoud_admin_pwd", passwordInput);
-      }
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: passwordInput }),
+      });
+      if (!response.ok) throw new Error("invalid password");
+      setAuthTokenGetter(null);
+      setIsAuthenticated(true);
+      setPasswordInput("");
+      await queryClient.invalidateQueries();
     } catch (err: any) {
       setAuthError("كلمة المرور غير صحيحة. يرجى المحاولة مرة أخرى.");
       setAuthTokenGetter(null);
@@ -164,11 +169,12 @@ export default function AdminDashboard() {
   };
 
   // Logout handler
-  const handleLogout = () => {
-    localStorage.removeItem("dr_mahmoud_admin_pwd");
+  const handleLogout = async () => {
+    await fetch("/api/admin/logout", { method: "POST", credentials: "include" }).catch(() => undefined);
     setAuthTokenGetter(null);
     setIsAuthenticated(false);
     setPasswordInput("");
+    queryClient.clear();
   };
 
   // Course Modal state & fields
@@ -238,11 +244,9 @@ export default function AdminDashboard() {
     if (!isAuthenticated) return;
     const fetchLinkedResources = async () => {
       try {
-        const password = localStorage.getItem("dr_mahmoud_admin_pwd") || "";
-        const headers = { Authorization: `Bearer ${password}`, "Content-Type": "application/json" };
         const [filesRes, quizzesRes] = await Promise.all([
-          fetch("/api/admin/learning/files", { headers }).then(r => r.json()),
-          fetch("/api/admin/learning/quizzes", { headers }).then(r => r.json())
+          fetch("/api/admin/learning/files", { credentials: "include" }).then(r => r.json()),
+          fetch("/api/admin/learning/quizzes", { credentials: "include" }).then(r => r.json())
         ]);
         if (Array.isArray(filesRes)) setLearningFiles(filesRes);
         if (Array.isArray(quizzesRes)) setLearningQuizzes(quizzesRes);
@@ -417,9 +421,7 @@ export default function AdminDashboard() {
     try {
       const response = await fetch("/api/upload", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("dr_mahmoud_admin_pwd") || ""}`,
-        },
+        credentials: "include",
         body: formData,
       });
 
@@ -451,9 +453,7 @@ export default function AdminDashboard() {
     try {
       const response = await fetch("/api/upload/audio", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("dr_mahmoud_admin_pwd") || ""}`,
-        },
+        credentials: "include",
         body: formData,
       });
 
@@ -590,9 +590,7 @@ export default function AdminDashboard() {
     try {
       const response = await fetch("/api/upload", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("dr_mahmoud_admin_pwd") || ""}`,
-        },
+        credentials: "include",
         body: formData,
       });
 
@@ -629,8 +627,14 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleVideoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleVideoFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setSelectedVideoFile(file);
+    e.target.value = "";
+  };
+
+  const uploadSelectedVideo = async () => {
+    const file = selectedVideoFile;
     if (!file) return;
 
     setIsVideoUploading(true);
@@ -640,9 +644,7 @@ export default function AdminDashboard() {
     try {
       const response = await fetch("/api/upload/video", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("dr_mahmoud_admin_pwd") || ""}`,
-        },
+        credentials: "include",
         body: formData,
       });
 
@@ -656,6 +658,8 @@ export default function AdminDashboard() {
           ...prev,
           youtubeUrl: data.url
         }));
+        setSelectedVideoFile(null);
+        toast({ title: "تم رفع الفيديو", description: "راجع البيانات وبعدها اضغط حفظ الفيديو." });
       }
     } catch (err) {
       console.error(err);
@@ -2280,6 +2284,14 @@ export default function AdminDashboard() {
                             <span className="text-xs font-semibold text-foreground">جاري رفع وتشفير الفيديو...</span>
                             <span className="text-[10px] text-muted-foreground">الرجاء عدم إغلاق النافذة حتى اكتمال الرفع</span>
                           </div>
+                        ) : selectedVideoFile && selectedVideoPreviewUrl ? (
+                          <div className="w-full space-y-3 py-2">
+                            <video src={selectedVideoPreviewUrl} controls preload="metadata" className="max-h-80 w-full rounded-xl bg-black" />
+                            <div className="flex flex-col gap-3 rounded-xl border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
+                              <div className="min-w-0 text-right"><strong className="block truncate text-xs">{selectedVideoFile.name}</strong><span className="text-[10px] text-muted-foreground">{(selectedVideoFile.size/1024/1024).toFixed(1)} MB · معاينة محلية قبل الرفع</span></div>
+                              <div className="flex gap-2"><button type="button" onClick={()=>setSelectedVideoFile(null)} className="rounded-lg border px-3 py-2 text-xs font-bold">إلغاء</button><button type="button" onClick={uploadSelectedVideo} className="rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"><Upload className="ml-1 inline h-3.5 w-3.5"/>رفع الفيديو</button></div>
+                            </div>
+                          </div>
                         ) : videoForm.youtubeUrl && (videoForm.youtubeUrl.startsWith("/uploads/") || videoForm.youtubeUrl.includes("/stream")) ? (
                           <div className="w-full space-y-3 py-2">
                             <div className="flex items-center gap-3 justify-between bg-background border border-border p-3 rounded-xl">
@@ -2317,7 +2329,7 @@ export default function AdminDashboard() {
                                   accept="video/*" 
                                   className="hidden" 
                                   disabled={isVideoUploading}
-                                  onChange={handleVideoFileUpload} 
+                                  onChange={handleVideoFileSelection}
                                 />
                               </label>
                             </div>
@@ -2495,7 +2507,7 @@ export default function AdminDashboard() {
                   return (
                     <video
                       className="absolute inset-0 w-full h-full object-contain bg-black"
-                      src={`${previewVideo.youtubeUrl}?keys=${encodeURIComponent(localStorage.getItem('dr_mahmoud_admin_pwd') || '')}`}
+                      src={previewVideo.youtubeUrl}
                       controls
                       controlsList="nodownload"
                       onContextMenu={(e) => e.preventDefault()}

@@ -26,6 +26,15 @@ function readStoredJson<T>(key: string, fallback: T): T {
   }
 }
 
+function syncVideoProgress(videoId: number, progress: number) {
+  void fetch(`/api/learning/progress/${videoId}`, {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ progress }),
+  }).catch(() => undefined);
+}
+
 // Real metadata read from the video record (entered by the admin).
 // Returns only the values that actually exist — no fabricated numbers.
 function getVideoMeta(item: VideoItem) {
@@ -119,6 +128,7 @@ function VideoPlayerModal({
       progressObj[item.id] = percent;
       localStorage.setItem("dr_mahmoud_watch_progress", JSON.stringify(progressObj));
       window.dispatchEvent(new Event("watch_progress_updated"));
+      if (percent === 100 || percent % 5 === 0) syncVideoProgress(item.id, percent);
     }
   };
 
@@ -129,6 +139,7 @@ function VideoPlayerModal({
       progressObj[item.id] = 100;
       localStorage.setItem("dr_mahmoud_watch_progress", JSON.stringify(progressObj));
       window.dispatchEvent(new Event("watch_progress_updated"));
+      syncVideoProgress(item.id, 100);
     }
   };
 
@@ -493,7 +504,7 @@ export function YoutubeSection({
     }
   };
 
-  // Load Bookmarks & Progress from localStorage
+  // Load the local cache immediately, then merge progress saved to the account.
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -506,6 +517,15 @@ export function YoutubeSection({
     };
 
     loadProgress();
+    void fetch("/api/learning/progress", { credentials: "include" })
+      .then((response) => response.ok ? response.json() : [])
+      .then((rows: Array<{ videoId: number; progress: number }>) => {
+        const merged = readStoredJson<Record<number, number>>("dr_mahmoud_watch_progress", {});
+        rows.forEach((row) => { merged[row.videoId] = Math.max(merged[row.videoId] || 0, row.progress); });
+        localStorage.setItem("dr_mahmoud_watch_progress", JSON.stringify(merged));
+        setWatchProgress(merged);
+      })
+      .catch(() => undefined);
     // Listen to watch progress custom event
     window.addEventListener("watch_progress_updated", loadProgress);
     return () => {

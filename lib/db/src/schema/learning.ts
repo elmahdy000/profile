@@ -12,6 +12,7 @@ export const studentsTable = pgTable("students", {
   city: text("city"),
   grade: text("grade"),
   otherGradeDetail: text("other_grade_detail"),
+  enrolledCategories: jsonb("enrolled_categories").$type<string[]>().notNull().default([]),
   approvedAt: timestamp("approved_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -74,4 +75,16 @@ export const quizAttemptsTable = pgTable("quiz_attempts", {
 }, (table) => ({
   quizIndex: index("quiz_attempts_quiz_idx").on(table.quizId),
   studentIndex: index("quiz_attempts_student_idx").on(table.studentId),
+}));
+
+export const videoProgressTable = pgTable("video_progress", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => studentsTable.id, { onDelete: "cascade" }),
+  videoId: integer("video_id").notNull(),
+  progress: integer("progress").notNull().default(0),
+  completed: boolean("completed").notNull().default(false),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  studentVideoUnique: uniqueIndex("video_progress_student_video_unique").on(table.studentId, table.videoId),
+  studentIndex: index("video_progress_student_idx").on(table.studentId),
 }));

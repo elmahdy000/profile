@@ -8,6 +8,7 @@ import settingsRouter from "./settings";
 import curriculumsRouter from "./curriculums";
 import videosRouter from "./videos";
 import learningRouter from "./learning";
+import adminAuthRouter from "./admin-auth";
 const router: IRouter = Router();
 
 router.use(healthRouter);
@@ -19,5 +20,6 @@ router.use(settingsRouter);
 router.use(curriculumsRouter);
 router.use(videosRouter);
 router.use(learningRouter);
+router.use(adminAuthRouter);
 
 export default router;

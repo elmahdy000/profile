@@ -7,6 +7,26 @@ export const STUDENT_COOKIE = "student_session";
 
 export type ApprovedStudent = typeof studentsTable.$inferSelect;
 
+function normalizeCategory(value: string | null | undefined) {
+  return String(value ?? "").trim().toLocaleLowerCase("ar");
+}
+
+export function getStudentAllowedCategories(student: ApprovedStudent): string[] {
+  const stage = student.grade === "أخرى" ? student.otherGradeDetail : student.grade;
+  const seen = new Set<string>();
+  return [stage, ...(student.enrolledCategories ?? [])].map((value) => String(value ?? "").trim()).filter((value) => {
+    const normalized = normalizeCategory(value);
+    if (!normalized || seen.has(normalized)) return false;
+    seen.add(normalized);
+    return true;
+  });
+}
+
+export function canStudentAccessCategory(student: ApprovedStudent, category: string): boolean {
+  const normalized = normalizeCategory(category);
+  return getStudentAllowedCategories(student).some((value) => normalizeCategory(value) === normalized);
+}
+
 export async function getApprovedStudent(req: Request): Promise<ApprovedStudent | null> {
   const token = req.cookies?.[STUDENT_COOKIE];
   if (!token || typeof token !== "string") return null;

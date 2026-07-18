@@ -43,9 +43,9 @@ export function useUpdateSiteSettings() {
     mutationFn: async (settings: { key: string; value: string; type?: string }[]) => {
       const res = await fetch("/api/settings/batch", {
         method: "PUT",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("dr_mahmoud_admin_pwd") || ""}`,
         },
         body: JSON.stringify({ settings }),
       });
@@ -111,4 +111,3 @@ export const SETTINGS_KEYS = {
   SITE_SEO_DESC: "site_seo_desc",
   SITE_LOGO_URL: "site_logo_url",
 } as const;
-

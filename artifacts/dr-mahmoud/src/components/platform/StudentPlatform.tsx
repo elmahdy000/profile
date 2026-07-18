@@ -142,6 +142,7 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [accessCode, setAccessCode] = useState("");
+  const [rememberCode, setRememberCode] = useState(true);
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -152,12 +153,19 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
     otherGradeDetail: "",
   });
 
+  useEffect(() => {
+    const remembered = localStorage.getItem("dr_mahmoud_student_code");
+    if (remembered) setAccessCode(remembered);
+  }, []);
+
   const submitLogin = async (event: React.FormEvent) => {
     event.preventDefault(); setLoading(true); setError("");
     try {
       const result = await api<{ student: Student }>("/api/student/login", {
         method: "POST", body: JSON.stringify({ accessCode }),
       });
+      if (rememberCode) localStorage.setItem("dr_mahmoud_student_code", accessCode.trim().toUpperCase());
+      else localStorage.removeItem("dr_mahmoud_student_code");
       onLogin(result.student);
     } catch (err) { setError((err as Error).message); }
     finally { setLoading(false); }
@@ -208,6 +216,7 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
             <form onSubmit={submitLogin} className="space-y-5">
               <div><h2 className="text-2xl font-black">دخول الطلاب</h2><p className="text-sm text-muted-foreground mt-1">اكتب كود EDU اللي وصلك بعد موافقة الأدمن.</p></div>
               <div className="space-y-2"><label htmlFor="student-code" className="text-sm font-bold">كود الدخول الشخصي</label><input id="student-code" value={accessCode} onChange={(e) => setAccessCode(e.target.value.toUpperCase())} required autoComplete="one-time-code" placeholder="EDU-XXXXXXXX" className="h-14 w-full rounded-xl border border-border bg-background px-4 text-center font-mono text-lg tracking-widest focus:border-primary focus:outline-none" /></div>
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border bg-muted/30 p-3"><input type="checkbox" checked={rememberCode} onChange={(e)=>setRememberCode(e.target.checked)} className="mt-1 h-4 w-4"/><span><strong className="block text-sm">افتكر الكود على الجهاز</strong><small className="text-muted-foreground">ماتفعّلهاش لو الجهاز مش شخصي.</small></span></label>
               {error && <p role="alert" className="rounded-xl bg-red-500/10 p-3 text-sm text-red-600">{error}</p>}
               <Button disabled={loading} className="h-13 w-full rounded-xl text-base font-bold">{loading ? <Loader2 className="animate-spin" /> : <ShieldCheck />} دخول المنصة</Button>
               <p className="text-center text-xs text-muted-foreground">لسه طلبك ما اتقبلش؟ كلمنا بعد ما تبعت التسجيل.</p>
@@ -295,9 +304,9 @@ function QuizzesPanel({ quizzes, onStartQuiz }: { quizzes: Quiz[]; onStartQuiz: 
   );
 }
 
-function DashboardPanel({ student, files, quizzes, onOpen }: { student: Student; files: LearningFile[]; quizzes: Quiz[]; onOpen: (tab: "lessons" | "files" | "quizzes") => void }) {
+function DashboardPanel({ student, files, quizzes, videoCount, averageProgress, onOpen }: { student: Student; files: LearningFile[]; quizzes: Quiz[]; videoCount: number; averageProgress: number; onOpen: (tab: "lessons" | "files" | "quizzes") => void }) {
   const stats = [
-    { label: "دروس متاحة", value: "12", icon: BookOpen, color: "text-primary", bg: "bg-primary/10" },
+    { label: "دروس متاحة", value: String(videoCount), icon: BookOpen, color: "text-primary", bg: "bg-primary/10" },
     { label: "ملفات مرفوعة", value: String(files.length), icon: FolderOpen, color: "text-cyan-700", bg: "bg-cyan-500/10" },
     { label: "اختبارات", value: String(quizzes.length), icon: ClipboardCheck, color: "text-amber-700", bg: "bg-amber-500/10" },
   ];
@@ -308,7 +317,7 @@ function DashboardPanel({ student, files, quizzes, onOpen }: { student: Student;
       <article className="academy-card overflow-hidden">
         <div className="grid md:grid-cols-[.9fr_1.1fr]">
           <div className="relative min-h-64 bg-slate-900"><img src="/baccalaureate-hero.png" alt="الدرس اللي بتذاكره" className="h-full w-full object-cover opacity-70"/><button onClick={()=>onOpen("lessons")} aria-label="شغل الدرس" className="absolute inset-0 m-auto grid h-16 w-16 place-items-center rounded-full bg-primary text-white shadow-xl"><Play className="h-7 w-7 fill-current"/></button></div>
-          <div className="flex flex-col justify-center p-6 text-right"><span className="w-fit rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-bold text-cyan-700">كمّل من هنا</span><h2 className="mt-3 text-2xl font-black">أساسيات البرمجة وحل المسائل</h2><p className="mt-2 text-muted-foreground">كمّل الدرس اللي بدأت فيه وطبّق التمرين المرفق.</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full w-[65%] rounded-full bg-cyan-500"/></div><div className="mt-2 flex justify-between text-xs text-muted-foreground"><span>65% مكتمل</span><span>12:45 دقيقة</span></div><Button onClick={()=>onOpen("lessons")} className="mt-5 h-12 w-fit font-bold">كمّل الدرس <ChevronLeft className="h-4 w-4"/></Button></div>
+          <div className="flex flex-col justify-center p-6 text-right"><span className="w-fit rounded-full bg-cyan-500/10 px-3 py-1 text-xs font-bold text-cyan-700">كمّل من هنا</span><h2 className="mt-3 text-2xl font-black">تقدمك في دروس المنصة</h2><p className="mt-2 text-muted-foreground">التقدم بيتحفظ على حسابك وبيكمل معاك من أي جهاز.</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-cyan-500" style={{width:`${averageProgress}%`}}/></div><div className="mt-2 flex justify-between text-xs text-muted-foreground"><span>{averageProgress}% مكتمل</span><span>{videoCount} درس متاح</span></div><Button onClick={()=>onOpen("lessons")} className="mt-5 h-12 w-fit font-bold">كمّل الدروس <ChevronLeft className="h-4 w-4"/></Button></div>
         </div>
       </article>
       <article className="academy-card p-6"><h2 className="text-xl font-black">المطلوب منك</h2><div className="mt-5 space-y-4"><button onClick={()=>onOpen("quizzes")} className="flex w-full items-center gap-3 rounded-xl bg-red-500/5 p-3 text-right"><ClipboardCheck className="text-red-500"/><span><strong className="block">اختبار قصير</strong><small className="text-muted-foreground">قبل يوم الخميس</small></span></button><button onClick={()=>onOpen("files")} className="flex w-full items-center gap-3 rounded-xl bg-primary/5 p-3 text-right"><FileText className="text-primary"/><span><strong className="block">ملف المراجعة</strong><small className="text-muted-foreground">اتحمّل دلوقتي</small></span></button></div></article>
@@ -327,6 +336,8 @@ export function StudentPlatform() {
   const [tab, setTab] = useState<"dashboard" | "lessons" | "files" | "quizzes" | "profile">("dashboard");
   const [files, setFiles] = useState<LearningFile[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [videoCount, setVideoCount] = useState(0);
+  const [averageProgress, setAverageProgress] = useState(0);
 
   // Quiz active states
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
@@ -357,7 +368,7 @@ export function StudentPlatform() {
   };
 
   useEffect(() => { api<{student:Student}>("/api/student/me").then(r=>setStudent(r.student)).catch(()=>{}).finally(()=>setLoading(false)); }, []);
-  useEffect(() => { if (!student) return; Promise.all([api<LearningFile[]>("/api/learning/files"),api<Quiz[]>("/api/learning/quizzes")]).then(([f,q])=>{setFiles(f);setQuizzes(q);}).catch(()=>{}); }, [student]);
+  useEffect(() => { if (!student) return; Promise.all([api<LearningFile[]>("/api/learning/files"),api<Quiz[]>("/api/learning/quizzes"),api<Array<{id:number}>>("/api/videos"),api<Array<{progress:number}>>("/api/learning/progress")]).then(([f,q,v,p])=>{setFiles(f);setQuizzes(q);setVideoCount(v.length);setAverageProgress(p.length?Math.round(p.reduce((sum,row)=>sum+row.progress,0)/Math.max(v.length,1)):0);}).catch(()=>{}); }, [student]);
   if (loading) return <div className="min-h-[70vh] grid place-items-center"><Loader2 className="h-9 w-9 animate-spin text-primary" /></div>;
   if (!student) return <AccessScreen onLogin={setStudent} />;
   const logout = async () => { await api("/api/student/logout",{method:"POST"}); setStudent(null); };
@@ -413,7 +424,7 @@ export function StudentPlatform() {
             </div>
           </div>
           {tab==='dashboard' ? (
-            <DashboardPanel student={student} files={files} quizzes={quizzes} onOpen={setTab}/>
+            <DashboardPanel student={student} files={files} quizzes={quizzes} videoCount={videoCount} averageProgress={averageProgress} onOpen={setTab}/>
           ) : tab==='lessons' ? (
             <YoutubeSection student={student} files={files} quizzes={quizzes} onStartQuiz={startQuiz} />
           ) : tab==='files' ? (

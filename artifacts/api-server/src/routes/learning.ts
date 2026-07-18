@@ -3,7 +3,7 @@ import { createHash, randomBytes } from "crypto";
 import fs from "fs";
 import path from "path";
 import multer from "multer";
-import { and, desc, eq, ilike } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray } from "drizzle-orm";
 import {
   db,
   learningFilesTable,
@@ -11,13 +11,18 @@ import {
   quizzesTable,
   studentSessionsTable,
   studentsTable,
+  videoProgressTable,
+  videosTable,
   type QuizQuestion,
 } from "@workspace/db";
 import { isAdminRequest, requireAdmin } from "../middleware/auth";
-import { getApprovedStudent, requireStudent, STUDENT_COOKIE } from "../middleware/student-auth";
+import { canStudentAccessCategory, getApprovedStudent, getStudentAllowedCategories, requireStudent, STUDENT_COOKIE } from "../middleware/student-auth";
+import { fixedWindowRateLimit } from "../middleware/rate-limit";
 
 const router: IRouter = Router();
 const SESSION_DAYS = 30;
+const studentRegisterLimit = fixedWindowRateLimit({ name: "student-register", limit: 5, windowMs: 60 * 60 * 1000 });
+const studentLoginLimit = fixedWindowRateLimit({ name: "student-login", limit: 12, windowMs: 15 * 60 * 1000 });
 const privateUploadDir = path.join(process.cwd(), "private", "learning-files");
 fs.mkdirSync(privateUploadDir, { recursive: true });
 
@@ -61,12 +66,13 @@ function publicStudent(student: typeof studentsTable.$inferSelect) {
     city: student.city,
     grade: student.grade,
     otherGradeDetail: student.otherGradeDetail,
+    enrolledCategories: student.enrolledCategories,
     createdAt: student.createdAt,
   };
 }
 
 function generateAccessCode() {
-  return `EDU-${randomBytes(4).toString("hex").toUpperCase()}`;
+  return `EDU-${randomBytes(8).toString("hex").toUpperCase()}`;
 }
 
 function validateQuestions(value: unknown): QuizQuestion[] | null {
@@ -81,7 +87,7 @@ function validateQuestions(value: unknown): QuizQuestion[] | null {
   return valid ? questions : null;
 }
 
-router.post("/student/register", async (req, res, next) => {
+router.post("/student/register", studentRegisterLimit, async (req, res, next) => {
   try {
     const name = String(req.body.name ?? "").trim();
     const phone = String(req.body.phone ?? "").replace(/\s+/g, "");
@@ -129,7 +135,7 @@ router.post("/student/register", async (req, res, next) => {
   }
 });
 
-router.post("/student/login", async (req, res, next) => {
+router.post("/student/login", studentLoginLimit, async (req, res, next) => {
   try {
     const accessCode = String(req.body.accessCode ?? "").trim();
     if (!accessCode) {
@@ -197,7 +203,7 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
   try {
     const id = Number(req.params.id);
     const status = String(req.body.status ?? "");
-    if (!Number.isInteger(id) || !["pending", "approved", "suspended"].includes(status)) {
+    if (!Number.isInteger(id) || (req.body.status !== undefined && !["pending", "approved", "suspended"].includes(status))) {
       res.status(400).json({ error: "Invalid student update" });
       return;
     }
@@ -207,13 +213,16 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
       return;
     }
     const [student] = await db.update(studentsTable).set({
-      status,
+      status: req.body.status !== undefined ? status : current.status,
       accessCode: status === "approved" ? (current.accessCode || generateAccessCode()) : current.accessCode,
       approvedAt: status === "approved" ? (current.approvedAt || new Date()) : current.approvedAt,
+      enrolledCategories: Array.isArray(req.body.enrolledCategories)
+        ? Array.from(new Set<string>((req.body.enrolledCategories as unknown[]).map((value) => String(value).trim()).filter(Boolean))).slice(0, 20)
+        : current.enrolledCategories,
       notes: req.body.notes !== undefined ? String(req.body.notes) : current.notes,
       updatedAt: new Date(),
     }).where(eq(studentsTable.id, id)).returning();
-    if (status === "suspended") {
+    if (req.body.status === "suspended") {
       await db.delete(studentSessionsTable).where(eq(studentSessionsTable.studentId, id));
     }
     res.json(student);
@@ -230,8 +239,11 @@ router.delete("/admin/students/:id", requireAdmin, async (req, res, next) => {
 
 router.get("/learning/files", requireStudent, async (_req, res, next) => {
   try {
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    const allowed = getStudentAllowedCategories(student);
+    if (allowed.length === 0) { res.json([]); return; }
     const files = await db.select().from(learningFilesTable)
-      .where(eq(learningFilesTable.isPublished, true)).orderBy(desc(learningFilesTable.createdAt));
+      .where(and(eq(learningFilesTable.isPublished, true), inArray(learningFilesTable.category, allowed))).orderBy(desc(learningFilesTable.createdAt));
     res.json(files.map(({ storageName: _storageName, ...file }) => file));
   } catch (error) { next(error); }
 });
@@ -262,6 +274,19 @@ router.post("/admin/learning/files", requireAdmin, learningFileUpload, async (re
   } catch (error) { next(error); }
 });
 
+router.patch("/admin/learning/files/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const [file] = await db.update(learningFilesTable).set({
+      ...(req.body.title !== undefined && { title: String(req.body.title).trim() }),
+      ...(req.body.description !== undefined && { description: String(req.body.description).trim() || null }),
+      ...(req.body.category !== undefined && { category: String(req.body.category).trim() || "عام" }),
+      ...(req.body.isPublished !== undefined && { isPublished: Boolean(req.body.isPublished) }),
+    }).where(eq(learningFilesTable.id, Number(req.params.id))).returning();
+    if (!file) { res.status(404).json({ error: "الملف غير موجود" }); return; }
+    res.json(file);
+  } catch (error) { next(error); }
+});
+
 router.delete("/admin/learning/files/:id", requireAdmin, async (req, res, next) => {
   try {
     const [file] = await db.delete(learningFilesTable).where(eq(learningFilesTable.id, Number(req.params.id))).returning();
@@ -281,6 +306,7 @@ router.get("/learning/files/:id/download", async (req, res, next) => {
     const [file] = await db.select().from(learningFilesTable)
       .where(and(eq(learningFilesTable.id, Number(req.params.id)), eq(learningFilesTable.isPublished, true))).limit(1);
     if (!file) { res.status(404).json({ error: "File not found" }); return; }
+    if (student && !canStudentAccessCategory(student, file.category)) { res.status(403).json({ error: "الملف مش ضمن الكورس المسجل ليك" }); return; }
     const filePath = path.join(privateUploadDir, path.basename(file.storageName));
     if (!fs.existsSync(filePath)) { res.status(404).json({ error: "File missing from storage" }); return; }
     res.setHeader("Content-Type", file.mimeType);
@@ -292,12 +318,59 @@ router.get("/learning/files/:id/download", async (req, res, next) => {
 
 router.get("/learning/quizzes", requireStudent, async (_req, res, next) => {
   try {
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    const allowed = getStudentAllowedCategories(student);
+    if (allowed.length === 0) { res.json([]); return; }
     const quizzes = await db.select().from(quizzesTable)
-      .where(eq(quizzesTable.isPublished, true)).orderBy(desc(quizzesTable.createdAt));
+      .where(and(eq(quizzesTable.isPublished, true), inArray(quizzesTable.category, allowed))).orderBy(desc(quizzesTable.createdAt));
     res.json(quizzes.map((quiz) => ({
       ...quiz,
       questions: quiz.questions.map(({ correctIndex: _correctIndex, ...question }) => question),
     })));
+  } catch (error) { next(error); }
+});
+
+router.get("/learning/progress", requireStudent, async (_req, res, next) => {
+  try {
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    const allowed = getStudentAllowedCategories(student);
+    if (allowed.length === 0) { res.json([]); return; }
+    const rows = await db.select({
+      videoId: videoProgressTable.videoId,
+      progress: videoProgressTable.progress,
+      completed: videoProgressTable.completed,
+      updatedAt: videoProgressTable.updatedAt,
+    }).from(videoProgressTable)
+      .innerJoin(videosTable, eq(videoProgressTable.videoId, videosTable.id))
+      .where(and(eq(videoProgressTable.studentId, student.id), inArray(videosTable.category, allowed)));
+    res.json(rows);
+  } catch (error) { next(error); }
+});
+
+router.put("/learning/progress/:videoId", requireStudent, async (req, res, next) => {
+  try {
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    const videoId = Number(req.params.videoId);
+    const progress = Math.max(0, Math.min(100, Math.round(Number(req.body.progress))));
+    if (!Number.isInteger(videoId) || videoId <= 0 || !Number.isFinite(progress)) {
+      res.status(400).json({ error: "بيانات التقدم غير صالحة" });
+      return;
+    }
+    const [video] = await db.select().from(videosTable).where(eq(videosTable.id, videoId)).limit(1);
+    if (!video || !canStudentAccessCategory(student, video.category)) {
+      res.status(403).json({ error: "الفيديو مش ضمن الكورس المسجل ليك" });
+      return;
+    }
+    const [current] = await db.select().from(videoProgressTable)
+      .where(and(eq(videoProgressTable.studentId, student.id), eq(videoProgressTable.videoId, videoId))).limit(1);
+    const savedProgress = Math.max(current?.progress ?? 0, progress);
+    const [saved] = await db.insert(videoProgressTable).values({
+      studentId: student.id, videoId, progress: savedProgress, completed: savedProgress >= 100, updatedAt: new Date(),
+    }).onConflictDoUpdate({
+      target: [videoProgressTable.studentId, videoProgressTable.videoId],
+      set: { progress: savedProgress, completed: savedProgress >= 100, updatedAt: new Date() },
+    }).returning();
+    res.json({ videoId: saved.videoId, progress: saved.progress, completed: saved.completed });
   } catch (error) { next(error); }
 });
 
@@ -323,6 +396,21 @@ router.post("/admin/learning/quizzes", requireAdmin, async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+router.patch("/admin/learning/quizzes/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const [quiz] = await db.update(quizzesTable).set({
+      ...(req.body.title !== undefined && { title: String(req.body.title).trim() }),
+      ...(req.body.description !== undefined && { description: String(req.body.description).trim() || null }),
+      ...(req.body.category !== undefined && { category: String(req.body.category).trim() || "عام" }),
+      ...(req.body.passingScore !== undefined && { passingScore: Math.max(0, Math.min(100, Number(req.body.passingScore))) }),
+      ...(req.body.isPublished !== undefined && { isPublished: Boolean(req.body.isPublished) }),
+      updatedAt: new Date(),
+    }).where(eq(quizzesTable.id, Number(req.params.id))).returning();
+    if (!quiz) { res.status(404).json({ error: "الاختبار غير موجود" }); return; }
+    res.json(quiz);
+  } catch (error) { next(error); }
+});
+
 router.delete("/admin/learning/quizzes/:id", requireAdmin, async (req, res, next) => {
   try {
     const [quiz] = await db.delete(quizzesTable).where(eq(quizzesTable.id, Number(req.params.id))).returning();
@@ -339,10 +427,13 @@ router.post("/learning/quizzes/:id/submit", requireStudent, async (req, res, nex
     if (!quiz || answers.length !== quiz.questions.length) {
       res.status(400).json({ error: "Quiz or answers are invalid" }); return;
     }
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    if (!canStudentAccessCategory(student, quiz.category)) {
+      res.status(403).json({ error: "الاختبار مش ضمن الكورس المسجل ليك" }); return;
+    }
     const correct = quiz.questions.reduce((count, question, index) => count + (answers[index] === question.correctIndex ? 1 : 0), 0);
     const score = Math.round((correct / quiz.questions.length) * 100);
     const passed = score >= quiz.passingScore;
-    const student = res.locals.student as typeof studentsTable.$inferSelect;
     const [attempt] = await db.insert(quizAttemptsTable).values({
       quizId: quiz.id, studentId: student.id, answers, score, passed,
     }).returning();

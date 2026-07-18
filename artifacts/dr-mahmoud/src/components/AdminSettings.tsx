@@ -299,12 +299,9 @@ export function AdminSettings() {
 
     setIsUploading(true);
     try {
-      const token = localStorage.getItem("dr_mahmoud_admin_pwd") || "";
       const res = await fetch("/api/upload", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
         body: form,
       });
 

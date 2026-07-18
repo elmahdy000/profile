@@ -6,12 +6,12 @@ import { eq, asc } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
 import { createHmac, timingSafeEqual } from "crypto";
-import { getApprovedStudent } from "../middleware/student-auth";
+import { canStudentAccessCategory, getApprovedStudent } from "../middleware/student-auth";
 
 const router: IRouter = Router();
 
 const streamTokenSecret = process.env.STREAM_TOKEN_SECRET || process.env.ADMIN_PASSWORD!;
-const STREAM_TOKEN_TTL_SECONDS = 60 * 60 * 4;
+const STREAM_TOKEN_TTL_SECONDS = 60 * 10;
 const VIDEO_CONTENT_TYPES: Record<string, string> = {
   ".mp4": "video/mp4",
   ".webm": "video/webm",
@@ -77,10 +77,11 @@ router.get("/videos", async (req, res, next) => {
       res.status(401).json({ error: "Student approval and login are required" });
       return;
     }
+    const allowedVideos = videos.filter((video) => canStudentAccessCategory(approvedStudent, video.category));
 
     // 1. Group videos by category to find the first video of each category
     const videosByCategory: Record<string, typeof videos> = {};
-    for (const v of videos) {
+    for (const v of allowedVideos) {
       if (!videosByCategory[v.category]) {
         videosByCategory[v.category] = [];
       }
@@ -108,10 +109,9 @@ router.get("/videos", async (req, res, next) => {
       .filter(Boolean);
 
     // 4. Return masked videos to the student
-    const studentVideos = videos.map((v) => {
+    const studentVideos = allowedVideos.map((v) => {
       const isFirstVideo = firstVideoIds.has(v.id);
       const isUnlocked =
-        Boolean(approvedStudent) ||
         !v.isProtected ||
         isFirstVideo ||
         (v.accessKey && studentKeys.includes(v.accessKey.toLowerCase().trim()));
@@ -294,6 +294,16 @@ router.get("/videos/:id/stream", async (req, res, next) => {
 
     const isAdmin = isAdminRequest(req);
     const hasValidToken = isValidStreamToken(video.id, req.query.token);
+
+    const approvedStudent = await getApprovedStudent(req);
+    if (!isAdmin && !approvedStudent) {
+      res.status(401).json({ error: "Student approval and login are required" });
+      return;
+    }
+    if (approvedStudent && !canStudentAccessCategory(approvedStudent, video.category)) {
+      res.status(403).json({ error: "الفيديو مش ضمن الكورس المسجل ليك" });
+      return;
+    }
 
     if (!isUnlocked && !isAdmin && !hasValidToken) {
       res.status(403).json({ error: "This content is protected and locked." });
