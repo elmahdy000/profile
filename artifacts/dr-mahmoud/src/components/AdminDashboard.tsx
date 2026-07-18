@@ -50,8 +50,10 @@ import {
   Upload,
   Play,
   Download,
+  Users,
 } from "lucide-react";
 import { AdminSettings } from "./AdminSettings";
+import { AdminLearning } from "./AdminLearning";
 import { useToast } from "@/hooks/use-toast";
 
 const getYoutubeThumbnail = (url: string) => {
@@ -77,7 +79,7 @@ export default function AdminDashboard() {
   const [passwordInput, setPasswordInput] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [authError, setAuthError] = useState("");
-  const [activeTab, setActiveTab] = useState<"bookings" | "courses" | "podcasts" | "curriculums" | "videos" | "settings">("bookings");
+  const [activeTab, setActiveTab] = useState<"bookings" | "courses" | "podcasts" | "curriculums" | "videos" | "learning" | "settings">("bookings");
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string>("all");
   const [selectedVideoCategoryFilter, setSelectedVideoCategoryFilter] = useState<string>("all");
   const [isVideoUploading, setIsVideoUploading] = useState(false);
@@ -220,6 +222,9 @@ export default function AdminDashboard() {
     order: 0,
     isProtected: false,
     accessKey: "",
+    durationText: "",
+    lessonsCount: "",
+    level: "",
   });
   const [previewVideo, setPreviewVideo] = useState<Video | null>(null);
 
@@ -256,6 +261,9 @@ export default function AdminDashboard() {
         order: video.order,
         isProtected: (video as any).isProtected ?? false,
         accessKey: (video as any).accessKey || "",
+        durationText: (video as any).durationText || "",
+        lessonsCount: (video as any).lessonsCount != null ? String((video as any).lessonsCount) : "",
+        level: (video as any).level || "",
       });
     } else {
       setSelectedVideoId(null);
@@ -268,6 +276,9 @@ export default function AdminDashboard() {
         order: 0,
         isProtected: false,
         accessKey: "",
+        durationText: "",
+        lessonsCount: "",
+        level: "",
       });
     }
     setIsVideoModalOpen(true);
@@ -640,6 +651,9 @@ export default function AdminDashboard() {
       order: Number(videoForm.order),
       isProtected: videoForm.isProtected,
       accessKey: videoForm.isProtected ? videoForm.accessKey || undefined : undefined,
+      durationText: videoForm.durationText || undefined,
+      lessonsCount: videoForm.lessonsCount ? Number(videoForm.lessonsCount) : undefined,
+      level: videoForm.level || undefined,
     };
 
     try {
@@ -911,6 +925,18 @@ export default function AdminDashboard() {
             >
               <VideoIcon className="w-5 h-5" />
               <span>الفيديوهات والقوائم</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("learning")}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right text-sm font-medium transition-all ${
+                activeTab === "learning"
+                  ? "bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/10"
+                  : "hover:bg-muted/60 text-muted-foreground hover:text-foreground/80"
+              }`}
+            >
+              <Users className="w-5 h-5" />
+              <span>إدارة المنصة والطلاب</span>
             </button>
 
             <button
@@ -1601,6 +1627,7 @@ export default function AdminDashboard() {
           )}
 
           {activeTab === "settings" && <AdminSettings />}
+          {activeTab === "learning" && <AdminLearning />}
           </div>
         </main>
       </div>
@@ -2170,6 +2197,43 @@ export default function AdminDashboard() {
                     onChange={(e) => setVideoForm({ ...videoForm, order: Number(e.target.value) })}
                     className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">المدة (اختياري)</label>
+                  <input
+                    type="text"
+                    value={videoForm.durationText}
+                    onChange={(e) => setVideoForm({ ...videoForm, durationText: e.target.value })}
+                    placeholder="مثال: 12 ساعة"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">عدد الدروس (اختياري)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={videoForm.lessonsCount}
+                    onChange={(e) => setVideoForm({ ...videoForm, lessonsCount: e.target.value })}
+                    placeholder="مثال: 24"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">المستوى (اختياري)</label>
+                  <select
+                    value={videoForm.level}
+                    onChange={(e) => setVideoForm({ ...videoForm, level: e.target.value })}
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
+                  >
+                    <option value="">غير محدد</option>
+                    <option value="مبتدئ">مبتدئ</option>
+                    <option value="متوسط">متوسط</option>
+                    <option value="متقدم">متقدم</option>
+                  </select>
                 </div>
 
                 <div className="md:col-span-2">

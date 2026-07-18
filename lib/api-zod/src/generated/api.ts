@@ -295,6 +295,9 @@ export const ListVideosResponseItem = zod.object({
   "order": zod.number(),
   "isProtected": zod.boolean(),
   "accessKey": zod.string().nullish(),
+  "durationText": zod.string().nullish(),
+  "lessonsCount": zod.number().nullish(),
+  "level": zod.string().nullish(),
   "createdAt": zod.string()
 })
 export const ListVideosResponse = zod.array(ListVideosResponseItem)
@@ -314,7 +317,10 @@ export const CreateVideoBody = zod.object({
   "type": zod.string(),
   "order": zod.number().optional(),
   "isProtected": zod.boolean().default(createVideoBodyIsProtectedDefault),
-  "accessKey": zod.string().nullish()
+  "accessKey": zod.string().nullish(),
+  "durationText": zod.string().nullish(),
+  "lessonsCount": zod.number().nullish(),
+  "level": zod.string().nullish()
 })
 
 
@@ -336,7 +342,10 @@ export const UpdateVideoBody = zod.object({
   "type": zod.string(),
   "order": zod.number().optional(),
   "isProtected": zod.boolean().default(updateVideoBodyIsProtectedDefault),
-  "accessKey": zod.string().nullish()
+  "accessKey": zod.string().nullish(),
+  "durationText": zod.string().nullish(),
+  "lessonsCount": zod.number().nullish(),
+  "level": zod.string().nullish()
 })
 
 export const UpdateVideoResponse = zod.object({
@@ -349,6 +358,9 @@ export const UpdateVideoResponse = zod.object({
   "order": zod.number(),
   "isProtected": zod.boolean(),
   "accessKey": zod.string().nullish(),
+  "durationText": zod.string().nullish(),
+  "lessonsCount": zod.number().nullish(),
+  "level": zod.string().nullish(),
   "createdAt": zod.string()
 })
 

@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, GraduationCap } from "lucide-react";
+import { Bell, Menu, X } from "lucide-react";
 import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -13,13 +13,10 @@ export function Navbar() {
 
   const navLinks = [
     { label: "الرئيسية", href: "/#hero", id: "hero" },
-    { label: "المسارات التعليمية", href: "/#learning-tracks", id: "learning-tracks" },
-    { label: "الكورسات", href: "/#courses", id: "courses" },
-    { label: "الورش المجانية", href: "/#free-workshop", id: "free-workshop" },
+    { label: "المسارات", href: "/#tracks", id: "tracks" },
     { label: "عن الدكتور", href: "/#about", id: "about" },
     { label: "آراء الطلاب", href: "/#testimonials", id: "testimonials" },
-    { label: "المنصة التعليمية", href: "/#youtube-lectures", id: "youtube-lectures" },
-    { label: "تواصل معنا", href: "/#contact", id: "contact" },
+    { label: "المنصة التعليمية", href: "/platform", id: "youtube-lectures" },
   ];
 
   useEffect(() => {
@@ -44,15 +41,15 @@ export function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 w-full bg-background/85 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto px-4 lg:px-8 h-20 flex items-center justify-between">
+      <nav className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-xl border-b border-border/70">
+        <div className="mx-auto max-w-7xl px-4 md:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3 shrink-0">
-            <img src={logoUrl} alt="Logo" className="w-10 h-10 object-cover rounded-full border border-primary/20 shrink-0" />
+            <img src={logoUrl} alt="لوجو أكاديمية د. محمود المهدي" className="w-10 h-10 object-cover rounded-full border border-primary/20 shrink-0" />
             <div className="flex flex-col text-right">
-              <span className="font-bold text-base md:text-lg leading-tight text-foreground">{siteName.split("|")[0].trim()}</span>
+              <span className="font-black text-base md:text-lg leading-tight text-primary">Academy Portal</span>
               {siteName.split("|")[1] && (
                 <span className="text-[10px] text-muted-foreground font-medium leading-none mt-0.5 max-w-[180px] md:max-w-xs truncate">
-                  {siteName.split("|")[1].replace("بالزقازيق", "").trim()}
+                  {siteName.split("|")[0].trim()}
                 </span>
               )}
             </div>
@@ -82,11 +79,12 @@ export function Navbar() {
               ))}
             </ul>
             <div className="flex items-center gap-2">
-              <Button asChild variant="outline" size="sm" className="rounded-full font-bold h-10 text-xs border-primary text-primary hover:bg-primary/5">
+              <Bell className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              <Button asChild variant="outline" size="sm" className="rounded-lg font-bold h-10 text-xs border-primary text-primary hover:bg-primary/5">
                 <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">تواصل واتساب</a>
               </Button>
-              <Button asChild size="sm" className="bg-primary hover:bg-primary/95 text-primary-foreground rounded-full px-5 font-bold h-10 text-xs shadow-md transition-all gap-2">
-                <a href="/#youtube-lectures">
+              <Button asChild size="sm" className="bg-primary hover:bg-primary/95 text-primary-foreground rounded-lg px-5 font-bold h-10 text-xs shadow-md transition-all gap-2">
+                <a href="/platform">
                   دخول المنصة
                 </a>
               </Button>
@@ -96,7 +94,7 @@ export function Navbar() {
           <button
             className="lg:hidden text-foreground z-50 p-2 hover:bg-muted rounded-lg transition-colors"
             onClick={() => setIsOpen(!isOpen)}
-            aria-label="Toggle menu"
+            aria-label={isOpen ? "اقفل القائمة" : "افتح القائمة"}
             data-testid="button-mobile-menu"
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
@@ -130,7 +128,7 @@ export function Navbar() {
               ))}
               <li className="mt-6 flex flex-col gap-3 w-full">
                 <Button asChild size="lg" className="w-full bg-primary hover:bg-primary/95 text-primary-foreground rounded-full font-bold h-14 text-base shadow-md transition-all gap-2">
-                  <a href="/#youtube-lectures" onClick={() => setIsOpen(false)}>دخول المنصة</a>
+                  <a href="/platform" onClick={() => setIsOpen(false)}>دخول المنصة</a>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="w-full rounded-full font-bold h-14 text-base border-primary text-primary hover:bg-primary/5">
                   <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer" onClick={() => setIsOpen(false)}>تواصل واتساب</a>

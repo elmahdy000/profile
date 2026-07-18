@@ -52,3 +52,12 @@ Thumbs.db
 .env
 public/uploads/
 artifacts/api-server/public/uploads/
+
+# Temporary files and documents
+*.docx
+ffffffffffffffffffffffffffffff.txt
+find_vscode_backups.py
+stitch_..zip
+stitch_/
+report_render/
+artifacts/dr-mahmoud/admin_open.py

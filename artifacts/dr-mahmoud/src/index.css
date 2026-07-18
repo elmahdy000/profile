@@ -1,8 +1,18 @@
 @import "tailwindcss";
+
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
+
+@utility input-admin {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+  padding: 0.7rem 0.85rem;
+  outline: none;
+}
 
 /* ── Self-hosted Cairo (no network dependency) ── */
 /* Arabic subset */
@@ -124,7 +134,7 @@
   --elevate-2: rgba(15, 23, 42, 0.04);
 
   /* Soft Background: #F8FAFC */
-  --background: 210 40% 98%;
+  --background: 240 100% 99%;
 
   /* Dark Text: #0F172A */
   --foreground: 222 47% 11%;
@@ -142,7 +152,7 @@
   --sidebar-border: 214 32% 91%;
 
   /* Royal Blue primary: #2563EB */
-  --sidebar-primary: 221 83% 53%;
+  --sidebar-primary: 211 100% 35%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 210 40% 96.1%;
   --sidebar-accent-foreground: 222 47% 11%;
@@ -153,11 +163,11 @@
   --popover-border: 214 32% 91%;
 
   /* Royal Blue primary: #2563EB */
-  --primary: 221 83% 53%;
+  --primary: 211 100% 35%;
   --primary-foreground: 0 0% 100%;
 
   /* Deep Blue secondary: #1E40AF */
-  --secondary: 221 72% 40%;
+  --secondary: 195 100% 38%;
   --secondary-foreground: 0 0% 100%;
 
   /* Muted background: #F1F5F9 */
@@ -176,8 +186,8 @@
   --destructive-foreground: 0 0% 100%;
 
   --input: 214 32% 91%;
-  --ring: 221 83% 53%;
-  --chart-1: 221 83% 53%;
+  --ring: 211 100% 35%;
+  --chart-1: 211 100% 35%;
   --chart-2: 221 72% 40%;
   --chart-3: 214 68% 14%;
   --chart-4: 142 76% 36%;
@@ -186,7 +196,7 @@
   --app-font-sans: 'Cairo', sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
-  --radius: .75rem;
+  --radius: .5rem;
   --shadow-2xs: 0px 1px 2px 0px rgba(0,0,0,0.05);
   --shadow-xs: 0px 1px 2px 0px rgba(0,0,0,0.05);
   --shadow-sm: 0px 1px 3px 0px rgba(0,0,0,0.08), 0px 1px 2px -1px rgba(0,0,0,0.04);
@@ -259,6 +269,24 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+}
+
+.academy-hero {
+  background: linear-gradient(120deg, #f9f9ff 0%, #eef5ff 55%, #e5f1ff 100%);
+}
+
+.academy-card {
+  border: 1px solid rgba(194, 198, 212, .72);
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 4px 20px rgba(17, 28, 45, .05);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.academy-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 86, 179, .28);
+  box-shadow: 0 10px 30px rgba(17, 28, 45, .10);
 }
 
 /* Custom scrollbar */

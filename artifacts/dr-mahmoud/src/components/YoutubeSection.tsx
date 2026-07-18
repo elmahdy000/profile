@@ -1,124 +1,43 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Youtube, Play, ExternalLink, Library, Tv, ChevronLeft, Loader2, Lock, Unlock,
-  Search, SlidersHorizontal, Bookmark, Share2, Clock, BookOpen, Award, Calendar,
-  Star, Users, Sparkles, Filter, ArrowUpDown, Copy, Check
+  Youtube, Play, ExternalLink, Tv, ChevronLeft, Loader2, Lock, Unlock,
+  Search, SlidersHorizontal, Bookmark, Share2, Clock, BookOpen, Award, ArrowUpDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListVideos } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  type VideoItem,
+  getYouTubeVideoId,
+  getYouTubePlaylistId,
+  getYoutubeThumbnail,
+} from "@/lib/video";
 
-interface VideoItem {
-  id?: number;
-  category: string;
-  title: string;
-  description?: string | null;
-  youtubeUrl: string;
-  type: "video" | "playlist";
-  order: number;
-  isProtected?: boolean;
-}
-
-// Helper to extract YouTube video ID
-function getYouTubeVideoId(url: string): string | null {
-  if (!url) return null;
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{11})/,
-    /youtube\.com\/live\/([A-Za-z0-9_-]{11})/,
-  ];
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match) return match[1];
+function readStoredJson<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) as T : fallback;
+  } catch {
+    localStorage.removeItem(key);
+    return fallback;
   }
-  return null;
 }
 
-// Helper to extract YouTube playlist ID
-function getYouTubePlaylistId(url: string): string | null {
-  if (!url) return null;
-  const match = url.match(/[?&]list=([^#\&\?]+)/);
-  return match ? match[1] : null;
-}
-
-// Helper to get thumbnail URL
-function getYoutubeThumbnail(url: string): string {
-  const vidId = getYouTubeVideoId(url);
-  if (vidId) {
-    return `https://img.youtube.com/vi/${vidId}/hqdefault.jpg`;
-  }
-  return "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80";
-}
-
-// Rich metadata enrichment based on item seed
-function getEnrichedMetadata(item: VideoItem) {
-  const seed = item.id || (item.title ? item.title.length : 1);
-  
-  const durations = ["18 ساعة", "12 ساعة", "8 ساعات", "15 ساعة", "24 ساعة"];
-  const lessons = [24, 16, 10, 18, 32];
-  const difficulties = ["مبتدئ", "متوسط", "متقدم"];
-  const projects = ["3 مشاريع عملي", "مشروعين عملي", "4 مشاريع عملي", "مشروع متكامل"];
-  const ratings = [4.9, 4.8, 5.0, 4.7];
-  const students = ["340+ طالب", "180+ طالب", "520+ طالب", "290+ طالب"];
-  const updates = ["يونيو 2026", "مايو 2026", "ابريل 2026", "يوليو 2026"];
-
-  const idx = seed % 4;
-  const diffIdx = seed % 3;
-  const projIdx = seed % 4;
-
+// Real metadata read from the video record (entered by the admin).
+// Returns only the values that actually exist — no fabricated numbers.
+function getVideoMeta(item: VideoItem) {
   return {
-    duration: durations[idx],
-    lessonsCount: lessons[idx],
-    difficulty: difficulties[diffIdx],
-    projectCount: projects[projIdx],
-    rating: ratings[idx],
-    studentCount: students[idx],
-    lastUpdated: updates[idx],
+    duration: item.durationText || null,
+    lessonsCount: item.lessonsCount ?? null,
+    difficulty: item.level || null,
     instructor: {
       name: "د. محمود المهدي",
-      avatar: "/dr-mahmoud-photo.png"
-    }
+      avatar: "/dr-mahmoud-photo.png",
+    },
   };
 }
-
-const fallbackVideos: VideoItem[] = [
-  {
-    id: 101,
-    category: "سي بلس بلس C++",
-    title: "كورس تعلم البرمجة للمبتدئين بلغة C++ من الصفر",
-    description: "شرح شامل وأساسي لأسس البرمجة وتصميم الخوارزميات وتطبيقها بلغة سي بلس بلس لطلاب الجامعات والمدارس.",
-    youtubeUrl: "https://www.youtube.com/playlist?list=PL43pGnjiVwgS6cQW6a-8Hj4_N292f7XwX",
-    type: "playlist",
-    order: 1,
-  },
-  {
-    id: 102,
-    category: "هياكل البيانات Data Structures",
-    title: "شرح هياكل البيانات بالتفصيل Data Structures & Algorithms",
-    description: "المفاهيم المتقدمة لهياكل البيانات مثل الأشجار والقوائم المرتبطة والرسوم البيانية وتطبيقاتها البرمجية.",
-    youtubeUrl: "https://www.youtube.com/playlist?list=PL43pGnjiVwgTq0Kwt-jP_Gndn1154cQk2",
-    type: "playlist",
-    order: 2,
-  },
-  {
-    id: 103,
-    category: "برمجة ثانوية عامة",
-    title: "تأسيس البرمجة وعلوم الحاسب لطلاب المدارس والثانوية العامة",
-    description: "بوابتك للدخول إلى عالم التكنولوجيا وصناعة التطبيقات والمواقع في سن مبكرة.",
-    youtubeUrl: "https://www.youtube.com/playlist?list=PL43pGnjiVwgSxY6b5O_Hmsj-0YhT_a4R3",
-    type: "playlist",
-    order: 3,
-  },
-  {
-    id: 104,
-    category: "برمجة للمبتدئين",
-    title: "كيف تبدأ البرمجة بالطريقة الصحيحة وتتجنب الأخطاء الشائعة؟",
-    description: "نصائح وتوجيهات هامة لكل طالب يرغب في بدء رحلته في عالم التطوير وتصميم البرمجيات.",
-    youtubeUrl: "https://www.youtube.com/watch?v=M-5T8T2p5gQ",
-    type: "video",
-    order: 4,
-  },
-];
 
 // ─── Modal Player Component ───
 function VideoPlayerModal({
@@ -135,24 +54,11 @@ function VideoPlayerModal({
     const handleFocus = () => setIsFocused(true);
     const handleBlur = () => setIsFocused(false);
 
-    // Save initial progress in localStorage when user starts watching
-    if (typeof window !== "undefined" && item.id) {
-      const progressStr = localStorage.getItem("dr_mahmoud_watch_progress") || "{}";
-      const progressObj = JSON.parse(progressStr);
-      if (!progressObj[item.id]) {
-        // Initialize with random progress between 10% and 35% for visualization
-        progressObj[item.id] = Math.floor(Math.random() * 25) + 10;
-        localStorage.setItem("dr_mahmoud_watch_progress", JSON.stringify(progressObj));
-      } else if (progressObj[item.id] < 95) {
-        // Increment progress slightly on reopening
-        progressObj[item.id] = Math.min(98, progressObj[item.id] + 15);
-        localStorage.setItem("dr_mahmoud_watch_progress", JSON.stringify(progressObj));
-      }
-      // Dispatch custom event to update parent UI state
-      window.dispatchEvent(new Event("watch_progress_updated"));
-    }
-
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
       if (
         e.key === "PrintScreen" ||
         (e.ctrlKey && (e.key === "s" || e.key === "p" || e.key === "c")) ||
@@ -166,20 +72,23 @@ function VideoPlayerModal({
     window.addEventListener("focus", handleFocus);
     window.addEventListener("blur", handleBlur);
     window.addEventListener("keydown", handleKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
     return () => {
       window.removeEventListener("focus", handleFocus);
       window.removeEventListener("blur", handleBlur);
       window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
     };
-  }, [item]);
+  }, [item, onClose]);
 
   const vidId = getYouTubeVideoId(item.youtubeUrl);
   const playlistId = getYouTubePlaylistId(item.youtubeUrl);
 
   const isStreamUrl = item.youtubeUrl?.startsWith("/api/videos/") || item.youtubeUrl?.startsWith("/uploads/");
   const studentKeys = typeof window !== "undefined" ? localStorage.getItem("dr_mahmoud_unlock_keys") || "" : "";
-  const streamUrl = isStreamUrl ? `${item.youtubeUrl}?keys=${encodeURIComponent(studentKeys)}` : "";
+  const streamUrl = isStreamUrl ? item.youtubeUrl : "";
 
   let embedUrl = "";
   if (!isStreamUrl) {
@@ -190,11 +99,26 @@ function VideoPlayerModal({
     }
   }
 
+  // Track REAL watch progress from the local video element
+  const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    if (typeof window === "undefined" || !item.id) return;
+    const el = e.currentTarget;
+    if (!el.duration || Number.isNaN(el.duration)) return;
+    const percent = Math.min(100, Math.round((el.currentTime / el.duration) * 100));
+    // Save at most in whole-percent steps to avoid excessive writes
+    const progressObj = readStoredJson<Record<number, number>>("dr_mahmoud_watch_progress", {});
+    // Only move progress forward, never backward
+    if ((progressObj[item.id] || 0) < percent) {
+      progressObj[item.id] = percent;
+      localStorage.setItem("dr_mahmoud_watch_progress", JSON.stringify(progressObj));
+      window.dispatchEvent(new Event("watch_progress_updated"));
+    }
+  };
+
   // Handle setting 100% completed
   const handleVideoEnded = () => {
     if (typeof window !== "undefined" && item.id) {
-      const progressStr = localStorage.getItem("dr_mahmoud_watch_progress") || "{}";
-      const progressObj = JSON.parse(progressStr);
+      const progressObj = readStoredJson<Record<number, number>>("dr_mahmoud_watch_progress", {});
       progressObj[item.id] = 100;
       localStorage.setItem("dr_mahmoud_watch_progress", JSON.stringify(progressObj));
       window.dispatchEvent(new Event("watch_progress_updated"));
@@ -227,6 +151,7 @@ function VideoPlayerModal({
             </div>
             <button
               onClick={onClose}
+              aria-label="إغلاق مشغل الفيديو"
               className="w-9 h-9 rounded-xl bg-muted hover:bg-muted/80 flex items-center justify-center text-foreground/70 hover:text-foreground transition-all border border-border"
             >
               ✕
@@ -264,6 +189,7 @@ function VideoPlayerModal({
                 disablePictureInPicture
                 onContextMenu={(e) => e.preventDefault()}
                 autoPlay
+                onTimeUpdate={handleTimeUpdate}
                 onEnded={handleVideoEnded}
               />
             ) : embedUrl ? (
@@ -462,7 +388,7 @@ function UnlockModal({
 
 
 export function YoutubeSection() {
-  const { data: dbVideos, isLoading, refetch } = useListVideos();
+  const { data: dbVideos, isLoading, isError, refetch } = useListVideos();
   const [activeCategory, setActiveCategory] = useState("all");
   const [activePlayer, setActivePlayer] = useState<VideoItem | null>(null);
   const [unlockModalItem, setUnlockModalItem] = useState<VideoItem | null>(null);
@@ -473,7 +399,7 @@ export function YoutubeSection() {
   const [selectedType, setSelectedType] = useState<string>("all");
   const [selectedAccess, setSelectedAccess] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState<"order" | "title" | "rating" | "recent">("order");
+  const [sortBy, setSortBy] = useState<"order" | "title" | "recent">("order");
   const [bookmarks, setBookmarks] = useState<number[]>([]);
   const [watchProgress, setWatchProgress] = useState<Record<number, number>>({});
   const { toast } = useToast();
@@ -491,22 +417,11 @@ export function YoutubeSection() {
     if (typeof window === "undefined") return;
 
     // Bookmarks
-    const savedBookmarks = localStorage.getItem("dr_mahmoud_bookmarks");
-    if (savedBookmarks) {
-      setBookmarks(JSON.parse(savedBookmarks));
-    }
+    setBookmarks(readStoredJson<number[]>("dr_mahmoud_bookmarks", []));
 
-    // Progress setup helper function
+    // Progress setup helper function — reads REAL saved progress only
     const loadProgress = () => {
-      const progressStr = localStorage.getItem("dr_mahmoud_watch_progress");
-      if (progressStr) {
-        setWatchProgress(JSON.parse(progressStr));
-      } else {
-        // Initialize mock progress values for high fidelity first load
-        const mockProg = { 101: 35, 102: 70, 103: 15 };
-        localStorage.setItem("dr_mahmoud_watch_progress", JSON.stringify(mockProg));
-        setWatchProgress(mockProg);
-      }
+      setWatchProgress(readStoredJson<Record<number, number>>("dr_mahmoud_watch_progress", {}));
     };
 
     loadProgress();
@@ -531,23 +446,33 @@ export function YoutubeSection() {
     localStorage.setItem("dr_mahmoud_bookmarks", JSON.stringify(updated));
   };
 
-  const shareCourse = (item: VideoItem) => {
-    const shareUrl = `${window.location.origin}/#youtube-lectures`;
-    navigator.clipboard.writeText(shareUrl).then(() => {
+  const shareCourse = async (item: VideoItem) => {
+    const shareUrl = `${window.location.origin}/platform`;
+    const sharedNatively = typeof navigator.share === "function";
+    try {
+      if (sharedNatively) {
+        await navigator.share({ title: item.title, text: item.description || item.title, url: shareUrl });
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+      }
       toast({
-        title: "تم نسخ رابط المنصة! 🔗",
-        description: `انسخ وشارك "${item.title}" مع زملائك.`,
+        title: sharedNatively ? "تمت مشاركة الكورس" : "تم نسخ رابط المنصة! 🔗",
+        description: `شارك "${item.title}" مع زملائك.`,
       });
-    });
+    } catch (error) {
+      if ((error as DOMException)?.name !== "AbortError") {
+        toast({ variant: "destructive", description: "تعذرت المشاركة. حاول مرة أخرى." });
+      }
+    }
   };
 
-  // Combine DB & Fallback (if DB empty)
-  const rawItems: VideoItem[] = dbVideos && dbVideos.length > 0 ? (dbVideos as any) : fallbackVideos;
+  // Do not render demo content while the real library is still loading.
+  const rawItems: VideoItem[] = dbVideos ? dbVideos as VideoItem[] : [];
 
-  // Enhance items with realistic UI metadata
+  // Enhance items with real metadata (entered by admin) + real watch progress
   const items = rawItems.map((item) => ({
     ...item,
-    meta: getEnrichedMetadata(item),
+    meta: getVideoMeta(item),
     progress: watchProgress[item.id || 0] || 0
   }));
 
@@ -569,7 +494,6 @@ export function YoutubeSection() {
     })
     .sort((a, b) => {
       if (sortBy === "title") return a.title.localeCompare(b.title);
-      if (sortBy === "rating") return b.meta.rating - a.meta.rating;
       if (sortBy === "recent") return (b.id || 0) - (a.id || 0);
       return a.order - b.order;
     });
@@ -594,12 +518,11 @@ export function YoutubeSection() {
             `https://img.youtube.com/vi/${vidId}/maxresdefault.jpg`,
             `https://img.youtube.com/vi/${vidId}/hqdefault.jpg`
           ],
-          "uploadDate": "2024-01-01T08:00:00+02:00",
           "embedUrl": `https://www.youtube.com/embed/${vidId}`,
           "contentUrl": item.youtubeUrl,
           "publisher": {
             "@type": "Organization",
-            "name": "Learn to Code",
+            "name": "د. محمود المهدي - Learn to Code",
             "logo": {
               "@type": "ImageObject",
               "url": "https://drelmahdy.com/dr-mahmoud-photo.png"
@@ -653,6 +576,12 @@ export function YoutubeSection() {
           </p>
         </motion.div>
 
+        {isError && (
+          <div role="status" className="max-w-3xl mx-auto mb-8 rounded-2xl border border-secondary/30 bg-secondary/10 px-5 py-3 text-center text-sm text-foreground">
+            تعذر الاتصال بالمكتبة الآن. حاول إعادة تحميل الصفحة بعد لحظات.
+          </div>
+        )}
+
         {/* ─── 1. Featured Course Card (Coursera / Netflix Style) ─── */}
         {featuredCourse && !isLoading && (
           <motion.div
@@ -671,7 +600,8 @@ export function YoutubeSection() {
                 />
                 <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-90 group-hover:opacity-100 transition-opacity">
                   <button
-                     onClick={() => handlePlayClick(featuredCourse)}
+                    onClick={() => handlePlayClick(featuredCourse)}
+                    aria-label={`تشغيل ${featuredCourse.title}`}
                     className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center shadow-2xl hover:scale-105 transition-transform"
                   >
                     <Play className="w-7 h-7 fill-current mr-1" />
@@ -689,11 +619,12 @@ export function YoutubeSection() {
                     <span className="bg-primary/10 text-primary border border-primary/20 text-xs font-bold px-3 py-1 rounded-md">
                       {featuredCourse.category}
                     </span>
-                    <span className="bg-muted text-muted-foreground text-xs px-2.5 py-1 rounded-md flex items-center gap-1">
-                      <Star className="w-3.5 h-3.5 fill-secondary text-secondary" />
-                      {featuredCourse.meta.rating}
-                    </span>
-                    <span className="text-xs text-muted-foreground">({featuredCourse.meta.studentCount})</span>
+                    {featuredCourse.meta.difficulty && (
+                      <span className="bg-muted text-muted-foreground text-xs px-2.5 py-1 rounded-md flex items-center gap-1">
+                        <Award className="w-3.5 h-3.5 text-secondary" />
+                        {featuredCourse.meta.difficulty}
+                      </span>
+                    )}
                   </div>
 
                   <h3 className="text-2xl lg:text-3xl font-black text-foreground group-hover:text-primary transition-colors">
@@ -719,12 +650,16 @@ export function YoutubeSection() {
 
                 {/* Meta details & Buttons */}
                 <div className="border-t border-border pt-4 flex flex-col sm:flex-row gap-4 items-center justify-between">
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {featuredCourse.meta.duration}</span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1"><BookOpen className="w-3.5 h-3.5" /> {featuredCourse.meta.lessonsCount} درس</span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1"><Award className="w-3.5 h-3.5" /> {featuredCourse.meta.difficulty}</span>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                    {featuredCourse.meta.duration && (
+                      <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {featuredCourse.meta.duration}</span>
+                    )}
+                    {featuredCourse.meta.lessonsCount != null && (
+                      <span className="flex items-center gap-1"><BookOpen className="w-3.5 h-3.5" /> {featuredCourse.meta.lessonsCount} درس</span>
+                    )}
+                    {featuredCourse.meta.difficulty && (
+                      <span className="flex items-center gap-1"><Award className="w-3.5 h-3.5" /> {featuredCourse.meta.difficulty}</span>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -736,6 +671,7 @@ export function YoutubeSection() {
                     </Button>
                     <button
                       onClick={() => toggleBookmark(featuredCourse.id)}
+                      aria-label={bookmarks.includes(featuredCourse.id || 0) ? "إزالة من المفضلة" : "إضافة إلى المفضلة"}
                       className={`p-3 rounded-xl border border-border hover:bg-muted transition-all ${
                         bookmarks.includes(featuredCourse.id || 0) ? "text-primary border-primary/20 bg-primary/5" : "text-muted-foreground"
                       }`}
@@ -769,9 +705,10 @@ export function YoutubeSection() {
                   className="bg-card border border-border rounded-2xl p-4 flex gap-4 items-center relative overflow-hidden group hover:border-primary/20 transition-all shadow-sm"
                 >
                   <div className="w-24 aspect-video rounded-lg overflow-hidden shrink-0 relative">
-                    <img src={getYoutubeThumbnail(item.youtubeUrl)} className="w-full h-full object-cover" />
+                    <img src={getYoutubeThumbnail(item.youtubeUrl)} alt={item.title} className="w-full h-full object-cover" />
                     <button
                       onClick={() => handlePlayClick(item)}
+                      aria-label={`استئناف ${item.title}`}
                       className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       <Play className="w-6 h-6 fill-white text-white" />
@@ -887,7 +824,6 @@ export function YoutubeSection() {
                   className="bg-transparent border-none focus:outline-none text-muted-foreground text-xs cursor-pointer"
                 >
                   <option value="order">الترتيب الافتراضي</option>
-                  <option value="rating">الأعلى تقييماً</option>
                   <option value="recent">المضاف حديثاً</option>
                   <option value="title">أبجدياً (أ-ي)</option>
                 </select>
@@ -966,6 +902,7 @@ export function YoutubeSection() {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
+                aria-pressed={activeCategory === cat}
                 className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all duration-300 ${
                   activeCategory === cat
                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/10 font-bold"
@@ -979,7 +916,7 @@ export function YoutubeSection() {
 
           {/* Grid List */}
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
               {[1, 2, 3].map((n) => (
                 <div key={n} className="bg-card border border-border rounded-3xl p-5 space-y-4 animate-pulse">
                   <div className="aspect-video bg-muted rounded-2xl w-full" />
@@ -996,7 +933,7 @@ export function YoutubeSection() {
           ) : (
             <motion.div
               layout
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
+              className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8"
             >
               <AnimatePresence mode="popLayout">
                 {filteredItems.map((item, idx) => (
@@ -1020,6 +957,7 @@ export function YoutubeSection() {
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300">
                         <button
                           onClick={() => handlePlayClick(item)}
+                          aria-label={item.youtubeUrl === "locked" ? `فتح نافذة تفعيل ${item.title}` : `تشغيل ${item.title}`}
                           className="w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-2xl scale-75 group-hover:scale-100 transition-all duration-300 hover:bg-primary/95"
                         >
                           {item.youtubeUrl === "locked" ? (
@@ -1048,12 +986,13 @@ export function YoutubeSection() {
                       </div>
 
                       {/* Top Left Quick Actions (Bookmark & Share) */}
-                      <div className="absolute top-4 left-4 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute top-4 left-4 flex items-center gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             toggleBookmark(item.id);
                           }}
+                          aria-label={bookmarks.includes(item.id || 0) ? `إزالة ${item.title} من المفضلة` : `إضافة ${item.title} إلى المفضلة`}
                           className={`w-8 h-8 rounded-lg bg-black/60 border border-border flex items-center justify-center hover:bg-black/80 transition-colors ${
                             bookmarks.includes(item.id || 0) ? "text-primary" : "text-white"
                           }`}
@@ -1065,6 +1004,7 @@ export function YoutubeSection() {
                             e.stopPropagation();
                             shareCourse(item);
                           }}
+                          aria-label={`مشاركة ${item.title}`}
                           className="w-8 h-8 rounded-lg bg-black/60 border border-border flex items-center justify-center hover:bg-black/80 text-white transition-colors"
                         >
                           <Share2 className="w-3.5 h-3.5" />
@@ -1079,7 +1019,11 @@ export function YoutubeSection() {
                           <span className="inline-block bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold px-2.5 py-0.5 rounded-md">
                             {item.category}
                           </span>
-                          <span className="text-[10px] text-muted-foreground">تحديث: {item.meta.lastUpdated}</span>
+                          {item.meta.difficulty && (
+                            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                              <Award className="w-3 h-3" /> {item.meta.difficulty}
+                            </span>
+                          )}
                         </div>
 
                         <h3 className="text-base font-bold text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors">
@@ -1092,32 +1036,28 @@ export function YoutubeSection() {
                         )}
                       </div>
 
-                      {/* Rating, students & Meta badges */}
-                      <div className="space-y-3 border-t border-border pt-4">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Star className="w-3.5 h-3.5 fill-secondary text-secondary" />
-                            <span className="font-bold text-foreground">{item.meta.rating}</span>
-                            <span>({item.meta.studentCount})</span>
-                          </div>
-                          <span>{item.meta.projectCount}</span>
-                        </div>
+                      {/* Real meta badges (duration / lessons) — only if provided */}
+                      {(item.meta.duration || item.meta.lessonsCount != null || item.progress > 0) && (
+                        <div className="space-y-3 border-t border-border pt-4">
+                          {(item.meta.duration || item.meta.lessonsCount != null) && (
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                              {item.meta.duration && (
+                                <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {item.meta.duration}</span>
+                              )}
+                              {item.meta.lessonsCount != null && (
+                                <span className="flex items-center gap-1"><BookOpen className="w-3.5 h-3.5" /> {item.meta.lessonsCount} درس</span>
+                              )}
+                            </div>
+                          )}
 
-                        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-                          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {item.meta.duration}</span>
-                          <span>•</span>
-                          <span className="flex items-center gap-1"><BookOpen className="w-3.5 h-3.5" /> {item.meta.lessonsCount} درس</span>
-                          <span>•</span>
-                          <span className="flex items-center gap-1"><Award className="w-3.5 h-3.5" /> {item.meta.difficulty}</span>
+                          {/* Progress bar if progress > 0 */}
+                          {item.progress > 0 && (
+                            <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+                              <div className="h-full bg-primary" style={{ width: `${item.progress}%` }} />
+                            </div>
+                          )}
                         </div>
-
-                        {/* Progress bar if progress > 0 */}
-                        {item.progress > 0 && (
-                          <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
-                            <div className="h-full bg-primary" style={{ width: `${item.progress}%` }} />
-                          </div>
-                        )}
-                      </div>
+                      )}
 
                       {/* Actions */}
                       <div className="flex items-center justify-between border-t border-border pt-4 mt-auto">
@@ -1139,7 +1079,7 @@ export function YoutubeSection() {
                           <ChevronLeft className="w-4 h-4 group-hover/btn:translate-x-[-2px] transition-transform" />
                         </button>
 
-                        {item.youtubeUrl !== "locked" && (
+                        {item.youtubeUrl !== "locked" && getYouTubeVideoId(item.youtubeUrl) && (
                           <a
                             href={item.youtubeUrl}
                             target="_blank"

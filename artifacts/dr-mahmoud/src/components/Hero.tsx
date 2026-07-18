@@ -112,7 +112,7 @@ export function Hero() {
                 className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 h-14 text-base font-bold shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 w-full sm:w-auto justify-center hover:scale-[1.02] border border-primary/20"
                 data-testid="button-enter-platform"
               >
-                <a href="/#youtube-lectures">
+                <a href="/platform">
                   <PlayCircle className="me-2 w-5 h-5 shrink-0" />
                   دخول المنصة
                 </a>

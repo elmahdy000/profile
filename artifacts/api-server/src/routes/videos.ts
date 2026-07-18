@@ -5,8 +5,50 @@ import { requireAdmin, isAdminRequest } from "../middleware/auth";
 import { eq, asc } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
+import { createHmac, timingSafeEqual } from "crypto";
+import { getApprovedStudent } from "../middleware/student-auth";
 
 const router: IRouter = Router();
+
+const streamTokenSecret = process.env.STREAM_TOKEN_SECRET || process.env.ADMIN_PASSWORD!;
+const STREAM_TOKEN_TTL_SECONDS = 60 * 60 * 4;
+const VIDEO_CONTENT_TYPES: Record<string, string> = {
+  ".mp4": "video/mp4",
+  ".webm": "video/webm",
+  ".ogg": "video/ogg",
+  ".ogv": "video/ogg",
+  ".mov": "video/quicktime",
+  ".avi": "video/x-msvideo",
+  ".mkv": "video/x-matroska",
+};
+
+function createStreamToken(videoId: number): string {
+  const expiresAt = Math.floor(Date.now() / 1000) + STREAM_TOKEN_TTL_SECONDS;
+  const payload = `${videoId}.${expiresAt}`;
+  const signature = createHmac("sha256", streamTokenSecret)
+    .update(payload)
+    .digest("base64url");
+  return `${expiresAt}.${signature}`;
+}
+
+function isValidStreamToken(videoId: number, token: unknown): boolean {
+  if (typeof token !== "string") return false;
+  const [expiresRaw, suppliedSignature] = token.split(".");
+  const expiresAt = Number(expiresRaw);
+  if (!expiresRaw || !suppliedSignature || !Number.isSafeInteger(expiresAt)) return false;
+  if (expiresAt < Math.floor(Date.now() / 1000)) return false;
+
+  const expectedSignature = createHmac("sha256", streamTokenSecret)
+    .update(`${videoId}.${expiresAt}`)
+    .digest("base64url");
+  const supplied = Buffer.from(suppliedSignature);
+  const expected = Buffer.from(expectedSignature);
+  return supplied.length === expected.length && timingSafeEqual(supplied, expected);
+}
+
+function getProtectedStreamUrl(videoId: number): string {
+  return `/api/videos/${videoId}/stream?token=${createStreamToken(videoId)}`;
+}
 
 // List all videos and playlists with gating logic
 router.get("/videos", async (req, res, next) => {
@@ -19,8 +61,20 @@ router.get("/videos", async (req, res, next) => {
     const isAdmin = isAdminRequest(req);
 
     if (isAdmin) {
-      // Admins see everything including raw access keys
-      res.json(videos);
+      // Admins see access keys, but local file paths are still replaced with
+      // short-lived stream URLs so uploads never need to be publicly served.
+      res.json(videos.map((video) => ({
+        ...video,
+        youtubeUrl: video.youtubeUrl.startsWith("/uploads/")
+          ? getProtectedStreamUrl(video.id)
+          : video.youtubeUrl,
+      })));
+      return;
+    }
+
+    const approvedStudent = await getApprovedStudent(req);
+    if (!approvedStudent) {
+      res.status(401).json({ error: "Student approval and login are required" });
       return;
     }
 
@@ -57,13 +111,14 @@ router.get("/videos", async (req, res, next) => {
     const studentVideos = videos.map((v) => {
       const isFirstVideo = firstVideoIds.has(v.id);
       const isUnlocked =
+        Boolean(approvedStudent) ||
         !v.isProtected ||
         isFirstVideo ||
         (v.accessKey && studentKeys.includes(v.accessKey.toLowerCase().trim()));
 
       const isLocalFile = v.youtubeUrl.startsWith("/uploads/");
       const videoSrcUrl = isUnlocked
-        ? (isLocalFile ? `/api/videos/${v.id}/stream` : v.youtubeUrl)
+        ? (isLocalFile ? getProtectedStreamUrl(v.id) : v.youtubeUrl)
         : "locked";
 
       return {
@@ -76,6 +131,9 @@ router.get("/videos", async (req, res, next) => {
         order: v.order,
         isProtected: v.isProtected,
         accessKey: null, // Never leak access key to clients!
+        durationText: v.durationText,
+        lessonsCount: v.lessonsCount,
+        level: v.level,
         createdAt: v.createdAt,
       };
     });
@@ -101,6 +159,9 @@ router.post("/videos", requireAdmin, async (req, res, next) => {
         order: validated.order ?? 0,
         isProtected: validated.isProtected ?? false,
         accessKey: validated.accessKey ?? null,
+        durationText: validated.durationText ?? null,
+        lessonsCount: validated.lessonsCount ?? null,
+        level: validated.level ?? null,
       })
       .returning();
 
@@ -127,6 +188,9 @@ router.put("/videos/:id", requireAdmin, async (req, res, next) => {
         ...(validated.order !== undefined && { order: validated.order }),
         ...(validated.isProtected !== undefined && { isProtected: validated.isProtected }),
         ...(validated.accessKey !== undefined && { accessKey: validated.accessKey }),
+        ...(validated.durationText !== undefined && { durationText: validated.durationText }),
+        ...(validated.lessonsCount !== undefined && { lessonsCount: validated.lessonsCount }),
+        ...(validated.level !== undefined && { level: validated.level }),
       })
       .where(eq(videosTable.id, id))
       .returning();
@@ -208,8 +272,9 @@ router.get("/videos/:id/stream", async (req, res, next) => {
       }
     }
 
-    // Check credentials (query keys or header keys)
-    const keysHeader = (req.query.keys as string || req.headers["x-unlock-keys"] as string || "").toLowerCase();
+    // Stream URLs use short-lived signed tokens. Unlock keys stay in request
+    // headers and are never exposed in URLs, browser history, or proxy logs.
+    const keysHeader = (req.headers["x-unlock-keys"] as string || "").toLowerCase();
     const isFirstVideo = firstVideoIds.has(video.id);
     const studentKeys = keysHeader
       .split(/[\s,]+/)
@@ -222,13 +287,14 @@ router.get("/videos/:id/stream", async (req, res, next) => {
       (video.accessKey && studentKeys.includes(video.accessKey.toLowerCase().trim()));
 
     const isAdmin = isAdminRequest(req);
+    const hasValidToken = isValidStreamToken(video.id, req.query.token);
 
-    if (!isUnlocked && !isAdmin) {
+    if (!isUnlocked && !isAdmin && !hasValidToken) {
       res.status(403).json({ error: "This content is protected and locked." });
       return;
     }
 
-    const filename = video.youtubeUrl.replace("/uploads/", "");
+    const filename = path.basename(video.youtubeUrl.replace("/uploads/", ""));
     const filePath = path.join(process.cwd(), "public", "uploads", filename);
 
     if (!fs.existsSync(filePath)) {
@@ -243,9 +309,10 @@ router.get("/videos/:id/stream", async (req, res, next) => {
     if (range) {
       const parts = range.replace(/bytes=/, "").split("-");
       const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const requestedEnd = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const end = Math.min(requestedEnd, fileSize - 1);
 
-      if (start >= fileSize) {
+      if (!Number.isSafeInteger(start) || start < 0 || !Number.isSafeInteger(end) || end < start || start >= fileSize) {
         res.status(416).send("Requested range not satisfiable\n" + start + " >= " + fileSize);
         return;
       }
@@ -256,7 +323,8 @@ router.get("/videos/:id/stream", async (req, res, next) => {
         "Content-Range": `bytes ${start}-${end}/${fileSize}`,
         "Accept-Ranges": "bytes",
         "Content-Length": chunksize,
-        "Content-Type": "video/mp4",
+        "Content-Type": VIDEO_CONTENT_TYPES[path.extname(filename).toLowerCase()] || "application/octet-stream",
+        "Cache-Control": "private, no-store",
       };
 
       res.writeHead(206, head);
@@ -264,7 +332,9 @@ router.get("/videos/:id/stream", async (req, res, next) => {
     } else {
       const head = {
         "Content-Length": fileSize,
-        "Content-Type": "video/mp4",
+        "Content-Type": VIDEO_CONTENT_TYPES[path.extname(filename).toLowerCase()] || "application/octet-stream",
+        "Accept-Ranges": "bytes",
+        "Cache-Control": "private, no-store",
       };
       res.writeHead(200, head);
       fs.createReadStream(filePath).pipe(res);

@@ -6,29 +6,14 @@ import { Switch, Route } from "wouter";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ScrollProgress } from "@/components/ScrollProgress";
-import { Navbar } from "@/components/Navbar";
-import { Hero } from "@/components/Hero";
-import { About } from "@/components/About";
-import { Services } from "@/components/Services";
-import { WhyChooseMe } from "@/components/WhyChooseMe";
-import { Courses } from "@/components/Courses";
-import { TeachingStyle } from "@/components/TeachingStyle";
-import { Portfolio } from "@/components/Portfolio";
-import { Articles } from "@/components/Articles";
-import { Testimonials } from "@/components/Testimonials";
-import { FAQ } from "@/components/FAQ";
-import { Pricing } from "@/components/Pricing";
-import { Podcast } from "@/components/Podcast";
-import { YoutubeSection } from "@/components/YoutubeSection";
-import { Contact } from "@/components/Contact";
-import { Footer } from "@/components/Footer";
-import { FloatingButtons } from "@/components/FloatingButtons";
+import { AcademyHome } from "@/components/AcademyHome";
 import AdminDashboard from "@/components/AdminDashboard";
 
 import BaccalaureatePage from "@/pages/BaccalaureatePage";
 import KidsPage from "@/pages/KidsPage";
 import UniversityPage from "@/pages/UniversityPage";
 import CurriculumPage from "@/pages/CurriculumPage";
+import PlatformPage from "@/pages/PlatformPage";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -43,28 +28,7 @@ function HomePage() {
   }, []);
 
   return (
-    <>
-      <ScrollProgress />
-      <Navbar />
-      <main>
-        <Hero />
-        <About />
-        <Services />
-        <WhyChooseMe />
-        <Courses />
-        <TeachingStyle />
-        <Portfolio />
-        <Articles />
-        <Testimonials />
-        <Podcast />
-        <YoutubeSection />
-        <Pricing />
-        <FAQ />
-        <Contact />
-      </main>
-      <Footer />
-      <FloatingButtons />
-    </>
+    <><ScrollProgress /><AcademyHome /></>
   );
 }
 
@@ -80,6 +44,7 @@ function App() {
               <Route path="/kids" component={KidsPage} />
               <Route path="/university" component={UniversityPage} />
               <Route path="/curriculum" component={CurriculumPage} />
+              <Route path="/platform" component={PlatformPage} />
               <Route path="/" component={HomePage} />
               <Route component={NotFound} />
             </Switch>

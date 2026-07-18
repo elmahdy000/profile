@@ -6,6 +6,7 @@ import { errorHandler } from "./middleware/error-handler";
 import { logger } from "./lib/logger";
 
 import path from "path";
+import cookieParser from "cookie-parser";
 
 const app: Express = express();
 
@@ -70,12 +71,22 @@ app.use(
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+app.use(cookieParser());
 
 // Serve static uploads. `X-Content-Type-Options: nosniff` prevents browsers
 // from re-interpreting an uploaded file as an executable type (e.g. HTML),
 // mitigating stored-XSS from user-supplied files.
 app.use(
   "/uploads",
+  (req, res, next) => {
+    // Videos must only be read through the authorization-aware range endpoint.
+    // Images and audio continue to be served as ordinary public assets.
+    if (/\.(mp4|webm|ogv|ogg|mov|avi|mkv)$/i.test(req.path)) {
+      res.status(404).end();
+      return;
+    }
+    next();
+  },
   express.static(path.join(process.cwd(), "public/uploads"), {
     setHeaders(res) {
       res.setHeader("X-Content-Type-Options", "nosniff");

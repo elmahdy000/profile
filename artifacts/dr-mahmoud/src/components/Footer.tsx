@@ -39,7 +39,7 @@ export function Footer() {
             </div>
             <p className="text-sm font-semibold text-primary mb-2">{siteTagline}</p>
             <p className="text-sm text-white/60 leading-relaxed mb-6 max-w-sm">
-              تأسيس عملي في البرمجة والذكاء الاصطناعي للثانوية، البكالوريا، الأطفال وطلاب الجامعة.
+              شرح برمجة عملي للمدرسة والجامعة والمبتدئين، بخطة واضحة ومتابعة خطوة بخطوة.
             </p>
             <div className="flex items-center gap-3 mt-auto">
               {socialLinks.map((s) => (
@@ -64,12 +64,12 @@ export function Footer() {
               {[
                 { label: "الرئيسية", href: "/" },
                 { label: "عن الدكتور", href: "/#about" },
-                { label: "البرامج التدريبية", href: "/#courses" },
+                { label: "المسارات", href: "/#tracks" },
                 { label: "المناهج التعليمية", href: "/curriculum" },
-                { label: "الأسئلة الشائعة", href: "/#faq" },
-                { label: "تواصل معنا", href: "/#contact" },
+                { label: "دخول المنصة", href: "/platform" },
+                { label: "كلمنا", href: `https://wa.me/${whatsapp}` },
               ].map((link) => (
-                <li key={link.label}>
+                <li key={link.href}>
                   <a href={link.href} className="text-sm text-white/60 hover:text-primary transition-colors flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary/50"></span>
                     {link.label}
@@ -105,7 +105,7 @@ export function Footer() {
                 className="inline-flex items-center gap-2 px-6 py-3 bg-[#25D366]/10 border border-[#25D366]/20 text-[#25D366] text-sm font-bold rounded-xl hover:bg-[#25D366] hover:text-white transition-all duration-300 w-full justify-center md:w-auto"
               >
                 <MessageCircle className="w-5 h-5" />
-                احجز تقييم مجاني عبر واتساب
+                اسألنا واحجز تقييم مجاني
               </a>
             </div>
           </div>

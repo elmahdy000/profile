@@ -5,9 +5,14 @@ import paramiko
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
-hostname = "72.62.27.196"
-username = "root"
-password = "e#LWhcSAa6B&R8s"
+hostname = os.environ.get("DEPLOY_HOST")
+username = os.environ.get("DEPLOY_USER")
+password = os.environ.get("DEPLOY_PASSWORD")
+
+if not all((hostname, username, password)):
+    raise RuntimeError(
+        "DEPLOY_HOST, DEPLOY_USER and DEPLOY_PASSWORD environment variables are required"
+    )
 
 def sftp_upload_dir(sftp, local_dir, remote_dir):
     print(f"Syncing directory: {local_dir} -> {remote_dir}")
@@ -39,7 +44,8 @@ def run_cmd(client, cmd):
 
 def main():
     client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.load_system_host_keys()
+    client.set_missing_host_key_policy(paramiko.RejectPolicy())
     try:
         client.connect(hostname, username=username, password=password, timeout=30)
         print("Connected to server successfully!")

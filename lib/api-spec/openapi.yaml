@@ -766,6 +766,15 @@ components:
         accessKey:
           type: string
           nullable: true
+        durationText:
+          type: string
+          nullable: true
+        lessonsCount:
+          type: integer
+          nullable: true
+        level:
+          type: string
+          nullable: true
       required:
         - category
         - title
@@ -792,6 +801,15 @@ components:
         isProtected:
           type: boolean
         accessKey:
+          type: string
+          nullable: true
+        durationText:
+          type: string
+          nullable: true
+        lessonsCount:
+          type: integer
+          nullable: true
+        level:
           type: string
           nullable: true
         createdAt:

@@ -113,6 +113,9 @@ export interface InsertVideo {
   order?: number;
   isProtected?: boolean;
   accessKey?: string | null;
+  durationText?: string | null;
+  lessonsCount?: number | null;
+  level?: string | null;
 }
 
 export interface Video {
@@ -125,6 +128,9 @@ export interface Video {
   order: number;
   isProtected: boolean;
   accessKey?: string | null;
+  durationText?: string | null;
+  lessonsCount?: number | null;
+  level?: string | null;
   createdAt: string;
 }
 

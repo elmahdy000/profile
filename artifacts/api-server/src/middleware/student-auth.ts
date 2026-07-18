@@ -1,0 +1,39 @@
+import { createHash } from "crypto";
+import type { Request, Response, NextFunction } from "express";
+import { and, eq, gt } from "drizzle-orm";
+import { db, studentSessionsTable, studentsTable } from "@workspace/db";
+
+export const STUDENT_COOKIE = "student_session";
+
+export type ApprovedStudent = typeof studentsTable.$inferSelect;
+
+export async function getApprovedStudent(req: Request): Promise<ApprovedStudent | null> {
+  const token = req.cookies?.[STUDENT_COOKIE];
+  if (!token || typeof token !== "string") return null;
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+  const [row] = await db
+    .select({ student: studentsTable })
+    .from(studentSessionsTable)
+    .innerJoin(studentsTable, eq(studentSessionsTable.studentId, studentsTable.id))
+    .where(and(
+      eq(studentSessionsTable.tokenHash, tokenHash),
+      gt(studentSessionsTable.expiresAt, new Date()),
+      eq(studentsTable.status, "approved"),
+    ))
+    .limit(1);
+  return row?.student ?? null;
+}
+
+export async function requireStudent(req: Request, res: Response, next: NextFunction) {
+  try {
+    const student = await getApprovedStudent(req);
+    if (!student) {
+      res.status(401).json({ error: "Student approval and login are required" });
+      return;
+    }
+    res.locals.student = student;
+    next();
+  } catch (error) {
+    next(error);
+  }
+}

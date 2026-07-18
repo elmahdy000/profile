@@ -10,6 +10,9 @@ export const videosTable = pgTable("videos", {
   order: integer("order").notNull().default(0),
   isProtected: boolean("is_protected").notNull().default(false),
   accessKey: text("access_key"),
+  durationText: text("duration_text"),        // e.g. "12 ساعة" — real value entered by admin
+  lessonsCount: integer("lessons_count"),      // real number of lessons entered by admin
+  level: text("level"),                        // e.g. "مبتدئ" / "متوسط" / "متقدم"
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
