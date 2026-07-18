@@ -467,6 +467,130 @@ export default function BaccalaureatePage() {
         </div>
       </section>
 
+      {/* ─── NEW: Detailed Grades Section ─── */}
+      <section className="py-20 bg-card/40 border-y border-border/60 relative overflow-hidden">
+        {/* Subtle decorative glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="container mx-auto px-4 lg:px-8 relative z-10">
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 border border-primary/20 text-primary text-xs font-bold rounded-full mb-3">
+              <Sparkles className="w-3.5 h-3.5" />
+              توزيع المناهج الدراسية
+            </span>
+            <h2 className="text-3xl md:text-5xl font-black text-foreground leading-tight">
+              خطة التأسيس المخصصة لكل سنة دراسية
+            </h2>
+            <p className="text-sm md:text-base text-muted-foreground mt-3 max-w-xl mx-auto">
+              شرح مبسط، تطبيق عملي مستمر، ومتابعة أسبوعية تناسب طبيعة دراسة كل مرحلة.
+            </p>
+            <div className="w-16 h-1 bg-primary mx-auto rounded-full mt-4" />
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto items-stretch">
+            {/* Grade 1 Card */}
+            <div className="bg-card border border-border/80 hover:border-primary/40 rounded-[2rem] p-8 shadow-md hover:shadow-lg transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors pointer-events-none" />
+              
+              <div>
+                <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+                    الصف الأول الثانوي
+                  </span>
+                  <span className="text-xs text-muted-foreground">البداية المثالية</span>
+                </div>
+
+                <h3 className="text-2xl font-black text-foreground mb-4">
+                  بناء عقلية حل المشكلات والـ Logic
+                </h3>
+                
+                <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                  الهدف الأساسي في هذه المرحلة هو كسر حاجز الخوف من البرمجة وتحويل التفكير من مجرد متلقي إلى محلل ومبتكر. بنبدأ مع الطالب من الصفر تماماً.
+                </p>
+
+                <div className="space-y-4">
+                  <h4 className="font-bold text-xs text-foreground/80">محاور التعلم الأساسية:</h4>
+                  {[
+                    "مفهوم التفكير البرمجي وكيف يفهم الكمبيوتر الأوامر",
+                    "رسم خرائط التدفق (Flowcharts) وتحليل المشكلات منطقياً",
+                    "أساسيات لغة Python (المتغيرات، الشروط، والتكرار البسيط)",
+                    "تطوير ألعاب ذكاء تفاعلية كاملة داخل الـ Terminal"
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex gap-3 items-start">
+                      <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <Check className="w-3 h-3 text-primary" />
+                      </div>
+                      <span className="text-xs text-foreground/80 leading-normal">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-border/60 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] text-muted-foreground">مدة التأسيس</p>
+                  <p className="text-sm font-bold text-foreground">8 - 10 أسابيع</p>
+                </div>
+                <div className="text-left">
+                  <p className="text-[10px] text-muted-foreground">المشاريع العملية</p>
+                  <p className="text-sm font-bold text-primary">3 مشاريع تفاعلية</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Grade 2 Card */}
+            <div className="bg-card border border-border/80 hover:border-primary/45 rounded-[2rem] p-8 shadow-md hover:shadow-lg transition-all duration-300 flex flex-col justify-between group relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors pointer-events-none" />
+              
+              <div>
+                <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+                    الصف الثاني الثانوي
+                  </span>
+                  <span className="text-xs text-muted-foreground">تجهيز للمستقبل</span>
+                </div>
+
+                <h3 className="text-2xl font-black text-foreground mb-4">
+                  التعمق في لغة Python وهياكل البيانات
+                </h3>
+                
+                <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                  للطالب المستعد لأخذ مهاراته إلى المستوى التالي. بنركز على المفاهيم المتقدمة التي يبنى عليها البرامج الكبيرة وتطبيقات الـ STEM.
+                </p>
+
+                <div className="space-y-4">
+                  <h4 className="font-bold text-xs text-foreground/80">محاور التعلم الأساسية:</h4>
+                  {[
+                    "الدوال (Functions) وكتابة كود نظيف وقابل لإعادة الاستخدام",
+                    "هياكل البيانات الأساسية (Lists, Dictionaries, Tuples)",
+                    "التعامل مع الملفات وحفظ البيانات (File Handling)",
+                    "تجهيز الطالب بالمهارات اللازمة لمشروعات الكابستون والمسابقات"
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex gap-3 items-start">
+                      <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <Check className="w-3 h-3 text-primary" />
+                      </div>
+                      <span className="text-xs text-foreground/80 leading-normal">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-border/60 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] text-muted-foreground">مدة التأسيس</p>
+                  <p className="text-sm font-bold text-foreground">10 - 12 أسبوع</p>
+                </div>
+                <div className="text-left">
+                  <p className="text-[10px] text-muted-foreground">المشاريع العملية</p>
+                  <p className="text-sm font-bold text-primary">مشروع كابستون متكامل</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Two Tracks Overview */}
       <section className="py-16 bg-background relative">
         <div className="container mx-auto px-4 lg:px-8">
