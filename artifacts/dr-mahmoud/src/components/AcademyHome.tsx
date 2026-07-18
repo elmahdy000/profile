@@ -4,29 +4,78 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { FloatingButtons } from "@/components/FloatingButtons";
 
-const tracks = [
+interface ImageConfig {
+  src: string;
+  alt: string;
+  objectFit?: "cover" | "contain";
+  objectPosition?: string;
+  mobileObjectPosition?: string;
+}
+
+interface Track {
+  title: string;
+  desc: string;
+  meta: string;
+  imageConfig: ImageConfig;
+  tags: string[];
+}
+
+const tracks: Track[] = [
   {
     title: "تطوير الويب Full Stack",
     desc: "ابدأ من الأساسيات لحد ما تبني موقع كامل بنفسك باستخدام أحدث أدوات الويب.",
     meta: "مسار عملي",
-    image: "/opengraph.jpg",
+    imageConfig: {
+      src: "/web-development-path.png",
+      alt: "مطور يعمل على تصميم وبرمجة موقع ويب متكامل",
+      objectFit: "cover",
+      objectPosition: "center",
+      mobileObjectPosition: "center",
+    },
     tags: ["HTML", "CSS", "JavaScript", "React"],
   },
   {
     title: "أساسيات Python والذكاء الاصطناعي",
     desc: "اتعلم البرمجة بطريقة سهلة وطبّق على مشروعات حقيقية خطوة بخطوة.",
     meta: "مناسب للمبتدئين",
-    image: "/baccalaureate-hero.png",
+    imageConfig: {
+      src: "/python-ai-path.png",
+      alt: "طالب يتعلم Python ويطبق أساسيات الذكاء الاصطناعي",
+      objectFit: "cover",
+      objectPosition: "center",
+      mobileObjectPosition: "center",
+    },
     tags: ["Python", "AI", "Problem Solving"],
   },
   {
     title: "دعم الجامعة ومواد الحاسبات",
     desc: "شرح عملي لـ C++ وOOP وهياكل البيانات والخوارزميات والـDatabase.",
     meta: "لطلاب الجامعة",
-    image: "/podcast-cover.png",
+    imageConfig: {
+      src: "/university-cs-path.png",
+      alt: "طالب جامعي يراجع البرمجة والخوارزميات ومواد علوم الحاسب",
+      objectFit: "cover",
+      objectPosition: "center",
+      mobileObjectPosition: "center",
+    },
     tags: ["C++", "OOP", "Data Structures"],
   },
 ];
+
+function renderMixedText(text: string) {
+  const regex = /([A-Za-z0-9+#.\s-]+)/g;
+  const parts = text.split(regex);
+  return parts.map((part, idx) => {
+    if (idx % 2 === 1) {
+      return (
+        <span key={idx} dir="ltr" className="inline-block font-sans select-all font-bold">
+          {part}
+        </span>
+      );
+    }
+    return part;
+  });
+}
 
 const benefits = [
   { icon: ShieldCheck, title: "منهج واضح من غير لف", text: "كل مسار مترتب من البداية، وكل درس بيكمل اللي قبله علشان توصل للنتيجة أسرع." },
@@ -66,10 +115,16 @@ export function AcademyHome() {
               </div>
             </div>
             <div className="order-1 lg:order-2">
-              <div className="relative mx-auto max-w-xl">
+              <div className="relative mx-auto max-w-xl lg:max-w-none">
                 <div className="absolute -inset-6 rounded-[2rem] bg-primary/10 blur-3xl" />
-                <img src="/dr-mahmoud-photo.png" alt="د. محمود المهدي" className="relative aspect-[4/3] w-full rounded-3xl border border-primary/10 object-cover shadow-2xl" />
-                <div className="absolute -bottom-5 right-5 rounded-2xl border border-border bg-card/95 p-4 shadow-xl backdrop-blur">
+                <div className="relative w-full aspect-[4/3] lg:h-[540px] lg:w-[720px] lg:max-w-full rounded-3xl border border-primary/10 overflow-hidden shadow-2xl bg-muted">
+                  <img 
+                    src="/dr-mahmoud-photo.png" 
+                    alt="د. محمود المهدي" 
+                    className="w-full h-full object-cover object-[center_25%] lg:object-[center_28%]" 
+                  />
+                </div>
+                <div className="absolute bottom-4 right-4 lg:bottom-6 lg:right-6 rounded-2xl border border-border bg-card/95 p-4 shadow-xl backdrop-blur z-10">
                   <strong className="block text-primary">د. محمود المهدي</strong>
                   <span className="text-xs text-muted-foreground">ماجستير نظم معلومات · مدرب برمجة وAI</span>
                 </div>
@@ -103,16 +158,49 @@ export function AcademyHome() {
               <div><span className="text-sm font-bold text-primary">اختار الطريق المناسب ليك</span><h2 className="mt-2 text-3xl font-black md:text-4xl">أهم المسارات اللي بنقدمها</h2></div>
               <a href="/curriculum" className="flex items-center gap-2 font-bold text-primary">شوف كل المناهج <ArrowLeft className="h-4 w-4" /></a>
             </div>
-            <div className="grid gap-6 md:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-3 items-stretch">
               {tracks.map((track) => (
-                <article key={track.title} className="academy-card group overflow-hidden">
-                  <div className="aspect-[16/9] overflow-hidden bg-muted"><img src={track.image} alt={track.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /></div>
-                  <div className="p-5">
+                <article key={track.title} className="academy-card group flex flex-col h-full overflow-hidden bg-card transition duration-300">
+                  <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
+                    <img 
+                      src={track.imageConfig.src} 
+                      alt={track.imageConfig.alt} 
+                      style={{
+                        '--object-position-desktop': track.imageConfig.objectPosition || 'center',
+                        '--object-position-mobile': track.imageConfig.mobileObjectPosition || track.imageConfig.objectPosition || 'center'
+                      } as React.CSSProperties}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03] [object-position:var(--object-position-mobile)] md:[object-position:var(--object-position-desktop)]" 
+                    />
+                  </div>
+                  <div className="flex flex-col flex-1 p-5 text-right">
                     <span className="text-xs font-bold text-primary">{track.meta}</span>
-                    <h3 className="mt-2 text-xl font-black">{track.title}</h3>
-                    <p className="mt-2 min-h-14 text-sm leading-6 text-muted-foreground">{track.desc}</p>
-                    <div className="mt-4 flex flex-wrap gap-2">{track.tags.map(tag => <span key={tag} className="rounded-md bg-muted px-2 py-1 text-[11px] font-bold text-muted-foreground">{tag}</span>)}</div>
-                    <a href="/platform" className="mt-5 flex items-center justify-between border-t border-border pt-4 font-bold text-primary">اعرف تفاصيل المسار <ArrowLeft className="h-4 w-4" /></a>
+                    <h3 className="mt-2 text-xl font-black text-foreground">
+                      {renderMixedText(track.title)}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground flex-1">
+                      {renderMixedText(track.desc)}
+                    </p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {track.tags.map(tag => {
+                        const isEnglish = /^[A-Za-z0-9+#.\s-]+$/.test(tag);
+                        return (
+                          <span 
+                            key={tag} 
+                            className="rounded-md bg-muted px-2 py-1 text-[11px] font-bold text-muted-foreground"
+                            dir={isEnglish ? "ltr" : "rtl"}
+                          >
+                            {tag}
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <a 
+                      href="/platform" 
+                      className="mt-5 flex items-center justify-between border-t border-border pt-4 font-bold text-primary hover:text-primary/80 transition-colors"
+                    >
+                      <span>اعرف تفاصيل المسار</span>
+                      <ArrowLeft className="h-4 w-4 shrink-0 transition-transform group-hover:-translate-x-1" />
+                    </a>
                   </div>
                 </article>
               ))}
@@ -136,9 +224,31 @@ export function AcademyHome() {
         </section>
 
         <section id="about" className="bg-primary py-16 text-primary-foreground">
-          <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 md:px-8 lg:grid-cols-[.75fr_1.25fr]">
-            <img src="/dr-mahmoud-photo.jpg" alt="د. محمود المهدي" className="mx-auto aspect-[4/3] w-full max-w-md rounded-3xl object-cover shadow-2xl" />
-            <div className="space-y-5 text-right"><span className="text-sm font-bold text-cyan-200">اعرف مدرسك</span><h2 className="text-3xl font-black md:text-4xl">د. محمود المهدي</h2><p className="text-lg leading-8 text-white/80">خبرة أكاديمية وتدريبية في البرمجة ونظم المعلومات، والهدف إن كل طالب يفهم الفكرة ويطبقها بإيده لحد ما يبقى قادر يعمل مشروع كامل.</p><div className="flex flex-wrap gap-3"><span className="rounded-lg bg-white/10 px-4 py-2">شرح بالمصري</span><span className="rounded-lg bg-white/10 px-4 py-2">متابعة شخصية</span><span className="rounded-lg bg-white/10 px-4 py-2">تطبيقات عملية</span></div></div>
+          <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 md:px-8 lg:grid-cols-[0.8fr_1.2fr]">
+            <div className="relative mx-auto aspect-[4/3] w-full max-w-md max-h-[420px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-muted">
+              <img 
+                src="/dr-mahmoud-photo.png" 
+                alt="د. محمود المهدي — مدرب البرمجة" 
+                className="w-full h-full object-cover object-[center_25%] lg:object-[center_28%]" 
+              />
+            </div>
+            <div className="space-y-5 text-right">
+              <span className="text-sm font-bold text-cyan-200 uppercase tracking-wider block">اعرف مدرسك</span>
+              <div>
+                <h2 className="text-3xl font-black md:text-4xl text-white">د. محمود المهدي</h2>
+                <p className="text-sm text-cyan-100/90 mt-1.5 font-medium leading-relaxed">
+                  ماجستير نظم المعلومات — مدرب برمجة وعلوم حاسب
+                </p>
+              </div>
+              <p className="text-lg leading-relaxed text-white/90">
+                خبرة أكاديمية وتدريبية في البرمجة ونظم المعلومات، والهدف إن كل طالب يفهم الفكرة ويطبقها بإيده لحد ما يبقى قادر يعمل مشروع كامل.
+              </p>
+              <div className="flex flex-wrap gap-2.5 pt-2">
+                <span className="rounded-xl bg-white/10 border border-white/5 px-4 py-2 text-sm font-medium">شرح بالمصري</span>
+                <span className="rounded-xl bg-white/10 border border-white/5 px-4 py-2 text-sm font-medium">متابعة شخصية</span>
+                <span className="rounded-xl bg-white/10 border border-white/5 px-4 py-2 text-sm font-medium">تطبيقات عملية</span>
+              </div>
+            </div>
           </div>
         </section>
 

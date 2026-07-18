@@ -183,22 +183,20 @@ export function Hero() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.55, ease: "easeOut" }}
-            className="relative mx-auto lg:mx-0 w-full max-w-[300px] sm:max-w-[340px] order-1 lg:order-2"
+            className="relative mx-auto lg:mx-0 w-full max-w-xl lg:max-w-none order-1 lg:order-2 aspect-[4/3] lg:h-[540px] lg:w-[720px] lg:max-w-full"
           >
-            {/* Subtle outer ring */}
-
             {/* Photo frame */}
-            <div className="relative aspect-[4/5] rounded-[1.8rem] overflow-hidden shadow-2xl border border-border group bg-muted flex items-center justify-center">
+            <div className="relative w-full h-full rounded-[1.8rem] overflow-hidden shadow-2xl border border-border group bg-muted flex items-center justify-center">
               {!imageError ? (
                 <img
                   src={photo}
                   alt="د. محمود المهدي — مدرب برمجة وذكاء اصطناعي"
                   fetchPriority="high"
                   decoding="async"
-                  width={420}
-                  height={525}
+                  width={720}
+                  height={540}
                   onError={() => setImageError(true)}
-                  className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.025]"
+                  className="w-full h-full object-cover object-[center_25%] lg:object-[center_28%] transition-transform duration-700 ease-out group-hover:scale-[1.025]"
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-muted">
@@ -208,10 +206,10 @@ export function Hero() {
                 </div>
               )}
               {/* Subtle bottom overlay */}
-              <div className="absolute inset-0 bg-black/30" style={{background: 'linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 50%)'}} />
+              <div className="absolute inset-0 bg-black/10" style={{background: 'linear-gradient(to top, rgba(0,0,0,0.2) 0%, transparent 40%)'}} />
 
               {/* Info card */}
-              <div className="absolute bottom-4 right-4 left-4">
+              <div className="absolute bottom-4 right-4 left-4 z-10">
                 <div className="bg-card/90 backdrop-blur-md border border-border rounded-xl p-3.5 shadow-lg">
                   <p className="text-primary font-bold text-base leading-tight">د. محمود المهدي</p>
                   <p className="text-muted-foreground text-xs mt-0.5 leading-snug">
