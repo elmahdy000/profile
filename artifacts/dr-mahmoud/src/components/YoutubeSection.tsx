@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Youtube, Play, ExternalLink, Tv, ChevronLeft, Loader2, Lock, Unlock,
   Search, SlidersHorizontal, Bookmark, Share2, Clock, BookOpen, Award, ArrowUpDown,
-  FileText, ClipboardCheck, Download
+  FileText, ClipboardCheck, Download, X, MonitorPlay, Layers3, Signal,
+  Info, Paperclip, ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListVideos } from "@workspace/api-client-react";
@@ -150,123 +151,233 @@ function VideoPlayerModal({
     }
   };
 
+  const attachedFiles = getAttachedFiles(item, files);
+  const linkedQuiz = item.quizId ? quizzes.find((quiz) => quiz.id === item.quizId) : null;
+  const stages = item.stages?.length ? item.stages : item.stage ? [item.stage] : [];
+  const learningModeLabel = item.learningMode === "online"
+    ? "أونلاين"
+    : item.learningMode === "offline"
+      ? "أوفلاين"
+      : item.learningMode === "both"
+        ? "أونلاين وأوفلاين"
+        : null;
+  const sourceLabel = isStreamUrl
+    ? "فيديو مرفوع على المنصة"
+    : embedUrl
+      ? item.type === "playlist" ? "قائمة تشغيل يوتيوب" : "فيديو يوتيوب"
+      : "رابط فيديو خارجي";
+
   return (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+        className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/85 p-0 backdrop-blur-sm sm:items-center sm:p-4"
         onClick={onClose}
       >
         <motion.div
-          initial={{ scale: 0.95, opacity: 0, y: 10 }}
+          initial={{ scale: 0.98, opacity: 0, y: 24 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.95, opacity: 0, y: 10 }}
-          className="relative w-full max-w-4xl bg-card border border-border rounded-3xl overflow-hidden shadow-2xl flex flex-col"
+          exit={{ scale: 0.98, opacity: 0, y: 24 }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="video-player-title"
+          dir="rtl"
+          className="relative flex max-h-[96dvh] w-full max-w-6xl flex-col overflow-hidden rounded-t-[28px] border border-border bg-background shadow-2xl sm:max-h-[94dvh] sm:rounded-[28px]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/40">
-            <div className="space-y-0.5 max-w-[85%] text-right">
-              <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
-                {item.type === "playlist" ? "قائمة تشغيل" : "فيديو شروحات"}
-              </span>
-              <h3 className="text-base font-bold text-foreground line-clamp-1">{item.title}</h3>
+          <div className="z-10 flex shrink-0 items-center gap-3 border-b border-border bg-background px-4 py-3 sm:px-5 sm:py-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary sm:h-11 sm:w-11">
+              <MonitorPlay className="h-5 w-5 sm:h-6 sm:w-6" />
+            </div>
+            <div className="min-w-0 flex-1 text-right">
+              <div className="mb-1 flex flex-wrap items-center gap-1.5 text-[10px] font-bold sm:text-[11px]">
+                <span className="rounded-md bg-primary/10 px-2 py-0.5 text-primary">{item.category}</span>
+                <span className="text-muted-foreground">الدرس {item.order || 1}</span>
+              </div>
+              <h2 id="video-player-title" className="line-clamp-1 text-sm font-extrabold text-foreground sm:text-base">
+                {item.title}
+              </h2>
             </div>
             <button
               onClick={onClose}
               aria-label="إغلاق مشغل الفيديو"
-              className="w-9 h-9 rounded-xl bg-muted hover:bg-muted/80 flex items-center justify-center text-foreground/70 hover:text-foreground transition-all border border-border"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-muted/60 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
-              ✕
+              <X className="h-5 w-5" />
             </button>
           </div>
 
-          {/* Player Container */}
-          <div className="relative w-full aspect-video bg-black select-none" onContextMenu={(e) => e.preventDefault()}>
-            {!isFocused && (
-              <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/95 backdrop-blur-md text-white text-center p-6 transition-all duration-300">
-                <Lock className="w-16 h-16 text-red-500 mb-4 animate-pulse" />
-                <h3 className="text-2xl font-bold mb-2">تم إيقاف العرض مؤقتاً</h3>
-                <p className="text-muted-foreground">يرجى العودة إلى نافذة المتصفح لمتابعة مشاهدة الفيديو.</p>
-                <p className="text-xs text-red-500/80 mt-4 font-mono bg-red-500/10 px-3 py-1 rounded-md border border-red-500/20">نظام الحماية ضد التسجيل مفعل</p>
-              </div>
-            )}
+          <div className="min-h-0 overflow-y-auto bg-slate-50/70">
+            <div className="grid lg:grid-cols-[minmax(0,1fr)_300px]">
+              {/* Player Container */}
+              <div className="bg-slate-950 p-0 sm:p-3 lg:order-2 lg:p-4">
+                <div
+                  className="relative aspect-video w-full select-none overflow-hidden bg-black sm:rounded-2xl sm:ring-1 sm:ring-white/10"
+                  onContextMenu={(e) => e.preventDefault()}
+                >
+                  {!isFocused && (
+                    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/95 p-5 text-center text-white backdrop-blur-md transition-all duration-300">
+                      <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/10 ring-1 ring-red-400/30">
+                        <Lock className="h-7 w-7 animate-pulse text-red-400" />
+                      </div>
+                      <h3 className="mb-1 text-lg font-extrabold sm:text-xl">العرض واقف مؤقتًا</h3>
+                      <p className="max-w-md text-xs leading-6 text-slate-300 sm:text-sm">ارجع لنافذة المنصة علشان تكمل مشاهدة الدرس.</p>
+                      <p className="mt-3 rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-1 text-[10px] font-bold text-red-300">حماية المحتوى مفعّلة</p>
+                    </div>
+                  )}
 
-            {isStreamUrl && (
-              <div className="absolute inset-0 z-40 pointer-events-none overflow-hidden opacity-25 flex items-center justify-center mix-blend-overlay">
-                <div className="text-white font-black text-4xl rotate-[-30deg] select-none text-center leading-relaxed">
-                  د. محمود المهدي <br /> 
-                  <span className="text-2xl font-mono block opacity-70 mt-2 tracking-widest text-red-300">
-                    {studentKeys ? studentKeys.split(",")[0] : "PROTECTED CONTENT"}
-                  </span>
+                  {isStreamUrl && (
+                    <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center overflow-hidden opacity-25 mix-blend-overlay">
+                      <div className="rotate-[-30deg] select-none text-center text-2xl font-black leading-relaxed text-white sm:text-4xl">
+                        د. محمود المهدي <br />
+                        <span className="mt-2 block font-mono text-base tracking-widest text-red-300 opacity-70 sm:text-2xl">
+                          {studentKeys ? studentKeys.split(",")[0] : "PROTECTED CONTENT"}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {isStreamUrl ? (
+                    <video
+                      className="absolute inset-0 h-full w-full bg-black object-contain"
+                      src={streamUrl}
+                      controls
+                      playsInline
+                      controlsList="nodownload noplaybackrate"
+                      disablePictureInPicture
+                      onContextMenu={(e) => e.preventDefault()}
+                      autoPlay
+                      onTimeUpdate={handleTimeUpdate}
+                      onEnded={handleVideoEnded}
+                    />
+                  ) : embedUrl ? (
+                    <iframe
+                      className="absolute inset-0 h-full w-full"
+                      src={embedUrl}
+                      title={item.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-5 text-center text-white">
+                      <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/15">
+                        <ExternalLink className="h-6 w-6 text-sky-300" />
+                      </div>
+                      <p className="text-sm font-bold">الفيديو موجود على موقع خارجي</p>
+                      <p className="mt-1 max-w-sm text-xs leading-5 text-slate-400">الموقع الخارجي مش بيسمح بتشغيله جوه المنصة، تقدر تفتحه بأمان في نافذة جديدة.</p>
+                      <a
+                        href={item.youtubeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                      >
+                        فتح الفيديو <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Lesson information */}
+              <aside className="space-y-4 border-t border-border bg-background p-4 text-right sm:p-5 lg:order-1 lg:border-l lg:border-t-0">
+                <div>
+                  <div className="mb-2 flex items-center gap-2 text-xs font-extrabold text-foreground">
+                    <Info className="h-4 w-4 text-primary" />
+                    عن الدرس
+                  </div>
+                  <p className="text-xs leading-6 text-muted-foreground">
+                    {item.description || "كل تفاصيل الدرس والمصادر الخاصة بيه هتلاقيها هنا أثناء المشاهدة."}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/35 p-3">
+                    <Layers3 className="h-4 w-4 shrink-0 text-primary" />
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-muted-foreground">الكورس</p>
+                      <p className="truncate text-xs font-bold text-foreground">{item.category}</p>
+                    </div>
+                  </div>
+                  {stages.length > 0 && (
+                    <div className="flex items-start gap-2 rounded-xl border border-border bg-muted/35 p-3">
+                      <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-muted-foreground">المرحلة</p>
+                        <p className="text-xs font-bold leading-5 text-foreground">{stages.join("، ")}</p>
+                      </div>
+                    </div>
+                  )}
+                  {learningModeLabel && (
+                    <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/35 p-3">
+                      <Signal className="h-4 w-4 shrink-0 text-primary" />
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">نظام الدراسة</p>
+                        <p className="text-xs font-bold text-foreground">{learningModeLabel}</p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-emerald-800">
+                    <ShieldCheck className="h-4 w-4 shrink-0" />
+                    <div>
+                      <p className="text-[10px] text-emerald-700/75">مصدر العرض</p>
+                      <p className="text-xs font-bold">{sourceLabel}</p>
+                    </div>
+                  </div>
+                </div>
+              </aside>
+            </div>
+
+            {/* Linked materials */}
+            {(attachedFiles.length > 0 || linkedQuiz) && (
+              <div className="border-t border-border bg-background px-4 py-4 sm:px-5">
+                <div className="mb-3 flex items-center gap-2 text-xs font-extrabold text-foreground">
+                  <Paperclip className="h-4 w-4 text-primary" />
+                  مصادر الدرس والاختبار
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {attachedFiles.map((file) => (
+                    <a
+                      key={file.id}
+                      href={`/api/learning/files/${file.id}/download`}
+                      className="group flex min-h-14 items-center gap-3 rounded-xl border border-border bg-muted/25 p-3 text-right transition-colors hover:border-primary/30 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    >
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <FileText className="h-4 w-4" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-xs font-bold text-foreground">{file.title}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {file.sizeBytes ? `${(file.sizeBytes / 1024 / 1024).toFixed(1)} MB` : "ملف مرفق"}
+                        </span>
+                      </span>
+                      <Download className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+                    </a>
+                  ))}
+                  {linkedQuiz && (
+                    <button
+                      onClick={() => {
+                        onClose();
+                        onStartQuiz?.(linkedQuiz);
+                      }}
+                      className="flex min-h-14 items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-right text-amber-900 transition-colors hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+                    >
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                        <ClipboardCheck className="h-4 w-4" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-xs font-extrabold">اختبار الدرس</span>
+                        <span className="text-[10px] text-amber-700">اختبر فهمك بعد المشاهدة</span>
+                      </span>
+                      <ChevronLeft className="h-4 w-4 shrink-0" />
+                    </button>
+                  )}
                 </div>
               </div>
             )}
-
-            {isStreamUrl ? (
-              <video
-                className="absolute inset-0 w-full h-full object-contain bg-black"
-                src={streamUrl}
-                controls
-                controlsList="nodownload noplaybackrate"
-                disablePictureInPicture
-                onContextMenu={(e) => e.preventDefault()}
-                autoPlay
-                onTimeUpdate={handleTimeUpdate}
-                onEnded={handleVideoEnded}
-              />
-            ) : embedUrl ? (
-              <iframe
-                className="absolute inset-0 w-full h-full"
-                src={embedUrl}
-                title={item.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
-                <Youtube className="w-16 h-16 text-red-500 mb-2" />
-                <p className="text-muted-foreground text-sm">عذراً، تعذر تحميل الرابط المباشر.</p>
-                <a
-                  href={item.youtubeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 text-primary text-sm flex items-center gap-1.5 hover:underline"
-                >
-                  افتح مباشرة على يوتيوب <ExternalLink className="w-4 h-4" />
-                </a>
-              </div>
-            )}
           </div>
-          {/* Linked Materials Footer */}
-          {(getAttachedFiles(item, files).length > 0 || item.quizId) && (
-            <div className="px-6 py-4 border-t border-border bg-muted/20 flex flex-col sm:flex-row gap-3 items-center justify-between text-right" dir="rtl">
-              <span className="text-xs font-bold text-muted-foreground">الملفات والتمارين الملحقة بالدرس:</span>
-              <div className="flex flex-wrap gap-2.5 w-full sm:w-auto justify-end">
-                {getAttachedFiles(item, files).map((file) => <a key={file.id} href={`/api/learning/files/${file.id}/download`} className="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-4 py-2.5 text-xs font-bold text-primary transition-all hover:bg-primary hover:text-white"><FileText className="w-4 h-4"/><span>{file.title}</span>{file.sizeBytes&&<small>{(file.sizeBytes/1024/1024).toFixed(1)} MB</small>}<Download className="w-3.5 h-3.5"/></a>)}
-                {item.quizId && (
-                  (() => {
-                    const quiz = quizzes.find(q => q.id === item.quizId);
-                    if (!quiz) return null;
-                    return (
-                      <button
-                        onClick={() => {
-                          onClose(); // close video modal before starting quiz
-                          onStartQuiz?.(quiz);
-                        }}
-                        className="inline-flex items-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 text-xs font-bold transition-all shadow-md"
-                      >
-                        <ClipboardCheck className="w-4 h-4" />
-                        ابدأ حل اختبار الدرس
-                      </button>
-                    );
-                  })()
-                )}
-              </div>
-            </div>
-          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>

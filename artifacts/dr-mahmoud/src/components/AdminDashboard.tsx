@@ -827,7 +827,11 @@ export default function AdminDashboard() {
     try {
       await deleteCurriculumMutation.mutateAsync({ id });
       queryClient.invalidateQueries({ queryKey: getListCurriculumsQueryKey() });
-      toast({ variant: "success", title: "تم", description: "تم حذف الدرس بنجاح" });
+      toast({
+        variant: "success",
+        title: "تم",
+        description: "تم حذف الدرس بنجاح",
+      });
     } catch (err) {
       toast({
         title: "خطأ",
@@ -840,12 +844,13 @@ export default function AdminDashboard() {
   const handleVideoFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
     setSelectedVideoFile(file);
+    if (file) setVideoForm((current) => ({ ...current, youtubeUrl: "" }));
     e.target.value = "";
   };
 
-  const uploadSelectedVideo = async () => {
+  const uploadSelectedVideo = async (): Promise<string | null> => {
     const file = selectedVideoFile;
-    if (!file) return;
+    if (!file) return null;
 
     setIsVideoUploading(true);
     const formData = new FormData();
@@ -874,7 +879,9 @@ export default function AdminDashboard() {
           title: "تم رفع الفيديو",
           description: "راجع البيانات وبعدها اضغط حفظ الفيديو.",
         });
+        return String(data.url);
       }
+      return null;
     } catch (err) {
       console.error(err);
       toast({
@@ -882,6 +889,7 @@ export default function AdminDashboard() {
         description: `حدث خطأ أثناء تحميل الفيديو ${file.name}`,
         variant: "destructive",
       });
+      return null;
     } finally {
       setIsVideoUploading(false);
     }
@@ -895,13 +903,11 @@ export default function AdminDashboard() {
       !videoForm.category.trim() ||
       !videoForm.subject.trim() ||
       !videoForm.title.trim() ||
-      !videoForm.youtubeUrl.trim() ||
       videoForm.order < 1
     ) {
       toast({
         title: "بيانات ناقصة",
-        description:
-          "اختار كورس ومرحلة واحدة على الأقل، وكمل اسم ورقم الدرس والفيديو.",
+        description: "اختار كورس ومرحلة واحدة على الأقل، وكمل اسم ورقم الدرس.",
         variant: "warning",
       });
       return;
@@ -925,6 +931,20 @@ export default function AdminDashboard() {
       return;
     }
 
+    let videoSource = videoForm.youtubeUrl.trim();
+    if (!videoSource && selectedVideoFile) {
+      videoSource = (await uploadSelectedVideo()) || "";
+    }
+    if (!videoSource) {
+      toast({
+        title: "مصدر الفيديو مطلوب",
+        description:
+          "ارفع ملف فيديو من جهازك، أو اكتب رابط يوتيوب أو رابط خارجي.",
+        variant: "warning",
+      });
+      return;
+    }
+
     const payload = {
       courseId: Number(videoForm.courseId),
       category: videoForm.category,
@@ -938,7 +958,7 @@ export default function AdminDashboard() {
         .filter(Boolean),
       title: videoForm.title,
       description: videoForm.description || undefined,
-      youtubeUrl: videoForm.youtubeUrl,
+      youtubeUrl: videoSource,
       type: videoForm.type,
       order: Number(videoForm.order),
       isProtected: videoForm.isProtected,
@@ -992,7 +1012,11 @@ export default function AdminDashboard() {
     try {
       await deleteVideoMutation.mutateAsync({ id });
       queryClient.invalidateQueries({ queryKey: getListVideosQueryKey() });
-      toast({ variant: "success", title: "تم", description: "تم حذف الفيديو بنجاح" });
+      toast({
+        variant: "success",
+        title: "تم",
+        description: "تم حذف الفيديو بنجاح",
+      });
     } catch (err) {
       toast({
         title: "خطأ",
@@ -1007,7 +1031,11 @@ export default function AdminDashboard() {
     try {
       await deleteCourseMutation.mutateAsync({ id });
       queryClient.invalidateQueries({ queryKey: getListCoursesQueryKey() });
-      toast({ variant: "success", title: "تم", description: "تم حذف الكورس بنجاح" });
+      toast({
+        variant: "success",
+        title: "تم",
+        description: "تم حذف الكورس بنجاح",
+      });
     } catch (err) {
       toast({
         title: "خطأ",
@@ -1021,7 +1049,11 @@ export default function AdminDashboard() {
     try {
       await deletePodcastMutation.mutateAsync({ id });
       queryClient.invalidateQueries({ queryKey: getListPodcastsQueryKey() });
-      toast({ variant: "success", title: "تم", description: "تم حذف الحلقة بنجاح" });
+      toast({
+        variant: "success",
+        title: "تم",
+        description: "تم حذف الحلقة بنجاح",
+      });
     } catch (err) {
       toast({
         title: "خطأ",
@@ -1039,7 +1071,11 @@ export default function AdminDashboard() {
         data: { status },
       });
       queryClient.invalidateQueries({ queryKey: getListBookingsQueryKey() });
-      toast({ variant: "success", title: "تم", description: "تم تحديث حالة الحجز بنجاح" });
+      toast({
+        variant: "success",
+        title: "تم",
+        description: "تم تحديث حالة الحجز بنجاح",
+      });
     } catch (err) {
       toast({
         title: "خطأ",
@@ -1053,7 +1089,11 @@ export default function AdminDashboard() {
     try {
       await deleteBookingMutation.mutateAsync({ id });
       queryClient.invalidateQueries({ queryKey: getListBookingsQueryKey() });
-      toast({ variant: "success", title: "تم", description: "تم حذف الحجز بنجاح" });
+      toast({
+        variant: "success",
+        title: "تم",
+        description: "تم حذف الحجز بنجاح",
+      });
     } catch (err) {
       toast({
         title: "خطأ",
@@ -3267,14 +3307,15 @@ export default function AdminDashboard() {
                   <div>
                     <h4 className="font-black">الفيديو</h4>
                     <p className="text-xs text-muted-foreground">
-                      عاين الملف الأول، وبعدها ارفعه أو استخدم رابط يوتيوب.
+                      اختار طريقة واحدة: ملف من جهازك، رابط يوتيوب، أو رابط
+                      خارجي.
                     </p>
                   </div>
                 </div>
 
                 <div className="md:col-span-2 space-y-3">
                   <label className="block text-xs font-semibold text-muted-foreground text-right">
-                    رابط الفيديو أو تحميل ملف فيديو
+                    مصدر الفيديو — اختار طريقة واحدة
                   </label>
                   <div className="grid grid-cols-1 gap-4">
                     {/* Visual drag-drop style upload box / URL box */}
@@ -3401,18 +3442,22 @@ export default function AdminDashboard() {
                       </div>
                       <input
                         type="text"
-                        required
                         value={videoForm.youtubeUrl}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          setSelectedVideoFile(null);
                           setVideoForm({
                             ...videoForm,
                             youtubeUrl: e.target.value,
-                          })
-                        }
-                        placeholder="أو اكتب رابط فيديو يوتيوب أو مسار خارجي مباشر..."
+                          });
+                        }}
+                        placeholder="رابط يوتيوب أو رابط خارجي مباشر (اختياري لو هترفع ملف)..."
                         className="w-full bg-background border border-border rounded-xl pr-10 pl-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm text-left"
                         dir="ltr"
                       />
+                      <p className="mt-1 text-right text-[11px] text-muted-foreground">
+                        سيب الرابط فاضي لو اخترت فيديو من جهازك؛ هيترفع تلقائيًا
+                        وقت نشر الدرس.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -3611,12 +3656,14 @@ export default function AdminDashboard() {
                 <button
                   type="submit"
                   disabled={
+                    isVideoUploading ||
                     createVideoMutation.isPending ||
                     updateVideoMutation.isPending
                   }
                   className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-xs transition-colors shadow-lg shadow-primary/10 flex items-center gap-1.5"
                 >
-                  {(createVideoMutation.isPending ||
+                  {(isVideoUploading ||
+                    createVideoMutation.isPending ||
                     updateVideoMutation.isPending) && (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   )}
