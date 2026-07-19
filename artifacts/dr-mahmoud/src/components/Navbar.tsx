@@ -41,8 +41,8 @@ export function Navbar() {
     },
     {
       label: "المنصة التعليمية",
-      href: "/#youtube-lectures",
-      id: "youtube-lectures",
+      href: "/platform",
+      id: "platform-account",
       icon: BookOpen,
     },
   ];
