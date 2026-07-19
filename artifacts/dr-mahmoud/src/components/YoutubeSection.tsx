@@ -87,7 +87,8 @@ function VideoPlayerModal({
         (e.metaKey && (e.key === "s" || e.key === "p" || e.key === "c" || e.shiftKey))
       ) {
         e.preventDefault();
-        alert("عذراً، غير مسموح بالتقاط أو تسجيل الشاشة لحماية حقوق الملكية.");
+        // Use a custom event to trigger toast from modal context
+        window.dispatchEvent(new CustomEvent("dr-toast", { detail: { variant: "destructive", title: "⛔ غير مسموح", description: "غير مسموح بالتقاط أو تسجيل الشاشة لحماية حقوق الملكية." } }));
       }
     };
 
@@ -318,6 +319,7 @@ function UnlockModal({
 
       if (updatedItem && updatedItem.youtubeUrl !== "locked") {
         toast({
+          variant: "success",
           title: "تم تفعيل المحاضرة بنجاح 🎉",
           description: `المحاضرة "${item.title}" متاحة للمشاهدة الآن.`,
         });
@@ -487,6 +489,16 @@ export function YoutubeSection({
   const [bookmarks, setBookmarks] = useState<number[]>([]);
   const [watchProgress, setWatchProgress] = useState<Record<number, number>>({});
   const { toast } = useToast();
+
+  // Listen for toast events dispatched from VideoPlayerModal (anti-piracy, etc.)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail) toast(detail);
+    };
+    window.addEventListener("dr-toast", handler);
+    return () => window.removeEventListener("dr-toast", handler);
+  }, [toast]);
 
   const handlePlayClick = (item: VideoItem) => {
     if (item.youtubeUrl === "locked") {

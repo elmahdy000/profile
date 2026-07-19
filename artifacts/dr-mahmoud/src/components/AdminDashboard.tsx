@@ -385,6 +385,7 @@ export default function AdminDashboard() {
     }));
     setSelectedVideoFile(null);
     toast({
+      variant: "success",
       title: "تم تجهيز الدرس التالي",
       description: "راجع اسم الدرس ورقمه وارفع الفيديو.",
     });
@@ -665,6 +666,7 @@ export default function AdminDashboard() {
       queryClient.invalidateQueries({ queryKey: getListCoursesQueryKey() });
       setIsCourseModalOpen(false);
       toast({
+        variant: "success",
         title: "تم",
         description:
           courseModalMode === "edit"
@@ -705,6 +707,7 @@ export default function AdminDashboard() {
       queryClient.invalidateQueries({ queryKey: getListPodcastsQueryKey() });
       setIsPodcastModalOpen(false);
       toast({
+        variant: "success",
         title: "تم",
         description:
           podcastModalMode === "edit"
@@ -731,7 +734,7 @@ export default function AdminDashboard() {
       toast({
         title: "تنبيه",
         description: "يرجى إضافة صورة واحدة على الأقل للدرس",
-        variant: "destructive",
+        variant: "warning",
       });
       return;
     }
@@ -758,6 +761,7 @@ export default function AdminDashboard() {
       queryClient.invalidateQueries({ queryKey: getListCurriculumsQueryKey() });
       setIsCurriculumModalOpen(false);
       toast({
+        variant: "success",
         title: "تم",
         description:
           curriculumModalMode === "edit"
@@ -823,7 +827,7 @@ export default function AdminDashboard() {
     try {
       await deleteCurriculumMutation.mutateAsync({ id });
       queryClient.invalidateQueries({ queryKey: getListCurriculumsQueryKey() });
-      toast({ title: "تم", description: "تم حذف الدرس بنجاح" });
+      toast({ variant: "success", title: "تم", description: "تم حذف الدرس بنجاح" });
     } catch (err) {
       toast({
         title: "خطأ",
@@ -866,6 +870,7 @@ export default function AdminDashboard() {
         }));
         setSelectedVideoFile(null);
         toast({
+          variant: "success",
           title: "تم رفع الفيديو",
           description: "راجع البيانات وبعدها اضغط حفظ الفيديو.",
         });
@@ -897,7 +902,7 @@ export default function AdminDashboard() {
         title: "بيانات ناقصة",
         description:
           "اختار كورس ومرحلة واحدة على الأقل، وكمل اسم ورقم الدرس والفيديو.",
-        variant: "destructive",
+        variant: "warning",
       });
       return;
     }
@@ -915,7 +920,7 @@ export default function AdminDashboard() {
       toast({
         title: "رقم الدرس مستخدم",
         description: `الدرس «${duplicateNumber.title}» واخد الرقم ده. اضغط اقترح التالي.`,
-        variant: "destructive",
+        variant: "warning",
       });
       return;
     }
@@ -967,6 +972,7 @@ export default function AdminDashboard() {
       queryClient.invalidateQueries({ queryKey: getListVideosQueryKey() });
       setIsVideoModalOpen(false);
       toast({
+        variant: "success",
         title: "تم",
         description:
           videoModalMode === "edit"
@@ -986,7 +992,7 @@ export default function AdminDashboard() {
     try {
       await deleteVideoMutation.mutateAsync({ id });
       queryClient.invalidateQueries({ queryKey: getListVideosQueryKey() });
-      toast({ title: "تم", description: "تم حذف الفيديو بنجاح" });
+      toast({ variant: "success", title: "تم", description: "تم حذف الفيديو بنجاح" });
     } catch (err) {
       toast({
         title: "خطأ",
@@ -1001,7 +1007,7 @@ export default function AdminDashboard() {
     try {
       await deleteCourseMutation.mutateAsync({ id });
       queryClient.invalidateQueries({ queryKey: getListCoursesQueryKey() });
-      toast({ title: "تم", description: "تم حذف الكورس بنجاح" });
+      toast({ variant: "success", title: "تم", description: "تم حذف الكورس بنجاح" });
     } catch (err) {
       toast({
         title: "خطأ",
@@ -1015,7 +1021,7 @@ export default function AdminDashboard() {
     try {
       await deletePodcastMutation.mutateAsync({ id });
       queryClient.invalidateQueries({ queryKey: getListPodcastsQueryKey() });
-      toast({ title: "تم", description: "تم حذف الحلقة بنجاح" });
+      toast({ variant: "success", title: "تم", description: "تم حذف الحلقة بنجاح" });
     } catch (err) {
       toast({
         title: "خطأ",
@@ -1033,7 +1039,7 @@ export default function AdminDashboard() {
         data: { status },
       });
       queryClient.invalidateQueries({ queryKey: getListBookingsQueryKey() });
-      toast({ title: "تم", description: "تم تحديث حالة الحجز بنجاح" });
+      toast({ variant: "success", title: "تم", description: "تم تحديث حالة الحجز بنجاح" });
     } catch (err) {
       toast({
         title: "خطأ",
@@ -1047,7 +1053,7 @@ export default function AdminDashboard() {
     try {
       await deleteBookingMutation.mutateAsync({ id });
       queryClient.invalidateQueries({ queryKey: getListBookingsQueryKey() });
-      toast({ title: "تم", description: "تم حذف الحجز بنجاح" });
+      toast({ variant: "success", title: "تم", description: "تم حذف الحجز بنجاح" });
     } catch (err) {
       toast({
         title: "خطأ",

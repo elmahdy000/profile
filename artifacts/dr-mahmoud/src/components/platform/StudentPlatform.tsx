@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { YoutubeSection } from "@/components/YoutubeSection";
+import { toast } from "@/hooks/use-toast";
 
 type Student = {
   id: number;
@@ -1307,7 +1308,7 @@ export function StudentPlatform() {
       );
       setQuizResult(res);
     } catch (err) {
-      alert((err as Error).message);
+      toast({ variant: "destructive", title: "خطأ في الاختبار", description: (err as Error).message });
     } finally {
       setQuizSubmitting(false);
     }

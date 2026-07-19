@@ -359,7 +359,7 @@ export function AdminSettings() {
     setList(newList);
     if (setIdx) setIdx(null);
     setIsSaved(false);
-    toast({ title: "تم", description: "تم حذف العنصر بنجاح" });
+    toast({ variant: "success", title: "تم", description: "تم حذف العنصر بنجاح" });
   };
 
   if (isLoading) {
