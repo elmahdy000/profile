@@ -1,16 +1,27 @@
 import { Router, type IRouter } from "express";
-import { db, videosTable } from "@workspace/db";
+import {
+  coursesTable,
+  db,
+  learningFilesTable,
+  videoFileAttachmentsTable,
+  videosTable,
+} from "@workspace/db";
 import { CreateVideoBody, UpdateVideoBody } from "@workspace/api-zod";
 import { requireAdmin, isAdminRequest } from "../middleware/auth";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, inArray } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
 import { createHmac, timingSafeEqual } from "crypto";
-import { canStudentAccessCategory, getApprovedStudent } from "../middleware/student-auth";
+import {
+  canStudentAccessContent,
+  canStudentAccessLearningMode,
+  getApprovedStudent,
+} from "../middleware/student-auth";
 
 const router: IRouter = Router();
 
-const streamTokenSecret = process.env.STREAM_TOKEN_SECRET || process.env.ADMIN_PASSWORD!;
+const streamTokenSecret =
+  process.env.STREAM_TOKEN_SECRET || process.env.ADMIN_PASSWORD!;
 const STREAM_TOKEN_TTL_SECONDS = 60 * 10;
 const VIDEO_CONTENT_TYPES: Record<string, string> = {
   ".mp4": "video/mp4",
@@ -35,7 +46,8 @@ function isValidStreamToken(videoId: number, token: unknown): boolean {
   if (typeof token !== "string") return false;
   const [expiresRaw, suppliedSignature] = token.split(".");
   const expiresAt = Number(expiresRaw);
-  if (!expiresRaw || !suppliedSignature || !Number.isSafeInteger(expiresAt)) return false;
+  if (!expiresRaw || !suppliedSignature || !Number.isSafeInteger(expiresAt))
+    return false;
   if (expiresAt < Math.floor(Date.now() / 1000)) return false;
 
   const expectedSignature = createHmac("sha256", streamTokenSecret)
@@ -43,11 +55,56 @@ function isValidStreamToken(videoId: number, token: unknown): boolean {
     .digest("base64url");
   const supplied = Buffer.from(suppliedSignature);
   const expected = Buffer.from(expectedSignature);
-  return supplied.length === expected.length && timingSafeEqual(supplied, expected);
+  return (
+    supplied.length === expected.length && timingSafeEqual(supplied, expected)
+  );
 }
 
 function getProtectedStreamUrl(videoId: number): string {
   return `/api/videos/${videoId}/stream?token=${createStreamToken(videoId)}`;
+}
+
+async function loadAttachmentMap(videoIds: number[]) {
+  const map = new Map<number, Array<Record<string, unknown>>>();
+  if (videoIds.length === 0) return map;
+  const rows = await db
+    .select({
+      videoId: videoFileAttachmentsTable.videoId,
+      order: videoFileAttachmentsTable.order,
+      id: learningFilesTable.id,
+      title: learningFilesTable.title,
+      description: learningFilesTable.description,
+      category: learningFilesTable.category,
+      stage: learningFilesTable.stage,
+      subject: learningFilesTable.subject,
+      originalName: learningFilesTable.originalName,
+      mimeType: learningFilesTable.mimeType,
+      sizeBytes: learningFilesTable.sizeBytes,
+      isPublished: learningFilesTable.isPublished,
+    })
+    .from(videoFileAttachmentsTable)
+    .innerJoin(
+      learningFilesTable,
+      eq(videoFileAttachmentsTable.fileId, learningFilesTable.id),
+    )
+    .where(inArray(videoFileAttachmentsTable.videoId, videoIds))
+    .orderBy(asc(videoFileAttachmentsTable.order));
+  for (const row of rows)
+    map.set(row.videoId, [...(map.get(row.videoId) ?? []), row]);
+  return map;
+}
+
+async function syncVideoAttachments(videoId: number, fileIds: number[]) {
+  const uniqueIds = Array.from(
+    new Set(fileIds.filter((id) => Number.isInteger(id) && id > 0)),
+  );
+  await db
+    .delete(videoFileAttachmentsTable)
+    .where(eq(videoFileAttachmentsTable.videoId, videoId));
+  if (uniqueIds.length)
+    await db
+      .insert(videoFileAttachmentsTable)
+      .values(uniqueIds.map((fileId, order) => ({ videoId, fileId, order })));
 }
 
 // List all videos and playlists with gating logic
@@ -57,27 +114,46 @@ router.get("/videos", async (req, res, next) => {
       .select()
       .from(videosTable)
       .orderBy(asc(videosTable.order));
+    const attachmentMap = await loadAttachmentMap(
+      videos.map((video) => video.id),
+    );
 
     const isAdmin = isAdminRequest(req);
 
     if (isAdmin) {
       // Admins see access keys, but local file paths are still replaced with
       // short-lived stream URLs so uploads never need to be publicly served.
-      res.json(videos.map((video) => ({
-        ...video,
-        youtubeUrl: video.youtubeUrl.startsWith("/uploads/")
-          ? getProtectedStreamUrl(video.id)
-          : video.youtubeUrl,
-      })));
+      res.json(
+        videos.map((video) => ({
+          ...video,
+          attachments: attachmentMap.get(video.id) ?? [],
+          youtubeUrl: video.youtubeUrl.startsWith("/uploads/")
+            ? getProtectedStreamUrl(video.id)
+            : video.youtubeUrl,
+        })),
+      );
       return;
     }
 
     const approvedStudent = await getApprovedStudent(req);
     if (!approvedStudent) {
-      res.status(401).json({ error: "Student approval and login are required" });
+      res
+        .status(401)
+        .json({ error: "Student approval and login are required" });
       return;
     }
-    const allowedVideos = videos.filter((video) => canStudentAccessCategory(approvedStudent, video.category));
+    const allowedVideos = videos.filter(
+      (video) =>
+        video.isPublished &&
+        canStudentAccessContent(
+          approvedStudent,
+          video.category,
+          video.stage,
+          video.stages,
+          video.courseId,
+        ) &&
+        canStudentAccessLearningMode(approvedStudent, video.learningMode),
+    );
 
     // 1. Group videos by category to find the first video of each category
     const videosByCategory: Record<string, typeof videos> = {};
@@ -102,7 +178,9 @@ router.get("/videos", async (req, res, next) => {
     }
 
     // 3. Parse student's unlocked keys from x-unlock-keys header
-    const unlockKeysHeader = (req.headers["x-unlock-keys"] as string || "").toLowerCase();
+    const unlockKeysHeader = (
+      (req.headers["x-unlock-keys"] as string) || ""
+    ).toLowerCase();
     const studentKeys = unlockKeysHeader
       .split(/[\s,]+/)
       .map((k) => k.trim())
@@ -118,23 +196,41 @@ router.get("/videos", async (req, res, next) => {
 
       const isLocalFile = v.youtubeUrl.startsWith("/uploads/");
       const videoSrcUrl = isUnlocked
-        ? (isLocalFile ? getProtectedStreamUrl(v.id) : v.youtubeUrl)
+        ? isLocalFile
+          ? getProtectedStreamUrl(v.id)
+          : v.youtubeUrl
         : "locked";
 
       return {
         id: v.id,
+        courseId: v.courseId,
         category: v.category,
+        stage: v.stage,
+        stages: v.stages,
+        subject: v.subject,
+        learningMode: v.learningMode,
+        tags: v.tags,
         title: v.title,
         description: v.description,
         youtubeUrl: videoSrcUrl,
         type: v.type,
         order: v.order,
         isProtected: v.isProtected,
+        isPublished: v.isPublished,
         accessKey: null, // Never leak access key to clients!
         durationText: v.durationText,
         lessonsCount: v.lessonsCount,
         level: v.level,
         pdfFileId: v.pdfFileId,
+        attachments: (attachmentMap.get(v.id) ?? []).filter(
+          (attachment) =>
+            attachment.isPublished &&
+            canStudentAccessContent(
+              approvedStudent,
+              String(attachment.category),
+              attachment.stage ? String(attachment.stage) : null,
+            ),
+        ),
         quizId: v.quizId,
         createdAt: v.createdAt,
       };
@@ -150,16 +246,55 @@ router.get("/videos", async (req, res, next) => {
 router.post("/videos", requireAdmin, async (req, res, next) => {
   try {
     const validated = CreateVideoBody.parse(req.body);
+    if (!validated.courseId) {
+      res.status(400).json({ error: "اختيار الكورس مطلوب" });
+      return;
+    }
+    const allowedStages = new Set([
+      "أولى بكالوريا",
+      "تانية بكالوريا",
+      "جامعة",
+      "عام",
+    ]);
+    const stages = Array.from(
+      new Set(
+        (validated.stages ?? (validated.stage ? [validated.stage] : []))
+          .map((value) => String(value).trim())
+          .filter((value) => allowedStages.has(value)),
+      ),
+    ).slice(0, 10);
+    if (stages.length === 0) {
+      res.status(400).json({ error: "اختار مرحلة دراسية واحدة على الأقل" });
+      return;
+    }
+    const [selectedCourse] = validated.courseId
+      ? await db
+          .select()
+          .from(coursesTable)
+          .where(eq(coursesTable.id, validated.courseId))
+          .limit(1)
+      : [];
+    if (validated.courseId && !selectedCourse) {
+      res.status(400).json({ error: "الكورس المختار غير موجود" });
+      return;
+    }
     const [inserted] = await db
       .insert(videosTable)
       .values({
-        category: validated.category,
+        courseId: selectedCourse?.id ?? null,
+        category: selectedCourse?.title ?? validated.category,
+        stage: stages[0] ?? null,
+        stages,
+        subject: validated.subject ?? null,
+        learningMode: validated.learningMode ?? "online",
+        tags: validated.tags ?? [],
         title: validated.title,
         description: validated.description ?? null,
         youtubeUrl: validated.youtubeUrl,
         type: validated.type,
         order: validated.order ?? 0,
         isProtected: validated.isProtected ?? false,
+        isPublished: validated.isPublished ?? true,
         accessKey: validated.accessKey ?? null,
         durationText: validated.durationText ?? null,
         lessonsCount: validated.lessonsCount ?? null,
@@ -169,7 +304,16 @@ router.post("/videos", requireAdmin, async (req, res, next) => {
       })
       .returning();
 
-    res.status(201).json(inserted);
+    const attachmentIds =
+      validated.attachmentFileIds ??
+      (validated.pdfFileId ? [validated.pdfFileId] : []);
+    await syncVideoAttachments(inserted.id, attachmentIds);
+
+    res.status(201).json({
+      ...inserted,
+      attachments:
+        (await loadAttachmentMap([inserted.id])).get(inserted.id) ?? [],
+    });
   } catch (error) {
     next(error);
   }
@@ -180,22 +324,83 @@ router.put("/videos/:id", requireAdmin, async (req, res, next) => {
   try {
     const id = parseInt(req.params.id as string, 10);
     const validated = UpdateVideoBody.parse(req.body);
+    const allowedStages = new Set([
+      "أولى بكالوريا",
+      "تانية بكالوريا",
+      "جامعة",
+      "عام",
+    ]);
+    const stages =
+      validated.stages !== undefined
+        ? Array.from(
+            new Set(
+              validated.stages
+                .map((value) => String(value).trim())
+                .filter((value) => allowedStages.has(value)),
+            ),
+          ).slice(0, 10)
+        : undefined;
+    if (stages !== undefined && stages.length === 0) {
+      res.status(400).json({ error: "اختار مرحلة دراسية واحدة على الأقل" });
+      return;
+    }
+    const [selectedCourse] = validated.courseId
+      ? await db
+          .select()
+          .from(coursesTable)
+          .where(eq(coursesTable.id, validated.courseId))
+          .limit(1)
+      : [];
+    if (validated.courseId && !selectedCourse) {
+      res.status(400).json({ error: "الكورس المختار غير موجود" });
+      return;
+    }
 
     const [updated] = await db
       .update(videosTable)
       .set({
-        ...(validated.category !== undefined && { category: validated.category }),
+        ...(validated.courseId !== undefined && {
+          courseId: validated.courseId,
+          ...(selectedCourse ? { category: selectedCourse.title } : {}),
+        }),
+        ...(validated.category !== undefined &&
+          validated.courseId === undefined && { category: validated.category }),
+        ...(stages !== undefined && { stages, stage: stages[0] ?? null }),
+        ...(stages === undefined &&
+          validated.stage !== undefined && { stage: validated.stage }),
+        ...(validated.subject !== undefined && { subject: validated.subject }),
+        ...(validated.learningMode !== undefined && {
+          learningMode: validated.learningMode,
+        }),
+        ...(validated.tags !== undefined && { tags: validated.tags }),
         ...(validated.title !== undefined && { title: validated.title }),
-        ...(validated.description !== undefined && { description: validated.description }),
-        ...(validated.youtubeUrl !== undefined && { youtubeUrl: validated.youtubeUrl }),
+        ...(validated.description !== undefined && {
+          description: validated.description,
+        }),
+        ...(validated.youtubeUrl !== undefined && {
+          youtubeUrl: validated.youtubeUrl,
+        }),
         ...(validated.type !== undefined && { type: validated.type }),
         ...(validated.order !== undefined && { order: validated.order }),
-        ...(validated.isProtected !== undefined && { isProtected: validated.isProtected }),
-        ...(validated.accessKey !== undefined && { accessKey: validated.accessKey }),
-        ...(validated.durationText !== undefined && { durationText: validated.durationText }),
-        ...(validated.lessonsCount !== undefined && { lessonsCount: validated.lessonsCount }),
+        ...(validated.isProtected !== undefined && {
+          isProtected: validated.isProtected,
+        }),
+        ...(validated.isPublished !== undefined && {
+          isPublished: validated.isPublished,
+        }),
+        ...(validated.accessKey !== undefined && {
+          accessKey: validated.accessKey,
+        }),
+        ...(validated.durationText !== undefined && {
+          durationText: validated.durationText,
+        }),
+        ...(validated.lessonsCount !== undefined && {
+          lessonsCount: validated.lessonsCount,
+        }),
         ...(validated.level !== undefined && { level: validated.level }),
-        ...(validated.pdfFileId !== undefined && { pdfFileId: validated.pdfFileId }),
+        ...(validated.pdfFileId !== undefined && {
+          pdfFileId: validated.pdfFileId,
+        }),
         ...(validated.quizId !== undefined && { quizId: validated.quizId }),
       })
       .where(eq(videosTable.id, id))
@@ -206,7 +411,21 @@ router.put("/videos/:id", requireAdmin, async (req, res, next) => {
       return;
     }
 
-    res.json(updated);
+    if (
+      validated.attachmentFileIds !== undefined ||
+      validated.pdfFileId !== undefined
+    ) {
+      const attachmentIds =
+        validated.attachmentFileIds ??
+        (validated.pdfFileId ? [validated.pdfFileId] : []);
+      await syncVideoAttachments(updated.id, attachmentIds);
+    }
+
+    res.json({
+      ...updated,
+      attachments:
+        (await loadAttachmentMap([updated.id])).get(updated.id) ?? [],
+    });
   } catch (error) {
     next(error);
   }
@@ -280,7 +499,9 @@ router.get("/videos/:id/stream", async (req, res, next) => {
 
     // Stream URLs use short-lived signed tokens. Unlock keys stay in request
     // headers and are never exposed in URLs, browser history, or proxy logs.
-    const keysHeader = (req.headers["x-unlock-keys"] as string || "").toLowerCase();
+    const keysHeader = (
+      (req.headers["x-unlock-keys"] as string) || ""
+    ).toLowerCase();
     const isFirstVideo = firstVideoIds.has(video.id);
     const studentKeys = keysHeader
       .split(/[\s,]+/)
@@ -290,17 +511,31 @@ router.get("/videos/:id/stream", async (req, res, next) => {
     const isUnlocked =
       !video.isProtected ||
       isFirstVideo ||
-      (video.accessKey && studentKeys.includes(video.accessKey.toLowerCase().trim()));
+      (video.accessKey &&
+        studentKeys.includes(video.accessKey.toLowerCase().trim()));
 
     const isAdmin = isAdminRequest(req);
     const hasValidToken = isValidStreamToken(video.id, req.query.token);
 
     const approvedStudent = await getApprovedStudent(req);
     if (!isAdmin && !approvedStudent) {
-      res.status(401).json({ error: "Student approval and login are required" });
+      res
+        .status(401)
+        .json({ error: "Student approval and login are required" });
       return;
     }
-    if (approvedStudent && !canStudentAccessCategory(approvedStudent, video.category)) {
+    if (
+      approvedStudent &&
+      (!video.isPublished ||
+        !canStudentAccessContent(
+          approvedStudent,
+          video.category,
+          video.stage,
+          video.stages,
+          video.courseId,
+        ) ||
+        !canStudentAccessLearningMode(approvedStudent, video.learningMode))
+    ) {
       res.status(403).json({ error: "الفيديو مش ضمن الكورس المسجل ليك" });
       return;
     }
@@ -328,18 +563,30 @@ router.get("/videos/:id/stream", async (req, res, next) => {
       const requestedEnd = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
       const end = Math.min(requestedEnd, fileSize - 1);
 
-      if (!Number.isSafeInteger(start) || start < 0 || !Number.isSafeInteger(end) || end < start || start >= fileSize) {
-        res.status(416).send("Requested range not satisfiable\n" + start + " >= " + fileSize);
+      if (
+        !Number.isSafeInteger(start) ||
+        start < 0 ||
+        !Number.isSafeInteger(end) ||
+        end < start ||
+        start >= fileSize
+      ) {
+        res
+          .status(416)
+          .send(
+            "Requested range not satisfiable\n" + start + " >= " + fileSize,
+          );
         return;
       }
 
-      const chunksize = (end - start) + 1;
+      const chunksize = end - start + 1;
       const file = fs.createReadStream(filePath, { start, end });
       const head = {
         "Content-Range": `bytes ${start}-${end}/${fileSize}`,
         "Accept-Ranges": "bytes",
         "Content-Length": chunksize,
-        "Content-Type": VIDEO_CONTENT_TYPES[path.extname(filename).toLowerCase()] || "application/octet-stream",
+        "Content-Type":
+          VIDEO_CONTENT_TYPES[path.extname(filename).toLowerCase()] ||
+          "application/octet-stream",
         "Cache-Control": "private, no-store",
       };
 
@@ -348,7 +595,9 @@ router.get("/videos/:id/stream", async (req, res, next) => {
     } else {
       const head = {
         "Content-Length": fileSize,
-        "Content-Type": VIDEO_CONTENT_TYPES[path.extname(filename).toLowerCase()] || "application/octet-stream",
+        "Content-Type":
+          VIDEO_CONTENT_TYPES[path.extname(filename).toLowerCase()] ||
+          "application/octet-stream",
         "Accept-Ranges": "bytes",
         "Cache-Control": "private, no-store",
       };

@@ -5,453 +5,474 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import * as zod from 'zod';
-
+import * as zod from "zod";
 
 /**
  * Returns all site settings as a key-value map
  * @summary Get all settings
  */
-export const GetSettingsResponse = zod.record(zod.string(), zod.object({
-  "value": zod.string().nullish(),
-  "type": zod.string().optional()
-}))
-
+export const GetSettingsResponse = zod.record(
+  zod.string(),
+  zod.object({
+    value: zod.string().nullish(),
+    type: zod.string().optional(),
+  }),
+);
 
 /**
  * Update or create a site setting
  * @summary Update setting
  */
 export const SetSettingBody = zod.object({
-  "key": zod.string(),
-  "value": zod.string().nullish(),
-  "type": zod.string().optional()
-})
+  key: zod.string(),
+  value: zod.string().nullish(),
+  type: zod.string().optional(),
+});
 
 export const SetSettingResponse = zod.object({
-  "id": zod.number(),
-  "key": zod.string(),
-  "value": zod.string().nullish(),
-  "type": zod.string().optional(),
-  "updatedAt": zod.string()
-})
-
+  id: zod.number(),
+  key: zod.string(),
+  value: zod.string().nullish(),
+  type: zod.string().optional(),
+  updatedAt: zod.string(),
+});
 
 /**
  * Update multiple settings at once
  * @summary Update settings batch
  */
 export const UpdateSettingsBatchBody = zod.object({
-  "settings": zod.array(zod.object({
-  "key": zod.string(),
-  "value": zod.string().nullish(),
-  "type": zod.string().optional()
-}))
-})
+  settings: zod.array(
+    zod.object({
+      key: zod.string(),
+      value: zod.string().nullish(),
+      type: zod.string().optional(),
+    }),
+  ),
+});
 
 export const UpdateSettingsBatchResponseItem = zod.object({
-  "id": zod.number(),
-  "key": zod.string(),
-  "value": zod.string().nullish(),
-  "type": zod.string().optional(),
-  "updatedAt": zod.string()
-})
-export const UpdateSettingsBatchResponse = zod.array(UpdateSettingsBatchResponseItem)
-
+  id: zod.number(),
+  key: zod.string(),
+  value: zod.string().nullish(),
+  type: zod.string().optional(),
+  updatedAt: zod.string(),
+});
+export const UpdateSettingsBatchResponse = zod.array(
+  UpdateSettingsBatchResponseItem,
+);
 
 /**
  * Returns server health status
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
-  "status": zod.string()
-})
-
+  status: zod.string(),
+});
 
 /**
  * Returns all bookings
  * @summary List bookings
  */
 export const ListBookingsResponseItem = zod.object({
-  "id": zod.number(),
-  "name": zod.string(),
-  "phone": zod.string(),
-  "message": zod.string(),
-  "status": zod.string(),
-  "createdAt": zod.string()
-})
-export const ListBookingsResponse = zod.array(ListBookingsResponseItem)
-
+  id: zod.number(),
+  name: zod.string(),
+  phone: zod.string(),
+  message: zod.string(),
+  status: zod.string(),
+  createdAt: zod.string(),
+});
+export const ListBookingsResponse = zod.array(ListBookingsResponseItem);
 
 /**
  * Submits a new booking request
  * @summary Create booking
  */
 export const CreateBookingBody = zod.object({
-  "name": zod.string(),
-  "phone": zod.string(),
-  "message": zod.string()
-})
-
+  name: zod.string(),
+  phone: zod.string(),
+  message: zod.string(),
+});
 
 /**
  * Updates the status of an existing booking
  * @summary Update booking status
  */
 export const UpdateBookingStatusParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const UpdateBookingStatusBody = zod.object({
-  "status": zod.string()
-})
+  status: zod.string(),
+});
 
 export const UpdateBookingStatusResponse = zod.object({
-  "id": zod.number(),
-  "name": zod.string(),
-  "phone": zod.string(),
-  "message": zod.string(),
-  "status": zod.string(),
-  "createdAt": zod.string()
-})
-
+  id: zod.number(),
+  name: zod.string(),
+  phone: zod.string(),
+  message: zod.string(),
+  status: zod.string(),
+  createdAt: zod.string(),
+});
 
 /**
  * Deletes a booking from the database
  * @summary Delete booking
  */
 export const DeleteBookingParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const DeleteBookingResponse = zod.object({
-  "success": zod.boolean()
-})
-
+  success: zod.boolean(),
+});
 
 /**
  * Returns all podcast episodes
  * @summary List podcasts
  */
 export const ListPodcastsResponseItem = zod.object({
-  "id": zod.number(),
-  "title": zod.string(),
-  "desc": zod.string(),
-  "duration": zod.string(),
-  "youtubeUrl": zod.string().nullish(),
-  "audioUrl": zod.string().nullish(),
-  "createdAt": zod.string()
-})
-export const ListPodcastsResponse = zod.array(ListPodcastsResponseItem)
-
+  id: zod.number(),
+  title: zod.string(),
+  desc: zod.string(),
+  duration: zod.string(),
+  youtubeUrl: zod.string().nullish(),
+  audioUrl: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+export const ListPodcastsResponse = zod.array(ListPodcastsResponseItem);
 
 /**
  * Creates a new podcast episode
  * @summary Create podcast
  */
 export const CreatePodcastBody = zod.object({
-  "title": zod.string(),
-  "desc": zod.string(),
-  "duration": zod.string(),
-  "youtubeUrl": zod.string().nullish(),
-  "audioUrl": zod.string().nullish()
-})
-
+  title: zod.string(),
+  desc: zod.string(),
+  duration: zod.string(),
+  youtubeUrl: zod.string().nullish(),
+  audioUrl: zod.string().nullish(),
+});
 
 /**
  * Updates an existing podcast episode
  * @summary Update podcast
  */
 export const UpdatePodcastParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const UpdatePodcastBody = zod.object({
-  "title": zod.string(),
-  "desc": zod.string(),
-  "duration": zod.string(),
-  "youtubeUrl": zod.string().nullish(),
-  "audioUrl": zod.string().nullish()
-})
+  title: zod.string(),
+  desc: zod.string(),
+  duration: zod.string(),
+  youtubeUrl: zod.string().nullish(),
+  audioUrl: zod.string().nullish(),
+});
 
 export const UpdatePodcastResponse = zod.object({
-  "id": zod.number(),
-  "title": zod.string(),
-  "desc": zod.string(),
-  "duration": zod.string(),
-  "youtubeUrl": zod.string().nullish(),
-  "audioUrl": zod.string().nullish(),
-  "createdAt": zod.string()
-})
-
+  id: zod.number(),
+  title: zod.string(),
+  desc: zod.string(),
+  duration: zod.string(),
+  youtubeUrl: zod.string().nullish(),
+  audioUrl: zod.string().nullish(),
+  createdAt: zod.string(),
+});
 
 /**
  * Deletes a podcast episode
  * @summary Delete podcast
  */
 export const DeletePodcastParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const DeletePodcastResponse = zod.object({
-  "success": zod.boolean()
-})
-
+  success: zod.boolean(),
+});
 
 /**
  * Returns all courses
  * @summary List courses
  */
 export const ListCoursesResponseItem = zod.object({
-  "id": zod.number(),
-  "title": zod.string(),
-  "age": zod.string(),
-  "duration": zod.string(),
-  "sessions": zod.string(),
-  "level": zod.string(),
-  "category": zod.string(),
-  "tags": zod.array(zod.string()),
-  "img": zod.string(),
-  "lessonsCount": zod.number(),
-  "videosCount": zod.number()
-})
-export const ListCoursesResponse = zod.array(ListCoursesResponseItem)
-
+  id: zod.number(),
+  title: zod.string(),
+  age: zod.string(),
+  duration: zod.string(),
+  sessions: zod.string(),
+  level: zod.string(),
+  category: zod.string(),
+  tags: zod.array(zod.string()),
+  img: zod.string(),
+  lessonsCount: zod.number(),
+  videosCount: zod.number(),
+});
+export const ListCoursesResponse = zod.array(ListCoursesResponseItem);
 
 /**
  * Creates a new course
  * @summary Create course
  */
 export const CreateCourseBody = zod.object({
-  "title": zod.string(),
-  "age": zod.string(),
-  "duration": zod.string(),
-  "sessions": zod.string(),
-  "level": zod.string(),
-  "category": zod.string(),
-  "tags": zod.array(zod.string()),
-  "img": zod.string()
-})
-
+  title: zod.string(),
+  age: zod.string(),
+  duration: zod.string(),
+  sessions: zod.string(),
+  level: zod.string(),
+  category: zod.string(),
+  tags: zod.array(zod.string()),
+  img: zod.string(),
+});
 
 /**
  * Updates an existing course
  * @summary Update course
  */
 export const UpdateCourseParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const UpdateCourseBody = zod.object({
-  "title": zod.string(),
-  "age": zod.string(),
-  "duration": zod.string(),
-  "sessions": zod.string(),
-  "level": zod.string(),
-  "category": zod.string(),
-  "tags": zod.array(zod.string()),
-  "img": zod.string()
-})
+  title: zod.string(),
+  age: zod.string(),
+  duration: zod.string(),
+  sessions: zod.string(),
+  level: zod.string(),
+  category: zod.string(),
+  tags: zod.array(zod.string()),
+  img: zod.string(),
+});
 
 export const UpdateCourseResponse = zod.object({
-  "id": zod.number(),
-  "title": zod.string(),
-  "age": zod.string(),
-  "duration": zod.string(),
-  "sessions": zod.string(),
-  "level": zod.string(),
-  "category": zod.string(),
-  "tags": zod.array(zod.string()),
-  "img": zod.string(),
-  "lessonsCount": zod.number(),
-  "videosCount": zod.number()
-})
-
+  id: zod.number(),
+  title: zod.string(),
+  age: zod.string(),
+  duration: zod.string(),
+  sessions: zod.string(),
+  level: zod.string(),
+  category: zod.string(),
+  tags: zod.array(zod.string()),
+  img: zod.string(),
+  lessonsCount: zod.number(),
+  videosCount: zod.number(),
+});
 
 /**
  * Deletes a course
  * @summary Delete course
  */
 export const DeleteCourseParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const DeleteCourseResponse = zod.object({
-  "success": zod.boolean()
-})
-
+  success: zod.boolean(),
+});
 
 /**
  * Returns all videos and playlists
  * @summary List videos and playlists
  */
 export const ListVideosResponseItem = zod.object({
-  "id": zod.number(),
-  "category": zod.string(),
-  "title": zod.string(),
-  "description": zod.string().nullish(),
-  "youtubeUrl": zod.string(),
-  "type": zod.string(),
-  "order": zod.number(),
-  "isProtected": zod.boolean(),
-  "accessKey": zod.string().nullish(),
-  "durationText": zod.string().nullish(),
-  "lessonsCount": zod.number().nullish(),
-  "level": zod.string().nullish(),
-  "pdfFileId": zod.number().nullish(),
-  "quizId": zod.number().nullish(),
-  "createdAt": zod.string()
-})
-export const ListVideosResponse = zod.array(ListVideosResponseItem)
-
+  id: zod.number(),
+  courseId: zod.number().nullish(),
+  category: zod.string(),
+  stage: zod.string().nullish(),
+  stages: zod.array(zod.string()).optional(),
+  subject: zod.string().nullish(),
+  learningMode: zod.enum(["online", "offline", "both"]).optional(),
+  tags: zod.array(zod.string()).optional(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  youtubeUrl: zod.string(),
+  type: zod.string(),
+  order: zod.number(),
+  isProtected: zod.boolean(),
+  isPublished: zod.boolean(),
+  accessKey: zod.string().nullish(),
+  durationText: zod.string().nullish(),
+  lessonsCount: zod.number().nullish(),
+  level: zod.string().nullish(),
+  pdfFileId: zod.number().nullish(),
+  attachments: zod.array(zod.record(zod.string(), zod.unknown())).optional(),
+  quizId: zod.number().nullish(),
+  createdAt: zod.string(),
+});
+export const ListVideosResponse = zod.array(ListVideosResponseItem);
 
 /**
  * Creates a new video or playlist entry
  * @summary Create video or playlist
  */
+export const createVideoBodyLearningModeDefault = `online`;
 export const createVideoBodyIsProtectedDefault = false;
+export const createVideoBodyIsPublishedDefault = true;
 
 export const CreateVideoBody = zod.object({
-  "category": zod.string(),
-  "title": zod.string(),
-  "description": zod.string().nullish(),
-  "youtubeUrl": zod.string(),
-  "type": zod.string(),
-  "order": zod.number().optional(),
-  "isProtected": zod.boolean().default(createVideoBodyIsProtectedDefault),
-  "accessKey": zod.string().nullish(),
-  "durationText": zod.string().nullish(),
-  "lessonsCount": zod.number().nullish(),
-  "level": zod.string().nullish(),
-  "pdfFileId": zod.number().nullish(),
-  "quizId": zod.number().nullish()
-})
-
+  courseId: zod.number().nullish(),
+  category: zod.string(),
+  stage: zod.string().nullish(),
+  stages: zod.array(zod.string()).optional(),
+  subject: zod.string().nullish(),
+  learningMode: zod
+    .enum(["online", "offline", "both"])
+    .default(createVideoBodyLearningModeDefault),
+  tags: zod.array(zod.string()).optional(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  youtubeUrl: zod.string(),
+  type: zod.string(),
+  order: zod.number().optional(),
+  isProtected: zod.boolean().default(createVideoBodyIsProtectedDefault),
+  isPublished: zod.boolean().default(createVideoBodyIsPublishedDefault),
+  accessKey: zod.string().nullish(),
+  durationText: zod.string().nullish(),
+  lessonsCount: zod.number().nullish(),
+  level: zod.string().nullish(),
+  pdfFileId: zod.number().nullish(),
+  attachmentFileIds: zod.array(zod.number()).optional(),
+  quizId: zod.number().nullish(),
+});
 
 /**
  * Updates an existing video or playlist entry
  * @summary Update video or playlist
  */
 export const UpdateVideoParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
+export const updateVideoBodyLearningModeDefault = `online`;
 export const updateVideoBodyIsProtectedDefault = false;
+export const updateVideoBodyIsPublishedDefault = true;
 
 export const UpdateVideoBody = zod.object({
-  "category": zod.string(),
-  "title": zod.string(),
-  "description": zod.string().nullish(),
-  "youtubeUrl": zod.string(),
-  "type": zod.string(),
-  "order": zod.number().optional(),
-  "isProtected": zod.boolean().default(updateVideoBodyIsProtectedDefault),
-  "accessKey": zod.string().nullish(),
-  "durationText": zod.string().nullish(),
-  "lessonsCount": zod.number().nullish(),
-  "level": zod.string().nullish(),
-  "pdfFileId": zod.number().nullish(),
-  "quizId": zod.number().nullish()
-})
+  courseId: zod.number().nullish(),
+  category: zod.string(),
+  stage: zod.string().nullish(),
+  stages: zod.array(zod.string()).optional(),
+  subject: zod.string().nullish(),
+  learningMode: zod
+    .enum(["online", "offline", "both"])
+    .default(updateVideoBodyLearningModeDefault),
+  tags: zod.array(zod.string()).optional(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  youtubeUrl: zod.string(),
+  type: zod.string(),
+  order: zod.number().optional(),
+  isProtected: zod.boolean().default(updateVideoBodyIsProtectedDefault),
+  isPublished: zod.boolean().default(updateVideoBodyIsPublishedDefault),
+  accessKey: zod.string().nullish(),
+  durationText: zod.string().nullish(),
+  lessonsCount: zod.number().nullish(),
+  level: zod.string().nullish(),
+  pdfFileId: zod.number().nullish(),
+  attachmentFileIds: zod.array(zod.number()).optional(),
+  quizId: zod.number().nullish(),
+});
 
 export const UpdateVideoResponse = zod.object({
-  "id": zod.number(),
-  "category": zod.string(),
-  "title": zod.string(),
-  "description": zod.string().nullish(),
-  "youtubeUrl": zod.string(),
-  "type": zod.string(),
-  "order": zod.number(),
-  "isProtected": zod.boolean(),
-  "accessKey": zod.string().nullish(),
-  "durationText": zod.string().nullish(),
-  "lessonsCount": zod.number().nullish(),
-  "level": zod.string().nullish(),
-  "pdfFileId": zod.number().nullish(),
-  "quizId": zod.number().nullish(),
-  "createdAt": zod.string()
-})
-
+  id: zod.number(),
+  courseId: zod.number().nullish(),
+  category: zod.string(),
+  stage: zod.string().nullish(),
+  stages: zod.array(zod.string()).optional(),
+  subject: zod.string().nullish(),
+  learningMode: zod.enum(["online", "offline", "both"]).optional(),
+  tags: zod.array(zod.string()).optional(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  youtubeUrl: zod.string(),
+  type: zod.string(),
+  order: zod.number(),
+  isProtected: zod.boolean(),
+  isPublished: zod.boolean(),
+  accessKey: zod.string().nullish(),
+  durationText: zod.string().nullish(),
+  lessonsCount: zod.number().nullish(),
+  level: zod.string().nullish(),
+  pdfFileId: zod.number().nullish(),
+  attachments: zod.array(zod.record(zod.string(), zod.unknown())).optional(),
+  quizId: zod.number().nullish(),
+  createdAt: zod.string(),
+});
 
 /**
  * Deletes a video or playlist entry
  * @summary Delete video or playlist
  */
 export const DeleteVideoParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const DeleteVideoResponse = zod.object({
-  "success": zod.boolean()
-})
-
+  success: zod.boolean(),
+});
 
 /**
  * Returns all curriculum lessons
  * @summary List curriculums
  */
 export const ListCurriculumsResponseItem = zod.object({
-  "id": zod.number(),
-  "subject": zod.string(),
-  "title": zod.string(),
-  "description": zod.string().nullish(),
-  "images": zod.array(zod.string()),
-  "order": zod.number(),
-  "createdAt": zod.string()
-})
-export const ListCurriculumsResponse = zod.array(ListCurriculumsResponseItem)
-
+  id: zod.number(),
+  subject: zod.string(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  images: zod.array(zod.string()),
+  order: zod.number(),
+  createdAt: zod.string(),
+});
+export const ListCurriculumsResponse = zod.array(ListCurriculumsResponseItem);
 
 /**
  * Creates a new curriculum lesson with images
  * @summary Create curriculum lesson
  */
 export const CreateCurriculumBody = zod.object({
-  "subject": zod.string(),
-  "title": zod.string(),
-  "description": zod.string().nullish(),
-  "images": zod.array(zod.string()),
-  "order": zod.number().optional()
-})
-
+  subject: zod.string(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  images: zod.array(zod.string()),
+  order: zod.number().optional(),
+});
 
 /**
  * Updates an existing curriculum lesson
  * @summary Update curriculum lesson
  */
 export const UpdateCurriculumParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const UpdateCurriculumBody = zod.object({
-  "subject": zod.string(),
-  "title": zod.string(),
-  "description": zod.string().nullish(),
-  "images": zod.array(zod.string()),
-  "order": zod.number().optional()
-})
+  subject: zod.string(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  images: zod.array(zod.string()),
+  order: zod.number().optional(),
+});
 
 export const UpdateCurriculumResponse = zod.object({
-  "id": zod.number(),
-  "subject": zod.string(),
-  "title": zod.string(),
-  "description": zod.string().nullish(),
-  "images": zod.array(zod.string()),
-  "order": zod.number(),
-  "createdAt": zod.string()
-})
-
+  id: zod.number(),
+  subject: zod.string(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  images: zod.array(zod.string()),
+  order: zod.number(),
+  createdAt: zod.string(),
+});
 
 /**
  * Deletes a curriculum lesson
  * @summary Delete curriculum lesson
  */
 export const DeleteCurriculumParams = zod.object({
-  "id": zod.coerce.number()
-})
+  id: zod.coerce.number(),
+});
 
 export const DeleteCurriculumResponse = zod.object({
-  "success": zod.boolean()
-})
-
-
+  success: zod.boolean(),
+});

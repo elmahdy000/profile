@@ -49,6 +49,12 @@ function getVideoMeta(item: VideoItem) {
   };
 }
 
+function getAttachedFiles(item: VideoItem, files: any[]) {
+  if (item.attachments?.length) return item.attachments;
+  const legacy = item.pdfFileId ? files.find((file) => file.id === item.pdfFileId) : null;
+  return legacy ? [legacy] : [];
+}
+
 // ─── Modal Player Component ───
 function VideoPlayerModal({
   item,
@@ -234,25 +240,11 @@ function VideoPlayerModal({
             )}
           </div>
           {/* Linked Materials Footer */}
-          {(item.pdfFileId || item.quizId) && (
+          {(getAttachedFiles(item, files).length > 0 || item.quizId) && (
             <div className="px-6 py-4 border-t border-border bg-muted/20 flex flex-col sm:flex-row gap-3 items-center justify-between text-right" dir="rtl">
               <span className="text-xs font-bold text-muted-foreground">الملفات والتمارين الملحقة بالدرس:</span>
               <div className="flex flex-wrap gap-2.5 w-full sm:w-auto justify-end">
-                {item.pdfFileId && (
-                  (() => {
-                    const file = files.find(f => f.id === item.pdfFileId);
-                    if (!file) return null;
-                    return (
-                      <a
-                        href={`/api/learning/files/${file.id}/download`}
-                        className="inline-flex items-center gap-2 rounded-xl bg-primary text-white hover:bg-primary/90 px-4 py-2.5 text-xs font-bold transition-all shadow-md"
-                      >
-                        <FileText className="w-4 h-4" />
-                        تحميل ملف الـ PDF المرفق
-                      </a>
-                    );
-                  })()
-                )}
+                {getAttachedFiles(item, files).map((file) => <a key={file.id} href={`/api/learning/files/${file.id}/download`} className="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-4 py-2.5 text-xs font-bold text-primary transition-all hover:bg-primary hover:text-white"><FileText className="w-4 h-4"/><span>{file.title}</span>{file.sizeBytes&&<small>{(file.sizeBytes/1024/1024).toFixed(1)} MB</small>}<Download className="w-3.5 h-3.5"/></a>)}
                 {item.quizId && (
                   (() => {
                     const quiz = quizzes.find(q => q.id === item.quizId);
@@ -635,8 +627,10 @@ export function YoutubeSection({
     }).filter(Boolean)
   };
 
+  const isStudentMode = Boolean(student);
+
   return (
-    <section id="youtube-lectures" className="py-24 bg-background relative overflow-hidden" dir="rtl">
+    <section id="youtube-lectures" className={`${isStudentMode ? "py-8 pb-28 lg:py-12 lg:pb-12" : "py-24"} bg-background relative overflow-hidden`} dir="rtl">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaMarkup) }}
@@ -654,7 +648,7 @@ export function YoutubeSection({
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16 space-y-4"
+          className={`${isStudentMode ? "mb-8 text-right" : "mb-16 text-center"} space-y-4`}
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
@@ -664,16 +658,13 @@ export function YoutubeSection({
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary font-medium text-sm"
           >
             <Tv className="w-4 h-4" />
-            المنصة التعليمية الشاملة
+            {isStudentMode ? "محتواك الدراسي" : "المنصة التعليمية الشاملة"}
           </motion.div>
           <h2 className="text-3xl md:text-5xl font-black text-foreground">
-            مكتبة{" "}
-            <span className="text-primary">
-              الكورسات والبرمجيات
-            </span>
+            {isStudentMode ? "دروسك وكورساتك" : <>مكتبة <span className="text-primary">الكورسات والبرمجيات</span></>}
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
-            منصة مخصصة لتأسيس الطلاب وبناء المهندسين. تعلم C++، هياكل البيانات، الخوارزميات وتطبيقات المدارس بأعلى حماية.
+            {isStudentMode ? "كل اللي ظاهر هنا مخصص لمرحلتك والكورسات المسجّل فيها. افتح الدرس وكمل من مكان ما وقفت." : "منصة مخصصة لتأسيس الطلاب وبناء المهندسين. تعلم C++، هياكل البيانات، الخوارزميات وتطبيقات المدارس بأعلى حماية."}
           </p>
         </motion.div>
 
@@ -732,7 +723,7 @@ export function YoutubeSection({
                     {featuredCourse.title}
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
-                    {featuredCourse.description || "ابدأ رحلتك التدريبية مع هذا المسار المتكامل لتأسيس قوي للجامعة وسوق العمل."}
+                    {featuredCourse.description || "افتح الدرس وابدأ المذاكرة، وتقدمك هيتحفظ تلقائي على حسابك."}
                   </p>
                 </div>
 
@@ -836,7 +827,7 @@ export function YoutubeSection({
         )}
 
         {/* ─── 3. Learning Paths Section (SaaS Roadmap style) ─── */}
-        <motion.div
+        {!isStudentMode && <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
@@ -891,19 +882,19 @@ export function YoutubeSection({
               </div>
             ))}
           </div>
-        </motion.div>
+        </motion.div>}
 
         {/* ─── 4. Main Course Directory ─── */}
         <div className="max-w-6xl mx-auto mb-8">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between border-b border-border pb-6 mb-8">
             <h3 className="text-xl font-bold text-foreground flex items-center gap-2 self-start">
               <span className="w-1.5 h-6 bg-primary rounded-full"></span>
-              دليل جميع المسارات والكورسات ({filteredItems.length})
+              {isStudentMode ? `كل دروسك (${filteredItems.length})` : `دليل جميع المسارات والكورسات (${filteredItems.length})`}
             </h3>
 
 
             {/* Controls */}
-            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            {!isStudentMode && <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
               {/* Search Bar */}
               <div className="relative w-full sm:w-64">
                 <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -942,7 +933,7 @@ export function YoutubeSection({
                 <SlidersHorizontal className="w-3.5 h-3.5" />
                 تصفية متقدمة
               </Button>
-            </div>
+            </div>}
           </div>
 
           {/* Collapsible Advanced Filters Panel */}
@@ -998,7 +989,7 @@ export function YoutubeSection({
           </AnimatePresence>
 
           {/* Category Tabs */}
-          <div className="flex flex-wrap items-center justify-start gap-2 mb-8 border-b border-border pb-4">
+          {!isStudentMode && <div className="flex flex-wrap items-center justify-start gap-2 mb-8 border-b border-border pb-4">
             {categories.map((cat) => (
               <button
                 key={cat}
@@ -1013,7 +1004,7 @@ export function YoutubeSection({
                 {cat === "all" ? "جميع الكورسات" : cat}
               </button>
             ))}
-          </div>
+          </div>}
 
           {/* Grid List */}
           {isLoading ? (
@@ -1161,27 +1152,11 @@ export function YoutubeSection({
                       )}
 
                       {/* Supplementary Materials (PDF & Exercises) */}
-                      {(item.pdfFileId || item.quizId) && (
+                      {(getAttachedFiles(item, files).length > 0 || item.quizId) && (
                         <div className="border-t border-border pt-4 space-y-2">
                           <span className="text-[10px] font-bold text-muted-foreground block">الملحقات والمرفقات:</span>
                           <div className="flex flex-col gap-2">
-                            {item.pdfFileId && (
-                              (() => {
-                                const file = files.find(f => f.id === item.pdfFileId);
-                                if (!file) return null;
-                                return (
-                                  <a
-                                    href={`/api/learning/files/${file.id}/download`}
-                                    className="flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/10 hover:border-primary/30 p-2.5 text-xs text-primary font-bold transition-all text-right w-full"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <FileText className="w-4 h-4 shrink-0 text-primary" />
-                                    <span className="line-clamp-1 flex-1 text-right">{file.title} (PDF)</span>
-                                    <Download className="w-3.5 h-3.5 shrink-0 text-primary/70" />
-                                  </a>
-                                );
-                              })()
-                            )}
+                            {getAttachedFiles(item, files).map((file) => <a key={file.id} href={`/api/learning/files/${file.id}/download`} className="flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/10 hover:border-primary/30 p-2.5 text-xs text-primary font-bold transition-all text-right w-full" onClick={(e)=>e.stopPropagation()}><FileText className="w-4 h-4 shrink-0 text-primary"/><span className="line-clamp-1 flex-1 text-right">{file.title}</span>{file.sizeBytes&&<small className="text-[9px] text-muted-foreground">{(file.sizeBytes/1024/1024).toFixed(1)} MB</small>}<Download className="w-3.5 h-3.5 shrink-0 text-primary/70"/></a>)}
                             {item.quizId && (
                               (() => {
                                 const quiz = quizzes.find(q => q.id === item.quizId);
@@ -1246,7 +1221,7 @@ export function YoutubeSection({
         </div>
 
         {/* Footer Channel Link */}
-        <motion.div
+        {!isStudentMode && <motion.div
           initial={{ opacity: 0, y: 15 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -1262,7 +1237,7 @@ export function YoutubeSection({
               زيارة القناة على YouTube (Learn to Code)
             </a>
           </Button>
-        </motion.div>
+        </motion.div>}
       </div>
 
       {/* Video Overlay Player Modal */}

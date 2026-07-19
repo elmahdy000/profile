@@ -105,35 +105,51 @@ export interface Curriculum {
 }
 
 export interface InsertVideo {
+  courseId?: number | null;
   category: string;
+  stage?: string | null;
+  stages?: string[];
+  subject?: string | null;
+  learningMode?: 'online' | 'offline' | 'both';
+  tags?: string[];
   title: string;
   description?: string | null;
   youtubeUrl: string;
   type: string;
   order?: number;
   isProtected?: boolean;
+  isPublished?: boolean;
   accessKey?: string | null;
   durationText?: string | null;
   lessonsCount?: number | null;
   level?: string | null;
   pdfFileId?: number | null;
+  attachmentFileIds?: number[];
   quizId?: number | null;
 }
 
 export interface Video {
   id: number;
+  courseId?: number | null;
   category: string;
+  stage?: string | null;
+  stages?: string[];
+  subject?: string | null;
+  learningMode?: 'online' | 'offline' | 'both';
+  tags?: string[];
   title: string;
   description?: string | null;
   youtubeUrl: string;
   type: string;
   order: number;
   isProtected: boolean;
+  isPublished: boolean;
   accessKey?: string | null;
   durationText?: string | null;
   lessonsCount?: number | null;
   level?: string | null;
   pdfFileId?: number | null;
+  attachments?: {[key: string]: unknown}[];
   quizId?: number | null;
   createdAt: string;
 }
@@ -167,4 +183,3 @@ export type DeleteVideo200 = {
 export type DeleteCurriculum200 = {
   success: boolean;
 };
-

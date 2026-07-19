@@ -747,8 +747,29 @@ components:
     InsertVideo:
       type: object
       properties:
+        courseId:
+          type: integer
+          nullable: true
         category:
           type: string
+        stage:
+          type: string
+          nullable: true
+        stages:
+          type: array
+          items:
+            type: string
+        subject:
+          type: string
+          nullable: true
+        learningMode:
+          type: string
+          enum: [online, offline, both]
+          default: online
+        tags:
+          type: array
+          items:
+            type: string
         title:
           type: string
         description:
@@ -763,6 +784,9 @@ components:
         isProtected:
           type: boolean
           default: false
+        isPublished:
+          type: boolean
+          default: true
         accessKey:
           type: string
           nullable: true
@@ -778,6 +802,10 @@ components:
         pdfFileId:
           type: integer
           nullable: true
+        attachmentFileIds:
+          type: array
+          items:
+            type: integer
         quizId:
           type: integer
           nullable: true
@@ -791,8 +819,28 @@ components:
       properties:
         id:
           type: integer
+        courseId:
+          type: integer
+          nullable: true
         category:
           type: string
+        stage:
+          type: string
+          nullable: true
+        stages:
+          type: array
+          items:
+            type: string
+        subject:
+          type: string
+          nullable: true
+        learningMode:
+          type: string
+          enum: [online, offline, both]
+        tags:
+          type: array
+          items:
+            type: string
         title:
           type: string
         description:
@@ -805,6 +853,8 @@ components:
         order:
           type: integer
         isProtected:
+          type: boolean
+        isPublished:
           type: boolean
         accessKey:
           type: string
@@ -821,6 +871,11 @@ components:
         pdfFileId:
           type: integer
           nullable: true
+        attachments:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
         quizId:
           type: integer
           nullable: true
@@ -834,5 +889,5 @@ components:
         - type
         - order
         - isProtected
+        - isPublished
         - createdAt
-

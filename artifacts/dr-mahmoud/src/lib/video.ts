@@ -1,16 +1,35 @@
 export interface VideoItem {
   id?: number;
+  courseId?: number | null;
   category: string;
+  stage?: string | null;
+  stages?: string[];
+  subject?: string | null;
+  learningMode?: "online" | "offline" | "both";
+  tags?: string[];
   title: string;
   description?: string | null;
   youtubeUrl: string;
   type: "video" | "playlist";
   order: number;
   isProtected?: boolean;
+  isPublished?: boolean;
   durationText?: string | null;
   lessonsCount?: number | null;
   level?: string | null;
   pdfFileId?: number | null;
+  attachments?: Array<{
+    id: number;
+    title: string;
+    description?: string | null;
+    category?: string;
+    stage?: string | null;
+    subject?: string | null;
+    originalName?: string;
+    mimeType?: string;
+    sizeBytes?: number;
+    order?: number;
+  }>;
   quizId?: number | null;
 }
 

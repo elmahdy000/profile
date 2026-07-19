@@ -1,140 +1,272 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Menu, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  BookOpen,
+  ChevronLeft,
+  GraduationCap,
+  Home,
+  Layers3,
+  Menu,
+  MessageCircle,
+  MessageSquareQuote,
+  UserRound,
+  X,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+
+type NavStudent = { name: string; status: string };
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("hero");
+  const [student, setStudent] = useState<NavStudent | null>(null);
   const { get } = useSiteSettings();
   const logoUrl = get(SETTINGS_KEYS.SITE_LOGO_URL, "/logo.jpg");
   const siteName = get(SETTINGS_KEYS.SITE_NAME, "د. محمود المهدي");
 
   const navLinks = [
-    { label: "الرئيسية", href: "/#hero", id: "hero" },
-    { label: "المسارات", href: "/#tracks", id: "tracks" },
-    { label: "عن الدكتور", href: "/#about", id: "about" },
-    { label: "آراء الطلاب", href: "/#testimonials", id: "testimonials" },
-    { label: "المنصة التعليمية", href: "/platform", id: "youtube-lectures" },
+    { label: "الرئيسية", href: "/#hero", id: "hero", icon: Home },
+    {
+      label: "المسارات التعليمية",
+      href: "/#tracks",
+      id: "tracks",
+      icon: Layers3,
+    },
+    { label: "عن الدكتور", href: "/#about", id: "about", icon: GraduationCap },
+    {
+      label: "آراء الطلاب",
+      href: "/#testimonials",
+      id: "testimonials",
+      icon: MessageSquareQuote,
+    },
+    {
+      label: "المنصة التعليمية",
+      href: "/#youtube-lectures",
+      id: "youtube-lectures",
+      icon: BookOpen,
+    },
   ];
 
   useEffect(() => {
-    const sectionIds = navLinks.map((l) => l.id);
-    const observers: IntersectionObserver[] = [];
+    const loadStudent = () =>
+      fetch("/api/student/me", { credentials: "include" })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((data) => setStudent(data?.student || null))
+        .catch(() => setStudent(null));
+    void loadStudent();
+    window.addEventListener("student-auth-changed", loadStudent);
+    return () =>
+      window.removeEventListener("student-auth-changed", loadStudent);
+  }, []);
 
-    sectionIds.forEach((id) => {
-      const el = document.getElementById(id);
-      if (!el) return;
+  useEffect(() => {
+    if (!isOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (window.location.pathname === "/platform")
+      setActiveSection("platform-account");
+    const observers: IntersectionObserver[] = [];
+    navLinks.forEach(({ id }) => {
+      const element = document.getElementById(id);
+      if (!element) return;
       const observer = new IntersectionObserver(
         ([entry]) => {
           if (entry.isIntersecting) setActiveSection(id);
         },
-        { rootMargin: "-40% 0px -55% 0px" }
+        { rootMargin: "-40% 0px -55% 0px" },
       );
-      observer.observe(el);
+      observer.observe(element);
       observers.push(observer);
     });
-
-    return () => observers.forEach((o) => o.disconnect());
+    return () => observers.forEach((observer) => observer.disconnect());
   }, []);
+
+  const closeMenu = () => setIsOpen(false);
 
   return (
     <>
-      <nav className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-xl border-b border-border/70">
-        <div className="mx-auto max-w-7xl px-4 md:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3 shrink-0">
-            <img src={logoUrl} alt="لوجو أكاديمية د. محمود المهدي" className="w-10 h-10 object-cover rounded-full border border-primary/20 shrink-0" />
-            <div className="flex flex-col text-right">
-              <span className="font-black text-base md:text-lg leading-tight text-primary">Academy Portal</span>
-              {siteName.split("|")[1] && (
-                <span className="text-[10px] text-muted-foreground font-medium leading-none mt-0.5 max-w-[180px] md:max-w-xs truncate">
-                  {siteName.split("|")[0].trim()}
-                </span>
-              )}
+      <nav
+        className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 backdrop-blur"
+        dir="rtl"
+      >
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
+          <a
+            href="/"
+            className="flex shrink-0 items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <img
+              src={logoUrl}
+              alt="لوجو أكاديمية د. محمود المهدي"
+              className="h-10 w-10 shrink-0 rounded-full border border-primary/20 object-cover"
+            />
+            <div className="text-right">
+              <span className="block text-base font-black leading-tight text-primary md:text-lg">
+                Academy Portal
+              </span>
+              <span className="mt-0.5 block max-w-[180px] truncate text-[10px] font-medium text-muted-foreground">
+                {siteName.split("|")[0].trim()}
+              </span>
             </div>
-          </div>
+          </a>
 
-          <div className="hidden lg:flex items-center gap-2 xl:gap-6">
-            <ul className="flex items-center gap-2 xl:gap-5">
+          <div className="hidden items-center gap-5 lg:flex">
+            <ul className="flex items-center gap-5">
               {navLinks.map((link) => (
-                <li key={link.href}>
+                <li key={link.id}>
                   <a
-                     href={link.href}
-                     className={`relative font-semibold text-[11px] xl:text-sm transition-colors ${
-                       activeSection === link.id
-                         ? "text-primary font-bold"
-                         : "text-muted-foreground hover:text-primary"
-                     }`}
+                    href={link.href}
+                    className={`relative text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${activeSection === link.id ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
                   >
                     {link.label}
                     {activeSection === link.id && (
                       <motion.span
                         layoutId="nav-indicator"
-                        className="absolute -bottom-1 right-0 left-0 h-0.5 bg-primary rounded-full"
+                        className="absolute -bottom-1 inset-x-0 h-0.5 rounded-full bg-primary"
                       />
                     )}
                   </a>
                 </li>
               ))}
             </ul>
-            <div className="flex items-center gap-2">
-              <Bell className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-              <Button asChild variant="outline" size="sm" className="rounded-lg font-bold h-10 text-xs border-primary text-primary hover:bg-primary/5">
-                <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">تواصل واتساب</a>
-              </Button>
-              <Button asChild size="sm" className="bg-primary hover:bg-primary/95 text-primary-foreground rounded-lg px-5 font-bold h-10 text-xs shadow-md transition-all gap-2">
-                <a href="/platform">
-                  دخول المنصة
-                </a>
-              </Button>
-            </div>
+            <a
+              href="https://wa.me/201044348610"
+              target="_blank"
+              rel="noreferrer"
+              className="flex h-10 items-center gap-2 rounded-lg border border-primary px-4 text-xs font-bold text-primary hover:bg-primary/5"
+            >
+              <MessageCircle className="h-4 w-4" />
+              واتساب
+            </a>
+            <a
+              href="/platform"
+              className="flex h-10 items-center rounded-lg bg-primary px-5 text-xs font-bold text-white hover:bg-primary/90"
+            >
+              {student ? "متابعة التعلم" : "دخول المنصة"}
+            </a>
           </div>
 
           <button
-            className="lg:hidden text-foreground z-50 p-2 hover:bg-muted rounded-lg transition-colors"
-            onClick={() => setIsOpen(!isOpen)}
-            aria-label={isOpen ? "اقفل القائمة" : "افتح القائمة"}
-            data-testid="button-mobile-menu"
+            type="button"
+            onClick={() => setIsOpen(true)}
+            aria-expanded={isOpen}
+            aria-controls="mobile-navigation"
+            aria-label="افتح القائمة"
+            className="grid h-11 w-11 place-items-center rounded-full text-foreground transition hover:bg-slate-100 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:hidden"
           >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
+            <Menu className="h-6 w-6" />
           </button>
         </div>
       </nav>
 
-      {/* Full-screen RTL Mobile Menu Overlay */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            id="mobile-navigation"
+            role="dialog"
+            aria-modal="true"
+            aria-label="قائمة التنقل"
             initial={{ opacity: 0, x: "100%" }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed inset-0 z-40 bg-background/98 backdrop-blur-lg flex flex-col justify-center items-center px-6 lg:hidden"
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            className="fixed inset-0 z-[80] overflow-y-auto bg-[#F7F9FC] lg:hidden"
+            dir="rtl"
           >
-            <ul className="flex flex-col gap-6 text-center w-full max-w-xs">
-              {navLinks.map((link) => (
-                <li key={link.href} className="w-full">
+            <div className="mx-auto flex min-h-full w-full max-w-[430px] flex-col px-5 pb-[calc(90px+env(safe-area-inset-bottom))]">
+              <header className="flex h-[76px] shrink-0 items-center justify-between border-b border-slate-200">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={logoUrl}
+                    alt="شعار المنصة"
+                    className="h-11 w-11 rounded-full border border-primary/20 object-cover"
+                  />
+                  <div>
+                    <strong className="block text-[17px] leading-6 text-slate-900">
+                      منصة د/ المهدي
+                    </strong>
+                    <span className="block text-xs text-slate-500">
+                      بوابتك للتعلم والمتابعة
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeMenu}
+                  aria-label="إغلاق القائمة"
+                  className="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </header>
+
+              <section className="mt-4 flex items-center gap-3 rounded-2xl border border-blue-100 bg-blue-50 p-4">
+                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white text-primary shadow-sm">
+                  <UserRound className="h-6 w-6" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className="block text-xs text-slate-500">أهلًا بك</span>
+                  <strong className="block truncate text-base text-slate-900">
+                    {student?.name || "زائر المنصة"}
+                  </strong>
+                  <span className="mt-0.5 block text-xs text-blue-700">
+                    {student
+                      ? "حسابك متفعّل — تقدر تكمل دروسك"
+                      : "سجل دخولك لمتابعة كورساتك"}
+                  </span>
+                </div>
+              </section>
+
+              <nav
+                className="mt-[18px] space-y-2.5"
+                aria-label="القائمة الرئيسية"
+              >
+                {navLinks.map(({ label, href, id, icon: Icon }) => (
                   <a
-                    href={link.href}
-                    className={`block font-bold text-xl py-3 rounded-xl transition-colors hover:bg-muted ${
-                      activeSection === link.id ? "text-primary bg-primary/5" : "text-foreground/80"
-                    }`}
-                    onClick={() => setIsOpen(false)}
+                    key={id}
+                    href={href}
+                    onClick={closeMenu}
+                    aria-current={activeSection === id ? "page" : undefined}
+                    className={`flex min-h-14 items-center gap-3 rounded-[14px] border px-4 text-base font-semibold transition active:scale-[.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${activeSection === id ? "border-blue-100 bg-blue-50 text-primary" : "border-transparent bg-white text-slate-700 hover:border-slate-200 hover:bg-slate-50"}`}
                   >
-                    {link.label}
+                    <Icon className="h-[22px] w-[22px] shrink-0" />
+                    <span className="flex-1">{label}</span>
+                    <ChevronLeft className="h-4 w-4 text-slate-400" />
                   </a>
-                </li>
-              ))}
-              <li className="mt-6 flex flex-col gap-3 w-full">
-                <Button asChild size="lg" className="w-full bg-primary hover:bg-primary/95 text-primary-foreground rounded-full font-bold h-14 text-base shadow-md transition-all gap-2">
-                  <a href="/platform" onClick={() => setIsOpen(false)}>دخول المنصة</a>
-                </Button>
-                <Button asChild variant="outline" size="lg" className="w-full rounded-full font-bold h-14 text-base border-primary text-primary hover:bg-primary/5">
-                  <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer" onClick={() => setIsOpen(false)}>تواصل واتساب</a>
-                </Button>
-              </li>
-            </ul>
+                ))}
+              </nav>
+
+              <div className="my-5 h-px bg-slate-200" />
+              <div className="grid grid-cols-2 gap-3">
+                <a
+                  href="/platform"
+                  onClick={closeMenu}
+                  className="flex h-[52px] items-center justify-center rounded-[14px] bg-primary px-3 text-sm font-bold text-white transition hover:bg-primary/90 active:scale-[.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  {student ? "متابعة التعلم" : "دخول المنصة"}
+                </a>
+                <a
+                  href="https://wa.me/201044348610"
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={closeMenu}
+                  className="flex h-[52px] items-center justify-center gap-2 rounded-[14px] border border-[#25D366] bg-white px-3 text-sm font-bold text-[#168C45] transition hover:bg-green-50 active:scale-[.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]"
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  واتساب
+                </a>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -12,21 +12,26 @@ router.get("/courses", async (_req, res, next) => {
     const [courses, curriculums, videos] = await Promise.all([
       db.select().from(coursesTable),
       db.select().from(curriculumsTable),
-      db.select().from(videosTable)
+      db.select().from(videosTable),
     ]);
 
-    const formatted = courses.map(c => {
+    const formatted = courses.map((c) => {
       // Find matching curriculum lessons
-      const matchingCurriculums = curriculums.filter(curr => 
-        curr.subject.toLowerCase() === c.category.toLowerCase() ||
-        c.title.toLowerCase().includes(curr.subject.toLowerCase()) ||
-        c.tags.some(tag => tag.toLowerCase() === curr.subject.toLowerCase())
+      const matchingCurriculums = curriculums.filter(
+        (curr) =>
+          curr.subject.toLowerCase() === c.category.toLowerCase() ||
+          c.title.toLowerCase().includes(curr.subject.toLowerCase()) ||
+          c.tags.some(
+            (tag) => tag.toLowerCase() === curr.subject.toLowerCase(),
+          ),
       );
 
       // Find matching YouTube videos/playlists
-      const matchingVideos = videos.filter(vid => 
-        vid.category.toLowerCase() === c.category.toLowerCase() ||
-        c.title.toLowerCase().includes(vid.category.toLowerCase())
+      const matchingVideos = videos.filter(
+        (vid) =>
+          vid.courseId === c.id ||
+          vid.category.toLowerCase() === c.category.toLowerCase() ||
+          c.title.toLowerCase().includes(vid.category.toLowerCase()),
       );
 
       return {
@@ -40,7 +45,7 @@ router.get("/courses", async (_req, res, next) => {
         tags: c.tags,
         img: c.img,
         lessonsCount: matchingCurriculums.length,
-        videosCount: matchingVideos.length
+        videosCount: matchingVideos.length,
       };
     });
     res.json(formatted);
@@ -109,6 +114,11 @@ router.put("/courses/:id", requireAdmin, async (req, res, next) => {
       return;
     }
 
+    await db
+      .update(videosTable)
+      .set({ category: updated.title })
+      .where(eq(videosTable.courseId, id));
+
     res.json({
       id: updated.id,
       title: updated.title,
@@ -129,6 +139,17 @@ router.put("/courses/:id", requireAdmin, async (req, res, next) => {
 router.delete("/courses/:id", requireAdmin, async (req, res, next) => {
   try {
     const id = parseInt(req.params.id as string, 10);
+    const [linkedVideo] = await db
+      .select({ id: videosTable.id })
+      .from(videosTable)
+      .where(eq(videosTable.courseId, id))
+      .limit(1);
+    if (linkedVideo) {
+      res
+        .status(409)
+        .json({ error: "مينفعش تحذف الكورس وفيه فيديوهات مرتبطة بيه" });
+      return;
+    }
     const [deleted] = await db
       .delete(coursesTable)
       .where(eq(coursesTable.id, id))

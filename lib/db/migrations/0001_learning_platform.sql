@@ -39,6 +39,10 @@ CREATE TABLE IF NOT EXISTS "learning_files" (
   "title" text NOT NULL,
   "description" text,
   "category" text NOT NULL DEFAULT 'عام',
+  "stage" text,
+  "subject" text,
+  "tags" jsonb NOT NULL DEFAULT '[]'::jsonb,
+  "order" integer NOT NULL DEFAULT 0,
   "original_name" text NOT NULL,
   "storage_name" text NOT NULL,
   "mime_type" text NOT NULL,
@@ -46,6 +50,10 @@ CREATE TABLE IF NOT EXISTS "learning_files" (
   "is_published" boolean NOT NULL DEFAULT true,
   "created_at" timestamp NOT NULL DEFAULT now()
 );
+ALTER TABLE "learning_files" ADD COLUMN IF NOT EXISTS "stage" text;
+ALTER TABLE "learning_files" ADD COLUMN IF NOT EXISTS "subject" text;
+ALTER TABLE "learning_files" ADD COLUMN IF NOT EXISTS "tags" jsonb NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE "learning_files" ADD COLUMN IF NOT EXISTS "order" integer NOT NULL DEFAULT 0;
 
 CREATE TABLE IF NOT EXISTS "quizzes" (
   "id" serial PRIMARY KEY,
@@ -81,3 +89,18 @@ CREATE TABLE IF NOT EXISTS "video_progress" (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS "video_progress_student_video_unique" ON "video_progress" ("student_id", "video_id");
 CREATE INDEX IF NOT EXISTS "video_progress_student_idx" ON "video_progress" ("student_id");
+
+ALTER TABLE "videos" ADD COLUMN IF NOT EXISTS "stage" text;
+ALTER TABLE "videos" ADD COLUMN IF NOT EXISTS "subject" text;
+ALTER TABLE "videos" ADD COLUMN IF NOT EXISTS "tags" jsonb NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE "videos" ADD COLUMN IF NOT EXISTS "is_published" boolean NOT NULL DEFAULT true;
+
+CREATE TABLE IF NOT EXISTS "video_file_attachments" (
+  "id" serial PRIMARY KEY,
+  "video_id" integer NOT NULL REFERENCES "videos"("id") ON DELETE CASCADE,
+  "file_id" integer NOT NULL REFERENCES "learning_files"("id") ON DELETE CASCADE,
+  "order" integer NOT NULL DEFAULT 0,
+  "created_at" timestamp NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "video_file_attachments_video_file_unique" ON "video_file_attachments" ("video_id", "file_id");
+CREATE INDEX IF NOT EXISTS "video_file_attachments_video_idx" ON "video_file_attachments" ("video_id");
