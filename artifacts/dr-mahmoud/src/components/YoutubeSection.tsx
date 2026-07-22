@@ -156,12 +156,30 @@ function VideoPlayerModal({
   const vidId = getYouTubeVideoId(item.youtubeUrl);
   const playlistId = getYouTubePlaylistId(item.youtubeUrl);
 
-  const isStreamUrl = item.youtubeUrl?.startsWith("/api/videos/") || item.youtubeUrl?.startsWith("/uploads/");
-  const studentKeys = typeof window !== "undefined" ? localStorage.getItem("dr_mahmoud_unlock_keys") || "" : "";
-  const streamUrl = isStreamUrl ? item.youtubeUrl : "";
+  const isDirectFileUrl =
+    item.youtubeUrl?.startsWith("/uploads/") ||
+    item.youtubeUrl?.endsWith(".mp4") ||
+    item.youtubeUrl?.endsWith(".webm") ||
+    item.youtubeUrl?.endsWith(".mov");
+
+  const isStreamUrl =
+    isDirectFileUrl ||
+    (item.youtubeUrl?.startsWith("/api/videos/") && !vidId && !playlistId);
+
+  const studentKeys =
+    typeof window !== "undefined"
+      ? localStorage.getItem("dr_mahmoud_unlock_keys") || ""
+      : "";
+
+  let streamUrl = "";
+  if (isStreamUrl) {
+    streamUrl = item.youtubeUrl;
+  } else if (item.id && !vidId && !playlistId) {
+    streamUrl = `/api/videos/${item.id}/stream`;
+  }
 
   let embedUrl = "";
-  if (!isStreamUrl) {
+  if (!isStreamUrl && !streamUrl) {
     if (item.type === "playlist" && playlistId) {
       embedUrl = `https://www.youtube.com/embed/videoseries?list=${playlistId}&autoplay=1&rel=0`;
     } else if (vidId) {
@@ -265,9 +283,9 @@ function VideoPlayerModal({
           <div className="min-h-0 overflow-y-auto bg-slate-50/70">
             <div className="grid lg:grid-cols-[minmax(0,1fr)_300px]">
               {/* Player Container */}
-              <div className="bg-slate-950 p-0 sm:p-3 lg:order-2 lg:p-4">
+              <div className="bg-slate-950 p-0 sm:p-4 lg:order-2">
                 <div
-                  className="relative aspect-video w-full select-none overflow-hidden bg-black sm:rounded-2xl sm:ring-1 sm:ring-white/10"
+                  className="relative aspect-video w-full select-none overflow-hidden bg-black sm:rounded-2xl sm:ring-2 sm:ring-[#0B63CE]/30 shadow-[0_0_50px_rgba(11,99,206,0.2)]"
                   onContextMenu={(e) => e.preventDefault()}
                 >
                   {!isFocused && (
@@ -281,7 +299,7 @@ function VideoPlayerModal({
                     </div>
                   )}
 
-                  {isStreamUrl && (
+                  {(isStreamUrl || streamUrl) && (
                     <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center overflow-hidden opacity-25 mix-blend-overlay">
                       <div className="rotate-[-30deg] select-none text-center text-2xl font-black leading-relaxed text-white sm:text-4xl">
                         د. محمود المهدي <br />
@@ -292,16 +310,15 @@ function VideoPlayerModal({
                     </div>
                   )}
 
-                  {isStreamUrl ? (
+                  {(isStreamUrl || streamUrl) ? (
                     <video
                       ref={videoRef}
                       className="absolute inset-0 h-full w-full bg-black object-contain"
-                      src={streamUrl}
+                      src={streamUrl || `/api/videos/${item.id}/stream`}
                       controls
                       playsInline
                       preload="metadata"
-                      controlsList="nodownload noplaybackrate"
-                      disablePictureInPicture
+                      controlsList="nodownload"
                       onContextMenu={(e) => e.preventDefault()}
                       autoPlay
                       onTimeUpdate={handleTimeUpdate}
@@ -328,19 +345,19 @@ function VideoPlayerModal({
                       allowFullScreen
                     />
                   ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center p-5 text-center text-white">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-5 text-center text-white bg-slate-900/90">
                       <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/15">
                         <ExternalLink className="h-6 w-6 text-sky-300" />
                       </div>
-                      <p className="text-sm font-bold">الفيديو موجود على موقع خارجي</p>
-                      <p className="mt-1 max-w-sm text-xs leading-5 text-slate-400">الموقع الخارجي مش بيسمح بتشغيله جوه المنصة، تقدر تفتحه بأمان في نافذة جديدة.</p>
+                      <p className="text-sm font-bold">الفيديو متاح عبر الرابط المباشر</p>
+                      <p className="mt-1 max-w-sm text-xs leading-5 text-slate-400">انقر أدناه لمشاهدة الفيديو في نافذة جديدة مباشرة.</p>
                       <a
                         href={item.youtubeUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-[#0B63CE] hover:bg-[#0956B4] px-5 text-xs font-bold text-white transition-all shadow-lg shadow-[#0B63CE]/20"
                       >
-                        فتح الفيديو <ExternalLink className="h-4 w-4" />
+                        فتح الفيديو الآن <ExternalLink className="h-4 w-4" />
                       </a>
                     </div>
                   )}

@@ -499,6 +499,9 @@ router.get("/videos/:id/stream", async (req, res, next) => {
     }
 
     if (!video.youtubeUrl.startsWith("/uploads/")) {
+      if (video.youtubeUrl.startsWith("http://") || video.youtubeUrl.startsWith("https://")) {
+        return res.redirect(302, video.youtubeUrl);
+      }
       res.status(400).json({ error: "This video is not locally hosted" });
       return;
     }
