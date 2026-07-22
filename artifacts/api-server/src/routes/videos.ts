@@ -255,11 +255,12 @@ router.get("/videos", async (req, res, next) => {
         attachments: (attachmentMap.get(v.id) ?? []).filter(
           (attachment) =>
             attachment.isPublished &&
-            canStudentAccessContent(
+            (attachment.targetType === "videos" || canStudentAccessContent(
               approvedStudent,
               String(attachment.category),
               attachment.stage ? String(attachment.stage) : null,
-            ),
+              Array.isArray(attachment.stages) ? attachment.stages.map(String) : undefined,
+            )),
         ),
         quizId: v.quizId,
         createdAt: v.createdAt,

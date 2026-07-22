@@ -60,6 +60,7 @@ type LearningFile = {
   description?: string | null;
   category: string;
   stage?: string | null;
+  targetType?: "stages" | "videos";
   subject?: string | null;
   tags?: string[];
   order?: number;
@@ -912,14 +913,15 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
 }
 
 function FilesPanel({ files }: { files: LearningFile[] }) {
+  const standaloneFiles = files.filter((file) => file.targetType !== "videos");
   return (
     <section className="space-y-7" dir="rtl">
-      <PageHeader title="الملفات والمرفقات" description="المذكرات والأكواد والتمارين الخاصة بمرحلتك وكورساتك." action={<StatusBadge>{files.length} ملف</StatusBadge>} />
-      {files.length === 0 ? (
+      <PageHeader title="الملفات والمرفقات" description="المذكرات والأكواد والتمارين الخاصة بمرحلتك وكورساتك." action={<StatusBadge>{standaloneFiles.length} ملف</StatusBadge>} />
+      {standaloneFiles.length === 0 ? (
         <EmptyState icon={FolderOpen} title="لا توجد ملفات مرفوعة" description="ستظهر مذكرات وأكواد الكورسات هنا فور نشرها لحسابك." />
       ) : (
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-          {files.map((file) => (
+          {standaloneFiles.map((file) => (
             <article key={file.id} className="grid gap-3 border-b border-slate-100 p-4 last:border-0 sm:grid-cols-[minmax(0,1fr)_160px_100px_auto] sm:items-center">
               <div className="flex min-w-0 items-center gap-3"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-50 text-[#0B63CE]"><FileText className="h-5 w-5" /></span><div className="min-w-0"><h3 className="truncate text-base font-semibold">{file.title}</h3><p className="truncate text-[13px] text-slate-500">{file.originalName}</p></div></div>
               <span className="text-sm text-slate-600">{file.category}</span>

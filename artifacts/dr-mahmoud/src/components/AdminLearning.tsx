@@ -50,6 +50,8 @@ type FileItem = {
   title: string;
   category: string;
   stage?: string | null;
+  stages?: string[];
+  targetType?: "stages" | "videos";
   subject?: string | null;
   tags?: string[];
   order?: number;
@@ -61,6 +63,7 @@ type FileItem = {
   createdAt?: string;
 };
 type Question = { prompt: string; options: string[]; correctIndex: number };
+type VideoOption = { id: number; title: string; category: string; stage?: string | null; stages?: string[] };
 type Quiz = {
   id: number;
   title: string;
@@ -143,6 +146,7 @@ export function AdminLearning() {
   const [analytics, setAnalytics] = useState<LearningAnalytics | null>(null);
   const [recoveryRequests, setRecoveryRequests] = useState<RecoveryRequest[]>([]);
   const [videoCategories, setVideoCategories] = useState<string[]>([]);
+  const [videoOptions, setVideoOptions] = useState<VideoOption[]>([]);
   const [learningCourses, setLearningCourses] = useState<
     Array<{ id: number; title: string; category: string }>
   >([]);
@@ -168,6 +172,9 @@ export function AdminLearning() {
     order: 1,
     description: "",
     file: null as File | null,
+    targetType: "stages" as "stages" | "videos",
+    stages: [] as string[],
+    videoIds: [] as string[],
   });
   const [quizForm, setQuizForm] = useState({
     title: "",
@@ -188,7 +195,7 @@ export function AdminLearning() {
         adminApi<FileItem[]>("/api/admin/learning/files"),
         adminApi<Quiz[]>("/api/admin/learning/quizzes"),
         adminApi<Attempt[]>("/api/admin/learning/attempts"),
-        adminApi<Array<{ category: string }>>("/api/videos"),
+        adminApi<VideoOption[]>("/api/videos"),
         adminApi<Array<{ id: number; title: string; category: string }>>("/api/courses"),
         adminApi<LearningAnalytics>("/api/admin/learning/analytics"),
         adminApi<RecoveryRequest[]>("/api/admin/recovery-requests"),
@@ -200,6 +207,7 @@ export function AdminLearning() {
       setLearningCourses(c);
       setAnalytics(analyticsData);
       setRecoveryRequests(recoveryData);
+      setVideoOptions(v);
       setVideoCategories(
         Array.from(
           new Set(
@@ -333,7 +341,10 @@ export function AdminLearning() {
     setShowFilePreview(false);
   };
   const uploadFile = async (isPublished: boolean) => {
-    if (!fileForm.file || fileForm.order < 1) {
+    const hasTarget = fileForm.targetType === "videos"
+      ? fileForm.videoIds.length > 0
+      : Boolean(fileForm.category) && fileForm.stages.length > 0;
+    if (!fileForm.file || fileForm.order < 1 || !hasTarget) {
       toast({
         variant: "destructive",
         description: "اختار الملف وحدد رقمه داخل الدرس.",
@@ -343,6 +354,8 @@ export function AdminLearning() {
     const duplicate = files.find(
       (file) =>
         file.originalName.toLowerCase() === fileForm.file?.name.toLowerCase() &&
+        file.targetType === fileForm.targetType &&
+        fileForm.targetType === "stages" &&
         file.category.trim().toLowerCase() ===
           fileForm.category.trim().toLowerCase() &&
         (file.stage || "") === fileForm.stage,
@@ -360,6 +373,9 @@ export function AdminLearning() {
     const body = new FormData();
     body.append("title", fileForm.title);
     body.append("stage", fileForm.stage);
+    body.append("stages", fileForm.stages.join(","));
+    body.append("targetType", fileForm.targetType);
+    body.append("videoIds", fileForm.videoIds.join(","));
     body.append("category", fileForm.category);
     body.append("subject", fileForm.subject);
     body.append("tags", fileForm.tags);
@@ -745,25 +761,50 @@ export function AdminLearning() {
           )}
           {tab === "files" && (
             <div className="space-y-6">
-              <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(300px,.7fr)]">
+              <div className="mx-auto max-w-4xl">
                 <form
                   id="file-upload-form"
                   onSubmit={(event) => {
                     event.preventDefault();
                     void uploadFile(true);
                   }}
-                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-7"
+                  className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-7"
                 >
                   <div className="mb-6 border-b border-slate-100 pb-5">
                     <h3 className="text-xl font-black text-slate-900">
                       رفع ملف تعليمي جديد
                     </h3>
                     <p className="mt-1 text-sm text-slate-500">
-                      أضف ملفات الدروس والمراجعات والتمارين ثم انشرها للطلاب.
+                      1) اختر الملف &nbsp; 2) حدد مكان ظهوره &nbsp; 3) اضغط رفع ونشر.
                     </p>
                   </div>
 
-                  <div className="grid gap-5 md:grid-cols-2">
+                  <div className="order-2 grid gap-5 md:grid-cols-2">
+                    <div className="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                      <span className="mb-3 block text-sm font-bold text-slate-800">مكان ظهور الملف</span>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {([['stages', 'مراحل دراسية محددة'], ['videos', 'داخل فيديو أو درس']] as const).map(([value, label]) => (
+                          <button key={value} type="button" onClick={() => setFileForm({ ...fileForm, targetType: value })}
+                            className={`rounded-xl border p-3 text-sm font-bold ${fileForm.targetType === value ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 bg-white text-slate-600'}`}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {fileForm.targetType === "videos" && <div className="md:col-span-2">
+                      <span className="mb-2 block text-sm font-semibold text-slate-700">اختر الفيديو أو الدرس المرتبط</span>
+                      <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border border-slate-200 p-3">
+                        {videoOptions.map((video) => {
+                          const id = String(video.id);
+                          const checked = fileForm.videoIds.includes(id);
+                          return <label key={video.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-100 p-3 hover:bg-slate-50">
+                            <input className="mt-1" type="checkbox" checked={checked} onChange={() => setFileForm({ ...fileForm, videoIds: checked ? fileForm.videoIds.filter((item) => item !== id) : [...fileForm.videoIds, id] })} />
+                            <span><strong className="block text-sm">{video.title}</strong><small className="text-slate-500">{video.category}</small></span>
+                          </label>;
+                        })}
+                        {!videoOptions.length && <p className="text-sm text-slate-500">لا توجد فيديوهات متاحة للربط.</p>}
+                      </div>
+                    </div>}
                     <Field label="اسم الملف أو الدرس">
                       <input
                         required
@@ -775,25 +816,9 @@ export function AdminLearning() {
                         className="input-admin min-h-12 border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/10"
                       />
                     </Field>
-                    <Field label="المرحلة الدراسية">
+                    {fileForm.targetType === "stages" && <><Field label="الكورس">
                       <select
-                        required
-                        value={fileForm.stage}
-                        onChange={(e) =>
-                          setFileForm({ ...fileForm, stage: e.target.value })
-                        }
-                        className="input-admin min-h-12 border-slate-300 focus:border-primary"
-                      >
-                        {availableFileStages.map((stage) => (
-                          <option key={stage} value={stage}>
-                            {stage === "عام" ? "عام لكل مراحل الكورس" : stage}
-                          </option>
-                        ))}
-                      </select>
-                    </Field>
-                    <Field label="الكورس المرتبط بالملف">
-                      <select
-                        required
+                        required={fileForm.targetType === "stages"}
                         value={fileForm.category}
                         onChange={(e) => {
                           const course = learningCourses.find(
@@ -804,6 +829,7 @@ export function AdminLearning() {
                             ...fileForm,
                             category: e.target.value,
                             stage: stages[0] || "عام",
+                            stages: [],
                           });
                         }}
                         className="input-admin min-h-12 border-slate-300 focus:border-primary"
@@ -816,9 +842,25 @@ export function AdminLearning() {
                         ))}
                       </select>
                     </Field>
+                    <Field label="المراحل التي سيظهر لها الملف">
+                      <div className="flex min-h-12 flex-wrap gap-2 rounded-xl border border-slate-300 bg-white p-2">
+                        {!fileForm.category && <span className="p-1 text-sm text-slate-400">اختر الكورس أولًا</span>}
+                        {fileForm.category && availableFileStages.map((stage) => {
+                          const checked = fileForm.stages.includes(stage);
+                          return <button key={stage} type="button" onClick={() => {
+                            const stages = checked ? fileForm.stages.filter((item) => item !== stage) : [...fileForm.stages, stage];
+                            setFileForm({ ...fileForm, stages, stage: stages[0] || "" });
+                          }} className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${checked ? "border-primary bg-primary text-white" : "border-slate-200 bg-slate-50 text-slate-600 hover:border-primary"}`}>
+                            {stage === "عام" ? "كل المراحل" : stage}
+                          </button>;
+                        })}
+                      </div>
+                    </Field></>}
+                    <details className="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                      <summary className="cursor-pointer select-none text-sm font-bold text-slate-700">تفاصيل إضافية (اختياري)</summary>
+                      <div className="mt-4 grid gap-5 md:grid-cols-2">
                     <Field label="المادة">
                       <input
-                        required
                         value={fileForm.subject}
                         onChange={(e) =>
                           setFileForm({ ...fileForm, subject: e.target.value })
@@ -902,9 +944,11 @@ export function AdminLearning() {
                         />
                       </Field>
                     </div>
+                      </div>
+                    </details>
                   </div>
 
-                  <div className="mt-6">
+                  <div className="order-1 mb-6">
                     <label className="mb-2 block text-sm font-semibold text-slate-700">
                       الملف المرفق
                     </label>
@@ -927,7 +971,7 @@ export function AdminLearning() {
                         {fileForm.file ? <FileCheck2 className="h-7 w-7" /> : <Upload className="h-7 w-7" />}
                       </span>
                       <strong className="mt-3 block text-sm text-slate-800">
-                        {fileForm.file ? "الملف جاهز للرفع" : isFileDragging ? "اترك الملف هنا" : "اسحب الملف هنا أو اضغط للاختيار"}
+                        {fileForm.file ? "تم اختيار الملف — أكمل مكان ظهوره بالأسفل" : isFileDragging ? "اترك الملف هنا" : "اضغط لاختيار الملف أو اسحبه هنا"}
                       </strong>
                       <span className="mt-1 block text-xs text-slate-500">
                         PDF, DOCX, ZIP, PPTX — بحد أقصى 150MB
@@ -986,7 +1030,7 @@ export function AdminLearning() {
                     )}
                   </div>
 
-                  <div className="mt-7 flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="order-3 mt-7 flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex flex-col gap-2 sm:flex-row">
                       <Button
                         type="button"
@@ -1028,7 +1072,7 @@ export function AdminLearning() {
                   </div>
                 </form>
 
-                <aside className="space-y-4 xl:sticky xl:top-6">
+                <aside className="hidden">
                   <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                     <h3 className="flex items-center gap-2 font-black text-slate-900">
                       <ListChecks className="h-5 w-5 text-primary" />

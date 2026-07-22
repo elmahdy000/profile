@@ -15,6 +15,7 @@ import {
   studentsTable,
   videoProgressTable,
   videosTable,
+  videoFileAttachmentsTable,
   type QuizQuestion,
 } from "@workspace/db";
 import { isAdminRequest, requireAdmin } from "../middleware/auth";
@@ -592,11 +593,23 @@ router.get("/learning/files", requireStudent, async (_req, res, next) => {
       .from(learningFilesTable)
       .where(eq(learningFilesTable.isPublished, true))
       .orderBy(desc(learningFilesTable.createdAt));
+    const links = await db
+      .select({ fileId: videoFileAttachmentsTable.fileId, video: videosTable })
+      .from(videoFileAttachmentsTable)
+      .innerJoin(videosTable, eq(videoFileAttachmentsTable.videoId, videosTable.id));
+    const linkedVideos = new Map<number, Array<typeof videosTable.$inferSelect>>();
+    for (const link of links) {
+      linkedVideos.set(link.fileId, [...(linkedVideos.get(link.fileId) ?? []), link.video]);
+    }
     res.json(
       files
-        .filter((file) =>
-          canStudentAccessContent(student, file.category, file.stage),
-        )
+        .filter((file) => file.targetType === "videos"
+          ? (linkedVideos.get(file.id) ?? []).some((video) =>
+              video.isPublished && canStudentAccessContent(
+                student, video.category, video.stage, video.stages, video.courseId,
+              ),
+            )
+          : canStudentAccessContent(student, file.category, file.stage, file.stages))
         .map(({ storageName: _storageName, ...file }) => file),
     );
   } catch (error) {
@@ -628,13 +641,28 @@ router.post(
         res.status(400).json({ error: "Title and file are required" });
         return;
       }
+      const targetType = String(req.body.targetType ?? "stages") === "videos" ? "videos" : "stages";
+      const stages = Array.from(new Set(
+        String(req.body.stages ?? req.body.stage ?? "")
+          .split(",").map((value) => value.trim()).filter(Boolean),
+      )).slice(0, 20);
+      const videoIds = Array.from(new Set(
+        String(req.body.videoIds ?? "").split(",").map(Number).filter(Number.isInteger),
+      )).slice(0, 100);
+      if ((targetType === "stages" && stages.length === 0) || (targetType === "videos" && videoIds.length === 0)) {
+        fs.rmSync(req.file.path, { force: true });
+        res.status(400).json({ error: targetType === "videos" ? "اختر فيديو واحدًا على الأقل" : "اختر مرحلة واحدة على الأقل" });
+        return;
+      }
       const [file] = await db
         .insert(learningFilesTable)
         .values({
           title: String(req.body.title).trim(),
           description: String(req.body.description ?? "").trim() || null,
           category: String(req.body.category ?? "عام").trim() || "عام",
-          stage: String(req.body.stage ?? "").trim() || null,
+          stage: stages[0] ?? null,
+          stages,
+          targetType,
           subject: String(req.body.subject ?? "").trim() || null,
           tags: String(req.body.tags ?? "")
             .split(",")
@@ -651,6 +679,18 @@ router.post(
           isPublished: String(req.body.isPublished ?? "true") !== "false",
         })
         .returning();
+      if (targetType === "videos") {
+        const validVideos = await db.select({ id: videosTable.id }).from(videosTable).where(inArray(videosTable.id, videoIds));
+        if (validVideos.length !== videoIds.length) {
+          await db.delete(learningFilesTable).where(eq(learningFilesTable.id, file.id));
+          fs.rmSync(req.file.path, { force: true });
+          res.status(400).json({ error: "أحد الفيديوهات المختارة غير موجود" });
+          return;
+        }
+        await db.insert(videoFileAttachmentsTable).values(
+          validVideos.map((video, order) => ({ videoId: video.id, fileId: file.id, order })),
+        );
+      }
       res.status(201).json(file);
     } catch (error) {
       next(error);
@@ -755,7 +795,14 @@ router.get("/learning/files/:id/download", async (req, res, next) => {
     }
     if (
       student &&
-      !canStudentAccessContent(student, file.category, file.stage)
+      !(file.targetType === "videos"
+        ? (await db.select({ video: videosTable }).from(videoFileAttachmentsTable)
+            .innerJoin(videosTable, eq(videoFileAttachmentsTable.videoId, videosTable.id))
+            .where(eq(videoFileAttachmentsTable.fileId, file.id)))
+            .some(({ video }) => video.isPublished && canStudentAccessContent(
+              student, video.category, video.stage, video.stages, video.courseId,
+            ))
+        : canStudentAccessContent(student, file.category, file.stage, file.stages))
     ) {
       res.status(403).json({ error: "الملف مش ضمن الكورس المسجل ليك" });
       return;

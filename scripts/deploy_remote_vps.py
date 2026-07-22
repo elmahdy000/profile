@@ -26,7 +26,7 @@ def main():
             "git fetch origin",
             "git reset --hard origin/main",
             "git clean -fd",
-            "DATABASE_URL=$(grep DATABASE_URL .env | head -1 | cut -d= -f2-) && psql \"$DATABASE_URL\" -f lib/db/migrations/0002_complete_learning_platform.sql",
+            "DATABASE_URL=$(grep DATABASE_URL .env | head -1 | cut -d= -f2-) && psql \"$DATABASE_URL\" -f lib/db/migrations/0002_complete_learning_platform.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0003_learning_file_targets.sql",
             "pnpm run build",
             "pm2 restart drelmahdy-backend",
             "systemctl reload nginx"

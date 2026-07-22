@@ -46,6 +46,8 @@ export const learningFilesTable = pgTable("learning_files", {
   description: text("description"),
   category: text("category").notNull().default("عام"),
   stage: text("stage"),
+  stages: jsonb("stages").$type<string[]>().notNull().default([]),
+  targetType: text("target_type").notNull().default("stages"),
   subject: text("subject"),
   tags: jsonb("tags").$type<string[]>().notNull().default([]),
   order: integer("order").notNull().default(0),
