@@ -770,8 +770,8 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                 </p>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="space-y-1">
-                  <label htmlFor="student-name" className="block text-xs font-bold text-foreground/80">
+                <div className="flex flex-col text-xs font-bold text-foreground/80">
+                  <label htmlFor="student-name" className="mb-1.5 block">
                     اسم الطالب <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -782,10 +782,10 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                     aria-invalid={Boolean(form.name) && !nameValid}
                     className="h-10 w-full rounded-lg border border-border/80 bg-background px-3 text-xs outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 shadow-xs"
                   />
-                  {form.name && !nameValid && <p className="text-[11px] text-red-600">اكتب اسم الطالب بشكل صحيح.</p>}
+                  {form.name && !nameValid && <p className="mt-1 text-[11px] text-red-600">اكتب اسم الطالب بشكل صحيح.</p>}
                 </div>
-                <div className="space-y-1">
-                  <label htmlFor="student-phone" className="block text-xs font-bold text-foreground/80">
+                <div className="flex flex-col text-xs font-bold text-foreground/80">
+                  <label htmlFor="student-phone" className="mb-1.5 block">
                     رقم الهاتف <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -798,11 +798,11 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                     aria-invalid={Boolean(form.phone) && !phoneValid}
                     className="h-10 w-full rounded-lg border border-border/80 bg-background px-3 text-xs outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 shadow-xs"
                   />
-                  {form.phone && !phoneValid && <p className="text-[11px] text-red-600">رقم الهاتف من 10 إلى 15 رقمًا.</p>}
+                  {form.phone && !phoneValid && <p className="mt-1 text-[11px] text-red-600">رقم الهاتف من 10 إلى 15 رقمًا.</p>}
                 </div>
               </div>
-              <div className="space-y-1">
-                <label htmlFor="student-email" className="block text-xs font-bold text-foreground/80">
+              <div className="flex flex-col text-xs font-bold text-foreground/80">
+                <label htmlFor="student-email" className="mb-1.5 block">
                   البريد الإلكتروني (اختياري)
                 </label>
                 <input
@@ -813,7 +813,7 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                   aria-invalid={!emailValid}
                   className="h-10 w-full rounded-lg border border-border/80 bg-background px-3 text-xs outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 shadow-xs"
                 />
-                {!emailValid && <p className="text-[11px] text-red-600">صيغة البريد الإلكتروني غير صحيحة.</p>}
+                {!emailValid && <p className="mt-1 text-[11px] text-red-600">صيغة البريد الإلكتروني غير صحيحة.</p>}
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <SearchableCombobox

@@ -96,14 +96,14 @@ export function RegistrationStageSelector({ value, onChange }: Props) {
   };
 
   return (
-    <fieldset className="space-y-3 rounded-xl border border-border/70 bg-muted/15 p-3.5 sm:p-4">
-      <legend className="px-1 text-xs font-extrabold uppercase text-primary tracking-wide">
+    <fieldset className="space-y-4 rounded-xl border border-border/80 bg-muted/15 p-4 sm:p-5">
+      <legend className="px-2 text-xs font-extrabold uppercase text-primary tracking-wide">
         1. النظام والمرحلة الدراسية
       </legend>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <label className="space-y-1 text-xs font-bold text-foreground/80">
-          <span>النظام التعليمي <span className="text-red-500">*</span></span>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <label className="flex flex-col text-xs font-bold text-foreground/80">
+          <span className="mb-1.5">النظام التعليمي <span className="text-red-500">*</span></span>
           <select
             id="education-system"
             aria-label="النظام التعليمي"
@@ -129,8 +129,8 @@ export function RegistrationStageSelector({ value, onChange }: Props) {
         </label>
 
         {system && (
-          <label className="space-y-1 text-xs font-bold text-foreground/80">
-            <span>السنة الدراسية <span className="text-red-500">*</span></span>
+          <label className="flex flex-col text-xs font-bold text-foreground/80">
+            <span className="mb-1.5">السنة الدراسية <span className="text-red-500">*</span></span>
             <select
               id="education-grade"
               aria-label="السنة الدراسية"
@@ -157,8 +157,8 @@ export function RegistrationStageSelector({ value, onChange }: Props) {
         )}
 
         {system && value.educationGrade && !isUniversity && (
-          <label className="space-y-1 text-xs font-bold text-foreground/80">
-            <span>نوع المدرسة <span className="text-red-500">*</span></span>
+          <label className="flex flex-col text-xs font-bold text-foreground/80">
+            <span className="mb-1.5">نوع المدرسة <span className="text-red-500">*</span></span>
             <select
               id="school-type"
               aria-label="نوع المدرسة"
@@ -185,8 +185,8 @@ export function RegistrationStageSelector({ value, onChange }: Props) {
         )}
 
         {system && value.educationGrade && (isUniversity || value.schoolType) && (
-          <label className="space-y-1 text-xs font-bold text-foreground/80">
-            <span>التخصص / المسار <span className="text-red-500">*</span></span>
+          <label className="flex flex-col text-xs font-bold text-foreground/80">
+            <span className="mb-1.5">التخصص / المسار <span className="text-red-500">*</span></span>
             <select
               id="academic-track"
               aria-label="التخصص أو المسار"
@@ -217,13 +217,13 @@ export function RegistrationStageSelector({ value, onChange }: Props) {
       </div>
 
       {chips.length > 0 && (
-        <div aria-label="ملخص المرحلة المختارة" className="flex flex-wrap items-center gap-1.5 border-t border-border/50 pt-2.5">
-          <span className="text-[11px] font-bold text-muted-foreground ml-1">المحدد:</span>
+        <div aria-label="ملخص المرحلة المختارة" className="flex flex-wrap items-center gap-2 border-t border-border/50 pt-3 mt-3">
+          <span className="text-xs font-bold text-muted-foreground ml-1">المحدد:</span>
           {chips.map((chip) => (
-            <span key={chip.key} className="inline-flex h-7 items-center gap-1.5 rounded-md border border-primary/20 bg-primary/10 px-2 text-xs font-bold text-primary">
+            <span key={chip.key} className="inline-flex h-8 items-center gap-2 rounded-lg border border-primary/25 bg-primary/10 px-3 text-xs font-bold text-primary shadow-xs">
               {chip.label}
               <button type="button" onClick={() => removeChip(chip.key)} aria-label={`إزالة ${chip.label}`} className="grid h-4 w-4 place-items-center rounded-sm hover:bg-primary/20">
-                <X className="h-3 w-3" />
+                <X className="h-3.5 w-3.5" />
               </button>
             </span>
           ))}
