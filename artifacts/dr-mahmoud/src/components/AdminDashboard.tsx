@@ -63,6 +63,17 @@ import { AdminSettings } from "./AdminSettings";
 import { AdminLearning } from "./AdminLearning";
 import { useToast } from "@/hooks/use-toast";
 import {
+  SidebarItem,
+  StatusBadge,
+  IconButton,
+  PrimaryButton,
+  SecondaryButton,
+  DangerButton,
+  PreviewButton,
+} from "@/components/ui/admin-ui";
+import { ADMIN_TOKENS } from "@/lib/admin-design-tokens";
+import { CascadingStageSelector } from "@/components/ui/CascadingStageSelector";
+import {
   ACADEMIC_TRACKS,
   getStagesForTrack,
   resolveTrackId,
@@ -1398,116 +1409,71 @@ export default function AdminDashboard() {
               </div>
             </div>
             <nav className="flex-1 space-y-1.5 overflow-y-auto">
-              <button
+              <SidebarItem
+                icon={Calendar}
+                label="الدورات"
+                active={activeTab === "bookings"}
                 onClick={() => setActiveTab("bookings")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right text-sm font-medium transition-all ${
-                  activeTab === "bookings"
-                    ? "bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/10"
-                    : "hover:bg-muted/60 text-muted-foreground hover:text-foreground/80"
-                }`}
-              >
-                <Calendar className="w-5 h-5" />
-                <span>الدورات</span>
-                {bookingsQuery.data &&
-                  bookingsQuery.data.filter((b) => b.status === "pending")
-                    .length > 0 && (
-                    <span
-                      className={`mr-auto px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === "bookings" ? "bg-background text-primary" : "bg-primary text-primary-foreground"}`}
-                    >
-                      {
-                        bookingsQuery.data.filter((b) => b.status === "pending")
-                          .length
-                      }
-                    </span>
-                  )}
-              </button>
+                badge={
+                  bookingsQuery.data &&
+                  bookingsQuery.data.filter((b) => b.status === "pending").length > 0
+                    ? bookingsQuery.data.filter((b) => b.status === "pending").length
+                    : undefined
+                }
+              />
 
-              <button
+              <SidebarItem
+                icon={BookOpen}
+                label="الكورسات"
+                active={activeTab === "courses"}
                 onClick={() => setActiveTab("courses")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right text-sm font-medium transition-all ${
-                  activeTab === "courses"
-                    ? "bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/10"
-                    : "hover:bg-muted/60 text-muted-foreground hover:text-foreground/80"
-                }`}
-              >
-                <BookOpen className="w-5 h-5" />
-                <span>الكورسات</span>
-              </button>
+              />
 
-              <button
+              <SidebarItem
+                icon={Mic}
+                label="البودكاست"
+                active={activeTab === "podcasts"}
                 onClick={() => setActiveTab("podcasts")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right text-sm font-medium transition-all ${
-                  activeTab === "podcasts"
-                    ? "bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/10"
-                    : "hover:bg-muted/60 text-muted-foreground hover:text-foreground/80"
-                }`}
-              >
-                <Mic className="w-5 h-5" />
-                <span>البودكاست</span>
-              </button>
+              />
 
-              <button
+              <SidebarItem
+                icon={Library}
+                label="المناهج التعليمية"
+                active={activeTab === "curriculums"}
                 onClick={() => setActiveTab("curriculums")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right text-sm font-medium transition-all ${
-                  activeTab === "curriculums"
-                    ? "bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/10"
-                    : "hover:bg-muted/60 text-muted-foreground hover:text-foreground/80"
-                }`}
-              >
-                <Library className="w-5 h-5" />
-                <span>المناهج التعليمية</span>
-              </button>
+              />
 
-              <button
+              <SidebarItem
+                icon={VideoIcon}
+                label="مكتبة الفيديوهات والقوائم"
+                active={activeTab === "videos"}
                 onClick={() => setActiveTab("videos")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right text-sm font-medium transition-all ${
-                  activeTab === "videos"
-                    ? "bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/10"
-                    : "hover:bg-muted/60 text-muted-foreground hover:text-foreground/80"
-                }`}
-              >
-                <VideoIcon className="w-5 h-5" />
-                <span>مكتبة الفيديوهات والقوائم</span>
-              </button>
+              />
 
-              <button
+              <SidebarItem
+                icon={Upload}
+                label="🎬 رفع فيديو جديد"
+                active={activeTab === "upload-video"}
                 onClick={() => {
                   openVideoModal("add");
                   setActiveTab("upload-video");
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right text-sm font-bold transition-all ${
-                  activeTab === "upload-video"
-                    ? "bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/20"
-                    : "bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20"
-                }`}
-              >
-                <Upload className="w-5 h-5" />
-                <span>🎬 رفع فيديو جديد</span>
-              </button>
+                variant="featured"
+              />
 
-              <button
+              <SidebarItem
+                icon={Users}
+                label="إدارة المنصة والطلاب"
+                active={activeTab === "learning"}
                 onClick={() => setActiveTab("learning")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right text-sm font-medium transition-all ${
-                  activeTab === "learning"
-                    ? "bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/10"
-                    : "hover:bg-muted/60 text-muted-foreground hover:text-foreground/80"
-                }`}
-              >
-                <Users className="w-5 h-5" />
-                <span>إدارة المنصة والطلاب</span>
-              </button>
+              />
 
-              <button
+              <SidebarItem
+                icon={Settings}
+                label="إعدادات الموقع"
+                active={activeTab === "settings"}
                 onClick={() => setActiveTab("settings")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right text-sm font-medium transition-all ${
-                  activeTab === "settings"
-                    ? "bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/10"
-                    : "hover:bg-muted/60 text-muted-foreground hover:text-foreground/80"
-                }`}
-              >
-                <Settings className="w-5 h-5" />
-                <span>إعدادات الموقع</span>
-              </button>
+              />
             </nav>
             <div className="mt-5 border-t border-slate-100 pt-4">
               <div className="mb-3 flex items-center gap-3 rounded-xl bg-slate-50 p-3">
@@ -1853,18 +1819,17 @@ export default function AdminDashboard() {
                             </div>
 
                             <div className="flex items-center gap-2 border-t border-border/80 pt-3">
-                              <button
+                              <SecondaryButton
                                 onClick={() => openCourseModal("edit", course)}
-                                className="flex-1 py-2 bg-muted hover:bg-muted/80 text-foreground/80 rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5 border border-border"
+                                className="flex-1"
                               >
-                                <Edit2 className="w-3.5 h-3.5" /> تعديل
-                              </button>
-                              <button
+                                <Edit2 className="w-[18px] h-[18px]" strokeWidth={1.75} /> تعديل الكورس
+                              </SecondaryButton>
+                              <DangerButton
                                 onClick={() => handleCourseDelete(course.id)}
-                                className="py-2 px-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-xs transition-colors border border-red-500/20"
                               >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                                <Trash2 className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                              </DangerButton>
                             </div>
                           </div>
                         </div>
@@ -1965,18 +1930,12 @@ export default function AdminDashboard() {
                           </div>
 
                           <div className="flex items-center gap-2 flex-shrink-0 self-stretch md:self-auto justify-end border-t md:border-t-0 border-border/60 pt-4 md:pt-0">
-                            <button
-                              onClick={() => openPodcastModal("edit", ep)}
-                              className="px-4 py-2.5 bg-muted hover:bg-muted/80 text-foreground/80 rounded-xl text-xs transition-colors flex items-center gap-1.5 border border-border"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" /> تعديل
-                            </button>
-                            <button
-                              onClick={() => handlePodcastDelete(ep.id)}
-                              className="p-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-xs transition-colors border border-red-500/20"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <SecondaryButton onClick={() => openPodcastModal("edit", ep)}>
+                              <Edit2 className="w-[18px] h-[18px]" strokeWidth={1.75} /> تعديل
+                            </SecondaryButton>
+                            <DangerButton onClick={() => handlePodcastDelete(ep.id)}>
+                              <Trash2 className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                            </DangerButton>
                           </div>
                         </div>
                       ))}
@@ -2338,22 +2297,20 @@ export default function AdminDashboard() {
                                           .join("، ")
                                       : video.stage || "مرحلة غير محددة"}
                                   </span>
-                                  <span
-                                    className={`border text-[10px] font-bold px-2 py-0.5 rounded-md ${video.learningMode === "offline" ? "bg-violet-500/10 text-violet-700 border-violet-500/20" : video.learningMode === "both" ? "bg-emerald-500/10 text-emerald-700 border-emerald-500/20" : "bg-sky-500/10 text-sky-700 border-sky-500/20"}`}
-                                  >
+                                  <StatusBadge variant="online">
                                     {video.learningMode === "offline"
                                       ? "أوفلاين"
                                       : video.learningMode === "both"
                                         ? "أونلاين وأوفلاين"
                                         : "أونلاين"}
-                                  </span>
-                                  <span className="bg-muted text-foreground/80 border text-[10px] font-bold px-2 py-0.5 rounded-md">
+                                  </StatusBadge>
+                                  <StatusBadge variant="undefined">
                                     {video.category}
-                                  </span>
+                                  </StatusBadge>
                                   {video.subject && (
-                                    <span className="bg-muted text-foreground/80 border text-[10px] font-bold px-2 py-0.5 rounded-md">
+                                    <StatusBadge variant="undefined">
                                       {video.subject}
-                                    </span>
+                                    </StatusBadge>
                                   )}
                                 </div>
                                 <h3 className="font-bold text-foreground text-base line-clamp-2 mt-1">
@@ -2698,80 +2655,21 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    {/* Section 4: Target Stages Checkboxes */}
                     <div className="space-y-3 pb-4">
                       <div className="flex items-center gap-2">
                         <span className="grid h-7 w-7 place-items-center rounded-full bg-primary text-xs font-black text-white">4</span>
-                        <h3 className="font-bold text-foreground text-base">المستهدفون من الدرس (المراحل الدراسية)</h3>
+                        <h3 className="font-bold text-foreground text-base">المستهدفون من الدرس (تحديد المرحلة والصف)</h3>
                       </div>
-                      <fieldset className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-4">
-                        <legend className="px-2 text-xs font-bold text-muted-foreground">
-                          تحديد المراحل المستهدفة (افتراضياً: كل المراحل)
-                        </legend>
-
-                        <div className="pb-2 border-b border-border/40">
-                          <label
-                            className={`flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-xs font-bold transition ${videoForm.stages.includes("عام") ? "border-primary bg-primary/10 text-primary shadow-sm" : "bg-background hover:border-primary/40 text-foreground/80"}`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={videoForm.stages.includes("عام")}
-                              onChange={() => {
-                                const checked = videoForm.stages.includes("عام");
-                                const stages = checked
-                                  ? videoForm.stages.filter((item) => item !== "عام")
-                                  : [...videoForm.stages, "عام"];
-                                setVideoForm({
-                                  ...videoForm,
-                                  stages,
-                                  stage: stages[0] || "",
-                                });
-                              }}
-                            />
-                            <span>🌐 كل المراحل (عام ومتاح لجميع الطلاب تلقائياً)</span>
-                          </label>
-                        </div>
-
-                        {ACADEMIC_TRACKS.map((track) => (
-                          <div key={track.id} className="space-y-2">
-                            <div className="flex items-center justify-between border-b border-border/40 pb-1.5">
-                              <h5 className="text-[11px] font-bold text-primary flex items-center gap-1.5">
-                                <span>{track.title}</span>
-                              </h5>
-                              <span className="text-[10px] text-muted-foreground font-medium">
-                                {track.eyebrow}
-                              </span>
-                            </div>
-                            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                              {track.stages.map((stage) => {
-                                const checked = videoForm.stages.includes(stage);
-                                return (
-                                  <label
-                                    key={stage}
-                                    className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition ${checked ? "border-primary bg-primary/10 text-primary shadow-sm" : "bg-background hover:border-primary/40 text-foreground/80"}`}
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={checked}
-                                      onChange={() => {
-                                        const stages = checked
-                                          ? videoForm.stages.filter((item) => item !== stage)
-                                          : [...videoForm.stages, stage];
-                                        setVideoForm({
-                                          ...videoForm,
-                                          stages,
-                                          stage: stages[0] || "",
-                                        });
-                                      }}
-                                    />
-                                    <span>{stage}</span>
-                                  </label>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        ))}
-                      </fieldset>
+                      <CascadingStageSelector
+                        selectedStages={videoForm.stages}
+                        onChange={(stages) =>
+                          setVideoForm({
+                            ...videoForm,
+                            stages,
+                            stage: stages[0] || "عام",
+                          })
+                        }
+                      />
                     </div>
 
                     {/* Submit Action Bar */}
@@ -3539,80 +3437,18 @@ export default function AdminDashboard() {
                     </p>
                   </div>
                 </div>
-                <fieldset className="md:col-span-2 rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-4">
-                  <legend className="px-2 text-xs font-bold text-muted-foreground">
-                    المراحل الدراسية — اختار مرحلة أو أكتر (البكالوريا / الثانوي / الجامعة)
-                  </legend>
-
-                  {ACADEMIC_TRACKS.map((track) => (
-                    <div key={track.id} className="space-y-2">
-                      <div className="flex items-center justify-between border-b border-border/40 pb-1.5">
-                        <h5 className="text-[11px] font-bold text-primary flex items-center gap-1.5">
-                          <span>{track.title}</span>
-                        </h5>
-                        <span className="text-[10px] text-muted-foreground font-medium">
-                          {track.eyebrow}
-                        </span>
-                      </div>
-                      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                        {track.stages.map((stage) => {
-                          const checked = videoForm.stages.includes(stage);
-                          return (
-                            <label
-                              key={stage}
-                              className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-bold transition ${checked ? "border-primary bg-primary/10 text-primary shadow-sm" : "bg-background hover:border-primary/40 text-foreground/80"}`}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={() => {
-                                  const stages = checked
-                                    ? videoForm.stages.filter(
-                                        (item) => item !== stage,
-                                      )
-                                    : [...videoForm.stages, stage];
-                                  setVideoForm({
-                                    ...videoForm,
-                                    stages,
-                                    stage: stages[0] || "",
-                                  });
-                                }}
-                              />
-                              <span>{stage}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-
-                  <div className="pt-2 border-t border-border/40">
-                    <label
-                      className={`flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-xs font-bold transition ${videoForm.stages.includes("عام") ? "border-primary bg-primary/10 text-primary shadow-sm" : "bg-background hover:border-primary/40 text-foreground/80"}`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={videoForm.stages.includes("عام")}
-                        onChange={() => {
-                          const checked = videoForm.stages.includes("عام");
-                          const stages = checked
-                            ? videoForm.stages.filter((item) => item !== "عام")
-                            : [...videoForm.stages, "عام"];
-                          setVideoForm({
-                            ...videoForm,
-                            stages,
-                            stage: stages[0] || "",
-                          });
-                        }}
-                      />
-                      <span>🌐 كل المراحل (متاح لكل الطلاب)</span>
-                    </label>
-                  </div>
-
-                  <p className="text-[11px] text-muted-foreground">
-                    الفيديو هيظهر للطالب لو مرحلته الدراسية موجودة ضمن الاختيارات دي.
-                  </p>
-                </fieldset>
+                <div className="md:col-span-2">
+                  <CascadingStageSelector
+                    selectedStages={videoForm.stages}
+                    onChange={(stages) =>
+                      setVideoForm({
+                        ...videoForm,
+                        stages,
+                        stage: stages[0] || "عام",
+                      })
+                    }
+                  />
+                </div>
 
                 <div className="md:col-span-2">
                   <label className="block text-xs font-semibold text-muted-foreground mb-1">

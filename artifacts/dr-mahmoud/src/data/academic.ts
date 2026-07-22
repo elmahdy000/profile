@@ -1,3 +1,5 @@
+import { normalizeLegacyStage, formatStageLabel } from "./stage-model";
+
 export type AcademicTrackId =
   | "baccalaureate"
   | "computer-science"
@@ -24,22 +26,12 @@ export const ACADEMIC_TRACKS: AcademicTrack[] = [
     description:
       "شرح من الصفر، حل تدريبات المنهج، ومراجعات واختبارات منظمة لكل سنة دراسية.",
     stages: [
-      "أولى بكالوريا",
-      "تانية بكالوريا",
-      "ثالثة بكالوريا",
-      "البكالوريا - الصف الأول",
-      "البكالوريا - الصف الثاني",
-      "البكالوريا - الصف الثالث",
-      "بكالوريا - أولى ثانوي - عام",
-      "بكالوريا - أولى ثانوي - لغات",
-      "بكالوريا - ثانية ثانوي - عام",
-      "بكالوريا - ثانية ثانوي - لغات",
-      "ثانوية عامة - أولى ثانوي",
-      "ثانوية عامة - ثانية ثانوي",
-      "ثانوية عامة - ثالثة ثانوي",
-      "أولى ثانوي",
-      "تانية ثانوي",
-      "ثالثة ثانوي",
+      "البكالوريا · الصف الأول (أولى بكالوريا)",
+      "البكالوريا · الصف الثاني (تانية بكالوريا)",
+      "البكالوريا · الصف الثالث (ثالثة بكالوريا)",
+      "الثانوية العامة · الصف الأول الثانوي",
+      "الثانوية العامة · الصف الثاني الثانوي",
+      "الثانوية العامة · الصف الثالث الثانوي",
     ],
     subjects: ["Python", "Logic", "ToFAS", "Problem Solving"],
     image: "/baccalaureate-hero.png",
@@ -53,10 +45,10 @@ export const ACADEMIC_TRACKS: AcademicTrack[] = [
     description:
       "مواد الكلية مرتبة حسب الفرقة: برمجة، OOP، هياكل بيانات، خوارزميات، قواعد بيانات وأنظمة تشغيل.",
     stages: [
-      "حاسبات - الفرقة الأولى",
-      "حاسبات - الفرقة الثانية",
-      "حاسبات - الفرقة الثالثة",
-      "حاسبات - الفرقة الرابعة",
+      "المرحلة الجامعية · الفرقة الأولى / إعدادي · كلية حاسبات ومعلومات",
+      "المرحلة الجامعية · الفرقة الثانية · كلية حاسبات ومعلومات",
+      "المرحلة الجامعية · الفرقة الثالثة · كلية حاسبات ومعلومات",
+      "المرحلة الجامعية · الفرقة الرابعة · كلية حاسبات ومعلومات",
     ],
     subjects: ["C++", "OOP", "Data Structures", "Algorithms", "Database"],
     image: "/university-cs-path.png",
@@ -70,11 +62,10 @@ export const ACADEMIC_TRACKS: AcademicTrack[] = [
     description:
       "برمجة ومواد حاسب لطلاب هندسة، من الإعدادي حتى الفرق المتقدمة، بشرح عملي ومسائل امتحانات.",
     stages: [
-      "هندسة - إعدادي",
-      "هندسة - الفرقة الأولى",
-      "هندسة - الفرقة الثانية",
-      "هندسة - الفرقة الثالثة",
-      "هندسة - الفرقة الرابعة",
+      "المرحلة الجامعية · الفرقة الأولى / إعدادي · كليات الهندسة",
+      "المرحلة الجامعية · الفرقة الثانية · كليات الهندسة",
+      "المرحلة الجامعية · الفرقة الثالثة · كليات الهندسة",
+      "المرحلة الجامعية · الفرقة الرابعة · كليات الهندسة",
     ],
     subjects: ["C Programming", "C++", "Digital Logic", "Algorithms", "Embedded"],
     image: "/web-development-path.png",
@@ -109,36 +100,12 @@ export function getStagesForTrack(value?: string | null): string[] {
 
 export function getTrackForStage(stage?: string | null) {
   if (!stage) return ACADEMIC_TRACKS[0];
-  const normalized = stage.trim().toLowerCase();
-
-  const exactMatch = ACADEMIC_TRACKS.find((track) =>
-    track.stages.some((s) => s.trim().toLowerCase() === normalized)
-  );
-  if (exactMatch) return exactMatch;
-
-  if (
-    normalized.includes("بكالوريا") ||
-    normalized.includes("ثانوي") ||
-    normalized.includes("ثانوية") ||
-    normalized.includes("baccalaureate") ||
-    normalized.includes("python")
-  ) {
-    return ACADEMIC_TRACKS.find((track) => track.id === "baccalaureate") ?? ACADEMIC_TRACKS[0];
+  const normalizedObj = normalizeLegacyStage(stage);
+  if (normalizedObj.track === "computer_science") {
+    return ACADEMIC_TRACKS.find((track) => track.id === "computer-science") ?? ACADEMIC_TRACKS[1];
   }
-
-  if (
-    normalized.includes("حاسبات") ||
-    normalized.includes("جامعة") ||
-    normalized.includes("جامعي") ||
-    normalized.includes("cs") ||
-    normalized.includes("computer")
-  ) {
-    return ACADEMIC_TRACKS.find((track) => track.id === "computer-science") ?? ACADEMIC_TRACKS[0];
+  if (normalizedObj.track === "engineering") {
+    return ACADEMIC_TRACKS.find((track) => track.id === "engineering") ?? ACADEMIC_TRACKS[2];
   }
-
-  if (normalized.includes("هندسة") || normalized.includes("engineering")) {
-    return ACADEMIC_TRACKS.find((track) => track.id === "engineering") ?? ACADEMIC_TRACKS[0];
-  }
-
   return ACADEMIC_TRACKS[0];
 }
