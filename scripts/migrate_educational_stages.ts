@@ -1,20 +1,11 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import pg from "pg";
-import { videosTable } from "../lib/db/src/schema/videos";
-import { coursesTable } from "../lib/db/src/schema/courses";
-import { studentsTable } from "../lib/db/src/schema/learning";
+import { db, videosTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { normalizeLegacyStage } from "../artifacts/dr-mahmoud/src/data/stage-model";
-
-const DATABASE_URL = process.env.DATABASE_URL || "postgres://postgres:postgres@localhost:5432/drelmahdy";
 
 async function runStageMigration() {
   console.log("==========================================================");
   console.log("🚀 STARTING EDUCATIONAL STAGES DATA MIGRATION & CLEANUP");
   console.log("==========================================================");
-
-  const pool = new pg.Pool({ connectionString: DATABASE_URL });
-  const db = drizzle(pool);
 
   try {
     // 1. Fetch all videos
@@ -79,7 +70,7 @@ async function runStageMigration() {
   } catch (err) {
     console.error("❌ Error during stage migration:", err);
   } finally {
-    await pool.end();
+    process.exit(0);
   }
 }
 
