@@ -662,26 +662,7 @@ export function VideoLessonsSection({
 
   const studentGrade = student?.grade === "أخرى" ? student?.otherGradeDetail : student?.grade;
   const rawItems: VideoItem[] = dbVideos ? dbVideos as VideoItem[] : [];
-  const matchedCategory = studentGrade
-    ? rawItems.find(
-        (item) => String(item.category).trim().toLowerCase() === String(studentGrade).trim().toLowerCase()
-      )?.category
-    : undefined;
 
-  useEffect(() => {
-    if (matchedCategory) {
-      setActiveCategory(matchedCategory);
-    } else if (student && student.grade && dbVideos) {
-      const grade = student.grade;
-      const rawItemsList = (dbVideos as any[]) || [];
-      const hasMatchingCategory = rawItemsList.some(
-        (item) => String(item.category).trim().toLowerCase() === String(grade).trim().toLowerCase()
-      );
-      if (hasMatchingCategory) {
-        setActiveCategory(grade);
-      }
-    }
-  }, [student, dbVideos, matchedCategory]);
 
   // States for search, advanced filters, sorting, bookmarks, and watch progress
   const [searchQuery, setSearchQuery] = useState("");
@@ -729,7 +710,9 @@ export function VideoLessonsSection({
       .then((response) => response.ok ? response.json() : [])
       .then((rows: Array<{ videoId: number; progress: number }>) => {
         const merged = readStoredJson<Record<number, number>>("dr_mahmoud_watch_progress", {});
-        rows.forEach((row) => { merged[row.videoId] = Math.max(merged[row.videoId] || 0, row.progress); });
+        rows.forEach((row) => { 
+          merged[row.videoId] = Math.max(merged[row.videoId] || 0, row.progress); 
+        });
         localStorage.setItem("dr_mahmoud_watch_progress", JSON.stringify(merged));
         setWatchProgress(merged);
       })
@@ -783,13 +766,59 @@ export function VideoLessonsSection({
     progress: watchProgress[item.id || 0] || 0
   }));
 
-  // Categories list
-  const categories = matchedCategory
-    ? [matchedCategory]
-    : ["all", ...Array.from(new Set(items.map((item) => item.category)))];
+  // Helper: check if a video's stage matches the student's grade
+  function studentCanSeeVideo(item: VideoItem): boolean {
+    if (!student) return true; // If no student context, show all (admin preview)
+    const grade = studentGrade || "";
+    const stageArr: string[] = Array.isArray((item as any).stages) && (item as any).stages.length
+      ? (item as any).stages
+      : item.stage ? [item.stage] : [];
+    if (stageArr.length === 0) return true; // No stage set → show to all
+    const normalize = (s: string) => String(s ?? "").trim().toLowerCase();
+    return stageArr.some((s) => {
+      const cn = normalize(s);
+      if (cn === "عام" || cn === "") return true; // General content
+      const sn = normalize(grade);
+      if (sn === cn) return true; // Exact match
+      // Grade 1 matching
+      const g1s = sn.includes("أولى") || sn.includes("الأول") || sn.includes("first") || sn.includes("year_1");
+      const g1c = cn.includes("أولى") || cn.includes("الأول") || cn.includes("first") || cn.includes("year_1");
+      if (g1s || g1c) return g1s && g1c;
+      // Grade 2 matching
+      const g2s = sn.includes("تانية") || sn.includes("الثاني") || sn.includes("second") || sn.includes("year_2");
+      const g2c = cn.includes("تانية") || cn.includes("الثاني") || cn.includes("second") || cn.includes("year_2");
+      if (g2s || g2c) return g2s && g2c;
+      // Grade 3 matching
+      const g3s = sn.includes("ثالثة") || sn.includes("الثالث") || sn.includes("third") || sn.includes("year_3");
+      const g3c = cn.includes("ثالثة") || cn.includes("الثالث") || cn.includes("third") || cn.includes("year_3");
+      if (g3s || g3c) return g3s && g3c;
+      return false;
+    });
+  }
+
+  // Filter items to only what this student's grade can access
+  const visibleItems = student ? items.filter(studentCanSeeVideo) : items;
+
+  // Categories list — only show categories from visible items
+  const categories = ["all", ...Array.from(new Set(visibleItems.map((item) => item.category)))];
+
+  // Auto-select the student's matching category
+  useEffect(() => {
+    if (!student || !dbVideos) return;
+    const grade = studentGrade || "";
+    const matchedCat = visibleItems.find(
+      (item) => String(item.category).trim().toLowerCase() === grade.trim().toLowerCase()
+    )?.category;
+    if (matchedCat) {
+      setActiveCategory(matchedCat);
+    } else if (visibleItems.length > 0 && visibleItems.length < items.length) {
+      // Student has filtered content but no exact category match — show all visible
+      setActiveCategory("all");
+    }
+  }, [student, dbVideos]);
 
   // Filtering Logic
-  const filteredItems = items
+  const filteredItems = visibleItems
     .filter((item) => {
       const matchesCategory = activeCategory === "all" || item.category === activeCategory;
       const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
