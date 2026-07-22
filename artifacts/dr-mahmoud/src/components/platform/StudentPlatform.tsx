@@ -58,6 +58,7 @@ type Quiz = {
   title: string;
   description?: string | null;
   category: string;
+  stage?: string | null;
   passingScore: number;
   questions: QuizQuestion[];
 };
@@ -982,6 +983,11 @@ function QuizzesPanel({
             <span className="text-xs font-bold text-primary">
               {quiz.category}
             </span>
+            {quiz.stage && (
+              <span className="mr-2 rounded-full bg-muted px-2 py-1 text-[10px] font-bold text-muted-foreground">
+                {quiz.stage}
+              </span>
+            )}
             <h3 className="text-xl font-black mt-2">{quiz.title}</h3>
             <p className="text-sm text-muted-foreground mt-2">
               {quiz.questions.length} أسئلة · النجاح من {quiz.passingScore}%

@@ -148,9 +148,14 @@ router.post(
         return;
       }
       const allowedGrades = [
-        "أولى بكالوريا",
-        "تانية بكالوريا",
-        "ثالثة بكالوريا",
+        "بكالوريا - أولى ثانوي - عام",
+        "بكالوريا - أولى ثانوي - لغات",
+        "بكالوريا - ثانية ثانوي - عام",
+        "بكالوريا - ثانية ثانوي - لغات",
+        "ثانوية عامة - أولى ثانوي - عام",
+        "ثانوية عامة - أولى ثانوي - لغات",
+        "ثانوية عامة - ثانية ثانوي - عام",
+        "ثانوية عامة - ثانية ثانوي - لغات",
         "حاسبات - الفرقة الأولى",
         "حاسبات - الفرقة الثانية",
         "حاسبات - الفرقة الثالثة",
@@ -714,20 +719,19 @@ router.get("/learning/quizzes", requireStudent, async (_req, res, next) => {
     const quizzes = await db
       .select()
       .from(quizzesTable)
-      .where(
-        and(
-          eq(quizzesTable.isPublished, true),
-          inArray(quizzesTable.category, allowed),
-        ),
-      )
+      .where(eq(quizzesTable.isPublished, true))
       .orderBy(desc(quizzesTable.createdAt));
     res.json(
-      quizzes.map((quiz) => ({
-        ...quiz,
-        questions: quiz.questions.map(
-          ({ correctIndex: _correctIndex, ...question }) => question,
-        ),
-      })),
+      quizzes
+        .filter((quiz) =>
+          canStudentAccessContent(student, quiz.category, quiz.stage),
+        )
+        .map((quiz) => ({
+          ...quiz,
+          questions: quiz.questions.map(
+            ({ correctIndex: _correctIndex, ...question }) => question,
+          ),
+        })),
     );
   } catch (error) {
     next(error);
@@ -830,7 +834,7 @@ router.put(
           progress: savedProgress,
           currentTimeSeconds: savedTime,
           durationSeconds: savedDuration,
-          completed: savedProgress >= 100,
+          completed: savedProgress >= 90,
           updatedAt: new Date(),
         })
         .onConflictDoUpdate({
@@ -839,7 +843,7 @@ router.put(
             progress: savedProgress,
             currentTimeSeconds: savedTime,
             durationSeconds: savedDuration,
-            completed: savedProgress >= 100,
+            completed: savedProgress >= 90,
             updatedAt: new Date(),
           },
         })
@@ -949,6 +953,7 @@ router.post("/admin/learning/quizzes", requireAdmin, async (req, res, next) => {
         title,
         description: String(req.body.description ?? "").trim() || null,
         category: String(req.body.category ?? "عام").trim() || "عام",
+        stage: String(req.body.stage ?? "").trim() || null,
         passingScore: Math.max(
           0,
           Math.min(100, Number(req.body.passingScore ?? 60)),
@@ -979,6 +984,9 @@ router.patch(
           }),
           ...(req.body.category !== undefined && {
             category: String(req.body.category).trim() || "عام",
+          }),
+          ...(req.body.stage !== undefined && {
+            stage: String(req.body.stage).trim() || null,
           }),
           ...(req.body.passingScore !== undefined && {
             passingScore: Math.max(
@@ -1044,7 +1052,7 @@ router.post(
         return;
       }
       const student = res.locals.student as typeof studentsTable.$inferSelect;
-      if (!canStudentAccessCategory(student, quiz.category)) {
+      if (!canStudentAccessContent(student, quiz.category, quiz.stage)) {
         res.status(403).json({ error: "الاختبار مش ضمن الكورس المسجل ليك" });
         return;
       }

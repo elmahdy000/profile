@@ -11,6 +11,9 @@ ALTER TABLE "video_progress"
 ALTER TABLE "video_progress"
   ADD COLUMN IF NOT EXISTS "duration_seconds" integer NOT NULL DEFAULT 0;
 
+ALTER TABLE "quizzes"
+  ADD COLUMN IF NOT EXISTS "stage" text;
+
 ALTER TABLE "videos"
   ADD COLUMN IF NOT EXISTS "course_id" integer REFERENCES "courses"("id") ON DELETE SET NULL;
 ALTER TABLE "videos"

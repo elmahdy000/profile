@@ -63,6 +63,7 @@ type Quiz = {
   id: number;
   title: string;
   category: string;
+  stage?: string | null;
   passingScore: number;
   questions: Question[];
   isPublished: boolean;
@@ -167,6 +168,7 @@ export function AdminLearning() {
   const [quizForm, setQuizForm] = useState({
     title: "",
     category: "",
+    stage: "",
     description: "",
     passingScore: 60,
     questions: [
@@ -415,6 +417,7 @@ export function AdminLearning() {
       setQuizForm({
         title: "",
         category: "",
+        stage: "",
         description: "",
         passingScore: 60,
         questions: [{ prompt: "", options: ["", "", "", ""], correctIndex: 0 }],
@@ -458,6 +461,10 @@ export function AdminLearning() {
     (course) => course.title === fileForm.category,
   );
   const availableFileStages = getStagesForTrack(selectedFileCourse?.category);
+  const selectedQuizCourse = learningCourses.find(
+    (course) => course.title === quizForm.category,
+  );
+  const availableQuizStages = getStagesForTrack(selectedQuizCourse?.category);
   const filteredFiles = useMemo(
     () =>
       files.filter((file) => {
@@ -1317,7 +1324,7 @@ export function AdminLearning() {
                 className="rounded-2xl border bg-card p-5 space-y-5"
               >
                 <h3 className="font-black text-lg">إنشاء اختبار</h3>
-                <div className="grid sm:grid-cols-3 gap-3">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   <Field label="اسم الاختبار">
                     <input
                       required
@@ -1332,15 +1339,40 @@ export function AdminLearning() {
                     <select
                       required
                       value={quizForm.category}
-                      onChange={(e) =>
-                        setQuizForm({ ...quizForm, category: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const course = learningCourses.find(
+                          (item) => item.title === e.target.value,
+                        );
+                        const stages = getStagesForTrack(course?.category);
+                        setQuizForm({
+                          ...quizForm,
+                          category: e.target.value,
+                          stage: stages[0] || "",
+                        });
+                      }}
                       className="input-admin"
                     >
                       <option value="">اختر الكورس</option>
                       {learningCourses.map((course) => (
                         <option key={course.id} value={course.title}>
                           {course.title}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="المرحلة / المجموعة">
+                    <select
+                      required
+                      value={quizForm.stage}
+                      onChange={(e) =>
+                        setQuizForm({ ...quizForm, stage: e.target.value })
+                      }
+                      className="input-admin"
+                    >
+                      <option value="">اختر المرحلة</option>
+                      {availableQuizStages.map((stage) => (
+                        <option key={stage} value={stage}>
+                          {stage === "عام" ? "عام لكل مراحل الكورس" : stage}
                         </option>
                       ))}
                     </select>

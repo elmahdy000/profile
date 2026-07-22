@@ -63,6 +63,7 @@ export const quizzesTable = pgTable("quizzes", {
   title: text("title").notNull(),
   description: text("description"),
   category: text("category").notNull().default("عام"),
+  stage: text("stage"),
   passingScore: integer("passing_score").notNull().default(60),
   questions: jsonb("questions").$type<QuizQuestion[]>().notNull(),
   isPublished: boolean("is_published").notNull().default(true),

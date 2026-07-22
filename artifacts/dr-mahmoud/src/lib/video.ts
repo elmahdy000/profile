@@ -14,6 +14,7 @@ export interface VideoItem {
   order: number;
   isProtected?: boolean;
   isPublished?: boolean;
+  thumbnailUrl?: string | null;
   durationText?: string | null;
   lessonsCount?: number | null;
   level?: string | null;

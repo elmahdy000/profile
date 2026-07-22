@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { lazy, Suspense, useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Youtube, Play, ExternalLink, Tv, ChevronLeft, Loader2, Lock, Unlock,
@@ -15,6 +15,12 @@ import {
   getYouTubePlaylistId,
   getYoutubeThumbnail,
 } from "@/lib/video";
+
+const PremiumLessonPlayer = lazy(() =>
+  import("@/components/learning/PremiumLessonPlayer").then((module) => ({
+    default: module.PremiumLessonPlayer,
+  })),
+);
 
 function readStoredJson<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -1425,13 +1431,26 @@ export function VideoLessonsSection({
 
       {/* Video Overlay Player Modal */}
       {activePlayer && (
-        <VideoPlayerModal
-          item={activePlayer}
-          files={files}
-          quizzes={quizzes}
-          onStartQuiz={onStartQuiz}
-          onClose={() => setActivePlayer(null)}
-        />
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/90">
+              <div className="flex items-center gap-3 text-sm font-bold text-white">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                جاري تجهيز الدرس...
+              </div>
+            </div>
+          }
+        >
+          <PremiumLessonPlayer
+            item={activePlayer}
+            lessons={filteredItems}
+            files={files}
+            quizzes={quizzes}
+            onStartQuiz={onStartQuiz}
+            onSelectLesson={setActivePlayer}
+            onClose={() => setActivePlayer(null)}
+          />
+        </Suspense>
       )}
 
       {/* Unlock Content Modal */}
