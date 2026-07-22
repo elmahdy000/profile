@@ -26,7 +26,7 @@ type Props = {
 };
 
 const fieldClass =
-  "h-[52px] w-full rounded-xl border border-border bg-background px-4 text-[15px] font-medium text-foreground outline-none transition hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/15";
+  "h-10 w-full rounded-lg border border-border/80 bg-background px-3 text-xs font-medium text-foreground outline-none transition hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/15 shadow-xs";
 
 export function createDefaultRegistrationStage(): RegistrationStageSelection {
   return {
@@ -96,13 +96,13 @@ export function RegistrationStageSelector({ value, onChange }: Props) {
   };
 
   return (
-    <fieldset className="space-y-4 rounded-2xl border border-border/80 bg-muted/15 p-4 sm:p-5">
-      <legend className="px-1 text-lg font-bold text-foreground">
-        المرحلة الدراسية
+    <fieldset className="space-y-3 rounded-xl border border-border/70 bg-muted/15 p-3.5 sm:p-4">
+      <legend className="px-1 text-xs font-extrabold uppercase text-primary tracking-wide">
+        1. النظام والمرحلة الدراسية
       </legend>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <label className="space-y-2 text-sm font-semibold text-foreground">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <label className="space-y-1 text-xs font-bold text-foreground/80">
           <span>النظام التعليمي <span className="text-red-500">*</span></span>
           <select
             id="education-system"
@@ -121,7 +121,7 @@ export function RegistrationStageSelector({ value, onChange }: Props) {
             required
             className={fieldClass}
           >
-            <option value="">اختر النظام التعليمي</option>
+            <option value="">اختر النظام</option>
             {EDUCATION_SYSTEMS.map((item) => (
               <option key={item.id} value={item.id}>{item.label}</option>
             ))}
@@ -129,7 +129,7 @@ export function RegistrationStageSelector({ value, onChange }: Props) {
         </label>
 
         {system && (
-          <label className="space-y-2 text-sm font-semibold text-foreground">
+          <label className="space-y-1 text-xs font-bold text-foreground/80">
             <span>السنة الدراسية <span className="text-red-500">*</span></span>
             <select
               id="education-grade"
@@ -148,7 +148,7 @@ export function RegistrationStageSelector({ value, onChange }: Props) {
               required
               className={fieldClass}
             >
-              <option value="">اختر السنة الدراسية</option>
+              <option value="">اختر السنة</option>
               {SYSTEM_GRADES[system].map((item) => (
                 <option key={item.id} value={item.id}>{item.label}</option>
               ))}
@@ -157,7 +157,7 @@ export function RegistrationStageSelector({ value, onChange }: Props) {
         )}
 
         {system && value.educationGrade && !isUniversity && (
-          <label className="space-y-2 text-sm font-semibold text-foreground">
+          <label className="space-y-1 text-xs font-bold text-foreground/80">
             <span>نوع المدرسة <span className="text-red-500">*</span></span>
             <select
               id="school-type"
@@ -176,7 +176,7 @@ export function RegistrationStageSelector({ value, onChange }: Props) {
               required
               className={fieldClass}
             >
-              <option value="">اختر نوع المدرسة</option>
+              <option value="">اختر النوع</option>
               {SCHOOL_TYPES.map((item) => (
                 <option key={item.id} value={item.id}>{item.label}</option>
               ))}
@@ -185,8 +185,8 @@ export function RegistrationStageSelector({ value, onChange }: Props) {
         )}
 
         {system && value.educationGrade && (isUniversity || value.schoolType) && (
-          <label className="space-y-2 text-sm font-semibold text-foreground">
-            <span>التخصص أو المسار <span className="text-red-500">*</span></span>
+          <label className="space-y-1 text-xs font-bold text-foreground/80">
+            <span>التخصص / المسار <span className="text-red-500">*</span></span>
             <select
               id="academic-track"
               aria-label="التخصص أو المسار"
@@ -204,7 +204,7 @@ export function RegistrationStageSelector({ value, onChange }: Props) {
               required
               className={fieldClass}
             >
-              <option value="">اختر التخصص أو المسار</option>
+              <option value="">اختر المسار</option>
               {isUniversity ? (
                 TRACKS.filter((item) => item.id === "computer_science" || item.id === "engineering")
                   .map((item) => <option key={item.id} value={item.id}>{item.label}</option>)
@@ -217,12 +217,13 @@ export function RegistrationStageSelector({ value, onChange }: Props) {
       </div>
 
       {chips.length > 0 && (
-        <div aria-label="ملخص المرحلة المختارة" className="flex flex-wrap gap-2 border-t border-border/60 pt-4">
+        <div aria-label="ملخص المرحلة المختارة" className="flex flex-wrap items-center gap-1.5 border-t border-border/50 pt-2.5">
+          <span className="text-[11px] font-bold text-muted-foreground ml-1">المحدد:</span>
           {chips.map((chip) => (
-            <span key={chip.key} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 text-sm font-semibold text-blue-800">
+            <span key={chip.key} className="inline-flex h-7 items-center gap-1.5 rounded-md border border-primary/20 bg-primary/10 px-2 text-xs font-bold text-primary">
               {chip.label}
-              <button type="button" onClick={() => removeChip(chip.key)} aria-label={`إزالة ${chip.label}`} className="grid h-6 w-6 place-items-center rounded-full hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
-                <X className="h-3.5 w-3.5" />
+              <button type="button" onClick={() => removeChip(chip.key)} aria-label={`إزالة ${chip.label}`} className="grid h-4 w-4 place-items-center rounded-sm hover:bg-primary/20">
+                <X className="h-3 w-3" />
               </button>
             </span>
           ))}
