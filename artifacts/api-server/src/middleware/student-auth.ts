@@ -94,16 +94,19 @@ export function canStudentAccessContent(
     Boolean(courseId) &&
     (student.enrolledCourseIds ?? []).includes(Number(courseId));
 
-  if (courseId)
-    return (
-      (assignedCourseId || assignedCourse) &&
-      (contentStages.length === 0 || stageMatches)
-    );
+  if (courseId) {
+    // If the student is explicitly enrolled in this course or category, allow access
+    // (regardless of stage), so admins can grant cross-grade access.
+    if (assignedCourseId || assignedCourse) return true;
+    // Otherwise, fall through to stage-based access below.
+  }
 
   const categoryMatches =
     assignedCourse || canStudentAccessCategory(student, category);
   if (contentStages.length > 0) {
-    return categoryMatches && stageMatches;
+    // Stage match is the primary gate. If stages are set and match the student's
+    // grade, grant access. Category match is a fallback for "general" content.
+    return stageMatches || (isGeneralContent && categoryMatches);
   }
   return categoryMatches;
 }
