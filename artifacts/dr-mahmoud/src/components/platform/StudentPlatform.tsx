@@ -1425,7 +1425,7 @@ export function StudentPlatform() {
   };
 
   useEffect(() => {
-    api<{ student: Student }>("/api/student/me")
+    api<{ student: Student | null }>("/api/student/me")
       .then((r) => setStudent(r.student))
       .catch(() => {})
       .finally(() => setLoading(false));

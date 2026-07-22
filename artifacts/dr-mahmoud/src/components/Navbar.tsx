@@ -53,7 +53,9 @@ export function Navbar() {
         .then((response) => (response.ok ? response.json() : null))
         .then((data) => setStudent(data?.student || null))
         .catch(() => setStudent(null));
-    void loadStudent();
+    // The platform performs its own session bootstrap. Avoid two expected 401
+    // responses for signed-out visitors on that route.
+    if (window.location.pathname !== "/platform") void loadStudent();
     window.addEventListener("student-auth-changed", loadStudent);
     return () =>
       window.removeEventListener("student-auth-changed", loadStudent);

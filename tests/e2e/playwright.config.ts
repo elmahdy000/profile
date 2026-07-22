@@ -17,13 +17,23 @@ export default defineConfig({
   },
   webServer: externalBaseUrl
     ? undefined
-    : {
-        command: "pnpm --filter @workspace/dr-mahmoud run dev",
-        cwd: "../..",
-        url: "http://127.0.0.1:18099",
-        reuseExistingServer: !process.env.CI,
-        timeout: 120_000,
-      },
+    : [
+        {
+          command:
+            "pnpm --filter @workspace/api-server run build && node --env-file=.env artifacts/api-server/dist/index.mjs",
+          cwd: "../..",
+          url: "http://127.0.0.1:5000/api/healthz",
+          reuseExistingServer: !process.env.CI,
+          timeout: 120_000,
+        },
+        {
+          command: "pnpm --filter @workspace/dr-mahmoud run dev",
+          cwd: "../..",
+          url: "http://127.0.0.1:18099",
+          reuseExistingServer: !process.env.CI,
+          timeout: 120_000,
+        },
+      ],
   projects: [
     {
       name: "desktop-chromium",

@@ -67,6 +67,9 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
   const saveTimer = useRef<number | undefined>(undefined);
   const [playerReady, setPlayerReady] = useState(false);
   const [playerError, setPlayerError] = useState(false);
+  const [playerErrorMessage, setPlayerErrorMessage] = useState("");
+  const [streamSrc, setStreamSrc] = useState(item.youtubeUrl);
+  const refreshAttempted = useRef(false);
   const [youtubeStarted, setYoutubeStarted] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -94,7 +97,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
   const poster = item.thumbnailUrl || getYoutubeThumbnail(item.youtubeUrl);
 
   useEffect(() => {
-    setPlayerReady(false); setPlayerError(false); setYoutubeStarted(false); setCurrentTime(0); setDuration(0); setPlaying(false);
+    setPlayerReady(false); setPlayerError(false); setPlayerErrorMessage(""); setStreamSrc(item.youtubeUrl); refreshAttempted.current = false; setYoutubeStarted(false); setCurrentTime(0); setDuration(0); setPlaying(false);
     const storedProgress = item.id ? readJson<Record<number, number>>("dr_mahmoud_watch_progress", {})[item.id] || 0 : 0;
     setProgress(storedProgress);
     setNotes(readJson<LessonNote[]>(noteKey, []));
@@ -129,6 +132,36 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
     const video = videoRef.current;
     if (!video) return;
     if (video.paused) await video.play(); else video.pause();
+  };
+
+  const refreshStreamUrl = async () => {
+    if (!item.id || refreshAttempted.current) {
+      setPlayerErrorMessage("تعذر الوصول لملف الفيديو. أعد تحميل الصفحة أو تواصل مع الإدارة.");
+      setPlayerError(true);
+      return;
+    }
+    refreshAttempted.current = true;
+    setPlayerReady(false);
+    try {
+      const unlockKeys = localStorage.getItem("dr_mahmoud_unlock_keys") || "";
+      const response = await fetch("/api/videos", {
+        credentials: "include",
+        cache: "no-store",
+        headers: unlockKeys ? { "x-unlock-keys": unlockKeys } : undefined,
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const videos = await response.json() as VideoItem[];
+      const refreshed = videos.find((video) => video.id === item.id);
+      if (!refreshed || refreshed.youtubeUrl === "locked" || !refreshed.youtubeUrl.startsWith("/api/videos/")) {
+        throw new Error("STREAM_NOT_AVAILABLE");
+      }
+      setStreamSrc(refreshed.youtubeUrl);
+      setPlayerError(false);
+      setPlayerErrorMessage("");
+    } catch {
+      setPlayerErrorMessage("رابط الفيديو غير صالح أو الملف غير موجود على السيرفر.");
+      setPlayerError(true);
+    }
   };
 
   const markComplete = async () => {
@@ -170,8 +203,8 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
               <div className="relative aspect-video w-full overflow-hidden bg-black">
                 {isProtected ? <>
                   {!playerReady && !playerError && <div className="absolute inset-0 z-10 animate-pulse bg-slate-900"><div className="absolute inset-0 grid place-items-center"><Loader2 className="h-8 w-8 animate-spin text-sky-400"/></div></div>}
-                  {playerError ? <div className="absolute inset-0 z-20 grid place-items-center p-6 text-center"><div><p className="font-bold text-white">تعذر تحميل الفيديو</p><p className="mt-1 text-sm text-slate-400">تحقق من اتصالك بالإنترنت ثم حاول مرة أخرى.</p><button onClick={() => { setPlayerError(false); videoRef.current?.load(); }} className="mt-4 inline-flex h-11 items-center gap-2 rounded-xl bg-sky-500 px-5 font-bold text-slate-950 hover:bg-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><RefreshCw className="h-4 w-4"/>إعادة المحاولة</button></div></div> : null}
-                  <video ref={videoRef} className="h-full w-full object-contain" src={item.youtubeUrl} poster={poster || undefined} preload="metadata" playsInline onLoadedMetadata={(event) => { const video = event.currentTarget; setDuration(video.duration); setPlayerReady(true); const position = item.id ? readJson<Record<number, number>>("dr_mahmoud_watch_positions", {})[item.id] || 0 : 0; if (position < video.duration - 5) video.currentTime = position; }} onError={() => setPlayerError(true)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onTimeUpdate={(event) => { const video = event.currentTarget; setCurrentTime(video.currentTime); const percent = video.duration ? Math.round(video.currentTime / video.duration * 100) : 0; setProgress((old) => Math.max(old, percent >= 90 ? 100 : percent)); }} onEnded={() => void markComplete()} />
+                  {playerError ? <div className="absolute inset-0 z-20 grid place-items-center bg-slate-950 p-6 text-center"><div><p className="font-bold text-white">تعذر تشغيل الدرس</p><p className="mt-2 text-sm text-slate-400">{playerErrorMessage}</p><button onClick={() => { refreshAttempted.current = false; setPlayerError(false); void refreshStreamUrl(); }} className="mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-sky-500 px-5 font-bold text-slate-950 hover:bg-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><RefreshCw className="h-4 w-4"/>تحديث رابط الفيديو</button></div></div> : null}
+                  <video ref={videoRef} className="h-full w-full object-contain" src={streamSrc} poster={poster || undefined} preload="metadata" playsInline onLoadedMetadata={(event) => { const video = event.currentTarget; setDuration(video.duration); setPlayerReady(true); setPlayerError(false); const position = item.id ? readJson<Record<number, number>>("dr_mahmoud_watch_positions", {})[item.id] || 0 : 0; if (position < video.duration - 5) video.currentTime = position; }} onError={() => void refreshStreamUrl()} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onTimeUpdate={(event) => { const video = event.currentTarget; setCurrentTime(video.currentTime); const percent = video.duration ? Math.round(video.currentTime / video.duration * 100) : 0; setProgress((old) => Math.max(old, percent >= 90 ? 100 : percent)); }} onEnded={() => void markComplete()} />
                   {playerReady && !playing && !playerError && <button onClick={() => void togglePlay()} className="absolute inset-0 grid place-items-center bg-black/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-400" aria-label="تشغيل الفيديو"><span className="grid h-16 w-16 place-items-center rounded-full bg-sky-500 text-slate-950 shadow-xl transition hover:scale-105 sm:h-20 sm:w-20"><Play className="h-7 w-7 fill-current sm:h-9 sm:w-9"/></span></button>}
                 </> : youtubeUrl ? <>
                   {!youtubeStarted ? <button onClick={() => setYoutubeStarted(true)} className="absolute inset-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-400" aria-label="تشغيل الفيديو"><img src={poster} alt="" className="h-full w-full object-cover"/><span className="absolute inset-0 bg-black/35"/><span className="absolute inset-0 grid place-items-center"><span className="grid h-16 w-16 place-items-center rounded-full bg-sky-500 text-slate-950 shadow-xl transition group-hover:scale-105 sm:h-20 sm:w-20"><Play className="h-8 w-8 fill-current"/></span></span></button> : <iframe className="absolute inset-0 h-full w-full" src={youtubeUrl} title={item.title} loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin"/>}

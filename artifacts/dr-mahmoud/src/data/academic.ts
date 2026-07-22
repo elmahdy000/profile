@@ -1,4 +1,4 @@
-import { normalizeLegacyStage, formatStageLabel } from "./stage-model";
+import { CANONICAL_STAGE_GROUPS, normalizeLegacyStage } from "./stage-model";
 
 export type AcademicTrackId =
   | "baccalaureate"
@@ -25,14 +25,7 @@ export const ACADEMIC_TRACKS: AcademicTrack[] = [
     eyebrow: "أولى وثانية ثانوي — عام ولغات",
     description:
       "شرح من الصفر، حل تدريبات المنهج، ومراجعات واختبارات منظمة لكل سنة دراسية.",
-    stages: [
-      "البكالوريا · الصف الأول (أولى بكالوريا)",
-      "البكالوريا · الصف الثاني (تانية بكالوريا)",
-      "البكالوريا · الصف الثالث (ثالثة بكالوريا)",
-      "الثانوية العامة · الصف الأول الثانوي",
-      "الثانوية العامة · الصف الثاني الثانوي",
-      "الثانوية العامة · الصف الثالث الثانوي",
-    ],
+    stages: [...CANONICAL_STAGE_GROUPS.secondary],
     subjects: ["Python", "Logic", "ToFAS", "Problem Solving"],
     image: "/baccalaureate-hero.png",
     imageAlt: "طالب يدرس منهج البرمجة والبكالوريا",
@@ -44,12 +37,7 @@ export const ACADEMIC_TRACKS: AcademicTrack[] = [
     eyebrow: "من أولى لرابعة جامعة",
     description:
       "مواد الكلية مرتبة حسب الفرقة: برمجة، OOP، هياكل بيانات، خوارزميات، قواعد بيانات وأنظمة تشغيل.",
-    stages: [
-      "المرحلة الجامعية · الفرقة الأولى / إعدادي · كلية حاسبات ومعلومات",
-      "المرحلة الجامعية · الفرقة الثانية · كلية حاسبات ومعلومات",
-      "المرحلة الجامعية · الفرقة الثالثة · كلية حاسبات ومعلومات",
-      "المرحلة الجامعية · الفرقة الرابعة · كلية حاسبات ومعلومات",
-    ],
+    stages: [...CANONICAL_STAGE_GROUPS.computerScience],
     subjects: ["C++", "OOP", "Data Structures", "Algorithms", "Database"],
     image: "/university-cs-path.png",
     imageAlt: "طالب في كلية حاسبات ومعلومات يدرس البرمجة",
@@ -61,12 +49,7 @@ export const ACADEMIC_TRACKS: AcademicTrack[] = [
     eyebrow: "إعدادي وتخصصات الحاسب",
     description:
       "برمجة ومواد حاسب لطلاب هندسة، من الإعدادي حتى الفرق المتقدمة، بشرح عملي ومسائل امتحانات.",
-    stages: [
-      "المرحلة الجامعية · الفرقة الأولى / إعدادي · كليات الهندسة",
-      "المرحلة الجامعية · الفرقة الثانية · كليات الهندسة",
-      "المرحلة الجامعية · الفرقة الثالثة · كليات الهندسة",
-      "المرحلة الجامعية · الفرقة الرابعة · كليات الهندسة",
-    ],
+    stages: [...CANONICAL_STAGE_GROUPS.engineering],
     subjects: ["C Programming", "C++", "Digital Logic", "Algorithms", "Embedded"],
     image: "/web-development-path.png",
     imageAlt: "طالب هندسة يدرس البرمجة ومواد الحاسب",

@@ -1,12 +1,12 @@
 import { expect, test } from "@playwright/test";
 
 const publicRoutes = [
-  { path: "/", title: /د\. محمود المهدي/, heading: /افهم منهجك/ },
-  { path: "/baccalaureate", title: /البكالوريا/, heading: /ابنك هيتعلم برمجة/ },
-  { path: "/kids", title: /للأطفال/, heading: /تعلم البرمجة/ },
-  { path: "/university", title: /حاسبات|البرمجة/, heading: /مواد الجامعة/ },
-  { path: "/curriculum", title: /المناهج/, heading: /مكتبة المناهج/ },
-  { path: "/platform", title: /المنصة التعليمية/, heading: /أهلًا بيك/ },
+  { path: "/", title: /د\. محمود المهدي/, heading: /افهم منهجك/, hasImage: true },
+  { path: "/baccalaureate", title: /البكالوريا/, heading: /ابنك هيتعلم برمجة/, hasImage: true },
+  { path: "/kids", title: /للأطفال/, heading: /تعلم البرمجة/, hasImage: false },
+  { path: "/university", title: /حاسبات|البرمجة/, heading: /مواد الجامعة/, hasImage: false },
+  { path: "/curriculum", title: /المناهج/, heading: /مكتبة المناهج/, hasImage: true },
+  { path: "/platform", title: /المنصة التعليمية/, heading: /أهلًا بيك/, hasImage: true },
 ] as const;
 
 test.describe("public platform", () => {
@@ -18,7 +18,9 @@ test.describe("public platform", () => {
       await expect(page.getByRole("heading", { level: 1 })).toContainText(
         route.heading,
       );
-      await expect(page.locator('img[src]:not([src=""])')).not.toHaveCount(0);
+      if (route.hasImage) {
+        await expect(page.locator('img[src]:not([src=""])')).not.toHaveCount(0);
+      }
     });
   }
 

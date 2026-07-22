@@ -19,6 +19,7 @@ import {
   canStudentAccessLearningMode,
   getApprovedStudent,
 } from "../middleware/student-auth";
+import { isAcceptedAcademicStage } from "../lib/academic-stages";
 
 const router: IRouter = Router();
 
@@ -64,6 +65,19 @@ function isValidStreamToken(videoId: number, token: unknown): boolean {
 
 function getProtectedStreamUrl(videoId: number): string {
   return `/api/videos/${videoId}/stream?token=${createStreamToken(videoId)}`;
+}
+
+function isGeneratedStreamUrl(value: string, videoId: number): boolean {
+  return new RegExp(`^/api/videos/${videoId}/stream(?:\\?|$)`).test(value);
+}
+
+function resolveUploadedVideoPath(filename: string): string | null {
+  const safeName = path.basename(filename);
+  const candidates = [
+    path.join(process.cwd(), "public", "uploads", safeName),
+    path.join(process.cwd(), "artifacts", "api-server", "public", "uploads", safeName),
+  ];
+  return candidates.find((candidate) => fs.existsSync(candidate)) ?? null;
 }
 
 async function loadAttachmentMap(videoIds: number[]) {
@@ -252,17 +266,11 @@ router.post("/videos", requireAdmin, async (req, res, next) => {
       res.status(400).json({ error: "اختيار الكورس مطلوب" });
       return;
     }
-    const allowedStages = new Set([
-      "أولى بكالوريا",
-      "تانية بكالوريا",
-      "جامعة",
-      "عام",
-    ]);
     const stages = Array.from(
       new Set(
         (validated.stages ?? (validated.stage ? [validated.stage] : []))
           .map((value) => String(value).trim())
-          .filter((value) => allowedStages.has(value)),
+          .filter((value) => isAcceptedAcademicStage(value)),
       ),
     ).slice(0, 10);
     if (stages.length === 0) {
@@ -353,19 +361,13 @@ router.put("/videos/:id", requireAdmin, async (req, res, next) => {
   try {
     const id = parseInt(req.params.id as string, 10);
     const validated = UpdateVideoBody.parse(req.body);
-    const allowedStages = new Set([
-      "أولى بكالوريا",
-      "تانية بكالوريا",
-      "جامعة",
-      "عام",
-    ]);
     const stages =
       validated.stages !== undefined
         ? Array.from(
             new Set(
               validated.stages
                 .map((value) => String(value).trim())
-                .filter((value) => allowedStages.has(value)),
+                .filter((value) => isAcceptedAcademicStage(value)),
             ),
           ).slice(0, 10)
         : undefined;
@@ -406,7 +408,8 @@ router.put("/videos/:id", requireAdmin, async (req, res, next) => {
         ...(validated.description !== undefined && {
           description: validated.description,
         }),
-        ...(validated.youtubeUrl !== undefined && {
+        ...(validated.youtubeUrl !== undefined &&
+          !isGeneratedStreamUrl(validated.youtubeUrl, id) && {
           youtubeUrl: validated.youtubeUrl,
         }),
         ...(validated.thumbnailUrl !== undefined && {
@@ -581,9 +584,9 @@ router.get("/videos/:id/stream", async (req, res, next) => {
     }
 
     const filename = path.basename(video.youtubeUrl.replace("/uploads/", ""));
-    const filePath = path.join(process.cwd(), "public", "uploads", filename);
+    const filePath = resolveUploadedVideoPath(filename);
 
-    if (!fs.existsSync(filePath)) {
+    if (!filePath) {
       res.status(404).json({ error: "Video file not found on disk" });
       return;
     }

@@ -23,6 +23,8 @@ ALTER TABLE "videos"
 ALTER TABLE "videos"
   ADD COLUMN IF NOT EXISTS "duration_text" text;
 ALTER TABLE "videos"
+  ADD COLUMN IF NOT EXISTS "thumbnail_url" text;
+ALTER TABLE "videos"
   ADD COLUMN IF NOT EXISTS "lessons_count" integer;
 ALTER TABLE "videos"
   ADD COLUMN IF NOT EXISTS "level" text;

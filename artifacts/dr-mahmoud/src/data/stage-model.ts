@@ -63,6 +63,19 @@ export const TRACKS: { id: Track; label: string; systemScope?: EducationSystem }
   { id: "business", label: "تجارة وإدارة أعمال", systemScope: "university" },
 ];
 
+const SECONDARY_GRADES: Grade[] = [
+  "first_secondary",
+  "second_secondary",
+  "third_secondary",
+];
+
+const UNIVERSITY_GRADES: Grade[] = [
+  "university_year_1",
+  "university_year_2",
+  "university_year_3",
+  "university_year_4",
+];
+
 /**
  * Creates canonical stage ID from components
  */
@@ -100,6 +113,30 @@ export function formatStageLabel(params: {
 
   return parts.join(" · ");
 }
+
+/** Canonical labels stored in students.grade and content stage columns. */
+export const CANONICAL_STAGE_GROUPS = {
+  secondary: (["baccalaureate", "general_secondary"] as EducationSystem[])
+    .flatMap((system) =>
+      SECONDARY_GRADES.flatMap((grade) =>
+        (["arabic", "languages"] as SchoolType[]).map((schoolType) =>
+          formatStageLabel({ system, grade, schoolType, track: "general" }),
+        ),
+      ),
+    ),
+  computerScience: UNIVERSITY_GRADES.map((grade) =>
+    formatStageLabel({ system: "university", grade, track: "computer_science" }),
+  ),
+  engineering: UNIVERSITY_GRADES.map((grade) =>
+    formatStageLabel({ system: "university", grade, track: "engineering" }),
+  ),
+} as const;
+
+export const CANONICAL_STAGE_LABELS = [
+  ...CANONICAL_STAGE_GROUPS.secondary,
+  ...CANONICAL_STAGE_GROUPS.computerScience,
+  ...CANONICAL_STAGE_GROUPS.engineering,
+];
 
 /**
  * Parses and normalizes legacy stage display strings into normalized stage objects

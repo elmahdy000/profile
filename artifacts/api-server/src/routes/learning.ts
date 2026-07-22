@@ -27,6 +27,7 @@ import {
   requireStudent,
   STUDENT_COOKIE,
 } from "../middleware/student-auth";
+import { isAcceptedAcademicStage } from "../lib/academic-stages";
 import { fixedWindowRateLimit } from "../middleware/rate-limit";
 
 const router: IRouter = Router();
@@ -147,27 +148,7 @@ router.post(
           .json({ error: "المحافظة والمدينة والمرحلة الدراسية مطلوبة" });
         return;
       }
-      const allowedGrades = [
-        "بكالوريا - أولى ثانوي - عام",
-        "بكالوريا - أولى ثانوي - لغات",
-        "بكالوريا - ثانية ثانوي - عام",
-        "بكالوريا - ثانية ثانوي - لغات",
-        "ثانوية عامة - أولى ثانوي - عام",
-        "ثانوية عامة - أولى ثانوي - لغات",
-        "ثانوية عامة - ثانية ثانوي - عام",
-        "ثانوية عامة - ثانية ثانوي - لغات",
-        "حاسبات - الفرقة الأولى",
-        "حاسبات - الفرقة الثانية",
-        "حاسبات - الفرقة الثالثة",
-        "حاسبات - الفرقة الرابعة",
-        "هندسة - إعدادي",
-        "هندسة - الفرقة الأولى",
-        "هندسة - الفرقة الثانية",
-        "هندسة - الفرقة الثالثة",
-        "هندسة - الفرقة الرابعة",
-        "أخرى",
-      ];
-      if (!allowedGrades.includes(grade)) {
+      if (grade !== "أخرى" && !isAcceptedAcademicStage(grade)) {
         res.status(400).json({ error: "المرحلة الدراسية غير صالحة" });
         return;
       }
@@ -301,7 +282,7 @@ router.get("/student/me", async (req, res, next) => {
   try {
     const student = await getApprovedStudent(req);
     if (!student) {
-      res.status(401).json({ error: "Not signed in" });
+      res.json({ student: null });
       return;
     }
     res.json({ student: publicStudent(student) });
