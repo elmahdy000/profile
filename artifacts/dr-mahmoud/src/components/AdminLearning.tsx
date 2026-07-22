@@ -22,6 +22,8 @@ import {
   BarChart3,
   MessageCircle,
   Activity,
+  FileCheck2,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -154,6 +156,8 @@ export function AdminLearning() {
   const [filePage, setFilePage] = useState(1);
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
   const [showFilePreview, setShowFilePreview] = useState(false);
+  const [isFileDragging, setIsFileDragging] = useState(false);
+  const [fileValidationError, setFileValidationError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileForm, setFileForm] = useState({
     title: "",
@@ -307,6 +311,27 @@ export function AdminLearning() {
         )
         .map((file) => Number(file.order) || 0),
     ) + 1;
+  const selectLearningFile = (file: File | null) => {
+    setIsFileDragging(false);
+    setFileValidationError("");
+    if (!file) return;
+    const allowedExtensions = ["pdf", "doc", "docx", "zip", "ppt", "pptx", "txt", "jpg", "jpeg", "png", "webp"];
+    const extension = file.name.split(".").pop()?.toLowerCase() || "";
+    if (!allowedExtensions.includes(extension)) {
+      setFileValidationError("صيغة الملف غير مدعومة. استخدم PDF أو Office أو ZIP أو صورة.");
+      return;
+    }
+    if (file.size > 150 * 1024 * 1024) {
+      setFileValidationError("حجم الملف أكبر من 150 MB. اضغط الملف ثم حاول مرة أخرى.");
+      return;
+    }
+    setFileForm((current) => ({
+      ...current,
+      file,
+      title: current.title || file.name.replace(/\.[^.]+$/, ""),
+    }));
+    setShowFilePreview(false);
+  };
   const uploadFile = async (isPublished: boolean) => {
     if (!fileForm.file || fileForm.order < 1) {
       toast({
@@ -883,34 +908,32 @@ export function AdminLearning() {
                     <label className="mb-2 block text-sm font-semibold text-slate-700">
                       الملف المرفق
                     </label>
-                    <div className="relative rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center transition hover:border-primary hover:bg-blue-50/40">
+                    <div
+                      onDragEnter={(event) => { event.preventDefault(); setIsFileDragging(true); }}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDragLeave={(event) => { event.preventDefault(); if (event.currentTarget === event.target) setIsFileDragging(false); }}
+                      onDrop={(event) => { event.preventDefault(); selectLearningFile(event.dataTransfer.files?.[0] || null); }}
+                      className={`relative min-h-44 rounded-2xl border-2 border-dashed p-6 text-center transition ${isFileDragging ? "scale-[1.01] border-primary bg-blue-50 ring-4 ring-blue-100" : fileForm.file ? "border-emerald-300 bg-emerald-50/40" : "border-slate-300 bg-slate-50 hover:border-primary hover:bg-blue-50/40"}`}
+                    >
                       <input
                         ref={fileInputRef}
                         type="file"
                         accept=".pdf,.doc,.docx,.zip,.ppt,.pptx,.txt,image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0] || null;
-                          setFileForm({
-                            ...fileForm,
-                            file,
-                            title:
-                              fileForm.title ||
-                              file?.name.replace(/\.[^.]+$/, "") ||
-                              "",
-                          });
-                          setShowFilePreview(false);
-                        }}
+                        onChange={(e) => { selectLearningFile(e.target.files?.[0] || null); e.target.value = ""; }}
                         className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                         aria-label="اختيار ملف تعليمي"
                       />
-                      <Upload className="mx-auto h-10 w-10 text-primary" />
+                      <span className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl ${fileForm.file ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-primary"}`}>
+                        {fileForm.file ? <FileCheck2 className="h-7 w-7" /> : <Upload className="h-7 w-7" />}
+                      </span>
                       <strong className="mt-3 block text-sm text-slate-800">
-                        اسحب الملف هنا أو اضغط للاختيار
+                        {fileForm.file ? "الملف جاهز للرفع" : isFileDragging ? "اترك الملف هنا" : "اسحب الملف هنا أو اضغط للاختيار"}
                       </strong>
                       <span className="mt-1 block text-xs text-slate-500">
                         PDF, DOCX, ZIP, PPTX — بحد أقصى 150MB
                       </span>
                     </div>
+                    {fileValidationError && <p role="alert" className="mt-3 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700"><AlertCircle className="h-4 w-4 shrink-0" />{fileValidationError}</p>}
                     {fileForm.file && (
                       <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4">
                         <div className="flex items-center gap-3">
@@ -929,6 +952,7 @@ export function AdminLearning() {
                             type="button"
                             onClick={() => {
                               setFileForm({ ...fileForm, file: null });
+                              setFileValidationError("");
                               setShowFilePreview(false);
                               if (fileInputRef.current)
                                 fileInputRef.current.value = "";

@@ -138,6 +138,7 @@ export default function AdminDashboard() {
     remainingSeconds: number;
   } | null>(null);
   const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
+  const [isVideoDragging, setIsVideoDragging] = useState(false);
   const [isThumbnailUploading, setIsThumbnailUploading] = useState(false);
   const [selectedVideoPreviewUrl, setSelectedVideoPreviewUrl] = useState("");
   const [isInitializing, setIsInitializing] = useState(true);
@@ -922,19 +923,26 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleVideoFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
+  const selectVideoFile = (file: File | null) => {
+    setIsVideoDragging(false);
+    if (file && !["video/mp4", "video/webm", "video/quicktime", "video/ogg"].includes(file.type)) {
+      toast({ variant: "destructive", title: "صيغة الفيديو غير مدعومة", description: "استخدم MP4 أو WebM أو MOV أو OGG." });
+      return;
+    }
     if (file && file.size > 500 * 1024 * 1024) {
       toast({
         variant: "destructive",
         title: "حجم الفيديو كبير",
         description: "الحد الأقصى 500 MB. اضغط الفيديو بصيغة MP4 بدقة 720p أو استخدم رابط خارجي.",
       });
-      e.target.value = "";
       return;
     }
     setSelectedVideoFile(file);
     if (file) setVideoForm((current) => ({ ...current, youtubeUrl: "" }));
+  };
+
+  const handleVideoFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+    selectVideoFile(e.target.files?.[0] ?? null);
     e.target.value = "";
   };
 
@@ -2405,44 +2413,45 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* Dedicated Upload Form Card */}
-                  <form onSubmit={async (e) => {
-                    await handleVideoSubmit(e);
-                    setActiveTab("videos");
-                  }} className="bg-card border border-border rounded-3xl p-6 shadow-xl space-y-6">
+                  <form onSubmit={handleVideoSubmit} className="space-y-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm md:p-7">
                     {/* Section 1: Video File Upload */}
                     <div className="space-y-3 border-b border-border/40 pb-6">
                       <div className="flex items-center gap-2">
                         <span className="grid h-7 w-7 place-items-center rounded-full bg-primary text-xs font-black text-white">1</span>
                         <h3 className="font-bold text-foreground text-base">ملف الفيديو للشرح</h3>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div>
                           <span className="block text-xs font-semibold text-muted-foreground mb-1">
                             خيار 1: اختيار فيديو من جهازك (مع العداد الديجيتال)
                           </span>
-                          <div className="relative border-2 border-dashed border-border hover:border-primary/50 rounded-2xl p-4 bg-muted/30 transition-all flex flex-col items-center justify-center min-h-[120px] text-center group">
+                          <div
+                            onDragEnter={(event) => { event.preventDefault(); setIsVideoDragging(true); }}
+                            onDragOver={(event) => event.preventDefault()}
+                            onDragLeave={(event) => { event.preventDefault(); if (event.currentTarget === event.target) setIsVideoDragging(false); }}
+                            onDrop={(event) => { event.preventDefault(); selectVideoFile(event.dataTransfer.files?.[0] || null); }}
+                            className={`group relative flex min-h-[180px] flex-col items-center justify-center rounded-2xl border-2 border-dashed p-5 text-center transition-all ${isVideoDragging ? "scale-[1.01] border-primary bg-blue-50 ring-4 ring-blue-100" : selectedVideoFile ? "border-emerald-300 bg-emerald-50/40" : "border-slate-300 bg-slate-50 hover:border-primary hover:bg-blue-50/40"}`}
+                          >
                             <input
                               type="file"
-                              accept="video/*"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) setSelectedVideoFile(file);
-                              }}
+                              accept=".mp4,.webm,.mov,.ogg,video/mp4,video/webm,video/quicktime,video/ogg"
+                              onChange={handleVideoFileSelection}
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                             />
                             {selectedVideoFile ? (
-                              <div className="space-y-1 z-0">
-                                <span className="text-xs font-bold text-primary block line-clamp-1">{selectedVideoFile.name}</span>
-                                <span className="text-[11px] text-muted-foreground block">
+                              <div className="z-0 w-full space-y-2">
+                                <span className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-emerald-100 text-emerald-700"><Check className="h-6 w-6" /></span>
+                                <span className="block truncate text-sm font-bold text-slate-900">{selectedVideoFile.name}</span>
+                                <span className="block text-xs text-slate-500">
                                   الحجم: {(selectedVideoFile.size / (1024 * 1024)).toFixed(1)} MB
                                 </span>
-                                <span className="text-[10px] text-emerald-400 font-bold block mt-1">✓ جاهز للرفع عند الحفظ</span>
+                                <span className="block text-xs font-bold text-emerald-700">جاهز للرفع عند حفظ الدرس</span>
                               </div>
                             ) : (
                               <div className="space-y-1.5 pointer-events-none">
-                                <Upload className="w-7 h-7 text-primary/70 mx-auto group-hover:scale-110 transition-transform" />
-                                <span className="text-xs font-bold text-foreground block">انقر هنا لاختيار فيديو من جهازك</span>
-                                <span className="text-[10px] text-muted-foreground block">MP4, WebM, MOV حتي 500MB</span>
+                                <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-blue-100 text-primary"><Upload className="h-7 w-7 transition-transform group-hover:-translate-y-0.5" /></span>
+                                <span className="block text-sm font-bold text-slate-900">{isVideoDragging ? "اترك الفيديو هنا" : "اسحب الفيديو أو اضغط للاختيار"}</span>
+                                <span className="block text-xs text-slate-500">MP4 أو WebM أو MOV — حتى 500 MB</span>
                               </div>
                             )}
                           </div>
@@ -2452,12 +2461,11 @@ export default function AdminDashboard() {
                           <span className="block text-xs font-semibold text-muted-foreground mb-1">
                             خيار 2: أو اكتب رابط يوتيوب / رابط خارجي مباشر
                           </span>
-                          <input
-                            type="text"
+                          <textarea
                             value={videoForm.youtubeUrl}
-                            onChange={(e) => setVideoForm({ ...videoForm, youtubeUrl: e.target.value })}
+                            onChange={(e) => { setVideoForm({ ...videoForm, youtubeUrl: e.target.value }); if (e.target.value.trim()) setSelectedVideoFile(null); }}
                             placeholder="https://youtube.com/watch?v=... أو رابط مباشر"
-                            className="w-full bg-background border border-border rounded-2xl px-4 py-3 text-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm h-[120px]"
+                            className="h-[180px] w-full resize-none rounded-2xl border border-slate-300 bg-white px-4 py-4 text-sm text-slate-900 outline-none transition focus:border-primary focus:ring-4 focus:ring-blue-100"
                           />
                         </div>
                       </div>
@@ -2479,7 +2487,7 @@ export default function AdminDashboard() {
 
                           <div className="w-full bg-slate-900 rounded-full h-3 overflow-hidden border border-primary/30 relative">
                             <div
-                              className="bg-gradient-to-r from-primary/80 via-primary to-emerald-400 h-full transition-all duration-200 relative"
+                              className="relative h-full bg-primary transition-all duration-200"
                               style={{ width: `${videoUploadProgress}%` }}
                             >
                               <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.4)_50%,transparent_100%)] animate-[shimmer_1.5s_infinite]" />
