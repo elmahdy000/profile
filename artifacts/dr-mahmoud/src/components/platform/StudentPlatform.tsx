@@ -22,8 +22,9 @@ import {
   UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { YoutubeSection } from "@/components/YoutubeSection";
+import { VideoLessonsSection } from "@/components/YoutubeSection";
 import { toast } from "@/hooks/use-toast";
+import { ACADEMIC_TRACKS, getTrackForStage } from "@/data/academic";
 
 type Student = {
   id: number;
@@ -71,7 +72,22 @@ type VideoSummary = {
   learningMode?: "online" | "offline" | "both";
   youtubeUrl: string;
 };
-type ProgressRow = { videoId: number; progress: number; updatedAt?: string };
+type ProgressRow = {
+  videoId: number;
+  progress: number;
+  currentTimeSeconds?: number;
+  durationSeconds?: number;
+  completed?: boolean;
+  updatedAt?: string;
+};
+type StudentNotification = {
+  id: number;
+  title: string;
+  message: string;
+  type: string;
+  readAt?: string | null;
+  createdAt: string;
+};
 
 async function api<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, {
@@ -389,12 +405,13 @@ function SearchableCombobox({
 }
 
 function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<"login" | "register" | "recover">("login");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [accessCode, setAccessCode] = useState("");
   const [rememberCode, setRememberCode] = useState(true);
+  const [recoveryForm, setRecoveryForm] = useState({ name: "", phone: "" });
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -457,6 +474,24 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
         otherGradeDetail: "",
         learningMode: "online",
       });
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const submitRecovery = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setLoading(true);
+    setError("");
+    setMessage("");
+    try {
+      const result = await api<{ message: string }>("/api/student/recovery-requests", {
+        method: "POST",
+        body: JSON.stringify(recoveryForm),
+      });
+      setMessage(result.message);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -577,6 +612,57 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                 محتاج مساعدة؟ كلمنا واتساب
               </a>
             </div>
+          ) : mode === "recover" ? (
+            <form onSubmit={submitRecovery} className="space-y-5">
+              <div>
+                <h2 className="text-2xl font-black">استرجاع كود الدخول</h2>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  اكتب نفس الاسم ورقم الموبايل اللي سجلت بيهم، والأدمن هيراجع الطلب ويتواصل معاك بأمان.
+                </p>
+              </div>
+              {message ? (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold leading-6 text-emerald-800" role="status">
+                  {message}
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <label htmlFor="recovery-name" className="text-sm font-bold">اسم الطالب</label>
+                    <input
+                      id="recovery-name"
+                      required
+                      value={recoveryForm.name}
+                      onChange={(event) => setRecoveryForm({ ...recoveryForm, name: event.target.value })}
+                      className="h-12 w-full rounded-xl border border-border bg-background px-4"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="recovery-phone" className="text-sm font-bold">رقم الموبايل المسجل</label>
+                    <input
+                      id="recovery-phone"
+                      type="tel"
+                      required
+                      value={recoveryForm.phone}
+                      onChange={(event) => setRecoveryForm({ ...recoveryForm, phone: event.target.value })}
+                      className="h-12 w-full rounded-xl border border-border bg-background px-4 text-left"
+                      dir="ltr"
+                    />
+                  </div>
+                  {error && <p role="alert" className="rounded-xl bg-red-500/10 p-3 text-sm text-red-600">{error}</p>}
+                  <Button disabled={loading} className="h-12 w-full rounded-xl font-bold">
+                    {loading ? <Loader2 className="animate-spin" /> : <ShieldCheck />}
+                    إرسال طلب الاسترجاع
+                  </Button>
+                </>
+              )}
+              <button
+                type="button"
+                onClick={() => { setMode("login"); setError(""); setMessage(""); }}
+                className="w-full text-sm font-bold text-primary"
+              >
+                رجوع لتسجيل الدخول
+              </button>
+            </form>
           ) : mode === "login" ? (
             <form onSubmit={submitLogin} className="space-y-5">
               <div>
@@ -634,6 +720,13 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                 )}{" "}
                 دخول المنصة
               </Button>
+              <button
+                type="button"
+                onClick={() => { setMode("recover"); setError(""); setMessage(""); }}
+                className="w-full text-center text-sm font-bold text-primary hover:underline"
+              >
+                نسيت كود الدخول؟
+              </button>
               <p className="text-center text-xs text-muted-foreground">
                 لسه طلبك ما اتقبلش؟ كلمنا بعد ما تبعت التسجيل.
               </p>
@@ -729,9 +822,15 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                   className="h-12 w-full rounded-xl border border-border bg-background px-4 focus:border-primary focus:outline-none"
                 >
                   <option value="">اختر المرحلة الدراسية</option>
-                  <option value="أولى بكالوريا">أولى بكالوريا</option>
-                  <option value="تانية بكالوريا">تانية بكالوريا</option>
-                  <option value="جامعة">جامعة</option>
+                  {ACADEMIC_TRACKS.map((track) => (
+                    <optgroup key={track.id} label={track.title}>
+                      {track.stages.map((stage) => (
+                        <option key={stage} value={stage}>
+                          {stage}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
                   <option value="أخرى">أخرى (يرجى التحديد)</option>
                 </select>
               </div>
@@ -926,6 +1025,7 @@ function DashboardPanel({
   onRetry: () => void;
   onOpen: (tab: "lessons" | "files" | "quizzes") => void;
 }) {
+  const academicTrack = getTrackForStage(student.grade);
   const progressByVideo = new Map(progress.map((row) => [row.videoId, row]));
   const averageProgress = videos.length
     ? Math.round(
@@ -1001,7 +1101,9 @@ function DashboardPanel({
             أهلًا بيك، {student.name.split(" ")[0]} 👋
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            كمّل من مكان ما وقفت، وخليك ثابت على خطتك.
+            {academicTrack
+              ? `${academicTrack.title} — محتواك مرتب حسب كورساتك ومرحلتك.`
+              : "كمّل من مكان ما وقفت، وخليك ثابت على خطتك."}
           </p>
         </div>
         <span
@@ -1050,8 +1152,8 @@ function DashboardPanel({
           <div className="grid md:grid-cols-[.9fr_1.1fr]">
             <div className="relative min-h-52 bg-slate-900">
               <img
-                src="/baccalaureate-hero.png"
-                alt="الدرس اللي بتذاكره"
+                src={academicTrack?.image || "/university-cs-path.png"}
+                alt={academicTrack?.imageAlt || "الدرس اللي بتذاكره"}
                 className="h-full w-full object-cover opacity-70"
               />
               {continueVideo && (
@@ -1277,6 +1379,8 @@ export function StudentPlatform() {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [videos, setVideos] = useState<VideoSummary[]>([]);
   const [progress, setProgress] = useState<ProgressRow[]>([]);
+  const [notifications, setNotifications] = useState<StudentNotification[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
   const [dataError, setDataError] = useState("");
 
@@ -1325,16 +1429,18 @@ export function StudentPlatform() {
     setDataLoading(true);
     setDataError("");
     try {
-      const [f, q, v, p] = await Promise.all([
+      const [f, q, v, p, n] = await Promise.all([
         api<LearningFile[]>("/api/learning/files"),
         api<Quiz[]>("/api/learning/quizzes"),
         api<VideoSummary[]>("/api/videos"),
         api<ProgressRow[]>("/api/learning/progress"),
+        api<StudentNotification[]>("/api/learning/notifications"),
       ]);
       setFiles(f);
       setQuizzes(q);
       setVideos(v);
       setProgress(p);
+      setNotifications(n);
     } catch (err) {
       setDataError((err as Error).message || "مقدرناش نحمّل محتواك دلوقتي.");
     } finally {
@@ -1364,6 +1470,21 @@ export function StudentPlatform() {
     setStudent(null);
     window.dispatchEvent(new Event("student-auth-changed"));
   };
+  const markNotificationRead = async (notification: StudentNotification) => {
+    if (notification.readAt) return;
+    try {
+      const updated = await api<StudentNotification>(
+        `/api/learning/notifications/${notification.id}/read`,
+        { method: "PATCH" },
+      );
+      setNotifications((current) =>
+        current.map((item) => (item.id === updated.id ? updated : item)),
+      );
+    } catch {
+      // Reading notifications should never interrupt the learning experience.
+    }
+  };
+  const unreadNotifications = notifications.filter((item) => !item.readAt).length;
   const nav = [
     ["dashboard", "الرئيسية", Home],
     ["lessons", "كورساتي", BookOpen],
@@ -1420,7 +1541,58 @@ export function StudentPlatform() {
         <section className="min-w-0">
           <div className="sticky top-16 z-30 flex h-14 items-center justify-between border-b bg-white/95 px-4 backdrop-blur md:px-8">
             <div className="flex items-center gap-3">
-              <Bell className="h-5 w-5 text-muted-foreground" />
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowNotifications((current) => !current)}
+                  aria-label="الإشعارات"
+                  aria-expanded={showNotifications}
+                  className="relative grid h-10 w-10 place-items-center rounded-xl border border-border bg-white text-muted-foreground hover:text-primary"
+                >
+                  <Bell className="h-5 w-5" />
+                  {unreadNotifications > 0 && (
+                    <span className="absolute -left-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white">
+                      {Math.min(unreadNotifications, 9)}
+                    </span>
+                  )}
+                </button>
+                <AnimatePresence>
+                  {showNotifications && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      className="absolute right-0 top-12 z-50 w-[min(340px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-white shadow-2xl"
+                    >
+                      <div className="border-b p-4">
+                        <strong>الإشعارات</strong>
+                        <p className="text-xs text-muted-foreground">كل جديد في حسابك وكورساتك</p>
+                      </div>
+                      <div className="max-h-80 overflow-y-auto p-2">
+                        {notifications.length === 0 ? (
+                          <p className="p-6 text-center text-sm text-muted-foreground">مفيش إشعارات جديدة</p>
+                        ) : notifications.map((notification) => (
+                          <button
+                            key={notification.id}
+                            type="button"
+                            onClick={() => void markNotificationRead(notification)}
+                            className={`mb-1 w-full rounded-xl p-3 text-right transition hover:bg-muted ${notification.readAt ? "opacity-70" : "bg-primary/5"}`}
+                          >
+                            <span className="flex items-start gap-2">
+                              <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${notification.readAt ? "bg-slate-300" : "bg-primary"}`} />
+                              <span>
+                                <strong className="block text-sm">{notification.title}</strong>
+                                <span className="mt-1 block text-xs leading-5 text-muted-foreground">{notification.message}</span>
+                                <span className="mt-1 block text-[10px] text-muted-foreground">{new Date(notification.createdAt).toLocaleDateString("ar-EG")}</span>
+                              </span>
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
               <span className="text-sm font-bold text-primary">
                 Academy Portal
               </span>
@@ -1442,7 +1614,7 @@ export function StudentPlatform() {
               onOpen={setTab}
             />
           ) : tab === "lessons" ? (
-            <YoutubeSection
+            <VideoLessonsSection
               student={student}
               files={files}
               quizzes={quizzes}

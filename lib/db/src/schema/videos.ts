@@ -14,6 +14,7 @@ export const videosTable = pgTable("videos", {
   title: text("title").notNull(),           // title of video or playlist
   description: text("description"),         // optional description
   youtubeUrl: text("youtube_url").notNull(), // link to youtube video/playlist
+  thumbnailUrl: text("thumbnail_url"),        // optional custom cover image/thumbnail URL
   type: text("type").notNull(),             // "video" or "playlist"
   order: integer("order").notNull().default(0),
   isProtected: boolean("is_protected").notNull().default(false),

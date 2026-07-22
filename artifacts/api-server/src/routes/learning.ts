@@ -5,11 +5,13 @@ import path from "path";
 import multer from "multer";
 import { and, desc, eq, ilike, inArray } from "drizzle-orm";
 import {
+  codeRecoveryRequestsTable,
   db,
   learningFilesTable,
   quizAttemptsTable,
   quizzesTable,
   studentSessionsTable,
+  studentNotificationsTable,
   studentsTable,
   videoProgressTable,
   videosTable,
@@ -38,6 +40,11 @@ const studentLoginLimit = fixedWindowRateLimit({
   name: "student-login",
   limit: 12,
   windowMs: 15 * 60 * 1000,
+});
+const studentRecoveryLimit = fixedWindowRateLimit({
+  name: "student-recovery",
+  limit: 5,
+  windowMs: 60 * 60 * 1000,
 });
 const privateUploadDir = path.join(process.cwd(), "private", "learning-files");
 fs.mkdirSync(privateUploadDir, { recursive: true });
@@ -143,7 +150,16 @@ router.post(
       const allowedGrades = [
         "أولى بكالوريا",
         "تانية بكالوريا",
-        "جامعة",
+        "ثالثة بكالوريا",
+        "حاسبات - الفرقة الأولى",
+        "حاسبات - الفرقة الثانية",
+        "حاسبات - الفرقة الثالثة",
+        "حاسبات - الفرقة الرابعة",
+        "هندسة - إعدادي",
+        "هندسة - الفرقة الأولى",
+        "هندسة - الفرقة الثانية",
+        "هندسة - الفرقة الثالثة",
+        "هندسة - الفرقة الرابعة",
         "أخرى",
       ];
       if (!allowedGrades.includes(grade)) {
@@ -230,6 +246,47 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
       path: "/",
     });
     res.json({ student: publicStudent(student) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/student/recovery-requests", studentRecoveryLimit, async (req, res, next) => {
+  try {
+    const name = String(req.body.name ?? "").trim().toLocaleLowerCase("ar");
+    const phone = String(req.body.phone ?? "").replace(/\s+/g, "");
+    if (name.length < 2 || !/^\+?\d{10,15}$/.test(phone)) {
+      res.status(400).json({ error: "اكتب الاسم ورقم الهاتف المسجلين بشكل صحيح" });
+      return;
+    }
+    const [student] = await db
+      .select()
+      .from(studentsTable)
+      .where(eq(studentsTable.phone, phone))
+      .limit(1);
+    if (!student || student.name.trim().toLocaleLowerCase("ar") !== name) {
+      res.status(404).json({ error: "البيانات مش مطابقة لطلب التسجيل" });
+      return;
+    }
+    if (student.status !== "approved" || !student.accessCode) {
+      res.status(409).json({ error: "الحساب لسه مستني موافقة الأدمن" });
+      return;
+    }
+    const [pending] = await db
+      .select()
+      .from(codeRecoveryRequestsTable)
+      .where(and(
+        eq(codeRecoveryRequestsTable.studentId, student.id),
+        eq(codeRecoveryRequestsTable.status, "pending"),
+      ))
+      .limit(1);
+    if (!pending) {
+      await db.insert(codeRecoveryRequestsTable).values({ studentId: student.id });
+    }
+    res.status(202).json({
+      success: true,
+      message: "طلب استرجاع الكود وصل للأدمن، وهيتواصل معاك على رقمك المسجل.",
+    });
   } catch (error) {
     next(error);
   }
@@ -343,7 +400,95 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
         .delete(studentSessionsTable)
         .where(eq(studentSessionsTable.studentId, id));
     }
+    if (req.body.status === "approved" && current.status !== "approved") {
+      await db.insert(studentNotificationsTable).values({
+        studentId: id,
+        type: "success",
+        title: "حسابك اتفعل بنجاح",
+        message: "تقدر دلوقتي تدخل على كورساتك وتبدأ التعلم بالكود الخاص بيك.",
+      });
+    }
     res.json(student);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/admin/recovery-requests", requireAdmin, async (_req, res, next) => {
+  try {
+    const rows = await db
+      .select({
+        id: codeRecoveryRequestsTable.id,
+        status: codeRecoveryRequestsTable.status,
+        createdAt: codeRecoveryRequestsTable.createdAt,
+        resolvedAt: codeRecoveryRequestsTable.resolvedAt,
+        studentId: studentsTable.id,
+        studentName: studentsTable.name,
+        phone: studentsTable.phone,
+        accessCode: studentsTable.accessCode,
+      })
+      .from(codeRecoveryRequestsTable)
+      .innerJoin(studentsTable, eq(codeRecoveryRequestsTable.studentId, studentsTable.id))
+      .orderBy(desc(codeRecoveryRequestsTable.createdAt));
+    res.json(rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.patch("/admin/recovery-requests/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const status = String(req.body.status ?? "resolved");
+    if (!['pending', 'resolved'].includes(status)) {
+      res.status(400).json({ error: "حالة الطلب غير صحيحة" });
+      return;
+    }
+    const [request] = await db
+      .update(codeRecoveryRequestsTable)
+      .set({ status, resolvedAt: status === "resolved" ? new Date() : null })
+      .where(eq(codeRecoveryRequestsTable.id, Number(req.params.id)))
+      .returning();
+    if (!request) {
+      res.status(404).json({ error: "طلب الاسترجاع غير موجود" });
+      return;
+    }
+    res.json(request);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/learning/notifications", requireStudent, async (_req, res, next) => {
+  try {
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    const rows = await db
+      .select()
+      .from(studentNotificationsTable)
+      .where(eq(studentNotificationsTable.studentId, student.id))
+      .orderBy(desc(studentNotificationsTable.createdAt))
+      .limit(30);
+    res.json(rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.patch("/learning/notifications/:id/read", requireStudent, async (req, res, next) => {
+  try {
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    const [notification] = await db
+      .update(studentNotificationsTable)
+      .set({ readAt: new Date() })
+      .where(and(
+        eq(studentNotificationsTable.id, Number(req.params.id)),
+        eq(studentNotificationsTable.studentId, student.id),
+      ))
+      .returning();
+    if (!notification) {
+      res.status(404).json({ error: "الإشعار غير موجود" });
+      return;
+    }
+    res.json(notification);
   } catch (error) {
     next(error);
   }
@@ -601,6 +746,8 @@ router.get("/learning/progress", requireStudent, async (_req, res, next) => {
       .select({
         videoId: videoProgressTable.videoId,
         progress: videoProgressTable.progress,
+        currentTimeSeconds: videoProgressTable.currentTimeSeconds,
+        durationSeconds: videoProgressTable.durationSeconds,
         completed: videoProgressTable.completed,
         updatedAt: videoProgressTable.updatedAt,
       })
@@ -629,10 +776,14 @@ router.put(
         0,
         Math.min(100, Math.round(Number(req.body.progress))),
       );
+      const currentTimeSeconds = Math.max(0, Math.round(Number(req.body.currentTimeSeconds ?? 0)));
+      const durationSeconds = Math.max(0, Math.round(Number(req.body.durationSeconds ?? 0)));
       if (
         !Number.isInteger(videoId) ||
         videoId <= 0 ||
-        !Number.isFinite(progress)
+        !Number.isFinite(progress) ||
+        !Number.isFinite(currentTimeSeconds) ||
+        !Number.isFinite(durationSeconds)
       ) {
         res.status(400).json({ error: "بيانات التقدم غير صالحة" });
         return;
@@ -667,12 +818,18 @@ router.put(
         )
         .limit(1);
       const savedProgress = Math.max(current?.progress ?? 0, progress);
+      const savedTime = savedProgress > (current?.progress ?? 0)
+        ? currentTimeSeconds
+        : Math.max(current?.currentTimeSeconds ?? 0, currentTimeSeconds);
+      const savedDuration = Math.max(current?.durationSeconds ?? 0, durationSeconds);
       const [saved] = await db
         .insert(videoProgressTable)
         .values({
           studentId: student.id,
           videoId,
           progress: savedProgress,
+          currentTimeSeconds: savedTime,
+          durationSeconds: savedDuration,
           completed: savedProgress >= 100,
           updatedAt: new Date(),
         })
@@ -680,6 +837,8 @@ router.put(
           target: [videoProgressTable.studentId, videoProgressTable.videoId],
           set: {
             progress: savedProgress,
+            currentTimeSeconds: savedTime,
+            durationSeconds: savedDuration,
             completed: savedProgress >= 100,
             updatedAt: new Date(),
           },
@@ -688,6 +847,8 @@ router.put(
       res.json({
         videoId: saved.videoId,
         progress: saved.progress,
+        currentTimeSeconds: saved.currentTimeSeconds,
+        durationSeconds: saved.durationSeconds,
         completed: saved.completed,
       });
     } catch (error) {
@@ -695,6 +856,71 @@ router.put(
     }
   },
 );
+
+router.get("/admin/learning/analytics", requireAdmin, async (_req, res, next) => {
+  try {
+    const [students, progressRows, attempts, videos] = await Promise.all([
+      db.select().from(studentsTable).orderBy(desc(studentsTable.createdAt)),
+      db.select().from(videoProgressTable),
+      db.select().from(quizAttemptsTable),
+      db.select().from(videosTable),
+    ]);
+    const now = Date.now();
+    const activeCutoff = now - 14 * 24 * 60 * 60 * 1000;
+    const studentRows = students.map((student) => {
+      const ownProgress = progressRows.filter((row) => row.studentId === student.id);
+      const ownAttempts = attempts.filter((row) => row.studentId === student.id);
+      const eligibleVideos = videos.filter((video) =>
+        video.isPublished &&
+        canStudentAccessContent(student, video.category, video.stage, video.stages, video.courseId) &&
+        canStudentAccessLearningMode(student, video.learningMode),
+      );
+      const activityTimes = [
+        ...ownProgress.map((row) => row.updatedAt.getTime()),
+        ...ownAttempts.map((row) => row.createdAt.getTime()),
+      ];
+      const lastActivityMs = activityTimes.length ? Math.max(...activityTimes) : 0;
+      return {
+        studentId: student.id,
+        name: student.name,
+        phone: student.phone,
+        status: student.status,
+        learningMode: student.learningMode,
+        assignedLessons: eligibleVideos.length,
+        startedLessons: ownProgress.length,
+        completedLessons: ownProgress.filter((row) => row.completed).length,
+        averageProgress: ownProgress.length
+          ? Math.round(ownProgress.reduce((sum, row) => sum + row.progress, 0) / ownProgress.length)
+          : 0,
+        quizAttempts: ownAttempts.length,
+        averageQuizScore: ownAttempts.length
+          ? Math.round(ownAttempts.reduce((sum, row) => sum + row.score, 0) / ownAttempts.length)
+          : 0,
+        lastActivity: lastActivityMs ? new Date(lastActivityMs).toISOString() : null,
+        isActive: lastActivityMs >= activeCutoff,
+      };
+    });
+    const approvedRows = studentRows.filter((row) => row.status === "approved");
+    res.json({
+      summary: {
+        totalStudents: students.length,
+        approvedStudents: approvedRows.length,
+        activeStudents: approvedRows.filter((row) => row.isActive).length,
+        inactiveStudents: approvedRows.filter((row) => !row.isActive).length,
+        completedLessons: progressRows.filter((row) => row.completed).length,
+        averageProgress: progressRows.length
+          ? Math.round(progressRows.reduce((sum, row) => sum + row.progress, 0) / progressRows.length)
+          : 0,
+        quizPassRate: attempts.length
+          ? Math.round((attempts.filter((row) => row.passed).length / attempts.length) * 100)
+          : 0,
+      },
+      students: studentRows,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.get("/admin/learning/quizzes", requireAdmin, async (_req, res, next) => {
   try {

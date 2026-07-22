@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { FloatingButtons } from "@/components/FloatingButtons";
+import { ACADEMIC_TRACKS } from "@/data/academic";
 
 interface ImageConfig {
   src: string;
@@ -20,7 +21,7 @@ interface Track {
   tags: string[];
 }
 
-const tracks: Track[] = [
+const legacyTracks: Track[] = [
   {
     title: "تطوير الويب Full Stack",
     desc: "ابدأ من الأساسيات لحد ما تبني موقع كامل بنفسك باستخدام أحدث أدوات الويب.",
@@ -62,6 +63,20 @@ const tracks: Track[] = [
   },
 ];
 
+const tracks: Track[] = ACADEMIC_TRACKS.map((track) => ({
+  title: track.title,
+  desc: track.description,
+  meta: track.eyebrow,
+  imageConfig: {
+    src: track.image,
+    alt: track.imageAlt,
+    objectFit: "cover",
+    objectPosition: "center",
+    mobileObjectPosition: "center",
+  },
+  tags: track.subjects,
+}));
+
 function renderMixedText(text: string) {
   const regex = /([A-Za-z0-9+#.\s-]+)/g;
   const parts = text.split(regex);
@@ -92,13 +107,13 @@ export function AcademyHome() {
           <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-14 md:px-8 lg:grid-cols-2 lg:py-20">
             <div className="order-2 space-y-6 text-right lg:order-1">
               <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-bold text-primary">
-                <Sparkles className="h-4 w-4" /> برمجة بشكل عملي ومنظم
+                <Sparkles className="h-4 w-4" /> منصة متخصصة للمدرسة والجامعة
               </span>
               <h1 className="text-4xl font-black leading-[1.25] md:text-6xl">
-                مستقبلك في البرمجة<br />يبدأ هنا مع <span className="text-primary">د. محمود المهدي</span>
+                افهم منهجك ومواد كليتك<br />مع <span className="text-primary">د. محمود المهدي</span>
               </h1>
               <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
-                سواء لسه بتبدأ، أو طالب مدرسة أو جامعة، هتلاقي خطة ماشية معاك خطوة بخطوة، بشرح بسيط وتطبيق بإيدك ومتابعة حقيقية.
+                كورسات مخصصة لطلاب البكالوريا، حاسبات ومعلومات، وهندسة. كل كورس مرتب إلى دروس وملفات واختبارات، ومتاح أونلاين أو حضوري.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button asChild size="lg" className="h-12 rounded-lg px-7 font-bold shadow-lg shadow-primary/15">
@@ -155,7 +170,7 @@ export function AcademyHome() {
         <section id="tracks" className="bg-[#f0f3ff] py-20">
           <div className="mx-auto max-w-7xl px-4 md:px-8">
             <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-              <div><span className="text-sm font-bold text-primary">اختار الطريق المناسب ليك</span><h2 className="mt-2 text-3xl font-black md:text-4xl">أهم المسارات اللي بنقدمها</h2></div>
+              <div><span className="text-sm font-bold text-primary">اختار بوابتك التعليمية</span><h2 className="mt-2 text-3xl font-black md:text-4xl">بكالوريا، حاسبات، أو هندسة</h2></div>
               <a href="/curriculum" className="flex items-center gap-2 font-bold text-primary">شوف كل المناهج <ArrowLeft className="h-4 w-4" /></a>
             </div>
             <div className="grid gap-6 md:grid-cols-3 items-stretch">

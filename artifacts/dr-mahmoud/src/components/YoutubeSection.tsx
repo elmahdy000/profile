@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Youtube, Play, ExternalLink, Tv, ChevronLeft, Loader2, Lock, Unlock,
@@ -27,12 +27,17 @@ function readStoredJson<T>(key: string, fallback: T): T {
   }
 }
 
-function syncVideoProgress(videoId: number, progress: number) {
+function syncVideoProgress(
+  videoId: number,
+  progress: number,
+  currentTimeSeconds = 0,
+  durationSeconds = 0,
+) {
   void fetch(`/api/learning/progress/${videoId}`, {
     method: "PUT",
     credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ progress }),
+    body: JSON.stringify({ progress, currentTimeSeconds, durationSeconds }),
   }).catch(() => undefined);
 }
 
@@ -71,6 +76,41 @@ function VideoPlayerModal({
   onClose: () => void;
 }) {
   const [isFocused, setIsFocused] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const hasResumedRef = useRef(false);
+  const [resumeTime, setResumeTime] = useState(0);
+
+  useEffect(() => {
+    hasResumedRef.current = false;
+    const cached = readStoredJson<Record<number, number>>(
+      "dr_mahmoud_watch_positions",
+      {},
+    );
+    setResumeTime(item.id ? cached[item.id] || 0 : 0);
+    if (!item.id) return;
+    void fetch("/api/learning/progress", { credentials: "include" })
+      .then((response) => (response.ok ? response.json() : []))
+      .then((rows: Array<{ videoId: number; currentTimeSeconds?: number }>) => {
+        const row = rows.find((entry) => entry.videoId === item.id);
+        if (row?.currentTimeSeconds) {
+          setResumeTime((current) => Math.max(current, row.currentTimeSeconds || 0));
+        }
+      })
+      .catch(() => undefined);
+  }, [item.id]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (
+      !video ||
+      hasResumedRef.current ||
+      !resumeTime ||
+      !Number.isFinite(video.duration) ||
+      resumeTime >= video.duration - 5
+    ) return;
+    video.currentTime = resumeTime;
+    hasResumedRef.current = true;
+  }, [resumeTime]);
 
   useEffect(() => {
     // Track focus for anti-piracy
@@ -129,6 +169,9 @@ function VideoPlayerModal({
     const el = e.currentTarget;
     if (!el.duration || Number.isNaN(el.duration)) return;
     const percent = Math.min(100, Math.round((el.currentTime / el.duration) * 100));
+    const positionObj = readStoredJson<Record<number, number>>("dr_mahmoud_watch_positions", {});
+    positionObj[item.id] = Math.floor(el.currentTime);
+    localStorage.setItem("dr_mahmoud_watch_positions", JSON.stringify(positionObj));
     // Save at most in whole-percent steps to avoid excessive writes
     const progressObj = readStoredJson<Record<number, number>>("dr_mahmoud_watch_progress", {});
     // Only move progress forward, never backward
@@ -136,7 +179,9 @@ function VideoPlayerModal({
       progressObj[item.id] = percent;
       localStorage.setItem("dr_mahmoud_watch_progress", JSON.stringify(progressObj));
       window.dispatchEvent(new Event("watch_progress_updated"));
-      if (percent === 100 || percent % 5 === 0) syncVideoProgress(item.id, percent);
+      if (percent === 100 || percent % 5 === 0) {
+        syncVideoProgress(item.id, percent, el.currentTime, el.duration);
+      }
     }
   };
 
@@ -147,7 +192,8 @@ function VideoPlayerModal({
       progressObj[item.id] = 100;
       localStorage.setItem("dr_mahmoud_watch_progress", JSON.stringify(progressObj));
       window.dispatchEvent(new Event("watch_progress_updated"));
-      syncVideoProgress(item.id, 100);
+      const video = videoRef.current;
+      syncVideoProgress(item.id, 100, video?.duration || 0, video?.duration || 0);
     }
   };
 
@@ -242,15 +288,29 @@ function VideoPlayerModal({
 
                   {isStreamUrl ? (
                     <video
+                      ref={videoRef}
                       className="absolute inset-0 h-full w-full bg-black object-contain"
                       src={streamUrl}
                       controls
                       playsInline
+                      preload="metadata"
                       controlsList="nodownload noplaybackrate"
                       disablePictureInPicture
                       onContextMenu={(e) => e.preventDefault()}
                       autoPlay
                       onTimeUpdate={handleTimeUpdate}
+                      onLoadedMetadata={() => {
+                        const video = videoRef.current;
+                        if (
+                          video &&
+                          !hasResumedRef.current &&
+                          resumeTime > 0 &&
+                          resumeTime < video.duration - 5
+                        ) {
+                          video.currentTime = resumeTime;
+                          hasResumedRef.current = true;
+                        }
+                      }}
                       onEnded={handleVideoEnded}
                     />
                   ) : embedUrl ? (
@@ -551,7 +611,7 @@ function UnlockModal({
 }
 
 
-export function YoutubeSection({
+export function VideoLessonsSection({
   student,
   files = [],
   quizzes = [],
@@ -809,7 +869,7 @@ export function YoutubeSection({
               {/* Cover Thumbnail */}
               <div className="w-full lg:w-1/2 aspect-video rounded-2xl overflow-hidden relative shadow-lg">
                 <img
-                  src={getYoutubeThumbnail(featuredCourse.youtubeUrl)}
+                  src={(featuredCourse as any).thumbnailUrl || getYoutubeThumbnail(featuredCourse.youtubeUrl)}
                   alt={featuredCourse.title}
                   className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
                 />
@@ -1164,7 +1224,7 @@ export function YoutubeSection({
                     {/* Thumbnail / Cover */}
                     <div className="relative aspect-video bg-muted overflow-hidden">
                       <img
-                        src={getYoutubeThumbnail(item.youtubeUrl)}
+                        src={(item as any).thumbnailUrl || getYoutubeThumbnail(item.youtubeUrl)}
                         alt={item.title}
                         className="w-full h-full object-cover opacity-80 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500"
                       />
@@ -1388,5 +1448,6 @@ export function YoutubeSection({
       )}
     </section>
   );
-
 }
+
+export const YoutubeSection = VideoLessonsSection;

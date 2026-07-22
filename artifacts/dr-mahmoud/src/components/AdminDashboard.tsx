@@ -62,6 +62,11 @@ import {
 import { AdminSettings } from "./AdminSettings";
 import { AdminLearning } from "./AdminLearning";
 import { useToast } from "@/hooks/use-toast";
+import {
+  ACADEMIC_TRACKS,
+  getStagesForTrack,
+  resolveTrackId,
+} from "@/data/academic";
 
 const getYoutubeThumbnail = (url: string) => {
   try {
@@ -80,14 +85,19 @@ const getYoutubeThumbnail = (url: string) => {
   return "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=400&q=80";
 };
 
-const EDUCATION_STAGES = [
-  "أولى بكالوريا",
-  "تانية بكالوريا",
-  "جامعة",
-  "عام",
-] as const;
-
 export default function AdminDashboard() {
+  useEffect(() => {
+    const previousTitle = document.title;
+    const robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    const previousRobots = robots?.content;
+    document.title = "لوحة إدارة المنصة | د. محمود المهدي";
+    robots?.setAttribute("content", "noindex, nofollow");
+    return () => {
+      document.title = previousTitle;
+      if (robots && previousRobots) robots.content = previousRobots;
+    };
+  }, []);
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -108,7 +118,15 @@ export default function AdminDashboard() {
   const [selectedVideoCategoryFilter, setSelectedVideoCategoryFilter] =
     useState<string>("all");
   const [isVideoUploading, setIsVideoUploading] = useState(false);
+  const [videoUploadProgress, setVideoUploadProgress] = useState(0);
+  const [videoUploadStats, setVideoUploadStats] = useState<{
+    loadedBytes: number;
+    totalBytes: number;
+    speedMBps: number;
+    remainingSeconds: number;
+  } | null>(null);
   const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
+  const [isThumbnailUploading, setIsThumbnailUploading] = useState(false);
   const [selectedVideoPreviewUrl, setSelectedVideoPreviewUrl] = useState("");
   const [isInitializing, setIsInitializing] = useState(true);
 
@@ -217,7 +235,7 @@ export default function AdminDashboard() {
     duration: "",
     sessions: "",
     level: "",
-    category: "kids",
+    category: "baccalaureate",
     tags: "",
     img: "",
   });
@@ -272,6 +290,7 @@ export default function AdminDashboard() {
     title: "",
     description: "",
     youtubeUrl: "",
+    thumbnailUrl: "",
     type: "video" as "video" | "playlist",
     order: 1,
     isProtected: false,
@@ -283,6 +302,10 @@ export default function AdminDashboard() {
     attachmentFileIds: [] as string[],
     quizId: "",
   });
+  const selectedVideoCourse = coursesQuery.data?.find(
+    (course) => String(course.id) === videoForm.courseId,
+  );
+  const availableVideoStages = getStagesForTrack(selectedVideoCourse?.category);
 
   const [learningFiles, setLearningFiles] = useState<
     {
@@ -379,6 +402,7 @@ export default function AdminDashboard() {
       title: "",
       description: "",
       youtubeUrl: "",
+      thumbnailUrl: "",
       tags: "",
       attachmentFileIds: [],
       quizId: "",
@@ -411,6 +435,7 @@ export default function AdminDashboard() {
         title: video.title,
         description: video.description || "",
         youtubeUrl: video.youtubeUrl,
+        thumbnailUrl: (video as any).thumbnailUrl || "",
         type: video.type as "video" | "playlist",
         order: video.order,
         isProtected: (video as any).isProtected ?? false,
@@ -449,6 +474,7 @@ export default function AdminDashboard() {
         title: "",
         description: "",
         youtubeUrl: "",
+        thumbnailUrl: "",
         type: "video",
         order: getNextLessonNumber(defaultCategory, defaultLearningMode),
         isProtected: false,
@@ -523,7 +549,7 @@ export default function AdminDashboard() {
         duration: "3 أشهر",
         sessions: "12 حصة",
         level: "مبتدئ",
-        category: "kids",
+        category: "baccalaureate",
         tags: "أطفال, برمجة, Scratch",
         img: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=600",
       });
@@ -841,8 +867,60 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleThumbnailImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        variant: "destructive",
+        title: "حجم الصورة كبير",
+        description: "الحد الأقصى لصورة الغلاف 10 MB.",
+      });
+      e.target.value = "";
+      return;
+    }
+    setIsThumbnailUploading(true);
+    const formData = new FormData();
+    formData.append("image", file);
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setVideoForm((prev) => ({ ...prev, thumbnailUrl: data.url }));
+        toast({
+          variant: "success",
+          title: "تم رفع صورة الغلاف بنجاح",
+        });
+      } else {
+        throw new Error(data.error || "فشل رفع الصورة");
+      }
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "خطأ في رفع الصورة",
+        description: err.message || "حدث خطأ أثناء رفع غلاف الفيديو.",
+      });
+    } finally {
+      setIsThumbnailUploading(false);
+      e.target.value = "";
+    }
+  };
+
   const handleVideoFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
+    if (file && file.size > 500 * 1024 * 1024) {
+      toast({
+        variant: "destructive",
+        title: "حجم الفيديو كبير",
+        description: "الحد الأقصى 500 MB. اضغط الفيديو بصيغة MP4 بدقة 720p أو استخدم رابط خارجي.",
+      });
+      e.target.value = "";
+      return;
+    }
     setSelectedVideoFile(file);
     if (file) setVideoForm((current) => ({ ...current, youtubeUrl: "" }));
     e.target.value = "";
@@ -853,25 +931,56 @@ export default function AdminDashboard() {
     if (!file) return null;
 
     setIsVideoUploading(true);
+    setVideoUploadProgress(0);
+    setVideoUploadStats({
+      loadedBytes: 0,
+      totalBytes: file.size,
+      speedMBps: 0,
+      remainingSeconds: 0,
+    });
+
     const formData = new FormData();
     formData.append("video", file);
 
+    const startTime = Date.now();
+
     try {
-      const response = await fetch("/api/upload/video", {
-        method: "POST",
-        credentials: "include",
-        body: formData,
+      const data = await new Promise<{ url?: string }>((resolve, reject) => {
+        const request = new XMLHttpRequest();
+        request.open("POST", "/api/upload/video");
+        request.withCredentials = true;
+        request.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percent = Math.round((event.loaded / event.total) * 100);
+            setVideoUploadProgress(percent);
+
+            const elapsedSec = (Date.now() - startTime) / 1000;
+            const speedBytesPerSec = elapsedSec > 0 ? event.loaded / elapsedSec : 0;
+            const speedMBps = Number((speedBytesPerSec / (1024 * 1024)).toFixed(2));
+            const remainingBytes = event.total - event.loaded;
+            const remainingSeconds = speedBytesPerSec > 0 ? Math.ceil(remainingBytes / speedBytesPerSec) : 0;
+
+            setVideoUploadStats({
+              loadedBytes: event.loaded,
+              totalBytes: event.total,
+              speedMBps,
+              remainingSeconds,
+            });
+          }
+        };
+        request.onload = () => {
+          const response = JSON.parse(request.responseText || "{}");
+          if (request.status >= 200 && request.status < 300) resolve(response);
+          else reject(new Error(response.error || "تعذر رفع الفيديو"));
+        };
+        request.onerror = () => reject(new Error("انقطع الاتصال أثناء رفع الفيديو"));
+        request.send(formData);
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to upload video " + file.name);
-      }
-
-      const data = await response.json();
       if (data.url) {
+        const uploadedUrl = data.url;
         setVideoForm((prev) => ({
           ...prev,
-          youtubeUrl: data.url,
+          youtubeUrl: uploadedUrl,
         }));
         setSelectedVideoFile(null);
         toast({
@@ -892,6 +1001,8 @@ export default function AdminDashboard() {
       return null;
     } finally {
       setIsVideoUploading(false);
+      setVideoUploadProgress(0);
+      setVideoUploadStats(null);
     }
   };
 
@@ -959,6 +1070,7 @@ export default function AdminDashboard() {
       title: videoForm.title,
       description: videoForm.description || undefined,
       youtubeUrl: videoSource,
+      thumbnailUrl: videoForm.thumbnailUrl || undefined,
       type: videoForm.type,
       order: Number(videoForm.order),
       isProtected: videoForm.isProtected,
@@ -1159,7 +1271,7 @@ export default function AdminDashboard() {
   // Render Login view if not authenticated
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-4 dir-rtl">
+      <div className="relative min-h-screen w-full overflow-hidden flex items-center justify-center bg-background px-4 dir-rtl">
         {/* Decorative elements */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
@@ -1179,10 +1291,11 @@ export default function AdminDashboard() {
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-foreground/90 mb-2">
+              <label htmlFor="admin-password" className="block text-sm font-medium text-foreground/90 mb-2">
                 كلمة المرور
               </label>
               <input
+                id="admin-password"
                 type="password"
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
@@ -2151,7 +2264,7 @@ export default function AdminDashboard() {
                             {/* Video Thumbnail */}
                             <div className="relative aspect-video bg-muted overflow-hidden border-b border-border/40">
                               <img
-                                src={getYoutubeThumbnail(video.youtubeUrl)}
+                                src={(video as any).thumbnailUrl || getYoutubeThumbnail(video.youtubeUrl)}
                                 alt={video.title}
                                 className="w-full h-full object-cover opacity-75 group-hover:opacity-90 group-hover:scale-105 transition-all duration-300"
                               />
@@ -2404,17 +2517,16 @@ export default function AdminDashboard() {
                     }
                     className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   >
-                    <option value="kids">المسار البرمجي للأطفال</option>
-                    <option value="python">
-                      برمجة بايثون والذكاء الاصطناعي
-                    </option>
-                    <option value="db">علوم البيانات وقواعد البيانات</option>
-                    <option value="mobile">تطوير تطبيقات الجوال</option>
-                    <option value="ai">تقنيات الذكاء الاصطناعي التوليدي</option>
-                    <option value="university">
-                      المناهج البرمجية الجامعية
-                    </option>
-                    <option value="icdl">التحول الرقمي و ICDL</option>
+                    {!resolveTrackId(courseForm.category) && courseForm.category && (
+                      <option value={courseForm.category}>
+                        تصنيف قديم — غيّره إلى بوابة تعليمية
+                      </option>
+                    )}
+                    {ACADEMIC_TRACKS.map((track) => (
+                      <option key={track.id} value={track.id}>
+                        {track.title}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -3028,7 +3140,7 @@ export default function AdminDashboard() {
                     المراحل الدراسية — اختار مرحلة أو أكتر
                   </legend>
                   <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                    {EDUCATION_STAGES.map((stage) => {
+                    {availableVideoStages.map((stage) => {
                       const checked = videoForm.stages.includes(stage);
                       return (
                         <label
@@ -3072,10 +3184,13 @@ export default function AdminDashboard() {
                       const course = coursesQuery.data?.find(
                         (item) => String(item.id) === e.target.value,
                       );
+                      const nextStages = getStagesForTrack(course?.category);
                       setVideoForm({
                         ...videoForm,
                         courseId: e.target.value,
                         category: course?.title || "",
+                        stages: nextStages[0] ? [nextStages[0]] : [],
+                        stage: nextStages[0] || "",
                         order: getNextLessonNumber(
                           course?.title || "",
                           videoForm.learningMode,
@@ -3300,6 +3415,83 @@ export default function AdminDashboard() {
                   </p>
                 </div>
 
+                {/* Cover Image / Thumbnail Upload Section */}
+                <div className="md:col-span-2 space-y-2 border-t pt-4 mt-2">
+                  <label className="block text-xs font-bold text-foreground text-right flex items-center justify-between">
+                    <span>🖼️ صورة غلاف الدرس / الفيديو (Thumbnails - اختياري)</span>
+                    <span className="text-[10px] text-muted-foreground">تظهر كبوستر غلاف قبل التشغيل وفي كروت الكورسات</span>
+                  </label>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
+                    {/* File Upload Box */}
+                    <div className="sm:col-span-1">
+                      <label className="flex flex-col items-center justify-center border-2 border-dashed border-border hover:border-primary/60 rounded-xl p-3 bg-muted/20 cursor-pointer transition-colors text-center">
+                        {isThumbnailUploading ? (
+                          <div className="flex items-center gap-2 py-2 text-xs text-primary font-bold">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>جاري الرفع...</span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-1">
+                            <Upload className="w-5 h-5 text-primary" />
+                            <span className="text-xs font-bold text-foreground">رفع غلاف من جهازك</span>
+                            <span className="text-[9px] text-muted-foreground">PNG, JPG, WebP</span>
+                          </div>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleThumbnailImageUpload}
+                          disabled={isThumbnailUploading}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
+                    {/* Image URL Input & Preview Box */}
+                    <div className="sm:col-span-2 space-y-2">
+                      <div className="flex gap-2 items-center">
+                        <input
+                          type="text"
+                          value={videoForm.thumbnailUrl}
+                          onChange={(e) =>
+                            setVideoForm({ ...videoForm, thumbnailUrl: e.target.value })
+                          }
+                          placeholder="أو اكتب رابط الغلاف مباشرة (مثال: /uploads/... أو رابط خارجي)"
+                          className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary dir-ltr"
+                        />
+                        {videoForm.thumbnailUrl && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setVideoForm({ ...videoForm, thumbnailUrl: "" })
+                            }
+                            className="px-2.5 py-2 text-xs font-bold text-red-500 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl whitespace-nowrap"
+                          >
+                            حذف الغلاف
+                          </button>
+                        )}
+                      </div>
+
+                      {videoForm.thumbnailUrl && (
+                        <div className="relative aspect-video max-h-24 rounded-xl overflow-hidden border border-border bg-slate-950 flex items-center justify-center">
+                          <img
+                            src={videoForm.thumbnailUrl}
+                            alt="معاينة غلاف الفيديو"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = "none";
+                            }}
+                          />
+                          <span className="absolute bottom-1 right-1 bg-black/70 text-white text-[9px] font-bold px-1.5 py-0.5 rounded backdrop-blur-sm">
+                            🖼️ معاينة الغلاف
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 <div className="md:col-span-2 mt-3 flex items-center gap-3 border-t pt-4">
                   <span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-sm font-black text-white">
                     3
@@ -3322,14 +3514,92 @@ export default function AdminDashboard() {
                     <div className="border border-dashed border-border rounded-2xl p-4 bg-muted/30 hover:border-primary/50 transition-colors">
                       <div className="flex flex-col items-center justify-center text-center space-y-2">
                         {isVideoUploading ? (
-                          <div className="flex flex-col items-center gap-2 py-4">
-                            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                            <span className="text-xs font-semibold text-foreground">
-                              جاري رفع وتشفير الفيديو...
-                            </span>
-                            <span className="text-[10px] text-muted-foreground">
-                              الرجاء عدم إغلاق النافذة حتى اكتمال الرفع
-                            </span>
+                          <div className="w-full relative overflow-hidden rounded-2xl border border-emerald-500/40 bg-slate-950 p-5 sm:p-6 shadow-[0_0_35px_rgba(16,185,129,0.2)] text-right font-mono my-2">
+                            {/* Background Cyber Glow */}
+                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent pointer-events-none" />
+                            <div className="absolute -top-12 -right-12 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                            {/* HUD Top Bar */}
+                            <div className="flex items-center justify-between border-b border-emerald-500/20 pb-3 mb-4 relative z-10">
+                              <div className="flex items-center gap-2">
+                                <span className="relative flex h-3 w-3">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 shadow-[0_0_10px_#34d399]" />
+                                </span>
+                                <span className="text-xs font-black tracking-wider text-emerald-400 uppercase">
+                                  نظام الرفع الديجيتال | STREAM HUD
+                                </span>
+                              </div>
+                              <span className="text-[10px] bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 px-2.5 py-0.5 rounded-full font-bold">
+                                🚀 UPLOADING FILE
+                              </span>
+                            </div>
+
+                            {/* Main Giant Digital Counter */}
+                            <div className="flex flex-col items-center justify-center my-3 relative z-10">
+                              <div className="text-center">
+                                <div className="flex items-baseline justify-center gap-1 dir-ltr">
+                                  <span className="text-6xl sm:text-7xl font-extrabold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 drop-shadow-[0_0_20px_rgba(52,211,153,0.7)] font-mono">
+                                    {String(videoUploadProgress).padStart(3, "0")}
+                                  </span>
+                                  <span className="text-2xl font-black text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.6)]">%</span>
+                                </div>
+                                <p className="text-xs font-semibold text-emerald-200/80 mt-2 flex items-center justify-center gap-2">
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
+                                  <span>جاري نقل وتشفير محتوى الفيديو بالسيرفر...</span>
+                                </p>
+                              </div>
+
+                              {/* Progress Track */}
+                              <div className="w-full mt-5 relative">
+                                <div className="h-4 w-full rounded-full bg-slate-900 border border-emerald-500/30 p-0.5 overflow-hidden shadow-inner flex items-center">
+                                  <div
+                                    className="h-full rounded-full bg-gradient-to-r from-emerald-600 via-teal-400 to-cyan-300 shadow-[0_0_15px_#34d399] transition-all duration-300 relative"
+                                    style={{ width: `${videoUploadProgress}%` }}
+                                  >
+                                    <div className="absolute top-0 right-0 bottom-0 w-2 bg-white rounded-full animate-pulse shadow-[0_0_10px_#fff]" />
+                                  </div>
+                                </div>
+
+                                <div className="flex justify-between text-[9px] text-emerald-500/60 font-bold mt-1 px-1 dir-ltr">
+                                  <span>0%</span>
+                                  <span>25%</span>
+                                  <span>50%</span>
+                                  <span>75%</span>
+                                  <span>100%</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Digital Telemetry Grid */}
+                            {videoUploadStats && (
+                              <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-emerald-500/20 text-center relative z-10">
+                                <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-xl p-2">
+                                  <span className="block text-[10px] text-emerald-400/70 font-semibold mb-0.5">البيانات المحملة</span>
+                                  <span className="text-xs font-bold text-emerald-300 dir-ltr block">
+                                    {(videoUploadStats.loadedBytes / (1024 * 1024)).toFixed(1)} / {(videoUploadStats.totalBytes / (1024 * 1024)).toFixed(1)} MB
+                                  </span>
+                                </div>
+                                <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-xl p-2">
+                                  <span className="block text-[10px] text-emerald-400/70 font-semibold mb-0.5">سرعة الرفع</span>
+                                  <span className="text-xs font-bold text-emerald-300 dir-ltr block">
+                                    {videoUploadStats.speedMBps} MB/s
+                                  </span>
+                                </div>
+                                <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-xl p-2">
+                                  <span className="block text-[10px] text-emerald-400/70 font-semibold mb-0.5">الوقت المتبقي</span>
+                                  <span className="text-xs font-bold text-emerald-300 block">
+                                    {videoUploadStats.remainingSeconds > 0 ? `${videoUploadStats.remainingSeconds} ثانية` : "لحظات..."}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+
+                            <div className="mt-3 text-center relative z-10">
+                              <span className="text-[10px] text-emerald-400/60 font-medium">
+                                ⚠️ الرجاء عدم إغلاق النافذة أو إعادة تحميل الصفحة حتى اكتمال الرفع
+                              </span>
+                            </div>
                           </div>
                         ) : selectedVideoFile && selectedVideoPreviewUrl ? (
                           <div className="w-full space-y-3 py-2">
@@ -3371,6 +3641,11 @@ export default function AdminDashboard() {
                                 </button>
                               </div>
                             </div>
+                            {selectedVideoFile.size > 250 * 1024 * 1024 && (
+                              <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-right text-xs font-bold leading-5 text-amber-800">
+                                الفيديو أكبر من 250 MB؛ الأفضل MP4 بترميز H.264 ودقة 720p علشان يبدأ أسرع عند الطلاب والنت الضعيف.
+                              </p>
+                            )}
                           </div>
                         ) : videoForm.youtubeUrl &&
                           (videoForm.youtubeUrl.startsWith("/uploads/") ||

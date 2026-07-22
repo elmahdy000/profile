@@ -19,6 +19,13 @@ export function Footer() {
   const siteName = get(SETTINGS_KEYS.SITE_NAME, "د. محمود المهدي");
   const siteTagline = get(SETTINGS_KEYS.SITE_TAGLINE, "مدرب برمجة وذكاء اصطناعي — مؤسس Eduverse");
 
+  const toTelephoneUrl = (value: string) => {
+    const digits = value.replace(/\D/g, "");
+    if (digits.startsWith("20")) return `tel:+${digits}`;
+    if (digits.startsWith("0")) return `tel:+2${digits}`;
+    return `tel:+${digits}`;
+  };
+
   const socialLinks = [
     { icon: Facebook, label: "Facebook", href: facebook, color: "hover:text-primary" },
     { icon: Instagram, label: "Instagram", href: instagram, color: "hover:text-primary" },
@@ -42,7 +49,7 @@ export function Footer() {
               شرح برمجة عملي للمدرسة والجامعة والمبتدئين، بخطة واضحة ومتابعة خطوة بخطوة.
             </p>
             <div className="flex items-center gap-3 mt-auto">
-              {socialLinks.map((s) => (
+              {socialLinks.filter((s) => s.href && s.href !== "#").map((s) => (
                 <a
                   key={s.label}
                   href={s.href}
@@ -90,9 +97,9 @@ export function Footer() {
               <div className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-primary shrink-0" />
                 <div className="flex flex-col gap-1" dir="ltr">
-                  <a href={`tel:+2${whatsapp}`} className="hover:text-primary transition-colors text-right">{whatsapp}</a>
-                  <a href={`tel:+2${phone1}`} className="hover:text-primary transition-colors text-right">{phone1}</a>
-                  <a href={`tel:+2${phone2}`} className="hover:text-primary transition-colors text-right">{phone2}</a>
+                  <a href={toTelephoneUrl(whatsapp)} className="hover:text-primary transition-colors text-right">{whatsapp}</a>
+                  <a href={toTelephoneUrl(phone1)} className="hover:text-primary transition-colors text-right">{phone1}</a>
+                  <a href={toTelephoneUrl(phone2)} className="hover:text-primary transition-colors text-right">{phone2}</a>
                 </div>
               </div>
             </div>

@@ -2,12 +2,19 @@ import { Router, type IRouter } from "express";
 import { db, bookingsTable } from "@workspace/db";
 import { CreateBookingBody } from "@workspace/api-zod";
 import { requireAdmin } from "../middleware/auth";
+import { fixedWindowRateLimit } from "../middleware/rate-limit";
 import { eq } from "drizzle-orm";
 
 const router: IRouter = Router();
+const createBookingLimit = fixedWindowRateLimit({
+  name: "booking-create",
+  limit: 5,
+  windowMs: 60 * 60 * 1000,
+});
+const BOOKING_STATUSES = new Set(["pending", "confirmed", "completed"]);
 
 // Create booking
-router.post("/bookings", async (req, res, next) => {
+router.post("/bookings", createBookingLimit, async (req, res, next) => {
   try {
     const validated = CreateBookingBody.parse(req.body);
     const [inserted] = await db.insert(bookingsTable).values({
@@ -51,10 +58,14 @@ router.get("/bookings", requireAdmin, async (_req, res, next) => {
 router.put("/bookings/:id", requireAdmin, async (req, res, next) => {
   try {
     const id = parseInt(req.params.id as string, 10);
-    const { status } = req.body;
+    const status = String(req.body.status ?? "");
 
-    if (!status) {
-      res.status(400).json({ error: "Missing status field" });
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: "Invalid booking id" });
+      return;
+    }
+    if (!BOOKING_STATUSES.has(status)) {
+      res.status(400).json({ error: "Invalid booking status" });
       return;
     }
 
@@ -86,6 +97,10 @@ router.put("/bookings/:id", requireAdmin, async (req, res, next) => {
 router.delete("/bookings/:id", requireAdmin, async (req, res, next) => {
   try {
     const id = parseInt(req.params.id as string, 10);
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: "Invalid booking id" });
+      return;
+    }
     const [deleted] = await db
       .delete(bookingsTable)
       .where(eq(bookingsTable.id, id))

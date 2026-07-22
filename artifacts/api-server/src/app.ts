@@ -10,6 +10,29 @@ import cookieParser from "cookie-parser";
 
 const app: Express = express();
 
+// The production service is behind one nginx reverse proxy. This makes
+// request IPs (and therefore rate limits) work per visitor instead of treating
+// every visitor as the proxy itself.
+app.set("trust proxy", 1);
+
+app.use((_req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(), payment=()",
+  );
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+  if (process.env.NODE_ENV === "production") {
+    res.setHeader(
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains",
+    );
+  }
+  next();
+});
+
 // Allowed origins come from the CORS_ORIGINS env var (comma-separated).
 // If unset, CORS is disabled (same-origin only) rather than wide-open.
 const allowedOrigins = (process.env.CORS_ORIGINS ?? "")

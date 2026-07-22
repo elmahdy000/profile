@@ -88,9 +88,35 @@ export const videoProgressTable = pgTable("video_progress", {
   studentId: integer("student_id").notNull().references(() => studentsTable.id, { onDelete: "cascade" }),
   videoId: integer("video_id").notNull(),
   progress: integer("progress").notNull().default(0),
+  currentTimeSeconds: integer("current_time_seconds").notNull().default(0),
+  durationSeconds: integer("duration_seconds").notNull().default(0),
   completed: boolean("completed").notNull().default(false),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => ({
   studentVideoUnique: uniqueIndex("video_progress_student_video_unique").on(table.studentId, table.videoId),
   studentIndex: index("video_progress_student_idx").on(table.studentId),
+}));
+
+export const studentNotificationsTable = pgTable("student_notifications", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => studentsTable.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  type: text("type").notNull().default("info"),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  studentIndex: index("student_notifications_student_idx").on(table.studentId),
+  createdAtIndex: index("student_notifications_created_at_idx").on(table.createdAt),
+}));
+
+export const codeRecoveryRequestsTable = pgTable("code_recovery_requests", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => studentsTable.id, { onDelete: "cascade" }),
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+}, (table) => ({
+  studentIndex: index("code_recovery_requests_student_idx").on(table.studentId),
+  statusIndex: index("code_recovery_requests_status_idx").on(table.status),
 }));

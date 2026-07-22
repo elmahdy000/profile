@@ -3,6 +3,8 @@ import {
   coursesTable,
   db,
   learningFilesTable,
+  studentNotificationsTable,
+  studentsTable,
   videoFileAttachmentsTable,
   videosTable,
 } from "@workspace/db";
@@ -291,6 +293,7 @@ router.post("/videos", requireAdmin, async (req, res, next) => {
         title: validated.title,
         description: validated.description ?? null,
         youtubeUrl: validated.youtubeUrl,
+        thumbnailUrl: validated.thumbnailUrl ?? null,
         type: validated.type,
         order: validated.order ?? 0,
         isProtected: validated.isProtected ?? false,
@@ -308,6 +311,32 @@ router.post("/videos", requireAdmin, async (req, res, next) => {
       validated.attachmentFileIds ??
       (validated.pdfFileId ? [validated.pdfFileId] : []);
     await syncVideoAttachments(inserted.id, attachmentIds);
+
+    if (inserted.isPublished) {
+      const approvedStudents = await db
+        .select()
+        .from(studentsTable)
+        .where(eq(studentsTable.status, "approved"));
+      const recipients = approvedStudents.filter((student) =>
+        canStudentAccessContent(
+          student,
+          inserted.category,
+          inserted.stage,
+          inserted.stages,
+          inserted.courseId,
+        ) && canStudentAccessLearningMode(student, inserted.learningMode),
+      );
+      if (recipients.length > 0) {
+        await db.insert(studentNotificationsTable).values(
+          recipients.map((student) => ({
+            studentId: student.id,
+            type: "lesson",
+            title: "درس جديد اتضاف لك",
+            message: `${inserted.title} متاح دلوقتي في كورس ${inserted.category}.`,
+          })),
+        );
+      }
+    }
 
     res.status(201).json({
       ...inserted,
@@ -379,6 +408,9 @@ router.put("/videos/:id", requireAdmin, async (req, res, next) => {
         }),
         ...(validated.youtubeUrl !== undefined && {
           youtubeUrl: validated.youtubeUrl,
+        }),
+        ...(validated.thumbnailUrl !== undefined && {
+          thumbnailUrl: validated.thumbnailUrl,
         }),
         ...(validated.type !== undefined && { type: validated.type }),
         ...(validated.order !== undefined && { order: validated.order }),

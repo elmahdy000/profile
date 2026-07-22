@@ -1,0 +1,13 @@
+{
+  "name": "profile-e2e-tests",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:live": "cross-env E2E_BASE_URL=https://drelmahdy.com playwright test",
+    "install:browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "cross-env": "^10.0.0"
+  }
+}

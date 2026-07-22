@@ -19,9 +19,13 @@ import {
   UserCheck,
   UserX,
   X,
+  BarChart3,
+  MessageCircle,
+  Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { getStagesForTrack } from "@/data/academic";
 
 type Student = {
   id: number;
@@ -71,6 +75,40 @@ type Attempt = {
   passed: boolean;
   createdAt: string;
 };
+type LearningAnalytics = {
+  summary: {
+    totalStudents: number;
+    approvedStudents: number;
+    activeStudents: number;
+    inactiveStudents: number;
+    completedLessons: number;
+    averageProgress: number;
+    quizPassRate: number;
+  };
+  students: Array<{
+    studentId: number;
+    name: string;
+    phone: string;
+    status: string;
+    assignedLessons: number;
+    startedLessons: number;
+    completedLessons: number;
+    averageProgress: number;
+    quizAttempts: number;
+    averageQuizScore: number;
+    lastActivity?: string | null;
+    isActive: boolean;
+  }>;
+};
+type RecoveryRequest = {
+  id: number;
+  status: string;
+  createdAt: string;
+  studentId: number;
+  studentName: string;
+  phone: string;
+  accessCode?: string | null;
+};
 
 function authHeaders(json = true): HeadersInit {
   return json ? { "Content-Type": "application/json" } : {};
@@ -92,16 +130,18 @@ async function adminApi<T>(url: string, options: RequestInit = {}): Promise<T> {
 
 export function AdminLearning() {
   const { toast } = useToast();
-  const [tab, setTab] = useState<"students" | "files" | "quizzes" | "results">(
+  const [tab, setTab] = useState<"students" | "files" | "quizzes" | "results" | "reports">(
     "files",
   );
   const [students, setStudents] = useState<Student[]>([]),
     [files, setFiles] = useState<FileItem[]>([]),
     [quizzes, setQuizzes] = useState<Quiz[]>([]),
     [attempts, setAttempts] = useState<Attempt[]>([]);
+  const [analytics, setAnalytics] = useState<LearningAnalytics | null>(null);
+  const [recoveryRequests, setRecoveryRequests] = useState<RecoveryRequest[]>([]);
   const [videoCategories, setVideoCategories] = useState<string[]>([]);
   const [learningCourses, setLearningCourses] = useState<
-    Array<{ id: number; title: string }>
+    Array<{ id: number; title: string; category: string }>
   >([]);
   const [loading, setLoading] = useState(true);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
@@ -126,7 +166,7 @@ export function AdminLearning() {
   });
   const [quizForm, setQuizForm] = useState({
     title: "",
-    category: "عام",
+    category: "",
     description: "",
     passingScore: 60,
     questions: [
@@ -137,19 +177,23 @@ export function AdminLearning() {
   const load = async () => {
     setLoading(true);
     try {
-      const [s, f, q, a, v, c] = await Promise.all([
+      const [s, f, q, a, v, c, analyticsData, recoveryData] = await Promise.all([
         adminApi<Student[]>("/api/admin/students"),
         adminApi<FileItem[]>("/api/admin/learning/files"),
         adminApi<Quiz[]>("/api/admin/learning/quizzes"),
         adminApi<Attempt[]>("/api/admin/learning/attempts"),
         adminApi<Array<{ category: string }>>("/api/videos"),
-        adminApi<Array<{ id: number; title: string }>>("/api/courses"),
+        adminApi<Array<{ id: number; title: string; category: string }>>("/api/courses"),
+        adminApi<LearningAnalytics>("/api/admin/learning/analytics"),
+        adminApi<RecoveryRequest[]>("/api/admin/recovery-requests"),
       ]);
       setStudents(s);
       setFiles(f);
       setQuizzes(q);
       setAttempts(a);
       setLearningCourses(c);
+      setAnalytics(analyticsData);
+      setRecoveryRequests(recoveryData);
       setVideoCategories(
         Array.from(
           new Set(
@@ -168,6 +212,22 @@ export function AdminLearning() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+  const resolveRecoveryRequest = async (id: number) => {
+    try {
+      await adminApi(`/api/admin/recovery-requests/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: "resolved" }),
+      });
+      setRecoveryRequests((current) =>
+        current.map((request) =>
+          request.id === id ? { ...request, status: "resolved" } : request,
+        ),
+      );
+      toast({ variant: "success", title: "تم إنهاء طلب استرجاع الكود" });
+    } catch (error) {
+      toast({ variant: "destructive", title: "تعذر تحديث الطلب", description: (error as Error).message });
     }
   };
   useEffect(() => {
@@ -354,7 +414,7 @@ export function AdminLearning() {
       setQuizzes([created, ...quizzes]);
       setQuizForm({
         title: "",
-        category: "عام",
+        category: "",
         description: "",
         passingScore: 60,
         questions: [{ prompt: "", options: ["", "", "", ""], correctIndex: 0 }],
@@ -394,6 +454,10 @@ export function AdminLearning() {
   )
     .filter(Boolean)
     .sort((a, b) => a.localeCompare(b, "ar"));
+  const selectedFileCourse = learningCourses.find(
+    (course) => course.title === fileForm.category,
+  );
+  const availableFileStages = getStagesForTrack(selectedFileCourse?.category);
   const filteredFiles = useMemo(
     () =>
       files.filter((file) => {
@@ -432,6 +496,7 @@ export function AdminLearning() {
     ["files", "الملفات", FileText],
     ["quizzes", "الاختبارات", ClipboardCheck],
     ["results", "النتائج", Check],
+    ["reports", "التقارير", BarChart3],
   ] as const;
   return (
     <div className="space-y-6" dir="rtl">
@@ -519,7 +584,7 @@ export function AdminLearning() {
           </article>
         ))}
       </div>
-      <div className="grid grid-cols-4 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
+      <div className="grid grid-cols-5 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
         {tabs.map(([value, label, Icon]) => (
           <button
             key={value}
@@ -687,28 +752,37 @@ export function AdminLearning() {
                         }
                         className="input-admin min-h-12 border-slate-300 focus:border-primary"
                       >
-                        <option value="أولى بكالوريا">أولى بكالوريا</option>
-                        <option value="تانية بكالوريا">تانية بكالوريا</option>
-                        <option value="جامعة">جامعة</option>
-                        <option value="عام">عام لكل المراحل</option>
+                        {availableFileStages.map((stage) => (
+                          <option key={stage} value={stage}>
+                            {stage === "عام" ? "عام لكل مراحل الكورس" : stage}
+                          </option>
+                        ))}
                       </select>
                     </Field>
-                    <Field label="اسم الكورس أو المسار">
-                      <input
+                    <Field label="الكورس المرتبط بالملف">
+                      <select
                         required
-                        list="learning-file-categories"
                         value={fileForm.category}
-                        onChange={(e) =>
-                          setFileForm({ ...fileForm, category: e.target.value })
-                        }
-                        placeholder="مثال: أساسيات C++"
+                        onChange={(e) => {
+                          const course = learningCourses.find(
+                            (item) => item.title === e.target.value,
+                          );
+                          const stages = getStagesForTrack(course?.category);
+                          setFileForm({
+                            ...fileForm,
+                            category: e.target.value,
+                            stage: stages[0] || "عام",
+                          });
+                        }}
                         className="input-admin min-h-12 border-slate-300 focus:border-primary"
-                      />
-                      <datalist id="learning-file-categories">
-                        {availableCategories.map((category) => (
-                          <option key={category} value={category} />
+                      >
+                        <option value="">اختر الكورس أولًا</option>
+                        {learningCourses.map((course) => (
+                          <option key={course.id} value={course.title}>
+                            {course.title}
+                          </option>
                         ))}
-                      </datalist>
+                      </select>
                     </Field>
                     <Field label="المادة">
                       <input
@@ -1254,14 +1328,22 @@ export function AdminLearning() {
                       className="input-admin"
                     />
                   </Field>
-                  <Field label="التصنيف">
-                    <input
+                  <Field label="الكورس المرتبط بالاختبار">
+                    <select
+                      required
                       value={quizForm.category}
                       onChange={(e) =>
                         setQuizForm({ ...quizForm, category: e.target.value })
                       }
                       className="input-admin"
-                    />
+                    >
+                      <option value="">اختر الكورس</option>
+                      {learningCourses.map((course) => (
+                        <option key={course.id} value={course.title}>
+                          {course.title}
+                        </option>
+                      ))}
+                    </select>
                   </Field>
                   <Field label="درجة النجاح %">
                     <input
@@ -1424,6 +1506,99 @@ export function AdminLearning() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+          {tab === "reports" && analytics && (
+            <div className="space-y-6">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {[
+                  ["طلاب نشطين آخر 14 يوم", analytics.summary.activeStudents, Activity, "bg-emerald-50 text-emerald-700"],
+                  ["طلاب محتاجين متابعة", analytics.summary.inactiveStudents, GraduationCap, "bg-amber-50 text-amber-700"],
+                  ["متوسط تقدم الدروس", `${analytics.summary.averageProgress}%`, BarChart3, "bg-blue-50 text-blue-700"],
+                  ["نسبة نجاح الاختبارات", `${analytics.summary.quizPassRate}%`, ClipboardCheck, "bg-violet-50 text-violet-700"],
+                ].map(([label, value, Icon, color]: any) => (
+                  <article key={String(label)} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <strong className="text-2xl font-black">{String(value)}</strong>
+                        <p className="mt-1 text-xs font-bold text-slate-600">{String(label)}</p>
+                      </div>
+                      <span className={`grid h-11 w-11 place-items-center rounded-xl ${String(color)}`}><Icon className="h-5 w-5" /></span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="mb-4">
+                  <h3 className="text-lg font-black">طلبات استرجاع الكود</h3>
+                  <p className="text-xs text-slate-500">راجع بيانات الطالب وابعتله الكود على رقم واتساب المسجل.</p>
+                </div>
+                <div className="space-y-2">
+                  {recoveryRequests.filter((request) => request.status === "pending").length === 0 ? (
+                    <p className="rounded-xl bg-slate-50 p-5 text-center text-sm text-slate-500">مفيش طلبات استرجاع معلقة</p>
+                  ) : recoveryRequests.filter((request) => request.status === "pending").map((request) => {
+                    const message = `أهلًا ${request.studentName}، كود دخول منصة د. محمود المهدي الخاص بيك هو: ${request.accessCode || ""}`;
+                    return (
+                      <article key={request.id} className="flex flex-col gap-3 rounded-xl border p-4 md:flex-row md:items-center md:justify-between">
+                        <div>
+                          <strong>{request.studentName}</strong>
+                          <p className="text-xs text-slate-500" dir="ltr">{request.phone}</p>
+                          <span className="mt-1 block font-mono text-xs font-bold text-primary">{request.accessCode}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <a
+                            href={`https://wa.me/${request.phone.replace(/^0/, "20")}?text=${encodeURIComponent(message)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#25D366] px-4 text-xs font-bold text-white"
+                          >
+                            <MessageCircle className="h-4 w-4" /> إرسال الكود
+                          </a>
+                          <Button size="sm" variant="outline" onClick={() => resolveRecoveryRequest(request.id)}>
+                            <Check className="h-4 w-4" /> تم التواصل
+                          </Button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+
+              <section className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="border-b p-5">
+                  <h3 className="text-lg font-black">متابعة تقدم الطلاب</h3>
+                  <p className="text-xs text-slate-500">الأقل نشاطًا ظاهرين الأول علشان المتابعة تكون أسرع.</p>
+                </div>
+                <table className="w-full min-w-[850px] text-sm">
+                  <thead className="bg-slate-50 text-slate-600">
+                    <tr>
+                      <th className="p-4 text-right">الطالب</th>
+                      <th className="p-4">الدروس</th>
+                      <th className="p-4">مكتمل</th>
+                      <th className="p-4">متوسط التقدم</th>
+                      <th className="p-4">الاختبارات</th>
+                      <th className="p-4">آخر نشاط</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...analytics.students].sort((a, b) => Number(a.isActive) - Number(b.isActive)).map((row) => (
+                      <tr key={row.studentId} className="border-t">
+                        <td className="p-4"><strong className="block">{row.name}</strong><span className="text-xs text-slate-500" dir="ltr">{row.phone}</span></td>
+                        <td className="p-4 text-center">{row.startedLessons}/{row.assignedLessons}</td>
+                        <td className="p-4 text-center font-bold text-emerald-700">{row.completedLessons}</td>
+                        <td className="p-4 text-center font-black">{row.averageProgress}%</td>
+                        <td className="p-4 text-center">{row.quizAttempts} · {row.averageQuizScore}%</td>
+                        <td className="p-4 text-center">
+                          <span className={`rounded-full px-2 py-1 text-xs font-bold ${row.isActive ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                            {row.lastActivity ? new Date(row.lastActivity).toLocaleDateString("ar-EG") : "لسه مبدأش"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </section>
             </div>
           )}
         </>

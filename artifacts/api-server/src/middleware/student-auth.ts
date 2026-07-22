@@ -65,11 +65,12 @@ export function canStudentAccessContent(
       (assignedCourseId || assignedCourse) &&
       (contentStages.length === 0 || stageMatches)
     );
-  return (
-    stageMatches ||
-    assignedCourse ||
-    (!stage && canStudentAccessCategory(student, category))
-  );
+  const categoryMatches =
+    assignedCourse || canStudentAccessCategory(student, category);
+  if (contentStages.length > 0) {
+    return categoryMatches && stageMatches;
+  }
+  return categoryMatches;
 }
 
 export function canStudentAccessLearningMode(
