@@ -40,7 +40,12 @@ export function errorHandler(
   }
 
   if (isMulterError(err)) {
-    res.status(400).json({ error: err.message });
+    const tooLarge = err.code === "LIMIT_FILE_SIZE";
+    res.status(tooLarge ? 413 : 400).json({
+      error: tooLarge
+        ? "حجم الملف أكبر من الحد المسموح (1 GB). اضغط الفيديو أو استخدم رابطًا خارجيًا."
+        : err.message,
+    });
     return;
   }
 

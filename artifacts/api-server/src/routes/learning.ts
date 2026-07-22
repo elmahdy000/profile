@@ -593,10 +593,14 @@ router.get("/learning/files", requireStudent, async (_req, res, next) => {
       .from(learningFilesTable)
       .where(eq(learningFilesTable.isPublished, true))
       .orderBy(desc(learningFilesTable.createdAt));
-    const links = await db
-      .select({ fileId: videoFileAttachmentsTable.fileId, video: videosTable })
-      .from(videoFileAttachmentsTable)
-      .innerJoin(videosTable, eq(videoFileAttachmentsTable.videoId, videosTable.id));
+    const fileIds = files.map((file) => file.id);
+    const links = fileIds.length
+      ? await db
+          .select({ fileId: videoFileAttachmentsTable.fileId, video: videosTable })
+          .from(videoFileAttachmentsTable)
+          .innerJoin(videosTable, eq(videoFileAttachmentsTable.videoId, videosTable.id))
+          .where(inArray(videoFileAttachmentsTable.fileId, fileIds))
+      : [];
     const linkedVideos = new Map<number, Array<typeof videosTable.$inferSelect>>();
     for (const link of links) {
       linkedVideos.set(link.fileId, [...(linkedVideos.get(link.fileId) ?? []), link.video]);

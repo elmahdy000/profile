@@ -106,6 +106,8 @@ async function loadAttachmentMap(videoIds: number[]) {
       description: learningFilesTable.description,
       category: learningFilesTable.category,
       stage: learningFilesTable.stage,
+      stages: learningFilesTable.stages,
+      targetType: learningFilesTable.targetType,
       subject: learningFilesTable.subject,
       originalName: learningFilesTable.originalName,
       mimeType: learningFilesTable.mimeType,

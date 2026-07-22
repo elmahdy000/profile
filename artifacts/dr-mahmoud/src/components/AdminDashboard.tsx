@@ -929,11 +929,11 @@ export default function AdminDashboard() {
       toast({ variant: "destructive", title: "صيغة الفيديو غير مدعومة", description: "استخدم MP4 أو WebM أو MOV أو OGG." });
       return;
     }
-    if (file && file.size > 500 * 1024 * 1024) {
+    if (file && file.size > 1024 * 1024 * 1024) {
       toast({
         variant: "destructive",
         title: "حجم الفيديو كبير",
-        description: "الحد الأقصى 500 MB. اضغط الفيديو بصيغة MP4 بدقة 720p أو استخدم رابط خارجي.",
+        description: "الحد الأقصى 1 GB. حوّل الفيديو إلى MP4 (H.264) بجودة 1080p أو 720p قبل الرفع.",
       });
       return;
     }
@@ -969,6 +969,7 @@ export default function AdminDashboard() {
         const request = new XMLHttpRequest();
         request.open("POST", "/api/upload/video");
         request.withCredentials = true;
+        request.timeout = 60 * 60 * 1000;
         request.upload.onprogress = (event) => {
           if (event.lengthComputable) {
             const percent = Math.round((event.loaded / event.total) * 100);
@@ -989,11 +990,19 @@ export default function AdminDashboard() {
           }
         };
         request.onload = () => {
-          const response = JSON.parse(request.responseText || "{}");
+          let response: { url?: string; error?: string } = {};
+          try {
+            response = JSON.parse(request.responseText || "{}");
+          } catch {
+            // Reverse proxies commonly return an HTML error page for 413/5xx.
+          }
           if (request.status >= 200 && request.status < 300) resolve(response);
-          else reject(new Error(response.error || "تعذر رفع الفيديو"));
+          else if (request.status === 413)
+            reject(new Error("الفيديو أكبر من الحد المسموح على الخادم. اضغطه إلى MP4 (H.264) أو استخدم رابطًا خارجيًا."));
+          else reject(new Error(response.error || `تعذر رفع الفيديو (رمز ${request.status || "غير معروف"})`));
         };
         request.onerror = () => reject(new Error("انقطع الاتصال أثناء رفع الفيديو"));
+        request.ontimeout = () => reject(new Error("انتهت مهلة رفع الفيديو. تحقق من سرعة الاتصال ثم حاول مجددًا."));
         request.send(formData);
       });
       if (data.url) {
@@ -1014,8 +1023,8 @@ export default function AdminDashboard() {
     } catch (err) {
       console.error(err);
       toast({
-        title: "خطأ",
-        description: `حدث خطأ أثناء تحميل الفيديو ${file.name}`,
+        title: "تعذر رفع الفيديو",
+        description: err instanceof Error ? err.message : `حدث خطأ أثناء تحميل الفيديو ${file.name}`,
         variant: "destructive",
       });
       return null;
@@ -2451,7 +2460,8 @@ export default function AdminDashboard() {
                               <div className="space-y-1.5 pointer-events-none">
                                 <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-blue-100 text-primary"><Upload className="h-7 w-7 transition-transform group-hover:-translate-y-0.5" /></span>
                                 <span className="block text-sm font-bold text-slate-900">{isVideoDragging ? "اترك الفيديو هنا" : "اسحب الفيديو أو اضغط للاختيار"}</span>
-                                <span className="block text-xs text-slate-500">MP4 أو WebM أو MOV — حتى 500 MB</span>
+                                <span className="block text-xs text-slate-500">MP4 أو WebM أو MOV — حتى 1 GB</span>
+                                <span className="mt-1 block text-[11px] text-emerald-700">أفضل حجم وجودة: MP4 (H.264)، دقة 1080p، وميزة Web Optimized</span>
                               </div>
                             )}
                           </div>

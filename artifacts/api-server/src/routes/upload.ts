@@ -5,6 +5,7 @@ import fs from "fs";
 import { requireAdmin } from "../middleware/auth";
 
 const router = Router();
+const MAX_VIDEO_BYTES = 1024 * 1024 * 1024; // 1 GiB — kept in sync with nginx.
 
 // Ensure upload directory exists in public/uploads at workspace root
 const uploadDir = path.join(process.cwd(), "public", "uploads");
@@ -91,7 +92,7 @@ const audioUpload = multer({
 
 const videoUpload = multer({
   storage: makeStorage(VIDEO_TYPES),
-  limits: { fileSize: 500 * 1024 * 1024 }, // 500MB limit for videos
+  limits: { fileSize: MAX_VIDEO_BYTES },
   fileFilter: makeFileFilter(VIDEO_TYPES, "video files"),
 }).single("video");
 
@@ -106,6 +107,43 @@ router.post("/upload", requireAdmin, imageUpload, (req, res) => {
 });
 
 // Audio upload route
+import { exec } from "child_process";
+
+function compressVideoInBackground(filePath: string) {
+  const ext = path.extname(filePath).toLowerCase();
+  const dir = path.dirname(filePath);
+  const base = path.basename(filePath, ext);
+  const tempPath = path.join(dir, `${base}-temp${ext}`);
+
+  // FFmpeg H.264 CRF 23 encoding (visually lossless for educational videos)
+  const cmd = `ffmpeg -y -i "${filePath}" -vcodec libx264 -crf 23 -preset fast -acodec copy "${tempPath}"`;
+
+  exec(cmd, (error) => {
+    if (error) {
+      console.error(`[Video Compression Error]: ${error.message}`);
+      if (fs.existsSync(tempPath)) {
+        try { fs.unlinkSync(tempPath); } catch (e) {}
+      }
+      return;
+    }
+
+    if (fs.existsSync(tempPath)) {
+      const origSize = fs.statSync(filePath).size;
+      const compSize = fs.statSync(tempPath).size;
+
+      if (compSize < origSize && compSize > 0) {
+        try {
+          fs.renameSync(tempPath, filePath);
+        } catch (e) {
+          console.error(`[Video Swap Error]:`, e);
+        }
+      } else {
+        try { fs.unlinkSync(tempPath); } catch (e) {}
+      }
+    }
+  });
+}
+
 router.post("/upload/audio", requireAdmin, audioUpload, (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded" });
@@ -120,6 +158,10 @@ router.post("/upload/video", requireAdmin, videoUpload, (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded" });
   }
+
+  const filePath = req.file.path;
+  // Trigger compression in the background so request completes instantly
+  setTimeout(() => compressVideoInBackground(filePath), 100);
 
   const fileUrl = `/uploads/${req.file.filename}`;
   return res.json({ url: fileUrl });
