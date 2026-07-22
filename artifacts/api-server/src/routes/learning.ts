@@ -108,8 +108,22 @@ function publicStudent(student: typeof studentsTable.$inferSelect) {
   };
 }
 
-function generateAccessCode() {
-  return `EDU-${randomBytes(8).toString("hex").toUpperCase()}`;
+async function generateAccessCode() {
+  // Six easy-to-read characters are compact enough to type while still
+  // providing more than 680 million combinations. Ambiguous characters are
+  // intentionally excluded.
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const bytes = randomBytes(6);
+    const code = Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join("");
+    const [existing] = await db
+      .select({ id: studentsTable.id })
+      .from(studentsTable)
+      .where(ilike(studentsTable.accessCode, code))
+      .limit(1);
+    if (!existing) return code;
+  }
+  throw new Error("تعذر إنشاء كود دخول فريد");
 }
 
 function validateQuestions(value: unknown): QuizQuestion[] | null {
@@ -423,7 +437,7 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
         status: req.body.status !== undefined ? status : current.status,
         accessCode:
           status === "approved"
-            ? current.accessCode || generateAccessCode()
+            ? current.accessCode || await generateAccessCode()
             : current.accessCode,
         approvedAt:
           status === "approved"

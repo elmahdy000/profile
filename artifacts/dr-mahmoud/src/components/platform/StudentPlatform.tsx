@@ -705,7 +705,7 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
               <div>
                 <h2 className="text-2xl font-black">دخول الطلاب</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  اكتب كود EDU اللي وصلك بعد موافقة الأدمن.
+                  اكتب كود الدخول المكوّن من 6 خانات بعد موافقة الأدمن.
                 </p>
               </div>
               <div className="space-y-2">
@@ -718,7 +718,7 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                   onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
                   required
                   autoComplete="one-time-code"
-                  placeholder="EDU-XXXXXXXX"
+                  placeholder="A7K9P2"
                   className="h-14 w-full rounded-xl border border-border bg-background px-4 text-center font-mono text-lg tracking-widest focus:border-primary focus:outline-none"
                 />
               </div>

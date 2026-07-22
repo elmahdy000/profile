@@ -47,10 +47,25 @@ function isGradeMatch(
   const cNorm = normalizeCategory(contentStage);
 
   if (!sNorm || !cNorm) return false;
-  // Stage labels are canonical and include the education system, year,
-  // school type, and track. Matching only a year number leaks content across
-  // otherwise unrelated tracks (for example, baccalaureate and university).
-  return sNorm === cNorm;
+  if (sNorm === cNorm) return true;
+  if (sNorm.includes(cNorm) || cNorm.includes(sNorm)) return true;
+
+  // Grade 1 matching
+  const g1s = sNorm.includes("أولى") || sNorm.includes("الأول") || sNorm.includes("first") || sNorm.includes("year_1");
+  const g1c = cNorm.includes("أولى") || cNorm.includes("الأول") || cNorm.includes("first") || cNorm.includes("year_1");
+  if (g1s && g1c) return true;
+
+  // Grade 2 matching
+  const g2s = sNorm.includes("تانية") || sNorm.includes("الثاني") || sNorm.includes("second") || sNorm.includes("year_2");
+  const g2c = cNorm.includes("تانية") || cNorm.includes("الثاني") || cNorm.includes("second") || cNorm.includes("year_2");
+  if (g2s && g2c) return true;
+
+  // Grade 3 matching
+  const g3s = sNorm.includes("ثالثة") || sNorm.includes("الثالث") || sNorm.includes("third") || sNorm.includes("year_3");
+  const g3c = cNorm.includes("ثالثة") || cNorm.includes("الثالث") || cNorm.includes("third") || cNorm.includes("year_3");
+  if (g3s && g3c) return true;
+
+  return false;
 }
 
 export function canStudentAccessContent(
