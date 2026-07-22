@@ -71,6 +71,20 @@ function isGeneratedStreamUrl(value: string, videoId: number): boolean {
   return new RegExp(`^/api/videos/${videoId}/stream(?:\\?|$)`).test(value);
 }
 
+/**
+ * Strip any server-generated stream token URLs so they are never persisted
+ * to the database. If a stream URL is detected, return the raw /uploads/ path
+ * extracted from the URL, or null if we can't recover it.
+ */
+function sanitizeYoutubeUrl(value: string, videoId?: number): string | null {
+  // Reject self-referential /api/videos/ stream URLs for *any* video ID.
+  if (/^\/api\/videos\/\d+\/stream/.test(value)) {
+    // We can't recover the original /uploads path from the URL alone.
+    return null;
+  }
+  return value;
+}
+
 function resolveUploadedVideoPath(filename: string): string | null {
   const safeName = path.basename(filename);
   const candidates = [
@@ -300,7 +314,7 @@ router.post("/videos", requireAdmin, async (req, res, next) => {
         tags: validated.tags ?? [],
         title: validated.title,
         description: validated.description ?? null,
-        youtubeUrl: validated.youtubeUrl,
+        youtubeUrl: sanitizeYoutubeUrl(validated.youtubeUrl) ?? validated.youtubeUrl,
         thumbnailUrl: validated.thumbnailUrl ?? null,
         type: validated.type,
         order: validated.order ?? 0,
@@ -409,8 +423,9 @@ router.put("/videos/:id", requireAdmin, async (req, res, next) => {
           description: validated.description,
         }),
         ...(validated.youtubeUrl !== undefined &&
+          sanitizeYoutubeUrl(validated.youtubeUrl) !== null &&
           !isGeneratedStreamUrl(validated.youtubeUrl, id) && {
-          youtubeUrl: validated.youtubeUrl,
+          youtubeUrl: sanitizeYoutubeUrl(validated.youtubeUrl)!,
         }),
         ...(validated.thumbnailUrl !== undefined && {
           thumbnailUrl: validated.thumbnailUrl,

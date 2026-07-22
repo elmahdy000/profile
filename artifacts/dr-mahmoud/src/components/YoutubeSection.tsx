@@ -17,9 +17,19 @@ import {
 } from "@/lib/video";
 
 const PremiumLessonPlayer = lazy(() =>
-  import("@/components/learning/PremiumLessonPlayer").then((module) => ({
-    default: module.PremiumLessonPlayer,
-  })),
+  import("@/components/learning/PremiumLessonPlayer")
+    .then((module) => {
+      window.sessionStorage.removeItem("chunk_load_error_reloaded");
+      return { default: module.PremiumLessonPlayer };
+    })
+    .catch((err) => {
+      const key = "chunk_load_error_reloaded";
+      if (typeof window !== "undefined" && !window.sessionStorage.getItem(key)) {
+        window.sessionStorage.setItem(key, "true");
+        window.location.reload();
+      }
+      throw err;
+    }),
 );
 
 function readStoredJson<T>(key: string, fallback: T): T {
