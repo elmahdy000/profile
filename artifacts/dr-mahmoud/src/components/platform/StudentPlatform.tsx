@@ -39,6 +39,10 @@ type Student = {
   governorate?: string | null;
   city?: string | null;
   grade?: string | null;
+  educationSystem?: string | null;
+  educationGrade?: string | null;
+  schoolType?: string | null;
+  academicTrack?: string | null;
   otherGradeDetail?: string | null;
   learningMode?: "online" | "offline";
   enrolledCourseIds?: number[];
@@ -353,8 +357,8 @@ function SearchableCombobox({
 
   return (
     <div className="space-y-2 relative text-right w-full" dir="rtl">
-      <label htmlFor={id} className="text-sm font-bold block">
-        {label}
+      <label htmlFor={id} className="block text-sm font-semibold text-foreground">
+        {label} {required && <span className="text-red-500">*</span>}
       </label>
       <input
         id={id}
@@ -370,7 +374,7 @@ function SearchableCombobox({
         }}
         required={required}
         placeholder={placeholder}
-        className="h-12 w-full rounded-xl border border-border bg-background px-4 focus:border-primary focus:outline-none text-right"
+        className="h-[52px] w-full rounded-xl border border-border bg-background px-4 text-right text-[15px] font-medium outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
       />
       {isOpen && (filtered.length > 0 || search.trim() !== "") && (
         <ul className="absolute z-50 w-full max-h-48 overflow-y-auto rounded-xl border border-border bg-card shadow-lg mt-1 py-1 text-right">
@@ -504,12 +508,33 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
     }
   };
 
+  const normalizedPhone = form.phone.replace(/\s+/g, "");
+  const nameValid = form.name.trim().length >= 2;
+  const phoneValid = /^\+?\d{10,15}$/.test(normalizedPhone);
+  const emailValid = !form.email.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim());
+  const educationValid = Boolean(
+    form.educationSystem &&
+      form.educationGrade &&
+      form.academicTrack &&
+      (form.educationSystem === "university" || form.schoolType) &&
+      form.grade,
+  );
+  const registrationValid = Boolean(
+    nameValid &&
+      phoneValid &&
+      emailValid &&
+      form.governorate &&
+      form.city &&
+      educationValid &&
+      form.learningMode,
+  );
+
   return (
     <main
       className="academy-hero min-h-[calc(100vh-4rem)] px-4 py-12"
       dir="rtl"
     >
-      <div className="mx-auto max-w-6xl grid lg:grid-cols-[1fr_1fr] gap-8 items-center">
+      <div className="mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(580px,640px)] lg:gap-10">
         <div className="space-y-6 text-right">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-bold text-primary">
             <ShieldCheck className="h-4 w-4" /> منصة تعليمية آمنة ومخصصة
@@ -562,7 +587,7 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
           </div>
         </div>
 
-        <div className="academy-card p-6 md:p-8 shadow-xl">
+        <div className="academy-card w-full rounded-[20px] p-6 shadow-xl sm:p-8">
           <div className="grid grid-cols-2 rounded-xl bg-muted p-1 mb-7">
             <button
               onClick={() => {
@@ -737,28 +762,30 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
               </p>
             </form>
           ) : (
-            <form onSubmit={submitRegistration} className="space-y-4">
+            <form onSubmit={submitRegistration} className="space-y-6" noValidate>
               <div>
-                <h2 className="text-2xl font-black">تسجيل طالب جديد</h2>
-                <p className="text-sm text-muted-foreground mt-1">
+                <h2 className="text-[28px] font-black leading-tight">تسجيل طالب جديد</h2>
+                <p className="mt-2 text-[13px] leading-6 text-muted-foreground">
                   اكتب بياناتك، والأدمن هيراجعها قبل ما يفعّل حسابك.
                 </p>
               </div>
               <div className="space-y-2">
-                <label htmlFor="student-name" className="text-sm font-bold">
-                  اسم الطالب
+                <label htmlFor="student-name" className="text-sm font-semibold">
+                  اسم الطالب <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="student-name"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   required
-                  className="h-12 w-full rounded-xl border border-border bg-background px-4 focus:border-primary focus:outline-none"
+                  aria-invalid={Boolean(form.name) && !nameValid}
+                  className="h-[52px] w-full rounded-xl border border-border bg-background px-4 text-[15px] outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
+                {form.name && !nameValid && <p className="text-[13px] text-red-600">اكتب اسم الطالب بشكل صحيح.</p>}
               </div>
               <div className="space-y-2">
-                <label htmlFor="student-phone" className="text-sm font-bold">
-                  رقم الهاتف
+                <label htmlFor="student-phone" className="text-sm font-semibold">
+                  رقم الهاتف <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="student-phone"
@@ -767,11 +794,13 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                   required
                   inputMode="tel"
                   placeholder="01xxxxxxxxx"
-                  className="h-12 w-full rounded-xl border border-border bg-background px-4 focus:border-primary focus:outline-none"
+                  aria-invalid={Boolean(form.phone) && !phoneValid}
+                  className="h-[52px] w-full rounded-xl border border-border bg-background px-4 text-[15px] outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
+                {form.phone && !phoneValid && <p className="text-[13px] text-red-600">اكتب رقم هاتف من 10 إلى 15 رقمًا.</p>}
               </div>
               <div className="space-y-2">
-                <label htmlFor="student-email" className="text-sm font-bold">
+                <label htmlFor="student-email" className="text-sm font-semibold">
                   البريد الإلكتروني (اختياري)
                 </label>
                 <input
@@ -779,10 +808,12 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                   type="email"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="h-12 w-full rounded-xl border border-border bg-background px-4 focus:border-primary focus:outline-none"
+                  aria-invalid={!emailValid}
+                  className="h-[52px] w-full rounded-xl border border-border bg-background px-4 text-[15px] outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
                 />
+                {!emailValid && <p className="text-[13px] text-red-600">صيغة البريد الإلكتروني غير صحيحة.</p>}
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <SearchableCombobox
                   id="student-governorate"
                   label="المحافظة"
@@ -814,9 +845,9 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                   setForm({ ...form, ...selection, otherGradeDetail: "" })
                 }
               />
-              <fieldset className="space-y-2">
-                <legend className="text-sm font-bold">نظام الدراسة</legend>
-                <div className="grid grid-cols-2 gap-3">
+              <fieldset className="space-y-3">
+                <legend className="text-lg font-bold">نظام الدراسة</legend>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {(
                     [
                       ["online", "أونلاين", "هتتابع فيديوهات الأونلاين"],
@@ -825,7 +856,7 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                   ).map(([value, label, description]) => (
                     <label
                       key={value}
-                      className={`cursor-pointer rounded-xl border p-3 transition ${form.learningMode === value ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "bg-background hover:border-primary/40"}`}
+                      className={`relative flex min-h-[88px] cursor-pointer items-center gap-3 rounded-2xl border p-4 transition focus-within:ring-2 focus-within:ring-primary/30 ${form.learningMode === value ? "border-primary bg-blue-50 ring-1 ring-primary/20" : "border-border bg-background hover:border-primary/40"}`}
                     >
                       <input
                         type="radio"
@@ -837,10 +868,11 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                         }
                         className="sr-only"
                       />
-                      <strong className="block text-sm">{label}</strong>
-                      <small className="mt-1 block text-xs text-muted-foreground">
-                        {description}
-                      </small>
+                      <span className="min-w-0 flex-1">
+                        <strong className="block text-base">{label}</strong>
+                        <small className="mt-1 block text-[13px] leading-5 text-muted-foreground">{description}</small>
+                      </span>
+                      {form.learningMode === value && <CheckCircle2 className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />}
                     </label>
                   ))}
                 </div>
@@ -854,8 +886,8 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                 </p>
               )}
               <Button
-                disabled={loading}
-                className="h-13 w-full rounded-xl text-base font-bold"
+                disabled={loading || !registrationValid}
+                className="mt-6 min-h-14 w-full rounded-xl text-base font-bold disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? <Loader2 className="animate-spin" /> : <UserPlus />}{" "}
                 إرسال طلب التسجيل

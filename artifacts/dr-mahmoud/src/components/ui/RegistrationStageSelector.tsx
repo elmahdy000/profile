@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import {
   EDUCATION_SYSTEMS,
   SCHOOL_TYPES,
@@ -7,14 +8,15 @@ import {
   type EducationSystem,
   type Grade,
   type SchoolType,
-  type Track,
 } from "@/data/stage-model";
 
+type RegistrationTrack = "general" | "computer_science" | "engineering";
+
 export type RegistrationStageSelection = {
-  educationSystem: EducationSystem;
-  educationGrade: Grade;
-  schoolType: SchoolType | "none";
-  academicTrack: "general" | "computer_science" | "engineering";
+  educationSystem: EducationSystem | "";
+  educationGrade: Grade | "";
+  schoolType: SchoolType | "none" | "";
+  academicTrack: RegistrationTrack | "";
   grade: string;
 };
 
@@ -24,138 +26,208 @@ type Props = {
 };
 
 const fieldClass =
-  "h-12 w-full rounded-xl border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/15";
+  "h-[52px] w-full rounded-xl border border-border bg-background px-4 text-[15px] font-medium text-foreground outline-none transition hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/15";
 
 export function createDefaultRegistrationStage(): RegistrationStageSelection {
-  return buildSelection(
-    "baccalaureate",
-    "first_secondary",
-    "arabic",
-    "general",
-  );
+  return {
+    educationSystem: "",
+    educationGrade: "",
+    schoolType: "",
+    academicTrack: "",
+    grade: "",
+  };
 }
 
-function buildSelection(
-  educationSystem: EducationSystem,
-  educationGrade: Grade,
-  schoolType: SchoolType | "none",
-  academicTrack: "general" | "computer_science" | "engineering",
+function completeSelection(
+  educationSystem: EducationSystem | "",
+  educationGrade: Grade | "",
+  schoolType: SchoolType | "none" | "",
+  academicTrack: RegistrationTrack | "",
 ): RegistrationStageSelection {
-  const isUniversity = educationSystem === "university";
-  const normalizedSchoolType = isUniversity ? "none" : schoolType === "none" ? "arabic" : schoolType;
-  const normalizedTrack = isUniversity
-    ? academicTrack === "general" ? "computer_science" : academicTrack
-    : "general";
+  const complete = Boolean(
+    educationSystem &&
+      educationGrade &&
+      academicTrack &&
+      (educationSystem === "university" || schoolType),
+  );
   return {
     educationSystem,
     educationGrade,
-    schoolType: normalizedSchoolType,
-    academicTrack: normalizedTrack,
-    grade: formatStageLabel({
-      system: educationSystem,
-      grade: educationGrade,
-      schoolType: isUniversity ? undefined : normalizedSchoolType as SchoolType,
-      track: normalizedTrack as Track,
-    }),
+    schoolType,
+    academicTrack,
+    grade: complete
+      ? formatStageLabel({
+          system: educationSystem as EducationSystem,
+          grade: educationGrade as Grade,
+          schoolType:
+            educationSystem === "university"
+              ? undefined
+              : (schoolType as SchoolType),
+          track: academicTrack as RegistrationTrack,
+        })
+      : "",
   };
 }
 
 export function RegistrationStageSelector({ value, onChange }: Props) {
-  const update = (
-    system = value.educationSystem,
-    grade = value.educationGrade,
-    schoolType = value.schoolType,
-    track = value.academicTrack,
-  ) => onChange(buildSelection(system, grade, schoolType, track));
+  const system = value.educationSystem;
+  const isUniversity = system === "university";
+  const systemLabel = EDUCATION_SYSTEMS.find((item) => item.id === system)?.label;
+  const gradeLabel = system
+    ? SYSTEM_GRADES[system].find((item) => item.id === value.educationGrade)?.label
+    : undefined;
+  const schoolLabel = SCHOOL_TYPES.find((item) => item.id === value.schoolType)?.label;
+  const trackLabel = TRACKS.find((item) => item.id === value.academicTrack)?.label;
 
-  const handleSystem = (system: EducationSystem) => {
-    const firstGrade = SYSTEM_GRADES[system][0].id;
-    update(
-      system,
-      firstGrade,
-      system === "university" ? "none" : "arabic",
-      system === "university" ? "computer_science" : "general",
-    );
+  const chips = [
+    systemLabel && { key: "system", label: systemLabel },
+    gradeLabel && { key: "grade", label: gradeLabel },
+    schoolLabel && { key: "school", label: schoolLabel },
+    trackLabel && { key: "track", label: trackLabel },
+  ].filter(Boolean) as Array<{ key: string; label: string }>;
+
+  const removeChip = (key: string) => {
+    if (key === "system") return onChange(createDefaultRegistrationStage());
+    if (key === "grade")
+      return onChange(completeSelection(system, "", isUniversity ? "none" : "", ""));
+    if (key === "school")
+      return onChange(completeSelection(system, value.educationGrade, "", value.academicTrack));
+    onChange(completeSelection(system, value.educationGrade, value.schoolType, ""));
   };
 
-  const universityTracks = TRACKS.filter(
-    (track) => track.id === "computer_science" || track.id === "engineering",
-  );
-
   return (
-    <fieldset className="space-y-3">
-      <legend className="mb-2 text-sm font-bold">بيانات المرحلة الدراسية</legend>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <label className="space-y-1.5 text-xs font-bold text-muted-foreground">
-          <span>1. النظام التعليمي *</span>
+    <fieldset className="space-y-4 rounded-2xl border border-border/80 bg-muted/15 p-4 sm:p-5">
+      <legend className="px-1 text-lg font-bold text-foreground">
+        المرحلة الدراسية
+      </legend>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <label className="space-y-2 text-sm font-semibold text-foreground">
+          <span>النظام التعليمي <span className="text-red-500">*</span></span>
           <select
+            id="education-system"
             aria-label="النظام التعليمي"
-            value={value.educationSystem}
-            onChange={(event) => handleSystem(event.target.value as EducationSystem)}
+            value={system}
+            onChange={(event) =>
+              onChange(
+                completeSelection(
+                  event.target.value as EducationSystem,
+                  "",
+                  event.target.value === "university" ? "none" : "",
+                  "",
+                ),
+              )
+            }
+            required
             className={fieldClass}
           >
-            {EDUCATION_SYSTEMS.map((system) => (
-              <option key={system.id} value={system.id}>
-                {system.label} ({system.eyebrow})
-              </option>
+            <option value="">اختر النظام التعليمي</option>
+            {EDUCATION_SYSTEMS.map((item) => (
+              <option key={item.id} value={item.id}>{item.label}</option>
             ))}
           </select>
         </label>
 
-        <label className="space-y-1.5 text-xs font-bold text-muted-foreground">
-          <span>2. الصف / السنة الدراسية *</span>
-          <select
-            aria-label="الصف أو السنة الدراسية"
-            value={value.educationGrade}
-            onChange={(event) => update(value.educationSystem, event.target.value as Grade)}
-            className={fieldClass}
-          >
-            {SYSTEM_GRADES[value.educationSystem].map((grade) => (
-              <option key={grade.id} value={grade.id}>{grade.label}</option>
-            ))}
-          </select>
-        </label>
-
-        <label className="space-y-1.5 text-xs font-bold text-muted-foreground">
-          <span>3. نوع المدرسة / الدراسة *</span>
-          {value.educationSystem === "university" ? (
-            <select aria-label="نوع المدرسة أو الدراسة" value="none" disabled className={`${fieldClass} disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground`}>
-              <option value="none">دراسة جامعية</option>
-            </select>
-          ) : (
+        {system && (
+          <label className="space-y-2 text-sm font-semibold text-foreground">
+            <span>السنة الدراسية <span className="text-red-500">*</span></span>
             <select
-              aria-label="نوع المدرسة أو الدراسة"
-              value={value.schoolType}
-              onChange={(event) => update(value.educationSystem, value.educationGrade, event.target.value as SchoolType)}
+              id="education-grade"
+              aria-label="السنة الدراسية"
+              value={value.educationGrade}
+              onChange={(event) =>
+                onChange(
+                  completeSelection(
+                    system,
+                    event.target.value as Grade,
+                    isUniversity ? "none" : "",
+                    "",
+                  ),
+                )
+              }
+              required
               className={fieldClass}
             >
-              {SCHOOL_TYPES.map((type) => (
-                <option key={type.id} value={type.id}>{type.label}</option>
+              <option value="">اختر السنة الدراسية</option>
+              {SYSTEM_GRADES[system].map((item) => (
+                <option key={item.id} value={item.id}>{item.label}</option>
               ))}
             </select>
-          )}
-        </label>
+          </label>
+        )}
 
-        <label className="space-y-1.5 text-xs font-bold text-muted-foreground">
-          <span>4. التخصص / المسار *</span>
-          <select
-            aria-label="التخصص أو المسار"
-            value={value.academicTrack}
-            disabled={value.educationSystem !== "university"}
-            onChange={(event) => update(value.educationSystem, value.educationGrade, value.schoolType, event.target.value as "computer_science" | "engineering")}
-            className={`${fieldClass} disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground`}
-          >
-            {value.educationSystem === "university" ? (
-              universityTracks.map((track) => <option key={track.id} value={track.id}>{track.label}</option>)
-            ) : (
-              <option value="general">عام</option>
-            )}
-          </select>
-        </label>
+        {system && value.educationGrade && !isUniversity && (
+          <label className="space-y-2 text-sm font-semibold text-foreground">
+            <span>نوع المدرسة <span className="text-red-500">*</span></span>
+            <select
+              id="school-type"
+              aria-label="نوع المدرسة"
+              value={value.schoolType}
+              onChange={(event) =>
+                onChange(
+                  completeSelection(
+                    system,
+                    value.educationGrade,
+                    event.target.value as SchoolType,
+                    "",
+                  ),
+                )
+              }
+              required
+              className={fieldClass}
+            >
+              <option value="">اختر نوع المدرسة</option>
+              {SCHOOL_TYPES.map((item) => (
+                <option key={item.id} value={item.id}>{item.label}</option>
+              ))}
+            </select>
+          </label>
+        )}
+
+        {system && value.educationGrade && (isUniversity || value.schoolType) && (
+          <label className="space-y-2 text-sm font-semibold text-foreground">
+            <span>التخصص أو المسار <span className="text-red-500">*</span></span>
+            <select
+              id="academic-track"
+              aria-label="التخصص أو المسار"
+              value={value.academicTrack}
+              onChange={(event) =>
+                onChange(
+                  completeSelection(
+                    system,
+                    value.educationGrade,
+                    isUniversity ? "none" : value.schoolType,
+                    event.target.value as RegistrationTrack,
+                  ),
+                )
+              }
+              required
+              className={fieldClass}
+            >
+              <option value="">اختر التخصص أو المسار</option>
+              {isUniversity ? (
+                TRACKS.filter((item) => item.id === "computer_science" || item.id === "engineering")
+                  .map((item) => <option key={item.id} value={item.id}>{item.label}</option>)
+              ) : (
+                <option value="general">عام</option>
+              )}
+            </select>
+          </label>
+        )}
       </div>
-      <p className="rounded-xl border border-primary/15 bg-primary/5 px-3 py-2 text-xs font-semibold text-primary">
-        المسار المحدد: {value.grade}
-      </p>
+
+      {chips.length > 0 && (
+        <div aria-label="ملخص المرحلة المختارة" className="flex flex-wrap gap-2 border-t border-border/60 pt-4">
+          {chips.map((chip) => (
+            <span key={chip.key} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 text-sm font-semibold text-blue-800">
+              {chip.label}
+              <button type="button" onClick={() => removeChip(chip.key)} aria-label={`إزالة ${chip.label}`} className="grid h-6 w-6 place-items-center rounded-full hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
     </fieldset>
   );
 }

@@ -53,10 +53,28 @@ test.describe("public platform", () => {
     await expect(page.getByLabel("رقم الهاتف")).toBeVisible();
     await expect(page.getByLabel("المحافظة")).toBeVisible();
     await expect(page.getByLabel("المدينة / المركز")).toBeVisible();
-    await expect(page.getByLabel("النظام التعليمي")).toBeVisible();
-    await expect(page.getByLabel("الصف أو السنة الدراسية")).toBeVisible();
-    await expect(page.getByLabel("نوع المدرسة أو الدراسة")).toBeVisible();
-    await expect(page.getByLabel("التخصص أو المسار")).toBeVisible();
+    const educationSystem = page.getByLabel("النظام التعليمي");
+    await expect(educationSystem).toBeVisible();
+    await expect(page.getByLabel("السنة الدراسية")).toHaveCount(0);
+
+    await educationSystem.selectOption("baccalaureate");
+    const academicYear = page.getByLabel("السنة الدراسية");
+    await expect(academicYear).toBeVisible();
+    await academicYear.selectOption("first_secondary");
+
+    const schoolType = page.getByLabel("نوع المدرسة");
+    await expect(schoolType).toBeVisible();
+    await schoolType.selectOption("arabic");
+
+    const academicTrack = page.getByLabel("التخصص أو المسار");
+    await expect(academicTrack).toBeVisible();
+    await academicTrack.selectOption("general");
+
+    const educationSummary = page.getByLabel("ملخص المرحلة المختارة");
+    await expect(educationSummary).toContainText("البكالوريا");
+    await expect(educationSummary).toContainText("الصف الأول (أولى بكالوريا)");
+    await expect(educationSummary).toContainText("مدارس عربي");
+    await expect(educationSummary).toContainText("عام");
 
     await page.getByRole("button", { name: "دخول الطالب" }).click();
     await page.getByRole("button", { name: "نسيت كود الدخول؟" }).click();

@@ -95,6 +95,10 @@ function publicStudent(student: typeof studentsTable.$inferSelect) {
     governorate: student.governorate,
     city: student.city,
     grade: student.grade,
+    educationSystem: student.educationSystem,
+    educationGrade: student.educationGrade,
+    schoolType: student.schoolType,
+    academicTrack: student.academicTrack,
     otherGradeDetail: student.otherGradeDetail,
     learningMode: student.learningMode,
     enrolledCategories: student.enrolledCategories,
@@ -147,6 +151,18 @@ router.post(
         ? resolveAcademicStageSelection(req.body)
         : submittedGrade;
       const grade = resolvedStage ?? "";
+      const educationSystem = hasStructuredStage
+        ? String(req.body.educationSystem ?? "")
+        : null;
+      const educationGrade = hasStructuredStage
+        ? String(req.body.educationGrade ?? "")
+        : null;
+      const schoolType = hasStructuredStage
+        ? String(req.body.schoolType ?? "")
+        : null;
+      const academicTrack = hasStructuredStage
+        ? String(req.body.academicTrack ?? "")
+        : null;
       const otherGradeDetail =
         String(req.body.otherGradeDetail ?? "").trim() || null;
       const learningMode = String(req.body.learningMode ?? "online").trim();
@@ -202,6 +218,10 @@ router.post(
           governorate,
           city,
           grade,
+          educationSystem,
+          educationGrade,
+          schoolType,
+          academicTrack,
           otherGradeDetail,
           learningMode,
         })

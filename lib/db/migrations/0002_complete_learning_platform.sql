@@ -5,6 +5,14 @@ ALTER TABLE "students"
   ADD COLUMN IF NOT EXISTS "learning_mode" text NOT NULL DEFAULT 'online';
 ALTER TABLE "students"
   ADD COLUMN IF NOT EXISTS "enrolled_course_ids" jsonb NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE "students"
+  ADD COLUMN IF NOT EXISTS "education_system" text;
+ALTER TABLE "students"
+  ADD COLUMN IF NOT EXISTS "education_grade" text;
+ALTER TABLE "students"
+  ADD COLUMN IF NOT EXISTS "school_type" text;
+ALTER TABLE "students"
+  ADD COLUMN IF NOT EXISTS "academic_track" text;
 
 ALTER TABLE "video_progress"
   ADD COLUMN IF NOT EXISTS "current_time_seconds" integer NOT NULL DEFAULT 0;
