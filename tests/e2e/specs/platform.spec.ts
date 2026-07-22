@@ -53,7 +53,10 @@ test.describe("public platform", () => {
     await expect(page.getByLabel("رقم الهاتف")).toBeVisible();
     await expect(page.getByLabel("المحافظة")).toBeVisible();
     await expect(page.getByLabel("المدينة / المركز")).toBeVisible();
-    await expect(page.getByLabel("المرحلة الدراسية")).toBeVisible();
+    await expect(page.getByLabel("النظام التعليمي")).toBeVisible();
+    await expect(page.getByLabel("الصف أو السنة الدراسية")).toBeVisible();
+    await expect(page.getByLabel("نوع المدرسة أو الدراسة")).toBeVisible();
+    await expect(page.getByLabel("التخصص أو المسار")).toBeVisible();
 
     await page.getByRole("button", { name: "دخول الطالب" }).click();
     await page.getByRole("button", { name: "نسيت كود الدخول؟" }).click();

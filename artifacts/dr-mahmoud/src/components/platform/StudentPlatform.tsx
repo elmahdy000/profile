@@ -24,7 +24,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { VideoLessonsSection } from "@/components/YoutubeSection";
 import { toast } from "@/hooks/use-toast";
-import { ACADEMIC_TRACKS, getTrackForStage } from "@/data/academic";
+import { getTrackForStage } from "@/data/academic";
+import {
+  RegistrationStageSelector,
+  createDefaultRegistrationStage,
+} from "@/components/ui/RegistrationStageSelector";
 
 type Student = {
   id: number;
@@ -419,7 +423,7 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
     email: "",
     governorate: "",
     city: "",
-    grade: "",
+    ...createDefaultRegistrationStage(),
     otherGradeDetail: "",
     learningMode: "online" as "online" | "offline",
   });
@@ -471,7 +475,7 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
         email: "",
         governorate: "",
         city: "",
-        grade: "",
+        ...createDefaultRegistrationStage(),
         otherGradeDetail: "",
         learningMode: "online",
       });
@@ -804,57 +808,12 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <label htmlFor="student-grade" className="text-sm font-bold">
-                  المرحلة الدراسية
-                </label>
-                <select
-                  id="student-grade"
-                  value={form.grade}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      grade: e.target.value,
-                      otherGradeDetail:
-                        e.target.value !== "أخرى" ? "" : form.otherGradeDetail,
-                    })
-                  }
-                  required
-                  className="h-12 w-full rounded-xl border border-border bg-background px-4 focus:border-primary focus:outline-none"
-                >
-                  <option value="">اختر المرحلة الدراسية</option>
-                  {ACADEMIC_TRACKS.map((track) => (
-                    <optgroup key={track.id} label={track.title}>
-                      {track.stages.map((stage) => (
-                        <option key={stage} value={stage}>
-                          {stage}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                  <option value="أخرى">أخرى (يرجى التحديد)</option>
-                </select>
-              </div>
-              {form.grade === "أخرى" && (
-                <div className="space-y-2">
-                  <label
-                    htmlFor="student-other-grade"
-                    className="text-sm font-bold"
-                  >
-                    تحديد المرحلة الدراسية الأخرى
-                  </label>
-                  <input
-                    id="student-other-grade"
-                    value={form.otherGradeDetail}
-                    onChange={(e) =>
-                      setForm({ ...form, otherGradeDetail: e.target.value })
-                    }
-                    required
-                    className="h-12 w-full rounded-xl border border-border bg-background px-4 focus:border-primary focus:outline-none"
-                    placeholder="اكتب مرحلتك الدراسية بالتفصيل"
-                  />
-                </div>
-              )}
+              <RegistrationStageSelector
+                value={form}
+                onChange={(selection) =>
+                  setForm({ ...form, ...selection, otherGradeDetail: "" })
+                }
+              />
               <fieldset className="space-y-2">
                 <legend className="text-sm font-bold">نظام الدراسة</legend>
                 <div className="grid grid-cols-2 gap-3">

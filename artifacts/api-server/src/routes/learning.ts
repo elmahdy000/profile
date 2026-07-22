@@ -27,7 +27,10 @@ import {
   requireStudent,
   STUDENT_COOKIE,
 } from "../middleware/student-auth";
-import { isAcceptedAcademicStage } from "../lib/academic-stages";
+import {
+  isAcceptedAcademicStage,
+  resolveAcademicStageSelection,
+} from "../lib/academic-stages";
 import { fixedWindowRateLimit } from "../middleware/rate-limit";
 
 const router: IRouter = Router();
@@ -133,7 +136,17 @@ router.post(
       const email = String(req.body.email ?? "").trim() || null;
       const governorate = String(req.body.governorate ?? "").trim();
       const city = String(req.body.city ?? "").trim();
-      const grade = String(req.body.grade ?? "").trim();
+      const submittedGrade = String(req.body.grade ?? "").trim();
+      const hasStructuredStage = [
+        "educationSystem",
+        "educationGrade",
+        "schoolType",
+        "academicTrack",
+      ].some((key) => req.body[key] !== undefined);
+      const resolvedStage = hasStructuredStage
+        ? resolveAcademicStageSelection(req.body)
+        : submittedGrade;
+      const grade = resolvedStage ?? "";
       const otherGradeDetail =
         String(req.body.otherGradeDetail ?? "").trim() || null;
       const learningMode = String(req.body.learningMode ?? "online").trim();
@@ -148,7 +161,10 @@ router.post(
           .json({ error: "المحافظة والمدينة والمرحلة الدراسية مطلوبة" });
         return;
       }
-      if (grade !== "أخرى" && !isAcceptedAcademicStage(grade)) {
+      if (
+        (hasStructuredStage && !resolvedStage) ||
+        (grade !== "أخرى" && !isAcceptedAcademicStage(grade))
+      ) {
         res.status(400).json({ error: "المرحلة الدراسية غير صالحة" });
         return;
       }
