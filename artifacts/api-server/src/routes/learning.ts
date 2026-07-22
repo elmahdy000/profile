@@ -91,6 +91,7 @@ function publicStudent(student: typeof studentsTable.$inferSelect) {
     name: student.name,
     phone: student.phone,
     email: student.email,
+    avatarUrl: student.avatarUrl,
     status: student.status,
     governorate: student.governorate,
     city: student.city,
@@ -322,6 +323,46 @@ router.get("/student/me", async (req, res, next) => {
       return;
     }
     res.json({ student: publicStudent(student) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+const studentAvatarUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 3 * 1024 * 1024 },
+  fileFilter: (_req, file, callback) => {
+    const valid = ["image/png", "image/jpeg", "image/webp"].includes(file.mimetype);
+    if (!valid) return callback(new Error("صيغة الصورة غير مدعومة"));
+    callback(null, true);
+  },
+}).single("avatar");
+
+router.post("/student/avatar", requireStudent, studentAvatarUpload, async (req, res, next) => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: "اختر صورة صالحة" });
+      return;
+    }
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    const extension = req.file.mimetype === "image/png" ? ".png" : req.file.mimetype === "image/webp" ? ".webp" : ".jpg";
+    const directory = path.join(process.cwd(), "public", "uploads", "avatars");
+    fs.mkdirSync(directory, { recursive: true });
+    const filename = `student-${student.id}-${Date.now()}${extension}`;
+    fs.writeFileSync(path.join(directory, filename), req.file.buffer);
+    const avatarUrl = `/uploads/avatars/${filename}`;
+    await db.update(studentsTable).set({ avatarUrl }).where(eq(studentsTable.id, student.id));
+    res.json({ avatarUrl });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete("/student/avatar", requireStudent, async (_req, res, next) => {
+  try {
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    await db.update(studentsTable).set({ avatarUrl: null }).where(eq(studentsTable.id, student.id));
+    res.json({ success: true });
   } catch (error) {
     next(error);
   }

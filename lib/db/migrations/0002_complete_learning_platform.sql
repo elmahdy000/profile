@@ -13,6 +13,8 @@ ALTER TABLE "students"
   ADD COLUMN IF NOT EXISTS "school_type" text;
 ALTER TABLE "students"
   ADD COLUMN IF NOT EXISTS "academic_track" text;
+ALTER TABLE "students"
+  ADD COLUMN IF NOT EXISTS "avatar_url" text;
 
 ALTER TABLE "video_progress"
   ADD COLUMN IF NOT EXISTS "current_time_seconds" integer NOT NULL DEFAULT 0;

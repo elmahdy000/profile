@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BarChart3,
@@ -20,6 +20,10 @@ import {
   Trophy,
   User,
   UserPlus,
+  Menu,
+  X,
+  Camera,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VideoLessonsSection } from "@/components/YoutubeSection";
@@ -29,12 +33,14 @@ import {
   RegistrationStageSelector,
   createDefaultRegistrationStage,
 } from "@/components/ui/RegistrationStageSelector";
+import { EmptyState, PageHeader, ProfileInfoRow, StatisticCard, StatusBadge, StudentAvatar } from "./StudentDashboardUI";
 
 type Student = {
   id: number;
   name: string;
   phone: string;
   email?: string | null;
+  avatarUrl?: string | null;
   status: string;
   governorate?: string | null;
   city?: string | null;
@@ -59,6 +65,7 @@ type LearningFile = {
   order?: number;
   originalName: string;
   sizeBytes: number;
+  createdAt?: string;
 };
 type QuizQuestion = { prompt: string; options: string[] };
 type Quiz = {
@@ -906,48 +913,22 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
 
 function FilesPanel({ files }: { files: LearningFile[] }) {
   return (
-    <section className="container mx-auto px-4 py-12" dir="rtl">
-      <div className="mb-8">
-        <h2 className="text-3xl font-black">الملفات والمرفقات</h2>
-        <p className="text-muted-foreground mt-2">
-          هنا هتلاقي المذكرات والأكواد والتمارين الخاصة بمرحلتك وكورساتك.
-        </p>
-      </div>
+    <section className="space-y-7" dir="rtl">
+      <PageHeader title="الملفات والمرفقات" description="المذكرات والأكواد والتمارين الخاصة بمرحلتك وكورساتك." action={<StatusBadge>{files.length} ملف</StatusBadge>} />
       {files.length === 0 ? (
-        <div className="rounded-3xl border border-dashed p-16 text-center text-muted-foreground">
-          مفيش ملفات مرفوعة دلوقتي.
-        </div>
+        <EmptyState icon={FolderOpen} title="لا توجد ملفات مرفوعة" description="ستظهر مذكرات وأكواد الكورسات هنا فور نشرها لحسابك." />
       ) : (
-        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
           {files.map((file) => (
-            <article key={file.id} className="academy-card p-5">
-              <div className="mb-4 flex items-start justify-between">
-                <div className="rounded-xl bg-primary/10 p-3 text-primary">
-                  <FileText />
-                </div>
-                <div className="flex flex-wrap justify-end gap-1">
-                  <span className="rounded-full bg-muted px-3 py-1 text-xs">
-                    {file.stage || file.category}
-                  </span>
-                  {file.subject && (
-                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs text-primary">
-                      {file.subject}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <h3 className="font-black text-lg">{file.title}</h3>
-              <p className="mt-1 text-xs font-bold text-primary">
-                {file.category}
-              </p>
-              <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                {file.description || file.originalName}
-              </p>
+            <article key={file.id} className="grid gap-3 border-b border-slate-100 p-4 last:border-0 sm:grid-cols-[minmax(0,1fr)_160px_100px_auto] sm:items-center">
+              <div className="flex min-w-0 items-center gap-3"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-50 text-[#0B63CE]"><FileText className="h-5 w-5" /></span><div className="min-w-0"><h3 className="truncate text-base font-semibold">{file.title}</h3><p className="truncate text-[13px] text-slate-500">{file.originalName}</p></div></div>
+              <span className="text-sm text-slate-600">{file.category}</span>
+              <span className="text-sm text-slate-500">{(file.sizeBytes / 1024 / 1024).toFixed(1)} MB</span>
               <a
                 href={`/api/learning/files/${file.id}/download`}
-                className="mt-5 inline-flex items-center gap-2 font-bold text-primary"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-blue-200 px-4 text-sm font-bold text-[#0B63CE] hover:bg-blue-50"
               >
-                <Download className="h-4 w-4" /> حمّل الملف
+                <Download className="h-4 w-4" /> تحميل
               </a>
             </article>
           ))}
@@ -965,13 +946,8 @@ function QuizzesPanel({
   onStartQuiz: (quiz: Quiz) => void;
 }) {
   return (
-    <section className="container mx-auto px-4 py-12" dir="rtl">
-      <div className="mb-8">
-        <h2 className="text-3xl font-black">الاختبارات</h2>
-        <p className="text-muted-foreground mt-2">
-          اختبر نفسك واعرف نتيجتك فورًا.
-        </p>
-      </div>
+    <section className="space-y-7" dir="rtl">
+      <PageHeader title="الاختبارات" description="اختبر فهمك واعرف نتيجتك فورًا." action={<StatusBadge>{quizzes.length} اختبار</StatusBadge>} />
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
         {quizzes.map((quiz) => (
           <article key={quiz.id} className="academy-card p-6">
@@ -997,9 +973,7 @@ function QuizzesPanel({
         ))}
       </div>
       {quizzes.length === 0 && (
-        <div className="rounded-3xl border border-dashed p-16 text-center text-muted-foreground">
-          مفيش اختبارات منشورة دلوقتي.
-        </div>
+        <EmptyState icon={ClipboardCheck} title="لا توجد اختبارات متاحة" description="سيظهر أي اختبار جديد فور نشره لحسابك." />
       )}
     </section>
   );
@@ -1058,23 +1032,21 @@ function DashboardPanel({
       label: "دروس متاحة",
       value: String(videos.length),
       icon: BookOpen,
-      color: "text-primary",
-      bg: "bg-primary/10",
+      helper: "مخصصة لمرحلتك",
     },
     {
       label: "ملفات مرفوعة",
       value: String(files.length),
       icon: FolderOpen,
-      color: "text-cyan-700",
-      bg: "bg-cyan-500/10",
+      helper: "جاهزة للتحميل",
     },
     {
       label: "اختبارات",
       value: String(quizzes.length),
       icon: ClipboardCheck,
-      color: "text-amber-700",
-      bg: "bg-amber-500/10",
+      helper: "منشورة حاليًا",
     },
+    { label: "إجمالي التقدم", value: `${averageProgress}%`, icon: BarChart3, helper: "عبر كل الدروس" },
   ];
   if (dataLoading)
     return (
@@ -1095,11 +1067,11 @@ function DashboardPanel({
       </div>
     );
   return (
-    <div className="space-y-6 p-4 pb-28 md:p-6 lg:pb-6">
+    <div className="space-y-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-black md:text-3xl">
-            أهلًا بيك، {student.name.split(" ")[0]} 👋
+          <h1 className="text-[28px] font-bold md:text-[34px]">
+            مرحبًا، {student.name} 👋
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {academicTrack
@@ -1131,22 +1103,8 @@ function DashboardPanel({
           </Button>
         </div>
       )}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        {stats.map(({ label, value, icon: Icon, color, bg }) => (
-          <article key={label} className="academy-card p-3 sm:p-4">
-            <div className="flex items-center justify-between gap-1">
-              <strong className="block text-xl sm:text-2xl">{value}</strong>
-              <div
-                className={`grid h-8 w-8 place-items-center rounded-lg sm:h-10 sm:w-10 sm:rounded-xl ${bg} ${color}`}
-              >
-                <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
-              </div>
-            </div>
-            <p className="mt-2 text-[10px] leading-4 text-muted-foreground sm:text-xs">
-              {label}
-            </p>
-          </article>
-        ))}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map((stat) => <StatisticCard key={stat.label} {...stat} />)}
       </div>
       <div className="grid gap-5 xl:grid-cols-[1.5fr_.7fr]">
         <article className="academy-card overflow-hidden">
@@ -1189,14 +1147,7 @@ function DashboardPanel({
                 <span>{continueProgress}% من الدرس</span>
                 <span>{averageProgress}% إجمالي التقدم</span>
               </div>
-              <Button
-                disabled={!continueVideo}
-                onClick={() => onOpen("lessons")}
-                className="mt-4 h-11 w-fit font-bold"
-              >
-                {continueProgress > 0 ? "كمّل الدرس" : "ابدأ أول درس"}{" "}
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
+              {continueVideo && <Button onClick={() => onOpen("lessons")} className="mt-4 h-11 w-fit font-bold">{continueProgress > 0 ? "كمّل الدرس" : "ابدأ أول درس"} <ChevronLeft className="h-4 w-4" /></Button>}
             </div>
           </div>
         </article>
@@ -1270,101 +1221,64 @@ function DashboardPanel({
           ))}
         </div>
         {files.length === 0 && (
-          <div className="rounded-2xl border border-dashed p-8 text-center text-muted-foreground">
-            أول ما الأدمن يرفع ملفات هتظهر لك هنا.
-          </div>
+          <EmptyState icon={FolderOpen} title="لا توجد ملفات مرفوعة" description="ستظهر مذكرات وأكواد الكورسات هنا بعد اعتمادها لحسابك." />
         )}
       </div>
     </div>
   );
 }
 
-function ProfilePanel({ student }: { student: Student }) {
+async function cropAvatar(file: File): Promise<Blob> {
+  const image = await createImageBitmap(file);
+  const side = Math.min(image.width, image.height);
+  const canvas = document.createElement("canvas");
+  canvas.width = 640; canvas.height = 640;
+  canvas.getContext("2d")?.drawImage(image, (image.width - side) / 2, (image.height - side) / 2, side, side, 0, 0, 640, 640);
+  image.close();
+  return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("تعذر تجهيز الصورة")), "image/webp", .88));
+}
+
+function ProfilePanel({ student, onStudentChange }: { student: Student; onStudentChange: (student: Student) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const uploadAvatar = async (file?: File) => {
+    if (!file) return;
+    if (!(["image/png", "image/jpeg", "image/webp"].includes(file.type)) || file.size > 3 * 1024 * 1024) {
+      toast({ variant: "destructive", title: "صورة غير صالحة", description: "استخدم PNG أو JPG أو WebP بحجم لا يزيد عن 3 MB." }); return;
+    }
+    setAvatarLoading(true);
+    try {
+      const cropped = await cropAvatar(file);
+      const body = new FormData(); body.append("avatar", cropped, "avatar.webp");
+      const response = await fetch("/api/student/avatar", { method: "POST", credentials: "include", body });
+      const data = await response.json(); if (!response.ok) throw new Error(data.error);
+      onStudentChange({ ...student, avatarUrl: data.avatarUrl });
+      toast({ title: "تم تحديث الصورة" });
+    } catch (error) { toast({ variant: "destructive", title: "تعذر رفع الصورة", description: (error as Error).message }); }
+    finally { setAvatarLoading(false); }
+  };
+  const removeAvatar = async () => {
+    setAvatarLoading(true);
+    try { await api("/api/student/avatar", { method: "DELETE" }); onStudentChange({ ...student, avatarUrl: null }); toast({ title: "تم حذف الصورة" }); }
+    catch (error) { toast({ variant: "destructive", title: "تعذر حذف الصورة", description: (error as Error).message }); }
+    finally { setAvatarLoading(false); }
+  };
   return (
-    <div className="space-y-6 p-4 md:p-8">
-      <article className="academy-card p-6">
+    <div className="space-y-7">
+      <PageHeader title="حسابي" description="بياناتك الشخصية والتعليمية وإعدادات الحساب." />
+      <article className="rounded-2xl border border-slate-200 bg-white p-6">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-          <img
-            src="/dr-mahmoud-photo.png"
-            alt="صورة الحساب"
-            className="h-28 w-28 rounded-full border-4 border-primary/10 object-cover"
-          />
+          <StudentAvatar name={student.name} src={student.avatarUrl} size="lg" />
           <div>
-            <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-700">
-              حساب متفعّل
-            </span>
-            <h1 className="mt-3 text-3xl font-black">{student.name}</h1>
-            <p className="text-muted-foreground">
-              طالب في أكاديمية د. محمود المهدي
-            </p>
+            <StatusBadge>حساب متفعّل</StatusBadge><h2 className="mt-3 text-2xl font-bold">{student.name}</h2><p className="text-sm text-slate-500">{student.grade || "طالب بمنصة د. محمود المهدي"}</p>
+            <div className="mt-4 flex flex-wrap gap-2"><input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => void uploadAvatar(event.target.files?.[0])} /><Button type="button" variant="outline" disabled={avatarLoading} onClick={() => inputRef.current?.click()}><Camera className="h-4 w-4" /> {avatarLoading ? "جاري الحفظ" : "تغيير الصورة"}</Button>{student.avatarUrl && <Button type="button" variant="ghost" disabled={avatarLoading} onClick={() => void removeAvatar()} className="text-slate-600 hover:text-red-600"><Trash2 className="h-4 w-4" /> حذف</Button>}</div>
           </div>
         </div>
       </article>
       <div className="grid gap-5 lg:grid-cols-[1.3fr_.7fr]">
-        <article className="academy-card p-6">
-          <h2 className="text-xl font-black">بيانات الحساب</h2>
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <label className="space-y-2">
-              <span className="text-sm font-bold">الاسم</span>
-              <input
-                value={student.name}
-                readOnly
-                className="h-12 w-full rounded-lg border bg-muted px-4"
-              />
-            </label>
-            <label className="space-y-2">
-              <span className="text-sm font-bold">رقم الموبايل</span>
-              <input
-                value={student.phone}
-                readOnly
-                className="h-12 w-full rounded-lg border bg-muted px-4"
-              />
-            </label>
-            <label className="space-y-2 sm:col-span-2">
-              <span className="text-sm font-bold">الإيميل</span>
-              <input
-                value={student.email || "مش مضاف"}
-                readOnly
-                className="h-12 w-full rounded-lg border bg-muted px-4"
-              />
-            </label>
-            <label className="space-y-2">
-              <span className="text-sm font-bold">المحافظة</span>
-              <input
-                value={student.governorate || "غير محدد"}
-                readOnly
-                className="h-12 w-full rounded-lg border bg-muted px-4"
-              />
-            </label>
-            <label className="space-y-2">
-              <span className="text-sm font-bold">المدينة / المركز</span>
-              <input
-                value={student.city || "غير محدد"}
-                readOnly
-                className="h-12 w-full rounded-lg border bg-muted px-4"
-              />
-            </label>
-            <label className="space-y-2 sm:col-span-2">
-              <span className="text-sm font-bold">المرحلة الدراسية</span>
-              <input
-                value={
-                  student.grade === "أخرى"
-                    ? student.otherGradeDetail || "أخرى"
-                    : student.grade || "غير محدد"
-                }
-                readOnly
-                className="h-12 w-full rounded-lg border bg-muted px-4"
-              />
-            </label>
-          </div>
+        <article className="rounded-2xl border border-slate-200 bg-white p-6"><h2 className="text-xl font-bold">المعلومات الشخصية</h2><dl className="mt-3 grid sm:grid-cols-2"><ProfileInfoRow label="الاسم" value={student.name} /><ProfileInfoRow label="رقم الموبايل" value={student.phone} /><ProfileInfoRow label="البريد الإلكتروني" value={student.email || "غير مضاف"} /><ProfileInfoRow label="المحافظة والمدينة" value={[student.governorate, student.city].filter(Boolean).join("، ")} /></dl>
         </article>
-        <article className="academy-card p-6">
-          <Trophy className="h-10 w-10 text-amber-500" />
-          <h2 className="mt-4 text-xl font-black">إنجازاتك</h2>
-          <p className="mt-2 text-muted-foreground">
-            كل اختبار تنجح فيه وشهادة تخلصها هتظهر هنا.
-          </p>
-        </article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-6"><h2 className="text-xl font-bold">المعلومات التعليمية</h2><dl className="mt-3"><ProfileInfoRow label="المرحلة الدراسية" value={student.grade} /><ProfileInfoRow label="نظام الدراسة" value={student.learningMode === "offline" ? "حضوري" : "أونلاين"} /><ProfileInfoRow label="حالة الحساب" value="متفعّل" /></dl></article>
       </div>
     </div>
   );
@@ -1382,6 +1296,7 @@ export function StudentPlatform() {
   const [progress, setProgress] = useState<ProgressRow[]>([]);
   const [notifications, setNotifications] = useState<StudentNotification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
   const [dataError, setDataError] = useState("");
 
@@ -1495,29 +1410,29 @@ export function StudentPlatform() {
   ] as const;
   return (
     <main
-      className="min-h-[calc(100vh-4rem)] bg-[#f9f9ff] pb-24 lg:pb-0"
+      className="min-h-screen bg-[#F7F9FC] pb-24 lg:pb-0"
       dir="rtl"
     >
-      <div className="mx-auto grid max-w-[1500px] lg:grid-cols-[240px_1fr]">
-        <aside className="hidden min-h-[calc(100vh-4rem)] border-l border-border bg-white p-4 lg:flex lg:flex-col">
-          <div className="flex items-center gap-3 border-b pb-5">
+      <div className="mx-auto grid max-w-[1600px] lg:grid-cols-[252px_1fr]">
+        {sidebarOpen && <button className="fixed inset-0 z-40 bg-slate-950/35 lg:hidden" aria-label="إغلاق القائمة" onClick={() => setSidebarOpen(false)} />}
+        <aside className={`fixed inset-y-0 right-0 z-50 flex w-[252px] flex-col border-l border-slate-200 bg-white p-4 transition-transform lg:sticky lg:top-0 lg:z-20 lg:min-h-screen ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}`}>
+          <button className="absolute left-3 top-3 grid h-10 w-10 place-items-center rounded-xl lg:hidden" onClick={() => setSidebarOpen(false)} aria-label="إغلاق القائمة"><X className="h-5 w-5" /></button>
+          <div className="flex items-center gap-3 border-b border-slate-100 pb-5">
             <img
               src="/logo.jpg"
-              alt="اللوجو"
-              className="h-12 w-12 rounded-full object-cover"
+              alt="شعار منصة د. محمود المهدي"
+              className="h-11 w-11 rounded-xl object-cover"
             />
-            <div>
-              <strong className="block">{student.name}</strong>
-              <span className="text-xs text-muted-foreground">طالب متفعّل</span>
-            </div>
+            <div><strong className="block text-sm">بوابة الطالب</strong><span className="text-xs text-slate-500">د. محمود المهدي</span></div>
           </div>
+          <div className="mt-4 flex items-center gap-3 rounded-xl bg-slate-50 p-3"><StudentAvatar name={student.name} src={student.avatarUrl} /><div className="min-w-0"><strong className="block truncate text-sm">{student.name}</strong><span className="text-xs text-slate-500">طالب متفعّل</span></div></div>
           <nav className="mt-5 space-y-1">
             {nav.map(([value, label, Icon]) => (
               <button
                 key={value}
-                onClick={() => setTab(value)}
+                onClick={() => { setTab(value); setSidebarOpen(false); }}
                 aria-current={tab === value ? "page" : undefined}
-                className={`flex min-h-12 w-full items-center gap-3 rounded-lg border-r-4 px-4 text-right font-bold ${tab === value ? "border-primary bg-[#d7e2ff] text-primary" : "border-transparent text-muted-foreground hover:bg-muted"}`}
+                className={`flex min-h-11 w-full items-center gap-3 rounded-lg border-r-[3px] px-3 text-right text-sm font-semibold transition ${tab === value ? "border-[#0B63CE] bg-[#EAF3FF] text-[#0B63CE]" : "border-transparent text-[#667085] hover:bg-slate-50"}`}
               >
                 <Icon className="h-5 w-5" />
                 {label}
@@ -1527,7 +1442,7 @@ export function StudentPlatform() {
           <div className="mt-auto space-y-2">
             <a
               href="https://wa.me/201044348610"
-              className="flex h-12 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white"
+              className="flex h-11 items-center justify-center rounded-xl border border-blue-200 text-sm font-bold text-[#0B63CE] hover:bg-blue-50"
             >
               كلم الدعم
             </a>
@@ -1540,8 +1455,9 @@ export function StudentPlatform() {
           </div>
         </aside>
         <section className="min-w-0">
-          <div className="sticky top-16 z-30 flex h-14 items-center justify-between border-b bg-white/95 px-4 backdrop-blur md:px-8">
+          <div className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur md:px-8">
             <div className="flex items-center gap-3">
+              <button className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 lg:hidden" onClick={() => setSidebarOpen(true)} aria-label="فتح القائمة"><Menu className="h-5 w-5" /></button>
               <div className="relative">
                 <button
                   type="button"
@@ -1594,15 +1510,11 @@ export function StudentPlatform() {
                   )}
                 </AnimatePresence>
               </div>
-              <span className="text-sm font-bold text-primary">
-                Academy Portal
-              </span>
+              <span className="hidden text-sm font-bold text-slate-700 sm:inline">{nav.find(([value]) => value === tab)?.[1]}</span>
             </div>
-            <span className="text-sm text-muted-foreground">
-              اتعلم، طبّق، واتقدم
-            </span>
+            <button onClick={() => setTab("profile")} className="flex items-center gap-2 rounded-xl p-1.5 hover:bg-slate-50"><StudentAvatar name={student.name} src={student.avatarUrl} size="sm" /><span className="hidden max-w-40 truncate text-sm font-semibold sm:block">{student.name}</span></button>
           </div>
-          {tab === "dashboard" ? (
+          <div className="mx-auto max-w-[1440px] p-4 pb-8 sm:p-6 lg:p-8">{tab === "dashboard" ? (
             <DashboardPanel
               student={student}
               files={files}
@@ -1626,8 +1538,8 @@ export function StudentPlatform() {
           ) : tab === "quizzes" ? (
             <QuizzesPanel quizzes={quizzes} onStartQuiz={startQuiz} />
           ) : (
-            <ProfilePanel student={student} />
-          )}
+            <ProfilePanel student={student} onStudentChange={setStudent} />
+          )}</div>
         </section>
       </div>
 

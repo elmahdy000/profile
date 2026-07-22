@@ -5,6 +5,7 @@ export const studentsTable = pgTable("students", {
   name: text("name").notNull(),
   phone: text("phone").notNull(),
   email: text("email"),
+  avatarUrl: text("avatar_url"),
   accessCode: text("access_code"),
   status: text("status").notNull().default("pending"),
   notes: text("notes"),
