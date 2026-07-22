@@ -2660,8 +2660,80 @@ export default function AdminDashboard() {
                             className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm resize-none"
                           />
                         </div>
+
+                        {/* Premium Lesson Attachments Selection */}
+                        <div className="md:col-span-2 border-t border-border/40 pt-4 mt-2">
+                          <label className="block text-sm font-bold text-foreground mb-1">الملفات المرفقة مع هذا الدرس (PDF / Word / ملخصات)</label>
+                          <span className="block text-xs text-muted-foreground mb-3">اختر الملفات المرفقة التي يستطيع الطالب تحميلها مباشرة عند فتح هذا الدرس</span>
+                          
+                          {learningFiles.length === 0 ? (
+                            <div className="p-4 rounded-2xl border border-dashed border-border bg-muted/30 text-center">
+                              <p className="text-xs text-muted-foreground font-bold">لا توجد ملفات مرفوعة حالياً في المكتبة التعليمية.</p>
+                              <button
+                                type="button"
+                                onClick={() => setActiveTab("learning")}
+                                className="mt-2 text-xs text-primary font-black hover:underline"
+                              >
+                                ارفع أول ملف من تبويب "المكتبة التعليمية" بالخارج
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/50 p-4 space-y-3">
+                              {/* Selection status header */}
+                              <div className="flex items-center justify-between text-xs font-bold border-b border-slate-200 pb-2">
+                                <span className="text-slate-600">الملفات المتاحة في الكورسات والمراحل</span>
+                                <span className="bg-primary/10 text-primary px-2.5 py-1 rounded-full">
+                                  تم تحديد ({videoForm.attachmentFileIds.length}) ملف مرفق
+                                </span>
+                              </div>
+
+                              {/* Interactive checklist grid */}
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 max-h-[220px] overflow-y-auto pr-1">
+                                {learningFiles.map((file) => {
+                                  const isChecked = videoForm.attachmentFileIds.includes(String(file.id));
+                                  return (
+                                    <div
+                                      key={file.id}
+                                      onClick={() => {
+                                        const newIds = isChecked
+                                          ? videoForm.attachmentFileIds.filter((id) => id !== String(file.id))
+                                          : [...videoForm.attachmentFileIds, String(file.id)];
+                                        setVideoForm({ ...videoForm, attachmentFileIds: newIds });
+                                      }}
+                                      className={`flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                                        isChecked
+                                          ? "border-primary bg-blue-50/30 text-primary shadow-sm"
+                                          : "border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-800 bg-white"
+                                      }`}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={() => {}} // handled by parent div onClick
+                                        className="mt-1 h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary pointer-events-none"
+                                      />
+                                      <div className="min-w-0 flex-1">
+                                        <span className="block truncate text-xs font-bold leading-tight">{file.title}</span>
+                                        <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-400">
+                                          <span className="truncate">{file.category}</span>
+                                          {file.stage && (
+                                            <>
+                                              <span>•</span>
+                                              <span className="truncate">{file.stage}</span>
+                                            </>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
+
 
                     <div className="space-y-3 pb-4">
                       <div className="flex items-center gap-2">
