@@ -191,9 +191,9 @@ function VideoPlayerModal({
   let embedUrl = "";
   if (!isStreamUrl && !streamUrl) {
     if (item.type === "playlist" && playlistId) {
-      embedUrl = `https://www.youtube.com/embed/videoseries?list=${playlistId}&autoplay=1&rel=0`;
+      embedUrl = `https://www.youtube.com/embed/videoseries?list=${playlistId}&autoplay=0&mute=0&rel=0`;
     } else if (vidId) {
-      embedUrl = `https://www.youtube.com/embed/${vidId}?autoplay=1&rel=0`;
+      embedUrl = `https://www.youtube.com/embed/${vidId}?autoplay=0&mute=0&rel=0`;
     }
   }
 
@@ -330,10 +330,14 @@ function VideoPlayerModal({
                       preload="metadata"
                       controlsList="nodownload"
                       onContextMenu={(e) => e.preventDefault()}
-                      autoPlay
                       onTimeUpdate={handleTimeUpdate}
                       onLoadedMetadata={() => {
                         const video = videoRef.current;
+                        if (video) {
+                          video.muted = false;
+                          video.defaultMuted = false;
+                          video.volume = 1;
+                        }
                         if (
                           video &&
                           !hasResumedRef.current &&
