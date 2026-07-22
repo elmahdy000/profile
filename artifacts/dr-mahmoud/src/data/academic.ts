@@ -24,14 +24,22 @@ export const ACADEMIC_TRACKS: AcademicTrack[] = [
     description:
       "شرح من الصفر، حل تدريبات المنهج، ومراجعات واختبارات منظمة لكل سنة دراسية.",
     stages: [
+      "أولى بكالوريا",
+      "تانية بكالوريا",
+      "ثالثة بكالوريا",
+      "البكالوريا - الصف الأول",
+      "البكالوريا - الصف الثاني",
+      "البكالوريا - الصف الثالث",
       "بكالوريا - أولى ثانوي - عام",
       "بكالوريا - أولى ثانوي - لغات",
       "بكالوريا - ثانية ثانوي - عام",
       "بكالوريا - ثانية ثانوي - لغات",
-      "ثانوية عامة - أولى ثانوي - عام",
-      "ثانوية عامة - أولى ثانوي - لغات",
-      "ثانوية عامة - ثانية ثانوي - عام",
-      "ثانوية عامة - ثانية ثانوي - لغات",
+      "ثانوية عامة - أولى ثانوي",
+      "ثانوية عامة - ثانية ثانوي",
+      "ثانوية عامة - ثالثة ثانوي",
+      "أولى ثانوي",
+      "تانية ثانوي",
+      "ثالثة ثانوي",
     ],
     subjects: ["Python", "Logic", "ToFAS", "Problem Solving"],
     image: "/baccalaureate-hero.png",
@@ -100,5 +108,37 @@ export function getStagesForTrack(value?: string | null): string[] {
 }
 
 export function getTrackForStage(stage?: string | null) {
-  return ACADEMIC_TRACKS.find((track) => track.stages.includes(stage ?? "")) ?? null;
+  if (!stage) return ACADEMIC_TRACKS[0];
+  const normalized = stage.trim().toLowerCase();
+
+  const exactMatch = ACADEMIC_TRACKS.find((track) =>
+    track.stages.some((s) => s.trim().toLowerCase() === normalized)
+  );
+  if (exactMatch) return exactMatch;
+
+  if (
+    normalized.includes("بكالوريا") ||
+    normalized.includes("ثانوي") ||
+    normalized.includes("ثانوية") ||
+    normalized.includes("baccalaureate") ||
+    normalized.includes("python")
+  ) {
+    return ACADEMIC_TRACKS.find((track) => track.id === "baccalaureate") ?? ACADEMIC_TRACKS[0];
+  }
+
+  if (
+    normalized.includes("حاسبات") ||
+    normalized.includes("جامعة") ||
+    normalized.includes("جامعي") ||
+    normalized.includes("cs") ||
+    normalized.includes("computer")
+  ) {
+    return ACADEMIC_TRACKS.find((track) => track.id === "computer-science") ?? ACADEMIC_TRACKS[0];
+  }
+
+  if (normalized.includes("هندسة") || normalized.includes("engineering")) {
+    return ACADEMIC_TRACKS.find((track) => track.id === "engineering") ?? ACADEMIC_TRACKS[0];
+  }
+
+  return ACADEMIC_TRACKS[0];
 }

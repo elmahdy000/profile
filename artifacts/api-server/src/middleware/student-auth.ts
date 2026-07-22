@@ -39,6 +39,17 @@ export function canStudentAccessCategory(
   );
 }
 
+function isBaccalaureateStage(stageStr: string | null | undefined): boolean {
+  if (!stageStr) return false;
+  const norm = String(stageStr).trim().toLowerCase();
+  return (
+    norm.includes("بكالوريا") ||
+    norm.includes("ثانوي") ||
+    norm.includes("ثانوية") ||
+    norm.includes("baccalaureate")
+  );
+}
+
 export function canStudentAccessContent(
   student: ApprovedStudent,
   category: string,
@@ -52,7 +63,8 @@ export function canStudentAccessContent(
   const stageMatches = contentStages.some(
     (value) =>
       normalizeCategory(value) === normalizeCategory(studentStage) ||
-      normalizeCategory(value) === normalizeCategory("عام"),
+      normalizeCategory(value) === normalizeCategory("عام") ||
+      (isBaccalaureateStage(studentStage) && isBaccalaureateStage(value)),
   );
   const assignedCourse = (student.enrolledCategories ?? []).some(
     (value) => normalizeCategory(value) === normalizeCategory(category),
