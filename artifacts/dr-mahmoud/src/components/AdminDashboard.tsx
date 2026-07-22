@@ -3135,41 +3135,78 @@ export default function AdminDashboard() {
                     </p>
                   </div>
                 </div>
-                <fieldset className="md:col-span-2 rounded-xl border bg-muted/20 p-4">
+                <fieldset className="md:col-span-2 rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-4">
                   <legend className="px-2 text-xs font-bold text-muted-foreground">
-                    المراحل الدراسية — اختار مرحلة أو أكتر
+                    المراحل الدراسية — اختار مرحلة أو أكتر (البكالوريا / الثانوي / الجامعة)
                   </legend>
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                    {availableVideoStages.map((stage) => {
-                      const checked = videoForm.stages.includes(stage);
-                      return (
-                        <label
-                          key={stage}
-                          className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-3 text-xs font-bold transition ${checked ? "border-primary bg-primary/10 text-primary" : "bg-background hover:border-primary/40"}`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => {
-                              const stages = checked
-                                ? videoForm.stages.filter(
-                                    (item) => item !== stage,
-                                  )
-                                : [...videoForm.stages, stage];
-                              setVideoForm({
-                                ...videoForm,
-                                stages,
-                                stage: stages[0] || "",
-                              });
-                            }}
-                          />
-                          {stage === "عام" ? "كل المراحل" : stage}
-                        </label>
-                      );
-                    })}
+
+                  {ACADEMIC_TRACKS.map((track) => (
+                    <div key={track.id} className="space-y-2">
+                      <div className="flex items-center justify-between border-b border-border/40 pb-1.5">
+                        <h5 className="text-[11px] font-bold text-primary flex items-center gap-1.5">
+                          <span>{track.title}</span>
+                        </h5>
+                        <span className="text-[10px] text-muted-foreground font-medium">
+                          {track.eyebrow}
+                        </span>
+                      </div>
+                      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        {track.stages.map((stage) => {
+                          const checked = videoForm.stages.includes(stage);
+                          return (
+                            <label
+                              key={stage}
+                              className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-bold transition ${checked ? "border-primary bg-primary/10 text-primary shadow-sm" : "bg-background hover:border-primary/40 text-foreground/80"}`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => {
+                                  const stages = checked
+                                    ? videoForm.stages.filter(
+                                        (item) => item !== stage,
+                                      )
+                                    : [...videoForm.stages, stage];
+                                  setVideoForm({
+                                    ...videoForm,
+                                    stages,
+                                    stage: stages[0] || "",
+                                  });
+                                }}
+                              />
+                              <span>{stage}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+
+                  <div className="pt-2 border-t border-border/40">
+                    <label
+                      className={`flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-xs font-bold transition ${videoForm.stages.includes("عام") ? "border-primary bg-primary/10 text-primary shadow-sm" : "bg-background hover:border-primary/40 text-foreground/80"}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={videoForm.stages.includes("عام")}
+                        onChange={() => {
+                          const checked = videoForm.stages.includes("عام");
+                          const stages = checked
+                            ? videoForm.stages.filter((item) => item !== "عام")
+                            : [...videoForm.stages, "عام"];
+                          setVideoForm({
+                            ...videoForm,
+                            stages,
+                            stage: stages[0] || "",
+                          });
+                        }}
+                      />
+                      <span>🌐 كل المراحل (متاح لكل الطلاب)</span>
+                    </label>
                   </div>
-                  <p className="mt-2 text-[11px] text-muted-foreground">
-                    الفيديو هيظهر للطالب لو مرحلته موجودة ضمن الاختيارات دي.
+
+                  <p className="text-[11px] text-muted-foreground">
+                    الفيديو هيظهر للطالب لو مرحلته الدراسية موجودة ضمن الاختيارات دي.
                   </p>
                 </fieldset>
 
@@ -3189,8 +3226,8 @@ export default function AdminDashboard() {
                         ...videoForm,
                         courseId: e.target.value,
                         category: course?.title || "",
-                        stages: nextStages[0] ? [nextStages[0]] : [],
-                        stage: nextStages[0] || "",
+                        stages: videoForm.stages.length ? videoForm.stages : (nextStages[0] ? [nextStages[0]] : []),
+                        stage: videoForm.stage || nextStages[0] || "",
                         order: getNextLessonNumber(
                           course?.title || "",
                           videoForm.learningMode,
