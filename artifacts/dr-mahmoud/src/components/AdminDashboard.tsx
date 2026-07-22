@@ -110,6 +110,7 @@ export default function AdminDashboard() {
     | "podcasts"
     | "curriculums"
     | "videos"
+    | "upload-video"
     | "learning"
     | "settings"
   >("bookings");
@@ -1466,7 +1467,22 @@ export default function AdminDashboard() {
                 }`}
               >
                 <VideoIcon className="w-5 h-5" />
-                <span>الفيديوهات والقوائم</span>
+                <span>مكتبة الفيديوهات والقوائم</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  openVideoModal("add");
+                  setActiveTab("upload-video");
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-right text-sm font-bold transition-all ${
+                  activeTab === "upload-video"
+                    ? "bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/20"
+                    : "bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20"
+                }`}
+              >
+                <Upload className="w-5 h-5" />
+                <span>🎬 رفع فيديو جديد</span>
               </button>
 
               <button
@@ -2397,6 +2413,394 @@ export default function AdminDashboard() {
                         ))}
                     </div>
                   )}
+                </div>
+              )}
+
+              {activeTab === "upload-video" && (
+                <div className="space-y-6 max-w-4xl mx-auto">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
+                    <div>
+                      <h2 className="text-2xl font-black text-foreground flex items-center gap-2">
+                        <Upload className="w-6 h-6 text-primary" />
+                        <span>مركز رفع ونشر الفيديوهات والدروس</span>
+                      </h2>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        ارفع فيديوهات الشرح المباشرة مع العداد الديجيتال، غلاف الصورة، وتحديد الكورس والمستهدفين بسهولة
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setActiveTab("videos")}
+                      className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground/80 rounded-xl text-xs font-bold transition-colors border border-border shrink-0"
+                    >
+                      العودة لمكتبة الفيديوهات
+                    </button>
+                  </div>
+
+                  {/* Info Banner */}
+                  <div className="bg-primary/10 border border-primary/20 rounded-2xl p-4 flex items-center gap-3 text-xs text-primary">
+                    <span className="text-xl">⚡</span>
+                    <div>
+                      <p className="font-bold">ملاحظة للتسهيل عليك أثناء الرفع:</p>
+                      <p className="text-muted-foreground mt-0.5">
+                        تم تفعيل مرحلة «كل المراحل (عام للجميع)» افتراضياً حتى لا تتغلب في تحديد المستهدفين، ويمكنك تخصيص الكورس والمراحل بالأسفل إن رغبت.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Dedicated Upload Form Card */}
+                  <form onSubmit={async (e) => {
+                    await handleVideoSubmit(e);
+                    setActiveTab("videos");
+                  }} className="bg-card border border-border rounded-3xl p-6 shadow-xl space-y-6">
+                    {/* Section 1: Video File Upload */}
+                    <div className="space-y-3 border-b border-border/40 pb-6">
+                      <div className="flex items-center gap-2">
+                        <span className="grid h-7 w-7 place-items-center rounded-full bg-primary text-xs font-black text-white">1</span>
+                        <h3 className="font-bold text-foreground text-base">ملف الفيديو للشرح</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <span className="block text-xs font-semibold text-muted-foreground mb-1">
+                            خيار 1: اختيار فيديو من جهازك (مع العداد الديجيتال)
+                          </span>
+                          <div className="relative border-2 border-dashed border-border hover:border-primary/50 rounded-2xl p-4 bg-muted/30 transition-all flex flex-col items-center justify-center min-h-[120px] text-center group">
+                            <input
+                              type="file"
+                              accept="video/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) setSelectedVideoFile(file);
+                              }}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                            />
+                            {selectedVideoFile ? (
+                              <div className="space-y-1 z-0">
+                                <span className="text-xs font-bold text-primary block line-clamp-1">{selectedVideoFile.name}</span>
+                                <span className="text-[11px] text-muted-foreground block">
+                                  الحجم: {(selectedVideoFile.size / (1024 * 1024)).toFixed(1)} MB
+                                </span>
+                                <span className="text-[10px] text-emerald-400 font-bold block mt-1">✓ جاهز للرفع عند الحفظ</span>
+                              </div>
+                            ) : (
+                              <div className="space-y-1.5 pointer-events-none">
+                                <Upload className="w-7 h-7 text-primary/70 mx-auto group-hover:scale-110 transition-transform" />
+                                <span className="text-xs font-bold text-foreground block">انقر هنا لاختيار فيديو من جهازك</span>
+                                <span className="text-[10px] text-muted-foreground block">MP4, WebM, MOV حتي 500MB</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <span className="block text-xs font-semibold text-muted-foreground mb-1">
+                            خيار 2: أو اكتب رابط يوتيوب / رابط خارجي مباشر
+                          </span>
+                          <input
+                            type="text"
+                            value={videoForm.youtubeUrl}
+                            onChange={(e) => setVideoForm({ ...videoForm, youtubeUrl: e.target.value })}
+                            placeholder="https://youtube.com/watch?v=... أو رابط مباشر"
+                            className="w-full bg-background border border-border rounded-2xl px-4 py-3 text-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm h-[120px]"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Video Stream Digital HUD Progress */}
+                      {isVideoUploading && (
+                        <div className="mt-4 p-4 rounded-2xl bg-[#090D14] border border-primary/40 shadow-2xl relative overflow-hidden space-y-3">
+                          <div className="flex items-center justify-between border-b border-primary/20 pb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-sm shadow-emerald-500" />
+                              <span className="text-xs font-mono font-bold text-primary tracking-wider uppercase">
+                                DIGITAL STREAM HUD :: UPLOADING VIDEO
+                              </span>
+                            </div>
+                            <span className="text-2xl font-black font-mono text-primary drop-shadow-[0_0_10px_rgba(var(--primary-rgb),0.8)]">
+                              {String(videoUploadProgress).padStart(3, "0")}%
+                            </span>
+                          </div>
+
+                          <div className="w-full bg-slate-900 rounded-full h-3 overflow-hidden border border-primary/30 relative">
+                            <div
+                              className="bg-gradient-to-r from-primary/80 via-primary to-emerald-400 h-full transition-all duration-200 relative"
+                              style={{ width: `${videoUploadProgress}%` }}
+                            >
+                              <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.4)_50%,transparent_100%)] animate-[shimmer_1.5s_infinite]" />
+                            </div>
+                          </div>
+
+                          {videoUploadStats && (
+                            <div className="grid grid-cols-3 gap-2 pt-1 text-center font-mono">
+                              <div className="bg-black/40 p-2 rounded-xl border border-white/5">
+                                <span className="text-[10px] text-muted-foreground block">السرعة الحية</span>
+                                <span className="text-xs font-bold text-emerald-400">⚡ {videoUploadStats.speedMBps} MB/s</span>
+                              </div>
+                              <div className="bg-black/40 p-2 rounded-xl border border-white/5">
+                                <span className="text-[10px] text-muted-foreground block">البيانات المرفوعة</span>
+                                <span className="text-xs font-bold text-primary">
+                                  {(videoUploadStats.loadedBytes / (1024 * 1024)).toFixed(1)} / {(videoUploadStats.totalBytes / (1024 * 1024)).toFixed(1)} MB
+                                </span>
+                              </div>
+                              <div className="bg-black/40 p-2 rounded-xl border border-white/5">
+                                <span className="text-[10px] text-muted-foreground block">الوقت المتبقي</span>
+                                <span className="text-xs font-bold text-amber-400">
+                                  ⏳ {videoUploadStats.remainingSeconds > 60 ? `${Math.ceil(videoUploadStats.remainingSeconds / 60)} دقيقة` : `${videoUploadStats.remainingSeconds} ثانية`}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Section 2: Thumbnail Image Cover */}
+                    <div className="space-y-3 border-b border-border/40 pb-6">
+                      <div className="flex items-center gap-2">
+                        <span className="grid h-7 w-7 place-items-center rounded-full bg-primary text-xs font-black text-white">2</span>
+                        <h3 className="font-bold text-foreground text-base">صورة غلاف الدرس (Thumbnail)</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <span className="block text-xs font-semibold text-muted-foreground mb-1">
+                            رفع غلاف من جهازك
+                          </span>
+                          <div className="relative border border-dashed border-border hover:border-primary/50 rounded-xl p-3 bg-muted/50 transition-colors flex flex-col items-center justify-center min-h-[90px]">
+                            {isThumbnailUploading ? (
+                              <div className="flex flex-col items-center gap-2">
+                                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                                <span className="text-xs text-muted-foreground">جاري الرفع...</span>
+                              </div>
+                            ) : (
+                              <>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handleThumbnailImageUpload}
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                />
+                                <span className="text-xs text-muted-foreground text-center font-bold">
+                                  انقر هنا لاختيار صورة الغلاف
+                                </span>
+                                <span className="text-[10px] text-muted-foreground mt-1">PNG, JPG, WebP حتى 10MB</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <span className="block text-xs font-semibold text-muted-foreground mb-1">
+                            أو رابط مباشر لصورة الغلاف
+                          </span>
+                          <input
+                            type="text"
+                            value={videoForm.thumbnailUrl}
+                            onChange={(e) => setVideoForm({ ...videoForm, thumbnailUrl: e.target.value })}
+                            placeholder="https://domain.com/cover.jpg"
+                            className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm h-[90px]"
+                          />
+                        </div>
+                      </div>
+
+                      {videoForm.thumbnailUrl && (
+                        <div className="flex items-center gap-3 p-3 bg-background border border-border rounded-xl">
+                          <img
+                            src={videoForm.thumbnailUrl}
+                            alt="Cover Preview"
+                            className="w-20 h-14 object-cover rounded-lg border"
+                          />
+                          <div className="flex-1">
+                            <span className="text-xs font-bold text-emerald-400 block">✓ تم تعيين صورة الغلاف بنجاح</span>
+                            <span className="text-[10px] text-muted-foreground block line-clamp-1">{videoForm.thumbnailUrl}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setVideoForm({ ...videoForm, thumbnailUrl: "" })}
+                            className="text-xs text-red-400 font-bold hover:underline"
+                          >
+                            حذف
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Section 3: Lesson Details */}
+                    <div className="space-y-4 border-b border-border/40 pb-6">
+                      <div className="flex items-center gap-2">
+                        <span className="grid h-7 w-7 place-items-center rounded-full bg-primary text-xs font-black text-white">3</span>
+                        <h3 className="font-bold text-foreground text-base">بيانات الدرس والتصنيف</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="md:col-span-2">
+                          <label className="block text-xs font-bold text-foreground mb-1">عنوان الدرس / الفيديو *</label>
+                          <input
+                            type="text"
+                            required
+                            value={videoForm.title}
+                            onChange={(e) => setVideoForm({ ...videoForm, title: e.target.value })}
+                            placeholder="مثال: الدرس الأول - مقدمة في البرمجة وهياكل البيانات"
+                            className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm font-medium"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-foreground mb-1">الكورس التابع له الفيديو *</label>
+                          <select
+                            required
+                            value={videoForm.courseId}
+                            onChange={(e) => {
+                              const course = coursesQuery.data?.find(
+                                (item) => String(item.id) === e.target.value,
+                              );
+                              const nextStages = getStagesForTrack(course?.category);
+                              setVideoForm({
+                                ...videoForm,
+                                courseId: e.target.value,
+                                category: course?.title || "",
+                                stages: videoForm.stages.length ? videoForm.stages : (nextStages[0] ? [nextStages[0]] : ["عام"]),
+                                stage: videoForm.stage || nextStages[0] || "عام",
+                                order: getNextLessonNumber(course?.title || "", videoForm.learningMode),
+                              });
+                            }}
+                            className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm font-medium"
+                          >
+                            <option value="">اختر الكورس</option>
+                            {coursesQuery.data?.map((course) => (
+                              <option key={course.id} value={course.id}>
+                                {course.title}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-foreground mb-1">نظام عرض السلسلة</label>
+                          <select
+                            value={videoForm.learningMode}
+                            onChange={(e) => setVideoForm({ ...videoForm, learningMode: e.target.value as "online" | "offline" | "both" })}
+                            className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm font-medium"
+                          >
+                            <option value="online">طلاب الأونلاين فقط</option>
+                            <option value="offline">طلاب الأوفلاين فقط</option>
+                            <option value="both">كل الطلاب (أونلاين وأوفلاين)</option>
+                          </select>
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <label className="block text-xs font-bold text-foreground mb-1">وصف تفصيلي للدرس (اختياري)</label>
+                          <textarea
+                            rows={3}
+                            value={videoForm.description}
+                            onChange={(e) => setVideoForm({ ...videoForm, description: e.target.value })}
+                            placeholder="اكتب النقاط الرئيسية المشروحة في هذا الفيديو..."
+                            className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm resize-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section 4: Target Stages Checkboxes */}
+                    <div className="space-y-3 pb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="grid h-7 w-7 place-items-center rounded-full bg-primary text-xs font-black text-white">4</span>
+                        <h3 className="font-bold text-foreground text-base">المستهدفون من الدرس (المراحل الدراسية)</h3>
+                      </div>
+                      <fieldset className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-4">
+                        <legend className="px-2 text-xs font-bold text-muted-foreground">
+                          تحديد المراحل المستهدفة (افتراضياً: كل المراحل)
+                        </legend>
+
+                        <div className="pb-2 border-b border-border/40">
+                          <label
+                            className={`flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-xs font-bold transition ${videoForm.stages.includes("عام") ? "border-primary bg-primary/10 text-primary shadow-sm" : "bg-background hover:border-primary/40 text-foreground/80"}`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={videoForm.stages.includes("عام")}
+                              onChange={() => {
+                                const checked = videoForm.stages.includes("عام");
+                                const stages = checked
+                                  ? videoForm.stages.filter((item) => item !== "عام")
+                                  : [...videoForm.stages, "عام"];
+                                setVideoForm({
+                                  ...videoForm,
+                                  stages,
+                                  stage: stages[0] || "",
+                                });
+                              }}
+                            />
+                            <span>🌐 كل المراحل (عام ومتاح لجميع الطلاب تلقائياً)</span>
+                          </label>
+                        </div>
+
+                        {ACADEMIC_TRACKS.map((track) => (
+                          <div key={track.id} className="space-y-2">
+                            <div className="flex items-center justify-between border-b border-border/40 pb-1.5">
+                              <h5 className="text-[11px] font-bold text-primary flex items-center gap-1.5">
+                                <span>{track.title}</span>
+                              </h5>
+                              <span className="text-[10px] text-muted-foreground font-medium">
+                                {track.eyebrow}
+                              </span>
+                            </div>
+                            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                              {track.stages.map((stage) => {
+                                const checked = videoForm.stages.includes(stage);
+                                return (
+                                  <label
+                                    key={stage}
+                                    className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition ${checked ? "border-primary bg-primary/10 text-primary shadow-sm" : "bg-background hover:border-primary/40 text-foreground/80"}`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={checked}
+                                      onChange={() => {
+                                        const stages = checked
+                                          ? videoForm.stages.filter((item) => item !== stage)
+                                          : [...videoForm.stages, stage];
+                                        setVideoForm({
+                                          ...videoForm,
+                                          stages,
+                                          stage: stages[0] || "",
+                                        });
+                                      }}
+                                    />
+                                    <span>{stage}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </fieldset>
+                    </div>
+
+                    {/* Submit Action Bar */}
+                    <div className="flex items-center justify-between border-t border-border pt-6">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("videos")}
+                        className="px-5 py-3 bg-muted hover:bg-muted/80 text-foreground/80 rounded-xl text-xs font-bold transition-colors border border-border"
+                      >
+                        إلغاء والعودة
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={createVideoMutation.isPending || updateVideoMutation.isPending || isVideoUploading}
+                        className="px-8 py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-xl text-sm transition-all shadow-xl shadow-primary/20 flex items-center gap-2 hover:scale-[1.02]"
+                      >
+                        {(createVideoMutation.isPending || updateVideoMutation.isPending || isVideoUploading) ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>جاري حفظ ونشر الدرس...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>🚀 حفظ ونشر الدرس فوراً</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
                 </div>
               )}
 
