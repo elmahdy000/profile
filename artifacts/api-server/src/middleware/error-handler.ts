@@ -43,7 +43,7 @@ export function errorHandler(
     const tooLarge = err.code === "LIMIT_FILE_SIZE";
     res.status(tooLarge ? 413 : 400).json({
       error: tooLarge
-        ? "حجم الملف أكبر من الحد المسموح (1 GB). اضغط الفيديو أو استخدم رابطًا خارجيًا."
+        ? "حجم الملف أكبر من الحد المسموح (150 MB). اضغط الملف أو اختر ملفًا أصغر."
         : err.message,
     });
     return;

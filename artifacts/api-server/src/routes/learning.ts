@@ -69,6 +69,10 @@ const allowedFileTypes = new Set([
   "image/png",
   "image/webp",
 ]);
+const allowedLearningFileExtensions = new Set([
+  ".pdf", ".zip", ".doc", ".docx", ".ppt", ".pptx", ".txt",
+  ".jpg", ".jpeg", ".png", ".webp",
+]);
 
 const learningFileUpload = multer({
   storage: multer.diskStorage({
@@ -83,8 +87,12 @@ const learningFileUpload = multer({
   }),
   limits: { fileSize: 150 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    if (allowedFileTypes.has(file.mimetype)) cb(null, true);
-    else cb(new Error("This learning file type is not allowed"));
+    const extension = path.extname(file.originalname).toLowerCase();
+    // Some browsers/operating systems report Office and ZIP files as
+    // application/octet-stream. The extension is validated as a fallback.
+    const genericMime = !file.mimetype || file.mimetype === "application/octet-stream";
+    if (allowedFileTypes.has(file.mimetype) || (genericMime && allowedLearningFileExtensions.has(extension))) cb(null, true);
+    else cb(new Error("صيغة الملف غير مدعومة. استخدم PDF أو Office أو ZIP أو TXT أو صورة."));
   },
 }).single("file");
 
@@ -564,6 +572,47 @@ router.get("/learning/notifications", requireStudent, async (_req, res, next) =>
   }
 });
 
+router.get("/learning/notifications/stream", requireStudent, async (req, res, next) => {
+  try {
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache, no-transform");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no");
+    res.flushHeaders();
+
+    let latestId = (await db
+      .select({ id: studentNotificationsTable.id })
+      .from(studentNotificationsTable)
+      .where(eq(studentNotificationsTable.studentId, student.id))
+      .orderBy(desc(studentNotificationsTable.id))
+      .limit(1))[0]?.id ?? 0;
+    res.write(`event: ready\ndata: ${JSON.stringify({ latestId })}\n\n`);
+
+    const timer = setInterval(async () => {
+      try {
+        const currentId = (await db
+          .select({ id: studentNotificationsTable.id })
+          .from(studentNotificationsTable)
+          .where(eq(studentNotificationsTable.studentId, student.id))
+          .orderBy(desc(studentNotificationsTable.id))
+          .limit(1))[0]?.id ?? 0;
+        if (currentId > latestId) {
+          latestId = currentId;
+          res.write(`event: refresh\ndata: ${JSON.stringify({ latestId })}\n\n`);
+        } else {
+          res.write(": keep-alive\n\n");
+        }
+      } catch {
+        res.write("event: error\ndata: {}\n\n");
+      }
+    }, 3000);
+    req.on("close", () => clearInterval(timer));
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.patch("/learning/notifications/:id/read", requireStudent, async (req, res, next) => {
   try {
     const student = res.locals.student as typeof studentsTable.$inferSelect;
@@ -727,7 +776,7 @@ router.post(
         })
         .returning();
       if (targetType === "videos") {
-        const validVideos = await db.select({ id: videosTable.id }).from(videosTable).where(inArray(videosTable.id, videoIds));
+        const validVideos = await db.select().from(videosTable).where(inArray(videosTable.id, videoIds));
         if (validVideos.length !== videoIds.length) {
           await db.delete(learningFilesTable).where(eq(learningFilesTable.id, file.id));
           fs.rmSync(req.file.path, { force: true });
@@ -737,6 +786,21 @@ router.post(
         await db.insert(videoFileAttachmentsTable).values(
           validVideos.map((video, order) => ({ videoId: video.id, fileId: file.id, order })),
         );
+      }
+      if (file.isPublished) {
+        const approvedStudents = await db.select().from(studentsTable).where(eq(studentsTable.status, "approved"));
+        const linkedVideos = targetType === "videos"
+          ? await db.select().from(videosTable).where(inArray(videosTable.id, videoIds))
+          : [];
+        const recipients = approvedStudents.filter((student) => targetType === "videos"
+          ? linkedVideos.some((video) => video.isPublished && canStudentAccessContent(student, video.category, video.stage, video.stages, video.courseId))
+          : canStudentAccessContent(student, file.category, file.stage, file.stages, file.courseId));
+        if (recipients.length) await db.insert(studentNotificationsTable).values(recipients.map((student) => ({
+          studentId: student.id,
+          type: "file",
+          title: "ملف جديد متاح لك",
+          message: `${file.title} متاح الآن داخل ملفاتك.`,
+        })));
       }
       res.status(201).json(file);
     } catch (error) {
@@ -857,6 +921,23 @@ router.patch(
       } else if (targetType === "stages") {
         await db.delete(videoFileAttachmentsTable).where(eq(videoFileAttachmentsTable.fileId, file.id));
       }
+      if (!currentFile.isPublished && file.isPublished) {
+        const approvedStudents = await db.select().from(studentsTable).where(eq(studentsTable.status, "approved"));
+        const linkedVideos = file.targetType === "videos"
+          ? (await db.select({ video: videosTable }).from(videoFileAttachmentsTable)
+              .innerJoin(videosTable, eq(videoFileAttachmentsTable.videoId, videosTable.id))
+              .where(eq(videoFileAttachmentsTable.fileId, file.id))).map(({ video }) => video)
+          : [];
+        const recipients = approvedStudents.filter((student) => file.targetType === "videos"
+          ? linkedVideos.some((video) => video.isPublished && canStudentAccessContent(student, video.category, video.stage, video.stages, video.courseId))
+          : canStudentAccessContent(student, file.category, file.stage, file.stages, file.courseId));
+        if (recipients.length) await db.insert(studentNotificationsTable).values(recipients.map((student) => ({
+          studentId: student.id,
+          type: "file",
+          title: "ملف جديد متاح لك",
+          message: `${file.title} متاح الآن داخل ملفاتك.`,
+        })));
+      }
       res.json(file);
     } catch (error) {
       next(error);
@@ -887,7 +968,7 @@ router.delete(
   },
 );
 
-router.get("/learning/files/:id/download", async (req, res, next) => {
+router.get(["/learning/files/:id/preview", "/learning/files/:id/download"], async (req, res, next) => {
   try {
     const student = await getApprovedStudent(req);
     if (!student && !isAdminRequest(req)) {
@@ -933,8 +1014,10 @@ router.get("/learning/files/:id/download", async (req, res, next) => {
     res.setHeader("Content-Type", file.mimeType);
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename*=UTF-8''${encodeURIComponent(file.originalName)}`,
+      `${req.path.endsWith("/preview") ? "inline" : "attachment"}; filename*=UTF-8''${encodeURIComponent(file.originalName)}`,
     );
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data: blob:");
     res.setHeader("Cache-Control", "private, no-store");
     fs.createReadStream(filePath).pipe(res);
   } catch (error) {
@@ -1234,6 +1317,17 @@ router.post("/admin/learning/quizzes", requireAdmin, async (req, res, next) => {
       })
       .returning();
     if (video) await db.update(videosTable).set({ quizId: quiz.id }).where(eq(videosTable.id, video.id));
+    if (quiz.isPublished) {
+      const approvedStudents = await db.select().from(studentsTable).where(eq(studentsTable.status, "approved"));
+      const recipients = approvedStudents.filter((student) =>
+        canStudentAccessContent(student, quiz.category, quiz.stage, quiz.stages, quiz.courseId));
+      if (recipients.length) await db.insert(studentNotificationsTable).values(recipients.map((student) => ({
+        studentId: student.id,
+        type: "quiz",
+        title: "اختبار جديد متاح لك",
+        message: `${quiz.title} جاهز الآن داخل الاختبارات.`,
+      })));
+    }
     res.status(201).json(quiz);
   } catch (error) {
     next(error);
@@ -1325,6 +1419,17 @@ router.patch(
       }
       if (current.videoId && current.videoId !== videoId) await db.update(videosTable).set({ quizId: null }).where(and(eq(videosTable.id, current.videoId), eq(videosTable.quizId, quizId)));
       if (videoId) await db.update(videosTable).set({ quizId }).where(eq(videosTable.id, videoId));
+      if (!current.isPublished && quiz.isPublished) {
+        const approvedStudents = await db.select().from(studentsTable).where(eq(studentsTable.status, "approved"));
+        const recipients = approvedStudents.filter((student) =>
+          canStudentAccessContent(student, quiz.category, quiz.stage, quiz.stages, quiz.courseId));
+        if (recipients.length) await db.insert(studentNotificationsTable).values(recipients.map((student) => ({
+          studentId: student.id,
+          type: "quiz",
+          title: "اختبار جديد متاح لك",
+          message: `${quiz.title} جاهز الآن داخل الاختبارات.`,
+        })));
+      }
       res.json(quiz);
     } catch (error) {
       next(error);

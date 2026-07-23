@@ -483,9 +483,12 @@ export function AdminLearning() {
         };
         request.onerror = () =>
           reject(new Error("تعذر الاتصال أثناء رفع الملف"));
+        request.onabort = () => reject(new Error("تم إلغاء رفع الملف قبل اكتماله"));
+        request.ontimeout = () => reject(new Error("استغرق رفع الملف وقتًا طويلًا. تحقق من الاتصال ثم حاول مرة أخرى"));
+        request.timeout = 10 * 60 * 1000;
         request.send(body);
       });
-      setFiles([created, ...files]);
+      setFiles((current) => [created, ...current]);
       setFileForm((current) => ({
         ...current,
         title: "",
@@ -670,7 +673,6 @@ export function AdminLearning() {
   const fileDestinationReady = fileForm.targetType === "videos"
     ? fileForm.videoIds.length > 0
     : Boolean(selectedFileTrack) && fileForm.stages.length > 0;
-  const fileUploadReady = Boolean(fileForm.file) && Boolean(fileForm.title.trim()) && fileDestinationReady && !isUploadingFile;
   const destinationSummary = fileForm.targetType === "videos"
     ? fileForm.videoIds.length
       ? `مرفق داخل ${fileForm.videoIds.length} ${fileForm.videoIds.length === 1 ? "درس" : "دروس"}`
@@ -1231,7 +1233,7 @@ export function AdminLearning() {
                       <Button
                         type="button"
                         variant="outline"
-                        disabled={!fileUploadReady}
+                        disabled={isUploadingFile}
                         onClick={() => void uploadFile(false)}
                         className="h-11"
                       >
@@ -1250,7 +1252,7 @@ export function AdminLearning() {
                     </div>
                     <Button
                       type="submit"
-                      disabled={!fileUploadReady}
+                      disabled={isUploadingFile}
                       className="h-11 px-6"
                     >
                       {isUploadingFile ? (

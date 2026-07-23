@@ -67,6 +67,7 @@ type LearningFile = {
   tags?: string[];
   order?: number;
   originalName: string;
+  mimeType?: string | null;
   sizeBytes: number;
   createdAt?: string;
 };
@@ -946,6 +947,7 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
 
 function FilesPanel({ files }: { files: LearningFile[] }) {
   const standaloneFiles = files.filter((file) => file.targetType !== "videos");
+  const [previewFile, setPreviewFile] = useState<LearningFile | null>(null);
   return (
     <section className="space-y-7" dir="rtl">
       <PageHeader title="الملفات والمرفقات" description="المذكرات والأكواد والتمارين الخاصة بمرحلتك وكورساتك." action={<StatusBadge>{standaloneFiles.length} ملف</StatusBadge>} />
@@ -958,17 +960,68 @@ function FilesPanel({ files }: { files: LearningFile[] }) {
               <div className="flex min-w-0 items-center gap-3"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-50 text-[#0B63CE]"><FileText className="h-5 w-5" /></span><div className="min-w-0"><h3 className="truncate text-base font-semibold">{file.title}</h3><p className="truncate text-[13px] text-slate-500">{file.originalName}</p></div></div>
               <span className="text-sm text-slate-600">{getTrack(file.category)?.title || file.category}</span>
               <span className="text-sm text-slate-500">{(file.sizeBytes / 1024 / 1024).toFixed(1)} MB</span>
-              <a
-                href={`/api/learning/files/${file.id}/download`}
+              <button
+                type="button"
+                onClick={() => setPreviewFile(file)}
                 className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-blue-200 px-4 text-sm font-bold text-[#0B63CE] hover:bg-blue-50"
               >
-                <Download className="h-4 w-4" /> تحميل
-              </a>
+                <Eye className="h-4 w-4" /> معاينة
+              </button>
             </article>
           ))}
         </div>
       )}
+      <AnimatePresence>
+        {previewFile && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/70 p-3 sm:p-6"
+            onMouseDown={(event) => { if (event.currentTarget === event.target) setPreviewFile(null); }}
+          >
+            <motion.section
+              initial={{ scale: 0.98, y: 12 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.98, y: 12 }}
+              role="dialog"
+              aria-modal="true"
+              aria-label={`معاينة ${previewFile.title}`}
+              className="flex h-[min(90vh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+            >
+              <header className="flex items-center justify-between gap-3 border-b px-4 py-3">
+                <div className="min-w-0"><strong className="block truncate">{previewFile.title}</strong><span className="block truncate text-xs text-slate-500">{previewFile.originalName}</span></div>
+                <button type="button" onClick={() => setPreviewFile(null)} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl hover:bg-slate-100" aria-label="إغلاق المعاينة"><X className="h-5 w-5" /></button>
+              </header>
+              <div className="min-h-0 flex-1 bg-slate-100 p-2 sm:p-4">
+                {previewFile.mimeType?.startsWith("image/") ? (
+                  <img src={`/api/learning/files/${previewFile.id}/preview`} alt={previewFile.title} className="h-full w-full object-contain" />
+                ) : previewFile.mimeType === "application/pdf" || previewFile.mimeType?.startsWith("text/") ? (
+                  <iframe src={`/api/learning/files/${previewFile.id}/preview`} title={previewFile.title} className="h-full w-full rounded-xl border bg-white" />
+                ) : (
+                  <div className="grid h-full place-items-center rounded-xl border bg-white p-8 text-center"><div><FileText className="mx-auto h-12 w-12 text-primary" /><strong className="mt-4 block">لا يمكن عرض هذا النوع داخل المتصفح</strong><p className="mt-2 text-sm text-slate-500">ارفع نسخة PDF من الملف لمعاينتها بأمان داخل المنصة.</p></div></div>
+                )}
+              </div>
+            </motion.section>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
+  );
+}
+
+function AppFilePreviewModal({ file, onClose }: { file: LearningFile | null; onClose: () => void }) {
+  if (!file) return null;
+  const previewUrl = `/api/learning/files/${file.id}/preview`;
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[110] grid place-items-center bg-slate-950/70 p-3 sm:p-6" onMouseDown={(event) => { if (event.currentTarget === event.target) onClose(); }}>
+      <motion.section initial={{ scale: 0.98, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.98, y: 12 }} role="dialog" aria-modal="true" aria-label={`معاينة ${file.title}`} className="flex h-[min(90vh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <header className="flex items-center justify-between gap-3 border-b px-4 py-3"><div className="min-w-0"><strong className="block truncate">{file.title}</strong><span className="block truncate text-xs text-slate-500">{file.originalName}</span></div><button type="button" onClick={onClose} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl hover:bg-slate-100" aria-label="إغلاق المعاينة"><X className="h-5 w-5" /></button></header>
+        <div className="min-h-0 flex-1 bg-slate-100 p-2 sm:p-4">
+          {file.mimeType?.startsWith("image/") ? <img src={previewUrl} alt={file.title} className="h-full w-full object-contain" /> : file.mimeType === "application/pdf" || file.mimeType?.startsWith("text/") ? <iframe src={previewUrl} title={file.title} className="h-full w-full rounded-xl border bg-white" /> : <div className="grid h-full place-items-center rounded-xl border bg-white p-8 text-center"><div><FileText className="mx-auto h-12 w-12 text-primary" /><strong className="mt-4 block">لا يمكن عرض هذا النوع داخل المتصفح</strong><p className="mt-2 text-sm text-slate-500">اطلب نسخة PDF لمعاينتها داخل المنصة.</p></div></div>}
+        </div>
+      </motion.section>
+    </motion.div>
   );
 }
 
@@ -1332,6 +1385,7 @@ export function StudentPlatform() {
   const [videos, setVideos] = useState<VideoSummary[]>([]);
   const [progress, setProgress] = useState<ProgressRow[]>([]);
   const [notifications, setNotifications] = useState<StudentNotification[]>([]);
+  const [linkedPreviewFile, setLinkedPreviewFile] = useState<LearningFile | null>(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
@@ -1434,6 +1488,19 @@ export function StudentPlatform() {
   useEffect(() => {
     void loadLearningData();
   }, [student]);
+  useEffect(() => {
+    if (!student) return;
+    const stream = new EventSource("/api/learning/notifications/stream", { withCredentials: true });
+    const refresh = () => {
+      void loadLearningData();
+      toast({ title: "محتوى جديد", description: "تم تحديث الدروس والملفات والاختبارات المتاحة لك." });
+    };
+    stream.addEventListener("refresh", refresh);
+    return () => {
+      stream.removeEventListener("refresh", refresh);
+      stream.close();
+    };
+  }, [student?.id]);
   if (loading)
     return (
       <div className="min-h-[70vh] grid place-items-center">
@@ -1480,6 +1547,15 @@ export function StudentPlatform() {
     <main
       className="min-h-screen bg-[#F7F9FC] pb-24 lg:pb-0"
       dir="rtl"
+      onClickCapture={(event) => {
+        const link = (event.target as HTMLElement).closest<HTMLAnchorElement>('a[href*="/api/learning/files/"]');
+        if (!link) return;
+        const match = link.getAttribute("href")?.match(/\/api\/learning\/files\/(\d+)\/(?:download|preview)/);
+        const file = match ? files.find((item) => item.id === Number(match[1])) : undefined;
+        if (!file) return;
+        event.preventDefault();
+        setLinkedPreviewFile(file);
+      }}
     >
       <div className="mx-auto grid max-w-[1600px] lg:grid-cols-[252px_1fr]">
         {sidebarOpen && <button className="fixed inset-0 z-40 bg-slate-950/35 lg:hidden" aria-label="إغلاق القائمة" onClick={() => setSidebarOpen(false)} />}
@@ -1560,7 +1636,13 @@ export function StudentPlatform() {
                           <button
                             key={notification.id}
                             type="button"
-                            onClick={() => void markNotificationRead(notification)}
+                            onClick={() => {
+                              void markNotificationRead(notification);
+                              if (notification.type === "lesson") setTab("lessons");
+                              if (notification.type === "file") setTab("files");
+                              if (notification.type === "quiz") setTab("quizzes");
+                              setShowNotifications(false);
+                            }}
                             className={`mb-1 w-full rounded-xl p-3 text-right transition hover:bg-muted ${notification.readAt ? "opacity-70" : "bg-primary/5"}`}
                           >
                             <span className="flex items-start gap-2">
@@ -1633,6 +1715,7 @@ export function StudentPlatform() {
       </nav>
 
       <AnimatePresence>
+        {linkedPreviewFile && <AppFilePreviewModal file={linkedPreviewFile} onClose={() => setLinkedPreviewFile(null)} />}
         {activeQuiz && (
           <motion.div
             className="fixed inset-0 z-[100] bg-black/70 p-4 overflow-y-auto flex items-center justify-center"

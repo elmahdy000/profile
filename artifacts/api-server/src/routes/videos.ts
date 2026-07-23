@@ -384,6 +384,7 @@ router.put("/videos/:id", requireAdmin, async (req, res, next) => {
   try {
     const id = parseInt(req.params.id as string, 10);
     const validated = UpdateVideoBody.parse(req.body);
+    const [currentVideo] = await db.select().from(videosTable).where(eq(videosTable.id, id)).limit(1);
     const stages =
       validated.stages !== undefined
         ? Array.from(
@@ -486,6 +487,19 @@ router.put("/videos/:id", requireAdmin, async (req, res, next) => {
         validated.attachmentFileIds ??
         (validated.pdfFileId ? [validated.pdfFileId] : []);
       await syncVideoAttachments(updated.id, attachmentIds);
+    }
+
+    if (currentVideo && !currentVideo.isPublished && updated.isPublished) {
+      const approvedStudents = await db.select().from(studentsTable).where(eq(studentsTable.status, "approved"));
+      const recipients = approvedStudents.filter((student) =>
+        canStudentAccessContent(student, updated.category, updated.stage, updated.stages, updated.courseId) &&
+        canStudentAccessLearningMode(student, updated.learningMode));
+      if (recipients.length) await db.insert(studentNotificationsTable).values(recipients.map((student) => ({
+        studentId: student.id,
+        type: "lesson",
+        title: "درس جديد اتضاف لك",
+        message: `${updated.title} متاح دلوقتي في كورس ${updated.category}.`,
+      })));
     }
 
     res.json({
