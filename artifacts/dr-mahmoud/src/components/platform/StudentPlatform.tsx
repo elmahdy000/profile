@@ -30,7 +30,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { VideoLessonsSection } from "@/components/YoutubeSection";
 import { toast } from "@/hooks/use-toast";
-import { getTrackForStage } from "@/data/academic";
+import { getTrack, getTrackForStage } from "@/data/academic";
 import {
   RegistrationStageSelector,
   createDefaultRegistrationStage,
@@ -956,7 +956,7 @@ function FilesPanel({ files }: { files: LearningFile[] }) {
           {standaloneFiles.map((file) => (
             <article key={file.id} className="grid gap-3 border-b border-slate-100 p-4 last:border-0 sm:grid-cols-[minmax(0,1fr)_160px_100px_auto] sm:items-center">
               <div className="flex min-w-0 items-center gap-3"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-50 text-[#0B63CE]"><FileText className="h-5 w-5" /></span><div className="min-w-0"><h3 className="truncate text-base font-semibold">{file.title}</h3><p className="truncate text-[13px] text-slate-500">{file.originalName}</p></div></div>
-              <span className="text-sm text-slate-600">{file.category}</span>
+              <span className="text-sm text-slate-600">{getTrack(file.category)?.title || file.category}</span>
               <span className="text-sm text-slate-500">{(file.sizeBytes / 1024 / 1024).toFixed(1)} MB</span>
               <a
                 href={`/api/learning/files/${file.id}/download`}

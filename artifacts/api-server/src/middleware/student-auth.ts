@@ -2,6 +2,7 @@ import { createHash } from "crypto";
 import type { Request, Response, NextFunction } from "express";
 import { and, eq, gt } from "drizzle-orm";
 import { db, studentSessionsTable, studentsTable } from "@workspace/db";
+import { getAcademicStageDimensions } from "../lib/academic-stages";
 
 export const STUDENT_COOKIE = "student_session";
 
@@ -48,6 +49,36 @@ function isGradeMatch(
 
   if (!sNorm || !cNorm) return false;
   if (sNorm === cNorm) return true;
+
+  const getSystem = (value: string) => {
+    if (value.includes("بكالوريا") || value.includes("baccalaureate")) return "baccalaureate";
+    if (value.includes("جامع") || value.includes("كلية") || value.includes("حاسبات") || value.includes("هندسة") || value.includes("university")) return "university";
+    if (value.includes("ثانوي") || value.includes("secondary")) return "secondary";
+    return null;
+  };
+  const getUniversityTrack = (value: string) => {
+    if (value.includes("حاسبات") || value.includes("computer") || value.includes("cs")) return "computer-science";
+    if (value.includes("هندسة") || value.includes("engineering")) return "engineering";
+    return null;
+  };
+  const getSchoolType = (value: string) => {
+    if (value.includes("لغات") || value.includes("languages")) return "languages";
+    if (value.includes("عربي") || value.includes("arabic")) return "arabic";
+    return null;
+  };
+
+  const studentSystem = getSystem(sNorm);
+  const contentSystem = getSystem(cNorm);
+  if (studentSystem && contentSystem && studentSystem !== contentSystem) return false;
+
+  const studentTrack = getUniversityTrack(sNorm);
+  const contentTrack = getUniversityTrack(cNorm);
+  if (studentTrack && contentTrack && studentTrack !== contentTrack) return false;
+
+  const studentSchoolType = getSchoolType(sNorm);
+  const contentSchoolType = getSchoolType(cNorm);
+  if (studentSchoolType && contentSchoolType && studentSchoolType !== contentSchoolType) return false;
+
   if (sNorm.includes(cNorm) || cNorm.includes(sNorm)) return true;
 
   // Grade 1 matching
@@ -65,7 +96,26 @@ function isGradeMatch(
   const g3c = cNorm.includes("ثالثة") || cNorm.includes("الثالث") || cNorm.includes("third") || cNorm.includes("year_3");
   if (g3s && g3c) return true;
 
+  // Grade 4 matching
+  const g4s = sNorm.includes("رابعة") || sNorm.includes("الرابع") || sNorm.includes("fourth") || sNorm.includes("year_4");
+  const g4c = cNorm.includes("رابعة") || cNorm.includes("الرابع") || cNorm.includes("fourth") || cNorm.includes("year_4");
+  if (g4s && g4c) return true;
+
   return false;
+}
+
+function isStructuredStageMatch(
+  student: ApprovedStudent,
+  contentStage: string,
+): boolean | null {
+  const content = getAcademicStageDimensions(contentStage);
+  if (!content || !student.educationSystem || !student.educationGrade) return null;
+  if (content.system !== student.educationSystem) return false;
+  if (content.grade !== student.educationGrade) return false;
+  if (content.system === "university") {
+    return Boolean(student.academicTrack) && content.track === student.academicTrack;
+  }
+  return Boolean(student.schoolType) && content.schoolType === student.schoolType;
 }
 
 export function canStudentAccessContent(
@@ -86,7 +136,10 @@ export function canStudentAccessContent(
 
   const stageMatches =
     isGeneralContent ||
-    contentStages.some((value) => isGradeMatch(studentStage, value));
+    contentStages.some((value) => {
+      const structuredMatch = isStructuredStageMatch(student, value);
+      return structuredMatch ?? isGradeMatch(studentStage, value);
+    });
 
   const assignedCourse = (student.enrolledCategories ?? []).some(
     (value) => normalizeCategory(value) === normalizeCategory(category),
@@ -103,6 +156,12 @@ export function canStudentAccessContent(
   const courseMatches = courseId
     ? assignedCourseId || categoryMatches
     : categoryMatches;
+
+  // Files published directly to educational stages are independent from a
+  // course enrollment. Their audience is the student's registered stage.
+  if (!courseId && !isGeneralContent && !hasCategoryGeneralStage) {
+    return stageMatches;
+  }
 
   // New accounts with explicit course assignments must match the course.
   // Legacy approved accounts predate course IDs, so their existing stage is

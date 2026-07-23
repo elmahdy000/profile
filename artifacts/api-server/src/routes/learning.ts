@@ -30,6 +30,7 @@ import {
   STUDENT_COOKIE,
 } from "../middleware/student-auth";
 import {
+  isAcademicStageAllowedForTrack,
   isAcceptedAcademicStage,
   resolveAcademicStageSelection,
 } from "../lib/academic-stages";
@@ -680,15 +681,24 @@ router.post(
       }
       if (targetType === "stages") {
         const [course] = courseId ? await db.select().from(coursesTable).where(eq(coursesTable.id, courseId)).limit(1) : [];
-        if (!course) {
+        const validTrackIds = new Set(["baccalaureate", "computer-science", "engineering"]);
+        if (courseId && !course) {
           fs.rmSync(req.file.path, { force: true });
           res.status(400).json({ error: "اختر كورسًا صحيحًا" }); return;
         }
-        if (course.stages.length && stages.some((stage) => !course.stages.includes(stage))) {
+        if (course?.stages.length && stages.some((stage) => !course.stages.includes(stage))) {
           fs.rmSync(req.file.path, { force: true });
           res.status(400).json({ error: "إحدى المراحل غير متاحة داخل الكورس" }); return;
         }
-        category = course.title;
+        if (!course && !validTrackIds.has(category)) {
+          fs.rmSync(req.file.path, { force: true });
+          res.status(400).json({ error: "اختر قسمًا تعليميًا صحيحًا" }); return;
+        }
+        if (!course && stages.some((stage) => !isAcademicStageAllowedForTrack(category, stage))) {
+          fs.rmSync(req.file.path, { force: true });
+          res.status(400).json({ error: "إحدى المراحل لا تنتمي إلى القسم التعليمي المختار" }); return;
+        }
+        category = course?.title || category;
       }
       const [file] = await db
         .insert(learningFilesTable)
@@ -768,8 +778,21 @@ router.patch(
       }
       const courseId = req.body.courseId !== undefined ? Number(req.body.courseId) || null : currentFile.courseId;
       const [course] = effectiveTarget === "stages" && courseId ? await db.select().from(coursesTable).where(eq(coursesTable.id, courseId)).limit(1) : [];
-      if (effectiveTarget === "stages" && (!course || (course.stages.length > 0 && effectiveStages.some((stage) => !course.stages.includes(stage))))) {
-        res.status(400).json({ error: "اختر كورسًا ومراحل صحيحة" }); return;
+      const requestedCategory = req.body.category !== undefined
+        ? String(req.body.category).trim()
+        : currentFile.category;
+      const validTrackIds = new Set(["baccalaureate", "computer-science", "engineering"]);
+      if (effectiveTarget === "stages" && courseId && !course) {
+        res.status(400).json({ error: "اختر كورسًا صحيحًا" }); return;
+      }
+      if (effectiveTarget === "stages" && course?.stages.length && effectiveStages.some((stage) => !course.stages.includes(stage))) {
+        res.status(400).json({ error: "إحدى المراحل غير متاحة داخل الكورس" }); return;
+      }
+      if (effectiveTarget === "stages" && !course && !validTrackIds.has(requestedCategory)) {
+        res.status(400).json({ error: "اختر قسمًا تعليميًا صحيحًا" }); return;
+      }
+      if (effectiveTarget === "stages" && !course && effectiveStages.some((stage) => !isAcademicStageAllowedForTrack(requestedCategory, stage))) {
+        res.status(400).json({ error: "إحدى المراحل لا تنتمي إلى القسم التعليمي المختار" }); return;
       }
       if (videoIds?.length) {
         const existingVideos = await db.select({ id: videosTable.id }).from(videosTable).where(inArray(videosTable.id, videoIds));
@@ -796,7 +819,7 @@ router.patch(
           }),
           ...(stages !== undefined && { stages, stage: stages[0] ?? null }),
           ...(effectiveTarget === "stages" && {
-            category: course!.title,
+            category: course?.title || requestedCategory,
             stages: effectiveStages,
             stage: effectiveStages[0] ?? null,
           }),
@@ -896,7 +919,7 @@ router.get("/learning/files/:id/download", async (req, res, next) => {
             ))
         : canStudentAccessContent(student, file.category, file.stage, file.stages, file.courseId))
     ) {
-      res.status(403).json({ error: "الملف مش ضمن الكورس المسجل ليك" });
+      res.status(403).json({ error: "الملف غير متاح لحسابك أو مرحلتك الدراسية" });
       return;
     }
     const filePath = path.join(

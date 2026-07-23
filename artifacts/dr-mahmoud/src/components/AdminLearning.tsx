@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { getStagesForTrack } from "@/data/academic";
+import { ACADEMIC_TRACKS, getStagesForTrack, getTrack } from "@/data/academic";
 
 type Student = {
   id: number;
@@ -201,7 +201,7 @@ export function AdminLearning() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileForm, setFileForm] = useState({
     title: "",
-    stage: "أولى بكالوريا",
+    stage: "",
     category: "",
     courseId: "",
     subject: "",
@@ -398,7 +398,7 @@ export function AdminLearning() {
   const uploadFile = async (isPublished: boolean) => {
     const hasTarget = fileForm.targetType === "videos"
       ? fileForm.videoIds.length > 0
-      : Boolean(fileForm.category) && fileForm.stages.length > 0;
+      : Boolean(getTrack(fileForm.category)) && fileForm.stages.length > 0;
     if (!fileForm.file) {
       toast({
         variant: "destructive",
@@ -415,7 +415,7 @@ export function AdminLearning() {
         variant: "destructive",
         description: fileForm.targetType === "videos"
           ? "اختر درسًا واحدًا على الأقل لربط الملف به."
-          : "اختر الكورس ومرحلة واحدة على الأقل.",
+          : "اختر القسم التعليمي ومرحلة واحدة على الأقل.",
       });
       return;
     }
@@ -425,7 +425,7 @@ export function AdminLearning() {
         file.targetType === fileForm.targetType &&
         (fileForm.targetType === "videos"
           ? (file.videoIds || []).some((id) => fileForm.videoIds.includes(String(id)))
-          : file.courseId === Number(fileForm.courseId) &&
+          : file.category === fileForm.category &&
             (file.stages || (file.stage ? [file.stage] : [])).some((stage) => fileForm.stages.includes(stage))),
     );
     if (duplicate) {
@@ -532,8 +532,12 @@ export function AdminLearning() {
     setFiles(files.map((f) => (f.id === file.id ? updated : f)));
   };
   const editFile = async (file: FileItem) => {
+    const linkedCourse = learningCourses.find((course) => course.id === file.courseId);
+    const fileTrack = getTrack(linkedCourse?.category || file.category);
     setEditingFile({
       ...file,
+      category: fileTrack?.id || file.category,
+      courseId: null,
       targetType: file.targetType || (file.videoIds?.length ? "videos" : "stages"),
       stages: file.stages?.length ? file.stages : file.stage ? [file.stage] : [],
       videoIds: file.videoIds || [],
@@ -549,8 +553,8 @@ export function AdminLearning() {
       toast({ variant: "destructive", description: "اختر درسًا واحدًا على الأقل." });
       return;
     }
-    if (editingFile.targetType !== "videos" && (!editingFile.courseId || !editingFile.stages?.length)) {
-      toast({ variant: "destructive", description: "اختر الكورس ومرحلة واحدة على الأقل." });
+    if (editingFile.targetType !== "videos" && (!getTrack(editingFile.category) || !editingFile.stages?.length)) {
+      toast({ variant: "destructive", description: "اختر القسم التعليمي ومرحلة واحدة على الأقل." });
       return;
     }
     const editingCategory = editingFile.targetType === "videos"
@@ -638,12 +642,16 @@ export function AdminLearning() {
   )
     .filter(Boolean)
     .sort((a, b) => a.localeCompare(b, "ar"));
-  const selectedFileCourse = learningCourses.find(
-    (course) => String(course.id) === fileForm.courseId,
-  );
-  const availableFileStages = selectedFileCourse?.stages?.length
-    ? selectedFileCourse.stages
-    : getStagesForTrack(selectedFileCourse?.category);
+  const selectedFileTrack = getTrack(fileForm.category);
+  const availableFileStages = selectedFileTrack?.stages ?? [];
+  const fileStageGroups = selectedFileTrack?.id === "baccalaureate"
+    ? [
+        { title: "البكالوريا", stages: availableFileStages.filter((stage) => stage.startsWith("البكالوريا")) },
+        { title: "الثانوية العامة", stages: availableFileStages.filter((stage) => stage.startsWith("الثانوية العامة")) },
+      ]
+    : selectedFileTrack
+      ? [{ title: selectedFileTrack.shortTitle, stages: availableFileStages }]
+      : [];
   const filteredLessonOptions = useMemo(() => {
     const query = lessonSearch.trim().toLowerCase();
     return videoOptions.filter((video) => {
@@ -661,15 +669,15 @@ export function AdminLearning() {
     : getStagesForTrack(selectedLessonCourse?.category);
   const fileDestinationReady = fileForm.targetType === "videos"
     ? fileForm.videoIds.length > 0
-    : Boolean(fileForm.courseId) && fileForm.stages.length > 0;
+    : Boolean(selectedFileTrack) && fileForm.stages.length > 0;
   const fileUploadReady = Boolean(fileForm.file) && Boolean(fileForm.title.trim()) && fileDestinationReady && !isUploadingFile;
   const destinationSummary = fileForm.targetType === "videos"
     ? fileForm.videoIds.length
       ? `مرفق داخل ${fileForm.videoIds.length} ${fileForm.videoIds.length === 1 ? "درس" : "دروس"}`
       : "لم تختر درسًا بعد"
-    : selectedFileCourse && fileForm.stages.length
-      ? `${selectedFileCourse.title} ← ${fileForm.stages.join("، ")}`
-      : "لم تحدد الكورس والمراحل بعد";
+    : selectedFileTrack && fileForm.stages.length
+      ? `${selectedFileTrack.title} ← ${fileForm.stages.join("، ")}`
+      : "لم تحدد القسم والمراحل بعد";
   const selectedQuizCourse = learningCourses.find(
     (course) => String(course.id) === quizForm.courseId,
   );
@@ -1017,51 +1025,60 @@ export function AdminLearning() {
                     {fileForm.targetType === "stages" && <>
                     <div className="md:col-span-2">
                       <span className="block text-xs font-black text-primary">الخطوة 2</span>
-                      <span className="block text-base font-black text-slate-900">حدد الكورس والمراحل</span>
+                      <span className="block text-base font-black text-slate-900">حدد القسم والمراحل</span>
+                      <p className="mt-1 text-xs text-slate-500">الملف سيصل للطلاب حسب مرحلتهم مباشرةً، ولا يحتاج إنشاء كورس أولًا.</p>
                     </div>
-                    <Field label="الكورس">
-                      <select
-                        required={fileForm.targetType === "stages"}
-                        value={fileForm.courseId}
-                        onChange={(e) => {
-                          const course = learningCourses.find(
-                            (item) => String(item.id) === e.target.value,
-                          );
-                          const stages = course?.stages?.length
-                            ? course.stages
-                            : getStagesForTrack(course?.category);
-                          setFileForm({
+                    <div className="md:col-span-2 grid gap-2 sm:grid-cols-3">
+                      {ACADEMIC_TRACKS.map((track) => {
+                        const selected = selectedFileTrack?.id === track.id;
+                        return <button
+                          key={track.id}
+                          type="button"
+                          onClick={() => setFileForm({
                             ...fileForm,
-                            category: course?.title || "",
-                            courseId: course ? String(course.id) : "",
-                            stage: stages[0] || "عام",
+                            category: track.id,
+                            courseId: "",
+                            stage: "",
                             stages: [],
-                          });
-                        }}
-                        className="input-admin min-h-12 border-slate-300 focus:border-primary"
-                      >
-                        <option value="">اختر الكورس أولًا</option>
-                        {learningCourses.map((course) => (
-                          <option key={course.id} value={course.id}>
-                            {course.title}
-                          </option>
-                        ))}
-                      </select>
-                    </Field>
+                          })}
+                          className={`rounded-xl border p-4 text-right transition ${selected ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/10" : "border-slate-200 bg-white text-slate-700 hover:border-primary/50"}`}
+                        >
+                          <strong className="block text-sm">{track.title}</strong>
+                          <span className="mt-1 block text-xs font-normal text-slate-500">{track.eyebrow}</span>
+                        </button>;
+                      })}
+                    </div>
+                    <div className="md:col-span-2">
                     <Field label="المراحل التي سيظهر لها الملف">
                       <div className="flex min-h-12 flex-wrap gap-2 rounded-xl border border-slate-300 bg-white p-2">
-                        {!fileForm.courseId && <span className="p-1 text-sm text-slate-400">اختر الكورس أولًا</span>}
-                        {fileForm.courseId && availableFileStages.map((stage) => {
-                          const checked = fileForm.stages.includes(stage);
-                          return <button key={stage} type="button" onClick={() => {
-                            const stages = checked ? fileForm.stages.filter((item) => item !== stage) : [...fileForm.stages, stage];
+                        {!selectedFileTrack && <span className="p-1 text-sm text-slate-400">اختر القسم التعليمي أولًا</span>}
+                        {selectedFileTrack && <button
+                          type="button"
+                          onClick={() => {
+                            const allSelected = availableFileStages.every((stage) => fileForm.stages.includes(stage));
+                            const stages = allSelected ? [] : [...availableFileStages];
                             setFileForm({ ...fileForm, stages, stage: stages[0] || "" });
-                          }} className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${checked ? "border-primary bg-primary text-white" : "border-slate-200 bg-slate-50 text-slate-600 hover:border-primary"}`}>
-                            {stage === "عام" ? "كل المراحل" : stage}
-                          </button>;
-                        })}
+                          }}
+                          className="rounded-lg border border-dashed border-primary px-3 py-2 text-xs font-black text-primary"
+                        >
+                          {availableFileStages.every((stage) => fileForm.stages.includes(stage)) ? "إلغاء تحديد الكل" : "تحديد كل مراحل القسم"}
+                        </button>}
+                        {fileStageGroups.map((group) => <div key={group.title} className="w-full rounded-xl bg-slate-50 p-3">
+                          <strong className="mb-2 block text-xs text-slate-800">{group.title}</strong>
+                          <div className="flex flex-wrap gap-2">{group.stages.map((stage) => {
+                            const checked = fileForm.stages.includes(stage);
+                            return <button key={stage} type="button" onClick={() => {
+                              const stages = checked ? fileForm.stages.filter((item) => item !== stage) : [...fileForm.stages, stage];
+                              setFileForm({ ...fileForm, stages, stage: stages[0] || "" });
+                            }} className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${checked ? "border-primary bg-primary text-white" : "border-slate-200 bg-white text-slate-600 hover:border-primary"}`}>
+                              {stage.replace(`${group.title} · `, "")}
+                            </button>;
+                          })}</div>
+                        </div>)}
                       </div>
-                    </Field></>}
+                    </Field>
+                    </div>
+                    </>}
                     <details className="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
                       <summary className="cursor-pointer select-none text-sm font-bold text-slate-700">تفاصيل إضافية (اختياري)</summary>
                       <div className="mt-4 grid gap-5 md:grid-cols-2">
@@ -1279,10 +1296,10 @@ export function AdminLearning() {
                         onChange={(e) => setFileCourseFilter(e.target.value)}
                         className="input-admin min-h-10"
                       >
-                        <option value="all">كل الكورسات</option>
+                        <option value="all">كل الأقسام والكورسات</option>
                         {availableCategories.map((category) => (
                           <option key={category} value={category}>
-                            {category}
+                            {getTrack(category)?.title || category}
                           </option>
                         ))}
                       </select>
@@ -1346,7 +1363,7 @@ export function AdminLearning() {
                               ? linkedLessons.length
                                 ? linkedLessons.map((video) => video.title).join("، ")
                                 : `داخل ${file.videoIds?.length || 0} درس`
-                              : `${file.category}${fileStages.length ? ` ← ${fileStages.join("، ")}` : ""}`}
+                              : `${getTrack(file.category)?.title || file.category}${fileStages.length ? ` ← ${fileStages.join("، ")}` : ""}`}
                           </div>
                           <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
                             <span>{(file.sizeBytes / 1024 / 1024).toFixed(1)} MB</span>
@@ -1396,7 +1413,7 @@ export function AdminLearning() {
                                 </div>
                               </div>
                             </td>
-                            <td className="p-4 font-semibold">{file.targetType === "videos" ? "داخل درس" : file.category}</td>
+                            <td className="p-4 font-semibold">{file.targetType === "videos" ? "داخل درس" : getTrack(file.category)?.title || file.category}</td>
                             <td className="max-w-56 p-4 text-slate-600">
                               {file.targetType === "videos"
                                 ? videoOptions.filter((video) => file.videoIds?.includes(video.id)).map((video) => video.title).join("، ") || `${file.videoIds?.length || 0} درس`
@@ -1500,7 +1517,10 @@ export function AdminLearning() {
                     <div className="mb-5 flex items-center justify-between"><div><h3 className="text-lg font-black">تعديل الملف</h3><p className="text-xs text-slate-500">غيّر مكان ظهوره بدون إعادة رفعه.</p></div><button type="button" onClick={() => setEditingFile(null)}><X className="h-5 w-5" /></button></div>
                     <Field label="اسم الملف"><input className="input-admin" value={editingFile.title} onChange={(event) => setEditingFile({ ...editingFile, title: event.target.value })} /></Field>
                     <div className="my-4 grid grid-cols-2 gap-2">{([['stages', 'مراحل محددة'], ['videos', 'فيديو أو درس']] as const).map(([value, label]) => <button type="button" key={value} onClick={() => setEditingFile({ ...editingFile, targetType: value, stages: [], videoIds: [] })} className={`rounded-xl border p-3 font-bold ${editingFile.targetType === value ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200'}`}>{label}</button>)}</div>
-                    {editingFile.targetType === "videos" ? <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border p-3">{videoOptions.map((video) => { const checked = editingFile.videoIds?.includes(video.id) || false; return <label key={video.id} className="flex gap-3 rounded-lg p-2 hover:bg-slate-50"><input type="checkbox" checked={checked} onChange={() => setEditingFile({ ...editingFile, videoIds: checked ? editingFile.videoIds?.filter((id) => id !== video.id) : [...(editingFile.videoIds || []), video.id] })} /><span><strong className="block text-sm">{video.title}</strong><small>{video.category}</small></span></label>; })}</div> : <div className="space-y-3"><select className="input-admin" value={editingFile.courseId || ""} onChange={(event) => { const course = learningCourses.find((item) => item.id === Number(event.target.value)); setEditingFile({ ...editingFile, courseId: course?.id || null, category: course?.title || "", stages: [] }); }}><option value="">اختر الكورس</option>{learningCourses.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}</select><div className="flex flex-wrap gap-2 rounded-xl border p-3">{(() => { const course = learningCourses.find((item) => item.id === editingFile.courseId); return (course?.stages?.length ? course.stages : getStagesForTrack(course?.category)); })().map((stage) => { const checked = editingFile.stages?.includes(stage) || false; return <button type="button" key={stage} onClick={() => setEditingFile({ ...editingFile, stages: checked ? editingFile.stages?.filter((item) => item !== stage) : [...(editingFile.stages || []), stage] })} className={`rounded-lg border px-3 py-2 text-xs font-bold ${checked ? 'bg-primary text-white' : 'bg-slate-50'}`}>{stage}</button>; })}</div></div>}
+                    {editingFile.targetType === "videos" ? <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border p-3">{videoOptions.map((video) => { const checked = editingFile.videoIds?.includes(video.id) || false; return <label key={video.id} className="flex gap-3 rounded-lg p-2 hover:bg-slate-50"><input type="checkbox" checked={checked} onChange={() => setEditingFile({ ...editingFile, videoIds: checked ? editingFile.videoIds?.filter((id) => id !== video.id) : [...(editingFile.videoIds || []), video.id] })} /><span><strong className="block text-sm">{video.title}</strong><small>{video.category}</small></span></label>; })}</div> : <div className="space-y-3">
+                      <div className="grid gap-2 sm:grid-cols-3">{ACADEMIC_TRACKS.map((track) => <button type="button" key={track.id} onClick={() => setEditingFile({ ...editingFile, courseId: null, category: track.id, stages: [] })} className={`rounded-xl border p-3 text-sm font-bold ${getTrack(editingFile.category)?.id === track.id ? "border-primary bg-primary/5 text-primary" : "border-slate-200"}`}>{track.shortTitle}</button>)}</div>
+                      <div className="flex flex-wrap gap-2 rounded-xl border p-3">{(getTrack(editingFile.category)?.stages || []).map((stage) => { const checked = editingFile.stages?.includes(stage) || false; return <button type="button" key={stage} onClick={() => setEditingFile({ ...editingFile, stages: checked ? editingFile.stages?.filter((item) => item !== stage) : [...(editingFile.stages || []), stage] })} className={`rounded-lg border px-3 py-2 text-xs font-bold ${checked ? 'bg-primary text-white' : 'bg-slate-50'}`}>{stage}</button>; })}</div>
+                    </div>}
                     <div className="mt-5 flex justify-end gap-2"><Button variant="outline" onClick={() => setEditingFile(null)}>إلغاء</Button><Button onClick={() => void saveEditedFile()}>حفظ التعديلات</Button></div>
                   </div>
                 </div>

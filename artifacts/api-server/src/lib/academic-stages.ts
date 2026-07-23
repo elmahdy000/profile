@@ -60,6 +60,68 @@ export function isAcceptedAcademicStage(value: string): boolean {
   return acceptedStages.has(value.trim());
 }
 
+export type AcademicStageDimensions = {
+  system: "baccalaureate" | "general_secondary" | "university";
+  grade: "first_secondary" | "second_secondary" | "third_secondary" | "university_year_1" | "university_year_2" | "university_year_3" | "university_year_4";
+  schoolType?: "arabic" | "languages";
+  track?: "general" | "computer_science" | "engineering";
+};
+
+export function getAcademicStageDimensions(value: string): AcademicStageDimensions | null {
+  const stage = value.trim();
+  const system = stage.startsWith("البكالوريا")
+    ? "baccalaureate"
+    : stage.startsWith("الثانوية العامة")
+      ? "general_secondary"
+      : stage.startsWith("المرحلة الجامعية")
+        ? "university"
+        : null;
+  if (!system) return null;
+
+  if (system === "university") {
+    const grade = stage.includes("الفرقة الأولى")
+      ? "university_year_1"
+      : stage.includes("الفرقة الثانية")
+        ? "university_year_2"
+        : stage.includes("الفرقة الثالثة")
+          ? "university_year_3"
+          : stage.includes("الفرقة الرابعة")
+            ? "university_year_4"
+            : null;
+    const track = stage.includes("حاسبات ومعلومات")
+      ? "computer_science"
+      : stage.includes("الهندسة")
+        ? "engineering"
+        : null;
+    return grade && track ? { system, grade, track } : null;
+  }
+
+  const grade = stage.includes("الصف الأول")
+    ? "first_secondary"
+    : stage.includes("الصف الثاني")
+      ? "second_secondary"
+      : stage.includes("الصف الثالث")
+        ? "third_secondary"
+        : null;
+  const schoolType = stage.includes("لغات")
+    ? "languages"
+    : stage.includes("عربي")
+      ? "arabic"
+      : null;
+  return grade && schoolType
+    ? { system, grade, schoolType, track: "general" }
+    : null;
+}
+
+export function isAcademicStageAllowedForTrack(trackId: string, stage: string): boolean {
+  const dimensions = getAcademicStageDimensions(stage);
+  if (!dimensions) return false;
+  if (trackId === "baccalaureate") return dimensions.system !== "university";
+  if (trackId === "computer-science") return dimensions.system === "university" && dimensions.track === "computer_science";
+  if (trackId === "engineering") return dimensions.system === "university" && dimensions.track === "engineering";
+  return false;
+}
+
 const SYSTEM_LABELS = {
   baccalaureate: "البكالوريا",
   general_secondary: "الثانوية العامة",
