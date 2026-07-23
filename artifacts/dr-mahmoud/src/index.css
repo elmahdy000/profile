@@ -14,6 +14,40 @@
   outline: none;
 }
 
+/* Educational admin workspace — visual-only refinement. */
+.admin-learning-workspace {
+  color: #142033;
+  --admin-primary: #1266d4;
+  --admin-border: #e1e7f0;
+  --admin-muted: #66758c;
+}
+.admin-learning-workspace .input-admin {
+  border-color: var(--admin-border);
+  border-radius: 10px;
+  background: #fff;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.admin-learning-workspace .input-admin:focus {
+  border-color: var(--admin-primary);
+  box-shadow: 0 0 0 3px rgb(18 102 212 / 10%);
+}
+.admin-learning-workspace article,
+.admin-learning-workspace form {
+  border-color: var(--admin-border);
+}
+.admin-learning-workspace article {
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+.admin-learning-workspace article:hover {
+  border-color: #cbd7e8;
+  box-shadow: 0 8px 24px rgb(20 32 51 / 6%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-learning-workspace *,
+  .admin-learning-workspace *::before,
+  .admin-learning-workspace *::after { transition: none !important; }
+}
+
 /* ── Self-hosted Cairo (no network dependency) ── */
 /* Arabic subset */
 @font-face { font-family: 'Cairo'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/cairo-arabic-400.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FDFC-FDFD; }

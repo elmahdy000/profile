@@ -23,6 +23,8 @@ import {
   FileCheck2,
   AlertCircle,
   Edit2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -234,6 +236,8 @@ export function AdminLearning() {
   const [copiedStudentId, setCopiedStudentId] = useState<number | null>(null);
   const [isImportingQuestions, setIsImportingQuestions] = useState(false);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
+  const [quizStageSearch, setQuizStageSearch] = useState("");
+  const [collapsedQuestions, setCollapsedQuestions] = useState<Set<number>>(new Set());
   const quizImportInputRef = useRef<HTMLInputElement>(null);
 
   const resetQuizForm = () => {
@@ -722,6 +726,26 @@ export function AdminLearning() {
         i === index ? { ...q, ...patch } : q,
       ),
     });
+  const duplicateQuestion = (index: number) => {
+    const question = quizForm.questions[index];
+    setQuizForm({
+      ...quizForm,
+      questions: [
+        ...quizForm.questions.slice(0, index + 1),
+        { ...question, options: [...question.options] },
+        ...quizForm.questions.slice(index + 1),
+      ],
+    });
+    setCollapsedQuestions(new Set());
+  };
+  const toggleQuestion = (index: number) => {
+    setCollapsedQuestions((current) => {
+      const next = new Set(current);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  };
   const availableCategories = Array.from(
     new Set([
       ...videoCategories,
@@ -770,6 +794,9 @@ export function AdminLearning() {
     (course) => String(course.id) === quizForm.courseId,
   );
   const availableQuizStages = selectedQuizCourse?.stages?.length ? selectedQuizCourse.stages : getStagesForTrack(selectedQuizCourse?.category);
+  const visibleQuizStages = availableQuizStages.filter((stage) =>
+    stage.toLocaleLowerCase("ar").includes(quizStageSearch.trim().toLocaleLowerCase("ar")),
+  );
   const filteredFiles = useMemo(
     () =>
       files.filter((file) => {
@@ -810,8 +837,15 @@ export function AdminLearning() {
     ["results", "النتائج", Check],
     ["reports", "التقارير", BarChart3],
   ] as const;
+  const tabMeta = {
+    students: ["إدارة الطلاب", "راجع التسجيلات والصلاحيات والكورسات المخصصة لكل طالب."],
+    files: ["مكتبة الملفات التعليمية", "ارفع الملفات وحدد مكان ظهورها للطلاب أو داخل الدروس."],
+    quizzes: ["بناء وإدارة الاختبارات", "أنشئ الاختبارات وحدد الجمهور والإعدادات والأسئلة ثم انشرها."],
+    results: ["نتائج الاختبارات", "تابع محاولات الطلاب ودرجات النجاح من مكان واحد."],
+    reports: ["التقارير والمتابعة", "راقب نشاط الطلاب والتقدم ومؤشرات الأداء التعليمية."],
+  } as const;
   return (
-    <div className="space-y-6" dir="rtl">
+    <div className="admin-learning-workspace space-y-6" dir="rtl">
       <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 md:flex-row md:items-center md:justify-between">
         <div>
           <h2 className="text-[28px] font-black leading-tight text-slate-900">
@@ -907,6 +941,10 @@ export function AdminLearning() {
             {label}
           </button>
         ))}
+      </div>
+      <div className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div><h3 className="text-[17px] font-black text-slate-900">{tabMeta[tab][0]}</h3><p className="mt-1 text-xs text-slate-500">{tabMeta[tab][1]}</p></div>
+        <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-600">تحديث تلقائي للبيانات</span>
       </div>
       {loading ? (
         <div className="grid place-items-center py-24">
@@ -1702,8 +1740,21 @@ export function AdminLearning() {
                     </select>
                   </Field>
                   <Field label="المراحل / المجموعات">
-                    <div className="flex min-h-11 flex-wrap gap-2 rounded-xl border border-slate-200 bg-white p-2">
-                      {availableQuizStages.map((stage) => {
+                    <div className="rounded-xl border border-slate-200 bg-white p-3">
+                      {availableQuizStages.length > 5 && (
+                        <div className="relative mb-3">
+                          <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                          <input value={quizStageSearch} onChange={(event) => setQuizStageSearch(event.target.value)} placeholder="ابحث داخل المراحل..." className="input-admin min-h-10 pr-9 text-xs" />
+                        </div>
+                      )}
+                      {quizForm.stages.length > 0 && (
+                        <div className="mb-3 flex flex-wrap gap-1.5 border-b border-slate-100 pb-3">
+                          <span className="ml-1 text-[11px] font-bold text-slate-500">المحدد ({quizForm.stages.length}):</span>
+                          {quizForm.stages.map((stage) => <span key={stage} className="rounded-full bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-700">{stage}</span>)}
+                        </div>
+                      )}
+                      <div className="flex max-h-44 flex-wrap gap-2 overflow-y-auto">
+                      {visibleQuizStages.map((stage) => {
                         const selected = quizForm.stages.includes(stage);
                         return (
                           <button
@@ -1722,6 +1773,8 @@ export function AdminLearning() {
                         );
                       })}
                       {availableQuizStages.length === 0 && <span className="px-2 py-1 text-xs text-muted-foreground">اختر الكورس أولًا</span>}
+                      {availableQuizStages.length > 0 && visibleQuizStages.length === 0 && <span className="px-2 py-1 text-xs text-muted-foreground">لا توجد مرحلة مطابقة للبحث</span>}
+                      </div>
                     </div>
                   </Field>
                   <Field label="نوع الاختبار">
@@ -1801,11 +1854,16 @@ export function AdminLearning() {
                 {quizForm.questions.map((q, qi) => (
                   <div
                     key={qi}
-                    className="rounded-2xl border bg-white p-4 space-y-3 shadow-sm"
+                    className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
                   >
-                    <div className="flex justify-between">
-                      <strong>السؤال {qi + 1}</strong>
-                      {quizForm.questions.length > 1 && (
+                    <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-4 py-3">
+                      <div className="flex min-w-0 items-center gap-3"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary text-xs font-black text-white">{qi + 1}</span><strong className="truncate">{q.prompt || `السؤال ${qi + 1}`}</strong></div>
+                      <div className="flex items-center gap-1">
+                        <button type="button" onClick={() => duplicateQuestion(qi)} title="تكرار السؤال" className="grid h-9 w-9 place-items-center rounded-lg text-slate-500 hover:bg-blue-50 hover:text-primary"><Copy className="h-4 w-4" /></button>
+                        <button type="button" onClick={() => toggleQuestion(qi)} title={collapsedQuestions.has(qi) ? "فتح السؤال" : "طي السؤال"} className="grid h-9 w-9 place-items-center rounded-lg text-slate-500 hover:bg-slate-100">
+                          {collapsedQuestions.has(qi) ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                        </button>
+                        {quizForm.questions.length > 1 && (
                         <button
                           type="button"
                           onClick={() =>
@@ -1816,12 +1874,15 @@ export function AdminLearning() {
                               ),
                             })
                           }
-                          className="text-red-500"
+                          title="حذف السؤال"
+                          className="grid h-9 w-9 place-items-center rounded-lg text-red-500 hover:bg-red-50"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
-                      )}
+                        )}
+                      </div>
                     </div>
+                    <div className={collapsedQuestions.has(qi) ? "hidden" : "space-y-3 p-4"}>
                     <input
                       required
                       placeholder="نص السؤال"
@@ -1858,9 +1919,10 @@ export function AdminLearning() {
                         </label>
                       ))}
                     </div>
+                    </div>
                   </div>
                 ))}
-                <div className="flex gap-2">
+                <div className="sticky bottom-3 z-20 flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-lg backdrop-blur">
                   <Button
                     type="button"
                     variant="outline"
