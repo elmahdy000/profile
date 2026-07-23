@@ -4,7 +4,7 @@ import fs from "fs";
 import path from "path";
 import multer from "multer";
 import mammoth from "mammoth";
-import { PDFParse } from "pdf-parse";
+import pdfParse from "pdf-parse";
 import { and, desc, eq, ilike, inArray } from "drizzle-orm";
 import {
   codeRecoveryRequestsTable,
@@ -1355,12 +1355,7 @@ router.post("/admin/learning/quizzes/import", requireAdmin, (req, res, next) => 
       const extension = path.extname(req.file.originalname).toLowerCase();
       let extractedText = "";
       if (extension === ".pdf") {
-        const parser = new PDFParse({ data: req.file.buffer });
-        try {
-          extractedText = (await parser.getText()).text;
-        } finally {
-          await parser.destroy();
-        }
+        extractedText = (await pdfParse(req.file.buffer)).text;
       } else if (extension === ".docx") {
         extractedText = (await mammoth.extractRawText({ buffer: req.file.buffer })).value;
       } else {
