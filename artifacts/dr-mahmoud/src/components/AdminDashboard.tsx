@@ -3674,9 +3674,39 @@ export default function AdminDashboard() {
                       </button>
                     )}
                 </div>
+                <div className="md:col-span-2 rounded-2xl border-2 border-primary/20 bg-primary/5 p-4">
+                  <div className="mb-3 flex items-center gap-3">
+                    <span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-sm font-black text-white">1</span>
+                    <div>
+                      <h4 className="font-black">اسم الدرس ورقمه</h4>
+                      <p className="text-xs text-muted-foreground">اكتب البيانات التي ستظهر للطالب في قائمة الدروس.</p>
+                    </div>
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-xs font-bold text-foreground">نوع المحتوى *</label>
+                      <select value={videoForm.type} onChange={(e) => setVideoForm({ ...videoForm, type: e.target.value as "video" | "playlist" })} className="w-full rounded-xl border border-primary/30 bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20">
+                        <option value="video">فيديو منفرد</option>
+                        <option value="playlist">قائمة تشغيل</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-bold text-foreground">اسم الدرس *</label>
+                      <input type="text" required value={videoForm.title} onChange={(e) => setVideoForm({ ...videoForm, title: e.target.value })} placeholder="مثال: المتغيرات وأنواع البيانات" className="w-full rounded-xl border border-primary/30 bg-background px-4 py-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                    </div>
+                    {videoForm.type === "playlist" && <div className="md:col-span-2">
+                      <label className="mb-1 block text-xs font-bold text-foreground">رقم الدرس في قائمة التشغيل *</label>
+                      <div className="flex gap-2">
+                        <input type="number" min="1" required value={videoForm.order} onChange={(e) => setVideoForm({ ...videoForm, order: Number(e.target.value) })} className="min-w-0 flex-1 rounded-xl border border-primary/30 bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                        <button type="button" onClick={() => setVideoForm({ ...videoForm, order: getNextLessonNumber(videoForm.category, videoForm.learningMode, videoForm.stages) })} className="rounded-xl border border-primary/30 bg-white px-3 text-xs font-bold text-primary hover:bg-primary/5">التالي</button>
+                      </div>
+                      <p className="mt-1 text-[11px] text-muted-foreground">حدد موضع هذا الدرس داخل قائمة التشغيل.</p>
+                    </div>}
+                  </div>
+                </div>
                 <div className="md:col-span-2 mt-1 flex items-center gap-3">
                   <span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-sm font-black text-white">
-                    1
+                    2
                   </span>
                   <div>
                     <h4 className="font-black">الدرس ده لمين؟</h4>
@@ -3778,93 +3808,6 @@ export default function AdminDashboard() {
                     placeholder="مثال: البرمجة وعلوم الحاسب"
                     className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm"
                   />
-                </div>
-
-                <div className="md:col-span-2 mt-3 flex items-center gap-3 border-t pt-4">
-                  <span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-sm font-black text-white">
-                    2
-                  </span>
-                  <div>
-                    <h4 className="font-black">بيانات الدرس</h4>
-                    <p className="text-xs text-muted-foreground">
-                      الاسم ورقم الدرس هما اللي الطالب هيشوفهم.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-muted-foreground mb-1 text-right">
-                    اسم الدرس
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={videoForm.title}
-                    onChange={(e) =>
-                      setVideoForm({ ...videoForm, title: e.target.value })
-                    }
-                    placeholder="مثال: الدرس 3 — المتغيرات وأنواع البيانات"
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground mb-1">
-                    نوع المحتوى
-                  </label>
-                  <select
-                    value={videoForm.type}
-                    onChange={(e) =>
-                      setVideoForm({
-                        ...videoForm,
-                        type: e.target.value as "video" | "playlist",
-                      })
-                    }
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
-                  >
-                    <option value="video">فيديو منفرد</option>
-                    <option value="playlist">قائمة تشغيل كاملة</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground mb-1">
-                    رقم الدرس داخل السلسلة
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="number"
-                      min="1"
-                      required
-                      value={videoForm.order}
-                      onChange={(e) =>
-                        setVideoForm({
-                          ...videoForm,
-                          order: Number(e.target.value),
-                        })
-                      }
-                      className="min-w-0 flex-1 bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setVideoForm({
-                          ...videoForm,
-                          order: getNextLessonNumber(
-                            videoForm.category,
-                            videoForm.learningMode,
-                            videoForm.stages,
-                          ),
-                        })
-                      }
-                      className="rounded-xl border px-3 text-xs font-bold text-primary hover:bg-primary/5"
-                    >
-                      اقترح التالي
-                    </button>
-                  </div>
-                  <p className="mt-1 text-[10px] text-muted-foreground">
-                    بيتحدد تلقائيًا حسب المرحلة والكورس ونظام الحضور.
-                  </p>
                 </div>
 
                 <div>
