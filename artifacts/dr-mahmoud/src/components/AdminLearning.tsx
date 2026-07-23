@@ -190,6 +190,10 @@ export function AdminLearning() {
   const [fileCourseFilter, setFileCourseFilter] = useState("all");
   const [fileStageFilter, setFileStageFilter] = useState("all");
   const [fileStatusFilter, setFileStatusFilter] = useState("all");
+  const [studentSearch, setStudentSearch] = useState("");
+  const [studentStatusFilter, setStudentStatusFilter] = useState("all");
+  const [studentStageFilter, setStudentStageFilter] = useState("all");
+  const [resultSearch, setResultSearch] = useState("");
   const [filePage, setFilePage] = useState(1);
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
   const [editingFile, setEditingFile] = useState<FileItem | null>(null);
@@ -200,6 +204,7 @@ export function AdminLearning() {
   const [lessonSearch, setLessonSearch] = useState("");
   const [lessonCourseFilter, setLessonCourseFilter] = useState("");
   const [lessonStageFilter, setLessonStageFilter] = useState("");
+  const [fileStageSearch, setFileStageSearch] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileForm, setFileForm] = useState({
     title: "",
@@ -765,6 +770,9 @@ export function AdminLearning() {
     : selectedFileTrack
       ? [{ title: selectedFileTrack.shortTitle, stages: availableFileStages }]
       : [];
+  const visibleFileStageGroups = fileStageGroups
+    .map((group) => ({ ...group, stages: group.stages.filter((stage) => stage.toLocaleLowerCase("ar").includes(fileStageSearch.trim().toLocaleLowerCase("ar"))) }))
+    .filter((group) => group.stages.length > 0);
   const filteredLessonOptions = useMemo(() => {
     const query = lessonSearch.trim().toLowerCase();
     return videoOptions.filter((video) => {
@@ -818,6 +826,27 @@ export function AdminLearning() {
       }),
     [files, fileSearch, fileCourseFilter, fileStageFilter, fileStatusFilter],
   );
+  const studentStages = Array.from(new Set(students.map((student) => student.grade).filter(Boolean) as string[]));
+  const filteredStudents = useMemo(() => {
+    const query = studentSearch.trim().toLocaleLowerCase("ar");
+    return students.filter((student) =>
+      (!query || [student.name, student.phone, student.email, student.accessCode].some((value) => String(value || "").toLocaleLowerCase("ar").includes(query))) &&
+      (studentStatusFilter === "all" || student.status === studentStatusFilter) &&
+      (studentStageFilter === "all" || student.grade === studentStageFilter),
+    );
+  }, [students, studentSearch, studentStatusFilter, studentStageFilter]);
+  const filteredAttempts = attempts.filter((attempt) => {
+    const query = resultSearch.trim().toLocaleLowerCase("ar");
+    return !query || attempt.studentName.toLocaleLowerCase("ar").includes(query) || attempt.quizTitle.toLocaleLowerCase("ar").includes(query);
+  });
+  const exportResults = () => {
+    const rows = [["الطالب", "الاختبار", "النتيجة", "الحالة", "التاريخ"], ...filteredAttempts.map((attempt) => [attempt.studentName, attempt.quizTitle, `${attempt.score}%`, attempt.passed ? "ناجح" : "لم ينجح", new Date(attempt.createdAt).toLocaleDateString("ar-EG")])];
+    const csv = `\uFEFF${rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n")}`;
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const anchor = document.createElement("a");
+    anchor.href = url; anchor.download = `quiz-results-${new Date().toISOString().slice(0, 10)}.csv`; anchor.click();
+    URL.revokeObjectURL(url);
+  };
   const filePageSize = 8;
   const filePageCount = Math.max(
     1,
@@ -906,10 +935,12 @@ export function AdminLearning() {
             ListChecks,
             "bg-emerald-50 text-emerald-700",
           ],
-        ].map(([label, value, helper, Icon, color]: any) => (
-          <article
+        ].map(([label, value, helper, Icon, color]: any, index) => (
+          <button
+            type="button"
             key={String(label)}
-            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+            onClick={() => setTab((['students', 'files', 'quizzes', 'results'] as const)[index])}
+            className="rounded-2xl border border-slate-200 bg-white p-4 text-right shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <div className="flex items-start justify-between">
               <div>
@@ -927,7 +958,7 @@ export function AdminLearning() {
               </div>
             </div>
             <p className="mt-3 text-xs text-slate-500">{String(helper)}</p>
-          </article>
+          </button>
         ))}
       </div>
       <div className="grid grid-cols-5 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
@@ -954,10 +985,16 @@ export function AdminLearning() {
         <>
           {tab === "students" && (
             <div className="space-y-3">
-              {students.length === 0 ? (
-                <Empty text="لا توجد طلبات تسجيل بعد" />
+              <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-3">
+                <label className="relative"><Search className="absolute right-3 top-3.5 h-4 w-4 text-slate-400" /><input value={studentSearch} onChange={(event) => setStudentSearch(event.target.value)} placeholder="ابحث بالاسم أو الهاتف أو الكود..." className="input-admin pr-9" /></label>
+                <select value={studentStatusFilter} onChange={(event) => setStudentStatusFilter(event.target.value)} className="input-admin"><option value="all">كل الحالات</option><option value="pending">قيد المراجعة</option><option value="approved">معتمد</option><option value="suspended">موقوف</option></select>
+                <select value={studentStageFilter} onChange={(event) => setStudentStageFilter(event.target.value)} className="input-admin"><option value="all">كل المراحل</option>{studentStages.map((stage) => <option key={stage} value={stage}>{stage}</option>)}</select>
+              </div>
+              <div className="flex items-center justify-between px-1 text-xs text-slate-500"><span>عرض {filteredStudents.length} من {students.length} طالب</span>{(studentSearch || studentStatusFilter !== "all" || studentStageFilter !== "all") && <button type="button" className="font-bold text-primary" onClick={() => { setStudentSearch(""); setStudentStatusFilter("all"); setStudentStageFilter("all"); }}>مسح الفلاتر</button>}</div>
+              {filteredStudents.length === 0 ? (
+                <Empty text={students.length ? "لا توجد نتائج مطابقة للفلاتر" : "لا توجد طلبات تسجيل بعد"} />
               ) : (
-                students.map((s) => (
+                filteredStudents.map((s) => (
                   <article
                     key={s.id}
                     className="rounded-2xl border bg-card p-5 space-y-4"
@@ -1177,8 +1214,11 @@ export function AdminLearning() {
                     </div>
                     <div className="md:col-span-2">
                     <Field label="المراحل التي سيظهر لها الملف">
-                      <div className="flex min-h-12 flex-wrap gap-2 rounded-xl border border-slate-300 bg-white p-2">
+                      <div className="min-h-12 rounded-xl border border-slate-300 bg-white p-3">
                         {!selectedFileTrack && <span className="p-1 text-sm text-slate-400">اختر القسم التعليمي أولًا</span>}
+                        {selectedFileTrack && availableFileStages.length > 5 && <div className="relative mb-3"><Search className="absolute right-3 top-3 h-4 w-4 text-slate-400" /><input value={fileStageSearch} onChange={(event) => setFileStageSearch(event.target.value)} placeholder="ابحث داخل مراحل القسم..." className="input-admin min-h-10 pr-9 text-xs" /></div>}
+                        {fileForm.stages.length > 0 && <div className="mb-3 flex flex-wrap items-center gap-1.5 border-b border-slate-100 pb-3"><span className="ml-1 text-[11px] font-bold text-slate-500">المحدد ({fileForm.stages.length}):</span>{fileForm.stages.slice(0, 4).map((stage) => <span key={stage} className="rounded-full bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-700">{stage}</span>)}{fileForm.stages.length > 4 && <span className="text-[11px] font-bold text-slate-500">+{fileForm.stages.length - 4}</span>}</div>}
+                        <div className="flex flex-wrap gap-2">
                         {selectedFileTrack && <button
                           type="button"
                           onClick={() => {
@@ -1190,8 +1230,8 @@ export function AdminLearning() {
                         >
                           {availableFileStages.every((stage) => fileForm.stages.includes(stage)) ? "إلغاء تحديد الكل" : "تحديد كل مراحل القسم"}
                         </button>}
-                        {fileStageGroups.map((group) => <div key={group.title} className="w-full rounded-xl bg-slate-50 p-3">
-                          <strong className="mb-2 block text-xs text-slate-800">{group.title}</strong>
+                        {visibleFileStageGroups.map((group) => <details key={group.title} open className="w-full rounded-xl bg-slate-50 p-3">
+                          <summary className="mb-2 cursor-pointer text-xs font-bold text-slate-800">{group.title} <span className="font-normal text-slate-400">({group.stages.length})</span></summary>
                           <div className="flex flex-wrap gap-2">{group.stages.map((stage) => {
                             const checked = fileForm.stages.includes(stage);
                             return <button key={stage} type="button" onClick={() => {
@@ -1201,7 +1241,9 @@ export function AdminLearning() {
                               {stage.replace(`${group.title} · `, "")}
                             </button>;
                           })}</div>
-                        </div>)}
+                        </details>)}
+                        {selectedFileTrack && visibleFileStageGroups.length === 0 && <p className="w-full py-3 text-center text-xs text-slate-500">لا توجد مرحلة مطابقة للبحث</p>}
+                        </div>
                       </div>
                     </Field>
                     </div>
@@ -1990,9 +2032,14 @@ export function AdminLearning() {
             </div>
           )}
           {tab === "results" && (
-            <div className="overflow-x-auto rounded-2xl border bg-card">
+            <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+              <div className="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <label className="relative w-full sm:max-w-sm"><Search className="absolute right-3 top-3.5 h-4 w-4 text-slate-400" /><input value={resultSearch} onChange={(event) => setResultSearch(event.target.value)} placeholder="ابحث باسم الطالب أو الاختبار..." className="input-admin pr-9" /></label>
+                <Button type="button" variant="outline" disabled={!filteredAttempts.length} onClick={exportResults}><Download className="h-4 w-4" /> تصدير CSV</Button>
+              </div>
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-muted">
+                <thead className="bg-slate-50 text-slate-600">
                   <tr>
                     <th className="p-4 text-right">الطالب</th>
                     <th className="p-4 text-right">الاختبار</th>
@@ -2002,13 +2049,13 @@ export function AdminLearning() {
                   </tr>
                 </thead>
                 <tbody>
-                  {attempts.map((a) => (
-                    <tr key={a.id} className="border-t">
+                  {filteredAttempts.map((a) => (
+                    <tr key={a.id} className="border-t hover:bg-slate-50/70">
                       <td className="p-4 font-bold">{a.studentName}</td>
                       <td className="p-4">{a.quizTitle}</td>
                       <td className="p-4 text-center font-black">{a.score}%</td>
                       <td className="p-4 text-center">
-                        {a.passed ? "ناجح" : "لم ينجح"}
+                        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${a.passed ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>{a.passed ? "ناجح" : "لم ينجح"}</span>
                       </td>
                       <td className="p-4 text-center text-muted-foreground">
                         {new Date(a.createdAt).toLocaleDateString("ar-EG")}
@@ -2017,6 +2064,8 @@ export function AdminLearning() {
                   ))}
                 </tbody>
               </table>
+              {!filteredAttempts.length && <div className="p-10"><Empty text={attempts.length ? "لا توجد نتائج مطابقة للبحث" : "لا توجد نتائج اختبارات بعد"} /></div>}
+              </div>
             </div>
           )}
           {tab === "reports" && analytics && (
@@ -2098,7 +2147,9 @@ export function AdminLearning() {
                         <td className="p-4"><strong className="block">{row.name}</strong><span className="text-xs text-slate-500" dir="ltr">{row.phone}</span></td>
                         <td className="p-4 text-center">{row.startedLessons}/{row.assignedLessons}</td>
                         <td className="p-4 text-center font-bold text-emerald-700">{row.completedLessons}</td>
-                        <td className="p-4 text-center font-black">{row.averageProgress}%</td>
+                        <td className="p-4">
+                          <div className="mx-auto w-28"><div className="mb-1 flex justify-between text-[11px]"><span className="text-slate-500">التقدم</span><strong>{row.averageProgress}%</strong></div><div className="h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, Math.max(0, row.averageProgress))}%` }} /></div></div>
+                        </td>
                         <td className="p-4 text-center">{row.quizAttempts} · {row.averageQuizScore}%</td>
                         <td className="p-4 text-center">
                           <span className={`rounded-full px-2 py-1 text-xs font-bold ${row.isActive ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>

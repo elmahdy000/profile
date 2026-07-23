@@ -1510,12 +1510,15 @@ export default function AdminDashboard() {
               <button type="button" onClick={() => setIsMobileSidebarOpen(false)} className="grid h-10 w-10 place-items-center rounded-xl bg-slate-100 text-slate-600" aria-label="إغلاق القائمة"><X className="h-5 w-5" /></button>
             </div>
             <nav className="flex-1 space-y-1.5 overflow-y-auto" onClick={() => setIsMobileSidebarOpen(false)}>
+              <span className="block px-3 pb-1 pt-2 text-[10px] font-black uppercase tracking-wider text-slate-400">الإدارة والمتابعة</span>
               <SidebarItem icon={Calendar} label="الدورات" active={activeTab === "bookings"} onClick={() => setActiveTab("bookings")} badge={bookingsQuery.data?.filter((booking) => booking.status === "pending").length || undefined} />
               <SidebarItem icon={BookOpen} label="الكورسات" active={activeTab === "courses"} onClick={() => setActiveTab("courses")} />
+              <span className="block px-3 pb-1 pt-4 text-[10px] font-black uppercase tracking-wider text-slate-400">المحتوى التعليمي</span>
               <SidebarItem icon={Mic} label="البودكاست" active={activeTab === "podcasts"} onClick={() => setActiveTab("podcasts")} />
               <SidebarItem icon={Library} label="المناهج التعليمية" active={activeTab === "curriculums"} onClick={() => setActiveTab("curriculums")} />
               <SidebarItem icon={VideoIcon} label="مكتبة الفيديوهات والقوائم" active={activeTab === "videos"} onClick={() => setActiveTab("videos")} />
               <SidebarItem icon={Upload} label="🎬 رفع فيديو جديد" active={activeTab === "upload-video"} onClick={() => openVideoModal("add")} variant="featured" />
+              <span className="block px-3 pb-1 pt-4 text-[10px] font-black uppercase tracking-wider text-slate-400">النظام</span>
               <SidebarItem icon={Users} label="إدارة المنصة والطلاب" active={activeTab === "learning"} onClick={() => setActiveTab("learning")} />
               <SidebarItem icon={Settings} label="إعدادات الموقع" active={activeTab === "settings"} onClick={() => setActiveTab("settings")} />
             </nav>
@@ -1548,6 +1551,7 @@ export default function AdminDashboard() {
               </div>
             </div>
             <nav className="flex-1 space-y-1.5 overflow-y-auto">
+              <span className="block px-3 pb-1 pt-1 text-[10px] font-black uppercase tracking-wider text-slate-400">الإدارة والمتابعة</span>
               <SidebarItem
                 icon={Calendar}
                 label="الدورات"
@@ -1567,6 +1571,8 @@ export default function AdminDashboard() {
                 active={activeTab === "courses"}
                 onClick={() => setActiveTab("courses")}
               />
+
+              <span className="block px-3 pb-1 pt-4 text-[10px] font-black uppercase tracking-wider text-slate-400">المحتوى التعليمي</span>
 
               <SidebarItem
                 icon={Mic}
@@ -1599,6 +1605,8 @@ export default function AdminDashboard() {
                 }}
                 variant="featured"
               />
+
+              <span className="block px-3 pb-1 pt-4 text-[10px] font-black uppercase tracking-wider text-slate-400">النظام</span>
 
               <SidebarItem
                 icon={Users}
