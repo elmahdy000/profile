@@ -2744,6 +2744,41 @@ export default function AdminDashboard() {
                         </div>
 
                         <div>
+                          <label className="block text-xs font-bold text-foreground mb-1">نوع المحتوى *</label>
+                          <select
+                            value={videoForm.type}
+                            onChange={(e) => setVideoForm({ ...videoForm, type: e.target.value as "video" | "playlist" })}
+                            className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm font-medium"
+                          >
+                            <option value="video">فيديو منفرد</option>
+                            <option value="playlist">قائمة تشغيل</option>
+                          </select>
+                        </div>
+
+                        {videoForm.type === "playlist" && (
+                          <div>
+                            <label className="block text-xs font-bold text-foreground mb-1">رقم الدرس في قائمة التشغيل *</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="number"
+                                min="1"
+                                required
+                                value={videoForm.order}
+                                onChange={(e) => setVideoForm({ ...videoForm, order: Number(e.target.value) })}
+                                className="min-w-0 flex-1 bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm font-medium"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setVideoForm({ ...videoForm, order: getNextLessonNumber(videoForm.category, videoForm.learningMode, videoForm.stages) })}
+                                className="rounded-xl border border-primary/30 px-3 text-xs font-bold text-primary hover:bg-primary/5"
+                              >
+                                التالي
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        <div>
                           <label className="block text-xs font-bold text-foreground mb-1">الكورس التابع له الفيديو *</label>
                           <select
                             required
