@@ -30,6 +30,8 @@ def main():
             "DATABASE_URL=$(grep DATABASE_URL .env | head -1 | cut -d= -f2-) && psql \"$DATABASE_URL\" -f lib/db/migrations/0002_complete_learning_platform.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0003_learning_file_targets.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0004_course_content_model.sql",
             "pnpm run build",
             "pm2 restart drelmahdy-backend",
+            "cp artifacts/drelmahdy_nginx.conf /etc/nginx/sites-available/drelmahdy",
+            "nginx -t",
             "systemctl reload nginx"
         ]
 

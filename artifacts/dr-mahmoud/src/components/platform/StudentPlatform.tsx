@@ -1390,6 +1390,7 @@ export function StudentPlatform() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
   const [dataError, setDataError] = useState("");
+  const latestNotificationIdRef = useRef(0);
 
   // Quiz active states
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
@@ -1479,6 +1480,7 @@ export function StudentPlatform() {
       setVideos(v);
       setProgress(p);
       setNotifications(n);
+      latestNotificationIdRef.current = Math.max(0, ...n.map((item) => item.id));
     } catch (err) {
       setDataError((err as Error).message || "مقدرناش نحمّل محتواك دلوقتي.");
     } finally {
@@ -1491,7 +1493,9 @@ export function StudentPlatform() {
   useEffect(() => {
     if (!student) return;
     const stream = new EventSource("/api/learning/notifications/stream", { withCredentials: true });
-    const refresh = () => {
+    const refresh = (event: Event) => {
+      const latestId = Number(JSON.parse((event as MessageEvent).data || "{}").latestId || 0);
+      if (latestId) latestNotificationIdRef.current = latestId;
       void loadLearningData();
       toast({ title: "محتوى جديد", description: "تم تحديث الدروس والملفات والاختبارات المتاحة لك." });
     };
@@ -1500,6 +1504,29 @@ export function StudentPlatform() {
       stream.removeEventListener("refresh", refresh);
       stream.close();
     };
+  }, [student?.id]);
+  useEffect(() => {
+    if (!student) return;
+    const poll = async () => {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const rows = await api<StudentNotification[]>("/api/learning/notifications");
+        const latestId = Math.max(0, ...rows.map((item) => item.id));
+        if (latestNotificationIdRef.current > 0 && latestId > latestNotificationIdRef.current) {
+          latestNotificationIdRef.current = latestId;
+          setNotifications(rows);
+          void loadLearningData();
+          toast({ title: "محتوى جديد", description: "تم تحديث المحتوى المتاح لك تلقائيًا." });
+        } else {
+          latestNotificationIdRef.current = latestId;
+          setNotifications(rows);
+        }
+      } catch {
+        // SSE keeps retrying; the next poll provides an independent fallback.
+      }
+    };
+    const timer = window.setInterval(poll, 12000);
+    return () => window.clearInterval(timer);
   }, [student?.id]);
   useEffect(() => {
     if (!student) return;
