@@ -53,7 +53,11 @@ const studentRecoveryLimit = fixedWindowRateLimit({
   limit: 5,
   windowMs: 60 * 60 * 1000,
 });
-const privateUploadDir = path.join(process.cwd(), "private", "learning-files");
+const privateUploadDir = process.env.LEARNING_FILES_DIR || (
+  process.env.NODE_ENV === "production"
+    ? "/var/lib/drelmahdy/learning-files"
+    : path.join(process.cwd(), "private", "learning-files")
+);
 fs.mkdirSync(privateUploadDir, { recursive: true });
 
 const allowedFileTypes = new Set([
@@ -1017,7 +1021,8 @@ router.get(["/learning/files/:id/preview", "/learning/files/:id/download"], asyn
       `${req.path.endsWith("/preview") ? "inline" : "attachment"}; filename*=UTF-8''${encodeURIComponent(file.originalName)}`,
     );
     res.setHeader("X-Content-Type-Options", "nosniff");
-    res.setHeader("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data: blob:");
+    res.setHeader("X-Frame-Options", "SAMEORIGIN");
+    res.setHeader("Content-Security-Policy", "frame-ancestors 'self'");
     res.setHeader("Cache-Control", "private, no-store");
     fs.createReadStream(filePath).pipe(res);
   } catch (error) {
