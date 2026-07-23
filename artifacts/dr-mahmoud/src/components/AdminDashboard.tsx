@@ -58,6 +58,7 @@ import {
   Users,
   FileText,
   HelpCircle,
+  Menu,
 } from "lucide-react";
 import { AdminSettings } from "./AdminSettings";
 import { AdminLearning } from "./AdminLearning";
@@ -142,6 +143,21 @@ export default function AdminDashboard() {
   const [isThumbnailUploading, setIsThumbnailUploading] = useState(false);
   const [selectedVideoPreviewUrl, setSelectedVideoPreviewUrl] = useState("");
   const [isInitializing, setIsInitializing] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isMobileSidebarOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsMobileSidebarOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isMobileSidebarOpen]);
 
   useEffect(() => {
     localStorage.removeItem("dr_mahmoud_admin_pwd");
@@ -339,7 +355,7 @@ export default function AdminDashboard() {
     }[]
   >([]);
   const [learningQuizzes, setLearningQuizzes] = useState<
-    { id: number; title: string }[]
+    { id: number; title: string; courseId?: number | null; videoId?: number | null; scope?: string }[]
   >([]);
 
   useEffect(() => {
@@ -1357,7 +1373,7 @@ export default function AdminDashboard() {
   // Render Login view if not authenticated
   if (!isAuthenticated) {
     return (
-      <div className="relative min-h-screen w-full overflow-hidden flex items-center justify-center bg-background px-4 dir-rtl">
+      <main className="relative min-h-screen w-full overflow-hidden flex items-center justify-center bg-background px-4 dir-rtl">
         {/* Decorative elements */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
@@ -1420,7 +1436,7 @@ export default function AdminDashboard() {
             </a>
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -1428,22 +1444,32 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-[#F7F9FC] text-foreground dir-rtl">
       {/* Top Admin Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-white px-4 py-3 shadow-sm lg:hidden">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setIsMobileSidebarOpen(true)}
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:border-primary hover:text-primary"
+              aria-label="فتح قائمة الإدارة"
+              aria-expanded={isMobileSidebarOpen}
+              aria-controls="admin-mobile-sidebar"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
             <div className="w-10 h-10 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center text-primary">
               <Lock className="w-5 h-5" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">
+            <div className="min-w-0">
+              <h1 className="truncate text-base font-bold text-foreground sm:text-xl">
                 لوحة تحكم د. محمود المهدي
               </h1>
-              <p className="text-xs text-muted-foreground">
+              <p className="hidden text-xs text-muted-foreground sm:block">
                 إدارة محتوى الكورسات، البودكاست والحجوزات
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="hidden items-center gap-2 sm:flex">
             <a
               href="/"
               target="_blank"
@@ -1461,6 +1487,46 @@ export default function AdminDashboard() {
           </div>
         </div>
       </header>
+
+      {isMobileSidebarOpen && (
+        <div className="fixed inset-0 z-[90] lg:hidden">
+          <button
+            type="button"
+            className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm"
+            onClick={() => setIsMobileSidebarOpen(false)}
+            aria-label="إغلاق قائمة الإدارة"
+          />
+          <aside
+            id="admin-mobile-sidebar"
+            role="dialog"
+            aria-modal="true"
+            aria-label="قائمة لوحة الإدارة"
+            className="absolute inset-y-0 right-0 flex w-[min(86vw,320px)] flex-col bg-white p-5 shadow-2xl"
+          >
+            <div className="mb-5 flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <img src="/logo.jpg" alt="شعار المنصة" className="h-11 w-11 rounded-xl border object-cover" />
+                <div><strong className="block text-sm font-black">أكاديمية د. محمود</strong><span className="text-[11px] text-muted-foreground">لوحة إدارة المنصة</span></div>
+              </div>
+              <button type="button" onClick={() => setIsMobileSidebarOpen(false)} className="grid h-10 w-10 place-items-center rounded-xl bg-slate-100 text-slate-600" aria-label="إغلاق القائمة"><X className="h-5 w-5" /></button>
+            </div>
+            <nav className="flex-1 space-y-1.5 overflow-y-auto" onClick={() => setIsMobileSidebarOpen(false)}>
+              <SidebarItem icon={Calendar} label="الدورات" active={activeTab === "bookings"} onClick={() => setActiveTab("bookings")} badge={bookingsQuery.data?.filter((booking) => booking.status === "pending").length || undefined} />
+              <SidebarItem icon={BookOpen} label="الكورسات" active={activeTab === "courses"} onClick={() => setActiveTab("courses")} />
+              <SidebarItem icon={Mic} label="البودكاست" active={activeTab === "podcasts"} onClick={() => setActiveTab("podcasts")} />
+              <SidebarItem icon={Library} label="المناهج التعليمية" active={activeTab === "curriculums"} onClick={() => setActiveTab("curriculums")} />
+              <SidebarItem icon={VideoIcon} label="مكتبة الفيديوهات والقوائم" active={activeTab === "videos"} onClick={() => setActiveTab("videos")} />
+              <SidebarItem icon={Upload} label="🎬 رفع فيديو جديد" active={activeTab === "upload-video"} onClick={() => openVideoModal("add")} variant="featured" />
+              <SidebarItem icon={Users} label="إدارة المنصة والطلاب" active={activeTab === "learning"} onClick={() => setActiveTab("learning")} />
+              <SidebarItem icon={Settings} label="إعدادات الموقع" active={activeTab === "settings"} onClick={() => setActiveTab("settings")} />
+            </nav>
+            <div className="mt-4 grid grid-cols-2 gap-2 border-t border-slate-100 pt-4">
+              <a href="/" target="_blank" rel="noreferrer" className="flex items-center justify-center gap-1 rounded-xl border px-2 py-2.5 text-xs font-bold"><ExternalLink className="h-4 w-4" /> الموقع</a>
+              <button type="button" onClick={handleLogout} className="flex items-center justify-center gap-1 rounded-xl bg-red-50 px-2 py-2.5 text-xs font-bold text-red-600"><LogOut className="h-4 w-4" /> خروج</button>
+            </div>
+          </aside>
+        </div>
+      )}
 
       {/* Main Container */}
       <div className="min-h-screen w-full lg:pr-[260px]">
@@ -4296,24 +4362,9 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="rounded-xl border bg-muted/20 p-4 text-right">
-                    <label className="block text-xs font-semibold text-muted-foreground mb-1 flex items-center justify-end gap-1.5">
-                      اختبار الدرس المرفق (Exercises)
-                      <HelpCircle className="w-3.5 h-3.5 text-primary" />
-                    </label>
-                    <select
-                      value={videoForm.quizId}
-                      onChange={(e) =>
-                        setVideoForm({ ...videoForm, quizId: e.target.value })
-                      }
-                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
-                    >
-                      <option value="">لا يوجد اختبار مرفق</option>
-                      {learningQuizzes.map((quiz) => (
-                        <option key={quiz.id} value={quiz.id}>
-                          {quiz.title}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="flex items-center justify-end gap-1.5 text-xs font-semibold text-muted-foreground"><span>اختبار الدرس</span><HelpCircle className="h-3.5 w-3.5 text-primary" /></div>
+                    <p className="mt-2 text-sm font-bold text-foreground">{learningQuizzes.find((quiz) => quiz.videoId === selectedVideoId)?.title || "لا يوجد اختبار مرتبط"}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">يتم إنشاء الاختبار وربطه بالدرس من شاشة «إدارة المنصة والطلاب ← الاختبارات» لتجنب تكرار الربط في مكانين.</p>
                   </div>
                 </div>
 

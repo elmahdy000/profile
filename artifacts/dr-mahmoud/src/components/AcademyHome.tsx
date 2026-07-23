@@ -19,49 +19,9 @@ interface Track {
   meta: string;
   imageConfig: ImageConfig;
   tags: string[];
+  href: string;
+  cta: string;
 }
-
-const legacyTracks: Track[] = [
-  {
-    title: "تطوير الويب Full Stack",
-    desc: "ابدأ من الأساسيات لحد ما تبني موقع كامل بنفسك باستخدام أحدث أدوات الويب.",
-    meta: "مسار عملي",
-    imageConfig: {
-      src: "/web-development-path.png",
-      alt: "مطور يعمل على تصميم وبرمجة موقع ويب متكامل",
-      objectFit: "cover",
-      objectPosition: "center",
-      mobileObjectPosition: "center",
-    },
-    tags: ["HTML", "CSS", "JavaScript", "React"],
-  },
-  {
-    title: "أساسيات Python والذكاء الاصطناعي",
-    desc: "اتعلم البرمجة بطريقة سهلة وطبّق على مشروعات حقيقية خطوة بخطوة.",
-    meta: "مناسب للمبتدئين",
-    imageConfig: {
-      src: "/python-ai-path.png",
-      alt: "طالب يتعلم Python ويطبق أساسيات الذكاء الاصطناعي",
-      objectFit: "cover",
-      objectPosition: "center",
-      mobileObjectPosition: "center",
-    },
-    tags: ["Python", "AI", "Problem Solving"],
-  },
-  {
-    title: "دعم الجامعة ومواد الحاسبات",
-    desc: "شرح عملي لـ C++ وOOP وهياكل البيانات والخوارزميات والـDatabase.",
-    meta: "لطلاب الجامعة",
-    imageConfig: {
-      src: "/university-cs-path.png",
-      alt: "طالب جامعي يراجع البرمجة والخوارزميات ومواد علوم الحاسب",
-      objectFit: "cover",
-      objectPosition: "center",
-      mobileObjectPosition: "center",
-    },
-    tags: ["C++", "OOP", "Data Structures"],
-  },
-];
 
 const tracks: Track[] = ACADEMIC_TRACKS.map((track) => ({
   title: track.title,
@@ -75,6 +35,12 @@ const tracks: Track[] = ACADEMIC_TRACKS.map((track) => ({
     mobileObjectPosition: "center",
   },
   tags: track.subjects,
+  href: track.id === "baccalaureate"
+    ? "/baccalaureate"
+    : track.id === "computer-science"
+      ? "/university"
+      : "/platform?track=engineering",
+  cta: track.id === "engineering" ? "سجّل في المسار" : "اعرف تفاصيل المسار",
 }));
 
 function renderMixedText(text: string) {
@@ -110,7 +76,7 @@ export function AcademyHome() {
                 <Sparkles className="h-4 w-4" /> منصة متخصصة للمدرسة والجامعة
               </span>
               <h1 className="text-4xl font-black leading-[1.25] md:text-6xl">
-                افهم منهجك ومواد كليتك<br />مع <span className="text-primary">د. محمود المهدي</span>
+                افهم منهجك ومواد كليتك<br />{" "}مع <span className="text-primary">د. محمود المهدي</span>
               </h1>
               <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
                 كورسات مخصصة لطلاب البكالوريا، حاسبات ومعلومات، وهندسة. كل كورس مرتب إلى دروس وملفات واختبارات، ومتاح أونلاين أو حضوري.
@@ -171,7 +137,10 @@ export function AcademyHome() {
           <div className="mx-auto max-w-7xl px-4 md:px-8">
             <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div><span className="text-sm font-bold text-primary">اختار بوابتك التعليمية</span><h2 className="mt-2 text-3xl font-black md:text-4xl">بكالوريا، حاسبات، أو هندسة</h2></div>
-              <a href="/curriculum" className="flex items-center gap-2 font-bold text-primary">شوف كل المناهج <ArrowLeft className="h-4 w-4" /></a>
+              <div className="flex flex-wrap gap-4">
+                <a href="/kids" className="flex items-center gap-2 font-bold text-primary">برمجة الأطفال <ArrowLeft className="h-4 w-4" /></a>
+                <a href="/curriculum" className="flex items-center gap-2 font-bold text-primary">شوف كل المناهج <ArrowLeft className="h-4 w-4" /></a>
+              </div>
             </div>
             <div className="grid gap-6 md:grid-cols-3 items-stretch">
               {tracks.map((track) => (
@@ -210,10 +179,10 @@ export function AcademyHome() {
                       })}
                     </div>
                     <a 
-                      href="/platform" 
+                      href={track.href}
                       className="mt-5 flex items-center justify-between border-t border-border pt-4 font-bold text-primary hover:text-primary/80 transition-colors"
                     >
-                      <span>اعرف تفاصيل المسار</span>
+                      <span>{track.cta}</span>
                       <ArrowLeft className="h-4 w-4 shrink-0 transition-transform group-hover:-translate-x-1" />
                     </a>
                   </div>

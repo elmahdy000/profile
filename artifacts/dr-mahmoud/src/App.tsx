@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,14 +7,14 @@ import { Switch, Route } from "wouter";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ScrollProgress } from "@/components/ScrollProgress";
 import { AcademyHome } from "@/components/AcademyHome";
-import AdminDashboard from "@/components/AdminDashboard";
 
-import BaccalaureatePage from "@/pages/BaccalaureatePage";
-import KidsPage from "@/pages/KidsPage";
-import UniversityPage from "@/pages/UniversityPage";
-import CurriculumPage from "@/pages/CurriculumPage";
-import PlatformPage from "@/pages/PlatformPage";
-import NotFound from "@/pages/not-found";
+const AdminDashboard = lazy(() => import("@/components/AdminDashboard"));
+const BaccalaureatePage = lazy(() => import("@/pages/BaccalaureatePage"));
+const KidsPage = lazy(() => import("@/pages/KidsPage"));
+const UniversityPage = lazy(() => import("@/pages/UniversityPage"));
+const CurriculumPage = lazy(() => import("@/pages/CurriculumPage"));
+const PlatformPage = lazy(() => import("@/pages/PlatformPage"));
+const NotFound = lazy(() => import("@/pages/not-found"));
 
 const queryClient = new QueryClient();
 
@@ -32,22 +32,32 @@ function HomePage() {
   );
 }
 
+function PageLoader() {
+  return (
+    <div className="grid min-h-screen place-items-center bg-background" role="status" aria-label="جاري تحميل الصفحة">
+      <span className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+    </div>
+  );
+}
+
 function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <div className="font-sans min-h-screen text-foreground bg-background overflow-x-hidden selection:bg-accent selection:text-white">
-            <Switch>
-              <Route path="/admin" component={AdminDashboard} />
-              <Route path="/baccalaureate" component={BaccalaureatePage} />
-              <Route path="/kids" component={KidsPage} />
-              <Route path="/university" component={UniversityPage} />
-              <Route path="/curriculum" component={CurriculumPage} />
-              <Route path="/platform" component={PlatformPage} />
-              <Route path="/" component={HomePage} />
-              <Route component={NotFound} />
-            </Switch>
+            <Suspense fallback={<PageLoader />}>
+              <Switch>
+                <Route path="/admin" component={AdminDashboard} />
+                <Route path="/baccalaureate" component={BaccalaureatePage} />
+                <Route path="/kids" component={KidsPage} />
+                <Route path="/university" component={UniversityPage} />
+                <Route path="/curriculum" component={CurriculumPage} />
+                <Route path="/platform" component={PlatformPage} />
+                <Route path="/" component={HomePage} />
+                <Route component={NotFound} />
+              </Switch>
+            </Suspense>
           </div>
           <Toaster />
         </TooltipProvider>

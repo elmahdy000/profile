@@ -24,6 +24,8 @@ import {
   X,
   Camera,
   Trash2,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VideoLessonsSection } from "@/components/YoutubeSection";
@@ -71,11 +73,16 @@ type LearningFile = {
 type QuizQuestion = { prompt: string; options: string[] };
 type Quiz = {
   id: number;
+  scope?: "course" | "lesson";
   title: string;
   description?: string | null;
   category: string;
   stage?: string | null;
   passingScore: number;
+  maxAttempts?: number;
+  attemptsUsed?: number;
+  locked?: boolean;
+  lockedReason?: string | null;
   questions: QuizQuestion[];
 };
 type VideoSummary = {
@@ -422,27 +429,40 @@ function SearchableCombobox({
 }
 
 function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
-  const [mode, setMode] = useState<"login" | "register" | "recover">("login");
+  const requestedTrack = new URLSearchParams(window.location.search).get("track");
+  const shouldStartRegistration = requestedTrack === "engineering" || requestedTrack === "computer-science";
+  const [mode, setMode] = useState<"login" | "register" | "recover">(
+    shouldStartRegistration ? "register" : "login",
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [accessCode, setAccessCode] = useState("");
-  const [rememberCode, setRememberCode] = useState(true);
+  const [rememberCode, setRememberCode] = useState(false);
+  const [showAccessCode, setShowAccessCode] = useState(false);
   const [recoveryForm, setRecoveryForm] = useState({ name: "", phone: "" });
-  const [form, setForm] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    governorate: "",
-    city: "",
-    ...createDefaultRegistrationStage(),
-    otherGradeDetail: "",
-    learningMode: "online" as "online" | "offline",
-  });
+  const [form, setForm] = useState(() => ({
+      name: "",
+      phone: "",
+      email: "",
+      governorate: "",
+      city: "",
+      ...createDefaultRegistrationStage(),
+      ...(shouldStartRegistration && {
+        educationSystem: "university" as const,
+        schoolType: "none" as const,
+        academicTrack: requestedTrack === "engineering" ? "engineering" as const : "computer_science" as const,
+      }),
+      otherGradeDetail: "",
+      learningMode: "online" as "online" | "offline",
+    }));
 
   useEffect(() => {
     const remembered = localStorage.getItem("dr_mahmoud_student_code");
-    if (remembered) setAccessCode(remembered);
+    if (remembered) {
+      setAccessCode(remembered);
+      setRememberCode(true);
+    }
   }, []);
 
   const submitLogin = async (event: React.FormEvent) => {
@@ -713,15 +733,27 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                 <label htmlFor="student-code" className="text-sm font-bold">
                   كود الدخول الشخصي
                 </label>
-                <input
-                  id="student-code"
-                  value={accessCode}
-                  onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
-                  required
-                  autoComplete="one-time-code"
-                  placeholder="A7K9P2"
-                  className="h-14 w-full rounded-xl border border-border bg-background px-4 text-center font-mono text-lg tracking-widest focus:border-primary focus:outline-none"
-                />
+                <div className="relative">
+                  <input
+                    id="student-code"
+                    type={showAccessCode ? "text" : "password"}
+                    value={accessCode}
+                    onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
+                    required
+                    autoComplete="one-time-code"
+                    placeholder="A7K9P2"
+                    className="h-14 w-full rounded-xl border border-border bg-background px-12 text-center font-mono text-lg tracking-widest focus:border-primary focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAccessCode((visible) => !visible)}
+                    aria-label={showAccessCode ? "إخفاء كود الدخول" : "إظهار كود الدخول"}
+                    aria-pressed={showAccessCode}
+                    className="absolute left-2 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-primary"
+                  >
+                    {showAccessCode ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
               </div>
               <label className="flex cursor-pointer items-start gap-3 rounded-xl border bg-muted/30 p-3">
                 <input
@@ -964,12 +996,15 @@ function QuizzesPanel({
             <h3 className="text-xl font-black mt-2">{quiz.title}</h3>
             <p className="text-sm text-muted-foreground mt-2">
               {quiz.questions.length} أسئلة · النجاح من {quiz.passingScore}%
+              {quiz.maxAttempts ? ` · ${Math.max(0, quiz.maxAttempts - (quiz.attemptsUsed || 0))} محاولة متبقية` : ""}
             </p>
+            {quiz.locked && <p className="mt-3 rounded-xl bg-amber-50 p-3 text-xs font-bold text-amber-700">{quiz.lockedReason}</p>}
             <Button
               onClick={() => onStartQuiz(quiz)}
+              disabled={quiz.locked || (quiz.maxAttempts !== undefined && (quiz.attemptsUsed || 0) >= quiz.maxAttempts)}
               className="mt-5 w-full font-bold"
             >
-              ابدأ الاختبار
+              {quiz.locked ? quiz.lockedReason || "الاختبار غير متاح" : "ابدأ الاختبار"}
             </Button>
           </article>
         ))}
@@ -1308,10 +1343,22 @@ export function StudentPlatform() {
   const [quizResult, setQuizResult] = useState<{
     score: number;
     passed: boolean;
+    correct: number;
+    total: number;
+    attemptsUsed: number;
+    attemptsRemaining: number;
   } | null>(null);
   const [quizSubmitting, setQuizSubmitting] = useState(false);
 
   const startQuiz = (quiz: Quiz) => {
+    if (quiz.locked || (quiz.maxAttempts !== undefined && (quiz.attemptsUsed || 0) >= quiz.maxAttempts)) {
+      toast({
+        variant: "destructive",
+        title: "الاختبار غير متاح الآن",
+        description: quiz.lockedReason || "استخدمت كل المحاولات المتاحة لهذا الاختبار.",
+      });
+      return;
+    }
     setActiveQuiz(quiz);
     setQuizAnswers(Array(quiz.questions.length).fill(-1));
     setQuizResult(null);
@@ -1321,7 +1368,14 @@ export function StudentPlatform() {
     if (!activeQuiz || quizAnswers.some((a) => a < 0)) return;
     setQuizSubmitting(true);
     try {
-      const res = await api<{ score: number; passed: boolean }>(
+      const res = await api<{
+        score: number;
+        passed: boolean;
+        correct: number;
+        total: number;
+        attemptsUsed: number;
+        attemptsRemaining: number;
+      }>(
         `/api/learning/quizzes/${activeQuiz.id}/submit`,
         {
           method: "POST",
@@ -1329,6 +1383,18 @@ export function StudentPlatform() {
         },
       );
       setQuizResult(res);
+      setQuizzes((current) =>
+        current.map((quiz) =>
+          quiz.id === activeQuiz.id
+            ? {
+                ...quiz,
+                attemptsUsed: res.attemptsUsed,
+                locked: res.attemptsRemaining === 0,
+                lockedReason: res.attemptsRemaining === 0 ? "استخدمت كل المحاولات المتاحة" : quiz.lockedReason,
+              }
+            : quiz,
+        ),
+      );
     } catch (err) {
       toast({ variant: "destructive", title: "خطأ في الاختبار", description: (err as Error).message });
     } finally {
@@ -1633,6 +1699,9 @@ export function StudentPlatform() {
                     {quizResult.passed
                       ? "عاش! نجحت في الاختبار"
                       : "راجع الدروس وجرب تاني"}
+                  </p>
+                  <p className="mt-2 text-sm font-semibold">
+                    {quizResult.correct} إجابة صحيحة من {quizResult.total} · {quizResult.attemptsRemaining} محاولة متبقية
                   </p>
                 </div>
               ) : (

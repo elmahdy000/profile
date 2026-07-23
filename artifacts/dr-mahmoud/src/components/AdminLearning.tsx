@@ -6,9 +6,7 @@ import {
   FileText,
   Eye,
   Download,
-  Minus,
   Search,
-  HardDrive,
   ListChecks,
   GraduationCap,
   Loader2,
@@ -24,6 +22,7 @@ import {
   Activity,
   FileCheck2,
   AlertCircle,
+  Edit2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -47,6 +46,7 @@ type Student = {
 };
 type FileItem = {
   id: number;
+  courseId?: number | null;
   title: string;
   category: string;
   stage?: string | null;
@@ -64,13 +64,20 @@ type FileItem = {
   createdAt?: string;
 };
 type Question = { prompt: string; options: string[]; correctIndex: number };
-type VideoOption = { id: number; title: string; category: string; stage?: string | null; stages?: string[] };
+type VideoOption = { id: number; courseId?: number | null; title: string; category: string; stage?: string | null; stages?: string[] };
 type Quiz = {
   id: number;
+  courseId?: number | null;
+  videoId?: number | null;
+  scope?: "course" | "lesson";
   title: string;
+  description?: string | null;
   category: string;
   stage?: string | null;
+  stages?: string[];
   passingScore: number;
+  maxAttempts?: number;
+  requiredProgress?: number;
   questions: Question[];
   isPublished: boolean;
 };
@@ -188,11 +195,15 @@ export function AdminLearning() {
   const [isFileDragging, setIsFileDragging] = useState(false);
   const [fileValidationError, setFileValidationError] = useState("");
   const [fileOptimization, setFileOptimization] = useState<{ before: number; after: number } | null>(null);
+  const [lessonSearch, setLessonSearch] = useState("");
+  const [lessonCourseFilter, setLessonCourseFilter] = useState("");
+  const [lessonStageFilter, setLessonStageFilter] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileForm, setFileForm] = useState({
     title: "",
     stage: "أولى بكالوريا",
     category: "",
+    courseId: "",
     subject: "",
     tags: "",
     order: 1,
@@ -204,14 +215,41 @@ export function AdminLearning() {
   });
   const [quizForm, setQuizForm] = useState({
     title: "",
+    courseId: "",
+    videoId: "",
+    scope: "course" as "course" | "lesson",
     category: "",
     stage: "",
+    stages: [] as string[],
     description: "",
     passingScore: 60,
+    maxAttempts: 3,
+    requiredProgress: 80,
+    isPublished: false,
     questions: [
       { prompt: "", options: ["", "", "", ""], correctIndex: 0 },
     ] as Question[],
   });
+  const [editingQuizId, setEditingQuizId] = useState<number | null>(null);
+
+  const resetQuizForm = () => {
+    setEditingQuizId(null);
+    setQuizForm({
+      title: "",
+      courseId: "",
+      videoId: "",
+      scope: "course",
+      category: "",
+      stage: "",
+      stages: [],
+      description: "",
+      passingScore: 60,
+      maxAttempts: 3,
+      requiredProgress: 80,
+      isPublished: false,
+      questions: [{ prompt: "", options: ["", "", "", ""], correctIndex: 0 }],
+    });
+  };
 
   const load = async () => {
     setLoading(true);
@@ -333,18 +371,6 @@ export function AdminLearning() {
     await adminApi(`/api/admin/students/${id}`, { method: "DELETE" });
     setStudents(students.filter((s) => s.id !== id));
   };
-  const getNextFileNumber = (stage: string, category: string) =>
-    Math.max(
-      0,
-      ...files
-        .filter(
-          (file) =>
-            (file.stage || "") === stage &&
-            file.category.trim().toLowerCase() ===
-              category.trim().toLowerCase(),
-        )
-        .map((file) => Number(file.order) || 0),
-    ) + 1;
   const selectLearningFile = async (file: File | null) => {
     setIsFileDragging(false);
     setFileValidationError("");
@@ -373,10 +399,23 @@ export function AdminLearning() {
     const hasTarget = fileForm.targetType === "videos"
       ? fileForm.videoIds.length > 0
       : Boolean(fileForm.category) && fileForm.stages.length > 0;
-    if (!fileForm.file || fileForm.order < 1 || !hasTarget) {
+    if (!fileForm.file) {
       toast({
         variant: "destructive",
-        description: "اختار الملف وحدد رقمه داخل الدرس.",
+        description: "اختر الملف الذي تريد رفعه أولًا.",
+      });
+      return;
+    }
+    if (!fileForm.title.trim()) {
+      toast({ variant: "destructive", description: "اكتب اسمًا واضحًا للملف." });
+      return;
+    }
+    if (!hasTarget) {
+      toast({
+        variant: "destructive",
+        description: fileForm.targetType === "videos"
+          ? "اختر درسًا واحدًا على الأقل لربط الملف به."
+          : "اختر الكورس ومرحلة واحدة على الأقل.",
       });
       return;
     }
@@ -384,10 +423,10 @@ export function AdminLearning() {
       (file) =>
         file.originalName.toLowerCase() === fileForm.file?.name.toLowerCase() &&
         file.targetType === fileForm.targetType &&
-        fileForm.targetType === "stages" &&
-        file.category.trim().toLowerCase() ===
-          fileForm.category.trim().toLowerCase() &&
-        (file.stage || "") === fileForm.stage,
+        (fileForm.targetType === "videos"
+          ? (file.videoIds || []).some((id) => fileForm.videoIds.includes(String(id)))
+          : file.courseId === Number(fileForm.courseId) &&
+            (file.stages || (file.stage ? [file.stage] : [])).some((stage) => fileForm.stages.includes(stage))),
     );
     if (duplicate) {
       toast({
@@ -406,6 +445,7 @@ export function AdminLearning() {
     body.append("targetType", fileForm.targetType);
     body.append("videoIds", fileForm.videoIds.join(","));
     body.append("category", fileForm.category);
+    body.append("courseId", fileForm.courseId);
     body.append("subject", fileForm.subject);
     body.append("tags", fileForm.tags);
     body.append("order", String(fileForm.order));
@@ -422,27 +462,52 @@ export function AdminLearning() {
             setUploadProgress(Math.round((event.loaded / event.total) * 100));
         };
         request.onload = () => {
-          const data = JSON.parse(request.responseText || "{}");
-          if (request.status >= 200 && request.status < 300)
+          let data: unknown = null;
+          try {
+            data = JSON.parse(request.responseText || "{}");
+          } catch {
+            data = null;
+          }
+          if (request.status >= 200 && request.status < 300 && data) {
             resolve(data as FileItem);
-          else reject(new Error(data.error || "تعذر رفع الملف"));
+            return;
+          }
+          if (request.status === 413) {
+            reject(new Error("حجم الملف أكبر من الحد المسموح على السيرفر. اضغطه أو اختر ملفًا أصغر."));
+            return;
+          }
+          const message = data && typeof data === "object" && "error" in data
+            ? String((data as { error: unknown }).error)
+            : `تعذر رفع الملف (${request.status || "خطأ اتصال"})`;
+          reject(new Error(message));
         };
         request.onerror = () =>
           reject(new Error("تعذر الاتصال أثناء رفع الملف"));
         request.send(body);
       });
       setFiles([created, ...files]);
-      setFileForm({
-        ...fileForm,
+      setFileForm((current) => ({
+        ...current,
         title: "",
-        order: fileForm.order + 1,
+        category: "",
+        courseId: "",
+        stage: "",
+        stages: [],
+        videoIds: [],
+        subject: "",
+        tags: "",
+        order: 1,
         description: "",
         file: null,
-      });
+      }));
+      setLessonSearch("");
+      setLessonCourseFilter("");
+      setLessonStageFilter("");
+      setFileOptimization(null);
+      setShowFilePreview(false);
       toast({
         title: isPublished ? "تم رفع ونشر الملف" : "تم حفظ الملف كمسودة",
-        description:
-          "احتفظنا ببيانات المرحلة والكورس لتقدر ترفع الملف اللي بعده بسرعة.",
+        description: "تم ربط الملف بالمكان الذي اخترته بنجاح.",
       });
     } catch (e) {
       toast({ variant: "destructive", description: (e as Error).message });
@@ -467,17 +532,37 @@ export function AdminLearning() {
     setFiles(files.map((f) => (f.id === file.id ? updated : f)));
   };
   const editFile = async (file: FileItem) => {
-    setEditingFile({ ...file, stages: file.stages?.length ? file.stages : file.stage ? [file.stage] : [], videoIds: file.videoIds || [] });
+    setEditingFile({
+      ...file,
+      targetType: file.targetType || (file.videoIds?.length ? "videos" : "stages"),
+      stages: file.stages?.length ? file.stages : file.stage ? [file.stage] : [],
+      videoIds: file.videoIds || [],
+    });
   };
   const saveEditedFile = async () => {
     if (!editingFile) return;
-    if (editingFile.targetType === "videos" && !editingFile.videoIds?.length) return;
-    if (editingFile.targetType !== "videos" && !editingFile.stages?.length) return;
+    if (!editingFile.title.trim()) {
+      toast({ variant: "destructive", description: "اكتب اسمًا واضحًا للملف." });
+      return;
+    }
+    if (editingFile.targetType === "videos" && !editingFile.videoIds?.length) {
+      toast({ variant: "destructive", description: "اختر درسًا واحدًا على الأقل." });
+      return;
+    }
+    if (editingFile.targetType !== "videos" && (!editingFile.courseId || !editingFile.stages?.length)) {
+      toast({ variant: "destructive", description: "اختر الكورس ومرحلة واحدة على الأقل." });
+      return;
+    }
+    const editingCategory = editingFile.targetType === "videos"
+      ? videoOptions.find((video) => editingFile.videoIds?.includes(video.id))?.category || editingFile.category
+      : editingFile.category;
     const updated = await adminApi<FileItem>(
       `/api/admin/learning/files/${editingFile.id}`,
       { method: "PATCH", body: JSON.stringify({
         title: editingFile.title,
         targetType: editingFile.targetType || "stages",
+        courseId: editingFile.courseId,
+        category: editingCategory,
         stages: editingFile.stages || [],
         videoIds: editingFile.videoIds || [],
       }) },
@@ -488,24 +573,40 @@ export function AdminLearning() {
   };
   const createQuiz = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!quizForm.courseId || quizForm.stages.length === 0 || (quizForm.scope === "lesson" && !quizForm.videoId)) {
+      toast({ variant: "destructive", description: "اختر الكورس ومرحلة واحدة على الأقل، وحدد الدرس إذا كان الاختبار تابعًا لدرس." });
+      return;
+    }
+    const wasEditing = editingQuizId !== null;
     try {
-      const created = await adminApi<Quiz>("/api/admin/learning/quizzes", {
-        method: "POST",
+      const created = await adminApi<Quiz>(editingQuizId ? `/api/admin/learning/quizzes/${editingQuizId}` : "/api/admin/learning/quizzes", {
+        method: editingQuizId ? "PATCH" : "POST",
         body: JSON.stringify(quizForm),
       });
-      setQuizzes([created, ...quizzes]);
-      setQuizForm({
-        title: "",
-        category: "",
-        stage: "",
-        description: "",
-        passingScore: 60,
-        questions: [{ prompt: "", options: ["", "", "", ""], correctIndex: 0 }],
-      });
-      toast({ title: "تم إنشاء الاختبار" });
+      setQuizzes(editingQuizId ? quizzes.map((quiz) => quiz.id === editingQuizId ? created : quiz) : [created, ...quizzes]);
+      resetQuizForm();
+      toast({ title: wasEditing ? "تم تحديث الاختبار" : "تم إنشاء الاختبار" });
     } catch (e) {
       toast({ variant: "destructive", description: (e as Error).message });
     }
+  };
+  const editQuiz = (quiz: Quiz) => {
+    setEditingQuizId(quiz.id);
+    setQuizForm({
+      title: quiz.title,
+      courseId: quiz.courseId ? String(quiz.courseId) : "",
+      videoId: quiz.videoId ? String(quiz.videoId) : "",
+      scope: quiz.scope || (quiz.videoId ? "lesson" : "course"),
+      category: quiz.category,
+      stage: quiz.stage || "",
+      stages: quiz.stages?.length ? quiz.stages : quiz.stage ? [quiz.stage] : [],
+      description: quiz.description || "",
+      passingScore: quiz.passingScore,
+      maxAttempts: quiz.maxAttempts || 3,
+      requiredProgress: quiz.requiredProgress ?? 80,
+      isPublished: quiz.isPublished,
+      questions: quiz.questions.map((question) => ({ ...question, options: [...question.options] })),
+    });
   };
   const deleteQuiz = async (id: number) => {
     await adminApi(`/api/admin/learning/quizzes/${id}`, { method: "DELETE" });
@@ -538,13 +639,41 @@ export function AdminLearning() {
     .filter(Boolean)
     .sort((a, b) => a.localeCompare(b, "ar"));
   const selectedFileCourse = learningCourses.find(
-    (course) => course.title === fileForm.category,
+    (course) => String(course.id) === fileForm.courseId,
   );
-  const availableFileStages = getStagesForTrack(selectedFileCourse?.category);
+  const availableFileStages = selectedFileCourse?.stages?.length
+    ? selectedFileCourse.stages
+    : getStagesForTrack(selectedFileCourse?.category);
+  const filteredLessonOptions = useMemo(() => {
+    const query = lessonSearch.trim().toLowerCase();
+    return videoOptions.filter((video) => {
+      const videoStages = video.stages?.length ? video.stages : video.stage ? [video.stage] : [];
+      return (
+        (!lessonCourseFilter || String(video.courseId || "") === lessonCourseFilter) &&
+        (!lessonStageFilter || videoStages.includes(lessonStageFilter)) &&
+        (!query || video.title.toLowerCase().includes(query) || video.category.toLowerCase().includes(query))
+      );
+    });
+  }, [videoOptions, lessonCourseFilter, lessonStageFilter, lessonSearch]);
+  const selectedLessonCourse = learningCourses.find((course) => String(course.id) === lessonCourseFilter);
+  const availableLessonStages = selectedLessonCourse?.stages?.length
+    ? selectedLessonCourse.stages
+    : getStagesForTrack(selectedLessonCourse?.category);
+  const fileDestinationReady = fileForm.targetType === "videos"
+    ? fileForm.videoIds.length > 0
+    : Boolean(fileForm.courseId) && fileForm.stages.length > 0;
+  const fileUploadReady = Boolean(fileForm.file) && Boolean(fileForm.title.trim()) && fileDestinationReady && !isUploadingFile;
+  const destinationSummary = fileForm.targetType === "videos"
+    ? fileForm.videoIds.length
+      ? `مرفق داخل ${fileForm.videoIds.length} ${fileForm.videoIds.length === 1 ? "درس" : "دروس"}`
+      : "لم تختر درسًا بعد"
+    : selectedFileCourse && fileForm.stages.length
+      ? `${selectedFileCourse.title} ← ${fileForm.stages.join("، ")}`
+      : "لم تحدد الكورس والمراحل بعد";
   const selectedQuizCourse = learningCourses.find(
-    (course) => course.title === quizForm.category,
+    (course) => String(course.id) === quizForm.courseId,
   );
-  const availableQuizStages = getStagesForTrack(selectedQuizCourse?.category);
+  const availableQuizStages = selectedQuizCourse?.stages?.length ? selectedQuizCourse.stages : getStagesForTrack(selectedQuizCourse?.category);
   const filteredFiles = useMemo(
     () =>
       files.filter((file) => {
@@ -557,7 +686,7 @@ export function AdminLearning() {
           matchesSearch &&
           (fileCourseFilter === "all" || file.category === fileCourseFilter) &&
           (fileStageFilter === "all" ||
-            (file.stage || "غير محدد") === fileStageFilter) &&
+            (file.stages?.length ? file.stages : [file.stage || "غير محدد"]).includes(fileStageFilter)) &&
           (fileStatusFilter === "all" ||
             (fileStatusFilter === "published"
               ? file.isPublished
@@ -807,75 +936,104 @@ export function AdminLearning() {
                     event.preventDefault();
                     void uploadFile(true);
                   }}
-                  className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-7"
+                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-7"
                 >
                   <div className="mb-6 border-b border-slate-100 pb-5">
                     <h3 className="text-xl font-black text-slate-900">
                       رفع ملف تعليمي جديد
                     </h3>
                     <p className="mt-1 text-sm text-slate-500">
-                      1) اختر الملف &nbsp; 2) حدد مكان ظهوره &nbsp; 3) اضغط رفع ونشر.
+                      حدد مكان الظهور، اختر الطلاب أو الدروس، ثم أضف الملف وانشره.
                     </p>
                   </div>
 
-                  <div className="order-2 grid gap-5 md:grid-cols-2">
-                    <div className="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                      <span className="mb-3 block text-sm font-bold text-slate-800">مكان ظهور الملف</span>
+                  <div className="grid gap-5 md:grid-cols-2">
+                    <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:p-5">
+                      <span className="mb-1 block text-xs font-black text-primary">الخطوة 1</span>
+                      <span className="mb-3 block text-base font-black text-slate-900">أين سيظهر الملف؟</span>
                       <div className="grid gap-2 sm:grid-cols-2">
-                        {([['stages', 'مراحل دراسية محددة'], ['videos', 'داخل فيديو أو درس']] as const).map(([value, label]) => (
+                        {([['stages', 'لطلاب كورس ومراحل', 'يظهر في مكتبة الملفات للطلاب المحددين'], ['videos', 'مرفق داخل درس', 'يظهر مع الفيديو داخل صفحة الدرس']] as const).map(([value, label, description]) => (
                           <button key={value} type="button" onClick={() => setFileForm({
                             ...fileForm,
                             targetType: value,
                             stages: [],
                             stage: "",
                             videoIds: [],
-                            ...(value === "videos" ? { category: "" } : {}),
+                            ...(value === "videos" ? { category: "", courseId: "" } : {}),
                           })}
-                            className={`rounded-xl border p-3 text-sm font-bold ${fileForm.targetType === value ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 bg-white text-slate-600'}`}>
-                            {label}
+                            className={`rounded-xl border p-4 text-right transition ${fileForm.targetType === value ? 'border-primary bg-white text-primary ring-2 ring-primary/10' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'}`}>
+                            <strong className="block text-sm">{label}</strong>
+                            <span className="mt-1 block text-xs font-normal text-slate-500">{description}</span>
                           </button>
                         ))}
                       </div>
                     </div>
                     {fileForm.targetType === "videos" && <div className="md:col-span-2">
-                      <span className="mb-2 block text-sm font-semibold text-slate-700">اختر الفيديو أو الدرس المرتبط</span>
+                      <span className="mb-1 block text-xs font-black text-primary">الخطوة 2</span>
+                      <span className="mb-3 block text-base font-black text-slate-900">اختر الدروس المرتبطة</span>
+                      <div className="mb-3 grid gap-2 sm:grid-cols-3">
+                        <select
+                          value={lessonCourseFilter}
+                          onChange={(event) => {
+                            setLessonCourseFilter(event.target.value);
+                            setLessonStageFilter("");
+                          }}
+                          className="input-admin min-h-11"
+                        >
+                          <option value="">كل الكورسات</option>
+                          {learningCourses.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}
+                        </select>
+                        <select
+                          value={lessonStageFilter}
+                          onChange={(event) => setLessonStageFilter(event.target.value)}
+                          disabled={!lessonCourseFilter}
+                          className="input-admin min-h-11 disabled:bg-slate-100"
+                        >
+                          <option value="">كل المراحل</option>
+                          {availableLessonStages.map((stage) => <option key={stage} value={stage}>{stage}</option>)}
+                        </select>
+                        <label className="relative">
+                          <Search className="absolute right-3 top-3.5 h-4 w-4 text-slate-400" />
+                          <input value={lessonSearch} onChange={(event) => setLessonSearch(event.target.value)} placeholder="ابحث عن درس..." className="input-admin min-h-11 pr-9" />
+                        </label>
+                      </div>
                       <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border border-slate-200 p-3">
-                        {videoOptions.map((video) => {
+                        {filteredLessonOptions.map((video) => {
                           const id = String(video.id);
                           const checked = fileForm.videoIds.includes(id);
                           return <label key={video.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-100 p-3 hover:bg-slate-50">
-                            <input className="mt-1" type="checkbox" checked={checked} onChange={() => setFileForm({ ...fileForm, videoIds: checked ? fileForm.videoIds.filter((item) => item !== id) : [...fileForm.videoIds, id] })} />
-                            <span><strong className="block text-sm">{video.title}</strong><small className="text-slate-500">{video.category}</small></span>
+                            <input className="mt-1" type="checkbox" checked={checked} onChange={() => {
+                              const videoIds = checked ? fileForm.videoIds.filter((item) => item !== id) : [...fileForm.videoIds, id];
+                              const firstVideo = videoOptions.find((item) => videoIds.includes(String(item.id)));
+                              setFileForm({ ...fileForm, videoIds, category: firstVideo?.category || "" });
+                            }} />
+                            <span className="min-w-0"><strong className="block truncate text-sm">{video.title}</strong><small className="text-slate-500">{video.category}{video.stage ? ` · ${video.stage}` : ""}</small></span>
                           </label>;
                         })}
-                        {!videoOptions.length && <p className="text-sm text-slate-500">لا توجد فيديوهات متاحة للربط.</p>}
+                        {!filteredLessonOptions.length && <p className="py-5 text-center text-sm text-slate-500">لا توجد دروس مطابقة للفلاتر الحالية.</p>}
                       </div>
+                      {fileForm.videoIds.length > 0 && <p className="mt-2 text-xs font-bold text-primary">تم اختيار {fileForm.videoIds.length} {fileForm.videoIds.length === 1 ? "درس" : "دروس"}</p>}
                     </div>}
-                    <Field label="اسم الملف أو الدرس">
-                      <input
-                        required
-                        value={fileForm.title}
-                        onChange={(e) =>
-                          setFileForm({ ...fileForm, title: e.target.value })
-                        }
-                        placeholder="مثال: مراجعة الدرس الثالث"
-                        className="input-admin min-h-12 border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/10"
-                      />
-                    </Field>
-                    {fileForm.targetType === "stages" && <><Field label="الكورس">
+                    {fileForm.targetType === "stages" && <>
+                    <div className="md:col-span-2">
+                      <span className="block text-xs font-black text-primary">الخطوة 2</span>
+                      <span className="block text-base font-black text-slate-900">حدد الكورس والمراحل</span>
+                    </div>
+                    <Field label="الكورس">
                       <select
                         required={fileForm.targetType === "stages"}
-                        value={fileForm.category}
+                        value={fileForm.courseId}
                         onChange={(e) => {
                           const course = learningCourses.find(
-                            (item) => item.title === e.target.value,
+                            (item) => String(item.id) === e.target.value,
                           );
                           const stages = course?.stages?.length
                             ? course.stages
                             : getStagesForTrack(course?.category);
                           setFileForm({
                             ...fileForm,
-                            category: e.target.value,
+                            category: course?.title || "",
+                            courseId: course ? String(course.id) : "",
                             stage: stages[0] || "عام",
                             stages: [],
                           });
@@ -884,7 +1042,7 @@ export function AdminLearning() {
                       >
                         <option value="">اختر الكورس أولًا</option>
                         {learningCourses.map((course) => (
-                          <option key={course.id} value={course.title}>
+                          <option key={course.id} value={course.id}>
                             {course.title}
                           </option>
                         ))}
@@ -892,8 +1050,8 @@ export function AdminLearning() {
                     </Field>
                     <Field label="المراحل التي سيظهر لها الملف">
                       <div className="flex min-h-12 flex-wrap gap-2 rounded-xl border border-slate-300 bg-white p-2">
-                        {!fileForm.category && <span className="p-1 text-sm text-slate-400">اختر الكورس أولًا</span>}
-                        {fileForm.category && availableFileStages.map((stage) => {
+                        {!fileForm.courseId && <span className="p-1 text-sm text-slate-400">اختر الكورس أولًا</span>}
+                        {fileForm.courseId && availableFileStages.map((stage) => {
                           const checked = fileForm.stages.includes(stage);
                           return <button key={stage} type="button" onClick={() => {
                             const stages = checked ? fileForm.stages.filter((item) => item !== stage) : [...fileForm.stages, stage];
@@ -916,53 +1074,6 @@ export function AdminLearning() {
                         placeholder="مثال: البرمجة وعلوم الحاسب"
                         className="input-admin min-h-12 border-slate-300 focus:border-primary"
                       />
-                    </Field>
-                    <Field label="رقم الملف داخل الدرس">
-                      <div className="flex min-h-12 overflow-hidden rounded-xl border border-slate-300 bg-white focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10">
-                        <button
-                          type="button"
-                          aria-label="تقليل رقم الملف"
-                          onClick={() =>
-                            setFileForm({
-                              ...fileForm,
-                              order: Math.max(1, fileForm.order - 1),
-                            })
-                          }
-                          className="grid w-12 place-items-center border-l text-slate-500 hover:bg-slate-50"
-                        >
-                          <Minus className="h-4 w-4" />
-                        </button>
-                        <input
-                          type="number"
-                          min="1"
-                          required
-                          value={fileForm.order}
-                          onChange={(e) =>
-                            setFileForm({
-                              ...fileForm,
-                              order: Math.max(1, Number(e.target.value)),
-                            })
-                          }
-                          className="min-w-0 flex-1 border-0 bg-transparent px-3 text-center font-bold outline-none"
-                        />
-                        <button
-                          type="button"
-                          aria-label="زيادة رقم الملف"
-                          onClick={() =>
-                            setFileForm({
-                              ...fileForm,
-                              order: fileForm.order + 1,
-                            })
-                          }
-                          className="grid w-12 place-items-center border-r text-primary hover:bg-primary/5"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </button>
-                      </div>
-                      <p className="text-xs text-slate-500">
-                        بيحدد ترتيب ظهور الملف داخل الدرس. الرقم المقترح التالي:{" "}
-                        {getNextFileNumber(fileForm.stage, fileForm.category)}
-                      </p>
                     </Field>
                     <Field label="الكلمات المفتاحية">
                       <input
@@ -996,9 +1107,10 @@ export function AdminLearning() {
                     </details>
                   </div>
 
-                  <div className="order-1 mb-6">
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
-                      الملف المرفق
+                  <div className="mt-6 rounded-2xl border border-slate-200 p-4 md:p-5">
+                    <span className="mb-1 block text-xs font-black text-primary">الخطوة 3</span>
+                    <label className="mb-3 block text-base font-black text-slate-900">
+                      اختر الملف واكتب اسمه
                     </label>
                     <div
                       onDragEnter={(event) => { event.preventDefault(); setIsFileDragging(true); }}
@@ -1024,6 +1136,18 @@ export function AdminLearning() {
                       <span className="mt-1 block text-xs text-slate-500">
                         PDF, DOCX, ZIP, PPTX — بحد أقصى 150MB
                       </span>
+                    </div>
+                    <div className="mt-4">
+                      <Field label="الاسم الذي سيظهر للطالب">
+                        <input
+                          required
+                          value={fileForm.title}
+                          onChange={(event) => setFileForm({ ...fileForm, title: event.target.value })}
+                          placeholder="مثال: ملخص الدرس الثالث"
+                          className="input-admin min-h-12 border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/10"
+                        />
+                        <p className="text-xs text-slate-500">يُكتب تلقائيًا من اسم الملف ويمكنك تعديله.</p>
+                      </Field>
                     </div>
                     {fileValidationError && <p role="alert" className="mt-3 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700"><AlertCircle className="h-4 w-4 shrink-0" />{fileValidationError}</p>}
                     {fileOptimization && <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">تم تحسين الصورة تلقائيًا مع الحفاظ على الجودة: {(fileOptimization.before / 1024 / 1024).toFixed(1)} MB ← {(fileOptimization.after / 1024 / 1024).toFixed(1)} MB</p>}
@@ -1080,12 +1204,17 @@ export function AdminLearning() {
                     )}
                   </div>
 
-                  <div className="order-3 mt-7 flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div className={`mt-5 rounded-xl border p-4 text-sm ${fileDestinationReady ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
+                    <strong className="block">مكان ظهور الملف</strong>
+                    <span>{destinationSummary}</span>
+                  </div>
+
+                  <div className="mt-5 flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex flex-col gap-2 sm:flex-row">
                       <Button
                         type="button"
                         variant="outline"
-                        disabled={isUploadingFile || !fileForm.file}
+                        disabled={!fileUploadReady}
                         onClick={() => void uploadFile(false)}
                         className="h-11"
                       >
@@ -1104,7 +1233,7 @@ export function AdminLearning() {
                     </div>
                     <Button
                       type="submit"
-                      disabled={isUploadingFile || !fileForm.file}
+                      disabled={!fileUploadReady}
                       className="h-11 px-6"
                     >
                       {isUploadingFile ? (
@@ -1122,78 +1251,6 @@ export function AdminLearning() {
                   </div>
                 </form>
 
-                <aside className="hidden">
-                  <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h3 className="flex items-center gap-2 font-black text-slate-900">
-                      <ListChecks className="h-5 w-5 text-primary" />
-                      قائمة النشر
-                    </h3>
-                    <ul className="mt-4 space-y-3 text-sm text-slate-600">
-                      {[
-                        "اكتب اسم واضح للملف والدرس",
-                        "تأكد من المرحلة والكورس",
-                        "راجع رقم الملف وترتيبه",
-                        "عاين الملف قبل النشر",
-                      ].map((item) => (
-                        <li key={item} className="flex items-start gap-2">
-                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </article>
-                  <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h3 className="flex items-center gap-2 font-black text-slate-900">
-                      <HardDrive className="h-5 w-5 text-primary" />
-                      مواصفات الرفع
-                    </h3>
-                    <div className="mt-4 space-y-3 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">الصيغ المدعومة</span>
-                        <strong>PDF, DOCX, ZIP, PPTX</strong>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">أقصى حجم</span>
-                        <strong>150MB</strong>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">حالة النشر</span>
-                        <strong className="text-emerald-600">
-                          فوري أو مسودة
-                        </strong>
-                      </div>
-                    </div>
-                  </article>
-                  <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h3 className="font-black text-slate-900">آخر الملفات</h3>
-                    <div className="mt-4 space-y-3">
-                      {files.slice(0, 3).map((file) => (
-                        <button
-                          type="button"
-                          key={file.id}
-                          onClick={() => setPreviewFile(file)}
-                          className="flex w-full items-center gap-3 rounded-xl border border-slate-100 p-3 text-right hover:bg-slate-50"
-                        >
-                          <FileText className="h-5 w-5 shrink-0 text-primary" />
-                          <span className="min-w-0">
-                            <strong className="block truncate text-xs">
-                              {file.title}
-                            </strong>
-                            <small className="text-[11px] text-slate-500">
-                              {file.category} ·{" "}
-                              {(file.sizeBytes / 1024 / 1024).toFixed(1)} MB
-                            </small>
-                          </span>
-                        </button>
-                      ))}
-                      {files.length === 0 && (
-                        <p className="text-sm text-slate-500">
-                          لسه مفيش ملفات مرفوعة.
-                        </p>
-                      )}
-                    </div>
-                  </article>
-                </aside>
               </div>
 
               <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -1237,7 +1294,7 @@ export function AdminLearning() {
                         <option value="all">كل المراحل</option>
                         {Array.from(
                           new Set(
-                            files.map((file) => file.stage || "غير محدد"),
+                            files.flatMap((file) => file.stages?.length ? file.stages : [file.stage || "غير محدد"]),
                           ),
                         ).map((stage) => (
                           <option key={stage} value={stage}>
@@ -1266,13 +1323,51 @@ export function AdminLearning() {
                     </p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
+                  <>
+                  <div className="grid gap-3 p-4 md:hidden">
+                    {visibleFiles.map((file) => {
+                      const linkedLessons = videoOptions.filter((video) => file.videoIds?.includes(video.id));
+                      const fileStages = file.stages?.length ? file.stages : file.stage ? [file.stage] : [];
+                      return (
+                        <article key={file.id} className="rounded-xl border border-slate-200 p-4">
+                          <div className="flex items-start gap-3">
+                            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-blue-50 text-primary"><FileText className="h-5 w-5" /></div>
+                            <div className="min-w-0 flex-1">
+                              <strong className="block truncate text-sm">{file.title}</strong>
+                              <span className="block truncate text-xs text-slate-500">{file.originalName}</span>
+                            </div>
+                            <button type="button" onClick={() => void toggleFile(file)} className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${file.isPublished ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                              {file.isPublished ? "منشور" : "مسودة"}
+                            </button>
+                          </div>
+                          <div className="mt-3 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+                            <strong className="mb-1 block text-slate-800">مكان الظهور</strong>
+                            {file.targetType === "videos"
+                              ? linkedLessons.length
+                                ? linkedLessons.map((video) => video.title).join("، ")
+                                : `داخل ${file.videoIds?.length || 0} درس`
+                              : `${file.category}${fileStages.length ? ` ← ${fileStages.join("، ")}` : ""}`}
+                          </div>
+                          <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+                            <span>{(file.sizeBytes / 1024 / 1024).toFixed(1)} MB</span>
+                            <div className="flex gap-1">
+                              <button type="button" onClick={() => setPreviewFile(file)} className="rounded-lg p-2 hover:bg-blue-50" aria-label="معاينة"><Eye className="h-4 w-4" /></button>
+                              <button type="button" onClick={() => void editFile(file)} className="rounded-lg p-2 hover:bg-slate-100" aria-label="تعديل"><Edit2 className="h-4 w-4" /></button>
+                              <a href={`/api/learning/files/${file.id}/download`} className="rounded-lg p-2 hover:bg-slate-100" aria-label="تحميل"><Download className="h-4 w-4" /></a>
+                              <button type="button" onClick={() => void deleteFile(file.id)} className="rounded-lg p-2 text-red-500 hover:bg-red-50" aria-label="حذف"><Trash2 className="h-4 w-4" /></button>
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                  <div className="hidden overflow-x-auto md:block">
                     <table className="w-full min-w-[1050px] text-sm">
                       <thead className="bg-slate-50 text-xs text-slate-500">
                         <tr>
                           <th className="p-4 text-right">اسم الملف</th>
-                          <th className="p-4 text-right">الكورس</th>
-                          <th className="p-4 text-right">المرحلة</th>
+                          <th className="p-4 text-right">مكان الظهور</th>
+                          <th className="p-4 text-right">التحديد</th>
                           <th className="p-4">النوع</th>
                           <th className="p-4">الحجم</th>
                           <th className="p-4">تاريخ الرفع</th>
@@ -1301,8 +1396,12 @@ export function AdminLearning() {
                                 </div>
                               </div>
                             </td>
-                            <td className="p-4">{file.category}</td>
-                            <td className="p-4">{file.stage || "غير محدد"}</td>
+                            <td className="p-4 font-semibold">{file.targetType === "videos" ? "داخل درس" : file.category}</td>
+                            <td className="max-w-56 p-4 text-slate-600">
+                              {file.targetType === "videos"
+                                ? videoOptions.filter((video) => file.videoIds?.includes(video.id)).map((video) => video.title).join("، ") || `${file.videoIds?.length || 0} درس`
+                                : (file.stages?.length ? file.stages.join("، ") : file.stage || "غير محدد")}
+                            </td>
                             <td className="p-4 text-center">
                               {file.mimeType?.split("/").pop()?.toUpperCase() ||
                                 "FILE"}
@@ -1342,7 +1441,7 @@ export function AdminLearning() {
                                   className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
                                   title="تعديل"
                                 >
-                                  <Plus className="h-4 w-4 rotate-45" />
+                                  <Edit2 className="h-4 w-4" />
                                 </button>
                                 <a
                                   href={`/api/learning/files/${file.id}/download`}
@@ -1366,6 +1465,7 @@ export function AdminLearning() {
                       </tbody>
                     </table>
                   </div>
+                  </>
                 )}
                 <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4 text-sm">
                   <span className="text-slate-500">
@@ -1396,11 +1496,11 @@ export function AdminLearning() {
 
               {editingFile && (
                 <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4" onClick={() => setEditingFile(null)}>
-                  <div className="w-full max-w-2xl rounded-2xl bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+                  <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
                     <div className="mb-5 flex items-center justify-between"><div><h3 className="text-lg font-black">تعديل الملف</h3><p className="text-xs text-slate-500">غيّر مكان ظهوره بدون إعادة رفعه.</p></div><button type="button" onClick={() => setEditingFile(null)}><X className="h-5 w-5" /></button></div>
                     <Field label="اسم الملف"><input className="input-admin" value={editingFile.title} onChange={(event) => setEditingFile({ ...editingFile, title: event.target.value })} /></Field>
                     <div className="my-4 grid grid-cols-2 gap-2">{([['stages', 'مراحل محددة'], ['videos', 'فيديو أو درس']] as const).map(([value, label]) => <button type="button" key={value} onClick={() => setEditingFile({ ...editingFile, targetType: value, stages: [], videoIds: [] })} className={`rounded-xl border p-3 font-bold ${editingFile.targetType === value ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200'}`}>{label}</button>)}</div>
-                    {editingFile.targetType === "videos" ? <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border p-3">{videoOptions.map((video) => { const checked = editingFile.videoIds?.includes(video.id) || false; return <label key={video.id} className="flex gap-3 rounded-lg p-2 hover:bg-slate-50"><input type="checkbox" checked={checked} onChange={() => setEditingFile({ ...editingFile, videoIds: checked ? editingFile.videoIds?.filter((id) => id !== video.id) : [...(editingFile.videoIds || []), video.id] })} /><span><strong className="block text-sm">{video.title}</strong><small>{video.category}</small></span></label>; })}</div> : <div className="flex flex-wrap gap-2 rounded-xl border p-3">{(() => { const course = learningCourses.find((item) => item.title === editingFile.category); return (course?.stages?.length ? course.stages : getStagesForTrack(course?.category)); })().map((stage) => { const checked = editingFile.stages?.includes(stage) || false; return <button type="button" key={stage} onClick={() => setEditingFile({ ...editingFile, stages: checked ? editingFile.stages?.filter((item) => item !== stage) : [...(editingFile.stages || []), stage] })} className={`rounded-lg border px-3 py-2 text-xs font-bold ${checked ? 'bg-primary text-white' : 'bg-slate-50'}`}>{stage}</button>; })}</div>}
+                    {editingFile.targetType === "videos" ? <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border p-3">{videoOptions.map((video) => { const checked = editingFile.videoIds?.includes(video.id) || false; return <label key={video.id} className="flex gap-3 rounded-lg p-2 hover:bg-slate-50"><input type="checkbox" checked={checked} onChange={() => setEditingFile({ ...editingFile, videoIds: checked ? editingFile.videoIds?.filter((id) => id !== video.id) : [...(editingFile.videoIds || []), video.id] })} /><span><strong className="block text-sm">{video.title}</strong><small>{video.category}</small></span></label>; })}</div> : <div className="space-y-3"><select className="input-admin" value={editingFile.courseId || ""} onChange={(event) => { const course = learningCourses.find((item) => item.id === Number(event.target.value)); setEditingFile({ ...editingFile, courseId: course?.id || null, category: course?.title || "", stages: [] }); }}><option value="">اختر الكورس</option>{learningCourses.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}</select><div className="flex flex-wrap gap-2 rounded-xl border p-3">{(() => { const course = learningCourses.find((item) => item.id === editingFile.courseId); return (course?.stages?.length ? course.stages : getStagesForTrack(course?.category)); })().map((stage) => { const checked = editingFile.stages?.includes(stage) || false; return <button type="button" key={stage} onClick={() => setEditingFile({ ...editingFile, stages: checked ? editingFile.stages?.filter((item) => item !== stage) : [...(editingFile.stages || []), stage] })} className={`rounded-lg border px-3 py-2 text-xs font-bold ${checked ? 'bg-primary text-white' : 'bg-slate-50'}`}>{stage}</button>; })}</div></div>}
                     <div className="mt-5 flex justify-end gap-2"><Button variant="outline" onClick={() => setEditingFile(null)}>إلغاء</Button><Button onClick={() => void saveEditedFile()}>حفظ التعديلات</Button></div>
                   </div>
                 </div>
@@ -1453,7 +1553,7 @@ export function AdminLearning() {
                 onSubmit={createQuiz}
                 className="rounded-2xl border bg-card p-5 space-y-5"
               >
-                <h3 className="font-black text-lg">إنشاء اختبار</h3>
+                <div><h3 className="font-black text-lg">{editingQuizId ? "تعديل الاختبار" : "إنشاء اختبار جديد"}</h3><p className="text-xs text-muted-foreground">حدد هل الاختبار للكورس كله أم تابع لدرس، ثم أضف الأسئلة.</p></div>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   <Field label="اسم الاختبار">
                     <input
@@ -1468,47 +1568,69 @@ export function AdminLearning() {
                   <Field label="الكورس المرتبط بالاختبار">
                     <select
                       required
-                      value={quizForm.category}
+                      value={quizForm.courseId}
                       onChange={(e) => {
                         const course = learningCourses.find(
-                          (item) => item.title === e.target.value,
+                          (item) => String(item.id) === e.target.value,
                         );
-                        const stages = course?.stages?.length
-                          ? course.stages
-                          : getStagesForTrack(course?.category);
                         setQuizForm({
                           ...quizForm,
-                          category: e.target.value,
-                          stage: stages[0] || "",
+                          courseId: e.target.value,
+                          category: course?.title || "",
+                          stage: "",
+                          stages: [],
+                          videoId: "",
                         });
                       }}
                       className="input-admin"
                     >
                       <option value="">اختر الكورس</option>
                       {learningCourses.map((course) => (
-                        <option key={course.id} value={course.title}>
+                        <option key={course.id} value={course.id}>
                           {course.title}
                         </option>
                       ))}
                     </select>
                   </Field>
-                  <Field label="المرحلة / المجموعة">
-                    <select
-                      required
-                      value={quizForm.stage}
-                      onChange={(e) =>
-                        setQuizForm({ ...quizForm, stage: e.target.value })
-                      }
-                      className="input-admin"
-                    >
-                      <option value="">اختر المرحلة</option>
-                      {availableQuizStages.map((stage) => (
-                        <option key={stage} value={stage}>
-                          {stage === "عام" ? "عام لكل مراحل الكورس" : stage}
-                        </option>
-                      ))}
+                  <Field label="المراحل / المجموعات">
+                    <div className="flex min-h-11 flex-wrap gap-2 rounded-xl border border-slate-200 bg-white p-2">
+                      {availableQuizStages.map((stage) => {
+                        const selected = quizForm.stages.includes(stage);
+                        return (
+                          <button
+                            key={stage}
+                            type="button"
+                            onClick={() => {
+                              const stages = selected
+                                ? quizForm.stages.filter((item) => item !== stage)
+                                : [...quizForm.stages, stage];
+                              setQuizForm({ ...quizForm, stages, stage: stages[0] || "", videoId: "" });
+                            }}
+                            className={`rounded-lg border px-3 py-2 text-xs font-bold ${selected ? "border-primary bg-primary text-white" : "border-slate-200 bg-slate-50 text-slate-600"}`}
+                          >
+                            {stage === "عام" ? "كل مراحل الكورس" : stage}
+                          </button>
+                        );
+                      })}
+                      {availableQuizStages.length === 0 && <span className="px-2 py-1 text-xs text-muted-foreground">اختر الكورس أولًا</span>}
+                    </div>
+                  </Field>
+                  <Field label="نوع الاختبار">
+                    <select value={quizForm.scope} onChange={(event) => setQuizForm({ ...quizForm, scope: event.target.value as "course" | "lesson", videoId: "" })} className="input-admin">
+                      <option value="course">اختبار للكورس</option>
+                      <option value="lesson">اختبار بعد درس</option>
                     </select>
                   </Field>
+                  {quizForm.scope === "lesson" && <Field label="الدرس المطلوب">
+                    <select required value={quizForm.videoId} onChange={(event) => setQuizForm({ ...quizForm, videoId: event.target.value })} className="input-admin">
+                      <option value="">اختر الدرس</option>
+                      {videoOptions.filter((video) => {
+                        if (video.category !== quizForm.category) return false;
+                        const videoStages = video.stages?.length ? video.stages : video.stage ? [video.stage] : [];
+                        return quizForm.stages.some((stage) => stage === "عام" || videoStages.includes(stage));
+                      }).map((video) => <option key={video.id} value={video.id}>{video.title}</option>)}
+                    </select>
+                  </Field>}
                   <Field label="درجة النجاح %">
                     <input
                       type="number"
@@ -1524,6 +1646,12 @@ export function AdminLearning() {
                       className="input-admin"
                     />
                   </Field>
+                  <Field label="عدد المحاولات">
+                    <input type="number" min="1" max="20" value={quizForm.maxAttempts} onChange={(event) => setQuizForm({ ...quizForm, maxAttempts: Number(event.target.value) })} className="input-admin" />
+                  </Field>
+                  {quizForm.scope === "lesson" && <Field label="نسبة مشاهدة الدرس المطلوبة %">
+                    <input type="number" min="0" max="100" value={quizForm.requiredProgress} onChange={(event) => setQuizForm({ ...quizForm, requiredProgress: Number(event.target.value) })} className="input-admin" />
+                  </Field>}
                 </div>
                 {quizForm.questions.map((q, qi) => (
                   <div
@@ -1607,7 +1735,9 @@ export function AdminLearning() {
                   >
                     <Plus /> إضافة سؤال
                   </Button>
-                  <Button type="submit">نشر الاختبار</Button>
+                  <label className="flex items-center gap-2 rounded-xl border px-3 text-sm"><input type="checkbox" checked={quizForm.isPublished} onChange={(event) => setQuizForm({ ...quizForm, isPublished: event.target.checked })} /> نشر للطلاب فورًا</label>
+                  <Button type="submit">{editingQuizId ? "حفظ التعديلات" : quizForm.isPublished ? "إنشاء ونشر" : "حفظ كمسودة"}</Button>
+                  {editingQuizId && <Button type="button" variant="ghost" onClick={resetQuizForm}>إلغاء التعديل</Button>}
                 </div>
               </form>
               <div className="space-y-3">
@@ -1618,10 +1748,20 @@ export function AdminLearning() {
                   >
                     <h3 className="font-black">{q.title}</h3>
                     <p className="text-xs text-muted-foreground">
-                      {q.questions.length} سؤال · نجاح {q.passingScore}% ·{" "}
-                      {q.isPublished ? "منشور" : "مخفي"}
+                      {q.scope === "lesson" ? `اختبار درس: ${videoOptions.find((video) => video.id === q.videoId)?.title || "درس غير متاح"}` : "اختبار على مستوى الكورس"}
+                      {" · "}{q.questions.length} سؤال · نجاح {q.passingScore}% · {q.maxAttempts || 3} محاولات
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {(q.stages?.length ? q.stages : q.stage ? [q.stage] : []).join("، ") || "بدون مرحلة"} · {q.isPublished ? "منشور" : "مسودة"}
                     </p>
                     <div className="mt-3 flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => editQuiz(q)}
+                      >
+                        <Edit2 className="h-4 w-4" /> تعديل
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"

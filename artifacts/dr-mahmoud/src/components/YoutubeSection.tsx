@@ -455,18 +455,20 @@ function VideoPlayerModal({
                   ))}
                   {linkedQuiz && (
                     <button
+                      disabled={linkedQuiz.locked}
                       onClick={() => {
+                        if (linkedQuiz.locked) return;
                         onClose();
                         onStartQuiz?.(linkedQuiz);
                       }}
-                      className="flex min-h-14 items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-right text-amber-900 transition-colors hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+                      className="flex min-h-14 items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-right text-amber-900 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
                     >
                       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
                         <ClipboardCheck className="h-4 w-4" />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block text-xs font-extrabold">اختبار الدرس</span>
-                        <span className="text-[10px] text-amber-700">اختبر فهمك بعد المشاهدة</span>
+                        <span className="text-[10px]">{linkedQuiz.locked ? linkedQuiz.lockedReason || "أكمل الدرس أولًا" : "اختبر فهمك بعد المشاهدة"}</span>
                       </span>
                       <ChevronLeft className="h-4 w-4 shrink-0" />
                     </button>
@@ -1412,14 +1414,16 @@ export function VideoLessonsSection({
                                 if (!quiz) return null;
                                 return (
                                   <button
+                                    disabled={quiz.locked}
                                     onClick={(e) => {
                                       e.stopPropagation();
+                                      if (quiz.locked) return;
                                       onStartQuiz?.(quiz);
                                     }}
-                                    className="flex items-center gap-2 rounded-xl bg-amber-500/5 border border-amber-500/10 hover:border-amber-500/30 p-2.5 text-xs text-amber-700 font-bold transition-all text-right w-full"
+                                    className="flex items-center gap-2 rounded-xl bg-amber-500/5 border border-amber-500/10 hover:border-amber-500/30 p-2.5 text-xs text-amber-700 font-bold transition-all text-right w-full disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500"
                                   >
                                     <ClipboardCheck className="w-4 h-4 shrink-0 text-amber-600" />
-                                    <span className="line-clamp-1 flex-1 text-right">{quiz.title} (تمارين)</span>
+                                    <span className="line-clamp-1 flex-1 text-right">{quiz.locked ? quiz.lockedReason || "أكمل الدرس أولًا" : `${quiz.title} (تمارين)`}</span>
                                     <Award className="w-3.5 h-3.5 shrink-0 text-amber-500" />
                                   </button>
                                 );

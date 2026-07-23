@@ -6,6 +6,7 @@ import multer from "multer";
 import { and, desc, eq, ilike, inArray } from "drizzle-orm";
 import {
   codeRecoveryRequestsTable,
+  coursesTable,
   db,
   learningFilesTable,
   quizAttemptsTable,
@@ -144,6 +145,17 @@ function validateQuestions(value: unknown): QuizQuestion[] | null {
       q.correctIndex < q.options.length,
   );
   return valid ? questions : null;
+}
+
+function normalizeStringList(value: unknown): string[] {
+  const values: unknown[] = Array.isArray(value) ? value : [value];
+  return Array.from(
+    new Set(
+      values
+        .map((item: unknown) => String(item ?? "").trim())
+        .filter((item: string) => item.length > 0),
+    ),
+  );
 }
 
 router.post(
@@ -613,7 +625,7 @@ router.get("/learning/files", requireStudent, async (_req, res, next) => {
                 student, video.category, video.stage, video.stages, video.courseId,
               ),
             )
-          : canStudentAccessContent(student, file.category, file.stage, file.stages))
+          : canStudentAccessContent(student, file.category, file.stage, file.stages, file.courseId))
         .map(({ storageName: _storageName, ...file }) => file),
     );
   } catch (error) {
@@ -659,17 +671,32 @@ router.post(
       const videoIds = Array.from(new Set(
         String(req.body.videoIds ?? "").split(",").map(Number).filter(Number.isInteger),
       )).slice(0, 100);
+      const courseId = Number(req.body.courseId) || null;
+      let category = String(req.body.category ?? "عام").trim() || "عام";
       if ((targetType === "stages" && stages.length === 0) || (targetType === "videos" && videoIds.length === 0)) {
         fs.rmSync(req.file.path, { force: true });
         res.status(400).json({ error: targetType === "videos" ? "اختر فيديو واحدًا على الأقل" : "اختر مرحلة واحدة على الأقل" });
         return;
       }
+      if (targetType === "stages") {
+        const [course] = courseId ? await db.select().from(coursesTable).where(eq(coursesTable.id, courseId)).limit(1) : [];
+        if (!course) {
+          fs.rmSync(req.file.path, { force: true });
+          res.status(400).json({ error: "اختر كورسًا صحيحًا" }); return;
+        }
+        if (course.stages.length && stages.some((stage) => !course.stages.includes(stage))) {
+          fs.rmSync(req.file.path, { force: true });
+          res.status(400).json({ error: "إحدى المراحل غير متاحة داخل الكورس" }); return;
+        }
+        category = course.title;
+      }
       const [file] = await db
         .insert(learningFilesTable)
         .values({
           title: String(req.body.title).trim(),
+          courseId: targetType === "stages" ? courseId : null,
           description: String(req.body.description ?? "").trim() || null,
-          category: String(req.body.category ?? "عام").trim() || "عام",
+          category,
           stage: stages[0] ?? null,
           stages,
           targetType,
@@ -713,6 +740,9 @@ router.patch(
   requireAdmin,
   async (req, res, next) => {
     try {
+      const fileId = Number(req.params.id);
+      const [currentFile] = await db.select().from(learningFilesTable).where(eq(learningFilesTable.id, fileId)).limit(1);
+      if (!currentFile) { res.status(404).json({ error: "الملف غير موجود" }); return; }
       const targetType = req.body.targetType === "videos" ? "videos" : req.body.targetType === "stages" ? "stages" : undefined;
       const stages: string[] | undefined = req.body.stages !== undefined
         ? (Array.isArray(req.body.stages) ? req.body.stages : String(req.body.stages).split(","))
@@ -728,6 +758,19 @@ router.patch(
       if (targetType === "videos" && videoIds?.length === 0) {
         res.status(400).json({ error: "اختر فيديو واحدًا على الأقل" }); return;
       }
+      const effectiveTarget = targetType ?? currentFile.targetType;
+      const effectiveStages = stages ?? currentFile.stages;
+      if (effectiveTarget === "stages" && effectiveStages.length === 0) {
+        res.status(400).json({ error: "اختر مرحلة واحدة على الأقل" }); return;
+      }
+      if (targetType === "videos" && currentFile.targetType !== "videos" && !videoIds?.length) {
+        res.status(400).json({ error: "اختر فيديو واحدًا على الأقل" }); return;
+      }
+      const courseId = req.body.courseId !== undefined ? Number(req.body.courseId) || null : currentFile.courseId;
+      const [course] = effectiveTarget === "stages" && courseId ? await db.select().from(coursesTable).where(eq(coursesTable.id, courseId)).limit(1) : [];
+      if (effectiveTarget === "stages" && (!course || (course.stages.length > 0 && effectiveStages.some((stage) => !course.stages.includes(stage))))) {
+        res.status(400).json({ error: "اختر كورسًا ومراحل صحيحة" }); return;
+      }
       if (videoIds?.length) {
         const existingVideos = await db.select({ id: videosTable.id }).from(videosTable).where(inArray(videosTable.id, videoIds));
         if (existingVideos.length !== new Set(videoIds).size) {
@@ -737,6 +780,8 @@ router.patch(
       const [file] = await db
         .update(learningFilesTable)
         .set({
+          courseId: effectiveTarget === "stages" ? courseId : null,
+          ...(course && { category: course.title }),
           ...(req.body.title !== undefined && {
             title: String(req.body.title).trim(),
           }),
@@ -750,6 +795,12 @@ router.patch(
             stage: String(req.body.stage).trim() || null,
           }),
           ...(stages !== undefined && { stages, stage: stages[0] ?? null }),
+          ...(effectiveTarget === "stages" && {
+            category: course!.title,
+            stages: effectiveStages,
+            stage: effectiveStages[0] ?? null,
+          }),
+          ...(targetType === "videos" && { stages: [], stage: null }),
           ...(targetType !== undefined && { targetType }),
           ...(req.body.subject !== undefined && {
             subject: String(req.body.subject).trim() || null,
@@ -769,7 +820,7 @@ router.patch(
             isPublished: Boolean(req.body.isPublished),
           }),
         })
-        .where(eq(learningFilesTable.id, Number(req.params.id)))
+        .where(eq(learningFilesTable.id, fileId))
         .returning();
       if (!file) {
         res.status(404).json({ error: "الملف غير موجود" });
@@ -843,7 +894,7 @@ router.get("/learning/files/:id/download", async (req, res, next) => {
             .some(({ video }) => video.isPublished && canStudentAccessContent(
               student, video.category, video.stage, video.stages, video.courseId,
             ))
-        : canStudentAccessContent(student, file.category, file.stage, file.stages))
+        : canStudentAccessContent(student, file.category, file.stage, file.stages, file.courseId))
     ) {
       res.status(403).json({ error: "الملف مش ضمن الكورس المسجل ليك" });
       return;
@@ -871,27 +922,40 @@ router.get("/learning/files/:id/download", async (req, res, next) => {
 router.get("/learning/quizzes", requireStudent, async (_req, res, next) => {
   try {
     const student = res.locals.student as typeof studentsTable.$inferSelect;
-    const allowed = getStudentAllowedCategories(student);
-    if (allowed.length === 0) {
-      res.json([]);
-      return;
+    const [quizzes, attempts, progress] = await Promise.all([
+      db.select().from(quizzesTable).where(eq(quizzesTable.isPublished, true)).orderBy(desc(quizzesTable.createdAt)),
+      db.select({ id: quizAttemptsTable.id, quizId: quizAttemptsTable.quizId }).from(quizAttemptsTable).where(eq(quizAttemptsTable.studentId, student.id)),
+      db.select({ videoId: videoProgressTable.videoId, progress: videoProgressTable.progress }).from(videoProgressTable).where(eq(videoProgressTable.studentId, student.id)),
+    ]);
+    const attemptsByQuiz = new Map<number, number>();
+    for (const attempt of attempts) {
+      attemptsByQuiz.set(attempt.quizId, (attemptsByQuiz.get(attempt.quizId) ?? 0) + 1);
     }
-    const quizzes = await db
-      .select()
-      .from(quizzesTable)
-      .where(eq(quizzesTable.isPublished, true))
-      .orderBy(desc(quizzesTable.createdAt));
+    const progressByVideo = new Map(progress.map((row) => [row.videoId, row.progress]));
     res.json(
       quizzes
         .filter((quiz) =>
-          canStudentAccessContent(student, quiz.category, quiz.stage),
+          canStudentAccessContent(student, quiz.category, quiz.stage, quiz.stages, quiz.courseId),
         )
-        .map((quiz) => ({
-          ...quiz,
-          questions: quiz.questions.map(
-            ({ correctIndex: _correctIndex, ...question }) => question,
-          ),
-        })),
+        .map((quiz) => {
+          const attemptsUsed = attemptsByQuiz.get(quiz.id) ?? 0;
+          const progressLocked = quiz.scope === "lesson" && quiz.videoId !== null &&
+            (progressByVideo.get(quiz.videoId) ?? 0) < quiz.requiredProgress;
+          const attemptsLocked = attemptsUsed >= quiz.maxAttempts;
+          return {
+            ...quiz,
+            attemptsUsed,
+            locked: progressLocked || attemptsLocked,
+            lockedReason: attemptsLocked
+              ? "استخدمت كل المحاولات المتاحة"
+              : progressLocked
+                ? `أكمل ${quiz.requiredProgress}% من الدرس أولًا`
+                : null,
+            questions: quiz.questions.map(
+              ({ correctIndex: _correctIndex, ...question }) => question,
+            ),
+          };
+        }),
     );
   } catch (error) {
     next(error);
@@ -1107,21 +1171,46 @@ router.post("/admin/learning/quizzes", requireAdmin, async (req, res, next) => {
       res.status(400).json({ error: "Valid title and questions are required" });
       return;
     }
+    const courseId = Number(req.body.courseId);
+    const videoId = Number(req.body.videoId) || null;
+    const scope = req.body.scope === "lesson" ? "lesson" : "course";
+    const stages = normalizeStringList(req.body.stages ?? req.body.stage);
+    const [course] = Number.isInteger(courseId) ? await db.select().from(coursesTable).where(eq(coursesTable.id, courseId)).limit(1) : [];
+    if (!course || stages.length === 0 || stages.some((stage) => course.stages.length && !course.stages.includes(stage))) {
+      res.status(400).json({ error: "اختر كورسًا ومراحل صحيحة" }); return;
+    }
+    const [video] = scope === "lesson" && videoId
+      ? await db.select().from(videosTable).where(eq(videosTable.id, videoId)).limit(1)
+      : [];
+    if (scope === "lesson" && (!video || video.courseId !== courseId)) {
+      res.status(400).json({ error: "اختر درسًا صحيحًا من نفس الكورس" }); return;
+    }
+    if (video) {
+      const [linkedQuiz] = await db.select({ id: quizzesTable.id }).from(quizzesTable).where(eq(quizzesTable.videoId, video.id)).limit(1);
+      if (linkedQuiz) { res.status(409).json({ error: "هذا الدرس مرتبط باختبار بالفعل" }); return; }
+    }
     const [quiz] = await db
       .insert(quizzesTable)
       .values({
         title,
+        courseId,
+        videoId: scope === "lesson" ? videoId : null,
+        scope,
         description: String(req.body.description ?? "").trim() || null,
-        category: String(req.body.category ?? "عام").trim() || "عام",
-        stage: String(req.body.stage ?? "").trim() || null,
+        category: course.title,
+        stage: stages[0] ?? null,
+        stages,
         passingScore: Math.max(
           0,
           Math.min(100, Number(req.body.passingScore ?? 60)),
         ),
+        maxAttempts: Math.max(1, Math.min(20, Number(req.body.maxAttempts ?? 3))),
+        requiredProgress: scope === "lesson" ? Math.max(0, Math.min(100, Number(req.body.requiredProgress ?? 80))) : 0,
         questions,
-        isPublished: req.body.isPublished !== false,
+        isPublished: req.body.isPublished === true,
       })
       .returning();
+    if (video) await db.update(videosTable).set({ quizId: quiz.id }).where(eq(videosTable.id, video.id));
     res.status(201).json(quiz);
   } catch (error) {
     next(error);
@@ -1133,20 +1222,63 @@ router.patch(
   requireAdmin,
   async (req, res, next) => {
     try {
+      const quizId = Number(req.params.id);
+      const [current] = await db.select().from(quizzesTable).where(eq(quizzesTable.id, quizId)).limit(1);
+      if (!current) { res.status(404).json({ error: "الاختبار غير موجود" }); return; }
+      const courseId = req.body.courseId !== undefined ? Number(req.body.courseId) : current.courseId;
+      const scope = req.body.scope !== undefined ? (req.body.scope === "lesson" ? "lesson" : "course") : current.scope;
+      const videoId = scope === "lesson" ? (req.body.videoId !== undefined ? Number(req.body.videoId) || null : current.videoId) : null;
+      const stages: string[] = req.body.stages !== undefined
+        ? normalizeStringList(req.body.stages)
+        : current.stages;
+      const [course] = courseId ? await db.select().from(coursesTable).where(eq(coursesTable.id, courseId)).limit(1) : [];
+      const [video] = scope === "lesson" && videoId ? await db.select().from(videosTable).where(eq(videosTable.id, videoId)).limit(1) : [];
+      if (
+        !course ||
+        stages.length === 0 ||
+        stages.some((stage) => course.stages.length > 0 && !course.stages.includes(stage)) ||
+        (scope === "lesson" && (!video || video.courseId !== courseId))
+      ) {
+        res.status(400).json({ error: "الكورس أو المرحلة أو الدرس غير صحيح" }); return;
+      }
+      if (videoId) {
+        const [linkedQuiz] = await db
+          .select({ id: quizzesTable.id })
+          .from(quizzesTable)
+          .where(eq(quizzesTable.videoId, videoId))
+          .limit(1);
+        if (linkedQuiz && linkedQuiz.id !== quizId) {
+          res.status(409).json({ error: "هذا الدرس مرتبط باختبار آخر بالفعل" });
+          return;
+        }
+      }
+      if (req.body.title !== undefined && !String(req.body.title).trim()) {
+        res.status(400).json({ error: "عنوان الاختبار مطلوب" });
+        return;
+      }
+      let questions: QuizQuestion[] | undefined;
+      if (req.body.questions !== undefined) {
+        const validatedQuestions = validateQuestions(req.body.questions);
+        if (!validatedQuestions) {
+          res.status(400).json({ error: "الأسئلة غير صالحة" });
+          return;
+        }
+        questions = validatedQuestions;
+      }
       const [quiz] = await db
         .update(quizzesTable)
         .set({
+          courseId,
+          videoId,
+          scope,
+          category: course.title,
+          stages,
+          stage: stages[0] ?? null,
           ...(req.body.title !== undefined && {
             title: String(req.body.title).trim(),
           }),
           ...(req.body.description !== undefined && {
             description: String(req.body.description).trim() || null,
-          }),
-          ...(req.body.category !== undefined && {
-            category: String(req.body.category).trim() || "عام",
-          }),
-          ...(req.body.stage !== undefined && {
-            stage: String(req.body.stage).trim() || null,
           }),
           ...(req.body.passingScore !== undefined && {
             passingScore: Math.max(
@@ -1157,14 +1289,19 @@ router.patch(
           ...(req.body.isPublished !== undefined && {
             isPublished: Boolean(req.body.isPublished),
           }),
+          ...(questions !== undefined && { questions }),
+          ...(req.body.maxAttempts !== undefined && { maxAttempts: Math.max(1, Math.min(20, Number(req.body.maxAttempts))) }),
+          requiredProgress: scope === "lesson" ? Math.max(0, Math.min(100, Number(req.body.requiredProgress ?? current.requiredProgress))) : 0,
           updatedAt: new Date(),
         })
-        .where(eq(quizzesTable.id, Number(req.params.id)))
+        .where(eq(quizzesTable.id, quizId))
         .returning();
       if (!quiz) {
         res.status(404).json({ error: "الاختبار غير موجود" });
         return;
       }
+      if (current.videoId && current.videoId !== videoId) await db.update(videosTable).set({ quizId: null }).where(and(eq(videosTable.id, current.videoId), eq(videosTable.quizId, quizId)));
+      if (videoId) await db.update(videosTable).set({ quizId }).where(eq(videosTable.id, videoId));
       res.json(quiz);
     } catch (error) {
       next(error);
@@ -1204,17 +1341,27 @@ router.post(
           ),
         )
         .limit(1);
-      const answers = Array.isArray(req.body.answers)
-        ? req.body.answers.map(Number)
+      const answers: number[] = Array.isArray(req.body.answers)
+        ? req.body.answers.map((answer: unknown) => Number(answer))
         : [];
-      if (!quiz || answers.length !== quiz.questions.length) {
+      if (!quiz || answers.length !== quiz.questions.length || answers.some((answer: number, index: number) => !Number.isInteger(answer) || answer < 0 || answer >= quiz.questions[index].options.length)) {
         res.status(400).json({ error: "Quiz or answers are invalid" });
         return;
       }
       const student = res.locals.student as typeof studentsTable.$inferSelect;
-      if (!canStudentAccessContent(student, quiz.category, quiz.stage)) {
+      if (!canStudentAccessContent(student, quiz.category, quiz.stage, quiz.stages, quiz.courseId)) {
         res.status(403).json({ error: "الاختبار مش ضمن الكورس المسجل ليك" });
         return;
+      }
+      const previousAttempts = await db.select({ id: quizAttemptsTable.id }).from(quizAttemptsTable).where(and(eq(quizAttemptsTable.quizId, quiz.id), eq(quizAttemptsTable.studentId, student.id)));
+      if (previousAttempts.length >= quiz.maxAttempts) {
+        res.status(409).json({ error: "استخدمت كل المحاولات المتاحة لهذا الاختبار" }); return;
+      }
+      if (quiz.scope === "lesson" && quiz.videoId) {
+        const [progress] = await db.select().from(videoProgressTable).where(and(eq(videoProgressTable.studentId, student.id), eq(videoProgressTable.videoId, quiz.videoId))).limit(1);
+        if ((progress?.progress ?? 0) < quiz.requiredProgress) {
+          res.status(403).json({ error: `أكمل ${quiz.requiredProgress}% من الدرس قبل بدء الاختبار` }); return;
+        }
       }
       const correct = quiz.questions.reduce(
         (count, question, index) =>
@@ -1239,6 +1386,8 @@ router.post(
         passed,
         correct,
         total: quiz.questions.length,
+        attemptsUsed: previousAttempts.length + 1,
+        attemptsRemaining: Math.max(0, quiz.maxAttempts - previousAttempts.length - 1),
       });
     } catch (error) {
       next(error);

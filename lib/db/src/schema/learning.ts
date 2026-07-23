@@ -1,4 +1,5 @@
 import { pgTable, serial, text, timestamp, integer, boolean, jsonb, uniqueIndex, index } from "drizzle-orm/pg-core";
+import { coursesTable } from "./courses";
 
 export const studentsTable = pgTable("students", {
   id: serial("id").primaryKey(),
@@ -42,6 +43,7 @@ export const studentSessionsTable = pgTable("student_sessions", {
 
 export const learningFilesTable = pgTable("learning_files", {
   id: serial("id").primaryKey(),
+  courseId: integer("course_id").references(() => coursesTable.id, { onDelete: "set null" }),
   title: text("title").notNull(),
   description: text("description"),
   category: text("category").notNull().default("عام"),
@@ -67,13 +69,19 @@ export type QuizQuestion = {
 
 export const quizzesTable = pgTable("quizzes", {
   id: serial("id").primaryKey(),
+  courseId: integer("course_id").references(() => coursesTable.id, { onDelete: "set null" }),
+  videoId: integer("video_id"),
+  scope: text("scope").notNull().default("course"),
   title: text("title").notNull(),
   description: text("description"),
   category: text("category").notNull().default("عام"),
   stage: text("stage"),
+  stages: jsonb("stages").$type<string[]>().notNull().default([]),
   passingScore: integer("passing_score").notNull().default(60),
+  maxAttempts: integer("max_attempts").notNull().default(3),
+  requiredProgress: integer("required_progress").notNull().default(80),
   questions: jsonb("questions").$type<QuizQuestion[]>().notNull(),
-  isPublished: boolean("is_published").notNull().default(true),
+  isPublished: boolean("is_published").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

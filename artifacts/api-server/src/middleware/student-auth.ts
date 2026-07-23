@@ -94,22 +94,24 @@ export function canStudentAccessContent(
   const assignedCourseId =
     Boolean(courseId) &&
     (student.enrolledCourseIds ?? []).includes(Number(courseId));
-
-  if (courseId) {
-    // If the student is explicitly enrolled in this course or category, allow access
-    // (regardless of stage), so admins can grant cross-grade access.
-    if (assignedCourseId || assignedCourse) return true;
-    // Otherwise, fall through to stage-based access below.
-  }
+  const hasExplicitCourseAssignments =
+    (student.enrolledCourseIds ?? []).length > 0 ||
+    (student.enrolledCategories ?? []).length > 0;
 
   const categoryMatches =
     assignedCourse || canStudentAccessCategory(student, category);
-  if (contentStages.length > 0) {
-    // Stage match is the primary gate. If stages are set and match the student's
-    // grade, grant access. Category match is a fallback for "general" content.
-    return stageMatches || (hasCategoryGeneralStage && categoryMatches);
+  const courseMatches = courseId
+    ? assignedCourseId || categoryMatches
+    : categoryMatches;
+
+  // New accounts with explicit course assignments must match the course.
+  // Legacy approved accounts predate course IDs, so their existing stage is
+  // the entitlement for stage-targeted content until an admin assigns courses.
+  if (hasExplicitCourseAssignments && !courseMatches) return false;
+  if (isGeneralContent || hasCategoryGeneralStage) {
+    return hasExplicitCourseAssignments ? courseMatches : categoryMatches;
   }
-  return categoryMatches;
+  return stageMatches;
 }
 
 export function canStudentAccessLearningMode(

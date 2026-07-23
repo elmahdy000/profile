@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useListCurriculums } from "@workspace/api-client-react";
+import { getListCurriculumsQueryKey, useListCurriculums } from "@workspace/api-client-react";
 import {
   ArrowRight,
   MessageCircle,
@@ -11,7 +11,9 @@ import {
   Layers,
   Info,
   Maximize2,
-  Search
+  Search,
+  AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
@@ -21,7 +23,9 @@ export default function CurriculumPage() {
   const logoUrl = get(SETTINGS_KEYS.SITE_LOGO_URL, "/logo.jpg");
   const siteName = get(SETTINGS_KEYS.SITE_NAME, "د. محمود المهدي");
 
-  const { data: curriculums, isLoading } = useListCurriculums();
+  const { data: curriculums, isLoading, isError, refetch, isFetching } = useListCurriculums({
+    query: { queryKey: getListCurriculumsQueryKey(), retry: 1 },
+  });
   const [selectedSubject, setSelectedSubject] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeLesson, setActiveLesson] = useState<any | null>(null);
@@ -169,6 +173,8 @@ export default function CurriculumPage() {
         </div>
       </nav>
 
+      <main>
+
       {/* Hero */}
       <section className="py-16 lg:py-20 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
@@ -206,6 +212,16 @@ export default function CurriculumPage() {
           <div className="flex flex-col items-center justify-center py-32">
             <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
             <p className="text-muted-foreground text-sm">جاري تحميل المناهج والدروس المصورة...</p>
+          </div>
+        ) : isError ? (
+          <div className="mx-auto max-w-xl rounded-3xl border border-red-200 bg-red-50 px-6 py-12 text-center shadow-sm" role="alert">
+            <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-red-600" />
+            <h3 className="text-lg font-bold text-red-900">تعذر تحميل المناهج حاليًا</h3>
+            <p className="mt-2 text-sm leading-6 text-red-700">حصلت مشكلة مؤقتة أثناء تحميل المحتوى. جرّب مرة ثانية، ولو استمرت تواصل مع الدعم.</p>
+            <Button type="button" onClick={() => void refetch()} disabled={isFetching} className="mt-6 font-bold">
+              <RefreshCw className={`me-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+              {isFetching ? "جاري المحاولة..." : "إعادة المحاولة"}
+            </Button>
           </div>
         ) : !curriculums || curriculums.length === 0 ? (
           <div className="text-center py-20 bg-card border border-border rounded-3xl max-w-xl mx-auto px-6 shadow-sm">
@@ -327,6 +343,7 @@ export default function CurriculumPage() {
           </div>
         )}
       </section>
+      </main>
 
       {/* Full screen Presentation Modal */}
       <AnimatePresence>
@@ -434,6 +451,9 @@ export default function CurriculumPage() {
                 {activeLesson.images.map((img: string, idx: number) => (
                   <button
                     key={idx}
+                    type="button"
+                    aria-label={`الانتقال للصفحة ${idx + 1}`}
+                    aria-current={currentSlideIndex === idx ? "page" : undefined}
                     onClick={() => {
                       setDirection(idx > currentSlideIndex ? 1 : -1);
                       setCurrentSlideIndex(idx);

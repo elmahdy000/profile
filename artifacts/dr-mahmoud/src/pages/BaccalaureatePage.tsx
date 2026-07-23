@@ -296,6 +296,8 @@ export default function BaccalaureatePage() {
         </div>
       </nav>
 
+      <main>
+
       {/* Hero Section */}
       <section className="py-16 lg:py-24 relative overflow-hidden">
         {/* Glow Effects */}
@@ -1067,6 +1069,7 @@ export default function BaccalaureatePage() {
           </Button>
         </div>
       </section>
+      </main>
 
       {/* Simple Footer */}
       <footer className="border-t border-border py-8 text-center text-xs text-foreground/35 bg-card/10">

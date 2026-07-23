@@ -59,6 +59,8 @@ export default function KidsPage() {
         </div>
       </nav>
 
+      <main>
+
       {/* Hero */}
       <section className="py-16 lg:py-24 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
@@ -82,7 +84,7 @@ export default function KidsPage() {
             </span>
 
             <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-6 leading-snug">
-              تعلم البرمجة<br />
+              تعلم البرمجة<br />{" "}
               <span className="text-primary">
                 بطريقة ممتعة للأطفال
               </span>
@@ -227,6 +229,7 @@ export default function KidsPage() {
           </Button>
         </div>
       </section>
+      </main>
 
       <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground/60 bg-muted/20">
         © {new Date().getFullYear()} د. محمود المهدي — جميع الحقوق محفوظة

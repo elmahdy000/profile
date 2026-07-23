@@ -29,9 +29,9 @@ export default function PlatformPage() {
     <>
       {!authenticated && <ScrollProgress />}
       {authChecked && !authenticated && <Navbar />}
-      <main>
+      <div>
         <StudentPlatform />
-      </main>
+      </div>
     </>
   );
 }
