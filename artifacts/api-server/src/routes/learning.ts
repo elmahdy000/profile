@@ -3,6 +3,8 @@ import { createHash, randomBytes } from "crypto";
 import fs from "fs";
 import path from "path";
 import multer from "multer";
+import mammoth from "mammoth";
+import { PDFParse } from "pdf-parse";
 import { and, desc, eq, ilike, inArray } from "drizzle-orm";
 import {
   codeRecoveryRequestsTable,
@@ -100,6 +102,16 @@ const learningFileUpload = multer({
   },
 }).single("file");
 
+const quizImportUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const extension = path.extname(file.originalname).toLowerCase();
+    if ([".pdf", ".docx", ".txt", ".md"].includes(extension)) cb(null, true);
+    else cb(new Error("يمكن استيراد ملفات PDF أو Word (DOCX) أو TXT فقط."));
+  },
+}).single("file");
+
 function publicStudent(student: typeof studentsTable.$inferSelect) {
   return {
     id: student.id,
@@ -158,6 +170,74 @@ function validateQuestions(value: unknown): QuizQuestion[] | null {
       q.correctIndex < q.options.length,
   );
   return valid ? questions : null;
+}
+
+const optionLabels: Record<string, number> = {
+  a: 0, b: 1, c: 2, d: 3, e: 4, f: 5,
+  "أ": 0, "ا": 0, "ب": 1, "ج": 2, "د": 3, "ه": 4, "هـ": 4,
+};
+
+function optionIndex(value: string): number | null {
+  const normalized = value.trim().toLowerCase().replace(/[.():\-]/g, "");
+  if (normalized in optionLabels) return optionLabels[normalized];
+  const numeric = Number(normalized);
+  return Number.isInteger(numeric) && numeric >= 1 && numeric <= 6 ? numeric - 1 : null;
+}
+
+function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; warnings: string[] } {
+  const lines = rawText
+    .replace(/\r/g, "")
+    .split("\n")
+    .map((line) => line.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+  const questions: QuizQuestion[] = [];
+  const warnings: string[] = [];
+  let current: { prompt: string; options: string[]; correctIndex: number | null } | null = null;
+
+  const finish = () => {
+    if (!current) return;
+    if (current.prompt && current.options.length >= 2) {
+      questions.push({
+        prompt: current.prompt,
+        options: current.options,
+        correctIndex: current.correctIndex ?? 0,
+      });
+      if (current.correctIndex === null) warnings.push(`لم يتم تحديد الإجابة الصحيحة للسؤال: ${current.prompt.slice(0, 70)}`);
+    } else if (current.prompt) {
+      warnings.push(`تم تجاهل سؤال لا يحتوي على اختيارين على الأقل: ${current.prompt.slice(0, 70)}`);
+    }
+    current = null;
+  };
+
+  for (const line of lines) {
+    const answer = line.match(/^(?:answer|correct\s*answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?)\s*[:：\-]?\s*(.+)$/i);
+    if (answer && current) {
+      const answerValue = answer[1].trim();
+      const byLabel = optionIndex(answerValue.split(/\s/)[0]);
+      const byText = current.options.findIndex((option) => option.toLowerCase() === answerValue.toLowerCase());
+      current.correctIndex = byLabel !== null && byLabel < current.options.length ? byLabel : byText >= 0 ? byText : null;
+      continue;
+    }
+
+    const numberedQuestion = line.match(/^(?:(?:س(?:ؤال)?\s*)?\d+\s*[.):\-]|Q(?:uestion)?\s*\d+\s*[.):\-])\s*(.+)$/i);
+    if (numberedQuestion && (!current || current.options.length >= 2)) {
+      finish();
+      current = { prompt: numberedQuestion[1].trim(), options: [], correctIndex: null };
+      continue;
+    }
+
+    const choice = line.match(/^(?:\(?([A-Fa-fأابجده]|هـ|[1-6])\)?[.):\-]\s+)(.+)$/);
+    if (choice && current) {
+      current.options.push(choice[2].trim());
+      continue;
+    }
+
+    if (!current) current = { prompt: line, options: [], correctIndex: null };
+    else if (current.options.length === 0) current.prompt += ` ${line}`;
+    else current.options[current.options.length - 1] += ` ${line}`;
+  }
+  finish();
+  return { questions, warnings };
 }
 
 function normalizeStringList(value: unknown): string[] {
@@ -1259,6 +1339,49 @@ router.get("/admin/learning/analytics", requireAdmin, async (_req, res, next) =>
   } catch (error) {
     next(error);
   }
+});
+
+router.post("/admin/learning/quizzes/import", requireAdmin, (req, res, next) => {
+  quizImportUpload(req, res, async (uploadError) => {
+    if (uploadError) {
+      res.status(400).json({ error: uploadError.message || "تعذر رفع الملف" });
+      return;
+    }
+    try {
+      if (!req.file) {
+        res.status(400).json({ error: "اختر ملفًا لاستيراد الأسئلة" });
+        return;
+      }
+      const extension = path.extname(req.file.originalname).toLowerCase();
+      let extractedText = "";
+      if (extension === ".pdf") {
+        const parser = new PDFParse({ data: req.file.buffer });
+        try {
+          extractedText = (await parser.getText()).text;
+        } finally {
+          await parser.destroy();
+        }
+      } else if (extension === ".docx") {
+        extractedText = (await mammoth.extractRawText({ buffer: req.file.buffer })).value;
+      } else {
+        extractedText = req.file.buffer.toString("utf8");
+      }
+      if (!extractedText.trim()) {
+        res.status(422).json({ error: "لم نتمكن من قراءة نص من الملف. إذا كان PDF مصورًا، حوّله إلى PDF قابل للبحث أولًا." });
+        return;
+      }
+      const parsed = parseImportedQuestions(extractedText);
+      if (!parsed.questions.length) {
+        res.status(422).json({
+          error: "لم يتم اكتشاف أسئلة متعددة الاختيارات. رقّم الأسئلة والاختيارات وأضف سطر Answer أو الإجابة الصحيحة.",
+        });
+        return;
+      }
+      res.json({ ...parsed, extractedText });
+    } catch (error) {
+      next(error);
+    }
+  });
 });
 
 router.get("/admin/learning/quizzes", requireAdmin, async (_req, res, next) => {

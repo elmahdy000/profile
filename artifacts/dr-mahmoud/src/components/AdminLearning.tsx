@@ -231,6 +231,10 @@ export function AdminLearning() {
     ] as Question[],
   });
   const [editingQuizId, setEditingQuizId] = useState<number | null>(null);
+  const [copiedStudentId, setCopiedStudentId] = useState<number | null>(null);
+  const [isImportingQuestions, setIsImportingQuestions] = useState(false);
+  const [importWarnings, setImportWarnings] = useState<string[]>([]);
+  const quizImportInputRef = useRef<HTMLInputElement>(null);
 
   const resetQuizForm = () => {
     setEditingQuizId(null);
@@ -249,6 +253,66 @@ export function AdminLearning() {
       isPublished: false,
       questions: [{ prompt: "", options: ["", "", "", ""], correctIndex: 0 }],
     });
+  };
+
+  const copyStudentCode = async (student: Student) => {
+    if (!student.accessCode) return;
+    try {
+      let copied = false;
+      if (navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(student.accessCode);
+          copied = true;
+        } catch {
+          copied = false;
+        }
+      }
+      if (!copied) {
+        const textarea = document.createElement("textarea");
+        textarea.value = student.accessCode;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          if (!document.execCommand("copy")) throw new Error("copy failed");
+        } finally {
+          textarea.remove();
+        }
+      }
+      setCopiedStudentId(student.id);
+      toast({ title: "تم نسخ كود الطالب", description: student.accessCode });
+      window.setTimeout(() => setCopiedStudentId((id) => id === student.id ? null : id), 1800);
+    } catch {
+      toast({ variant: "destructive", title: "تعذر نسخ الكود", description: "حدد الكود وانسخه يدويًا." });
+    }
+  };
+
+  const importQuizQuestions = async (file: File) => {
+    setIsImportingQuestions(true);
+    setImportWarnings([]);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const result = await adminApi<{ questions: Question[]; warnings: string[] }>(
+        "/api/admin/learning/quizzes/import",
+        { method: "POST", body: formData },
+      );
+      const hasManualQuestion = quizForm.questions.some((question) =>
+        question.prompt.trim() || question.options.some((option) => option.trim()),
+      );
+      setQuizForm((current) => ({
+        ...current,
+        questions: hasManualQuestion ? [...current.questions, ...result.questions] : result.questions,
+      }));
+      setImportWarnings(result.warnings || []);
+      toast({ title: `تم استيراد ${result.questions.length} سؤال`, description: "راجع الأسئلة والإجابات الصحيحة قبل الحفظ." });
+    } catch (error) {
+      toast({ variant: "destructive", title: "تعذر استيراد الأسئلة", description: (error as Error).message });
+    } finally {
+      setIsImportingQuestions(false);
+      if (quizImportInputRef.current) quizImportInputRef.current.value = "";
+    }
   };
 
   const load = async () => {
@@ -862,13 +926,14 @@ export function AdminLearning() {
                         </p>
                         {s.accessCode && (
                           <button
-                            onClick={() =>
-                              navigator.clipboard.writeText(s.accessCode!)
-                            }
-                            className="mt-2 inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5 font-mono text-primary"
+                            type="button"
+                            onClick={() => copyStudentCode(s)}
+                            title="اضغط لنسخ كود الطالب"
+                            className={`mt-2 inline-flex items-center gap-2 rounded-lg px-3 py-1.5 font-mono transition ${copiedStudentId === s.id ? "bg-emerald-100 text-emerald-700" : "bg-primary/10 text-primary hover:bg-primary/20"}`}
                           >
-                            <Copy className="h-3.5 w-3.5" />
+                            {copiedStudentId === s.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                             {s.accessCode}
+                            <span className="font-sans text-xs">{copiedStudentId === s.id ? "تم النسخ" : "نسخ"}</span>
                           </button>
                         )}
                       </div>
@@ -1675,10 +1740,46 @@ export function AdminLearning() {
                     <input type="number" min="0" max="100" value={quizForm.requiredProgress} onChange={(event) => setQuizForm({ ...quizForm, requiredProgress: Number(event.target.value) })} className="input-admin" />
                   </Field>}
                 </div>
+                <section className="rounded-2xl border-2 border-dashed border-primary/25 bg-primary/5 p-5">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-xl bg-primary/10 p-3 text-primary"><Upload className="h-5 w-5" /></div>
+                      <div>
+                        <h4 className="font-black">استيراد الأسئلة من ملف</h4>
+                        <p className="mt-1 text-xs text-muted-foreground">PDF أو Word (DOCX) أو TXT — يدعم الأسئلة والاختيارات والإجابة الصحيحة بالعربية والإنجليزية.</p>
+                      </div>
+                    </div>
+                    <input
+                      ref={quizImportInputRef}
+                      type="file"
+                      accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                      className="hidden"
+                      onChange={(event) => event.target.files?.[0] && importQuizQuestions(event.target.files[0])}
+                    />
+                    <Button type="button" variant="outline" disabled={isImportingQuestions} onClick={() => quizImportInputRef.current?.click()}>
+                      {isImportingQuestions ? <Loader2 className="animate-spin" /> : <Upload />}
+                      {isImportingQuestions ? "جارٍ استخراج الأسئلة..." : "اختر ملف الأسئلة"}
+                    </Button>
+                  </div>
+                  <p className="mt-3 rounded-lg bg-white/80 px-3 py-2 text-xs text-slate-600">
+                    مثال: <b>1. نص السؤال</b> ثم <b>A) الاختيار الأول</b> ... ثم <b>Answer: B</b> أو <b>الإجابة: ب</b>. ستظل كل الأسئلة قابلة للتعديل قبل النشر.
+                  </p>
+                  {importWarnings.length > 0 && (
+                    <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                      <strong className="flex items-center gap-1"><AlertCircle className="h-4 w-4" /> راجع الإجابات التالية</strong>
+                      <ul className="mt-2 list-disc space-y-1 pr-5">{importWarnings.slice(0, 6).map((warning, index) => <li key={index}>{warning}</li>)}</ul>
+                    </div>
+                  )}
+                </section>
+
+                <div className="flex items-center justify-between">
+                  <div><h4 className="font-black text-lg">أسئلة الاختبار</h4><p className="text-xs text-muted-foreground">حدد الدائرة بجوار الإجابة الصحيحة.</p></div>
+                  <span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-black text-primary">{quizForm.questions.length} سؤال</span>
+                </div>
                 {quizForm.questions.map((q, qi) => (
                   <div
                     key={qi}
-                    className="rounded-2xl bg-muted/50 p-4 space-y-3"
+                    className="rounded-2xl border bg-white p-4 space-y-3 shadow-sm"
                   >
                     <div className="flex justify-between">
                       <strong>السؤال {qi + 1}</strong>
@@ -1710,7 +1811,7 @@ export function AdminLearning() {
                     />
                     <div className="grid sm:grid-cols-2 gap-2">
                       {q.options.map((option, oi) => (
-                        <label key={oi} className="flex items-center gap-2">
+                        <label key={oi} className={`flex items-center gap-2 rounded-xl border p-2 transition ${q.correctIndex === oi ? "border-emerald-400 bg-emerald-50" : "border-slate-200"}`}>
                           <input
                             type="radio"
                             name={`correct-${qi}`}
@@ -1721,7 +1822,7 @@ export function AdminLearning() {
                           />
                           <input
                             required
-                            placeholder={`الإجابة ${oi + 1}`}
+                            placeholder={`الاختيار ${String.fromCharCode(65 + oi)}`}
                             value={option}
                             onChange={(e) =>
                               setQuestion(qi, {
