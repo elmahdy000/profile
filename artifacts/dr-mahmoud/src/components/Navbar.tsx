@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  BookOpen,
   ChevronLeft,
   GraduationCap,
   Home,
@@ -31,6 +32,7 @@ export function Navbar() {
       id: "tracks",
       icon: Layers3,
     },
+    { label: "برنامج البكالوريا", href: "/#baccalaureate", id: "baccalaureate", icon: BookOpen },
     { label: "عن الدكتور", href: "/#about", id: "about", icon: GraduationCap },
     {
       label: "آراء الطلاب",

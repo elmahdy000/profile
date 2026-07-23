@@ -14,7 +14,7 @@ export function FloatingButtons() {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
-    <div className="fixed bottom-4 left-4 z-50 flex items-end gap-3 sm:bottom-6 sm:left-6">
+    <div className="fixed bottom-4 left-4 z-50 hidden items-end gap-3 sm:bottom-6 sm:left-6 md:flex">
       <AnimatePresence>
         {showTop && (
           <motion.button
