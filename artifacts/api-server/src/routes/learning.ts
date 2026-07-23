@@ -1,10 +1,10 @@
 import { Router, type IRouter } from "express";
 import { createHash, randomBytes } from "crypto";
+import { createRequire } from "module";
 import fs from "fs";
 import path from "path";
 import multer from "multer";
 import mammoth from "mammoth";
-import pdfParse from "pdf-parse";
 import { and, desc, eq, ilike, inArray } from "drizzle-orm";
 import {
   codeRecoveryRequestsTable,
@@ -39,6 +39,8 @@ import {
 import { fixedWindowRateLimit } from "../middleware/rate-limit";
 
 const router: IRouter = Router();
+const require = createRequire(import.meta.url);
+const pdfParse = require("pdf-parse/lib/pdf-parse.js") as (data: Buffer) => Promise<{ text: string }>;
 const SESSION_DAYS = 30;
 const studentRegisterLimit = fixedWindowRateLimit({
   name: "student-register",
