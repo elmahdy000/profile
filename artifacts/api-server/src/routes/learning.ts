@@ -253,6 +253,37 @@ function normalizeStringList(value: unknown): string[] {
   );
 }
 
+async function getAutomaticCourseAssignments(stage: string) {
+  const normalizedStage = stage.trim().toLocaleLowerCase("ar");
+  if (!normalizedStage) return { enrolledCourseIds: [] as number[], enrolledCategories: [] as string[] };
+  const courses = await db
+    .select()
+    .from(coursesTable)
+    .where(eq(coursesTable.isPublished, true));
+  const matching = courses.filter((course) =>
+    (course.stages ?? []).some((courseStage) =>
+      courseStage.trim().toLocaleLowerCase("ar") === normalizedStage,
+    ),
+  );
+  return {
+    enrolledCourseIds: matching.map((course) => course.id),
+    enrolledCategories: Array.from(new Set(matching.map((course) => course.title))),
+  };
+}
+
+async function ensureAutomaticCourseAssignments(student: typeof studentsTable.$inferSelect) {
+  if ((student.enrolledCourseIds ?? []).length || (student.enrolledCategories ?? []).length) return student;
+  const stage = student.grade === "أخرى" ? student.otherGradeDetail || student.grade : student.grade;
+  const automaticAssignments = await getAutomaticCourseAssignments(stage || "");
+  if (!automaticAssignments.enrolledCourseIds.length) return student;
+  const [updated] = await db
+    .update(studentsTable)
+    .set({ ...automaticAssignments, updatedAt: new Date() })
+    .where(eq(studentsTable.id, student.id))
+    .returning();
+  return updated;
+}
+
 router.post(
   "/student/register",
   studentRegisterLimit,
@@ -347,6 +378,7 @@ router.post(
           academicTrack,
           otherGradeDetail,
           learningMode,
+          ...(await getAutomaticCourseAssignments(grade === "أخرى" ? otherGradeDetail || grade : grade)),
         })
         .returning();
       res.status(201).json({
@@ -366,7 +398,7 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
       res.status(400).json({ error: "Access code is required" });
       return;
     }
-    const [student] = await db
+    let [student] = await db
       .select()
       .from(studentsTable)
       .where(ilike(studentsTable.accessCode, accessCode))
@@ -377,6 +409,7 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
         .json({ error: "Code is invalid or registration is not approved yet" });
       return;
     }
+    student = await ensureAutomaticCourseAssignments(student);
     const token = randomBytes(32).toString("base64url");
     const tokenHash = createHash("sha256").update(token).digest("hex");
     const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
@@ -439,11 +472,12 @@ router.post("/student/recovery-requests", studentRecoveryLimit, async (req, res,
 
 router.get("/student/me", async (req, res, next) => {
   try {
-    const student = await getApprovedStudent(req);
+    let student = await getApprovedStudent(req);
     if (!student) {
       res.json({ student: null });
       return;
     }
+    student = await ensureAutomaticCourseAssignments(student);
     res.json({ student: publicStudent(student) });
   } catch (error) {
     next(error);
@@ -593,6 +627,21 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
         message: "تقدر دلوقتي تدخل على كورساتك وتبدأ التعلم بالكود الخاص بيك.",
       });
     }
+    if (req.body.enrolledCourseIds !== undefined || req.body.enrolledCategories !== undefined) {
+      await db.insert(studentNotificationsTable).values({
+        studentId: id,
+        type: "course",
+        title: "تم تحديث كورساتك",
+        message: "الكورسات والدروس المتاحة لك اتحدثت تلقائيًا. تقدر تبدأ المشاهدة دلوقتي.",
+      });
+    } else if (req.body.learningMode !== undefined && student.learningMode !== current.learningMode) {
+      await db.insert(studentNotificationsTable).values({
+        studentId: id,
+        type: "info",
+        title: "تم تحديث نظام الدراسة",
+        message: "تم تحديث المحتوى المتاح لك حسب نظام الدراسة الجديد.",
+      });
+    }
     res.json(student);
   } catch (error) {
     next(error);
@@ -666,6 +715,7 @@ router.get("/learning/notifications/stream", requireStudent, async (req, res, ne
     res.setHeader("Connection", "keep-alive");
     res.setHeader("X-Accel-Buffering", "no");
     res.flushHeaders();
+    res.write("retry: 3000\n\n");
 
     let latestId = (await db
       .select({ id: studentNotificationsTable.id })

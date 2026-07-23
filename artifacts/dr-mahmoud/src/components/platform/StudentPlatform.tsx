@@ -1501,6 +1501,18 @@ export function StudentPlatform() {
       stream.close();
     };
   }, [student?.id]);
+  useEffect(() => {
+    if (!student) return;
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void loadLearningData();
+    };
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    window.addEventListener("focus", refreshWhenVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+      window.removeEventListener("focus", refreshWhenVisible);
+    };
+  }, [student?.id]);
   if (loading)
     return (
       <div className="min-h-[70vh] grid place-items-center">

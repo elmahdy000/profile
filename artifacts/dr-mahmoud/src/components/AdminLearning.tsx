@@ -373,7 +373,29 @@ export function AdminLearning() {
     }
   };
   useEffect(() => {
-    load();
+    void load();
+    const refreshStudentQueues = async () => {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const [studentRows, recoveryRows] = await Promise.all([
+          adminApi<Student[]>("/api/admin/students"),
+          adminApi<RecoveryRequest[]>("/api/admin/recovery-requests"),
+        ]);
+        setStudents(studentRows);
+        setRecoveryRequests(recoveryRows);
+      } catch {
+        // The next polling cycle retries without interrupting admin work.
+      }
+    };
+    const timer = window.setInterval(refreshStudentQueues, 8000);
+    const handleVisibility = () => void refreshStudentQueues();
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", handleVisibility);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", handleVisibility);
+    };
   }, []);
   const updateStudent = async (id: number, status: string) => {
     try {
