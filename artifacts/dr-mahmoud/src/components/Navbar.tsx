@@ -1,6 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  BookOpen,
   ChevronLeft,
   GraduationCap,
   Home,
@@ -38,12 +37,6 @@ export function Navbar() {
       href: "/#testimonials",
       id: "testimonials",
       icon: MessageSquareQuote,
-    },
-    {
-      label: "المنصة التعليمية",
-      href: "/platform",
-      id: "platform-account",
-      icon: BookOpen,
     },
   ];
 
@@ -114,29 +107,23 @@ export function Navbar() {
             />
             <div className="text-right">
               <span className="block text-base font-black leading-tight text-primary md:text-lg">
-                Academy Portal
+                د. محمود المهدي
               </span>
               <span className="mt-0.5 block max-w-[180px] truncate text-[10px] font-medium text-muted-foreground">
-                {siteName.split("|")[0].trim()}
+                منصة البرمجة وعلوم الحاسب
               </span>
             </div>
           </a>
 
-          <div className="hidden items-center gap-5 lg:flex">
-            <ul className="flex items-center gap-5">
+          <div className="hidden items-center gap-3 lg:flex">
+            <ul className="flex items-center gap-1">
               {navLinks.map((link) => (
                 <li key={link.id}>
                   <a
                     href={link.href}
-                    className={`relative text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${activeSection === link.id ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+                    className={`block rounded-lg px-3 py-2 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${activeSection === link.id ? "bg-blue-50 text-primary" : "text-slate-600 hover:bg-slate-50 hover:text-primary"}`}
                   >
                     {link.label}
-                    {activeSection === link.id && (
-                      <motion.span
-                        layoutId="nav-indicator"
-                        className="absolute -bottom-1 inset-x-0 h-0.5 rounded-full bg-primary"
-                      />
-                    )}
                   </a>
                 </li>
               ))}
@@ -145,7 +132,7 @@ export function Navbar() {
               href="https://wa.me/201044348610"
               target="_blank"
               rel="noreferrer"
-              className="flex h-10 items-center gap-2 rounded-lg border border-primary px-4 text-xs font-bold text-primary hover:bg-primary/5"
+              className="flex h-9 items-center gap-2 rounded-lg border border-slate-300 px-3 text-xs font-bold text-slate-600 hover:border-primary hover:text-primary"
             >
               <MessageCircle className="h-4 w-4" />
               واتساب

@@ -14,7 +14,7 @@ export function FloatingButtons() {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
-    <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50 flex flex-col gap-2.5 sm:gap-3 items-center">
+    <div className="fixed bottom-4 left-4 z-50 flex items-end gap-3 sm:bottom-6 sm:left-6">
       <AnimatePresence>
         {showTop && (
           <motion.button
@@ -24,7 +24,7 @@ export function FloatingButtons() {
             exit={{ opacity: 0, scale: 0.5, y: 15 }}
             transition={{ type: "spring", stiffness: 300, damping: 22 }}
             onClick={scrollToTop}
-            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-700 border border-slate-600 text-white hover:bg-primary hover:border-primary hover:text-primary-foreground transition-all duration-300 flex items-center justify-center shadow-lg"
+            className="hidden h-11 w-11 rounded-full border border-slate-200 bg-white text-slate-600 shadow-lg transition-all hover:border-primary hover:text-primary sm:flex sm:items-center sm:justify-center"
             aria-label="العودة للأعلى"
           >
             <ArrowUp className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -42,7 +42,7 @@ export function FloatingButtons() {
         transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 22 }}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
-        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-xl shadow-[#25D366]/20 hover:bg-[#20bd5a] transition-colors"
+        className="flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-xl shadow-[#25D366]/20 transition-colors hover:bg-[#20bd5a] sm:h-14 sm:w-14"
       >
         <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7 fill-white" />
       </motion.a>

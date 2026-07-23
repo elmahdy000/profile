@@ -431,7 +431,8 @@ function SearchableCombobox({
 
 function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
   const requestedTrack = new URLSearchParams(window.location.search).get("track");
-  const shouldStartRegistration = requestedTrack === "engineering" || requestedTrack === "computer-science";
+  const requestedMode = new URLSearchParams(window.location.search).get("mode");
+  const shouldStartRegistration = requestedMode === "register" || requestedTrack === "engineering" || requestedTrack === "computer-science";
   const [mode, setMode] = useState<"login" | "register" | "recover">(
     shouldStartRegistration ? "register" : "login",
   );

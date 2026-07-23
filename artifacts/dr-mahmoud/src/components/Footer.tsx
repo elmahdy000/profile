@@ -1,4 +1,4 @@
-import { Facebook, Instagram, Linkedin, Youtube, MessageCircle, Phone, MapPin } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Youtube, Phone, MapPin } from "lucide-react";
 import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
 
 export function Footer() {
@@ -34,11 +34,10 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-[#080C18] text-white/70 pt-12 pb-24 md:pb-8 border-t border-white/10 relative z-10">
+    <footer className="relative z-10 border-t border-slate-200 bg-[#0F1D32] pb-24 pt-12 text-white/75 md:pb-8">
       <div className="container mx-auto px-4 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-8 mb-10 text-right">
           
-          {/* Right Column: Brand (takes up 5 cols) */}
           <div className="md:col-span-5 flex flex-col order-1">
             <div className="flex items-center gap-3 mb-4">
               <img src={logoUrl} alt="Logo" className="w-10 h-10 object-cover rounded-full border border-primary/20 shrink-0" />
@@ -64,7 +63,6 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Middle Column: Quick Links (takes up 3 cols) */}
           <div className="md:col-span-3 flex flex-col order-3 md:order-2">
             <h3 className="font-bold text-white mb-5 text-sm uppercase tracking-wider">روابط سريعة</h3>
             <ul className="space-y-3">
@@ -86,7 +84,6 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Left Column: Contact (takes up 4 cols) */}
           <div className="md:col-span-4 flex flex-col order-2 md:order-3">
             <h3 className="font-bold text-white mb-5 text-sm uppercase tracking-wider">تواصل معنا</h3>
             <div className="space-y-4 text-sm text-white/70">
@@ -104,17 +101,6 @@ export function Footer() {
               </div>
             </div>
             
-            <div className="mt-6">
-              <a
-                href={`https://wa.me/${whatsapp}`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-[#25D366]/10 border border-[#25D366]/20 text-[#25D366] text-sm font-bold rounded-xl hover:bg-[#25D366] hover:text-white transition-all duration-300 w-full justify-center md:w-auto"
-              >
-                <MessageCircle className="w-5 h-5" />
-                اسألنا واحجز تقييم مجاني
-              </a>
-            </div>
           </div>
           
         </div>
@@ -122,9 +108,7 @@ export function Footer() {
         {/* Copyright Row */}
         <div className="pt-6 border-t border-white/10 text-center text-sm text-white/40 flex flex-col md:flex-row justify-between items-center gap-4">
           <p>© {currentYear} د. محمود المهدي — جميع الحقوق محفوظة.</p>
-          <p className="text-xs">
-            تصميم وتطوير بكل فخر لـ Eduverse
-          </p>
+          <p className="text-xs">منصة تعليمية للبرمجة وعلوم الحاسب</p>
         </div>
       </div>
     </footer>
