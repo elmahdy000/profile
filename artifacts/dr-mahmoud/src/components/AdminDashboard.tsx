@@ -1107,17 +1107,16 @@ export default function AdminDashboard() {
 
   const handleVideoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      !videoForm.courseId ||
-      videoForm.stages.length === 0 ||
-      !videoForm.category.trim() ||
-      !videoForm.subject.trim() ||
-      !videoForm.title.trim() ||
-      videoForm.order < 1
-    ) {
+    const missingVideoFields = [
+      !videoForm.title.trim() && "اسم الدرس",
+      !videoForm.courseId && "الكورس",
+      videoForm.stages.length === 0 && "المرحلة",
+      videoForm.type === "playlist" && videoForm.order < 1 && "رقم الدرس في قائمة التشغيل",
+    ].filter(Boolean) as string[];
+    if (missingVideoFields.length > 0) {
       toast({
-        title: "بيانات ناقصة",
-        description: "اختار كورس ومرحلة واحدة على الأقل، وكمل اسم ورقم الدرس.",
+        title: "بيانات رفع الفيديو ناقصة",
+        description: `أكمل: ${missingVideoFields.join("، ")}.`,
         variant: "warning",
       });
       return;
