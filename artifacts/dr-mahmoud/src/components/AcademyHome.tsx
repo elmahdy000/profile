@@ -69,23 +69,24 @@ export function AcademyHome() {
     <div className="min-h-screen bg-background text-foreground" dir="rtl">
       <Navbar />
       <main>
-        <section id="hero" className="academy-hero overflow-hidden border-b border-border/60">
-          <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-14 md:px-8 lg:grid-cols-2 lg:py-20">
+        <section id="hero" className="relative overflow-hidden border-b border-slate-200 bg-[#f6f8fc]">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-primary/20" />
+          <div className="mx-auto grid min-h-[680px] max-w-[1440px] items-center gap-10 px-4 py-12 md:px-8 lg:grid-cols-[.88fr_1.12fr] lg:px-12 lg:py-16">
             <div className="order-2 space-y-6 text-right lg:order-1">
-              <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-bold text-primary">
+              <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-4 py-2 text-sm font-bold text-primary shadow-sm">
                 <Sparkles className="h-4 w-4" /> منصة متخصصة للمدرسة والجامعة
               </span>
-              <h1 className="text-4xl font-black leading-[1.25] md:text-6xl">
+              <h1 className="max-w-3xl text-4xl font-black leading-[1.25] tracking-tight text-[#142033] md:text-[3.6rem]">
                 افهم منهجك ومواد كليتك<br />{" "}مع <span className="text-primary">د. محمود المهدي</span>
               </h1>
-              <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
+              <p className="max-w-2xl text-base leading-8 text-[#66758c] md:text-lg">
                 كورسات مخصصة لطلاب البكالوريا، حاسبات ومعلومات، وهندسة. كل كورس مرتب إلى دروس وملفات واختبارات، ومتاح أونلاين أو حضوري.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Button asChild size="lg" className="h-12 rounded-lg px-7 font-bold shadow-lg shadow-primary/15">
+                <Button asChild size="lg" className="h-13 rounded-xl px-8 font-bold shadow-lg shadow-primary/20">
                   <a href="/platform"><Rocket className="h-4 w-4" /> ابدأ رحلتك دلوقتي</a>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="h-12 rounded-lg px-7 font-bold">
+                <Button asChild variant="outline" size="lg" className="h-13 rounded-xl border-slate-300 bg-white px-8 font-bold">
                   <a href="#tracks"><BookOpen className="h-4 w-4" /> شوف المسارات</a>
                 </Button>
               </div>
@@ -97,15 +98,17 @@ export function AcademyHome() {
             </div>
             <div className="order-1 lg:order-2">
               <div className="relative mx-auto max-w-xl lg:max-w-none">
-                <div className="absolute -inset-6 rounded-[2rem] bg-primary/10 blur-3xl" />
-                <div className="relative w-full aspect-[4/3] lg:h-[540px] lg:w-[720px] lg:max-w-full rounded-3xl border border-primary/10 overflow-hidden shadow-2xl bg-muted">
+                <div className="absolute -bottom-5 -left-5 h-full w-full rounded-[2rem] border border-blue-200 bg-blue-50" />
+                <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[2rem] border-4 border-white bg-slate-200 shadow-[0_25px_70px_rgba(20,32,51,.2)] lg:h-[610px] lg:aspect-auto">
                   <img 
-                    src="/dr-mahmoud-photo.png" 
-                    alt="د. محمود المهدي" 
-                    className="w-full h-full object-cover object-[center_25%] lg:object-[center_28%]" 
+                    src="/dr-mahmoud-hero-classroom.png"
+                    alt="د. محمود المهدي أثناء شرح البرمجة والروبوتات للطلاب"
+                    fetchPriority="high"
+                    decoding="async"
+                    className="h-full w-full object-cover object-center"
                   />
                 </div>
-                <div className="absolute bottom-4 right-4 lg:bottom-6 lg:right-6 rounded-2xl border border-border bg-card/95 p-4 shadow-xl backdrop-blur z-10">
+                <div className="absolute bottom-4 right-4 z-10 max-w-[85%] rounded-2xl border border-white/70 bg-white/95 p-4 shadow-xl backdrop-blur lg:bottom-6 lg:right-6">
                   <strong className="block text-primary">د. محمود المهدي</strong>
                   <span className="text-xs text-muted-foreground">ماجستير نظم معلومات · مدرب برمجة وAI</span>
                 </div>
@@ -114,7 +117,7 @@ export function AcademyHome() {
           </div>
         </section>
 
-        <section id="why" className="py-20">
+        <section id="why" className="bg-white py-20 md:py-24">
           <div className="mx-auto max-w-7xl px-4 md:px-8">
             <div className="mx-auto mb-12 max-w-2xl text-center">
               <span className="text-sm font-bold text-primary">ليه الأكاديمية مختلفة؟</span>
@@ -123,7 +126,7 @@ export function AcademyHome() {
             </div>
             <div className="grid gap-5 md:grid-cols-3">
               {benefits.map(({ icon: Icon, title, text }) => (
-                <article key={title} className="academy-card p-6 text-right">
+                <article key={title} className="academy-card border-slate-200 p-7 text-right shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl">
                   <div className="mb-5 grid h-12 w-12 place-items-center rounded-xl bg-primary/10 text-primary"><Icon className="h-6 w-6" /></div>
                   <h3 className="text-xl font-black">{title}</h3>
                   <p className="mt-3 leading-7 text-muted-foreground">{text}</p>
@@ -133,7 +136,7 @@ export function AcademyHome() {
           </div>
         </section>
 
-        <section id="tracks" className="bg-[#f0f3ff] py-20">
+        <section id="tracks" className="border-y border-slate-200 bg-[#f6f8fc] py-20 md:py-24">
           <div className="mx-auto max-w-7xl px-4 md:px-8">
             <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <div><span className="text-sm font-bold text-primary">اختار بوابتك التعليمية</span><h2 className="mt-2 text-3xl font-black md:text-4xl">بكالوريا، حاسبات، أو هندسة</h2></div>
@@ -211,9 +214,9 @@ export function AcademyHome() {
           <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 md:px-8 lg:grid-cols-[0.8fr_1.2fr]">
             <div className="relative mx-auto aspect-[4/3] w-full max-w-md max-h-[420px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-muted">
               <img 
-                src="/dr-mahmoud-photo.png" 
+                src="/dr-mahmoud-hero-classroom.png"
                 alt="د. محمود المهدي — مدرب البرمجة" 
-                className="w-full h-full object-cover object-[center_25%] lg:object-[center_28%]" 
+                className="h-full w-full object-cover object-center"
               />
             </div>
             <div className="space-y-5 text-right">
@@ -238,7 +241,7 @@ export function AcademyHome() {
 
         <section id="join" className="py-20">
           <div className="mx-auto max-w-5xl px-4 text-center">
-            <div className="academy-card bg-gradient-to-l from-primary/[.07] to-cyan-500/[.05] p-8 md:p-12">
+            <div className="academy-card border-blue-100 bg-blue-50/60 p-8 shadow-lg md:p-12">
               <Code2 className="mx-auto h-11 w-11 text-primary" />
               <h2 className="mt-5 text-3xl font-black md:text-4xl">جاهز تبدأ رحلتك؟</h2>
               <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">سجّل طلبك، وبعد مراجعة الأدمن هيوصلك كود الدخول الخاص بيك وتبدأ تتعلم فورًا.</p>
