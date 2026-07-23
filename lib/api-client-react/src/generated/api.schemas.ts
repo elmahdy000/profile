@@ -49,6 +49,8 @@ export interface InsertCourse {
   sessions: string;
   level: string;
   category: string;
+  stages: string[];
+  isPublished: boolean;
   tags: string[];
   img: string;
 }
@@ -61,6 +63,8 @@ export interface Course {
   sessions: string;
   level: string;
   category: string;
+  stages: string[];
+  isPublished: boolean;
   tags: string[];
   img: string;
   lessonsCount: number;
@@ -87,6 +91,8 @@ export interface SiteSettingModel {
 }
 
 export interface InsertCurriculum {
+  courseId?: number | null;
+  stage?: string | null;
   subject: string;
   title: string;
   description?: string | null;
@@ -96,6 +102,8 @@ export interface InsertCurriculum {
 
 export interface Curriculum {
   id: number;
+  courseId?: number | null;
+  stage?: string | null;
   subject: string;
   title: string;
   description?: string | null;

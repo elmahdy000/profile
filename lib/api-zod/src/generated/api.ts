@@ -204,6 +204,8 @@ export const ListCoursesResponseItem = zod.object({
   sessions: zod.string(),
   level: zod.string(),
   category: zod.string(),
+  stages: zod.array(zod.string()),
+  isPublished: zod.boolean(),
   tags: zod.array(zod.string()),
   img: zod.string(),
   lessonsCount: zod.number(),
@@ -216,14 +218,16 @@ export const ListCoursesResponse = zod.array(ListCoursesResponseItem);
  * @summary Create course
  */
 export const CreateCourseBody = zod.object({
-  title: zod.string(),
-  age: zod.string(),
-  duration: zod.string(),
-  sessions: zod.string(),
-  level: zod.string(),
-  category: zod.string(),
-  tags: zod.array(zod.string()),
-  img: zod.string(),
+  title: zod.string().trim().min(2).max(160),
+  age: zod.string().trim().max(80),
+  duration: zod.string().trim().max(80),
+  sessions: zod.string().trim().max(80),
+  level: zod.string().trim().max(80),
+  category: zod.string().trim().min(1).max(80),
+  stages: zod.array(zod.string().trim().min(1)).max(20),
+  isPublished: zod.boolean(),
+  tags: zod.array(zod.string().trim().min(1)).max(30),
+  img: zod.string().trim().max(2048),
 });
 
 /**
@@ -235,14 +239,16 @@ export const UpdateCourseParams = zod.object({
 });
 
 export const UpdateCourseBody = zod.object({
-  title: zod.string(),
-  age: zod.string(),
-  duration: zod.string(),
-  sessions: zod.string(),
-  level: zod.string(),
-  category: zod.string(),
-  tags: zod.array(zod.string()),
-  img: zod.string(),
+  title: zod.string().trim().min(2).max(160),
+  age: zod.string().trim().max(80),
+  duration: zod.string().trim().max(80),
+  sessions: zod.string().trim().max(80),
+  level: zod.string().trim().max(80),
+  category: zod.string().trim().min(1).max(80),
+  stages: zod.array(zod.string().trim().min(1)).max(20),
+  isPublished: zod.boolean(),
+  tags: zod.array(zod.string().trim().min(1)).max(30),
+  img: zod.string().trim().max(2048),
 });
 
 export const UpdateCourseResponse = zod.object({
@@ -253,6 +259,8 @@ export const UpdateCourseResponse = zod.object({
   sessions: zod.string(),
   level: zod.string(),
   category: zod.string(),
+  stages: zod.array(zod.string()),
+  isPublished: zod.boolean(),
   tags: zod.array(zod.string()),
   img: zod.string(),
   lessonsCount: zod.number(),
@@ -434,6 +442,8 @@ export const ListCurriculumsResponse = zod.array(ListCurriculumsResponseItem);
  * @summary Create curriculum lesson
  */
 export const CreateCurriculumBody = zod.object({
+  courseId: zod.number().int().positive().nullish(),
+  stage: zod.string().trim().nullish(),
   subject: zod.string(),
   title: zod.string(),
   description: zod.string().nullish(),
@@ -450,6 +460,8 @@ export const UpdateCurriculumParams = zod.object({
 });
 
 export const UpdateCurriculumBody = zod.object({
+  courseId: zod.number().int().positive().nullish(),
+  stage: zod.string().trim().nullish(),
   subject: zod.string(),
   title: zod.string(),
   description: zod.string().nullish(),

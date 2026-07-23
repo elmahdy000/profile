@@ -249,6 +249,8 @@ export default function AdminDashboard() {
     sessions: "",
     level: "",
     category: "baccalaureate",
+    stages: [] as string[],
+    isPublished: false,
     tags: "",
     img: "",
   });
@@ -278,6 +280,8 @@ export default function AdminDashboard() {
     number | null
   >(null);
   const [curriculumForm, setCurriculumForm] = useState({
+    courseId: "",
+    stage: "",
     subject: "C++",
     title: "",
     description: "",
@@ -318,7 +322,9 @@ export default function AdminDashboard() {
   const selectedVideoCourse = coursesQuery.data?.find(
     (course) => String(course.id) === videoForm.courseId,
   );
-  const availableVideoStages = getStagesForTrack(selectedVideoCourse?.category);
+  const availableVideoStages = selectedVideoCourse?.stages?.length
+    ? selectedVideoCourse.stages
+    : getStagesForTrack(selectedVideoCourse?.category);
 
   const [learningFiles, setLearningFiles] = useState<
     {
@@ -380,11 +386,13 @@ export default function AdminDashboard() {
   const getNextLessonNumber = (
     category: string,
     learningMode: "online" | "offline" | "both",
+    stages: string[] = [],
   ) => {
     const matching = (videosQuery.data || []).filter(
       (video) =>
         video.category.trim().toLowerCase() === category.trim().toLowerCase() &&
-        (video.learningMode || "online") === learningMode,
+        (video.learningMode || "online") === learningMode &&
+        (stages.length === 0 || (video.stages || (video.stage ? [video.stage] : [])).some((stage) => stages.includes(stage))),
     );
     return (
       Math.max(0, ...matching.map((video) => Number(video.order) || 0)) + 1
@@ -471,15 +479,14 @@ export default function AdminDashboard() {
           (video as any).quizId != null ? String((video as any).quizId) : "",
       });
     } else {
-      const defaultStage = "أولى بكالوريا";
       const defaultCourse = coursesQuery.data?.[0];
       const defaultCategory = defaultCourse?.title || "";
       const defaultLearningMode = "online" as const;
       setSelectedVideoId(null);
       setVideoForm({
         courseId: defaultCourse ? String(defaultCourse.id) : "",
-        stage: defaultStage,
-        stages: [defaultStage],
+        stage: "",
+        stages: [],
         learningMode: defaultLearningMode,
         category: defaultCategory,
         subject: "",
@@ -500,7 +507,9 @@ export default function AdminDashboard() {
         quizId: "",
       });
     }
-    setIsVideoModalOpen(true);
+    setSelectedVideoFile(null);
+    setIsVideoModalOpen(false);
+    setActiveTab("upload-video");
   };
 
   // Open Curriculum Modal
@@ -519,6 +528,8 @@ export default function AdminDashboard() {
       paddedImages.length = 10;
 
       setCurriculumForm({
+        courseId: curriculum.courseId != null ? String(curriculum.courseId) : "",
+        stage: curriculum.stage || "",
         subject: curriculum.subject,
         title: curriculum.title,
         description: curriculum.description || "",
@@ -528,6 +539,8 @@ export default function AdminDashboard() {
     } else {
       setSelectedCurriculumId(null);
       setCurriculumForm({
+        courseId: "",
+        stage: "",
         subject: "C++",
         title: "",
         description: "",
@@ -551,6 +564,8 @@ export default function AdminDashboard() {
         sessions: course.sessions,
         level: course.level,
         category: course.category,
+        stages: course.stages || [],
+        isPublished: course.isPublished,
         tags: course.tags.join(", "),
         img: course.img,
       });
@@ -558,13 +573,15 @@ export default function AdminDashboard() {
       setSelectedCourseId(null);
       setCourseForm({
         title: "",
-        age: "من 4 إلى 18 سنة",
-        duration: "3 أشهر",
-        sessions: "12 حصة",
-        level: "مبتدئ",
+        age: "",
+        duration: "",
+        sessions: "",
+        level: "",
         category: "baccalaureate",
-        tags: "أطفال, برمجة, Scratch",
-        img: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=600",
+        stages: [],
+        isPublished: false,
+        tags: "",
+        img: "",
       });
     }
     setIsCourseModalOpen(true);
@@ -601,10 +618,33 @@ export default function AdminDashboard() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      toast({ title: "صورة غير مدعومة", description: "استخدم JPG أو PNG أو WebP.", variant: "destructive" });
+      return;
+    }
 
     setIsUploadingImage(true);
+    let uploadFile = file;
+    try {
+      const image = await createImageBitmap(file);
+      const scale = Math.min(1, 1600 / Math.max(image.width, image.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(image.width * scale));
+      canvas.height = Math.max(1, Math.round(image.height * scale));
+      const context = canvas.getContext("2d");
+      context?.drawImage(image, 0, 0, canvas.width, canvas.height);
+      image.close();
+      const blob = context
+        ? await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", 0.9))
+        : null;
+      if (blob && blob.size < file.size) {
+        uploadFile = new File([blob], file.name.replace(/\.[^.]+$/, ".webp"), { type: "image/webp" });
+      }
+    } catch {
+      // Keep the original image when the browser cannot optimize it.
+    }
     const formData = new FormData();
-    formData.append("image", file);
+    formData.append("image", uploadFile);
 
     try {
       const response = await fetch("/api/upload", {
@@ -620,6 +660,7 @@ export default function AdminDashboard() {
       const data = await response.json();
       if (data.url) {
         setCourseForm((prev) => ({ ...prev, img: data.url }));
+        toast({ variant: "success", title: "تم تجهيز صورة الكورس", description: uploadFile.size < file.size ? "تم ضغط الصورة مع الحفاظ على الجودة." : "تم رفع الصورة بنجاح." });
       }
     } catch (err) {
       toast({
@@ -675,18 +716,31 @@ export default function AdminDashboard() {
   // Submit Course Form
   const handleCourseSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!courseForm.title.trim()) return;
+    if (courseForm.isPublished && (!courseForm.img || courseForm.stages.length === 0)) {
+      toast({
+        title: "الكورس غير جاهز للنشر",
+        description: "اختر مرحلة واحدة على الأقل وأضف صورة غلاف، أو احفظه كمسودة.",
+        variant: "warning",
+      });
+      return;
+    }
     const tagsArray = courseForm.tags
       .split(",")
       .map((t) => t.trim())
       .filter(Boolean);
 
     const payload = {
+      courseId: curriculumForm.courseId ? Number(curriculumForm.courseId) : null,
+      stage: curriculumForm.stage || null,
       title: courseForm.title,
       age: courseForm.age,
       duration: courseForm.duration,
       sessions: courseForm.sessions,
       level: courseForm.level,
       category: courseForm.category,
+      stages: courseForm.stages,
+      isPublished: courseForm.isPublished,
       tags: tagsArray,
       img: courseForm.img,
     };
@@ -1060,6 +1114,9 @@ export default function AdminDashboard() {
           video.category.trim().toLowerCase() ===
             videoForm.category.trim().toLowerCase()) &&
         (video.learningMode || "online") === videoForm.learningMode &&
+        (video.stages || (video.stage ? [video.stage] : [])).some((stage) =>
+          videoForm.stages.includes(stage),
+        ) &&
         video.order === Number(videoForm.order),
     );
     if (duplicateNumber) {
@@ -1809,6 +1866,9 @@ export default function AdminDashboard() {
                             />
                             <div className="absolute top-3 right-3 bg-background/80 backdrop-blur-md border border-border px-3 py-1 rounded-full text-xs font-bold text-primary">
                               {course.category}
+                            </div>
+                            <div className={`absolute top-3 left-3 rounded-full border px-3 py-1 text-xs font-bold backdrop-blur-md ${course.isPublished ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-700" : "border-slate-400/30 bg-slate-500/20 text-slate-600"}`}>
+                              {course.isPublished ? "منشور" : "مسودة"}
                             </div>
                           </div>
 
@@ -2626,13 +2686,12 @@ export default function AdminDashboard() {
                               const course = coursesQuery.data?.find(
                                 (item) => String(item.id) === e.target.value,
                               );
-                              const nextStages = getStagesForTrack(course?.category);
                               setVideoForm({
                                 ...videoForm,
                                 courseId: e.target.value,
                                 category: course?.title || "",
-                                stages: videoForm.stages.length ? videoForm.stages : (nextStages[0] ? [nextStages[0]] : ["عام"]),
-                                stage: videoForm.stage || nextStages[0] || "عام",
+                                stages: [],
+                                stage: "",
                                 order: getNextLessonNumber(course?.title || "", videoForm.learningMode),
                               });
                             }}
@@ -2806,13 +2865,12 @@ export default function AdminDashboard() {
             className="fixed inset-0 bg-background/80 backdrop-blur-md"
             onClick={() => setIsCourseModalOpen(false)}
           />
-          <div className="bg-card border border-border w-full max-w-4xl rounded-3xl p-6 relative z-10 max-h-[90vh] overflow-y-auto shadow-2xl space-y-6">
+          <div className="bg-card border border-border w-full max-w-2xl rounded-3xl p-5 md:p-7 relative z-10 max-h-[92vh] overflow-y-auto shadow-2xl space-y-6">
             <div className="flex items-center justify-between border-b border-border pb-4">
-              <h3 className="text-lg font-bold text-foreground">
-                {courseModalMode === "edit"
-                  ? "تعديل الكورس"
-                  : "إضافة كورس جديد"}
-              </h3>
+              <div>
+                <h3 className="text-xl font-black text-foreground">{courseModalMode === "edit" ? "تعديل الكورس" : "إضافة كورس جديد"}</h3>
+                <p className="mt-1 text-xs text-muted-foreground">اكتب الاسم، اختر البوابة، وأضف صورة. باقي البيانات جاهزة ويمكن تعديلها اختياريًا.</p>
+              </div>
               <button
                 onClick={() => setIsCourseModalOpen(false)}
                 className="p-1.5 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground/80 transition-colors"
@@ -2821,11 +2879,11 @@ export default function AdminDashboard() {
               </button>
             </div>
 
-            <form onSubmit={handleCourseSubmit} className="space-y-4">
+            <form onSubmit={handleCourseSubmit} className="space-y-5">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-muted-foreground mb-1">
-                    اسم الكورس
+                  <label className="block text-sm font-bold text-foreground mb-2">
+                    1. اسم الكورس
                   </label>
                   <input
                     type="text"
@@ -2834,17 +2892,22 @@ export default function AdminDashboard() {
                     onChange={(e) =>
                       setCourseForm({ ...courseForm, title: e.target.value })
                     }
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
+                    placeholder="مثال: أساسيات البرمجة بلغة Python"
+                    autoFocus
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
                   />
                 </div>
 
+                <details className="md:col-span-2 rounded-2xl border border-border bg-muted/30 p-4">
+                  <summary className="cursor-pointer select-none text-sm font-bold text-foreground">بيانات إضافية (اختياري)</summary>
+                  <p className="mt-1 text-xs text-muted-foreground">القيم الافتراضية مناسبة لمعظم الكورسات.</p>
+                  <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground mb-1">
                     الفئة العمرية
                   </label>
                   <input
                     type="text"
-                    required
                     value={courseForm.age}
                     onChange={(e) =>
                       setCourseForm({ ...courseForm, age: e.target.value })
@@ -2859,7 +2922,6 @@ export default function AdminDashboard() {
                   </label>
                   <input
                     type="text"
-                    required
                     value={courseForm.duration}
                     onChange={(e) =>
                       setCourseForm({ ...courseForm, duration: e.target.value })
@@ -2874,7 +2936,6 @@ export default function AdminDashboard() {
                   </label>
                   <input
                     type="text"
-                    required
                     value={courseForm.sessions}
                     onChange={(e) =>
                       setCourseForm({ ...courseForm, sessions: e.target.value })
@@ -2889,7 +2950,6 @@ export default function AdminDashboard() {
                   </label>
                   <input
                     type="text"
-                    required
                     value={courseForm.level}
                     onChange={(e) =>
                       setCourseForm({ ...courseForm, level: e.target.value })
@@ -2897,17 +2957,19 @@ export default function AdminDashboard() {
                     className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   />
                 </div>
+                  </div>
+                </details>
 
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground mb-1">
-                    التصنيف الرئيسي
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-bold text-foreground mb-2">
+                    2. البوابة التعليمية
                   </label>
                   <select
                     value={courseForm.category}
                     onChange={(e) =>
-                      setCourseForm({ ...courseForm, category: e.target.value })
+                      setCourseForm({ ...courseForm, category: e.target.value, stages: [] })
                     }
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
                   >
                     {!resolveTrackId(courseForm.category) && courseForm.category && (
                       <option value={courseForm.category}>
@@ -2922,16 +2984,29 @@ export default function AdminDashboard() {
                   </select>
                 </div>
 
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-bold text-foreground mb-2">3. المراحل المتاحة للكورس</label>
+                  <div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-muted/20 p-3">
+                    {getStagesForTrack(courseForm.category).map((stage) => {
+                      const selected = courseForm.stages.includes(stage);
+                      return <button key={stage} type="button" onClick={() => setCourseForm({
+                        ...courseForm,
+                        stages: selected ? courseForm.stages.filter((item) => item !== stage) : [...courseForm.stages, stage],
+                      })} className={`rounded-xl border px-3 py-2 text-xs font-bold transition ${selected ? "border-primary bg-primary text-primary-foreground" : "border-border bg-background text-muted-foreground hover:border-primary"}`}>{stage === "عام" ? "كل المراحل" : stage}</button>;
+                    })}
+                  </div>
+                </div>
+
                 <div className="md:col-span-2 space-y-2">
-                  <label className="block text-xs font-semibold text-muted-foreground">
-                    صورة الكورس
+                  <label className="block text-sm font-bold text-foreground">
+                    4. صورة غلاف الكورس
                   </label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-3">
                     <div>
                       <span className="block text-[10px] text-muted-foreground mb-1">
-                        خيار 1: تحميل صورة من جهازك
+                        ارفع صورة من جهازك
                       </span>
-                      <div className="relative border border-dashed border-border hover:border-primary/50 rounded-xl p-3 bg-muted/50 transition-colors flex flex-col items-center justify-center min-h-[90px]">
+                      <div className="relative border-2 border-dashed border-border hover:border-primary rounded-2xl p-5 bg-muted/30 transition-colors flex flex-col items-center justify-center min-h-[120px]">
                         {isUploadingImage ? (
                           <div className="flex flex-col items-center gap-2">
                             <Loader2 className="w-5 h-5 animate-spin text-primary" />
@@ -2948,7 +3023,7 @@ export default function AdminDashboard() {
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                             />
                             <span className="text-xs text-muted-foreground text-center">
-                              انقر هنا أو اسحب الصورة لرفعها
+                              اضغط لاختيار صورة الغلاف أو اسحبها هنا
                             </span>
                             <span className="text-[10px] text-muted-foreground mt-1">
                               PNG, JPG حتى 5MB
@@ -2957,21 +3032,20 @@ export default function AdminDashboard() {
                         )}
                       </div>
                     </div>
-                    <div>
+                    <details>
                       <span className="block text-[10px] text-muted-foreground mb-1">
-                        خيار 2: رابط صورة مباشر
+                        أو استخدم رابط صورة مباشر
                       </span>
                       <input
                         type="text"
-                        required
                         value={courseForm.img}
                         onChange={(e) =>
                           setCourseForm({ ...courseForm, img: e.target.value })
                         }
                         placeholder="https://example.com/image.jpg"
-                        className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm h-[90px]"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                       />
-                    </div>
+                    </details>
                   </div>
                   {courseForm.img && (
                     <div className="flex items-center gap-3 p-2 bg-background/20 border border-border rounded-xl mt-2">
@@ -2996,13 +3070,13 @@ export default function AdminDashboard() {
                   )}
                 </div>
 
-                <div className="md:col-span-2">
+                <details className="md:col-span-2 rounded-xl border border-border p-3">
+                  <summary className="cursor-pointer text-xs font-bold text-muted-foreground">وسوم البحث (اختياري)</summary>
                   <label className="block text-xs font-semibold text-muted-foreground mb-1">
                     الوسوم (مفصولة بفواصل)
                   </label>
                   <input
                     type="text"
-                    required
                     value={courseForm.tags}
                     onChange={(e) =>
                       setCourseForm({ ...courseForm, tags: e.target.value })
@@ -3010,10 +3084,14 @@ export default function AdminDashboard() {
                     placeholder="برمجة, أطفال, بايثون"
                     className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"
                   />
-                </div>
+                </details>
+                <label className="md:col-span-2 flex cursor-pointer items-center justify-between rounded-2xl border border-border bg-muted/20 p-4">
+                  <span><strong className="block text-sm text-foreground">نشر الكورس للطلاب</strong><small className="text-muted-foreground">اتركه مغلقًا لحفظ الكورس كمسودة حتى يكتمل.</small></span>
+                  <input type="checkbox" checked={courseForm.isPublished} onChange={(event) => setCourseForm({ ...courseForm, isPublished: event.target.checked })} className="h-5 w-5 accent-primary" />
+                </label>
               </div>
 
-              <div className="flex items-center gap-2 justify-end border-t border-border pt-4 mt-6">
+              <div className="sticky -bottom-5 md:-bottom-7 flex items-center gap-2 justify-end border-t border-border bg-card py-4 mt-6">
                 <button
                   type="button"
                   onClick={() => setIsCourseModalOpen(false)}
@@ -3027,13 +3105,13 @@ export default function AdminDashboard() {
                     createCourseMutation.isPending ||
                     updateCourseMutation.isPending
                   }
-                  className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-xs transition-colors shadow-lg shadow-primary/10 flex items-center gap-1.5"
+                  className="px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-sm transition-colors shadow-lg shadow-primary/10 flex items-center gap-1.5"
                 >
                   {(createCourseMutation.isPending ||
                     updateCourseMutation.isPending) && (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   )}
-                  حفظ البيانات
+                  {courseModalMode === "edit" ? "حفظ التعديلات" : "إضافة الكورس"}
                 </button>
               </div>
             </form>
@@ -3095,6 +3173,20 @@ export default function AdminDashboard() {
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">الكورس المرتبط</label>
+                  <select required value={curriculumForm.courseId} onChange={(event) => setCurriculumForm({ ...curriculumForm, courseId: event.target.value, stage: "" })} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground text-sm">
+                    <option value="">اختر الكورس</option>
+                    {coursesQuery.data?.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-muted-foreground mb-1">المرحلة</label>
+                  <select required value={curriculumForm.stage} onChange={(event) => setCurriculumForm({ ...curriculumForm, stage: event.target.value })} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground text-sm">
+                    <option value="">اختر المرحلة</option>
+                    {(coursesQuery.data?.find((course) => String(course.id) === curriculumForm.courseId)?.stages || []).map((stage) => <option key={stage} value={stage}>{stage}</option>)}
+                  </select>
+                </div>
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground mb-1">
                     مدة الحلقة (دقيقة:ثانية)
@@ -3551,13 +3643,12 @@ export default function AdminDashboard() {
                       const course = coursesQuery.data?.find(
                         (item) => String(item.id) === e.target.value,
                       );
-                      const nextStages = getStagesForTrack(course?.category);
                       setVideoForm({
                         ...videoForm,
                         courseId: e.target.value,
                         category: course?.title || "",
-                        stages: videoForm.stages.length ? videoForm.stages : (nextStages[0] ? [nextStages[0]] : []),
-                        stage: videoForm.stage || nextStages[0] || "",
+                        stages: [],
+                        stage: "",
                         order: getNextLessonNumber(
                           course?.title || "",
                           videoForm.learningMode,
@@ -3696,6 +3787,7 @@ export default function AdminDashboard() {
                           order: getNextLessonNumber(
                             videoForm.category,
                             videoForm.learningMode,
+                            videoForm.stages,
                           ),
                         })
                       }

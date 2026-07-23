@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, jsonb, boolean } from "drizzle-orm/pg-core";
 
 export const coursesTable = pgTable("courses", {
   id: serial("id").primaryKey(),
@@ -8,6 +8,8 @@ export const coursesTable = pgTable("courses", {
   sessions: text("sessions").notNull(),
   level: text("level").notNull(),
   category: text("category").notNull(),
+  stages: jsonb("stages").$type<string[]>().notNull().default([]),
+  isPublished: boolean("is_published").notNull().default(false),
   tags: jsonb("tags").$type<string[]>().notNull(),
   img: text("img").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),

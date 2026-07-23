@@ -623,12 +623,18 @@ router.get("/learning/files", requireStudent, async (_req, res, next) => {
 
 router.get("/admin/learning/files", requireAdmin, async (_req, res, next) => {
   try {
-    res.json(
-      await db
+    const files = await db
         .select()
         .from(learningFilesTable)
-        .orderBy(desc(learningFilesTable.createdAt)),
-    );
+        .orderBy(desc(learningFilesTable.createdAt));
+    const links = files.length ? await db
+      .select({ fileId: videoFileAttachmentsTable.fileId, videoId: videoFileAttachmentsTable.videoId })
+      .from(videoFileAttachmentsTable)
+      .where(inArray(videoFileAttachmentsTable.fileId, files.map((file) => file.id))) : [];
+    res.json(files.map((file) => ({
+      ...file,
+      videoIds: links.filter((link) => link.fileId === file.id).map((link) => link.videoId),
+    })));
   } catch (error) {
     next(error);
   }
@@ -707,6 +713,27 @@ router.patch(
   requireAdmin,
   async (req, res, next) => {
     try {
+      const targetType = req.body.targetType === "videos" ? "videos" : req.body.targetType === "stages" ? "stages" : undefined;
+      const stages: string[] | undefined = req.body.stages !== undefined
+        ? (Array.isArray(req.body.stages) ? req.body.stages : String(req.body.stages).split(","))
+            .map(String).map((stage: string) => stage.trim()).filter(Boolean)
+        : undefined;
+      const videoIds: number[] | undefined = req.body.videoIds !== undefined
+        ? (Array.isArray(req.body.videoIds) ? req.body.videoIds : String(req.body.videoIds).split(","))
+            .map(Number).filter((id: number) => Number.isInteger(id) && id > 0)
+        : undefined;
+      if (targetType === "stages" && stages?.length === 0) {
+        res.status(400).json({ error: "اختر مرحلة واحدة على الأقل" }); return;
+      }
+      if (targetType === "videos" && videoIds?.length === 0) {
+        res.status(400).json({ error: "اختر فيديو واحدًا على الأقل" }); return;
+      }
+      if (videoIds?.length) {
+        const existingVideos = await db.select({ id: videosTable.id }).from(videosTable).where(inArray(videosTable.id, videoIds));
+        if (existingVideos.length !== new Set(videoIds).size) {
+          res.status(400).json({ error: "أحد الفيديوهات المختارة غير موجود" }); return;
+        }
+      }
       const [file] = await db
         .update(learningFilesTable)
         .set({
@@ -722,6 +749,8 @@ router.patch(
           ...(req.body.stage !== undefined && {
             stage: String(req.body.stage).trim() || null,
           }),
+          ...(stages !== undefined && { stages, stage: stages[0] ?? null }),
+          ...(targetType !== undefined && { targetType }),
           ...(req.body.subject !== undefined && {
             subject: String(req.body.subject).trim() || null,
           }),
@@ -745,6 +774,14 @@ router.patch(
       if (!file) {
         res.status(404).json({ error: "الملف غير موجود" });
         return;
+      }
+      if (videoIds !== undefined) {
+        await db.delete(videoFileAttachmentsTable).where(eq(videoFileAttachmentsTable.fileId, file.id));
+        if (videoIds.length) await db.insert(videoFileAttachmentsTable).values(
+          Array.from(new Set(videoIds)).map((videoId, order) => ({ videoId, fileId: file.id, order })),
+        );
+      } else if (targetType === "stages") {
+        await db.delete(videoFileAttachmentsTable).where(eq(videoFileAttachmentsTable.fileId, file.id));
       }
       res.json(file);
     } catch (error) {

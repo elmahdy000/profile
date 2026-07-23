@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, coursesTable, curriculumsTable, videosTable } from "@workspace/db";
 import { CreateCourseBody, UpdateCourseBody } from "@workspace/api-zod";
 import { requireAdmin } from "../middleware/auth";
+import { isAdminRequest } from "../middleware/auth";
 import { eq } from "drizzle-orm";
 
 const router: IRouter = Router();
@@ -15,15 +16,19 @@ router.get("/courses", async (_req, res, next) => {
       db.select().from(videosTable),
     ]);
 
-    const formatted = courses.map((c) => {
+    const visibleCourses = isAdminRequest(_req)
+      ? courses
+      : courses.filter((course) => course.isPublished);
+    const formatted = visibleCourses.map((c) => {
       // Find matching curriculum lessons
       const matchingCurriculums = curriculums.filter(
         (curr) =>
-          curr.subject.toLowerCase() === c.category.toLowerCase() ||
+          curr.courseId === c.id ||
+          (!curr.courseId && (curr.subject.toLowerCase() === c.category.toLowerCase() ||
           c.title.toLowerCase().includes(curr.subject.toLowerCase()) ||
           c.tags.some(
             (tag) => tag.toLowerCase() === curr.subject.toLowerCase(),
-          ),
+          ))),
       );
 
       // Find matching YouTube videos/playlists
@@ -42,6 +47,8 @@ router.get("/courses", async (_req, res, next) => {
         sessions: c.sessions,
         level: c.level,
         category: c.category,
+        stages: c.stages,
+        isPublished: c.isPublished,
         tags: c.tags,
         img: c.img,
         lessonsCount: matchingCurriculums.length,
@@ -67,6 +74,8 @@ router.post("/courses", requireAdmin, async (req, res, next) => {
         sessions: validated.sessions,
         level: validated.level,
         category: validated.category,
+        stages: validated.stages,
+        isPublished: validated.isPublished,
         tags: validated.tags,
         img: validated.img,
       })
@@ -80,6 +89,8 @@ router.post("/courses", requireAdmin, async (req, res, next) => {
       sessions: inserted.sessions,
       level: inserted.level,
       category: inserted.category,
+      stages: inserted.stages,
+      isPublished: inserted.isPublished,
       tags: inserted.tags,
       img: inserted.img,
     });
@@ -103,6 +114,8 @@ router.put("/courses/:id", requireAdmin, async (req, res, next) => {
         sessions: validated.sessions,
         level: validated.level,
         category: validated.category,
+        stages: validated.stages,
+        isPublished: validated.isPublished,
         tags: validated.tags,
         img: validated.img,
       })
@@ -127,6 +140,8 @@ router.put("/courses/:id", requireAdmin, async (req, res, next) => {
       sessions: updated.sessions,
       level: updated.level,
       category: updated.category,
+      stages: updated.stages,
+      isPublished: updated.isPublished,
       tags: updated.tags,
       img: updated.img,
     });

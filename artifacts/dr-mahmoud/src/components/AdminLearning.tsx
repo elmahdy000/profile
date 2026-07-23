@@ -52,6 +52,7 @@ type FileItem = {
   stage?: string | null;
   stages?: string[];
   targetType?: "stages" | "videos";
+  videoIds?: number[];
   subject?: string | null;
   tags?: string[];
   order?: number;
@@ -134,6 +135,29 @@ async function adminApi<T>(url: string, options: RequestInit = {}): Promise<T> {
   return data;
 }
 
+async function optimizeLearningImage(file: File): Promise<File> {
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) return file;
+  const image = await createImageBitmap(file);
+  const maxEdge = 2560;
+  const scale = Math.min(1, maxEdge / Math.max(image.width, image.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(image.width * scale));
+  canvas.height = Math.max(1, Math.round(image.height * scale));
+  const context = canvas.getContext("2d", { alpha: true });
+  if (!context) {
+    image.close();
+    return file;
+  }
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  image.close();
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", 0.9));
+  if (!blob || blob.size >= file.size) return file;
+  return new File([blob], file.name.replace(/\.[^.]+$/, ".webp"), {
+    type: "image/webp",
+    lastModified: file.lastModified,
+  });
+}
+
 export function AdminLearning() {
   const { toast } = useToast();
   const [tab, setTab] = useState<"students" | "files" | "quizzes" | "results" | "reports">(
@@ -148,7 +172,7 @@ export function AdminLearning() {
   const [videoCategories, setVideoCategories] = useState<string[]>([]);
   const [videoOptions, setVideoOptions] = useState<VideoOption[]>([]);
   const [learningCourses, setLearningCourses] = useState<
-    Array<{ id: number; title: string; category: string }>
+    Array<{ id: number; title: string; category: string; stages?: string[] }>
   >([]);
   const [loading, setLoading] = useState(true);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
@@ -159,9 +183,11 @@ export function AdminLearning() {
   const [fileStatusFilter, setFileStatusFilter] = useState("all");
   const [filePage, setFilePage] = useState(1);
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
+  const [editingFile, setEditingFile] = useState<FileItem | null>(null);
   const [showFilePreview, setShowFilePreview] = useState(false);
   const [isFileDragging, setIsFileDragging] = useState(false);
   const [fileValidationError, setFileValidationError] = useState("");
+  const [fileOptimization, setFileOptimization] = useState<{ before: number; after: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileForm, setFileForm] = useState({
     title: "",
@@ -196,7 +222,7 @@ export function AdminLearning() {
         adminApi<Quiz[]>("/api/admin/learning/quizzes"),
         adminApi<Attempt[]>("/api/admin/learning/attempts"),
         adminApi<VideoOption[]>("/api/videos"),
-        adminApi<Array<{ id: number; title: string; category: string }>>("/api/courses"),
+        adminApi<Array<{ id: number; title: string; category: string; stages?: string[] }>>("/api/courses"),
         adminApi<LearningAnalytics>("/api/admin/learning/analytics"),
         adminApi<RecoveryRequest[]>("/api/admin/recovery-requests"),
       ]);
@@ -319,9 +345,10 @@ export function AdminLearning() {
         )
         .map((file) => Number(file.order) || 0),
     ) + 1;
-  const selectLearningFile = (file: File | null) => {
+  const selectLearningFile = async (file: File | null) => {
     setIsFileDragging(false);
     setFileValidationError("");
+    setFileOptimization(null);
     if (!file) return;
     const allowedExtensions = ["pdf", "doc", "docx", "zip", "ppt", "pptx", "txt", "jpg", "jpeg", "png", "webp"];
     const extension = file.name.split(".").pop()?.toLowerCase() || "";
@@ -333,9 +360,11 @@ export function AdminLearning() {
       setFileValidationError("حجم الملف أكبر من 150 MB. اضغط الملف ثم حاول مرة أخرى.");
       return;
     }
+    const optimizedFile = await optimizeLearningImage(file).catch(() => file);
+    setFileOptimization(optimizedFile.size < file.size ? { before: file.size, after: optimizedFile.size } : null);
     setFileForm((current) => ({
       ...current,
-      file,
+      file: optimizedFile,
       title: current.title || file.name.replace(/\.[^.]+$/, ""),
     }));
     setShowFilePreview(false);
@@ -438,14 +467,24 @@ export function AdminLearning() {
     setFiles(files.map((f) => (f.id === file.id ? updated : f)));
   };
   const editFile = async (file: FileItem) => {
-    const title = prompt("اسم الملف الجديد", file.title)?.trim();
-    if (!title || title === file.title) return;
+    setEditingFile({ ...file, stages: file.stages?.length ? file.stages : file.stage ? [file.stage] : [], videoIds: file.videoIds || [] });
+  };
+  const saveEditedFile = async () => {
+    if (!editingFile) return;
+    if (editingFile.targetType === "videos" && !editingFile.videoIds?.length) return;
+    if (editingFile.targetType !== "videos" && !editingFile.stages?.length) return;
     const updated = await adminApi<FileItem>(
-      `/api/admin/learning/files/${file.id}`,
-      { method: "PATCH", body: JSON.stringify({ title }) },
+      `/api/admin/learning/files/${editingFile.id}`,
+      { method: "PATCH", body: JSON.stringify({
+        title: editingFile.title,
+        targetType: editingFile.targetType || "stages",
+        stages: editingFile.stages || [],
+        videoIds: editingFile.videoIds || [],
+      }) },
     );
-    setFiles(files.map((item) => (item.id === file.id ? updated : item)));
-    toast({ title: "تم تحديث اسم الملف" });
+    setFiles(files.map((item) => (item.id === editingFile.id ? { ...updated, videoIds: editingFile.videoIds } : item)));
+    setEditingFile(null);
+    toast({ title: "تم تحديث مكان ظهور الملف" });
   };
   const createQuiz = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -784,7 +823,14 @@ export function AdminLearning() {
                       <span className="mb-3 block text-sm font-bold text-slate-800">مكان ظهور الملف</span>
                       <div className="grid gap-2 sm:grid-cols-2">
                         {([['stages', 'مراحل دراسية محددة'], ['videos', 'داخل فيديو أو درس']] as const).map(([value, label]) => (
-                          <button key={value} type="button" onClick={() => setFileForm({ ...fileForm, targetType: value })}
+                          <button key={value} type="button" onClick={() => setFileForm({
+                            ...fileForm,
+                            targetType: value,
+                            stages: [],
+                            stage: "",
+                            videoIds: [],
+                            ...(value === "videos" ? { category: "" } : {}),
+                          })}
                             className={`rounded-xl border p-3 text-sm font-bold ${fileForm.targetType === value ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 bg-white text-slate-600'}`}>
                             {label}
                           </button>
@@ -824,7 +870,9 @@ export function AdminLearning() {
                           const course = learningCourses.find(
                             (item) => item.title === e.target.value,
                           );
-                          const stages = getStagesForTrack(course?.category);
+                          const stages = course?.stages?.length
+                            ? course.stages
+                            : getStagesForTrack(course?.category);
                           setFileForm({
                             ...fileForm,
                             category: e.target.value,
@@ -978,6 +1026,7 @@ export function AdminLearning() {
                       </span>
                     </div>
                     {fileValidationError && <p role="alert" className="mt-3 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700"><AlertCircle className="h-4 w-4 shrink-0" />{fileValidationError}</p>}
+                    {fileOptimization && <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">تم تحسين الصورة تلقائيًا مع الحفاظ على الجودة: {(fileOptimization.before / 1024 / 1024).toFixed(1)} MB ← {(fileOptimization.after / 1024 / 1024).toFixed(1)} MB</p>}
                     {fileForm.file && (
                       <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4">
                         <div className="flex items-center gap-3">
@@ -997,6 +1046,7 @@ export function AdminLearning() {
                             onClick={() => {
                               setFileForm({ ...fileForm, file: null });
                               setFileValidationError("");
+                              setFileOptimization(null);
                               setShowFilePreview(false);
                               if (fileInputRef.current)
                                 fileInputRef.current.value = "";
@@ -1344,6 +1394,18 @@ export function AdminLearning() {
                 </div>
               </section>
 
+              {editingFile && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4" onClick={() => setEditingFile(null)}>
+                  <div className="w-full max-w-2xl rounded-2xl bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+                    <div className="mb-5 flex items-center justify-between"><div><h3 className="text-lg font-black">تعديل الملف</h3><p className="text-xs text-slate-500">غيّر مكان ظهوره بدون إعادة رفعه.</p></div><button type="button" onClick={() => setEditingFile(null)}><X className="h-5 w-5" /></button></div>
+                    <Field label="اسم الملف"><input className="input-admin" value={editingFile.title} onChange={(event) => setEditingFile({ ...editingFile, title: event.target.value })} /></Field>
+                    <div className="my-4 grid grid-cols-2 gap-2">{([['stages', 'مراحل محددة'], ['videos', 'فيديو أو درس']] as const).map(([value, label]) => <button type="button" key={value} onClick={() => setEditingFile({ ...editingFile, targetType: value, stages: [], videoIds: [] })} className={`rounded-xl border p-3 font-bold ${editingFile.targetType === value ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200'}`}>{label}</button>)}</div>
+                    {editingFile.targetType === "videos" ? <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border p-3">{videoOptions.map((video) => { const checked = editingFile.videoIds?.includes(video.id) || false; return <label key={video.id} className="flex gap-3 rounded-lg p-2 hover:bg-slate-50"><input type="checkbox" checked={checked} onChange={() => setEditingFile({ ...editingFile, videoIds: checked ? editingFile.videoIds?.filter((id) => id !== video.id) : [...(editingFile.videoIds || []), video.id] })} /><span><strong className="block text-sm">{video.title}</strong><small>{video.category}</small></span></label>; })}</div> : <div className="flex flex-wrap gap-2 rounded-xl border p-3">{(() => { const course = learningCourses.find((item) => item.title === editingFile.category); return (course?.stages?.length ? course.stages : getStagesForTrack(course?.category)); })().map((stage) => { const checked = editingFile.stages?.includes(stage) || false; return <button type="button" key={stage} onClick={() => setEditingFile({ ...editingFile, stages: checked ? editingFile.stages?.filter((item) => item !== stage) : [...(editingFile.stages || []), stage] })} className={`rounded-lg border px-3 py-2 text-xs font-bold ${checked ? 'bg-primary text-white' : 'bg-slate-50'}`}>{stage}</button>; })}</div>}
+                    <div className="mt-5 flex justify-end gap-2"><Button variant="outline" onClick={() => setEditingFile(null)}>إلغاء</Button><Button onClick={() => void saveEditedFile()}>حفظ التعديلات</Button></div>
+                  </div>
+                </div>
+              )}
+
               {previewFile && (
                 <div
                   className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
@@ -1411,7 +1473,9 @@ export function AdminLearning() {
                         const course = learningCourses.find(
                           (item) => item.title === e.target.value,
                         );
-                        const stages = getStagesForTrack(course?.category);
+                        const stages = course?.stages?.length
+                          ? course.stages
+                          : getStagesForTrack(course?.category);
                         setQuizForm({
                           ...quizForm,
                           category: e.target.value,

@@ -605,6 +605,12 @@ components:
           type: string
         category:
           type: string
+        stages:
+          type: array
+          items:
+            type: string
+        isPublished:
+          type: boolean
         tags:
           type: array
           items:
@@ -618,6 +624,8 @@ components:
         - sessions
         - level
         - category
+        - stages
+        - isPublished
         - tags
         - img
     Course:
@@ -637,6 +645,12 @@ components:
           type: string
         category:
           type: string
+        stages:
+          type: array
+          items:
+            type: string
+        isPublished:
+          type: boolean
         tags:
           type: array
           items:
@@ -655,6 +669,8 @@ components:
         - sessions
         - level
         - category
+        - stages
+        - isPublished
         - tags
         - img
         - lessonsCount
@@ -700,6 +716,12 @@ components:
     InsertCurriculum:
       type: object
       properties:
+        courseId:
+          type: integer
+          nullable: true
+        stage:
+          type: string
+          nullable: true
         subject:
           type: string
         title:
@@ -722,6 +744,12 @@ components:
       properties:
         id:
           type: integer
+        courseId:
+          type: integer
+          nullable: true
+        stage:
+          type: string
+          nullable: true
         subject:
           type: string
         title:

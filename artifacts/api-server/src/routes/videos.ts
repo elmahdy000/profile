@@ -142,10 +142,10 @@ async function syncVideoAttachments(videoId: number, fileIds: number[]) {
 // List all videos and playlists with gating logic
 router.get("/videos", async (req, res, next) => {
   try {
-    const videos = await db
-      .select()
-      .from(videosTable)
-      .orderBy(asc(videosTable.order));
+    const [videos, courses] = await Promise.all([
+      db.select().from(videosTable).orderBy(asc(videosTable.order)),
+      db.select({ id: coursesTable.id, isPublished: coursesTable.isPublished }).from(coursesTable),
+    ]);
     const attachmentMap = await loadAttachmentMap(
       videos.map((video) => video.id),
     );
@@ -174,8 +174,10 @@ router.get("/videos", async (req, res, next) => {
         .json({ error: "Student approval and login are required" });
       return;
     }
+    const publishedCourseIds = new Set(courses.filter((course) => course.isPublished).map((course) => course.id));
     const allowedVideos = videos.filter(
       (video) =>
+        (!video.courseId || publishedCourseIds.has(video.courseId)) &&
         video.isPublished &&
         canStudentAccessContent(
           approvedStudent,
@@ -305,6 +307,10 @@ router.post("/videos", requireAdmin, async (req, res, next) => {
       res.status(400).json({ error: "الكورس المختار غير موجود" });
       return;
     }
+    if (selectedCourse?.stages?.length && stages.some((stage) => !selectedCourse.stages.includes(stage))) {
+      res.status(400).json({ error: "إحدى المراحل المختارة غير متاحة داخل هذا الكورس" });
+      return;
+    }
     const [inserted] = await db
       .insert(videosTable)
       .values({
@@ -399,6 +405,14 @@ router.put("/videos/:id", requireAdmin, async (req, res, next) => {
           .where(eq(coursesTable.id, validated.courseId))
           .limit(1)
       : [];
+    if (validated.courseId && !selectedCourse) {
+      res.status(400).json({ error: "الكورس المختار غير موجود" });
+      return;
+    }
+    if (selectedCourse?.stages?.length && stages?.some((stage) => !selectedCourse.stages.includes(stage))) {
+      res.status(400).json({ error: "إحدى المراحل المختارة غير متاحة داخل هذا الكورس" });
+      return;
+    }
     if (validated.courseId && !selectedCourse) {
       res.status(400).json({ error: "الكورس المختار غير موجود" });
       return;
@@ -579,6 +593,13 @@ router.get("/videos/:id/stream", async (req, res, next) => {
         .status(401)
         .json({ error: "Student approval and login are required" });
       return;
+    }
+    if (approvedStudent && video.courseId) {
+      const course = await db.select({ isPublished: coursesTable.isPublished }).from(coursesTable).where(eq(coursesTable.id, video.courseId)).then((rows) => rows[0]);
+      if (!course?.isPublished) {
+        res.status(403).json({ error: "الكورس غير منشور حاليًا" });
+        return;
+      }
     }
     if (
       approvedStudent &&

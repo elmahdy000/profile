@@ -27,6 +27,8 @@ router.post("/curriculums", requireAdmin, async (req, res, next) => {
       .insert(curriculumsTable)
       .values({
         subject: validated.subject,
+        courseId: validated.courseId ?? null,
+        stage: validated.stage ?? null,
         title: validated.title,
         description: validated.description ?? null,
         images: validated.images,
@@ -50,6 +52,8 @@ router.put("/curriculums/:id", requireAdmin, async (req, res, next) => {
       .update(curriculumsTable)
       .set({
         ...(validated.subject !== undefined && { subject: validated.subject }),
+        ...(validated.courseId !== undefined && { courseId: validated.courseId }),
+        ...(validated.stage !== undefined && { stage: validated.stage }),
         ...(validated.title !== undefined && { title: validated.title }),
         ...(validated.description !== undefined && { description: validated.description }),
         ...(validated.images !== undefined && { images: validated.images }),
