@@ -105,7 +105,7 @@ export function AcademyHome() {
                     alt="د. محمود المهدي أثناء شرح البرمجة والروبوتات للطلاب"
                     fetchPriority="high"
                     decoding="async"
-                    className="h-full w-full object-cover object-center"
+                    className="h-full w-full object-cover object-[center_12%] sm:object-[center_10%] lg:object-top"
                   />
                 </div>
                 <div className="absolute bottom-4 right-4 z-10 max-w-[85%] rounded-2xl border border-white/70 bg-white/95 p-4 shadow-xl backdrop-blur lg:bottom-6 lg:right-6">
