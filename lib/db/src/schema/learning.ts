@@ -64,9 +64,13 @@ export const learningFilesTable = pgTable("learning_files", {
 });
 
 export type QuizQuestion = {
+  id?: string;
   prompt: string;
   options: string[];
   correctIndex: number;
+  explanation?: string;       // Explanation/Feedback for why the correct answer is right
+  imageUrl?: string;          // Optional image attachment for the question (e.g. code snippet, diagram)
+  points?: number;            // Custom points for this question (default 1)
 };
 
 export const quizzesTable = pgTable("quizzes", {
@@ -79,9 +83,12 @@ export const quizzesTable = pgTable("quizzes", {
   category: text("category").notNull().default("عام"),
   stage: text("stage"),
   stages: jsonb("stages").$type<string[]>().notNull().default([]),
+  durationMinutes: integer("duration_minutes"), // null = no time limit, e.g. 30 = 30-minute exam timer
   passingScore: integer("passing_score").notNull().default(60),
   maxAttempts: integer("max_attempts").notNull().default(3),
   requiredProgress: integer("required_progress").notNull().default(80),
+  shuffleQuestions: boolean("shuffle_questions").notNull().default(false),
+  showExplanations: boolean("show_explanations").notNull().default(true),
   questions: jsonb("questions").$type<QuizQuestion[]>().notNull(),
   isPublished: boolean("is_published").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -95,6 +102,13 @@ export const quizAttemptsTable = pgTable("quiz_attempts", {
   answers: jsonb("answers").$type<number[]>().notNull(),
   score: integer("score").notNull(),
   passed: boolean("passed").notNull(),
+  timeSpentSeconds: integer("time_spent_seconds").notNull().default(0),
+  details: jsonb("details").$type<Array<{
+    questionIndex: number;
+    selectedOption: number;
+    correctOption: number;
+    isCorrect: boolean;
+  }>>(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({
   quizIndex: index("quiz_attempts_quiz_idx").on(table.quizId),

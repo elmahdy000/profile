@@ -65,24 +65,39 @@ type FileItem = {
   isPublished: boolean;
   createdAt?: string;
 };
-type Question = { prompt: string; options: string[]; correctIndex: number };
+interface Question {
+  id?: string;
+  prompt: string;
+  options: string[];
+  correctIndex: number;
+  explanation?: string;
+  imageUrl?: string;
+  points?: number;
+}
 type VideoOption = { id: number; courseId?: number | null; title: string; category: string; stage?: string | null; stages?: string[] };
-type Quiz = {
+interface Quiz {
   id: number;
   courseId?: number | null;
   videoId?: number | null;
-  scope?: "course" | "lesson";
+  scope: "course" | "lesson";
   title: string;
   description?: string | null;
   category: string;
   stage?: string | null;
-  stages?: string[];
+  stages: string[];
+  durationMinutes?: number | null;
   passingScore: number;
-  maxAttempts?: number;
-  requiredProgress?: number;
+  maxAttempts: number;
+  requiredProgress: number;
+  shuffleQuestions?: boolean;
+  showExplanations?: boolean;
   questions: Question[];
   isPublished: boolean;
-};
+  attemptsUsed?: number;
+  locked?: boolean;
+  lockedReason?: string | null;
+  createdAt?: string;
+}
 type Attempt = {
   id: number;
   studentName: string;
@@ -229,12 +244,15 @@ export function AdminLearning() {
     stage: "",
     stages: [] as string[],
     description: "",
+    durationMinutes: "" as number | string,
     passingScore: 60,
     maxAttempts: 3,
     requiredProgress: 80,
+    shuffleQuestions: false,
+    showExplanations: true,
     isPublished: false,
     questions: [
-      { prompt: "", options: ["", "", "", ""], correctIndex: 0 },
+      { prompt: "", options: ["", "", "", ""], correctIndex: 0, explanation: "", imageUrl: "" },
     ] as Question[],
   });
   const [editingQuizId, setEditingQuizId] = useState<number | null>(null);
@@ -256,11 +274,14 @@ export function AdminLearning() {
       stage: "",
       stages: [],
       description: "",
+      durationMinutes: "",
       passingScore: 60,
       maxAttempts: 3,
       requiredProgress: 80,
+      shuffleQuestions: false,
+      showExplanations: true,
       isPublished: false,
-      questions: [{ prompt: "", options: ["", "", "", ""], correctIndex: 0 }],
+      questions: [{ prompt: "", options: ["", "", "", ""], correctIndex: 0, explanation: "", imageUrl: "" }],
     });
   };
 
@@ -703,11 +724,19 @@ export function AdminLearning() {
       stage: quiz.stage || "",
       stages: quiz.stages?.length ? quiz.stages : quiz.stage ? [quiz.stage] : [],
       description: quiz.description || "",
+      durationMinutes: quiz.durationMinutes ? String(quiz.durationMinutes) : "",
       passingScore: quiz.passingScore,
       maxAttempts: quiz.maxAttempts || 3,
       requiredProgress: quiz.requiredProgress ?? 80,
+      shuffleQuestions: quiz.shuffleQuestions ?? false,
+      showExplanations: quiz.showExplanations ?? true,
       isPublished: quiz.isPublished,
-      questions: quiz.questions.map((question) => ({ ...question, options: [...question.options] })),
+      questions: quiz.questions.map((question) => ({
+        ...question,
+        options: [...question.options],
+        explanation: question.explanation || "",
+        imageUrl: question.imageUrl || "",
+      })),
     });
   };
   const deleteQuiz = async (id: number) => {
@@ -1853,9 +1882,22 @@ export function AdminLearning() {
                   <Field label="عدد المحاولات">
                     <input type="number" min="1" max="20" value={quizForm.maxAttempts} onChange={(event) => setQuizForm({ ...quizForm, maxAttempts: Number(event.target.value) })} className="input-admin" />
                   </Field>
+                  <Field label="مدة الاختبار بالدقائق (Timer)">
+                    <input type="number" min="1" max="300" placeholder="بدون وقت محدد" value={quizForm.durationMinutes} onChange={(event) => setQuizForm({ ...quizForm, durationMinutes: event.target.value })} className="input-admin" />
+                  </Field>
                   {quizForm.scope === "lesson" && <Field label="نسبة مشاهدة الدرس المطلوبة %">
                     <input type="number" min="0" max="100" value={quizForm.requiredProgress} onChange={(event) => setQuizForm({ ...quizForm, requiredProgress: Number(event.target.value) })} className="input-admin" />
                   </Field>}
+                </div>
+                <div className="flex flex-wrap gap-4 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                  <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-slate-700">
+                    <input type="checkbox" checked={quizForm.shuffleQuestions} onChange={(e) => setQuizForm({ ...quizForm, shuffleQuestions: e.target.checked })} className="h-4 w-4 rounded border-slate-300 text-primary" />
+                    خلط الأسئلة عشوائياً لكل طالب (Randomize)
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-slate-700">
+                    <input type="checkbox" checked={quizForm.showExplanations} onChange={(e) => setQuizForm({ ...quizForm, showExplanations: e.target.checked })} className="h-4 w-4 rounded border-slate-300 text-primary" />
+                    عرض التفسير والشرح للطالب بعد التصحيح
+                  </label>
                 </div>
                 <section className="rounded-2xl border-2 border-dashed border-primary/25 bg-primary/5 p-5">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -1934,6 +1976,20 @@ export function AdminLearning() {
                       }
                       className="input-admin"
                     />
+                    <div className="grid sm:grid-cols-2 gap-2">
+                      <input
+                        placeholder="رابط صورة توضيحية للسؤال (اختياري)"
+                        value={q.imageUrl || ""}
+                        onChange={(e) => setQuestion(qi, { imageUrl: e.target.value })}
+                        className="input-admin text-xs"
+                      />
+                      <input
+                        placeholder="الشرح والتفسير للإجابة الصحيحة (اختياري)"
+                        value={q.explanation || ""}
+                        onChange={(e) => setQuestion(qi, { explanation: e.target.value })}
+                        className="input-admin text-xs"
+                      />
+                    </div>
                     <div className="grid sm:grid-cols-2 gap-2">
                       {q.options.map((option, oi) => (
                         <label key={oi} className={`flex items-center gap-2 rounded-xl border p-2 transition ${q.correctIndex === oi ? "border-emerald-400 bg-emerald-50" : "border-slate-200"}`}>

@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   ClipboardCheck,
+  Clock,
   Download,
   FileText,
   FolderOpen,
@@ -73,7 +74,13 @@ type LearningFile = {
   sizeBytes: number;
   createdAt?: string;
 };
-type QuizQuestion = { prompt: string; options: string[] };
+type QuizQuestion = {
+  prompt: string;
+  options: string[];
+  correctIndex?: number;
+  explanation?: string;
+  imageUrl?: string;
+};
 type Quiz = {
   id: number;
   scope?: "course" | "lesson";
@@ -81,8 +88,11 @@ type Quiz = {
   description?: string | null;
   category: string;
   stage?: string | null;
+  durationMinutes?: number | null;
   passingScore: number;
   maxAttempts?: number;
+  shuffleQuestions?: boolean;
+  showExplanations?: boolean;
   attemptsUsed?: number;
   locked?: boolean;
   lockedReason?: string | null;
@@ -1085,9 +1095,21 @@ function QuizzesPanel({
               </span>
             )}
             <h3 className="text-lg font-extrabold text-foreground mt-2">{quiz.title}</h3>
-            <p className="text-[13px] text-muted-foreground mt-2">
-              {quiz.questions.length} أسئلة · النجاح من {quiz.passingScore}%
-              {quiz.maxAttempts ? ` · ${Math.max(0, quiz.maxAttempts - (quiz.attemptsUsed || 0))} محاولة متبقية` : ""}
+            <div className="flex flex-wrap items-center gap-2 mt-2 text-[12px] font-semibold text-muted-foreground">
+              <span>{quiz.questions.length} أسئلة</span>
+              <span>·</span>
+              <span>النجاح من {quiz.passingScore}%</span>
+              {quiz.durationMinutes && (
+                <>
+                  <span>·</span>
+                  <span className="flex items-center gap-1 font-bold text-primary">
+                    <Clock className="h-3.5 w-3.5" /> {quiz.durationMinutes} دقيقة
+                  </span>
+                </>
+              )}
+            </div>
+            <p className="text-[12px] text-muted-foreground mt-1">
+              {quiz.maxAttempts ? `${Math.max(0, quiz.maxAttempts - (quiz.attemptsUsed || 0))} محاولات متبقية من أصل ${quiz.maxAttempts}` : "محاولات بلا حدود"}
             </p>
             {quiz.locked && <p className="mt-3 rounded-xl bg-amber-50 p-3 text-xs font-bold text-amber-700">{quiz.lockedReason}</p>}
             <Button
@@ -1489,9 +1511,11 @@ export function StudentPlatform() {
     else if (saved === "light") document.documentElement.classList.remove("dark");
   }, []);
 
-  // Quiz active states
+  // Quiz active states & Timer
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
   const [quizAnswers, setQuizAnswers] = useState<number[]>([]);
+  const [quizTimeRemaining, setQuizTimeRemaining] = useState<number | null>(null);
+  const [quizStartTime, setQuizStartTime] = useState<number>(0);
   const [quizResult, setQuizResult] = useState<{
     score: number;
     passed: boolean;
@@ -1502,6 +1526,20 @@ export function StudentPlatform() {
   } | null>(null);
   const [quizSubmitting, setQuizSubmitting] = useState(false);
 
+  // Exam Countdown Timer Effect
+  useEffect(() => {
+    if (!activeQuiz || quizResult || quizTimeRemaining === null) return;
+    if (quizTimeRemaining <= 0) {
+      toast({ title: "انتهى وقت الاختبار", description: "جاري تسليم إجاباتك تلقائياً..." });
+      void submitQuiz();
+      return;
+    }
+    const timer = setInterval(() => {
+      setQuizTimeRemaining((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [activeQuiz, quizResult, quizTimeRemaining]);
+
   const startQuiz = (quiz: Quiz) => {
     if (quiz.locked || (quiz.maxAttempts !== undefined && (quiz.attemptsUsed || 0) >= quiz.maxAttempts)) {
       toast({
@@ -1511,14 +1549,21 @@ export function StudentPlatform() {
       });
       return;
     }
-    setActiveQuiz(quiz);
-    setQuizAnswers(Array(quiz.questions.length).fill(-1));
+    let questions = [...quiz.questions];
+    if (quiz.shuffleQuestions) {
+      questions = questions.sort(() => Math.random() - 0.5);
+    }
+    setActiveQuiz({ ...quiz, questions });
+    setQuizAnswers(Array(questions.length).fill(-1));
     setQuizResult(null);
+    setQuizStartTime(Date.now());
+    setQuizTimeRemaining(quiz.durationMinutes ? quiz.durationMinutes * 60 : null);
   };
 
   const submitQuiz = async () => {
-    if (!activeQuiz || quizAnswers.some((a) => a < 0)) return;
+    if (!activeQuiz) return;
     setQuizSubmitting(true);
+    const timeSpentSeconds = Math.round((Date.now() - quizStartTime) / 1000);
     try {
       const res = await api<{
         score: number;
@@ -1531,10 +1576,11 @@ export function StudentPlatform() {
         `/api/learning/quizzes/${activeQuiz.id}/submit`,
         {
           method: "POST",
-          body: JSON.stringify({ answers: quizAnswers }),
+          body: JSON.stringify({ answers: quizAnswers, timeSpentSeconds }),
         },
       );
       setQuizResult(res);
+      setQuizTimeRemaining(null);
       setQuizzes((current) =>
         current.map((quiz) =>
           quiz.id === activeQuiz.id
@@ -1874,72 +1920,141 @@ export function StudentPlatform() {
         {linkedPreviewFile && <AppFilePreviewModal file={linkedPreviewFile} onClose={() => setLinkedPreviewFile(null)} />}
         {activeQuiz && (
           <motion.div
-            className="fixed inset-0 z-[100] bg-black/70 p-4 overflow-y-auto flex items-center justify-center"
+            className="fixed inset-0 z-[100] bg-black/75 p-4 overflow-y-auto flex items-center justify-center backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setActiveQuiz(null)}
           >
             <motion.div
-              className="w-full max-w-2xl rounded-2xl bg-background p-6 md:p-8 shadow-2xl relative"
+              className="w-full max-w-3xl rounded-3xl bg-background p-6 md:p-8 shadow-2xl relative border border-border"
               onClick={(e) => e.stopPropagation()}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 20, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
             >
-              <h2 className="text-2xl font-black text-right mb-4">
-                {activeQuiz.title}
-              </h2>
-              <div className="mt-6 space-y-7 text-right max-h-[60vh] overflow-y-auto px-2">
-                {activeQuiz.questions.map((q, qi) => (
-                  <fieldset key={qi} className="space-y-3">
-                    <legend className="font-bold mb-3">
-                      {qi + 1}. {q.prompt}
-                    </legend>
-                    <div className="space-y-2">
-                      {q.options.map((option, oi) => (
-                        <label
-                          key={oi}
-                          className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${
-                            quizAnswers[qi] === oi
-                              ? "border-primary bg-primary/5"
-                              : "border-border"
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name={`q-${qi}`}
-                            checked={quizAnswers[qi] === oi}
-                            onChange={() =>
-                              setQuizAnswers(
-                                quizAnswers.map((a, i) => (i === qi ? oi : a)),
-                              )
-                            }
-                            className="text-primary focus:ring-primary h-4 w-4"
-                          />
-                          <span className="text-sm font-medium">{option}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </fieldset>
-                ))}
+              <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
+                <div>
+                  <h2 className="text-xl font-black text-foreground">
+                    {activeQuiz.title}
+                  </h2>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {activeQuiz.questions.length} أسئلة · نسبة النجاح {activeQuiz.passingScore}%
+                  </p>
+                </div>
+                {quizTimeRemaining !== null && !quizResult && (
+                  <div className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-black transition-colors ${
+                    quizTimeRemaining < 60 ? "bg-red-500/10 text-red-500 animate-pulse" : "bg-primary/10 text-primary"
+                  }`}>
+                    <Clock className="h-4 w-4" />
+                    <span>
+                      {Math.floor(quizTimeRemaining / 60)}:{String(quizTimeRemaining % 60).padStart(2, "0")}
+                    </span>
+                  </div>
+                )}
               </div>
+
+              <div className="mt-4 space-y-7 text-right max-h-[65vh] overflow-y-auto px-2">
+                {activeQuiz.questions.map((q, qi) => {
+                  const isSelected = quizAnswers[qi] !== undefined && quizAnswers[qi] >= 0;
+                  const isCorrect = quizResult && quizAnswers[qi] === q.correctIndex;
+                  const isWrong = quizResult && isSelected && !isCorrect;
+
+                  return (
+                    <fieldset key={qi} className={`space-y-3 rounded-2xl border p-4 transition-colors ${
+                      quizResult
+                        ? isCorrect
+                          ? "border-emerald-500/30 bg-emerald-500/5"
+                          : isWrong
+                          ? "border-red-500/30 bg-red-500/5"
+                          : "border-border"
+                        : "border-border bg-card/50"
+                    }`}>
+                      <legend className="font-extrabold text-base mb-2 text-foreground flex items-center justify-between w-full">
+                        <span>{qi + 1}. {q.prompt}</span>
+                        {quizResult && (
+                          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                            isCorrect ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-red-500/10 text-red-600 dark:text-red-400"
+                          }`}>
+                            {isCorrect ? "إجابة صحيحة ✓" : "إجابة خاطئة ✗"}
+                          </span>
+                        )}
+                      </legend>
+
+                      {q.imageUrl && (
+                        <div className="my-3 overflow-hidden rounded-xl border border-border bg-slate-100 dark:bg-slate-950 max-h-60 flex justify-center">
+                          <img src={q.imageUrl} alt={`صورة سؤال ${qi + 1}`} className="object-contain max-h-60" />
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        {q.options.map((option, oi) => {
+                          const optionSelected = quizAnswers[qi] === oi;
+                          const optionIsCorrect = q.correctIndex === oi;
+                          let optionStyle = "border-border hover:bg-muted";
+
+                          if (quizResult) {
+                            if (optionIsCorrect) {
+                              optionStyle = "border-emerald-500 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-bold";
+                            } else if (optionSelected && !optionIsCorrect) {
+                              optionStyle = "border-red-500 bg-red-500/15 text-red-700 dark:text-red-300 line-through opacity-80";
+                            } else {
+                              optionStyle = "border-border opacity-50";
+                            }
+                          } else if (optionSelected) {
+                            optionStyle = "border-primary bg-primary/10 text-primary font-bold ring-2 ring-primary/20";
+                          }
+
+                          return (
+                            <label
+                              key={oi}
+                              className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border p-3.5 transition-all ${optionStyle}`}
+                            >
+                              <input
+                                type="radio"
+                                disabled={Boolean(quizResult)}
+                                name={`q-${qi}`}
+                                checked={optionSelected}
+                                onChange={() =>
+                                  setQuizAnswers(
+                                    quizAnswers.map((a, i) => (i === qi ? oi : a)),
+                                  )
+                                }
+                                className="text-primary focus:ring-primary h-4 w-4"
+                              />
+                              <span className="text-sm font-medium">{option}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+
+                      {quizResult && activeQuiz.showExplanations !== false && q.explanation && (
+                        <div className="mt-3 rounded-xl border border-blue-500/20 bg-blue-500/10 p-3.5 text-xs text-blue-800 dark:text-blue-200">
+                          <strong className="block font-bold mb-1">💡 التفسير والشرح:</strong>
+                          <span>{q.explanation}</span>
+                        </div>
+                      )}
+                    </fieldset>
+                  );
+                })}
+              </div>
+
               {quizResult ? (
                 <div
-                  className={`mt-7 rounded-2xl p-5 text-center ${
+                  className={`mt-6 rounded-2xl p-5 text-center transition-all ${
                     quizResult.passed
-                      ? "bg-emerald-500/10 text-emerald-700"
-                      : "bg-red-500/10 text-red-600"
+                      ? "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 border border-emerald-500/30"
+                      : "bg-red-500/15 text-red-800 dark:text-red-200 border border-red-500/30"
                   }`}
                 >
-                  <CheckCircle2 className="mx-auto mb-2 h-8 w-8 text-center" />
-                  <strong className="text-2xl">{quizResult.score}%</strong>
-                  <p className="mt-1 font-bold">
+                  <CheckCircle2 className="mx-auto mb-2 h-9 w-9 text-center" />
+                  <strong className="text-3xl font-black">{quizResult.score}%</strong>
+                  <p className="mt-1 text-base font-extrabold">
                     {quizResult.passed
-                      ? "عاش! نجحت في الاختبار"
-                      : "راجع الدروس وجرب تاني"}
+                      ? "مبروك! تم اجتياز الاختبار بنجاح 🎉"
+                      : "للأسف لم تتخطى درجة النجاح، ادرس المادة جيداً وجرب ثانيةً!"}
                   </p>
-                  <p className="mt-2 text-sm font-semibold">
+                  <p className="mt-2 text-xs font-bold opacity-80">
                     {quizResult.correct} إجابة صحيحة من {quizResult.total} · {quizResult.attemptsRemaining} محاولة متبقية
                   </p>
                 </div>
@@ -1947,19 +2062,19 @@ export function StudentPlatform() {
                 <Button
                   onClick={submitQuiz}
                   disabled={quizSubmitting || quizAnswers.some((a) => a < 0)}
-                  className="mt-7 w-full h-12 font-bold"
+                  className="mt-6 w-full h-12 text-base font-bold rounded-xl shadow-lg"
                 >
                   {quizSubmitting ? (
                     <Loader2 className="animate-spin h-5 w-5 mx-auto" />
                   ) : (
-                    "سلّم الإجابات"
+                    "تسليم وتصحيح الاختبار"
                   )}
                 </Button>
               )}
               <Button
                 variant="ghost"
                 onClick={() => setActiveQuiz(null)}
-                className="mt-2 w-full font-bold"
+                className="mt-2 w-full font-bold text-muted-foreground"
               >
                 إغلاق
               </Button>
