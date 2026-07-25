@@ -196,9 +196,17 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
     .filter(Boolean);
   const questions: QuizQuestion[] = [];
   const warnings: string[] = [];
-  let current: { prompt: string; options: string[]; correctIndex: number | null; explanation?: string } | null = null;
 
-  const finish = () => {
+  type DraftQuestion = {
+    prompt: string;
+    options: string[];
+    correctIndex: number | null;
+    explanation?: string;
+  };
+
+  let current: DraftQuestion | null = null;
+
+  const finishCurrent = () => {
     if (!current) return;
     if (current.prompt && current.options.length >= 2) {
       questions.push({
@@ -207,63 +215,78 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
         correctIndex: current.correctIndex ?? 0,
         explanation: current.explanation,
       });
-      if (current.correctIndex === null) warnings.push(`لم يتم تحديد الإجابة الصحيحة للسؤال: ${current.prompt.slice(0, 70)}`);
+      if (current.correctIndex === null) {
+        warnings.push(`لم يتم العثور على سطر إجابة صريح للسؤال: «${current.prompt.slice(0, 60)}». تم تعيين الاختيار الأول افتراضيًا.`);
+      }
     } else if (current.prompt) {
-      warnings.push(`تم تجاهل سؤال لا يحتوي على اختيارين على الأقل: ${current.prompt.slice(0, 70)}`);
+      warnings.push(`تم تجاوز السؤال: «${current.prompt.slice(0, 60)}» لأنه يحتاج اختيارين على الأقل (يحتوي على ${current.options.length}).`);
     }
     current = null;
   };
 
-  for (const line of lines) {
-    // 1. Check for explanation
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+
+    // 1. Check Explanation line
     const explanationMatch = line.match(/^(?:explanation|note|التفسير|الشرح|تفسير|ملاحظة)\s*[:：\-]?\s*(.+)$/i);
     if (explanationMatch && current) {
       current.explanation = explanationMatch[1].trim();
       continue;
     }
 
-    // 2. Check for Answer line
-    const answer = line.match(/^(?:answer|correct\s*answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة)\s*[:：\-]?\s*(.+)$/i);
-    if (answer && current) {
-      const answerValue = answer[1].trim();
-      const firstWord = answerValue.split(/\s+/)[0];
-      const byLabel = optionIndex(firstWord);
-      const byText = current.options.findIndex((option) => option.toLowerCase() === answerValue.toLowerCase());
-      current.correctIndex = byLabel !== null && byLabel < current.options.length ? byLabel : byText >= 0 ? byText : null;
+    // 2. Check Answer line
+    const answerMatch = line.match(/^(?:answer|correct\s*answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة)\s*[:：\-]?\s*(.+)$/i);
+    if (answerMatch && current) {
+      const answerVal = answerMatch[1].trim();
+      const firstToken = answerVal.split(/\s+/)[0];
+      const byIndex = optionIndex(firstToken);
+      const byText = current.options.findIndex((o) => o.toLowerCase() === answerVal.toLowerCase());
+      if (byIndex !== null && byIndex < current.options.length) {
+        current.correctIndex = byIndex;
+      } else if (byText >= 0) {
+        current.correctIndex = byText;
+      }
       continue;
     }
 
-    // 3. Check for Choice (e.g., "A)", "A.", "(A)", "أ)", "أ.", "1)", "1.")
-    const choice = line.match(/^(?:\(?([A-Fa-fأابجده]|هـ|[1-6])\)?[.):\-\s]\s*)(.+)$/);
-    if (choice && current && current.options.length < 8 && (current.options.length > 0 || !line.match(/^(?:س(?:ؤال)?\s*)?\d+\s*[.):\-]/i))) {
-      current.options.push(choice[2].trim());
+    // 3. Check for Question start: e.g. "1.", "1)", "Q1:", "س1)", "س1.", "س1:"
+    const questionHeaderMatch = line.match(/^(?:(?:س(?:ؤال)?\s*)?\d+|Q(?:uestion)?\s*\d+|#\d+)\s*[.):\-]\s*(.+)$/i);
+
+    if (questionHeaderMatch) {
+      finishCurrent();
+      current = {
+        prompt: questionHeaderMatch[1].trim(),
+        options: [],
+        correctIndex: null,
+      };
       continue;
     }
 
-    // 4. Check for Numbered Question start (e.g., "1.", "Q1:", "س1-")
-    const numberedQuestion = line.match(/^(?:(?:س(?:ؤال)?\s*)?\d+\s*[.):\-]|Q(?:uestion)?\s*\d+\s*[.):\-]|#\d+)\s*(.+)$/i);
-    if (numberedQuestion) {
-      finish();
-      current = { prompt: numberedQuestion[1].trim(), options: [], correctIndex: null };
+    // 4. Check for Choice line: e.g. "A)", "A.", "(A)", "أ)", "أ.", "1)", "1."
+    const choiceMatch = line.match(/^(?:\(?([A-Fa-fأابجده]|هـ|[1-6])\)?[.):\-\s]\s*)(.+)$/);
+    if (choiceMatch && current && current.options.length < 8) {
+      current.options.push(choiceMatch[2].trim());
       continue;
     }
 
-    // Fallback: line attachment
+    // 5. Fallback logic:
     if (!current) {
-      current = { prompt: line, options: [], correctIndex: null };
+      // If no question active yet, treat this line as the start of Question 1
+      current = {
+        prompt: line,
+        options: [],
+        correctIndex: null,
+      };
     } else if (current.options.length === 0) {
+      // If question prompt already exists but zero choices found yet, append text to prompt
       current.prompt += ` ${line}`;
     } else if (!current.explanation) {
-      // If we haven't seen an answer yet, try choice format again without trailing space requirement
-      const lenientChoice = line.match(/^(?:\(?([A-Fa-fأابجده]|هـ|[1-6])\)?[.):\-]?\s*)(.+)$/);
-      if (lenientChoice && current.options.length < 6) {
-        current.options.push(lenientChoice[2].trim());
-      } else {
-        current.options[current.options.length - 1] += ` ${line}`;
-      }
+      // If choices already exist, append extra lines to the last choice option
+      current.options[current.options.length - 1] += ` ${line}`;
     }
   }
-  finish();
+
+  finishCurrent();
   return { questions, warnings };
 }
 
@@ -1957,26 +1980,60 @@ router.post(
           count + (answers[index] === question.correctIndex ? 1 : 0),
         0,
       );
+      if (quiz.questions.length === 0) {
+        res.status(400).json({ error: "الاختبار لا يحتوي على أسئلة" });
+        return;
+      }
       const score = Math.round((correct / quiz.questions.length) * 100);
       const passed = score >= quiz.passingScore;
-      const [attempt] = await db
-        .insert(quizAttemptsTable)
-        .values({
-          quizId: quiz.id,
-          studentId: student.id,
-          answers,
-          score,
-          passed,
-        })
-        .returning();
+      const timeSpentSeconds = Math.max(0, Math.round(Number(req.body.timeSpentSeconds ?? 0))) || 0;
+      const details = quiz.questions.map((question, index) => ({
+        questionIndex: index,
+        selectedOption: answers[index],
+        correctOption: question.correctIndex,
+        isCorrect: answers[index] === question.correctIndex,
+      }));
+
+      // Wrap check + insert in transaction to prevent race condition
+      const result = await db.transaction(async (tx) => {
+        const prevAttempts = await tx.select({ id: quizAttemptsTable.id }).from(quizAttemptsTable).where(and(eq(quizAttemptsTable.quizId, quiz.id), eq(quizAttemptsTable.studentId, student.id)));
+        if (prevAttempts.length >= quiz.maxAttempts) {
+          return null; // exceeded
+        }
+        const [attempt] = await tx
+          .insert(quizAttemptsTable)
+          .values({
+            quizId: quiz.id,
+            studentId: student.id,
+            answers,
+            score,
+            passed,
+            timeSpentSeconds,
+            details,
+          })
+          .returning();
+        return { attempt, attemptsUsed: prevAttempts.length + 1 };
+      });
+
+      if (!result) {
+        res.status(409).json({ error: "استخدمت كل المحاولات المتاحة لهذا الاختبار" });
+        return;
+      }
+
+      // Return correctIndex per question so frontend can highlight right/wrong
+      const showExplanations = quiz.showExplanations !== false;
       res.json({
-        attemptId: attempt.id,
+        attemptId: result.attempt.id,
         score,
         passed,
         correct,
         total: quiz.questions.length,
-        attemptsUsed: previousAttempts.length + 1,
-        attemptsRemaining: Math.max(0, quiz.maxAttempts - previousAttempts.length - 1),
+        attemptsUsed: result.attemptsUsed,
+        attemptsRemaining: Math.max(0, quiz.maxAttempts - result.attemptsUsed),
+        details,
+        ...(showExplanations && {
+          explanations: quiz.questions.map((q) => q.explanation ?? null),
+        }),
       });
     } catch (error) {
       next(error);
