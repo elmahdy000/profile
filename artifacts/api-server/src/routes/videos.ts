@@ -266,6 +266,7 @@ router.get("/videos", async (req, res, next) => {
               Array.isArray(attachment.stages) ? attachment.stages.map(String) : undefined,
             )),
         ),
+        thumbnailUrl: v.thumbnailUrl,
         quizId: v.quizId,
         createdAt: v.createdAt,
       };
