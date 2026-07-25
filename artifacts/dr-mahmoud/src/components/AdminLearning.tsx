@@ -842,11 +842,16 @@ export function AdminLearning() {
     (course) => String(course.id) === quizForm.courseId,
   );
   const selectedQuizTrack = getTrack(selectedQuizCourse?.category);
-  const availableQuizStages = selectedQuizCourse?.stages?.length ? selectedQuizCourse.stages : getStagesForTrack(selectedQuizCourse?.category);
-  const quizStageGroups = selectedQuizTrack?.id === "baccalaureate"
+  const availableQuizStages = selectedQuizCourse?.stages?.length
+    ? selectedQuizCourse.stages
+    : selectedQuizCourse
+      ? getStagesForTrack(selectedQuizCourse.category)
+      : ACADEMIC_TRACKS.flatMap((track) => track.stages);
+  const quizStageGroups = selectedQuizTrack?.id === "baccalaureate" || (!selectedQuizCourse && ACADEMIC_TRACKS.some((t) => t.id === "baccalaureate"))
     ? [
         { title: "البكالوريا", stages: availableQuizStages.filter((stage) => stage.startsWith("البكالوريا")) },
         { title: "الثانوية العامة", stages: availableQuizStages.filter((stage) => stage.startsWith("الثانوية العامة")) },
+        { title: "الكليات والجامعات", stages: availableQuizStages.filter((stage) => stage.includes("كلية") || stage.includes("جامعة") || stage.includes("الفرقة")) },
       ]
     : selectedQuizTrack
       ? [{ title: selectedQuizTrack.shortTitle, stages: availableQuizStages }]
@@ -1870,8 +1875,7 @@ export function AdminLearning() {
                           </div>
                         </div>
                       ))}
-                      {availableQuizStages.length === 0 && <span className="px-2 py-1 text-xs text-muted-foreground">اختر الكورس أولًا لرؤية المراحل</span>}
-                      {availableQuizStages.length > 0 && visibleQuizStageGroups.length === 0 && <span className="px-2 py-1 text-xs text-muted-foreground">لا توجد مرحلة مطابقة للبحث</span>}
+                      {visibleQuizStageGroups.length === 0 && <span className="px-2 py-1 text-xs text-muted-foreground">لا توجد مرحلة مطابقة للبحث</span>}
                       </div>
                     </div>
                   </Field>
