@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-24T00:00:00Z",
+  "title": "Design System: Dr. Mahmoud ElMahdy Academy",
+  "extensions": {
+    "colorMeta": {
+      "academy-blue": { "role": "primary", "displayName": "Academy Blue", "canonical": "#0564C9", "tonalRamp": ["#032047", "#053570", "#0749A0", "#0564C9", "#3A85D6", "#6FA6E3", "#A4C7F0", "#D9E8F8"] },
+      "deep-authority": { "role": "primary", "displayName": "Deep Authority", "canonical": "#064A96", "tonalRamp": ["#021E3D", "#043068", "#064A96", "#0860BF", "#3A80CF", "#6CA0DF", "#9EC0EF", "#D0E0F7"] },
+      "midnight-navy": { "role": "neutral", "displayName": "Midnight Navy", "canonical": "#0F1D32", "tonalRamp": ["#060C14", "#0F1D32", "#1A3050", "#25436E", "#3A5A85", "#5E7A9E", "#8AA0BA", "#B8C8D8"] },
+      "slate-ink": { "role": "neutral", "displayName": "Slate Ink", "canonical": "#172033", "tonalRamp": ["#090D15", "#172033", "#253550", "#334A6E", "#4A6085", "#6A809E", "#92A4BA", "#BCC8D8"] },
+      "calm-steel": { "role": "neutral", "displayName": "Calm Steel", "canonical": "#526176", "tonalRamp": ["#1E2530", "#354050", "#526176", "#6A7A8E", "#8494A6", "#9EAEBB", "#B8C4D0", "#D2DAE2"] },
+      "quiet-grey": { "role": "neutral", "displayName": "Quiet Grey", "canonical": "#667085", "tonalRamp": ["#282D36", "#444D5C", "#667085", "#808A9C", "#99A2B0", "#B3BAC4", "#CDD2D9", "#E6E9ED"] },
+      "silver-border": { "role": "neutral", "displayName": "Silver Border", "canonical": "#DCE3EC", "tonalRamp": ["#5A6370", "#7E8894", "#A2ADB8", "#C0CAD4", "#DCE3EC", "#E8EDF3", "#F0F3F7", "#F8F9FB"] },
+      "ice-blue-tint": { "role": "neutral", "displayName": "Ice Blue Tint", "canonical": "#EAF3FF", "tonalRamp": ["#3A6CAA", "#5A8CC4", "#7AACDE", "#9CC6EE", "#BDD8F5", "#D4E6FA", "#EAF3FF", "#F5F9FF"] },
+      "cloud-canvas": { "role": "neutral", "displayName": "Cloud Canvas", "canonical": "#F6F8FC", "tonalRamp": ["#6A7080", "#8A8E9C", "#AAAFB8", "#C4C8D0", "#DEE1E8", "#ECEEF3", "#F6F8FC", "#FBFCFE"] },
+      "trust-green": { "role": "primary", "displayName": "Trust Green", "canonical": "#16A365", "tonalRamp": ["#0A4228", "#0E6840", "#16A365", "#1CC07A", "#4ED09A", "#80E0BA", "#B0EEDA", "#E0F8EE"] },
+      "alert-red": { "role": "primary", "displayName": "Alert Red", "canonical": "#DC2626", "tonalRamp": ["#5A0F0F", "#8B1A1A", "#DC2626", "#E65050", "#EE7A7A", "#F4A4A4", "#F8CECE", "#FCE8E8"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero headlines only. One per page. Always Slate Ink on light backgrounds." },
+      "headline": { "displayName": "Headline", "purpose": "Section titles via the SectionTitle component. Centered with colored eyebrow above." },
+      "title": { "displayName": "Title", "purpose": "Card titles, feature names, FAQ questions. The workhorse heading inside content blocks." },
+      "body": { "displayName": "Body", "purpose": "Primary reading text. Generous line-height (2.0) for Arabic readability." },
+      "label": { "displayName": "Label", "purpose": "Eyebrows, chips, form labels, nav items. Bold weight, never letter-spaced." }
+    },
+    "shadows": [
+      { "name": "card-ambient", "value": "0 8px 30px rgba(15,29,50,.07)", "purpose": "Default card shadow. Barely visible at rest — more felt than seen." },
+      { "name": "hero-dramatic", "value": "0 16px 45px rgba(15,29,50,.14)", "purpose": "Hero portrait frame only. The deepest shadow in the system." },
+      { "name": "button-glow", "value": "0 10px 15px -3px rgba(5,100,201,.15)", "purpose": "Colored shadow under primary CTAs in hero sections." },
+      { "name": "input-focus", "value": "0 0 0 3px rgba(5,100,201,.12)", "purpose": "Soft blue ring around focused inputs." },
+      { "name": "nav-bottom", "value": "0 -8px 24px rgba(15,29,50,.08)", "purpose": "Upward shadow on the mobile fixed bottom bar." },
+      { "name": "card-hover", "value": "0 10px 30px rgba(17,28,45,.10)", "purpose": "Elevated card shadow on hover, paired with translateY(-4px)." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "ease", "purpose": "Default easing for hover transitions on cards and inputs." },
+      { "name": "duration-fast", "value": "180ms", "purpose": "Input focus border and shadow transitions." },
+      { "name": "duration-standard", "value": "200ms", "purpose": "Card hover lift and shadow transitions." },
+      { "name": "nav-slide", "value": "220ms easeOut", "purpose": "Mobile navigation drawer slide-in via Framer Motion." },
+      { "name": "fade-in", "value": "opacity 0→1, translateY 4px→0", "purpose": "Content fade-in animation for lazy-loaded elements." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main CTA button. Academy Blue with white text and subtle blue glow.",
+      "html": "<button class=\"ds-btn-primary\">اعرف التفاصيل <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m12 19-7-7 7-7\"/><path d=\"M19 12H5\"/></svg></button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 12px 24px; background: #0564C9; color: #fff; font-family: Cairo, sans-serif; font-size: 14px; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; transition: background 200ms ease; box-shadow: 0 10px 15px -3px rgba(5,100,201,.15); } .ds-btn-primary:hover { background: #064A96; } .ds-btn-primary:focus-visible { outline: 2px solid #0564C9; outline-offset: 2px; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary action button. White with silver border.",
+      "html": "<button class=\"ds-btn-outline\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"6 3 20 12 6 21 6 3\"/></svg> شاهد درس مجاني</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 12px 24px; background: #fff; color: #172033; font-family: Cairo, sans-serif; font-size: 14px; font-weight: 700; border: 1px solid #DCE3EC; border-radius: 12px; cursor: pointer; transition: border-color 200ms ease, background 200ms ease; } .ds-btn-outline:hover { border-color: #0564C9; color: #0564C9; } .ds-btn-outline:focus-visible { outline: 2px solid #0564C9; outline-offset: 2px; }"
+    },
+    {
+      "name": "WhatsApp Button",
+      "kind": "button",
+      "refersTo": "button-whatsapp",
+      "description": "WhatsApp contact CTA with green border branding.",
+      "html": "<button class=\"ds-btn-whatsapp\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M7.9 20A9 9 0 1 0 4 16.1L2 22Z\"/></svg> التواصل عبر واتساب</button>",
+      "css": ".ds-btn-whatsapp { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 16px; background: #fff; color: #168C45; font-family: Cairo, sans-serif; font-size: 14px; font-weight: 700; border: 1px solid #25D366; border-radius: 12px; cursor: pointer; transition: background 200ms ease; } .ds-btn-whatsapp:hover { background: #f0fdf4; } .ds-btn-whatsapp:focus-visible { outline: 2px solid #25D366; outline-offset: 2px; }"
+    },
+    {
+      "name": "Blue Chip",
+      "kind": "chip",
+      "refersTo": "chip-blue",
+      "description": "Informational pill badge in Ice Blue Tint with Academy Blue text.",
+      "html": "<span class=\"ds-chip-blue\">برمجة البكالوريا · تأسيس البرمجة</span>",
+      "css": ".ds-chip-blue { display: inline-flex; align-items: center; padding: 8px 16px; background: #EAF3FF; color: #0564C9; font-family: Cairo, sans-serif; font-size: 14px; font-weight: 700; border-radius: 9999px; }"
+    },
+    {
+      "name": "Content Card",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "Standard content card with ambient shadow and silver border.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-icon\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"3\" width=\"20\" height=\"14\" rx=\"2\"/><line x1=\"8\" y1=\"21\" x2=\"16\" y2=\"21\"/><line x1=\"12\" y1=\"17\" x2=\"12\" y2=\"21\"/></svg></div><div><h3 class=\"ds-card-title\">شرح وتعلم</h3><p class=\"ds-card-text\">فيديوهات شرح مرتبة ومحاضرات مباشرة حسب البرنامج.</p></div></article>",
+      "css": ".ds-card { display: flex; gap: 16px; padding: 24px; background: #fff; border: 1px solid #DCE3EC; border-radius: 16px; box-shadow: 0 8px 30px rgba(15,29,50,.06); font-family: Cairo, sans-serif; } .ds-card-icon { display: grid; place-items: center; width: 48px; height: 48px; flex-shrink: 0; background: #EAF3FF; color: #0564C9; border-radius: 12px; } .ds-card-title { font-size: 18px; font-weight: 700; color: #172033; margin: 0; } .ds-card-text { font-size: 14px; font-weight: 500; color: #667085; line-height: 2; margin: 8px 0 0; }"
+    },
+    {
+      "name": "Home Input",
+      "kind": "input",
+      "refersTo": "input-home",
+      "description": "Form input used in the booking section. 44px height with blue focus glow.",
+      "html": "<input class=\"ds-input\" placeholder=\"اسم ولي الأمر\" dir=\"rtl\" />",
+      "css": ".ds-input { width: 100%; min-height: 44px; padding: 10px 12px; background: #fff; color: #172033; font-family: Cairo, sans-serif; font-size: 14px; border: 1px solid #DCE3EC; border-radius: 12px; outline: none; transition: border-color 180ms ease, box-shadow 180ms ease; } .ds-input:focus { border-color: #0564C9; box-shadow: 0 0 0 3px rgba(5,100,201,.12); } .ds-input::placeholder { color: #667085; }"
+    },
+    {
+      "name": "Section Title",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Reusable section header: eyebrow + headline + optional subtext, always centered.",
+      "html": "<div class=\"ds-section-title\"><span class=\"ds-eyebrow\">العرض الرئيسي</span><h2 class=\"ds-headline\">برنامج البرمجة لطلاب البكالوريا</h2><p class=\"ds-subtext\">مسار تعليمي يجمع بين التأسيس والتطبيق العملي.</p></div>",
+      "css": ".ds-section-title { max-width: 768px; margin: 0 auto 40px; text-align: center; font-family: Cairo, sans-serif; } .ds-eyebrow { font-size: 14px; font-weight: 700; color: #0564C9; } .ds-headline { margin-top: 8px; font-size: 30px; font-weight: 800; line-height: 1.45; color: #172033; } .ds-subtext { margin-top: 12px; font-size: 15px; font-weight: 500; line-height: 2; color: #667085; }"
+    },
+    {
+      "name": "Navigation Bar",
+      "kind": "nav",
+      "refersTo": "nav-bar",
+      "description": "Sticky top nav with frosted glass effect, logo, links, and dual CTAs.",
+      "html": "<nav class=\"ds-nav\" dir=\"rtl\"><div class=\"ds-nav-inner\"><a href=\"/\" class=\"ds-nav-brand\"><span class=\"ds-nav-logo\">م</span><div><strong class=\"ds-nav-name\">د. محمود المهدي</strong><span class=\"ds-nav-tagline\">منصة البرمجة وعلوم الحاسب</span></div></a><div class=\"ds-nav-actions\"><a href=\"#\" class=\"ds-nav-link ds-nav-link--active\">الرئيسية</a><a href=\"#\" class=\"ds-nav-link\">المسارات</a><button class=\"ds-btn-primary\" style=\"min-height:40px;padding:8px 20px;font-size:12px;\">دخول المنصة</button></div></div></nav>",
+      "css": ".ds-nav { position: sticky; top: 0; width: 100%; height: 64px; background: rgba(255,255,255,0.95); backdrop-filter: blur(8px); border-bottom: 1px solid #E2E8F0; z-index: 50; font-family: Cairo, sans-serif; } .ds-nav-inner { display: flex; align-items: center; justify-content: space-between; max-width: 1280px; height: 100%; margin: 0 auto; padding: 0 32px; } .ds-nav-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; } .ds-nav-logo { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 9999px; border: 1px solid rgba(5,100,201,.2); background: #EAF3FF; color: #0564C9; font-weight: 800; font-size: 18px; } .ds-nav-name { display: block; font-size: 16px; font-weight: 900; color: #0564C9; line-height: 1.3; } .ds-nav-tagline { display: block; font-size: 10px; font-weight: 500; color: #64748B; } .ds-nav-actions { display: flex; align-items: center; gap: 8px; } .ds-nav-link { padding: 8px 12px; font-size: 14px; font-weight: 700; color: #475569; border-radius: 8px; text-decoration: none; transition: background 150ms ease, color 150ms ease; } .ds-nav-link:hover { background: #f1f5f9; color: #0564C9; } .ds-nav-link--active { background: #eff6ff; color: #0564C9; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Clear Path",
+    "overview": "This is a system built on the same philosophy as the teaching it serves: clarity first, then confidence. Every surface feels like walking into a well-organized classroom — clean walls, clear signage, materials laid out in order. There is no visual noise competing for attention; the hierarchy does the work so parents can find answers and students can find their next step.\n\nThe palette is anchored in a single confident blue that carries authority without coldness. Surrounding it is a world of cool neutrals, soft canvas backgrounds, and generous white space that lets Arabic typography breathe at its natural reading rhythm. Cards and containers use gentle rounding and ambient shadows — surfaces that feel lifted but not floating, structured but not rigid.\n\nThe system is RTL-native. Every spatial decision, every icon placement, every reading flow assumes Arabic as the primary language. English appears only inside code snippets and programming terms, inheriting the typographic weight of its surrounding context.",
+    "keyCharacteristics": [
+      "Structured clarity — visual hierarchy does the navigation; no element fights for attention",
+      "Single-blue confidence — one primary blue drives all action and trust signals",
+      "Warm neutrality — cool greys with just enough warmth to feel approachable, not clinical",
+      "Generous breathing room — sections are tall, gaps are wide, text has room to be read",
+      "RTL-native — built right-to-left from the ground up, not mirrored from LTR"
+    ],
+    "rules": [
+      { "name": "The One-Blue Rule", "body": "Academy Blue is the only chromatic accent on any public-facing surface. No secondary accent, no gradient, no warm color competes with it. Its monopoly is what makes it immediately recognizable as 'click here' or 'look here.'", "section": "colors" },
+      { "name": "The Tint-Not-Shade Rule", "body": "When blue needs a background, use Ice Blue Tint (#EAF3FF) — never a semi-transparent overlay of Academy Blue. This keeps the tinted surfaces consistent and avoids opacity stacking artifacts.", "section": "colors" },
+      { "name": "The Bold-Not-Light Rule", "body": "The lightest weight used is 500 (medium). No thin or light weights exist in the system. Arabic readability on screens demands substance; waif-like type undermines trust.", "section": "typography" },
+      { "name": "The Two-Point Rule", "body": "Adjacent text sizes in the hierarchy never differ by less than 2px. Display→Headline is a large jump; Headline→Title is moderate; Title→Body is subtle but always perceptible.", "section": "typography" },
+      { "name": "The Ambient-Only Rule", "body": "No hard drop shadows. Every shadow uses large blur (24px–45px) and low opacity (.06–.15). The system feels like soft studio lighting, not paper stacked on paper.", "section": "elevation" },
+      { "name": "The Two-Tier Rule", "body": "Containers get 16px radius. Interactive elements get 12px radius. Nothing else. This two-level system prevents the 'every element has a different radius' drift that plagues component-heavy builds.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do use Academy Blue (#0564C9) as the only accent color on public-facing pages. Its singularity is the brand signal.",
+      "Do maintain the 16px/12px radius split between containers and interactive elements.",
+      "Do use the SectionTitle pattern (eyebrow → headline → optional subtext) for every content section.",
+      "Do pair every CTA with a WhatsApp alternative. Parents expect direct human contact.",
+      "Do use font-weight 500+ for all text. Cairo below 500 is too thin for screen Arabic.",
+      "Do respect RTL-first layout: icons trail text, phone numbers are dir=\"ltr\", grid ordering accounts for reading direction."
+    ],
+    "donts": [
+      "Don't introduce a second chromatic accent color. No orange, purple, or green buttons.",
+      "Don't use pure black (#000000) for text. Slate Ink (#172033) is the darkest.",
+      "Don't add structural shadows (hard edges, small blur). Every shadow is ambient.",
+      "Don't use letter-spacing or text-transform on Arabic text.",
+      "Don't place interactive elements in the bottom 90px of mobile layouts — the fixed CTA bar occupies that space.",
+      "Don't fabricate testimonials, student counts, or institutional claims."
+    ]
+  }
+}

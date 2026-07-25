@@ -74,7 +74,5 @@
     "wouter": "^3.3.5",
     "zod": "catalog:"
   },
-  "dependencies": {
-    "@fontsource/cairo": "^5.2.7"
-  }
+  "dependencies": {}
 }

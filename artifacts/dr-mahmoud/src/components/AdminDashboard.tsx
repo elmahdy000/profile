@@ -59,6 +59,9 @@ import {
   FileText,
   HelpCircle,
   Menu,
+  Eye,
+  EyeOff,
+  ShieldCheck,
 } from "lucide-react";
 import { AdminSettings } from "./AdminSettings";
 import { AdminLearning } from "./AdminLearning";
@@ -71,6 +74,7 @@ import {
   SecondaryButton,
   DangerButton,
   PreviewButton,
+  KPICard,
 } from "@/components/ui/admin-ui";
 import { ADMIN_TOKENS } from "@/lib/admin-design-tokens";
 import { CascadingStageSelector } from "@/components/ui/CascadingStageSelector";
@@ -114,6 +118,7 @@ export default function AdminDashboard() {
   const queryClient = useQueryClient();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [authError, setAuthError] = useState("");
   const [activeTab, setActiveTab] = useState<
@@ -1372,67 +1377,86 @@ export default function AdminDashboard() {
   // Render Login view if not authenticated
   if (!isAuthenticated) {
     return (
-      <main className="relative min-h-screen w-full overflow-hidden flex items-center justify-center bg-background px-4 dir-rtl">
-        {/* Decorative elements */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+      <main className="relative min-h-screen w-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 px-4 dir-rtl text-slate-100 selection:bg-blue-600 selection:text-white">
+        {/* Ambient Glowing Orbs */}
+        <div className="absolute top-1/4 left-1/3 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/3 w-[500px] h-[500px] bg-indigo-600/15 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
 
-        <div className="w-full max-w-md bg-card/60 backdrop-blur-xl border border-border rounded-3xl p-8 relative overflow-hidden shadow-2xl">
-          <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20 mb-4 animate-pulse">
-              <Lock className="w-8 h-8" />
+        <div className="w-full max-w-md bg-slate-900/80 backdrop-blur-2xl border border-slate-800 rounded-3xl p-8 relative overflow-hidden shadow-2xl shadow-black/80">
+          {/* Top Brand & Security Header */}
+          <div className="flex flex-col items-center mb-7">
+            <div className="relative mb-4">
+              <div className="w-20 h-20 bg-gradient-to-tr from-[#0B63CE] to-blue-500 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-500/30 ring-4 ring-blue-500/20">
+                <ShieldCheck className="w-10 h-10" strokeWidth={1.8} />
+              </div>
+              <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 border-2 border-slate-900 rounded-full flex items-center justify-center text-[10px] text-white shadow-sm" title="السيرفر متصل">✓</span>
             </div>
-            <h1 className="text-2xl font-bold text-foreground font-outfit">
-              بوابة المسؤول
+
+            <h1 className="text-2xl font-black tracking-tight text-white">
+              لوحة إدارة المنصة
             </h1>
-            <p className="text-sm text-muted-foreground mt-2">
-              يرجى إدخال رمز التحقق للوصول إلى لوحة التحكم
+            <p className="text-xs text-slate-400 mt-1.5 font-medium">
+              أكاديمية د. محمود المهدي — بوابة المسئول
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label htmlFor="admin-password" className="block text-sm font-medium text-foreground/90 mb-2">
-                كلمة المرور
+              <label htmlFor="admin-password" className="block text-xs font-bold text-slate-300 mb-2">
+                كلمة المرور المشفرة
               </label>
-              <input
-                id="admin-password"
-                type="password"
-                value={passwordInput}
-                onChange={(e) => setPasswordInput(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-background/80 border border-border text-foreground rounded-xl px-4 py-3.5 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors placeholder:text-muted-foreground text-center text-lg tracking-widest font-sans"
-              />
+              <div className="relative">
+                <input
+                  id="admin-password"
+                  type={showPassword ? "text" : "password"}
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full bg-slate-950/70 border border-slate-700/80 text-white rounded-xl pr-4 pl-11 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#0B63CE] focus:border-[#0B63CE] transition-all placeholder:text-slate-600 text-center text-base tracking-widest font-sans shadow-inner"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-200 transition-colors"
+                  title={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
               {authError && (
-                <p className="text-red-400 text-xs mt-2 text-right">
+                <div className="mt-2.5 p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold text-right flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
                   {authError}
-                </p>
+                </div>
               )}
             </div>
 
             <button
               type="submit"
-              disabled={isLoggingIn}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl py-3.5 transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 flex items-center justify-center gap-2"
+              disabled={isLoggingIn || !passwordInput}
+              className="w-full bg-gradient-to-r from-[#0B63CE] to-blue-600 hover:from-blue-600 hover:to-[#0956B4] text-white font-bold rounded-xl py-3.5 transition-all shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 text-sm"
             >
               {isLoggingIn ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  جاري التحقق...
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  جاري التحقق والتشفير...
                 </>
               ) : (
-                "دخول لوحة التحكم"
+                "تسجيل الدخول للموحة الإدارة"
               )}
             </button>
           </form>
 
-          <div className="mt-8 text-center">
+          <div className="mt-6 pt-5 border-t border-slate-800/80 text-center flex items-center justify-between text-xs">
             <a
               href="/"
-              className="text-xs text-muted-foreground hover:text-foreground/90 flex items-center justify-center gap-1 transition-colors"
+              className="text-slate-400 hover:text-white flex items-center gap-1 transition-colors font-medium"
             >
-              <ChevronRight className="w-4 h-4" /> العودة للموقع الرئيسي
+              <ChevronRight className="w-4 h-4" /> العودة للموقع
             </a>
+            <span className="text-[11px] text-slate-500 font-mono">v2.5 Secured</span>
           </div>
         </div>
       </main>
@@ -1504,7 +1528,7 @@ export default function AdminDashboard() {
           >
             <div className="mb-5 flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-3">
-                <img src="/logo.jpg" alt="شعار المنصة" className="h-11 w-11 rounded-xl border object-cover" />
+                <img src="/logo.webp" alt="شعار المنصة" className="h-11 w-11 rounded-xl border object-cover" />
                 <div><strong className="block text-sm font-black">أكاديمية د. محمود</strong><span className="text-[11px] text-muted-foreground">لوحة إدارة المنصة</span></div>
               </div>
               <button type="button" onClick={() => setIsMobileSidebarOpen(false)} className="grid h-10 w-10 place-items-center rounded-xl bg-slate-100 text-slate-600" aria-label="إغلاق القائمة"><X className="h-5 w-5" /></button>
@@ -1537,7 +1561,7 @@ export default function AdminDashboard() {
           <div className="flex h-full flex-col p-5">
             <div className="mb-7 flex items-center gap-3 border-b border-slate-100 pb-5">
               <img
-                src="/logo.jpg"
+                src="/logo.webp"
                 alt="شعار المنصة"
                 className="h-12 w-12 rounded-xl border object-cover"
               />
@@ -1554,14 +1578,14 @@ export default function AdminDashboard() {
               <span className="block px-3 pb-1 pt-1 text-[10px] font-black uppercase tracking-wider text-slate-400">الإدارة والمتابعة</span>
               <SidebarItem
                 icon={Calendar}
-                label="الدورات"
+                label="الحجوزات"
                 active={activeTab === "bookings"}
                 onClick={() => setActiveTab("bookings")}
                 badge={
                   bookingsQuery.data &&
                   bookingsQuery.data.filter((b) => b.status === "pending").length > 0
                     ? bookingsQuery.data.filter((b) => b.status === "pending").length
-                    : undefined
+                    : bookingsQuery.data?.length || undefined
                 }
               />
 
@@ -1570,6 +1594,7 @@ export default function AdminDashboard() {
                 label="الكورسات"
                 active={activeTab === "courses"}
                 onClick={() => setActiveTab("courses")}
+                badge={coursesQuery.data?.length}
               />
 
               <span className="block px-3 pb-1 pt-4 text-[10px] font-black uppercase tracking-wider text-slate-400">المحتوى التعليمي</span>
@@ -1579,6 +1604,7 @@ export default function AdminDashboard() {
                 label="البودكاست"
                 active={activeTab === "podcasts"}
                 onClick={() => setActiveTab("podcasts")}
+                badge={podcastsQuery.data?.length}
               />
 
               <SidebarItem
@@ -1586,6 +1612,7 @@ export default function AdminDashboard() {
                 label="المناهج التعليمية"
                 active={activeTab === "curriculums"}
                 onClick={() => setActiveTab("curriculums")}
+                badge={curriculumsQuery.data?.length}
               />
 
               <SidebarItem
@@ -1593,6 +1620,7 @@ export default function AdminDashboard() {
                 label="مكتبة الفيديوهات والقوائم"
                 active={activeTab === "videos"}
                 onClick={() => setActiveTab("videos")}
+                badge={videosQuery.data?.length}
               />
 
               <SidebarItem
@@ -1657,6 +1685,106 @@ export default function AdminDashboard() {
         {/* Dynamic Panel Content */}
         <main className="min-w-0 px-4 py-6 md:px-7 lg:px-9 lg:py-8">
           <div className="mx-auto max-w-[1400px]">
+
+            {/* Top Desktop Executive Header */}
+            <div className="hidden lg:flex items-center justify-between gap-4 mb-6 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#0B63CE] to-blue-500 text-white flex items-center justify-center font-black text-sm shadow-md shadow-blue-500/20">
+                  د.م
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-black text-slate-900">أكاديمية د. محمود المهدي</h2>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> السيرفر نشط
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5">لوحة التحكم التنفيذية وإدارة محتوى الأكاديمية</p>
+                </div>
+              </div>
+
+              {/* Action shortcuts */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => openCourseModal("add")}
+                  className="px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#0B63CE] text-xs font-bold transition-all flex items-center gap-1.5 border border-blue-200/60"
+                >
+                  <Plus className="w-3.5 h-3.5" /> كورس جديد
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    openVideoModal("add");
+                    setActiveTab("upload-video");
+                  }}
+                  className="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition-all flex items-center gap-1.5 border border-emerald-200/60"
+                >
+                  <Upload className="w-3.5 h-3.5" /> رفع فيديو
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openPodcastModal("add")}
+                  className="px-3 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold transition-all flex items-center gap-1.5 border border-purple-200/60"
+                >
+                  <Mic className="w-3.5 h-3.5" /> بودكاست
+                </button>
+                <a
+                  href="/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 border border-slate-200"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" /> الموقع
+                </a>
+              </div>
+            </div>
+
+            {/* KPI Metrics Quick Bar */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 mb-7">
+              <KPICard
+                title="إجمالي الحجوزات"
+                value={bookingsQuery.data?.length || 0}
+                subtitle={`${bookingsQuery.data?.filter(b => b.status === "pending").length || 0} طلب قيد الانتظار`}
+                icon={Calendar}
+                color="blue"
+                badge={bookingsQuery.data?.filter(b => b.status === "pending").length ? "جديد" : undefined}
+                onClick={() => setActiveTab("bookings")}
+              />
+              <KPICard
+                title="الكورسات"
+                value={coursesQuery.data?.length || 0}
+                subtitle={`${coursesQuery.data?.filter(c => c.isPublished).length || 0} كورس منشور`}
+                icon={BookOpen}
+                color="emerald"
+                onClick={() => setActiveTab("courses")}
+              />
+              <KPICard
+                title="مكتبة الفيديوهات"
+                value={videosQuery.data?.length || 0}
+                subtitle="فيديوهات وقوائم تشغيل"
+                icon={VideoIcon}
+                color="indigo"
+                onClick={() => setActiveTab("videos")}
+              />
+              <KPICard
+                title="حلقات البودكاست"
+                value={podcastsQuery.data?.length || 0}
+                subtitle="لقاءات وملفات صوتية"
+                icon={Mic}
+                color="purple"
+                onClick={() => setActiveTab("podcasts")}
+              />
+              <KPICard
+                title="المناهج المتاحة"
+                value={curriculumsQuery.data?.length || 0}
+                subtitle="المراحل والشروحات"
+                icon={Library}
+                color="amber"
+                onClick={() => setActiveTab("curriculums")}
+              />
+            </div>
+
             <div key={activeTab} className="animate-[fadeIn_0.2s_ease-in-out]">
               {activeTab === "bookings" && (
                 <div className="space-y-6">

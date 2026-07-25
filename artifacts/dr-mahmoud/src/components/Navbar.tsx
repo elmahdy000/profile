@@ -11,49 +11,56 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
 
 type NavStudent = { name: string; status: string };
+
+const navLinks = [
+  { label: "الرئيسية", href: "/#hero", id: "hero", icon: Home },
+  { label: "المسارات التعليمية", href: "/#tracks", id: "tracks", icon: Layers3 },
+  { label: "برنامج البكالوريا", href: "/#baccalaureate", id: "baccalaureate", icon: BookOpen },
+  { label: "عن الدكتور", href: "/#about", id: "about", icon: GraduationCap },
+  { label: "آراء الطلاب", href: "/#testimonials", id: "testimonials", icon: MessageSquareQuote },
+] as const;
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("hero");
   const [student, setStudent] = useState<NavStudent | null>(null);
+  const studentCacheRef = useRef<{ data: NavStudent | null; ts: number } | null>(null);
   const { get } = useSiteSettings();
-  const logoUrl = get(SETTINGS_KEYS.SITE_LOGO_URL, "/logo.jpg");
-  const siteName = get(SETTINGS_KEYS.SITE_NAME, "د. محمود المهدي");
-
-  const navLinks = [
-    { label: "الرئيسية", href: "/#hero", id: "hero", icon: Home },
-    {
-      label: "المسارات التعليمية",
-      href: "/#tracks",
-      id: "tracks",
-      icon: Layers3,
-    },
-    { label: "برنامج البكالوريا", href: "/#baccalaureate", id: "baccalaureate", icon: BookOpen },
-    { label: "عن الدكتور", href: "/#about", id: "about", icon: GraduationCap },
-    {
-      label: "آراء الطلاب",
-      href: "/#testimonials",
-      id: "testimonials",
-      icon: MessageSquareQuote,
-    },
-  ];
+  const logoUrl = get(SETTINGS_KEYS.SITE_LOGO_URL, "/logo.webp");
 
   useEffect(() => {
-    const loadStudent = () =>
+    const loadStudent = () => {
+      // Cache student data for 5 minutes to avoid redundant auth checks on navigation
+      const cache = studentCacheRef.current;
+      if (cache && Date.now() - cache.ts < 5 * 60 * 1000) {
+        setStudent(cache.data);
+        return;
+      }
       fetch("/api/student/me", { credentials: "include" })
         .then((response) => (response.ok ? response.json() : null))
-        .then((data) => setStudent(data?.student || null))
-        .catch(() => setStudent(null));
+        .then((data) => {
+          const s = data?.student || null;
+          studentCacheRef.current = { data: s, ts: Date.now() };
+          setStudent(s);
+        })
+        .catch(() => {
+          studentCacheRef.current = { data: null, ts: Date.now() };
+          setStudent(null);
+        });
+    };
+    const onAuthChange = () => {
+      studentCacheRef.current = null; // Invalidate cache on login/logout
+      loadStudent();
+    };
     // The platform performs its own session bootstrap. Avoid two expected 401
     // responses for signed-out visitors on that route.
-    if (window.location.pathname !== "/platform") void loadStudent();
-    window.addEventListener("student-auth-changed", loadStudent);
-    return () =>
-      window.removeEventListener("student-auth-changed", loadStudent);
+    if (window.location.pathname !== "/platform") loadStudent();
+    window.addEventListener("student-auth-changed", onAuthChange);
+    return () => window.removeEventListener("student-auth-changed", onAuthChange);
   }, []);
 
   useEffect(() => {
@@ -105,7 +112,7 @@ export function Navbar() {
             <img
               src={logoUrl}
               alt="لوجو أكاديمية د. محمود المهدي"
-              className="h-10 w-10 shrink-0 rounded-full border border-primary/20 object-cover"
+              width={40} height={40} className="h-10 w-10 shrink-0 rounded-full border border-primary/20 object-cover"
             />
             <div className="text-right">
               <span className="block text-base font-black leading-tight text-primary md:text-lg">
@@ -180,7 +187,7 @@ export function Navbar() {
                   <img
                     src={logoUrl}
                     alt="شعار المنصة"
-                    className="h-11 w-11 rounded-full border border-primary/20 object-cover"
+                    width={44} height={44} className="h-11 w-11 rounded-full border border-primary/20 object-cover"
                   />
                   <div>
                     <strong className="block text-[17px] leading-6 text-slate-900">

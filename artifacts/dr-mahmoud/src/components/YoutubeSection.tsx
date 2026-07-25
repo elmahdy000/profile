@@ -14,6 +14,7 @@ import {
   getYouTubeVideoId,
   getYouTubePlaylistId,
   getYoutubeThumbnail,
+  getVideoThumbnail,
 } from "@/lib/video";
 
 const PremiumLessonPlayer = lazy(() =>
@@ -295,7 +296,7 @@ function VideoPlayerModal({
               {/* Player Container */}
               <div className="bg-slate-950 p-0 sm:p-4 lg:order-2">
                 <div
-                  className="relative aspect-video w-full select-none overflow-hidden bg-black sm:rounded-2xl sm:ring-2 sm:ring-[#0B63CE]/30 shadow-[0_0_50px_rgba(11,99,206,0.2)]"
+                  className="relative aspect-video w-full select-none overflow-hidden bg-black sm:rounded-2xl sm:ring-2 sm:ring-primary/30 shadow-[0_0_50px_rgba(11,99,206,0.2)]"
                   onContextMenu={(e) => e.preventDefault()}
                 >
                   {!isFocused && (
@@ -369,7 +370,7 @@ function VideoPlayerModal({
                         href={item.youtubeUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-[#0B63CE] hover:bg-[#0956B4] px-5 text-xs font-bold text-white transition-all shadow-lg shadow-[#0B63CE]/20"
+                        className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-primary hover:bg-primary/90 px-5 text-xs font-bold text-white transition-all shadow-lg shadow-primary/20"
                       >
                         فتح الفيديو الآن <ExternalLink className="h-4 w-4" />
                       </a>
@@ -881,7 +882,7 @@ export function VideoLessonsSection({
   const isStudentMode = Boolean(student);
 
   return (
-    <section id="youtube-lectures" className={`${isStudentMode ? "py-8 pb-28 lg:py-12 lg:pb-12" : "py-24"} bg-background relative overflow-hidden`} dir="rtl">
+    <section id="youtube-lectures" className={`${isStudentMode ? "py-8 lg:py-12" : "py-24"} bg-background relative overflow-hidden`} dir="rtl">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaMarkup) }}
@@ -937,7 +938,7 @@ export function VideoLessonsSection({
               {/* Cover Thumbnail */}
               <div className="w-full lg:w-1/2 aspect-video rounded-2xl overflow-hidden relative shadow-lg">
                 <img
-                  src={(featuredCourse as any).thumbnailUrl || getYoutubeThumbnail(featuredCourse.youtubeUrl)}
+                  src={getVideoThumbnail(featuredCourse)}
                   alt={featuredCourse.title}
                   className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
                 />
@@ -1048,7 +1049,7 @@ export function VideoLessonsSection({
                   className="bg-card border border-border rounded-2xl p-4 flex gap-4 items-center relative overflow-hidden group hover:border-primary/20 transition-all shadow-sm"
                 >
                   <div className="w-24 aspect-video rounded-lg overflow-hidden shrink-0 relative">
-                    <img src={getYoutubeThumbnail(item.youtubeUrl)} alt={item.title} className="w-full h-full object-cover" />
+                    <img src={getVideoThumbnail(item)} alt={item.title} className="w-full h-full object-cover" />
                     <button
                       onClick={() => handlePlayClick(item)}
                       aria-label={`استئناف ${item.title}`}
@@ -1292,7 +1293,7 @@ export function VideoLessonsSection({
                     {/* Thumbnail / Cover */}
                     <div className="relative aspect-video bg-muted overflow-hidden">
                       <img
-                        src={(item as any).thumbnailUrl || getYoutubeThumbnail(item.youtubeUrl)}
+                        src={getVideoThumbnail(item)}
                         alt={item.title}
                         className="w-full h-full object-cover opacity-80 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500"
                       />

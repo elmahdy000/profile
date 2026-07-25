@@ -15,7 +15,7 @@ export function Footer() {
   const youtube = get(SETTINGS_KEYS.SOCIAL_YOUTUBE, "#");
   const linkedin = get(SETTINGS_KEYS.SOCIAL_LINKEDIN, "#");
 
-  const logoUrl = get(SETTINGS_KEYS.SITE_LOGO_URL, "/logo.jpg");
+  const logoUrl = get(SETTINGS_KEYS.SITE_LOGO_URL, "/logo.webp");
   const siteName = get(SETTINGS_KEYS.SITE_NAME, "د. محمود المهدي");
   const siteTagline = get(SETTINGS_KEYS.SITE_TAGLINE, "مدرب برمجة وذكاء اصطناعي — مؤسس Eduverse");
 
@@ -40,7 +40,7 @@ export function Footer() {
           
           <div className="md:col-span-5 flex flex-col order-1">
             <div className="flex items-center gap-3 mb-4">
-              <img src={logoUrl} alt="Logo" className="w-10 h-10 object-cover rounded-full border border-primary/20 shrink-0" />
+              <img src={logoUrl} alt="Logo" width={40} height={40} className="w-10 h-10 object-cover rounded-full border border-primary/20 shrink-0" />
               <h2 className="text-xl font-bold text-white">{siteName}</h2>
             </div>
             <p className="text-sm font-semibold text-primary mb-2">{siteTagline}</p>

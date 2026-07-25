@@ -61,6 +61,15 @@ export function getYoutubeThumbnail(url: string): string {
   return "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=800&q=80";
 }
 
+/**
+ * Resolve the best available thumbnail for a video item.
+ * Priority: admin-set thumbnailUrl → YouTube auto-thumbnail → generic fallback.
+ */
+export function getVideoThumbnail(item: VideoItem): string {
+  if (item.thumbnailUrl) return item.thumbnailUrl;
+  return getYoutubeThumbnail(item.youtubeUrl);
+}
+
 export function isStreamUrl(url?: string): boolean {
   return !!url && (url.startsWith("/api/videos/") || url.startsWith("/uploads/"));
 }

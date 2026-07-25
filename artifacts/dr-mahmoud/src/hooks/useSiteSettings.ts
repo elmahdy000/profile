@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export interface SiteSettingValue {
@@ -17,23 +18,32 @@ export function useSiteSettings() {
   const query = useQuery<SiteSettingsMap>({
     queryKey: ["site-settings"],
     queryFn: fetchSettings,
-    staleTime: 1000 * 5, // 5 seconds cache for fast updates
+    staleTime: 1000 * 60 * 60, // 1 hour — settings only change via admin save
+    gcTime: 1000 * 60 * 60 * 2,
+    refetchOnWindowFocus: false,
   });
 
-  const get = (key: string, fallback = "") =>
-    query.data?.[key]?.value || fallback;
+  const data = query.data;
 
-  const getJson = <T>(key: string, fallback: T): T => {
-    const val = query.data?.[key]?.value;
-    if (!val) return fallback;
-    try {
-      return JSON.parse(val) as T;
-    } catch {
-      return fallback;
-    }
-  };
+  const get = useCallback(
+    (key: string, fallback = "") => data?.[key]?.value || fallback,
+    [data],
+  );
 
-  return { settings: query.data, get, getJson, isLoading: query.isLoading, isError: query.isError };
+  const getJson = useCallback(
+    <T>(key: string, fallback: T): T => {
+      const val = data?.[key]?.value;
+      if (!val) return fallback;
+      try {
+        return JSON.parse(val) as T;
+      } catch {
+        return fallback;
+      }
+    },
+    [data],
+  );
+
+  return { settings: data, get, getJson, isLoading: query.isLoading, isError: query.isError };
 }
 
 export function useUpdateSiteSettings() {

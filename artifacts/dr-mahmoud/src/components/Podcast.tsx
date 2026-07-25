@@ -312,7 +312,7 @@ export function Podcast() {
             <div className="relative max-w-xs w-full">
               <div className="absolute -inset-3 bg-primary/8 rounded-3xl blur-2xl" />
               <img
-                src="/podcast-cover.png"
+                src="/podcast-cover.webp" loading="lazy"
                 alt="بودكاست د. محمود المهدي"
                 className="relative rounded-2xl shadow-2xl shadow-primary/10 w-full object-cover border border-border"
               />

@@ -47,16 +47,13 @@ export default defineConfig({
     chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
-        manualChunks: {
-          "vendor-react": ["react", "react-dom"],
-          "vendor-motion": ["framer-motion"],
-          "vendor-icons": ["lucide-react"],
-          "vendor-ui": [
-            "@radix-ui/react-dialog",
-            "@radix-ui/react-slot",
-            "@radix-ui/react-tooltip",
-          ],
-        },
+        manualChunks(id) {
+            if (id.includes("node_modules/react-dom") || id.includes("node_modules/react/")) return "vendor-react";
+            if (id.includes("node_modules/framer-motion")) return "vendor-motion";
+            if (id.includes("node_modules/lucide-react")) return "vendor-icons";
+            if (id.includes("node_modules/@radix-ui")) return "vendor-ui";
+            if (id.includes("node_modules/@tanstack")) return "vendor-query";
+          },
       },
     },
   },

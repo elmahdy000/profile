@@ -5,8 +5,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Switch, Route } from "wouter";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { ScrollProgress } from "@/components/ScrollProgress";
-import { AcademyHome } from "@/components/AcademyHome";
+
+const ScrollProgress = lazy(() => import("@/components/ScrollProgress").then(m => ({ default: m.ScrollProgress })));
+const AcademyHome = lazy(() => import("@/components/AcademyHome").then(m => ({ default: m.AcademyHome })));
 
 const AdminDashboard = lazy(() => import("@/components/AdminDashboard"));
 const BaccalaureatePage = lazy(() => import("@/pages/BaccalaureatePage"));

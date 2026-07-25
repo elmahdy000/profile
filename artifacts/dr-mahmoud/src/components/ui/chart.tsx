@@ -1,5 +1,6 @@
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
+// NOTE: This file is not imported by any feature component. Vite tree-shakes it from the bundle.
 
 import { cn } from "@/lib/utils"
 

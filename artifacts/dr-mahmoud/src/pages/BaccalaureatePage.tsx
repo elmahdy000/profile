@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle2,
@@ -264,10 +264,11 @@ export default function BaccalaureatePage() {
     window.open(`https://wa.me/${whatsapp}?text=${text}`, "_blank");
     
     setSubmitted(true);
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       setSubmitted(false);
       setFormData({ name: "", phone: "", schoolType: "ثانوي عام", grade: "الصف الأول الثانوي", notes: "" });
     }, 4000);
+    return () => clearTimeout(timer);
   };
 
   return (
@@ -370,8 +371,9 @@ export default function BaccalaureatePage() {
               
               <div className="relative rounded-3xl overflow-hidden border border-border/80 shadow-2xl bg-card p-2 max-w-[450px] w-full">
                 <img 
-                  src="/baccalaureate-hero.png" 
-                  alt="طلاب البكالوريا والثانوي يدرسون البرمجة" 
+                  src="/baccalaureate-hero.webp"
+                  alt="طلاب البكالوريا والثانوي يدرسون البرمجة"
+                  width={800} height={600}
                   className="rounded-2xl w-full h-auto object-cover aspect-[4/3] sm:aspect-square"
                 />
                 

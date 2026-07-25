@@ -561,81 +561,116 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
 
   return (
     <main
-      className="academy-hero min-h-[calc(100vh-4rem)] px-4 py-12"
+      className="relative min-h-[calc(100vh-4rem)] w-full overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/10 via-slate-50 to-blue-50/50 px-4 py-12 lg:py-16 dir-rtl"
       dir="rtl"
     >
-      <div className="mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(580px,640px)] lg:gap-10">
-        <div className="space-y-6 text-right">
-          <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-bold text-primary">
-            <ShieldCheck className="h-4 w-4" /> منصة تعليمية آمنة ومخصصة
-          </span>
-          <h1 className="text-4xl md:text-5xl font-black leading-tight">
-            أهلًا بيك في أكاديمية د. محمود المهدي
+      {/* Glowing Ambient Background Elements */}
+      <div className="absolute top-12 right-1/4 h-96 w-96 rounded-full bg-blue-500/15 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-12 left-1/4 h-96 w-96 rounded-full bg-indigo-500/15 blur-[120px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
+
+      <div className="relative mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(560px,640px)] lg:gap-14">
+        {/* Hero Left Info Column */}
+        <div className="space-y-7 text-right">
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200/80 bg-blue-50/90 px-4 py-2 text-xs md:text-sm font-bold text-blue-700 shadow-xs backdrop-blur-md">
+            <ShieldCheck className="h-4 w-4 text-blue-600" />
+            <span>منصة تعليمية آمنة ومخصصة للطلاب</span>
+          </div>
+
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.15]">
+            أهلاً بك في منصة <br />
+            <span className="bg-gradient-to-r from-primary via-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              د. محمود المهدي
+            </span>
           </h1>
-          <p className="text-muted-foreground text-lg leading-8 max-w-2xl">
-            بوابتك للشرح العملي والمسارات والملفات والاختبارات. سجّل طلبك، وبعد
-            موافقة الأدمن هتدخل بالكود الخاص بيك.
+
+          <p className="text-slate-600 text-base md:text-lg leading-8 max-w-2xl font-medium">
+            بوابتك الذكية للتأسيس العملي، مشاهدة الدروس، تحميل المذكرات، وحل الاختبارات التفاعلية. سجّل حسابك واطلع على محتوى مرحلتك فور تفعيل كود الدخول.
           </p>
+
+          {/* 3-Step Journey */}
           <div
-            className="grid grid-cols-3 gap-2"
+            className="grid grid-cols-3 gap-3"
             aria-label="خطوات الانضمام للمنصة"
           >
             {[
-              ["1", "سجّل بياناتك"],
-              ["2", "موافقة الأدمن"],
-              ["3", "ابدأ التعلّم"],
-            ].map(([number, label], index) => (
+              ["1", "سجّل بياناتك", "أدخل اسمك ومرحلتك"],
+              ["2", "موافقة الأدمن", "تفعيل حسابك بالكود"],
+              ["3", "ابدأ التعلّم", "دروس ومذكرات واختبارات"],
+            ].map(([number, label, desc], index) => (
               <div
                 key={number}
-                className="relative rounded-2xl border bg-card p-3 text-center shadow-sm"
+                className="relative rounded-2xl border border-slate-200/90 bg-card/80 p-3.5 text-center shadow-xs transition-all hover:shadow-md hover:border-blue-300 backdrop-blur-sm"
               >
-                <span className="mx-auto grid h-8 w-8 place-items-center rounded-full bg-primary text-sm font-black text-white">
+                <span className="mx-auto grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-tr from-primary to-blue-500 text-xs font-black text-white shadow-md shadow-blue-500/20">
                   {number}
                 </span>
-                <strong className="mt-2 block text-xs sm:text-sm">
+                <strong className="mt-2.5 block text-xs sm:text-sm font-black text-slate-900">
                   {label}
                 </strong>
+                <span className="hidden sm:block mt-1 text-[11px] text-slate-500 font-medium truncate">
+                  {desc}
+                </span>
                 {index < 2 && (
-                  <span className="absolute -left-3 top-7 hidden h-px w-4 bg-primary/30 sm:block" />
+                  <span className="absolute -left-3 top-8 hidden h-px w-4 bg-blue-300 sm:block" />
                 )}
               </div>
             ))}
           </div>
-          <div className="grid sm:grid-cols-3 gap-3">
+
+          {/* Key Features Pills */}
+          <div className="grid sm:grid-cols-3 gap-3 pt-2">
             {[
-              ["دروس منظمة", BookOpen],
-              ["ملفات خاصة", FileText],
-              ["اختبارات ونتائج", ClipboardCheck],
-            ].map(([label, Icon]) => (
+              ["دروس شرح منظمة", BookOpen, "مباشرة وأونلاين"],
+              ["مذكرات وقوالب PDF", FileText, "معاينة وتحميل سريع"],
+              ["اختبارات وتقييم آلي", ClipboardCheck, "تصحيح ونتائج فورية"],
+            ].map(([label, Icon, sub]) => (
               <div
                 key={label as string}
-                className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3 font-bold shadow-sm"
+                className="rounded-2xl border border-slate-200/80 bg-card/90 p-4 flex items-center gap-3.5 font-bold shadow-xs transition-all hover:shadow-md hover:border-blue-300"
               >
-                <Icon className="h-5 w-5 text-primary" /> {label as string}
+                <div className="p-2.5 rounded-xl bg-blue-50 text-primary">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <strong className="block text-xs md:text-sm text-slate-900">{label as string}</strong>
+                  <span className="text-[11px] text-slate-500 font-normal">{sub as string}</span>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="academy-card w-full rounded-[20px] p-6 shadow-xl sm:p-8">
-          <div className="grid grid-cols-2 rounded-xl bg-muted p-1 mb-7">
+        {/* Right Glassmorphism Access Card */}
+        <div className="w-full rounded-[28px] border border-slate-200/90 bg-card/95 p-6 shadow-2xl shadow-blue-900/10 backdrop-blur-2xl sm:p-9">
+          <div className="grid grid-cols-2 rounded-2xl bg-slate-100/90 p-1.5 mb-7 border border-slate-200/60 shadow-inner">
             <button
+              type="button"
               onClick={() => {
                 setMode("login");
                 setError("");
               }}
-              className={`rounded-lg py-3 font-bold transition ${mode === "login" ? "bg-background text-primary shadow" : "text-muted-foreground"}`}
+              className={`rounded-xl py-3 font-extrabold text-xs sm:text-sm transition-all ${
+                mode === "login"
+                  ? "bg-card text-primary shadow-sm shadow-slate-200"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
             >
               دخول الطالب
             </button>
             <button
+              type="button"
               onClick={() => {
                 setMode("register");
                 setError("");
               }}
-              className={`rounded-lg py-3 font-bold transition ${mode === "register" ? "bg-background text-primary shadow" : "text-muted-foreground"}`}
+              className={`rounded-xl py-3 font-extrabold text-xs sm:text-sm transition-all ${
+                mode === "register"
+                  ? "bg-card text-primary shadow-sm shadow-slate-200"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
             >
-              تسجيل جديد
+              تسجيل طالب جديد
             </button>
           </div>
           {mode === "register" && message ? (
@@ -955,16 +990,16 @@ function FilesPanel({ files }: { files: LearningFile[] }) {
       {standaloneFiles.length === 0 ? (
         <EmptyState icon={FolderOpen} title="لا توجد ملفات مرفوعة" description="ستظهر مذكرات وأكواد الكورسات هنا فور نشرها لحسابك." />
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div className="overflow-hidden rounded-2xl border border-slate-200bg-card">
           {standaloneFiles.map((file) => (
             <article key={file.id} className="grid gap-3 border-b border-slate-100 p-4 last:border-0 sm:grid-cols-[minmax(0,1fr)_160px_100px_auto] sm:items-center">
-              <div className="flex min-w-0 items-center gap-3"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-50 text-[#0B63CE]"><FileText className="h-5 w-5" /></span><div className="min-w-0"><h3 className="truncate text-base font-semibold">{file.title}</h3><p className="truncate text-[13px] text-slate-500">{file.originalName}</p></div></div>
+              <div className="flex min-w-0 items-center gap-3"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-50 text-primary"><FileText className="h-5 w-5" /></span><div className="min-w-0"><h3 className="truncate text-base font-semibold">{file.title}</h3><p className="truncate text-[13px] text-slate-500">{file.originalName}</p></div></div>
               <span className="text-sm text-slate-600">{getTrack(file.category)?.title || file.category}</span>
               <span className="text-sm text-slate-500">{(file.sizeBytes / 1024 / 1024).toFixed(1)} MB</span>
               <button
                 type="button"
                 onClick={() => setPreviewFile(file)}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-blue-200 px-4 text-sm font-bold text-[#0B63CE] hover:bg-blue-50"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-blue-200 px-4 text-sm font-bold text-primary hover:bg-blue-50"
               >
                 <Eye className="h-4 w-4" /> معاينة
               </button>
@@ -988,7 +1023,7 @@ function FilesPanel({ files }: { files: LearningFile[] }) {
               role="dialog"
               aria-modal="true"
               aria-label={`معاينة ${previewFile.title}`}
-              className="flex h-[min(90vh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+              className="flex h-[min(90vh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-card shadow-2xl"
             >
               <header className="flex items-center justify-between gap-3 border-b px-4 py-3">
                 <div className="min-w-0"><strong className="block truncate">{previewFile.title}</strong><span className="block truncate text-xs text-slate-500">{previewFile.originalName}</span></div>
@@ -998,9 +1033,9 @@ function FilesPanel({ files }: { files: LearningFile[] }) {
                 {previewFile.mimeType?.startsWith("image/") ? (
                   <img src={`/api/learning/files/${previewFile.id}/preview`} alt={previewFile.title} className="h-full w-full object-contain" />
                 ) : previewFile.mimeType === "application/pdf" || previewFile.mimeType?.startsWith("text/") ? (
-                  <iframe src={`/api/learning/files/${previewFile.id}/preview`} title={previewFile.title} className="h-full w-full rounded-xl border bg-white" />
+                  <iframe src={`/api/learning/files/${previewFile.id}/preview`} title={previewFile.title} className="h-full w-full rounded-xl borderbg-card" />
                 ) : (
-                  <div className="grid h-full place-items-center rounded-xl border bg-white p-8 text-center"><div><FileText className="mx-auto h-12 w-12 text-primary" /><strong className="mt-4 block">لا يمكن عرض هذا النوع داخل المتصفح</strong><p className="mt-2 text-sm text-slate-500">ارفع نسخة PDF من الملف لمعاينتها بأمان داخل المنصة.</p></div></div>
+                  <div className="grid h-full place-items-center rounded-xl border bg-card p-8 text-center"><div><FileText className="mx-auto h-12 w-12 text-primary" /><strong className="mt-4 block">لا يمكن عرض هذا النوع داخل المتصفح</strong><p className="mt-2 text-sm text-slate-500">ارفع نسخة PDF من الملف لمعاينتها بأمان داخل المنصة.</p></div></div>
                 )}
               </div>
             </motion.section>
@@ -1016,10 +1051,10 @@ function AppFilePreviewModal({ file, onClose }: { file: LearningFile | null; onC
   const previewUrl = `/api/learning/files/${file.id}/preview`;
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[110] grid place-items-center bg-slate-950/70 p-3 sm:p-6" onMouseDown={(event) => { if (event.currentTarget === event.target) onClose(); }}>
-      <motion.section initial={{ scale: 0.98, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.98, y: 12 }} role="dialog" aria-modal="true" aria-label={`معاينة ${file.title}`} className="flex h-[min(90vh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <motion.section initial={{ scale: 0.98, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.98, y: 12 }} role="dialog" aria-modal="true" aria-label={`معاينة ${file.title}`} className="flex h-[min(90vh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-card shadow-2xl">
         <header className="flex items-center justify-between gap-3 border-b px-4 py-3"><div className="min-w-0"><strong className="block truncate">{file.title}</strong><span className="block truncate text-xs text-slate-500">{file.originalName}</span></div><button type="button" onClick={onClose} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl hover:bg-slate-100" aria-label="إغلاق المعاينة"><X className="h-5 w-5" /></button></header>
         <div className="min-h-0 flex-1 bg-slate-100 p-2 sm:p-4">
-          {file.mimeType?.startsWith("image/") ? <img src={previewUrl} alt={file.title} className="h-full w-full object-contain" /> : file.mimeType === "application/pdf" || file.mimeType?.startsWith("text/") ? <iframe src={previewUrl} title={file.title} className="h-full w-full rounded-xl border bg-white" /> : <div className="grid h-full place-items-center rounded-xl border bg-white p-8 text-center"><div><FileText className="mx-auto h-12 w-12 text-primary" /><strong className="mt-4 block">لا يمكن عرض هذا النوع داخل المتصفح</strong><p className="mt-2 text-sm text-slate-500">اطلب نسخة PDF لمعاينتها داخل المنصة.</p></div></div>}
+          {file.mimeType?.startsWith("image/") ? <img src={previewUrl} alt={file.title} className="h-full w-full object-contain" /> : file.mimeType === "application/pdf" || file.mimeType?.startsWith("text/") ? <iframe src={previewUrl} title={file.title} className="h-full w-full rounded-xl borderbg-card" /> : <div className="grid h-full place-items-center rounded-xl border bg-card p-8 text-center"><div><FileText className="mx-auto h-12 w-12 text-primary" /><strong className="mt-4 block">لا يمكن عرض هذا النوع داخل المتصفح</strong><p className="mt-2 text-sm text-slate-500">اطلب نسخة PDF لمعاينتها داخل المنصة.</p></div></div>}
         </div>
       </motion.section>
     </motion.div>
@@ -1038,17 +1073,17 @@ function QuizzesPanel({
       <PageHeader title="الاختبارات" description="اختبر فهمك واعرف نتيجتك فورًا." action={<StatusBadge>{quizzes.length} اختبار</StatusBadge>} />
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
         {quizzes.map((quiz) => (
-          <article key={quiz.id} className="academy-card p-6">
-            <span className="text-xs font-bold text-primary">
+          <article key={quiz.id} className="rounded-2xl border border-border bg-card p-6 shadow-sm transition-all duration-200 hover:shadow-md hover:border-primary/20">
+            <span className="text-[12px] font-bold text-primary">
               {quiz.category}
             </span>
             {quiz.stage && (
-              <span className="mr-2 rounded-full bg-muted px-2 py-1 text-[10px] font-bold text-muted-foreground">
+              <span className="mr-2 rounded-full bg-muted px-2.5 py-1 text-[10px] font-bold text-muted-foreground">
                 {quiz.stage}
               </span>
             )}
-            <h3 className="text-xl font-black mt-2">{quiz.title}</h3>
-            <p className="text-sm text-muted-foreground mt-2">
+            <h3 className="text-lg font-extrabold text-foreground mt-2">{quiz.title}</h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
               {quiz.questions.length} أسئلة · النجاح من {quiz.passingScore}%
               {quiz.maxAttempts ? ` · ${Math.max(0, quiz.maxAttempts - (quiz.attemptsUsed || 0))} محاولة متبقية` : ""}
             </p>
@@ -1158,20 +1193,20 @@ function DashboardPanel({
       </div>
     );
   return (
-    <div className="space-y-8">
+    <div className="space-y-7">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-[28px] font-bold md:text-[34px]">
+          <h1 className="text-[24px] font-extrabold text-foreground md:text-[28px] leading-tight">
             مرحبًا، {student.name} 👋
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1.5 text-[13px] leading-6 text-muted-foreground">
             {academicTrack
               ? `${academicTrack.title} — محتواك مرتب حسب كورساتك ومرحلتك.`
               : "كمّل من مكان ما وقفت، وخليك ثابت على خطتك."}
           </p>
         </div>
         <span
-          className={`w-fit rounded-full px-3 py-1.5 text-xs font-bold ${student.learningMode === "offline" ? "bg-violet-500/10 text-violet-700" : "bg-sky-500/10 text-sky-700"}`}
+          className={`w-fit rounded-full px-3 py-1.5 text-[11px] font-bold ${student.learningMode === "offline" ? "bg-violet-50 text-violet-700 border border-violet-200/60" : "bg-primary/10 text-primary border border-primary/12"}`}
         >
           {student.learningMode === "offline"
             ? "نظامك: أوفلاين"
@@ -1198,43 +1233,43 @@ function DashboardPanel({
         {stats.map((stat) => <StatisticCard key={stat.label} {...stat} />)}
       </div>
       <div className="grid gap-5 xl:grid-cols-[1.5fr_.7fr]">
-        <article className="academy-card overflow-hidden">
+        <article className="overflow-hidden rounded-2xl border border-border bg-card shadow-md">
           <div className="grid md:grid-cols-[.9fr_1.1fr]">
-            <div className="relative min-h-52 bg-slate-900">
+            <div className="relative min-h-52 bg-accent">
               <img
-                src={academicTrack?.image || "/university-cs-path.png"}
+                src={academicTrack?.image || "/university-cs-path.webp"}
                 alt={academicTrack?.imageAlt || "الدرس اللي بتذاكره"}
-                className="h-full w-full object-cover opacity-70"
+                className="h-full w-full object-cover opacity-60"
               />
               {continueVideo && (
                 <button
                   onClick={() => onOpen("lessons")}
                   aria-label={`شغّل ${continueVideo.title}`}
-                  className="absolute inset-0 m-auto grid h-14 w-14 place-items-center rounded-full bg-primary text-white shadow-xl transition hover:scale-105"
+                  className="absolute inset-0 m-auto grid h-14 w-14 place-items-center rounded-full bg-primary text-white shadow-lg shadow-primary/30 transition-transform duration-200 hover:scale-110"
                 >
                   <Play className="h-6 w-6 fill-current" />
                 </button>
               )}
             </div>
             <div className="flex flex-col justify-center p-5 text-right">
-              <span className="w-fit rounded-full bg-cyan-500/10 px-3 py-1 text-[11px] font-bold text-cyan-700">
+              <span className="w-fit rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary">
                 {continueProgress > 0 ? "كمّل من مكان ما وقفت" : "ابدأ رحلتك"}
               </span>
-              <h2 className="mt-2 text-xl font-black md:text-2xl">
+              <h2 className="mt-2.5 text-lg font-extrabold text-foreground md:text-xl leading-snug">
                 {continueVideo?.title || "محتواك هيظهر هنا قريب"}
               </h2>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
                 {continueVideo
                   ? `${continueVideo.subject || continueVideo.category} — تقدمك بيتحفظ تلقائي على حسابك.`
                   : "لسه مفيش دروس منشورة ليك. أول ما المحتوى يتضاف هتلاقيه هنا."}
               </p>
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
+              <div className="mt-4 h-[7px] overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full rounded-full bg-cyan-500 transition-all"
+                  className="h-full rounded-full bg-primary transition-all duration-500"
                   style={{ width: `${continueProgress}%` }}
                 />
               </div>
-              <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
+              <div className="mt-2 flex justify-between text-[11px] font-medium text-muted-foreground">
                 <span>{continueProgress}% من الدرس</span>
                 <span>{averageProgress}% إجمالي التقدم</span>
               </div>
@@ -1242,21 +1277,21 @@ function DashboardPanel({
             </div>
           </div>
         </article>
-        <article className="academy-card p-6">
-          <h2 className="text-xl font-black">الخطوة اللي بعدها</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+        <article className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <h2 className="text-lg font-extrabold text-foreground">الخطوة اللي بعدها</h2>
+          <p className="mt-1 text-[13px] text-muted-foreground">
             اختصار لأحدث حاجة متاحة ليك.
           </p>
           <div className="mt-5 space-y-4">
             {quizzes[0] && (
               <button
                 onClick={() => onOpen("quizzes")}
-                className="flex w-full items-center gap-3 rounded-xl bg-amber-500/10 p-3 text-right transition hover:bg-amber-500/15"
+                className="flex w-full items-center gap-3 rounded-xl border border-amber-100 bg-amber-50/60 p-3.5 text-right transition-colors hover:bg-amber-50"
               >
-                <ClipboardCheck className="text-amber-600" />
-                <span>
-                  <strong className="block">{quizzes[0].title}</strong>
-                  <small className="text-muted-foreground">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-amber-100 text-amber-600"><ClipboardCheck className="h-[18px] w-[18px]" /></span>
+                <span className="min-w-0">
+                  <strong className="block text-[13px] font-bold text-foreground truncate">{quizzes[0].title}</strong>
+                  <small className="text-[11px] text-muted-foreground">
                     {quizzes[0].questions.length} أسئلة — ابدأ لما تكون جاهز
                   </small>
                 </span>
@@ -1265,20 +1300,20 @@ function DashboardPanel({
             {files[0] && (
               <button
                 onClick={() => onOpen("files")}
-                className="flex w-full items-center gap-3 rounded-xl bg-primary/5 p-3 text-right transition hover:bg-primary/10"
+                className="flex w-full items-center gap-3 rounded-xl border border-primary/10 bg-primary/10/50 p-3.5 text-right transition-colors hover:bg-primary/10"
               >
-                <FileText className="text-primary" />
-                <span>
-                  <strong className="block">{files[0].title}</strong>
-                  <small className="text-muted-foreground">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><FileText className="h-[18px] w-[18px]" /></span>
+                <span className="min-w-0">
+                  <strong className="block text-[13px] font-bold text-foreground truncate">{files[0].title}</strong>
+                  <small className="text-[11px] text-muted-foreground">
                     أحدث ملف متاح للتحميل
                   </small>
                 </span>
               </button>
             )}
             {!quizzes.length && !files.length && (
-              <div className="rounded-2xl border border-dashed p-5 text-center text-sm text-muted-foreground">
-                <CheckCircle2 className="mx-auto mb-2 h-7 w-7 text-emerald-600" />
+              <div className="rounded-xl border border-dashed border-border p-5 text-center text-[13px] text-muted-foreground">
+                <CheckCircle2 className="mx-auto mb-2 h-6 w-6 text-emerald-500" />
                 مفيش مهام مطلوبة منك دلوقتي. ركّز في دروسك براحتك.
               </div>
             )}
@@ -1287,7 +1322,7 @@ function DashboardPanel({
       </div>
       <div>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-black">أحدث الملفات</h2>
+          <h2 className="text-lg font-extrabold text-foreground">أحدث الملفات</h2>
           <button
             onClick={() => onOpen("files")}
             className="font-bold text-primary"
@@ -1297,14 +1332,14 @@ function DashboardPanel({
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {files.slice(0, 4).map((file) => (
-            <article key={file.id} className="academy-card p-4">
-              <div className="grid h-24 place-items-center rounded-xl bg-[#e7eeff]">
-                <FileText className="h-9 w-9 text-primary/40" />
+            <article key={file.id} className="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all duration-200 hover:shadow-md hover:border-primary/20">
+              <div className="grid h-[88px] place-items-center rounded-xl bg-primary/10">
+                <FileText className="h-8 w-8 text-primary/35" />
               </div>
-              <h3 className="mt-3 line-clamp-1 font-bold">{file.title}</h3>
+              <h3 className="mt-3 line-clamp-1 text-[13px] font-bold text-foreground">{file.title}</h3>
               <a
                 href={`/api/learning/files/${file.id}/download`}
-                className="mt-3 flex h-10 items-center justify-center gap-2 rounded-lg bg-primary/10 text-sm font-bold text-primary"
+                className="mt-3 flex h-9 items-center justify-center gap-2 rounded-lg bg-primary/10 text-[12px] font-bold text-primary transition-colors hover:bg-primary/15"
               >
                 <Download className="h-4 w-4" /> تحميل
               </a>
@@ -1357,19 +1392,19 @@ function ProfilePanel({ student, onStudentChange }: { student: Student; onStuden
   return (
     <div className="space-y-7">
       <PageHeader title="حسابي" description="بياناتك الشخصية والتعليمية وإعدادات الحساب." />
-      <article className="rounded-2xl border border-slate-200 bg-white p-6">
+      <article className="rounded-2xl border border-border bg-card p-6 shadow-sm">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
           <StudentAvatar name={student.name} src={student.avatarUrl} size="lg" />
           <div>
-            <StatusBadge>حساب متفعّل</StatusBadge><h2 className="mt-3 text-2xl font-bold">{student.name}</h2><p className="text-sm text-slate-500">{student.grade || "طالب بمنصة د. محمود المهدي"}</p>
-            <div className="mt-4 flex flex-wrap gap-2"><input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => void uploadAvatar(event.target.files?.[0])} /><Button type="button" variant="outline" disabled={avatarLoading} onClick={() => inputRef.current?.click()}><Camera className="h-4 w-4" /> {avatarLoading ? "جاري الحفظ" : "تغيير الصورة"}</Button>{student.avatarUrl && <Button type="button" variant="ghost" disabled={avatarLoading} onClick={() => void removeAvatar()} className="text-slate-600 hover:text-red-600"><Trash2 className="h-4 w-4" /> حذف</Button>}</div>
+            <StatusBadge>حساب متفعّل</StatusBadge><h2 className="mt-3 text-xl font-extrabold text-foreground">{student.name}</h2><p className="text-[13px] text-muted-foreground">{student.grade || "طالب بمنصة د. محمود المهدي"}</p>
+            <div className="mt-4 flex flex-wrap gap-2"><input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => void uploadAvatar(event.target.files?.[0])} /><Button type="button" variant="outline" disabled={avatarLoading} onClick={() => inputRef.current?.click()}><Camera className="h-4 w-4" /> {avatarLoading ? "جاري الحفظ" : "تغيير الصورة"}</Button>{student.avatarUrl && <Button type="button" variant="ghost" disabled={avatarLoading} onClick={() => void removeAvatar()} className="text-muted-foreground hover:text-red-600"><Trash2 className="h-4 w-4" /> حذف</Button>}</div>
           </div>
         </div>
       </article>
       <div className="grid gap-5 lg:grid-cols-[1.3fr_.7fr]">
-        <article className="rounded-2xl border border-slate-200 bg-white p-6"><h2 className="text-xl font-bold">المعلومات الشخصية</h2><dl className="mt-3 grid sm:grid-cols-2"><ProfileInfoRow label="الاسم" value={student.name} /><ProfileInfoRow label="رقم الموبايل" value={student.phone} /><ProfileInfoRow label="البريد الإلكتروني" value={student.email || "غير مضاف"} /><ProfileInfoRow label="المحافظة والمدينة" value={[student.governorate, student.city].filter(Boolean).join("، ")} /></dl>
+        <article className="rounded-2xl border border-border bg-card p-6 shadow-sm"><h2 className="text-base font-extrabold text-foreground">المعلومات الشخصية</h2><dl className="mt-3 grid sm:grid-cols-2"><ProfileInfoRow label="الاسم" value={student.name} /><ProfileInfoRow label="رقم الموبايل" value={student.phone} /><ProfileInfoRow label="البريد الإلكتروني" value={student.email || "غير مضاف"} /><ProfileInfoRow label="المحافظة والمدينة" value={[student.governorate, student.city].filter(Boolean).join("، ")} /></dl>
         </article>
-        <article className="rounded-2xl border border-slate-200 bg-white p-6"><h2 className="text-xl font-bold">المعلومات التعليمية</h2><dl className="mt-3"><ProfileInfoRow label="المرحلة الدراسية" value={student.grade} /><ProfileInfoRow label="نظام الدراسة" value={student.learningMode === "offline" ? "حضوري" : "أونلاين"} /><ProfileInfoRow label="حالة الحساب" value="متفعّل" /></dl></article>
+        <article className="rounded-2xl border border-border bg-card p-6 shadow-sm"><h2 className="text-base font-extrabold text-foreground">المعلومات التعليمية</h2><dl className="mt-3"><ProfileInfoRow label="المرحلة الدراسية" value={student.grade} /><ProfileInfoRow label="نظام الدراسة" value={student.learningMode === "offline" ? "حضوري" : "أونلاين"} /><ProfileInfoRow label="حالة الحساب" value="متفعّل" /></dl></article>
       </div>
     </div>
   );
@@ -1531,8 +1566,14 @@ export function StudentPlatform() {
   }, [student?.id]);
   useEffect(() => {
     if (!student) return;
+    let lastRefresh = 0;
     const refreshWhenVisible = () => {
-      if (document.visibilityState === "visible") void loadLearningData();
+      if (document.visibilityState !== "visible") return;
+      // Debounce: skip if refreshed within the last 30 seconds
+      const now = Date.now();
+      if (now - lastRefresh < 30_000) return;
+      lastRefresh = now;
+      void loadLearningData();
     };
     document.addEventListener("visibilitychange", refreshWhenVisible);
     window.addEventListener("focus", refreshWhenVisible);
@@ -1585,7 +1626,7 @@ export function StudentPlatform() {
   ] as const;
   return (
     <main
-      className="min-h-screen bg-[#F7F9FC] pb-24 lg:pb-0"
+      className="min-h-screen bg-muted pb-24 lg:pb-0"
       dir="rtl"
       onClickCapture={(event) => {
         const link = (event.target as HTMLElement).closest<HTMLAnchorElement>('a[href*="/api/learning/files/"]');
@@ -1597,62 +1638,62 @@ export function StudentPlatform() {
         setLinkedPreviewFile(file);
       }}
     >
-      <div className="mx-auto grid max-w-[1600px] lg:grid-cols-[252px_1fr]">
+      <div className="mx-auto grid max-w-[1600px] lg:grid-cols-[260px_1fr]">
         {sidebarOpen && <button className="fixed inset-0 z-40 bg-slate-950/35 lg:hidden" aria-label="إغلاق القائمة" onClick={() => setSidebarOpen(false)} />}
-        <aside className={`fixed inset-y-0 right-0 z-50 flex w-[252px] flex-col border-l border-slate-200 bg-white p-4 transition-transform lg:sticky lg:top-0 lg:z-20 lg:min-h-screen ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}`}>
-          <button className="absolute left-3 top-3 grid h-10 w-10 place-items-center rounded-xl lg:hidden" onClick={() => setSidebarOpen(false)} aria-label="إغلاق القائمة"><X className="h-5 w-5" /></button>
-          <div className="flex items-center gap-3 border-b border-slate-100 pb-5">
+        <aside className={`fixed inset-y-0 right-0 z-50 flex w-[252px] flex-col border-l border-border bg-card transition-transform lg:sticky lg:top-0 lg:z-20 lg:min-h-screen ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}`}>
+          <button className="absolute left-3 top-3 grid h-9 w-9 place-items-center rounded-lg text-muted-foreground hover:bg-slate-100 lg:hidden" onClick={() => setSidebarOpen(false)} aria-label="إغلاق القائمة"><X className="h-4.5 w-4.5" /></button>
+          <div className="flex items-center gap-3 border-b border-border px-5 py-5">
             <img
-              src="/logo.jpg"
+              src="/logo.webp"
               alt="شعار منصة د. محمود المهدي"
-              className="h-11 w-11 rounded-xl object-cover"
+              className="h-10 w-10 rounded-[10px] object-cover ring-1 ring-primary/15"
             />
-            <div><strong className="block text-sm">بوابة الطالب</strong><span className="text-xs text-slate-500">د. محمود المهدي</span></div>
+            <div><strong className="block text-[13px] font-bold text-foreground">بوابة الطالب</strong><span className="text-[11px] text-muted-foreground">د. محمود المهدي</span></div>
           </div>
-          <div className="mt-4 flex items-center gap-3 rounded-xl bg-slate-50 p-3"><StudentAvatar name={student.name} src={student.avatarUrl} /><div className="min-w-0"><strong className="block truncate text-sm">{student.name}</strong><span className="text-xs text-slate-500">طالب متفعّل</span></div></div>
-          <nav className="mt-5 space-y-1">
+          <div className="mx-4 mt-4 flex items-center gap-3 rounded-xl bg-muted p-3"><StudentAvatar name={student.name} src={student.avatarUrl} /><div className="min-w-0"><strong className="block truncate text-[13px] font-bold text-foreground">{student.name}</strong><span className="text-[11px] text-muted-foreground">طالب متفعّل</span></div></div>
+          <nav className="mt-5 space-y-0.5 px-3">
             {nav.map(([value, label, Icon]) => (
               <button
                 key={value}
                 onClick={() => { setTab(value); setSidebarOpen(false); }}
                 aria-current={tab === value ? "page" : undefined}
-                className={`flex min-h-11 w-full items-center gap-3 rounded-lg border-r-[3px] px-3 text-right text-sm font-semibold transition ${tab === value ? "border-[#0B63CE] bg-[#EAF3FF] text-[#0B63CE]" : "border-transparent text-[#667085] hover:bg-slate-50"}`}
+                className={`flex min-h-[42px] w-full items-center gap-3 rounded-xl px-3 text-right text-[13px] font-bold transition-all duration-150 ${tab === value ? "bg-primary/10 text-primary shadow-[inset_-3px_0_0_hsl(var(--primary))]" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className={`h-[18px] w-[18px] ${tab === value ? "" : "opacity-70"}`} />
                 {label}
               </button>
             ))}
           </nav>
-          <div className="mt-auto space-y-2">
+          <div className="mt-auto space-y-2 px-4 pb-5">
             <a
               href="https://wa.me/201044348610"
-              className="flex h-11 items-center justify-center rounded-xl border border-blue-200 text-sm font-bold text-[#0B63CE] hover:bg-blue-50"
+              className="flex h-10 items-center justify-center rounded-xl border border-border text-[13px] font-bold text-primary transition-colors hover:bg-primary/10 hover:border-primary/20"
             >
               كلم الدعم
             </a>
             <button
               onClick={logout}
-              className="flex h-12 w-full items-center justify-center gap-2 text-sm font-bold text-red-600"
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-xl text-[13px] font-bold text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-600"
             >
               <LogOut className="h-4 w-4" /> تسجيل الخروج
             </button>
           </div>
         </aside>
         <section className="min-w-0">
-          <div className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur md:px-8">
+          <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-card/97 px-4 backdrop-blur-sm md:px-8">
             <div className="flex items-center gap-3">
-              <button className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 lg:hidden" onClick={() => setSidebarOpen(true)} aria-label="فتح القائمة"><Menu className="h-5 w-5" /></button>
+              <button className="grid h-9 w-9 place-items-center rounded-lg border border-border text-muted-foreground lg:hidden" onClick={() => setSidebarOpen(true)} aria-label="فتح القائمة"><Menu className="h-[18px] w-[18px]" /></button>
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setShowNotifications((current) => !current)}
                   aria-label="الإشعارات"
                   aria-expanded={showNotifications}
-                  className="relative grid h-10 w-10 place-items-center rounded-xl border border-border bg-white text-muted-foreground hover:text-primary"
+                  className="relative grid h-9 w-9 place-items-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:text-primary hover:border-primary/20"
                 >
-                  <Bell className="h-5 w-5" />
+                  <Bell className="h-[18px] w-[18px]" />
                   {unreadNotifications > 0 && (
-                    <span className="absolute -left-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white">
+                    <span className="absolute -left-1.5 -top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-destructive px-1 text-[9px] font-bold text-white shadow-sm">
                       {Math.min(unreadNotifications, 9)}
                     </span>
                   )}
@@ -1660,18 +1701,19 @@ export function StudentPlatform() {
                 <AnimatePresence>
                   {showNotifications && (
                     <motion.div
-                      initial={{ opacity: 0, y: -8 }}
+                      initial={{ opacity: 0, y: -6 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      className="absolute right-0 top-12 z-50 w-[min(340px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-white shadow-2xl"
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-11 z-50 w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-card shadow-xl"
                     >
-                      <div className="border-b p-4">
-                        <strong>الإشعارات</strong>
-                        <p className="text-xs text-muted-foreground">كل جديد في حسابك وكورساتك</p>
+                      <div className="border-b border-border px-4 py-3">
+                        <strong className="text-[14px] font-bold text-foreground">الإشعارات</strong>
+                        <p className="text-[11px] text-muted-foreground">كل جديد في حسابك وكورساتك</p>
                       </div>
-                      <div className="max-h-80 overflow-y-auto p-2">
+                      <div className="max-h-80 overflow-y-auto p-1.5">
                         {notifications.length === 0 ? (
-                          <p className="p-6 text-center text-sm text-muted-foreground">مفيش إشعارات جديدة</p>
+                          <p className="p-8 text-center text-[13px] text-muted-foreground">مفيش إشعارات جديدة</p>
                         ) : notifications.map((notification) => (
                           <button
                             key={notification.id}
@@ -1683,14 +1725,14 @@ export function StudentPlatform() {
                               if (notification.type === "quiz") setTab("quizzes");
                               setShowNotifications(false);
                             }}
-                            className={`mb-1 w-full rounded-xl p-3 text-right transition hover:bg-muted ${notification.readAt ? "opacity-70" : "bg-primary/5"}`}
+                            className={`mb-0.5 w-full rounded-xl p-3 text-right transition-colors hover:bg-muted ${notification.readAt ? "opacity-60" : "bg-primary/10/50"}`}
                           >
-                            <span className="flex items-start gap-2">
-                              <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${notification.readAt ? "bg-slate-300" : "bg-primary"}`} />
+                            <span className="flex items-start gap-2.5">
+                              <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${notification.readAt ? "bg-border" : "bg-primary"}`} />
                               <span>
-                                <strong className="block text-sm">{notification.title}</strong>
-                                <span className="mt-1 block text-xs leading-5 text-muted-foreground">{notification.message}</span>
-                                <span className="mt-1 block text-[10px] text-muted-foreground">{new Date(notification.createdAt).toLocaleDateString("ar-EG")}</span>
+                                <strong className="block text-[13px] font-bold text-foreground">{notification.title}</strong>
+                                <span className="mt-0.5 block text-[12px] leading-5 text-muted-foreground">{notification.message}</span>
+                                <span className="mt-1 block text-[10px] text-muted-foreground/70">{new Date(notification.createdAt).toLocaleDateString("ar-EG")}</span>
                               </span>
                             </span>
                           </button>
@@ -1700,9 +1742,9 @@ export function StudentPlatform() {
                   )}
                 </AnimatePresence>
               </div>
-              <span className="hidden text-sm font-bold text-slate-700 sm:inline">{nav.find(([value]) => value === tab)?.[1]}</span>
+              <span className="hidden text-[13px] font-bold text-foreground sm:inline">{nav.find(([value]) => value === tab)?.[1]}</span>
             </div>
-            <button onClick={() => setTab("profile")} className="flex items-center gap-2 rounded-xl p-1.5 hover:bg-slate-50"><StudentAvatar name={student.name} src={student.avatarUrl} size="sm" /><span className="hidden max-w-40 truncate text-sm font-semibold sm:block">{student.name}</span></button>
+            <button onClick={() => setTab("profile")} className="flex items-center gap-2.5 rounded-xl p-1.5 transition-colors hover:bg-muted"><StudentAvatar name={student.name} src={student.avatarUrl} size="sm" /><span className="hidden max-w-40 truncate text-[13px] font-bold text-foreground sm:block">{student.name}</span></button>
           </div>
           <div className="mx-auto max-w-[1440px] p-4 pb-8 sm:p-6 lg:p-8">{tab === "dashboard" ? (
             <DashboardPanel
@@ -1735,7 +1777,7 @@ export function StudentPlatform() {
 
       <nav
         aria-label="التنقل الرئيسي"
-        className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(15,23,42,.06)] backdrop-blur lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/97 px-1 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-sm lg:hidden"
       >
         <div className="mx-auto grid max-w-lg grid-cols-5">
           {nav.map(([value, label, Icon]) => (
@@ -1743,7 +1785,7 @@ export function StudentPlatform() {
               key={value}
               onClick={() => setTab(value)}
               aria-current={tab === value ? "page" : undefined}
-              className={`my-1 flex min-h-[62px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[11px] font-bold transition active:scale-[.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${tab === value ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}
+              className={`my-1 flex min-h-[56px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-bold transition-colors active:scale-[.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${tab === value ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}
             >
               <Icon
                 className={`h-[23px] w-[23px] ${tab === value ? "stroke-[2.5]" : ""}`}
