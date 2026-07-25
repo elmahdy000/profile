@@ -223,18 +223,22 @@ export function ExamWizard({
         "/api/admin/learning/quizzes/import",
         { method: "POST", body: formData }
       );
-      setQuizForm((prev: QuizFormState) => {
-        const hasManualQuestion = prev.questions.some(
-          (q) => q.prompt.trim() || q.options.some((o) => o.trim())
-        );
-        return {
-          ...prev,
-          questions: hasManualQuestion ? [...prev.questions, ...result.questions] : result.questions,
-        };
-      });
-      setImportWarnings(result.warnings || []);
-      toast({ title: `تم استيراد ${result.questions.length} سؤال بنجاح 🎉` });
-      setQuestionSource("manual");
+      if (Array.isArray(result.questions) && result.questions.length > 0) {
+        setQuizForm((prev: QuizFormState) => {
+          const hasManualQuestion = prev.questions.some(
+            (q) => q.prompt.trim() || q.options.some((o) => o.trim())
+          );
+          return {
+            ...prev,
+            questions: hasManualQuestion ? [...prev.questions, ...result.questions] : result.questions,
+          };
+        });
+        setImportWarnings(result.warnings || []);
+        toast({ title: `تم استيراد ${result.questions.length} سؤال بنجاح 🎉` });
+        setQuestionSource("manual");
+      } else {
+        toast({ variant: "destructive", title: "لم يتم العثور على أسئلة داخل الملف" });
+      }
     } catch (error) {
       toast({ variant: "destructive", title: "تعذر استيراد الأسئلة", description: (error as Error).message });
     } finally {
@@ -880,12 +884,20 @@ export function ExamWizard({
                     type="file"
                     accept=".pdf,.docx,.txt,.md"
                     className="hidden"
-                    onChange={(e) => e.target.files?.[0] && importQuizQuestions(e.target.files[0])}
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) {
+                        importQuizQuestions(e.target.files[0]);
+                      }
+                    }}
                   />
                   <Button
                     type="button"
                     disabled={isImportingQuestions}
-                    onClick={() => quizImportInputRef.current?.click()}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      quizImportInputRef.current?.click();
+                    }}
                     className="font-bold text-xs"
                   >
                     {isImportingQuestions ? "جارٍ قراءة الأسئلة..." : "تصفح واختيار الملف"}
