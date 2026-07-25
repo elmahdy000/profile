@@ -121,41 +121,39 @@ export function ExamWizard({
   const isTimeUnlimited = !quizForm.durationMinutes || quizForm.durationMinutes === "0";
   const isAttemptsUnlimited = !quizForm.maxAttempts || quizForm.maxAttempts === 0;
 
-  // Selected Quiz Course
+  // Selected Quiz Course & Track
   const selectedQuizCourse = learningCourses.find(
     (course) => String(course.id) === quizForm.courseId
   );
-  const selectedQuizTrack = getTrack(selectedQuizCourse?.category);
+  const selectedQuizTrack = getTrack(selectedQuizCourse?.category || selectedQuizCourse?.title);
 
-  // Available Stages
-  const availableQuizStages = selectedQuizCourse?.stages?.length
-    ? selectedQuizCourse.stages
-    : selectedQuizCourse
-    ? getStagesForTrack(selectedQuizCourse.category)
-    : ACADEMIC_TRACKS.flatMap((track) => track.stages);
+  // Available Stages (Use course stages if restricted, or track stages, or all tracks if course isn't restricted)
+  const availableQuizStages = useMemo(() => {
+    if (selectedQuizCourse?.stages?.length) {
+      return selectedQuizCourse.stages;
+    }
+    if (selectedQuizTrack) {
+      return getStagesForTrack(selectedQuizTrack.id);
+    }
+    return ACADEMIC_TRACKS.flatMap((track) => track.stages);
+  }, [selectedQuizCourse, selectedQuizTrack]);
 
   // Group stages logically by Track
   const quizStageGroups = useMemo(() => {
+    if (selectedQuizCourse?.stages?.length) {
+      return [{ title: selectedQuizCourse.title, stages: selectedQuizCourse.stages }];
+    }
+
     if (selectedQuizTrack) {
-      if (selectedQuizTrack.id === "baccalaureate") {
-        return [
-          {
-            title: "البكالوريا والثانوية العامة",
-            stages: availableQuizStages.filter(
-              (s) => s.startsWith("البكالوريا") || s.startsWith("الثانوية العامة")
-            ),
-          },
-        ];
-      }
       return [{ title: selectedQuizTrack.title, stages: availableQuizStages }];
     }
 
-    // Default when no course is chosen: Show all track groups
+    // Default: Show all academic tracks
     return ACADEMIC_TRACKS.map((track) => ({
       title: track.title,
       stages: track.stages,
     }));
-  }, [selectedQuizTrack, availableQuizStages]);
+  }, [selectedQuizCourse, selectedQuizTrack, availableQuizStages]);
 
   const visibleQuizStageGroups = quizStageGroups
     .map((group) => ({

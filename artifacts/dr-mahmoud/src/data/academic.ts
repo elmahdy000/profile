@@ -60,6 +60,8 @@ const LEGACY_TRACK_ALIASES: Record<string, AcademicTrackId> = {
   university: "computer-science",
   db: "computer-science",
   python: "baccalaureate",
+  cpp: "computer-science",
+  "c++": "computer-science",
 };
 
 export const GENERAL_STAGE = "عام";
@@ -69,7 +71,22 @@ export function resolveTrackId(value?: string | null): AcademicTrackId | null {
   const normalized = value.trim().toLowerCase();
   const direct = ACADEMIC_TRACKS.find((track) => track.id === normalized);
   if (direct) return direct.id;
-  return LEGACY_TRACK_ALIASES[normalized] ?? null;
+  
+  const alias = LEGACY_TRACK_ALIASES[normalized];
+  if (alias) return alias;
+
+  // Partial/keyword match on title or subjects
+  if (normalized.includes("بكالوريا") || normalized.includes("ثانوية") || normalized.includes("ثانوي") || normalized.includes("python")) {
+    return "baccalaureate";
+  }
+  if (normalized.includes("هندسة") || normalized.includes("engineering")) {
+    return "engineering";
+  }
+  if (normalized.includes("حاسبات") || normalized.includes("جامعة") || normalized.includes("جامعات") || normalized.includes("c++") || normalized.includes("computer")) {
+    return "computer-science";
+  }
+
+  return null;
 }
 
 export function getTrack(value?: string | null) {
