@@ -138,22 +138,19 @@ export function ExamWizard({
     return ACADEMIC_TRACKS.flatMap((track) => track.stages);
   }, [selectedQuizCourse, selectedQuizTrack]);
 
-  // Group stages logically by Track
+  // Group stages logically by Track - Always display all academic tracks so instructors can target any grade/track
   const quizStageGroups = useMemo(() => {
+    // If course explicitly defines specific allowed stages, prioritize showing them first
     if (selectedQuizCourse?.stages?.length) {
-      return [{ title: selectedQuizCourse.title, stages: selectedQuizCourse.stages }];
+      return [{ title: `مراحل الكورس المحددة (${selectedQuizCourse.title})`, stages: selectedQuizCourse.stages }];
     }
 
-    if (selectedQuizTrack) {
-      return [{ title: selectedQuizTrack.title, stages: availableQuizStages }];
-    }
-
-    // Default: Show all academic tracks
+    // Always show all academic tracks (Baccalaureate/Secondary, CS, Engineering)
     return ACADEMIC_TRACKS.map((track) => ({
       title: track.title,
       stages: track.stages,
     }));
-  }, [selectedQuizCourse, selectedQuizTrack, availableQuizStages]);
+  }, [selectedQuizCourse]);
 
   const visibleQuizStageGroups = quizStageGroups
     .map((group) => ({
