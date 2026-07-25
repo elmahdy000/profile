@@ -127,16 +127,13 @@ export function ExamWizard({
   );
   const selectedQuizTrack = getTrack(selectedQuizCourse?.category || selectedQuizCourse?.title);
 
-  // Available Stages (Use course stages if restricted, or track stages, or all tracks if course isn't restricted)
+  // Available Stages (Use course stages if restricted, otherwise include all stages from all tracks)
   const availableQuizStages = useMemo(() => {
     if (selectedQuizCourse?.stages?.length) {
       return selectedQuizCourse.stages;
     }
-    if (selectedQuizTrack) {
-      return getStagesForTrack(selectedQuizTrack.id);
-    }
     return ACADEMIC_TRACKS.flatMap((track) => track.stages);
-  }, [selectedQuizCourse, selectedQuizTrack]);
+  }, [selectedQuizCourse]);
 
   // Group stages logically by Track - Always display all academic tracks so instructors can target any grade/track
   const quizStageGroups = useMemo(() => {
