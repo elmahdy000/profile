@@ -4,7 +4,7 @@ import {
   Youtube, Play, ExternalLink, Tv, ChevronLeft, Loader2, Lock, Unlock,
   Search, SlidersHorizontal, Bookmark, Share2, Clock, BookOpen, Award, ArrowUpDown,
   FileText, ClipboardCheck, Download, X, MonitorPlay, Layers3, Signal,
-  Info, Paperclip, ShieldCheck
+  Info, Paperclip, ShieldCheck, Eye
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListVideos } from "@workspace/api-client-react";
@@ -1325,6 +1325,20 @@ export function VideoLessonsSection({
                           <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg border backdrop-blur-md bg-secondary/10 text-secondary border-secondary/20 flex items-center gap-1">
                             <Lock className="w-3 h-3" />
                             محتوى مدفوع 🔒
+                          </span>
+                        )}
+                        {item.maxViews && item.maxViews > 0 && item.youtubeUrl !== "locked" && (
+                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border backdrop-blur-md flex items-center gap-1 ${
+                            (item.viewCount ?? 0) >= item.maxViews
+                              ? "bg-destructive/10 text-destructive border-destructive/20"
+                              : (item.viewCount ?? 0) >= item.maxViews - 1
+                                ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                                : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
+                          }`}>
+                            <Eye className="w-3 h-3" />
+                            {(item.viewCount ?? 0) >= item.maxViews
+                              ? "نفدت المشاهدات"
+                              : `باقي ${item.maxViews - (item.viewCount ?? 0)} مشاهدة`}
                           </span>
                         )}
                       </div>

@@ -19,6 +19,7 @@ import {
   videoProgressTable,
   videosTable,
   videoFileAttachmentsTable,
+  studentNotesTable,
   type QuizQuestion,
 } from "@workspace/db";
 import { isAdminRequest, requireAdmin } from "../middleware/auth";
@@ -284,6 +285,30 @@ async function ensureAutomaticCourseAssignments(student: typeof studentsTable.$i
   return updated;
 }
 
+async function calculateStreak(studentId: number): Promise<number> {
+  const rows = await db
+    .select({ updatedAt: videoProgressTable.updatedAt })
+    .from(videoProgressTable)
+    .where(eq(videoProgressTable.studentId, studentId))
+    .orderBy(desc(videoProgressTable.updatedAt));
+  if (!rows.length) return 0;
+  const uniqueDays = Array.from(new Set(
+    rows.map((r) => r.updatedAt.toISOString().slice(0, 10)),
+  )).sort().reverse();
+  const today = new Date().toISOString().slice(0, 10);
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  if (uniqueDays[0] !== today && uniqueDays[0] !== yesterday) return 0;
+  let streak = 1;
+  for (let i = 1; i < uniqueDays.length; i++) {
+    const prev = new Date(uniqueDays[i - 1]);
+    const curr = new Date(uniqueDays[i]);
+    const diffDays = (prev.getTime() - curr.getTime()) / 86400000;
+    if (Math.round(diffDays) === 1) streak++;
+    else break;
+  }
+  return streak;
+}
+
 router.post(
   "/student/register",
   studentRegisterLimit,
@@ -410,12 +435,18 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
       return;
     }
     student = await ensureAutomaticCourseAssignments(student);
+    // ── Single-device enforcement: invalidate all previous sessions ──
     const token = randomBytes(32).toString("base64url");
     const tokenHash = createHash("sha256").update(token).digest("hex");
     const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
-    await db
-      .insert(studentSessionsTable)
-      .values({ studentId: student.id, tokenHash, expiresAt });
+    await db.transaction(async (tx) => {
+      await tx
+        .delete(studentSessionsTable)
+        .where(eq(studentSessionsTable.studentId, student.id));
+      await tx
+        .insert(studentSessionsTable)
+        .values({ studentId: student.id, tokenHash, expiresAt });
+    });
     res.cookie(STUDENT_COOKIE, token, {
       httpOnly: true,
       sameSite: "lax",
@@ -478,7 +509,8 @@ router.get("/student/me", async (req, res, next) => {
       return;
     }
     student = await ensureAutomaticCourseAssignments(student);
-    res.json({ student: publicStudent(student) });
+    const streak = await calculateStreak(student.id);
+    res.json({ student: publicStudent(student), streak });
   } catch (error) {
     next(error);
   }
@@ -778,6 +810,47 @@ router.delete("/admin/students/:id", requireAdmin, async (req, res, next) => {
       .returning();
     if (!student) res.status(404).json({ error: "Student not found" });
     else res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/admin/students/:id/whatsapp-message", requireAdmin, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    const type = String(req.query.type ?? "");
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: "Invalid student ID" });
+      return;
+    }
+    if (!["welcome", "new-content", "reminder"].includes(type)) {
+      res.status(400).json({ error: "type must be one of: welcome, new-content, reminder" });
+      return;
+    }
+    const [student] = await db
+      .select()
+      .from(studentsTable)
+      .where(eq(studentsTable.id, id))
+      .limit(1);
+    if (!student) {
+      res.status(404).json({ error: "Student not found" });
+      return;
+    }
+    const name = student.name;
+    const accessCode = student.accessCode ?? "";
+    let message: string;
+    if (type === "welcome") {
+      message = `أهلاً ${name}، حسابك اتفعل على منصة د. محمود المهدي. كود الدخول الخاص بيك: ${accessCode}. ادخل من هنا: https://drelmahdy.com/platform`;
+    } else if (type === "new-content") {
+      message = `أهلاً ${name}، محتوى جديد متاح ليك على المنصة. ادخل دلوقتي وشوف الجديد: https://drelmahdy.com/platform`;
+    } else {
+      message = `أهلاً ${name}، فاكرينك! كمّل دروسك على المنصة وماتوقفش: https://drelmahdy.com/platform`;
+    }
+    // Normalise Egyptian phone: strip leading 0, prepend country code 20
+    const rawPhone = student.phone.replace(/^\+/, "");
+    const normalisedPhone = rawPhone.startsWith("0") ? `2${rawPhone}` : rawPhone.startsWith("20") ? rawPhone : `20${rawPhone}`;
+    const whatsappUrl = `https://wa.me/${normalisedPhone}?text=${encodeURIComponent(message)}`;
+    res.json({ whatsappUrl, message });
   } catch (error) {
     next(error);
   }
@@ -1393,6 +1466,101 @@ router.get("/admin/learning/analytics", requireAdmin, async (_req, res, next) =>
   }
 });
 
+router.get("/admin/learning/analytics/export", requireAdmin, async (_req, res, next) => {
+  try {
+    const [students, progressRows, attempts, videos] = await Promise.all([
+      db.select().from(studentsTable).orderBy(desc(studentsTable.createdAt)),
+      db.select().from(videoProgressTable),
+      db.select().from(quizAttemptsTable),
+      db.select().from(videosTable),
+    ]);
+    const now = Date.now();
+    const activeCutoff = now - 14 * 24 * 60 * 60 * 1000;
+    const studentRows = students.map((student) => {
+      const ownProgress = progressRows.filter((row) => row.studentId === student.id);
+      const ownAttempts = attempts.filter((row) => row.studentId === student.id);
+      const eligibleVideos = videos.filter((video) =>
+        video.isPublished &&
+        canStudentAccessContent(student, video.category, video.stage, video.stages, video.courseId) &&
+        canStudentAccessLearningMode(student, video.learningMode),
+      );
+      const activityTimes = [
+        ...ownProgress.map((row) => row.updatedAt.getTime()),
+        ...ownAttempts.map((row) => row.createdAt.getTime()),
+      ];
+      const lastActivityMs = activityTimes.length ? Math.max(...activityTimes) : 0;
+      return {
+        name: student.name,
+        phone: student.phone,
+        status: student.status,
+        learningMode: student.learningMode,
+        assignedLessons: eligibleVideos.length,
+        completedLessons: ownProgress.filter((row) => row.completed).length,
+        averageProgress: ownProgress.length
+          ? Math.round(ownProgress.reduce((sum, row) => sum + row.progress, 0) / ownProgress.length)
+          : 0,
+        quizAttempts: ownAttempts.length,
+        averageQuizScore: ownAttempts.length
+          ? Math.round(ownAttempts.reduce((sum, row) => sum + row.score, 0) / ownAttempts.length)
+          : 0,
+        lastActivity: lastActivityMs ? new Date(lastActivityMs).toISOString() : "",
+        isActive: lastActivityMs >= activeCutoff,
+      };
+    });
+
+    const headers = [
+      "اسم الطالب",
+      "رقم الهاتف",
+      "الحالة",
+      "نظام الدراسة",
+      "الدروس المتاحة",
+      "الدروس المكتملة",
+      "متوسط التقدم",
+      "محاولات الاختبارات",
+      "متوسط درجات الاختبارات",
+      "آخر نشاط",
+    ];
+
+    const escapeCell = (value: string | number | boolean) => {
+      const str = String(value);
+      if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+        return '"' + str.replace(/"/g, '""') + '"';
+      }
+      return str;
+    };
+
+    const csvRows = [
+      headers.map(escapeCell).join(","),
+      ...studentRows.map((row) =>
+        [
+          row.name,
+          row.phone,
+          row.status,
+          row.learningMode ?? "",
+          row.assignedLessons,
+          row.completedLessons,
+          row.averageProgress,
+          row.quizAttempts,
+          row.averageQuizScore,
+          row.lastActivity,
+        ]
+          .map(escapeCell)
+          .join(","),
+      ),
+    ];
+
+    // UTF-8 BOM for Arabic Excel compatibility
+    const bom = "﻿";
+    const csvContent = bom + csvRows.join("\r\n");
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", 'attachment; filename="students-analytics.csv"');
+    res.send(csvContent);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.post("/admin/learning/quizzes/import", requireAdmin, (req, res, next) => {
   quizImportUpload(req, res, async (uploadError) => {
     if (uploadError) {
@@ -1725,5 +1893,127 @@ router.get(
     }
   },
 );
+
+// ── Student Notes CRUD ──
+
+router.get("/learning/notes/:videoId", requireStudent, async (req, res, next) => {
+  try {
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    const videoId = Number(req.params.videoId);
+    if (!Number.isInteger(videoId) || videoId <= 0) {
+      res.status(400).json({ error: "معرف الفيديو غير صالح" });
+      return;
+    }
+    const notes = await db
+      .select()
+      .from(studentNotesTable)
+      .where(
+        and(
+          eq(studentNotesTable.studentId, student.id),
+          eq(studentNotesTable.videoId, videoId),
+        ),
+      )
+      .orderBy(desc(studentNotesTable.createdAt));
+    res.json(notes);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/learning/notes/:videoId", requireStudent, async (req, res, next) => {
+  try {
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    const videoId = Number(req.params.videoId);
+    const content = String(req.body.content ?? "").trim();
+    const timestampSeconds = req.body.timestampSeconds != null
+      ? Math.max(0, Math.round(Number(req.body.timestampSeconds)))
+      : null;
+    if (!Number.isInteger(videoId) || videoId <= 0) {
+      res.status(400).json({ error: "معرف الفيديو غير صالح" });
+      return;
+    }
+    if (!content || content.length > 2000) {
+      res.status(400).json({ error: "الملاحظة مطلوبة (2000 حرف كحد أقصى)" });
+      return;
+    }
+    const existing = await db
+      .select({ id: studentNotesTable.id })
+      .from(studentNotesTable)
+      .where(
+        and(
+          eq(studentNotesTable.studentId, student.id),
+          eq(studentNotesTable.videoId, videoId),
+        ),
+      );
+    if (existing.length >= 20) {
+      res.status(409).json({ error: "وصلت للحد الأقصى (20 ملاحظة لكل درس)" });
+      return;
+    }
+    const [note] = await db
+      .insert(studentNotesTable)
+      .values({
+        studentId: student.id,
+        videoId,
+        content,
+        timestampSeconds: Number.isFinite(timestampSeconds) ? timestampSeconds : null,
+      })
+      .returning();
+    res.status(201).json(note);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.patch("/learning/notes/:id", requireStudent, async (req, res, next) => {
+  try {
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    const noteId = Number(req.params.id);
+    const content = String(req.body.content ?? "").trim();
+    if (!content || content.length > 2000) {
+      res.status(400).json({ error: "الملاحظة مطلوبة (2000 حرف كحد أقصى)" });
+      return;
+    }
+    const [note] = await db
+      .update(studentNotesTable)
+      .set({ content, updatedAt: new Date() })
+      .where(
+        and(
+          eq(studentNotesTable.id, noteId),
+          eq(studentNotesTable.studentId, student.id),
+        ),
+      )
+      .returning();
+    if (!note) {
+      res.status(404).json({ error: "الملاحظة غير موجودة" });
+      return;
+    }
+    res.json(note);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete("/learning/notes/:id", requireStudent, async (req, res, next) => {
+  try {
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    const noteId = Number(req.params.id);
+    const [note] = await db
+      .delete(studentNotesTable)
+      .where(
+        and(
+          eq(studentNotesTable.id, noteId),
+          eq(studentNotesTable.studentId, student.id),
+        ),
+      )
+      .returning();
+    if (!note) {
+      res.status(404).json({ error: "الملاحظة غير موجودة" });
+      return;
+    }
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;

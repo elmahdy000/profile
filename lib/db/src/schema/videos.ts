@@ -25,6 +25,7 @@ export const videosTable = pgTable("videos", {
   level: text("level"),                        // e.g. "مبتدئ" / "متوسط" / "متقدم"
   pdfFileId: integer("pdf_file_id").references(() => learningFilesTable.id, { onDelete: "set null" }),
   quizId: integer("quiz_id").references(() => quizzesTable.id, { onDelete: "set null" }),
+  maxViews: integer("max_views"),               // null = unlimited, e.g. 3 = student can open 3 times
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

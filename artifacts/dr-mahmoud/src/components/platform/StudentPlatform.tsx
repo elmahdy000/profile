@@ -26,6 +26,8 @@ import {
   Trash2,
   Eye,
   EyeOff,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VideoLessonsSection } from "@/components/YoutubeSection";
@@ -1232,6 +1234,58 @@ function DashboardPanel({
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => <StatisticCard key={stat.label} {...stat} />)}
       </div>
+      {(() => {
+        const categoryMap = new Map<string, { total: number; progressSum: number; completed: number }>();
+        for (const video of videos) {
+          const cat = video.category || "عام";
+          const row = progressByVideo.get(video.id);
+          const pct = row?.progress ?? 0;
+          const existing = categoryMap.get(cat) ?? { total: 0, progressSum: 0, completed: 0 };
+          categoryMap.set(cat, {
+            total: existing.total + 1,
+            progressSum: existing.progressSum + pct,
+            completed: existing.completed + (pct >= 90 ? 1 : 0),
+          });
+        }
+        const categories = Array.from(categoryMap.entries());
+        if (categories.length < 2) return null;
+        return (
+          <section aria-label="تقدمك في الكورسات">
+            <h2 className="mb-3 text-[15px] font-extrabold text-foreground">تقدمك في الكورسات</h2>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {categories.map(([cat, data]) => {
+                const avg = Math.round(data.progressSum / data.total);
+                const isComplete = data.completed === data.total && data.total > 0;
+                return (
+                  <div
+                    key={cat}
+                    className={`rounded-2xl border p-4 text-right shadow-sm ${isComplete ? "border-emerald-300 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-950/30" : "border-border bg-card"}`}
+                  >
+                    <div className="mb-2.5 flex items-center justify-between gap-2">
+                      <p className="truncate text-[13px] font-bold text-foreground">{cat}</p>
+                      {isComplete && (
+                        <span className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400">
+                          <Trophy className="h-3 w-3" /> مكتمل
+                        </span>
+                      )}
+                    </div>
+                    <div className="h-[6px] overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary transition-all duration-500"
+                        style={{ width: `${avg}%` }}
+                      />
+                    </div>
+                    <div className="mt-2 flex items-center justify-between text-[11px] font-medium text-muted-foreground">
+                      <span>{avg}%</span>
+                      <span>{data.completed}/{data.total} دروس</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })()}
       <div className="grid gap-5 xl:grid-cols-[1.5fr_.7fr]">
         <article className="overflow-hidden rounded-2xl border border-border bg-card shadow-md">
           <div className="grid md:grid-cols-[.9fr_1.1fr]">
@@ -1427,6 +1481,13 @@ export function StudentPlatform() {
   const [dataLoading, setDataLoading] = useState(false);
   const [dataError, setDataError] = useState("");
   const latestNotificationIdRef = useRef(0);
+
+  // Restore saved theme on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("dr_mahmoud_theme");
+    if (saved === "dark") document.documentElement.classList.add("dark");
+    else if (saved === "light") document.documentElement.classList.remove("dark");
+  }, []);
 
   // Quiz active states
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
@@ -1665,6 +1726,19 @@ export function StudentPlatform() {
             ))}
           </nav>
           <div className="mt-auto space-y-2 px-4 pb-5">
+            <button
+              type="button"
+              onClick={() => {
+                const isDark = document.documentElement.classList.toggle("dark");
+                localStorage.setItem("dr_mahmoud_theme", isDark ? "dark" : "light");
+              }}
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-border text-[13px] font-bold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <Moon className="h-4 w-4 hidden dark:inline" />
+              <Sun className="h-4 w-4 dark:hidden" />
+              <span className="dark:hidden">الوضع الليلي</span>
+              <span className="hidden dark:inline">الوضع النهاري</span>
+            </button>
             <a
               href="https://wa.me/201044348610"
               className="flex h-10 items-center justify-center rounded-xl border border-border text-[13px] font-bold text-primary transition-colors hover:bg-primary/10 hover:border-primary/20"
@@ -1673,7 +1747,7 @@ export function StudentPlatform() {
             </a>
             <button
               onClick={logout}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-xl text-[13px] font-bold text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-600"
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-xl text-[13px] font-bold text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30"
             >
               <LogOut className="h-4 w-4" /> تسجيل الخروج
             </button>

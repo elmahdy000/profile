@@ -6,11 +6,12 @@ import {
   studentNotificationsTable,
   studentsTable,
   videoFileAttachmentsTable,
+  videoProgressTable,
   videosTable,
 } from "@workspace/db";
 import { CreateVideoBody, UpdateVideoBody } from "@workspace/api-zod";
 import { requireAdmin, isAdminRequest } from "../middleware/auth";
-import { eq, asc, inArray } from "drizzle-orm";
+import { eq, asc, and, inArray } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
 import { createHmac, timingSafeEqual } from "crypto";
@@ -220,7 +221,17 @@ router.get("/videos", async (req, res, next) => {
       .map((k) => k.trim())
       .filter(Boolean);
 
-    // 4. Return masked videos to the student
+    // 4. Load student view counts for view-limit display
+    const studentProgress = await db
+      .select({
+        videoId: videoProgressTable.videoId,
+        viewCount: videoProgressTable.viewCount,
+      })
+      .from(videoProgressTable)
+      .where(eq(videoProgressTable.studentId, approvedStudent.id));
+    const viewCountMap = new Map(studentProgress.map((r) => [r.videoId, r.viewCount]));
+
+    // 5. Return masked videos to the student
     const studentVideos = allowedVideos.map((v) => {
       const isFirstVideo = firstVideoIds.has(v.id);
       const isUnlocked =
@@ -268,6 +279,8 @@ router.get("/videos", async (req, res, next) => {
         ),
         thumbnailUrl: v.thumbnailUrl,
         quizId: v.quizId,
+        maxViews: v.maxViews,
+        viewCount: viewCountMap.get(v.id) ?? 0,
         createdAt: v.createdAt,
       };
     });
@@ -635,6 +648,54 @@ router.get("/videos/:id/stream", async (req, res, next) => {
     if (!isUnlocked && !isAdmin && !hasValidToken) {
       res.status(403).json({ error: "This content is protected and locked." });
       return;
+    }
+
+    // ── Video view-count enforcement ──
+    // Only count a "view" on the initial request (no Range header or Range starting at 0)
+    // to avoid incrementing on every seek/chunk request.
+    if (approvedStudent && video.maxViews && video.maxViews > 0) {
+      const [progressRow] = await db
+        .select()
+        .from(videoProgressTable)
+        .where(
+          and(
+            eq(videoProgressTable.studentId, approvedStudent.id),
+            eq(videoProgressTable.videoId, video.id),
+          ),
+        )
+        .limit(1);
+      const currentViews = progressRow?.viewCount ?? 0;
+
+      if (currentViews >= video.maxViews) {
+        res.status(403).json({
+          error: "استنفدت عدد المشاهدات المتاحة لهذا الفيديو",
+          code: "VIEW_LIMIT_REACHED",
+          viewCount: currentViews,
+          maxViews: video.maxViews,
+        });
+        return;
+      }
+
+      // Increment view count only on first byte request (new play session)
+      const range = req.headers.range;
+      const isNewPlaySession = !range || range.startsWith("bytes=0-");
+      if (isNewPlaySession) {
+        await db
+          .insert(videoProgressTable)
+          .values({
+            studentId: approvedStudent.id,
+            videoId: video.id,
+            viewCount: 1,
+            updatedAt: new Date(),
+          })
+          .onConflictDoUpdate({
+            target: [videoProgressTable.studentId, videoProgressTable.videoId],
+            set: {
+              viewCount: (progressRow?.viewCount ?? 0) + 1,
+              updatedAt: new Date(),
+            },
+          });
+      }
     }
 
     const filename = path.basename(video.youtubeUrl.replace("/uploads/", ""));
