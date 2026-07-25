@@ -1022,9 +1022,9 @@ export function ExamWizard({
                   type="button"
                   variant="outline"
                   onClick={() => setCurrentStep((s) => (s - 1) as any)}
-                  className="font-bold text-xs"
+                  className="font-bold text-xs gap-1.5"
                 >
-                  <ChevronRight className="h-4 w-4" /> السابق
+                  <ChevronRight className="h-4 w-4 rtl:rotate-0 ltr:rotate-180" /> السابق
                 </Button>
               )}
             </div>
@@ -1042,9 +1042,9 @@ export function ExamWizard({
                 <Button
                   type="button"
                   onClick={() => setCurrentStep((s) => (s + 1) as any)}
-                  className="font-bold text-xs px-6"
+                  className="font-bold text-xs px-6 gap-1.5"
                 >
-                  التالي <ChevronLeft className="h-4 w-4" />
+                  التالي <ChevronLeft className="h-4 w-4 rtl:rotate-0 ltr:rotate-180" />
                 </Button>
               ) : (
                 <Button
