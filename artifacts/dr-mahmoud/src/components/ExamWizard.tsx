@@ -223,13 +223,15 @@ export function ExamWizard({
         "/api/admin/learning/quizzes/import",
         { method: "POST", body: formData }
       );
-      const hasManualQuestion = quizForm.questions.some(
-        (q) => q.prompt.trim() || q.options.some((o) => o.trim())
-      );
-      setQuizForm((current: QuizFormState) => ({
-        ...current,
-        questions: hasManualQuestion ? [...current.questions, ...result.questions] : result.questions,
-      }));
+      setQuizForm((prev: QuizFormState) => {
+        const hasManualQuestion = prev.questions.some(
+          (q) => q.prompt.trim() || q.options.some((o) => o.trim())
+        );
+        return {
+          ...prev,
+          questions: hasManualQuestion ? [...prev.questions, ...result.questions] : result.questions,
+        };
+      });
       setImportWarnings(result.warnings || []);
       toast({ title: `تم استيراد ${result.questions.length} سؤال بنجاح 🎉` });
       setQuestionSource("manual");
