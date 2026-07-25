@@ -134,30 +134,28 @@ export function ExamWizard({
     ? getStagesForTrack(selectedQuizCourse.category)
     : ACADEMIC_TRACKS.flatMap((track) => track.stages);
 
-  const quizStageGroups =
-    selectedQuizTrack?.id === "baccalaureate" ||
-    (!selectedQuizCourse && ACADEMIC_TRACKS.some((t) => t.id === "baccalaureate"))
-      ? [
+  // Group stages logically by Track
+  const quizStageGroups = useMemo(() => {
+    if (selectedQuizTrack) {
+      if (selectedQuizTrack.id === "baccalaureate") {
+        return [
           {
-            title: "البكالوريا",
-            stages: availableQuizStages.filter((stage) => stage.startsWith("البكالوريا")),
-          },
-          {
-            title: "الثانوية العامة",
-            stages: availableQuizStages.filter((stage) => stage.startsWith("الثانوية العامة")),
-          },
-          {
-            title: "الكليات والجامعات",
-            stages: availableQuizStages.filter((stage) =>
-              stage.includes("كلية") || stage.includes("جامعة") || stage.includes("الفرقة")
+            title: "البكالوريا والثانوية العامة",
+            stages: availableQuizStages.filter(
+              (s) => s.startsWith("البكالوريا") || s.startsWith("الثانوية العامة")
             ),
           },
-        ]
-      : selectedQuizTrack
-      ? [{ title: selectedQuizTrack.shortTitle, stages: availableQuizStages }]
-      : availableQuizStages.length
-      ? [{ title: selectedQuizCourse?.title || "المراحل المتاحة", stages: availableQuizStages }]
-      : [];
+        ];
+      }
+      return [{ title: selectedQuizTrack.title, stages: availableQuizStages }];
+    }
+
+    // Default when no course is chosen: Show all track groups
+    return ACADEMIC_TRACKS.map((track) => ({
+      title: track.title,
+      stages: track.stages,
+    }));
+  }, [selectedQuizTrack, availableQuizStages]);
 
   const visibleQuizStageGroups = quizStageGroups
     .map((group) => ({
