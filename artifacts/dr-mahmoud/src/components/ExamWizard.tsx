@@ -680,7 +680,7 @@ export function ExamWizard({
                         <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary text-xs font-black text-white">
                           {qi + 1}
                         </span>
-                        <strong className="truncate text-sm font-bold text-slate-800">
+                        <strong className="truncate text-sm font-bold text-slate-800" dir="auto">
                           {q.prompt || `السؤال ${qi + 1}`}
                         </strong>
                       </div>
@@ -756,6 +756,7 @@ export function ExamWizard({
                         <label className="text-xs font-extrabold text-slate-700">نص السؤال <span className="text-red-500">*</span></label>
                         <input
                           required
+                          dir="auto"
                           placeholder="اكتب نص السؤال هنا..."
                           value={q.prompt}
                           onChange={(e) => setQuestion(qi, { prompt: e.target.value })}
@@ -767,15 +768,17 @@ export function ExamWizard({
                         <div className="space-y-1">
                           <label className="text-[11px] font-bold text-slate-600">رابط صورة السؤال (اختياري)</label>
                           <input
+                            dir="ltr"
                             placeholder="https://..."
                             value={q.imageUrl || ""}
                             onChange={(e) => setQuestion(qi, { imageUrl: e.target.value })}
-                            className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-xs font-medium focus:outline-none"
+                            className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-xs font-medium focus:outline-none text-left"
                           />
                         </div>
                         <div className="space-y-1">
                           <label className="text-[11px] font-bold text-slate-600">الشرح والتفسير (اختياري)</label>
                           <input
+                            dir="auto"
                             placeholder="توضيح الإجابة النموذجية..."
                             value={q.explanation || ""}
                             onChange={(e) => setQuestion(qi, { explanation: e.target.value })}
@@ -810,6 +813,7 @@ export function ExamWizard({
                                 </div>
                                 <input
                                   required
+                                  dir="auto"
                                   placeholder={`الاختيار ${String.fromCharCode(65 + oi)}`}
                                   value={option}
                                   onClick={(e) => e.stopPropagation()}
