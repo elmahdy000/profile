@@ -95,6 +95,23 @@ export const quizzesTable = pgTable("quizzes", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const questionBankTable = pgTable("question_bank", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").references(() => coursesTable.id, { onDelete: "cascade" }),
+  subject: text("subject"),
+  stage: text("stage"),
+  stages: jsonb("stages").$type<string[]>().notNull().default([]),
+  category: text("category").notNull().default("عام"),
+  difficulty: text("difficulty").notNull().default("medium"), // easy, medium, hard
+  tags: jsonb("tags").$type<string[]>().notNull().default([]),
+  question: jsonb("question").$type<QuizQuestion>().notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  courseIdx: index("question_bank_course_idx").on(table.courseId),
+  categoryIdx: index("question_bank_category_idx").on(table.category),
+}));
+
 export const quizAttemptsTable = pgTable("quiz_attempts", {
   id: serial("id").primaryKey(),
   quizId: integer("quiz_id").notNull().references(() => quizzesTable.id, { onDelete: "cascade" }),

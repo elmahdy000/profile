@@ -13,6 +13,7 @@ import {
   learningFilesTable,
   quizAttemptsTable,
   quizzesTable,
+  questionBankTable,
   studentSessionsTable,
   studentNotificationsTable,
   studentsTable,
@@ -1796,6 +1797,100 @@ router.delete(
     }
   },
 );
+
+// ── Question Bank CRUD Endpoints ──
+
+router.get("/admin/learning/question-bank", requireAdmin, async (_req, res, next) => {
+  try {
+    const questions = await db
+      .select()
+      .from(questionBankTable)
+      .orderBy(desc(questionBankTable.createdAt));
+    res.json(questions);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/admin/learning/question-bank", requireAdmin, async (req, res, next) => {
+  try {
+    const { prompt, options, correctIndex, explanation, imageUrl, courseId, category, stage, stages, difficulty, subject, tags } = req.body;
+    if (!prompt || !Array.isArray(options) || options.length < 2 || typeof correctIndex !== "number") {
+      res.status(400).json({ error: "بيانات السؤال غير كاملة" });
+      return;
+    }
+    const [entry] = await db
+      .insert(questionBankTable)
+      .values({
+        courseId: Number(courseId) || null,
+        category: String(category || "عام"),
+        stage: String(stage || ""),
+        stages: Array.isArray(stages) ? stages : [],
+        difficulty: String(difficulty || "medium"),
+        subject: String(subject || ""),
+        tags: Array.isArray(tags) ? tags : [],
+        question: {
+          prompt: String(prompt).trim(),
+          options: options.map((o: unknown) => String(o).trim()),
+          correctIndex: Math.max(0, Math.min(options.length - 1, correctIndex)),
+          explanation: String(explanation || "").trim() || undefined,
+          imageUrl: String(imageUrl || "").trim() || undefined,
+        },
+      })
+      .returning();
+    res.status(201).json(entry);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete("/admin/learning/question-bank/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const [deleted] = await db
+      .delete(questionBankTable)
+      .where(eq(questionBankTable.id, Number(req.params.id)))
+      .returning();
+    if (!deleted) {
+      res.status(404).json({ error: "السؤال غير موجود في البنك" });
+      return;
+    }
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Generate Quiz from Question Bank automatically
+router.post("/admin/learning/question-bank/generate-quiz", requireAdmin, async (req, res, next) => {
+  try {
+    const { title, courseId, count, category, difficulty, passingScore, durationMinutes } = req.body;
+    const qCount = Math.max(1, Math.min(50, Number(count || 10)));
+    const allBankQuestions = await db.select().from(questionBankTable);
+    
+    let filtered = allBankQuestions;
+    if (courseId) filtered = filtered.filter((q) => q.courseId === Number(courseId));
+    if (category && category !== "all") filtered = filtered.filter((q) => q.category === category);
+    if (difficulty && difficulty !== "all") filtered = filtered.filter((q) => q.difficulty === difficulty);
+
+    if (filtered.length === 0) {
+      res.status(404).json({ error: "لا توجد أسئلة كافية في البنك تطابق هذا البحث" });
+      return;
+    }
+
+    // Pick random questions
+    const shuffled = [...filtered].sort(() => Math.random() - 0.5);
+    const selectedQuestions = shuffled.slice(0, qCount).map((item) => item.question);
+
+    res.json({
+      title: title || `اختبار عشوائي من بنك الأسئلة (${selectedQuestions.length} سؤال)`,
+      questions: selectedQuestions,
+      passingScore: Number(passingScore) || 60,
+      durationMinutes: durationMinutes ? Number(durationMinutes) : null,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.post(
   "/learning/quizzes/:id/submit",

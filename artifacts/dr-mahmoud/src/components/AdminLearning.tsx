@@ -25,6 +25,7 @@ import {
   Edit2,
   ChevronDown,
   ChevronUp,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -93,9 +94,19 @@ interface Quiz {
   showExplanations?: boolean;
   questions: Question[];
   isPublished: boolean;
-  attemptsUsed?: number;
-  locked?: boolean;
   lockedReason?: string | null;
+  createdAt?: string;
+}
+interface BankQuestion {
+  id: number;
+  courseId?: number | null;
+  category: string;
+  stage?: string | null;
+  stages?: string[];
+  subject?: string | null;
+  difficulty: "easy" | "medium" | "hard";
+  tags?: string[];
+  question: Question;
   createdAt?: string;
 }
 type Attempt = {
@@ -1931,6 +1942,46 @@ export function AdminLearning() {
                   )}
                 </section>
 
+                <section className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h4 className="font-extrabold text-sm text-emerald-900 flex items-center gap-1.5">
+                        <BookOpen className="h-4 w-4 text-emerald-600" /> توليد اختبار تلقائي من بنك الأسئلة (Question Bank)
+                      </h4>
+                      <p className="text-xs text-emerald-700 mt-0.5">اختر عينات من الأسئلة المحفوظة سلفاً بضغطة زر.</p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-emerald-300 text-emerald-800 hover:bg-emerald-100 font-bold text-xs"
+                      onClick={async () => {
+                        try {
+                          const res = await adminApi<{
+                            title: string;
+                            questions: Question[];
+                          }>("/api/admin/learning/question-bank/generate-quiz", {
+                            method: "POST",
+                            body: JSON.stringify({
+                              courseId: quizForm.courseId,
+                              category: quizForm.category,
+                              count: 10,
+                            }),
+                          });
+                          setQuizForm({
+                            ...quizForm,
+                            questions: res.questions,
+                          });
+                          toast({ title: `تم جلب ${res.questions.length} سؤال من بنك الأسئلة بنجاح 🎉` });
+                        } catch (e) {
+                          toast({ variant: "destructive", description: (e as Error).message });
+                        }
+                      }}
+                    >
+                      سحب 10 أسئلة عشوائية من البنك
+                    </Button>
+                  </div>
+                </section>
+
                 <div className="flex items-center justify-between">
                   <div><h4 className="font-black text-lg">أسئلة الاختبار</h4><p className="text-xs text-muted-foreground">حدد الدائرة بجوار الإجابة الصحيحة.</p></div>
                   <span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-black text-primary">{quizForm.questions.length} سؤال</span>
@@ -1943,6 +1994,38 @@ export function AdminLearning() {
                     <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-4 py-3">
                       <div className="flex min-w-0 items-center gap-3"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary text-xs font-black text-white">{qi + 1}</span><strong className="truncate">{q.prompt || `السؤال ${qi + 1}`}</strong></div>
                       <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!q.prompt || !q.options.filter(Boolean).length) {
+                              toast({ variant: "destructive", description: "اكتب نص السؤال والاختيارات أولاً" });
+                              return;
+                            }
+                            try {
+                              await adminApi("/api/admin/learning/question-bank", {
+                                method: "POST",
+                                body: JSON.stringify({
+                                  prompt: q.prompt,
+                                  options: q.options,
+                                  correctIndex: q.correctIndex,
+                                  explanation: q.explanation,
+                                  imageUrl: q.imageUrl,
+                                  courseId: quizForm.courseId,
+                                  category: quizForm.category || "عام",
+                                  stage: quizForm.stage,
+                                  stages: quizForm.stages,
+                                }),
+                              });
+                              toast({ title: "تم حفظ السؤال في بنك الأسئلة 📚" });
+                            } catch (e) {
+                              toast({ variant: "destructive", description: (e as Error).message });
+                            }
+                          }}
+                          title="حفظ السؤال في بنك الأسئلة"
+                          className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg text-emerald-700 bg-emerald-50 hover:bg-emerald-100 font-bold"
+                        >
+                          <BookOpen className="h-3.5 w-3.5" /> حفظ بالبنك
+                        </button>
                         <button type="button" onClick={() => duplicateQuestion(qi)} title="تكرار السؤال" className="grid h-9 w-9 place-items-center rounded-lg text-slate-500 hover:bg-blue-50 hover:text-primary"><Copy className="h-4 w-4" /></button>
                         <button type="button" onClick={() => toggleQuestion(qi)} title={collapsedQuestions.has(qi) ? "فتح السؤال" : "طي السؤال"} className="grid h-9 w-9 place-items-center rounded-lg text-slate-500 hover:bg-slate-100">
                           {collapsedQuestions.has(qi) ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
