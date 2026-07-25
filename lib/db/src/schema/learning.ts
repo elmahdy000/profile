@@ -21,6 +21,8 @@ export const studentsTable = pgTable("students", {
   learningMode: text("learning_mode").notNull().default("online"),
   enrolledCourseIds: jsonb("enrolled_course_ids").$type<number[]>().notNull().default([]),
   enrolledCategories: jsonb("enrolled_categories").$type<string[]>().notNull().default([]),
+  subscriptionEndDate: timestamp("subscription_end_date"),  // null = no expiry set
+  subscriptionNotifiedAt: timestamp("subscription_notified_at"),  // last time we notified about expiry
   approvedAt: timestamp("approved_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
