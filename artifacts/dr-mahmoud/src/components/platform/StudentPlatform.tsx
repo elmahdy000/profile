@@ -1970,10 +1970,10 @@ export function StudentPlatform() {
                           : "border-border"
                         : "border-border bg-card/50"
                     }`}>
-                      <legend className="font-extrabold text-base mb-2 text-foreground flex items-center justify-between w-full">
-                        <span>{qi + 1}. {q.prompt}</span>
+                      <legend className="font-extrabold text-base mb-2 text-foreground flex items-center justify-between w-full gap-3">
+                        <span dir="auto" className="flex-1 text-right">{qi + 1}. {q.prompt}</span>
                         {quizResult && (
-                          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                          <span className={`text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${
                             isCorrect ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-red-500/10 text-red-600 dark:text-red-400"
                           }`}>
                             {isCorrect ? "إجابة صحيحة ✓" : "إجابة خاطئة ✗"}
@@ -1987,7 +1987,7 @@ export function StudentPlatform() {
                         </div>
                       )}
 
-                      <div className="space-y-2">
+                      <div className="space-y-2.5">
                         {q.options.map((option, oi) => {
                           const optionSelected = quizAnswers[qi] === oi;
                           const optionIsCorrect = q.correctIndex === oi;
@@ -2008,7 +2008,7 @@ export function StudentPlatform() {
                           return (
                             <label
                               key={oi}
-                              className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border p-3.5 transition-all ${optionStyle}`}
+                              className={`flex min-h-12 cursor-pointer items-center justify-between gap-3 rounded-xl border p-3.5 transition-all ${optionStyle}`}
                             >
                               <input
                                 type="radio"
@@ -2020,16 +2020,18 @@ export function StudentPlatform() {
                                     quizAnswers.map((a, i) => (i === qi ? oi : a)),
                                   )
                                 }
-                                className="text-primary focus:ring-primary h-4 w-4"
+                                className="text-primary focus:ring-primary h-4 w-4 shrink-0"
                               />
-                              <span className="text-sm font-medium">{option}</span>
+                              <span dir="auto" className="text-sm font-semibold flex-1 text-right leading-relaxed">
+                                {option}
+                              </span>
                             </label>
                           );
                         })}
                       </div>
 
                       {quizResult && activeQuiz.showExplanations !== false && q.explanation && (
-                        <div className="mt-3 rounded-xl border border-blue-500/20 bg-blue-500/10 p-3.5 text-xs text-blue-800 dark:text-blue-200">
+                        <div className="mt-3 rounded-xl border border-blue-500/20 bg-blue-500/10 p-3.5 text-xs text-blue-800 dark:text-blue-200" dir="auto">
                           <strong className="block font-bold mb-1">💡 التفسير والشرح:</strong>
                           <span>{q.explanation}</span>
                         </div>
