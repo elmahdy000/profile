@@ -196,7 +196,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
     .filter(Boolean);
   const questions: QuizQuestion[] = [];
   const warnings: string[] = [];
-  let current: { prompt: string; options: string[]; correctIndex: number | null } | null = null;
+  let current: { prompt: string; options: string[]; correctIndex: number | null; explanation?: string } | null = null;
 
   const finish = () => {
     if (!current) return;
@@ -205,6 +205,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
         prompt: current.prompt,
         options: current.options,
         correctIndex: current.correctIndex ?? 0,
+        explanation: current.explanation,
       });
       if (current.correctIndex === null) warnings.push(`لم يتم تحديد الإجابة الصحيحة للسؤال: ${current.prompt.slice(0, 70)}`);
     } else if (current.prompt) {
@@ -214,6 +215,12 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   };
 
   for (const line of lines) {
+    const explanationMatch = line.match(/^(?:explanation|note|التفسير|الشرح|ملاحظة)\s*[:：\-]?\s*(.+)$/i);
+    if (explanationMatch && current) {
+      current.explanation = explanationMatch[1].trim();
+      continue;
+    }
+
     const answer = line.match(/^(?:answer|correct\s*answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?)\s*[:：\-]?\s*(.+)$/i);
     if (answer && current) {
       const answerValue = answer[1].trim();
@@ -238,7 +245,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
 
     if (!current) current = { prompt: line, options: [], correctIndex: null };
     else if (current.options.length === 0) current.prompt += ` ${line}`;
-    else current.options[current.options.length - 1] += ` ${line}`;
+    else if (!current.explanation) current.options[current.options.length - 1] += ` ${line}`;
   }
   finish();
   return { questions, warnings };
