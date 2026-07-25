@@ -841,10 +841,19 @@ export function AdminLearning() {
   const selectedQuizCourse = learningCourses.find(
     (course) => String(course.id) === quizForm.courseId,
   );
+  const selectedQuizTrack = getTrack(selectedQuizCourse?.category);
   const availableQuizStages = selectedQuizCourse?.stages?.length ? selectedQuizCourse.stages : getStagesForTrack(selectedQuizCourse?.category);
-  const visibleQuizStages = availableQuizStages.filter((stage) =>
-    stage.toLocaleLowerCase("ar").includes(quizStageSearch.trim().toLocaleLowerCase("ar")),
-  );
+  const quizStageGroups = selectedQuizTrack?.id === "baccalaureate"
+    ? [
+        { title: "البكالوريا", stages: availableQuizStages.filter((stage) => stage.startsWith("البكالوريا")) },
+        { title: "الثانوية العامة", stages: availableQuizStages.filter((stage) => stage.startsWith("الثانوية العامة")) },
+      ]
+    : selectedQuizTrack
+      ? [{ title: selectedQuizTrack.shortTitle, stages: availableQuizStages }]
+      : availableQuizStages.length ? [{ title: selectedQuizCourse?.title || "المراحل المتاحة", stages: availableQuizStages }] : [];
+  const visibleQuizStageGroups = quizStageGroups
+    .map((group) => ({ ...group, stages: group.stages.filter((stage) => stage.toLocaleLowerCase("ar").includes(quizStageSearch.trim().toLocaleLowerCase("ar"))) }))
+    .filter((group) => group.stages.length > 0);
   const filteredFiles = useMemo(
     () =>
       files.filter((file) => {
@@ -1835,27 +1844,34 @@ export function AdminLearning() {
                           {quizForm.stages.map((stage) => <span key={stage} className="rounded-full bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-700">{stage}</span>)}
                         </div>
                       )}
-                      <div className="flex max-h-44 flex-wrap gap-2 overflow-y-auto">
-                      {visibleQuizStages.map((stage) => {
-                        const selected = quizForm.stages.includes(stage);
-                        return (
-                          <button
-                            key={stage}
-                            type="button"
-                            onClick={() => {
-                              const stages = selected
-                                ? quizForm.stages.filter((item) => item !== stage)
-                                : [...quizForm.stages, stage];
-                              setQuizForm({ ...quizForm, stages, stage: stages[0] || "", videoId: "" });
-                            }}
-                            className={`rounded-lg border px-3 py-2 text-xs font-bold ${selected ? "border-primary bg-primary text-white" : "border-slate-200 bg-slate-50 text-slate-600"}`}
-                          >
-                            {stage === "عام" ? "كل مراحل الكورس" : stage}
-                          </button>
-                        );
-                      })}
-                      {availableQuizStages.length === 0 && <span className="px-2 py-1 text-xs text-muted-foreground">اختر الكورس أولًا</span>}
-                      {availableQuizStages.length > 0 && visibleQuizStages.length === 0 && <span className="px-2 py-1 text-xs text-muted-foreground">لا توجد مرحلة مطابقة للبحث</span>}
+                      <div className="max-h-52 overflow-y-auto space-y-3">
+                      {visibleQuizStageGroups.map((group, gi) => (
+                        <div key={gi} className="space-y-1.5">
+                          <strong className="block text-[11px] font-black text-slate-500">{group.title}</strong>
+                          <div className="flex flex-wrap gap-2">
+                            {group.stages.map((stage) => {
+                              const selected = quizForm.stages.includes(stage);
+                              return (
+                                <button
+                                  key={stage}
+                                  type="button"
+                                  onClick={() => {
+                                    const stages = selected
+                                      ? quizForm.stages.filter((item) => item !== stage)
+                                      : [...quizForm.stages, stage];
+                                    setQuizForm({ ...quizForm, stages, stage: stages[0] || "", videoId: "" });
+                                  }}
+                                  className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${selected ? "border-primary bg-primary text-white" : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"}`}
+                                >
+                                  {stage === "عام" ? "كل مراحل الكورس" : stage}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                      {availableQuizStages.length === 0 && <span className="px-2 py-1 text-xs text-muted-foreground">اختر الكورس أولًا لرؤية المراحل</span>}
+                      {availableQuizStages.length > 0 && visibleQuizStageGroups.length === 0 && <span className="px-2 py-1 text-xs text-muted-foreground">لا توجد مرحلة مطابقة للبحث</span>}
                       </div>
                     </div>
                   </Field>
