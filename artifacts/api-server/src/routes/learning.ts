@@ -215,37 +215,53 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   };
 
   for (const line of lines) {
-    const explanationMatch = line.match(/^(?:explanation|note|التفسير|الشرح|ملاحظة)\s*[:：\-]?\s*(.+)$/i);
+    // 1. Check for explanation
+    const explanationMatch = line.match(/^(?:explanation|note|التفسير|الشرح|تفسير|ملاحظة)\s*[:：\-]?\s*(.+)$/i);
     if (explanationMatch && current) {
       current.explanation = explanationMatch[1].trim();
       continue;
     }
 
-    const answer = line.match(/^(?:answer|correct\s*answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?)\s*[:：\-]?\s*(.+)$/i);
+    // 2. Check for Answer line
+    const answer = line.match(/^(?:answer|correct\s*answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة)\s*[:：\-]?\s*(.+)$/i);
     if (answer && current) {
       const answerValue = answer[1].trim();
-      const byLabel = optionIndex(answerValue.split(/\s/)[0]);
+      const firstWord = answerValue.split(/\s+/)[0];
+      const byLabel = optionIndex(firstWord);
       const byText = current.options.findIndex((option) => option.toLowerCase() === answerValue.toLowerCase());
       current.correctIndex = byLabel !== null && byLabel < current.options.length ? byLabel : byText >= 0 ? byText : null;
       continue;
     }
 
-    const numberedQuestion = line.match(/^(?:(?:س(?:ؤال)?\s*)?\d+\s*[.):\-]|Q(?:uestion)?\s*\d+\s*[.):\-])\s*(.+)$/i);
-    if (numberedQuestion && (!current || current.options.length >= 2)) {
+    // 3. Check for Choice (e.g., "A)", "A.", "(A)", "أ)", "أ.", "1)", "1.")
+    const choice = line.match(/^(?:\(?([A-Fa-fأابجده]|هـ|[1-6])\)?[.):\-\s]\s*)(.+)$/);
+    if (choice && current && current.options.length < 8 && (current.options.length > 0 || !line.match(/^(?:س(?:ؤال)?\s*)?\d+\s*[.):\-]/i))) {
+      current.options.push(choice[2].trim());
+      continue;
+    }
+
+    // 4. Check for Numbered Question start (e.g., "1.", "Q1:", "س1-")
+    const numberedQuestion = line.match(/^(?:(?:س(?:ؤال)?\s*)?\d+\s*[.):\-]|Q(?:uestion)?\s*\d+\s*[.):\-]|#\d+)\s*(.+)$/i);
+    if (numberedQuestion) {
       finish();
       current = { prompt: numberedQuestion[1].trim(), options: [], correctIndex: null };
       continue;
     }
 
-    const choice = line.match(/^(?:\(?([A-Fa-fأابجده]|هـ|[1-6])\)?[.):\-]\s+)(.+)$/);
-    if (choice && current) {
-      current.options.push(choice[2].trim());
-      continue;
+    // Fallback: line attachment
+    if (!current) {
+      current = { prompt: line, options: [], correctIndex: null };
+    } else if (current.options.length === 0) {
+      current.prompt += ` ${line}`;
+    } else if (!current.explanation) {
+      // If we haven't seen an answer yet, try choice format again without trailing space requirement
+      const lenientChoice = line.match(/^(?:\(?([A-Fa-fأابجده]|هـ|[1-6])\)?[.):\-]?\s*)(.+)$/);
+      if (lenientChoice && current.options.length < 6) {
+        current.options.push(lenientChoice[2].trim());
+      } else {
+        current.options[current.options.length - 1] += ` ${line}`;
+      }
     }
-
-    if (!current) current = { prompt: line, options: [], correctIndex: null };
-    else if (current.options.length === 0) current.prompt += ` ${line}`;
-    else if (!current.explanation) current.options[current.options.length - 1] += ` ${line}`;
   }
   finish();
   return { questions, warnings };
