@@ -900,6 +900,11 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
           ["online", "offline"].includes(String(req.body.learningMode))
             ? String(req.body.learningMode)
             : current.learningMode,
+        paymentStatus:
+          req.body.paymentStatus !== undefined &&
+          ["paid", "pending_review", "unpaid"].includes(String(req.body.paymentStatus))
+            ? String(req.body.paymentStatus)
+            : current.paymentStatus,
         notes:
           req.body.notes !== undefined ? String(req.body.notes) : current.notes,
         updatedAt: new Date(),

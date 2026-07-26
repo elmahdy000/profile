@@ -695,8 +695,8 @@ export function VideoLessonsSection({
   const handlePlayClick = (item: VideoItem) => {
     if (item.paymentLocked) {
       toast({
-        title: "محتوى مدفوع",
-        description: "ادفع وارفع إيصال الدفع من الصفحة الرئيسية علشان تفتح باقي الفيديوهات.",
+        title: "🔒 محتوى خاص بالمشتركين المدفوعين",
+        description: "أول فيديوهين فقط مجانيين كمعاينة. لباقي دروس الكورس، يرجى سداد الاشتراك واختيار الإيصال من القائمة الرئيسية ليفعّله الأدمن فوريًا.",
       });
       return;
     }
@@ -1329,9 +1329,9 @@ export function VideoLessonsSection({
                           {item.type === "playlist" ? "قائمة تشغيل" : "شرح منفرد"}
                         </span>
                         {item.youtubeUrl === "locked" && (
-                          <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg border backdrop-blur-md bg-secondary/10 text-secondary border-secondary/20 flex items-center gap-1">
+                          <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg border backdrop-blur-md bg-amber-500/10 text-amber-700 border-amber-500/20 flex items-center gap-1">
                             <Lock className="w-3 h-3" />
-                            محتوى مدفوع 🔒
+                            مغلق - محتوى مدفوع 🔒
                           </span>
                         )}
                         {item.maxViews && item.maxViews > 0 && item.youtubeUrl !== "locked" && (
@@ -1464,7 +1464,7 @@ export function VideoLessonsSection({
                           }`}
                         >
                           {item.youtubeUrl === "locked" ? (
-                            <>فك قفل الفيديو 🔒</>
+                            <>مغلق - يتطلب تفعيل الاشتراك 🔒</>
                           ) : item.progress > 0 ? (
                             "استئناف المشاهدة"
                           ) : item.type === "playlist" ? (

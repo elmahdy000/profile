@@ -204,6 +204,7 @@ export function AdminLearning() {
     [files, setFiles] = useState<FileItem[]>([]),
     [quizzes, setQuizzes] = useState<Quiz[]>([]),
     [attempts, setAttempts] = useState<Attempt[]>([]);
+  const [paymentReceipts, setPaymentReceipts] = useState<PaymentReceipt[]>([]);
   const [analytics, setAnalytics] = useState<LearningAnalytics | null>(null);
   const [recoveryRequests, setRecoveryRequests] = useState<RecoveryRequest[]>([]);
   const [videoCategories, setVideoCategories] = useState<string[]>([]);
@@ -361,7 +362,7 @@ export function AdminLearning() {
   const load = async () => {
     setLoading(true);
     try {
-      const [s, f, q, a, v, c, analyticsData, recoveryData] = await Promise.all([
+      const [s, f, q, a, v, c, analyticsData, recoveryData, receiptsData] = await Promise.all([
         adminApi<Student[]>("/api/admin/students"),
         adminApi<FileItem[]>("/api/admin/learning/files"),
         adminApi<Quiz[]>("/api/admin/learning/quizzes"),
@@ -370,8 +371,10 @@ export function AdminLearning() {
         adminApi<Array<{ id: number; title: string; category: string; stages?: string[] }>>("/api/courses"),
         adminApi<LearningAnalytics>("/api/admin/learning/analytics"),
         adminApi<RecoveryRequest[]>("/api/admin/recovery-requests"),
+        adminApi<PaymentReceipt[]>("/api/admin/payment-receipts").catch(() => []),
       ]);
       setStudents(s);
+      setPaymentReceipts(receiptsData);
       setFiles(f);
       setQuizzes(q);
       setAttempts(a);
@@ -490,6 +493,23 @@ export function AdminLearning() {
       setStudents(students.map((s) => (s.id === student.id ? updated : s)));
       toast({
         title: `تم تحويل الطالب لنظام ${learningMode === "online" ? "أونلاين" : "أوفلاين"}`,
+      });
+    } catch (e) {
+      toast({ variant: "destructive", description: (e as Error).message });
+    }
+  };
+  const updateStudentPaymentStatus = async (
+    student: Student,
+    paymentStatus: string,
+  ) => {
+    try {
+      const updated = await adminApi<Student>(
+        `/api/admin/students/${student.id}`,
+        { method: "PATCH", body: JSON.stringify({ paymentStatus }) },
+      );
+      setStudents(students.map((s) => (s.id === student.id ? updated : s)));
+      toast({
+        title: paymentStatus === "paid" ? "تم تفعيل الاشتراك المدفوع للطالب 💳" : paymentStatus === "pending_review" ? "حالة الإيصال قيد المراجعة ⏳" : "تم إلغاء تفعيل الاشتراك (مجاني)",
       });
     } catch (e) {
       toast({ variant: "destructive", description: (e as Error).message });
@@ -1129,27 +1149,72 @@ export function AdminLearning() {
                         </Button>
                       </div>
                     </div>
-                    <div className="flex flex-col gap-2 rounded-xl border bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <strong className="text-sm">نظام حضور الطالب</strong>
-                        <p className="text-xs text-muted-foreground">
-                          الطالب هيشوف فيديوهات النظام المحدد بس.
-                        </p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="flex flex-col gap-2 rounded-xl border bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <strong className="text-sm">نظام حضور الطالب</strong>
+                          <p className="text-xs text-muted-foreground">
+                            الطالب هيشوف فيديوهات النظام المحدد بس.
+                          </p>
+                        </div>
+                        <select
+                          value={s.learningMode || "online"}
+                          onChange={(e) =>
+                            updateStudentMode(
+                              s,
+                              e.target.value as "online" | "offline",
+                            )
+                          }
+                          className="input-admin sm:w-44"
+                        >
+                          <option value="online">أونلاين</option>
+                          <option value="offline">أوفلاين</option>
+                        </select>
                       </div>
-                      <select
-                        value={s.learningMode || "online"}
-                        onChange={(e) =>
-                          updateStudentMode(
-                            s,
-                            e.target.value as "online" | "offline",
-                          )
-                        }
-                        className="input-admin sm:w-48"
-                      >
-                        <option value="online">أونلاين</option>
-                        <option value="offline">أوفلاين</option>
-                      </select>
+
+                      <div className="flex flex-col gap-2 rounded-xl border bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <strong className="text-sm">حالة الاشتراك والدفع 💳</strong>
+                          <p className="text-xs text-muted-foreground">
+                            تحويل الطالب لمشترك مدفوع لفتح جميع الفيديوهات.
+                          </p>
+                        </div>
+                        <select
+                          value={s.paymentStatus || "unpaid"}
+                          onChange={(e) => updateStudentPaymentStatus(s, e.target.value)}
+                          className={`input-admin sm:w-48 font-bold ${s.paymentStatus === "paid" ? "border-emerald-500 bg-emerald-50 text-emerald-800" : s.paymentStatus === "pending_review" ? "border-amber-500 bg-amber-50 text-amber-800" : "border-slate-300"}`}
+                        >
+                          <option value="unpaid">🆓 مشاهدة مجانية (أول 2)</option>
+                          <option value="pending_review">⏳ إيصال قيد المراجعة</option>
+                          <option value="paid">💳 اشتراك مدفوع (فتح الكل)</option>
+                        </select>
+                      </div>
                     </div>
+
+                    {/* Receipt Image Display under Student if available */}
+                    {(() => {
+                      const receipt = paymentReceipts.find((r) => r.studentId === s.id);
+                      if (!receipt) return null;
+                      return (
+                        <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-amber-800 flex items-center gap-1">
+                              🧾 إيصال الدفع المرفوع بواسطة الطالب ({new Date(receipt.createdAt).toLocaleDateString("ar-EG")})
+                            </span>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${receipt.status === "approved" ? "bg-emerald-100 text-emerald-700" : receipt.status === "rejected" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-800"}`}>
+                              {receipt.status === "approved" ? "مقبول" : receipt.status === "rejected" ? "مرفوض" : "قيد المراجعة"}
+                            </span>
+                          </div>
+                          <div className="overflow-hidden rounded-lg border bg-white p-2 text-center">
+                            <img
+                              src={`/api/admin/payment-receipts/${receipt.id}/image`}
+                              alt={`إيصال ${s.name}`}
+                              className="mx-auto max-h-64 object-contain rounded-md shadow-xs"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })()}
                     <CourseAccess
                       student={s}
                       courses={learningCourses}
