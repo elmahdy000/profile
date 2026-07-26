@@ -28,13 +28,21 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("hero");
   const [student, setStudent] = useState<NavStudent | null>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
   const studentCacheRef = useRef<{ data: NavStudent | null; ts: number } | null>(null);
   const { get } = useSiteSettings();
   const logoUrl = get(SETTINGS_KEYS.SITE_LOGO_URL, "/logo.webp");
 
   useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
     const loadStudent = () => {
-      // Cache student data for 5 minutes to avoid redundant auth checks on navigation
       const cache = studentCacheRef.current;
       if (cache && Date.now() - cache.ts < 5 * 60 * 1000) {
         setStudent(cache.data);
@@ -53,11 +61,9 @@ export function Navbar() {
         });
     };
     const onAuthChange = () => {
-      studentCacheRef.current = null; // Invalidate cache on login/logout
+      studentCacheRef.current = null;
       loadStudent();
     };
-    // The platform performs its own session bootstrap. Avoid two expected 401
-    // responses for signed-out visitors on that route.
     if (window.location.pathname !== "/platform") loadStudent();
     window.addEventListener("student-auth-changed", onAuthChange);
     return () => window.removeEventListener("student-auth-changed", onAuthChange);
@@ -101,100 +107,163 @@ export function Navbar() {
   return (
     <>
       <nav
-        className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 backdrop-blur"
+        aria-label="التنقل الرئيسي"
+        className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+          isScrolled
+            ? "h-[74px] bg-[#07111f]/95 shadow-[0_8px_30px_rgba(0,0,0,0.25)]"
+            : "h-[78px] md:h-[82px] bg-[#07111f]/92 shadow-[0_8px_30px_rgba(0,0,0,0.18)]"
+        } backdrop-blur-[18px] border-b border-[rgba(148,163,184,0.14)]`}
         dir="rtl"
       >
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
+        <div className="mx-auto flex h-full max-w-[1480px] items-center justify-between px-4 sm:px-6 md:px-8 lg:px-12">
+          {/* Brand Area (Right) */}
           <a
             href="/"
-            className="flex shrink-0 items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="group flex shrink-0 items-center gap-3 rounded-xl transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6]"
           >
-            <img
-              src={logoUrl}
-              alt="لوجو أكاديمية د. محمود المهدي"
-              width={40} height={40} className="h-10 w-10 shrink-0 rounded-full border border-primary/20 object-cover"
-            />
-            <div className="text-right">
-              <span className="block text-base font-black leading-tight text-primary md:text-lg">
+            <div className="relative">
+              <img
+                src={logoUrl}
+                alt="د. محمود المهدي"
+                width={48}
+                height={48}
+                className="h-11 w-11 sm:h-12 sm:w-12 shrink-0 rounded-full border border-[rgba(96,165,250,0.35)] object-cover shadow-[0_0_12px_rgba(59,130,246,0.2)] transition-transform duration-300 group-hover:scale-105"
+              />
+            </div>
+            <div className="flex flex-col justify-center text-right">
+              <span className="block text-[18px] sm:text-[20px] font-extrabold leading-[1.2] text-[#F8FAFC] tracking-tight">
                 د. محمود المهدي
               </span>
-              <span className="mt-0.5 block max-w-[180px] truncate text-[10px] font-medium text-muted-foreground">
+              <span className="hidden sm:block text-[12px] font-medium leading-[1.4] text-[#94A3B8]">
                 منصة البرمجة وعلوم الحاسب
               </span>
             </div>
           </a>
 
-          <div className="hidden items-center gap-3 lg:flex">
-            <ul className="flex items-center gap-1">
-              {navLinks.map((link) => (
-                <li key={link.id}>
-                  <a
-                    href={link.href}
-                    className={`block rounded-lg px-3 py-2 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${activeSection === link.id ? "bg-blue-50 text-primary" : "text-slate-600 hover:bg-slate-50 hover:text-primary"}`}
-                  >
-                    {link.label}
-                  </a>
-                </li>
-              ))}
+          {/* Navigation Links (Center) */}
+          <div className="hidden items-center lg:flex">
+            <ul className="flex items-center gap-6 xl:gap-8">
+              {navLinks.map((link) => {
+                const isActive = activeSection === link.id;
+                return (
+                  <li key={link.id} className="relative">
+                    <a
+                      href={link.href}
+                      aria-current={isActive ? "page" : undefined}
+                      className={`relative flex h-[44px] items-center rounded-[10px] px-3 text-[15px] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] ${
+                        isActive
+                          ? "font-bold text-[#60A5FA] bg-[rgba(59,130,246,0.10)]"
+                          : "font-semibold text-[#94A3B8] hover:bg-[rgba(148,163,184,0.07)] hover:text-[#F8FAFC]"
+                      }`}
+                    >
+                      {link.label}
+                    </a>
+                    {isActive && (
+                      <span className="absolute bottom-[-6px] left-1/2 h-[2.5px] w-5 -translate-x-1/2 rounded-full bg-[#3B82F6] shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
+                    )}
+                  </li>
+                );
+              })}
             </ul>
+          </div>
+
+          {/* Actions (Left) */}
+          <div className="hidden items-center gap-3 sm:flex">
             <a
               href="https://wa.me/201044348610"
               target="_blank"
               rel="noreferrer"
-              className="flex h-9 items-center gap-2 rounded-lg border border-slate-300 px-3 text-xs font-bold text-slate-600 hover:border-primary hover:text-primary"
+              aria-label="تواصل عبر الواتساب"
+              className="flex h-[44px] items-center gap-2 rounded-[12px] border border-[rgba(148,163,184,0.22)] bg-transparent px-4 text-[14px] font-semibold text-[#CBD5E1] transition-all duration-200 hover:border-[rgba(148,163,184,0.34)] hover:bg-[rgba(148,163,184,0.08)] hover:text-[#F8FAFC] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6]"
             >
-              <MessageCircle className="h-4 w-4" />
-              واتساب
+              <MessageCircle className="h-[18px] w-[18px] text-[#25D366]" />
+              <span>واتساب</span>
             </a>
+
             <a
               href="/platform"
-              className="flex h-10 items-center rounded-lg bg-primary px-5 text-xs font-bold text-white hover:bg-primary/90"
+              className="flex h-[44px] items-center justify-center rounded-[12px] bg-[#3B82F6] px-5 text-[14px] font-bold text-white shadow-[0_8px_20px_rgba(37,99,235,0.22)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#2563EB] active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#07111f]"
             >
               {student ? "متابعة التعلم" : "دخول المنصة"}
             </a>
           </div>
 
+          {/* Mobile Actions & Toggle */}
+          <div className="flex items-center gap-2 sm:hidden">
+            <a
+              href="/platform"
+              className="flex h-[40px] items-center justify-center rounded-[10px] bg-[#3B82F6] px-3.5 text-[13px] font-bold text-white shadow-md transition hover:bg-[#2563EB]"
+            >
+              {student ? "متابعة" : "دخول المنصة"}
+            </a>
+
+            <button
+              type="button"
+              onClick={() => setIsOpen(true)}
+              aria-expanded={isOpen}
+              aria-controls="mobile-navigation"
+              aria-label="افتح القائمة"
+              className="grid h-[42px] w-[42px] place-items-center rounded-[10px] border border-[rgba(148,163,184,0.20)] bg-[rgba(148,163,184,0.08)] text-[#F8FAFC] transition hover:bg-[rgba(148,163,184,0.15)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6]"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Tablet Menu Toggle (between sm and lg) */}
           <button
             type="button"
             onClick={() => setIsOpen(true)}
             aria-expanded={isOpen}
             aria-controls="mobile-navigation"
             aria-label="افتح القائمة"
-            className="grid h-11 w-11 place-items-center rounded-full text-foreground transition hover:bg-slate-100 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:hidden"
+            className="hidden sm:grid lg:hidden h-[44px] w-[44px] place-items-center rounded-[12px] border border-[rgba(148,163,184,0.20)] bg-[rgba(148,163,184,0.08)] text-[#F8FAFC] transition hover:bg-[rgba(148,163,184,0.15)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6]"
           >
             <Menu className="h-6 w-6" />
           </button>
         </div>
       </nav>
 
+      {/* Mobile / Tablet Dropdown Panel */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            id="mobile-navigation"
-            role="dialog"
-            aria-modal="true"
-            aria-label="قائمة التنقل"
-            initial={{ opacity: 0, x: "100%" }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: "100%" }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
-            className="fixed inset-0 z-[80] overflow-y-auto bg-[#F7F9FC] lg:hidden"
-            dir="rtl"
-          >
-            <div className="mx-auto flex min-h-full w-full max-w-[430px] flex-col px-5 pb-[calc(90px+env(safe-area-inset-bottom))]">
-              <header className="flex h-[76px] shrink-0 items-center justify-between border-b border-slate-200">
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closeMenu}
+              className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm lg:hidden"
+            />
+
+            {/* Menu Panel */}
+            <motion.div
+              id="mobile-navigation"
+              role="dialog"
+              aria-modal="true"
+              aria-label="قائمة التنقل"
+              initial={{ opacity: 0, y: -12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="fixed top-[74px] right-3 left-3 z-[70] max-h-[85vh] overflow-y-auto rounded-[16px] border border-[rgba(148,163,184,0.16)] bg-[#101D31] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.38)] lg:hidden"
+              dir="rtl"
+            >
+              <div className="flex items-center justify-between border-b border-[rgba(148,163,184,0.12)] pb-3.5 mb-3">
                 <div className="flex items-center gap-3">
                   <img
                     src={logoUrl}
-                    alt="شعار المنصة"
-                    width={44} height={44} className="h-11 w-11 rounded-full border border-primary/20 object-cover"
+                    alt="د. محمود المهدي"
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 rounded-full border border-[rgba(96,165,250,0.35)] object-cover"
                   />
                   <div>
-                    <strong className="block text-[17px] leading-6 text-slate-900">
-                      منصة د/ المهدي
+                    <strong className="block text-[16px] font-extrabold text-[#F8FAFC]">
+                      د. محمود المهدي
                     </strong>
-                    <span className="block text-xs text-slate-500">
-                      بوابتك للتعلم والمتابعة
+                    <span className="block text-[12px] text-[#94A3B8]">
+                      منصة البرمجة وعلوم الحاسب
                     </span>
                   </div>
                 </div>
@@ -202,72 +271,76 @@ export function Navbar() {
                   type="button"
                   onClick={closeMenu}
                   aria-label="إغلاق القائمة"
-                  className="grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="grid h-9 w-9 place-items-center rounded-lg border border-[rgba(148,163,184,0.20)] bg-[rgba(148,163,184,0.08)] text-[#94A3B8] transition hover:text-[#F8FAFC]"
                 >
                   <X className="h-5 w-5" />
                 </button>
-              </header>
+              </div>
 
-              <section className="mt-4 flex items-center gap-3 rounded-2xl border border-blue-100 bg-blue-50 p-4">
-                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white text-primary shadow-sm">
-                  <UserRound className="h-6 w-6" />
+              {student && (
+                <div className="mb-3 flex items-center gap-3 rounded-[12px] border border-[rgba(59,130,246,0.20)] bg-[rgba(59,130,246,0.08)] p-3">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#3B82F6]/20 text-[#60A5FA]">
+                    <UserRound className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="block text-[11px] text-[#94A3B8]">أهلًا بك</span>
+                    <strong className="block truncate text-[14px] font-bold text-[#F8FAFC]">
+                      {student.name}
+                    </strong>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <span className="block text-xs text-slate-500">أهلًا بك</span>
-                  <strong className="block truncate text-base text-slate-900">
-                    {student?.name || "زائر المنصة"}
-                  </strong>
-                  <span className="mt-0.5 block text-xs text-blue-700">
-                    {student
-                      ? "حسابك متفعّل — تقدر تكمل دروسك"
-                      : "سجل دخولك لمتابعة كورساتك"}
-                  </span>
-                </div>
-              </section>
+              )}
 
-              <nav
-                className="mt-[18px] space-y-2.5"
-                aria-label="القائمة الرئيسية"
-              >
-                {navLinks.map(({ label, href, id, icon: Icon }) => (
-                  <a
-                    key={id}
-                    href={href}
-                    onClick={closeMenu}
-                    aria-current={activeSection === id ? "page" : undefined}
-                    className={`flex min-h-14 items-center gap-3 rounded-[14px] border px-4 text-base font-semibold transition active:scale-[.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${activeSection === id ? "border-blue-100 bg-blue-50 text-primary" : "border-transparent bg-white text-slate-700 hover:border-slate-200 hover:bg-slate-50"}`}
-                  >
-                    <Icon className="h-[22px] w-[22px] shrink-0" />
-                    <span className="flex-1">{label}</span>
-                    <ChevronLeft className="h-4 w-4 text-slate-400" />
-                  </a>
-                ))}
+              <nav className="space-y-1.5" aria-label="القائمة الرئيسية">
+                {navLinks.map(({ label, href, id, icon: Icon }) => {
+                  const isActive = activeSection === id;
+                  return (
+                    <a
+                      key={id}
+                      href={href}
+                      onClick={closeMenu}
+                      aria-current={isActive ? "page" : undefined}
+                      className={`flex h-[48px] items-center justify-between rounded-[10px] px-3.5 text-[15px] font-semibold transition ${
+                        isActive
+                          ? "bg-[rgba(59,130,246,0.12)] text-[#60A5FA] font-bold"
+                          : "text-[#CBD5E1] hover:bg-[rgba(148,163,184,0.08)] hover:text-[#F8FAFC]"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon className="h-5 w-5 text-[#60A5FA]" />
+                        <span>{label}</span>
+                      </div>
+                      <ChevronLeft className="h-4 w-4 text-[#64748B]" />
+                    </a>
+                  );
+                })}
               </nav>
 
-              <div className="my-5 h-px bg-slate-200" />
-              <div className="grid grid-cols-2 gap-3">
-                <a
-                  href="/platform"
-                  onClick={closeMenu}
-                  className="flex h-[52px] items-center justify-center rounded-[14px] bg-primary px-3 text-sm font-bold text-white transition hover:bg-primary/90 active:scale-[.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                >
-                  {student ? "متابعة التعلم" : "دخول المنصة"}
-                </a>
+              <div className="mt-4 pt-3 border-t border-[rgba(148,163,184,0.12)] flex flex-col gap-2">
                 <a
                   href="https://wa.me/201044348610"
                   target="_blank"
                   rel="noreferrer"
                   onClick={closeMenu}
-                  className="flex h-[52px] items-center justify-center gap-2 rounded-[14px] border border-[#25D366] bg-white px-3 text-sm font-bold text-[#168C45] transition hover:bg-green-50 active:scale-[.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]"
+                  className="flex h-[48px] items-center justify-center gap-2 rounded-[12px] border border-[rgba(148,163,184,0.22)] bg-transparent px-4 text-[14px] font-bold text-[#25D366] transition hover:bg-[rgba(37,211,102,0.10)]"
                 >
                   <MessageCircle className="h-5 w-5" />
-                  واتساب
+                  <span>تواصل عبر الواتساب</span>
+                </a>
+
+                <a
+                  href="/platform"
+                  onClick={closeMenu}
+                  className="flex h-[48px] items-center justify-center rounded-[12px] bg-[#3B82F6] px-4 text-[14px] font-bold text-white shadow-md transition hover:bg-[#2563EB]"
+                >
+                  {student ? "متابعة التعلم" : "دخول المنصة"}
                 </a>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </>
   );
 }
+
