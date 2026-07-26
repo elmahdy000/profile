@@ -1445,24 +1445,27 @@ int main() {
 
 function CppCompilerPanel() {
   const [code, setCode] = useState(CPP_TEMPLATES.hello.code);
-  const [stdin, setStdin] = useState(CPP_TEMPLATES.hello.stdin || "");
-  const [output, setOutput] = useState("");
+  const [inputsList, setInputsList] = useState<string[]>([]);
+  const [currentInputVal, setCurrentInputVal] = useState("");
+  const [outputLines, setOutputLines] = useState<string[]>([]);
   const [errorOutput, setErrorOutput] = useState("");
   const [running, setRunning] = useState(false);
+  const [waitingForInput, setWaitingForInput] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("hello");
-  const [isInteractiveWaiting, setIsInteractiveWaiting] = useState(false);
-  const [currentInputVal, setCurrentInputVal] = useState("");
+  const [executionDone, setExecutionDone] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const outputEndRef = useRef<HTMLDivElement>(null);
+  const consoleBottomRef = useRef<HTMLDivElement>(null);
 
   const lineNumbers = code.split("\n").map((_, i) => i + 1);
 
-  const runCodeWithInput = async (providedStdin: string) => {
+  // Helper to run code with gathered inputs
+  const executeCode = async (providedInputs: string[]) => {
     setRunning(true);
     setErrorOutput("");
-    setIsInteractiveWaiting(false);
+    setWaitingForInput(false);
 
     try {
+      const stdinCombined = providedInputs.join("\n");
       const res = await api<{
         output: string;
         error: string;
@@ -1470,38 +1473,69 @@ function CppCompilerPanel() {
         success: boolean;
       }>("/api/learning/compiler/run", {
         method: "POST",
-        body: JSON.stringify({ code, stdin: providedStdin }),
+        body: JSON.stringify({ code, stdin: stdinCombined }),
       });
 
-      setOutput(res.output);
+      if (res.error && !res.output) {
+        setErrorOutput(res.error);
+        setExecutionDone(true);
+        setRunning(false);
+        return;
+      }
+
+      // Parse output into lines
+      const rawOutput = res.output || "";
+      const lines = rawOutput ? rawOutput.split("\n") : [];
+      
+      // Determine how many cin calls exist in code vs inputs provided
+      const cinMatches = code.match(/cin\s*>>/g) || [];
+      const requiredInputsCount = cinMatches.length;
+
+      setOutputLines(lines);
+
       if (res.error) {
         setErrorOutput(res.error);
       }
 
-      // Check if code seems to expect cin but got no/insufficient input
-      if (code.includes("cin") && !providedStdin.trim() && !res.output.trim() && !res.error) {
-        setIsInteractiveWaiting(true);
+      // If program needs more input and hasn't produced final completion
+      if (providedInputs.length < requiredInputsCount && !res.error) {
+        setWaitingForInput(true);
+      } else {
+        setExecutionDone(true);
       }
     } catch (err) {
-      setErrorOutput((err as Error).message || "Execution error.");
+      setErrorOutput((err as Error).message || "Compilation failed.");
+      setExecutionDone(true);
     } finally {
       setRunning(false);
+      setTimeout(() => consoleBottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
     }
   };
 
   const handleRun = () => {
+    setInputsList([]);
+    setOutputLines([]);
+    setErrorOutput("");
+    setExecutionDone(false);
     setCurrentInputVal("");
-    setStdin("");
-    void runCodeWithInput(stdin);
+
+    const cinMatches = code.match(/cin\s*>>/g) || [];
+    if (cinMatches.length > 0) {
+      // If code requires input, execute initial run to show prompt outputs
+      void executeCode([]);
+    } else {
+      void executeCode([]);
+    }
   };
 
-  const handleInteractiveSubmit = (e: React.FormEvent) => {
+  const handleInputSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentInputVal) return;
-    const newStdin = stdin ? `${stdin}\n${currentInputVal}` : currentInputVal;
-    setStdin(newStdin);
+    if (!currentInputVal.trim() && currentInputVal !== "0") return;
+
+    const updatedInputs = [...inputsList, currentInputVal];
+    setInputsList(updatedInputs);
     setCurrentInputVal("");
-    void runCodeWithInput(newStdin);
+    void executeCode(updatedInputs);
   };
 
   const handleTemplateChange = (key: string) => {
@@ -1509,10 +1543,12 @@ function CppCompilerPanel() {
     const tmpl = CPP_TEMPLATES[key];
     if (tmpl) {
       setCode(tmpl.code);
-      setStdin(tmpl.stdin || "");
-      setOutput("");
+      setInputsList([]);
+      setOutputLines([]);
       setErrorOutput("");
-      setIsInteractiveWaiting(false);
+      setWaitingForInput(false);
+      setExecutionDone(false);
+      setCurrentInputVal("");
     }
   };
 
@@ -1534,15 +1570,13 @@ function CppCompilerPanel() {
 
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f172a] shadow-xl overflow-hidden font-sans" dir="ltr">
-      {/* Top Header Bar (Programiz Header) */}
+      {/* Top Header Bar */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-[#1e293b] border-b border-slate-200 dark:border-slate-800">
-        {/* Left Side File Tab */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 px-3 py-1 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-slate-700 dark:text-slate-200 shadow-sm">
             <span className="h-2 w-2 rounded-full bg-blue-500" />
             main.cpp
           </div>
-          {/* Example selector pills */}
           <div className="hidden sm:flex items-center gap-1.5 overflow-x-auto">
             {Object.entries(CPP_TEMPLATES).map(([key, item]) => (
               <button
@@ -1560,7 +1594,6 @@ function CppCompilerPanel() {
           </div>
         </div>
 
-        {/* Center / Right Header Actions: Run & Clear */}
         <div className="flex items-center gap-2">
           <Button
             onClick={handleRun}
@@ -1582,18 +1615,16 @@ function CppCompilerPanel() {
         </div>
       </div>
 
-      {/* Programiz Main Split Layout */}
+      {/* Main Split View */}
       <div className="grid lg:grid-cols-12 min-h-[520px] bg-slate-50 dark:bg-[#090d16]">
         {/* Left Side: Code Editor (7 Columns) */}
         <div className="lg:col-span-7 flex bg-white dark:bg-[#0d1117] border-r border-slate-200 dark:border-slate-800/80 font-mono text-sm leading-relaxed relative">
-          {/* Line Numbers Gutter */}
           <div className="py-4 pl-3 pr-2 select-none text-right text-slate-400 dark:text-slate-600 bg-slate-50 dark:bg-[#161b22] border-r border-slate-200 dark:border-slate-800 min-w-[44px] text-xs font-mono">
             {lineNumbers.map((n) => (
               <div key={n} className="leading-relaxed">{n}</div>
             ))}
           </div>
 
-          {/* Text Area */}
           <textarea
             ref={textareaRef}
             value={code}
@@ -1601,88 +1632,100 @@ function CppCompilerPanel() {
             onKeyDown={handleKeyDown}
             spellCheck={false}
             className="w-full h-full min-h-[500px] bg-transparent p-4 font-mono text-xs sm:text-sm leading-relaxed text-slate-800 dark:text-slate-200 focus:outline-none resize-none selection:bg-blue-500/20"
-            placeholder="// Online C++ compiler to run C++ program online"
+            placeholder="// Online C++ compiler"
           />
         </div>
 
-        {/* Right Side: Programiz Terminal Output (5 Columns) */}
-        <div className="lg:col-span-5 flex flex-col bg-slate-50 dark:bg-[#0b0f19] border-t lg:border-t-0 border-slate-200 dark:border-slate-800">
-          {/* Output Header */}
-          <div className="flex items-center justify-between px-4 py-2 bg-slate-100 dark:bg-[#151c2c] border-b border-slate-200 dark:border-slate-800">
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Output</span>
+        {/* Right Side: Interactive Programiz Console Output (5 Columns) */}
+        <div className="lg:col-span-5 flex flex-col bg-slate-900 text-slate-100 border-t lg:border-t-0 border-slate-800">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-2 bg-slate-950 border-b border-slate-800">
+            <span className="text-xs font-mono font-semibold text-slate-300 flex items-center gap-2">
+              <Terminal className="h-3.5 w-3.5 text-blue-400" />
+              Console Output
+            </span>
             <button
               onClick={() => {
-                setOutput("");
+                setOutputLines([]);
                 setErrorOutput("");
-                setIsInteractiveWaiting(false);
+                setInputsList([]);
+                setWaitingForInput(false);
+                setExecutionDone(false);
               }}
-              className="text-[11px] font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0f172a]"
+              className="text-[11px] font-mono text-slate-400 hover:text-white px-2 py-0.5 rounded border border-slate-700 bg-slate-900"
             >
               Clear
             </button>
           </div>
 
-          {/* Console / Output Window - Continuous Real Terminal Screen */}
+          {/* Interactive Console Screen */}
           <div
             onClick={() => {
-              const inputEl = document.getElementById("terminal-inline-input");
-              if (inputEl) inputEl.focus();
+              const el = document.getElementById("interactive-console-input");
+              if (el) el.focus();
             }}
-            className="flex-1 p-4 font-mono text-xs sm:text-sm leading-relaxed text-slate-800 dark:text-slate-200 overflow-y-auto cursor-text min-h-[460px] bg-slate-50 dark:bg-[#0b0f19]"
+            className="flex-1 p-4 font-mono text-xs sm:text-sm leading-relaxed overflow-y-auto cursor-text bg-[#090d16] text-emerald-400 space-y-2 min-h-[460px] flex flex-col justify-between"
           >
-            {/* If there is output, show output. If program is waiting for input or executed, render inline */}
-            {output ? (
-              <div className="space-y-1 font-mono whitespace-pre-wrap">
-                <span className="text-slate-800 dark:text-slate-100">{output}</span>
-                {/* Inline Prompt Input inside the stream */}
-                <form
-                  onSubmit={handleInteractiveSubmit}
-                  className="inline-flex items-center gap-1.5 ml-1"
-                >
-                  <input
-                    id="terminal-inline-input"
-                    type="text"
-                    value={currentInputVal}
-                    onChange={(e) => setCurrentInputVal(e.target.value)}
-                    placeholder="type value & hit enter..."
-                    autoFocus
-                    className="bg-transparent border-b border-blue-500 text-blue-600 dark:text-blue-400 font-mono font-bold text-xs sm:text-sm focus:outline-none min-w-[140px] px-1 py-0"
-                  />
-                </form>
-                {!running && (
-                  <div className="mt-4 text-[11px] text-emerald-600 dark:text-emerald-400 font-sans font-semibold border-t border-slate-200 dark:border-slate-800/80 pt-2">
-                    === Code Execution Successful ===
+            <div className="space-y-1">
+              {outputLines.length > 0 ? (
+                outputLines.map((line, idx) => (
+                  <div key={idx} className="whitespace-pre-wrap leading-relaxed text-slate-100">
+                    {line}
                   </div>
-                )}
-              </div>
-            ) : !errorOutput && !running ? (
-              <div className="text-slate-400 dark:text-slate-500 text-xs italic flex flex-col items-start gap-2">
-                <span>Click "Run" to execute program.</span>
-                <form
-                  onSubmit={handleInteractiveSubmit}
-                  className="flex items-center gap-2 mt-2"
-                >
-                  <span className="text-slate-500 dark:text-slate-400 font-mono text-xs">&gt;</span>
-                  <input
-                    id="terminal-inline-input"
-                    type="text"
-                    value={currentInputVal}
-                    onChange={(e) => setCurrentInputVal(e.target.value)}
-                    placeholder="Enter input values here..."
-                    className="bg-transparent border-b border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono text-xs focus:outline-none focus:border-blue-500 px-1 py-0.5"
-                  />
-                </form>
-              </div>
-            ) : null}
+                ))
+              ) : !errorOutput && !running ? (
+                <div className="text-slate-500 text-xs italic">
+                  Press "Run" to start execution...
+                </div>
+              ) : null}
 
-            {errorOutput && (
-              <div className="space-y-1 mt-2">
-                <pre className="text-red-500 dark:text-red-400 whitespace-pre-wrap font-mono text-xs bg-red-50 dark:bg-red-950/30 p-3 rounded-lg border border-red-200 dark:border-red-900/50">
+              {errorOutput && (
+                <div className="text-red-400 whitespace-pre-wrap font-mono text-xs bg-red-950/40 p-3 rounded-lg border border-red-900/60 my-2">
                   {errorOutput}
-                </pre>
-              </div>
-            )}
-            <div ref={outputEndRef} />
+                </div>
+              )}
+            </div>
+
+            {/* Waiting for Student Input Box (Programiz interactive prompt) */}
+            <div className="pt-3 border-t border-slate-800/80 mt-4 space-y-2">
+              {(waitingForInput || code.includes("cin")) && !executionDone ? (
+                <form onSubmit={handleInputSubmit} className="space-y-1.5 bg-blue-950/30 p-2.5 rounded-xl border border-blue-900/60">
+                  <div className="flex items-center justify-between text-[11px] font-sans text-blue-300 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-blue-400 animate-ping" />
+                      البرنامج ينتظر إدخال قيمة (cin &gt;&gt;):
+                    </span>
+                    <span className="text-[10px] text-blue-400/80 font-normal">اكتب القيمة ثم اضغط Enter</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-blue-400 font-mono font-bold text-sm">&gt;</span>
+                    <input
+                      id="interactive-console-input"
+                      type="text"
+                      value={currentInputVal}
+                      onChange={(e) => setCurrentInputVal(e.target.value)}
+                      placeholder="أدخل القيمة المطلوبة هنا..."
+                      autoFocus
+                      className="flex-1 bg-slate-900 border border-blue-700/60 rounded-lg px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-blue-400 shadow-inner"
+                    />
+                    <button
+                      type="submit"
+                      disabled={running}
+                      className="px-3 py-1.5 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
+                    >
+                      إرسال
+                    </button>
+                  </div>
+                </form>
+              ) : null}
+
+              {executionDone && outputLines.length > 0 && !errorOutput && (
+                <div className="text-[11px] text-emerald-400 font-mono font-semibold pt-1">
+                  === Code Execution Successful ===
+                </div>
+              )}
+            </div>
+            <div ref={consoleBottomRef} />
           </div>
         </div>
       </div>
