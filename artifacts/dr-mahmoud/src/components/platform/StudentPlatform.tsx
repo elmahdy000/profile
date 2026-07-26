@@ -2633,22 +2633,51 @@ export function StudentPlatform() {
 
               {quizResult ? (
                 <div
-                  className={`mt-5 rounded-2xl p-4 text-center transition-all ${
+                  className={`mt-5 rounded-2xl p-6 text-center shadow-lg transition-all border ${
                     quizResult.passed
-                      ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                      : "bg-red-500/15 text-red-400 border border-red-500/30"
+                      ? "bg-emerald-500/10 dark:bg-emerald-950/40 border-emerald-500/30 text-emerald-900 dark:text-emerald-200"
+                      : "bg-red-500/10 dark:bg-red-950/40 border-red-500/30 text-red-900 dark:text-red-200"
                   }`}
+                  dir="rtl"
                 >
-                  <CheckCircle2 className="mx-auto mb-1.5 h-8 w-8 text-center" />
-                  <strong className="text-2xl font-black">{quizResult.score}%</strong>
-                  <p className="mt-1 text-sm font-extrabold">
+                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-background/80 shadow-md mb-3">
+                    {quizResult.passed ? (
+                      <Sparkles className="h-8 w-8 text-emerald-500 animate-bounce" />
+                    ) : (
+                      <AlertCircle className="h-8 w-8 text-red-500" />
+                    )}
+                  </div>
+
+                  <strong className="block text-3xl font-black tracking-tight">
+                    {quizResult.passed ? "مبروك! تم الاجتياز بنجاح 🎉" : "للأسف لم تتخطَ درجة النجاح 💔"}
+                  </strong>
+
+                  <p className="mt-1 text-xs md:text-sm font-semibold opacity-90">
                     {quizResult.passed
-                      ? "تم اجتياز الاختبار بنجاح"
-                      : "لم تتخطَ درجة النجاح، ادرس المادة جيداً وجرب ثانيةً"}
+                      ? "أداء ممتاز! تم توثيق نتيجتك وحفظ المحاولة بنجاح."
+                      : `درجة النجاح المطلوبة هي ${activeQuiz?.passingScore}%، ادرس الأسئلة الموضحة بالأسفل وحاول مجدداً.`}
                   </p>
-                  <p className="mt-1.5 text-xs font-bold opacity-80">
-                    {quizResult.correct} إجابة صحيحة من {quizResult.total} · {quizResult.attemptsRemaining} محاولة متبقية
-                  </p>
+
+                  <div className="grid grid-cols-3 gap-2.5 mt-4 pt-4 border-t border-current/10" dir="ltr">
+                    <div className="rounded-xl bg-background/60 p-2.5 text-center shadow-2xs">
+                      <span className="block text-[10px] font-bold text-muted-foreground">النسبة</span>
+                      <strong className="block text-base font-black text-primary">{quizResult.score}%</strong>
+                    </div>
+
+                    <div className="rounded-xl bg-background/60 p-2.5 text-center shadow-2xs">
+                      <span className="block text-[10px] font-bold text-muted-foreground">الإجابات الصحيحة</span>
+                      <strong className="block text-base font-black text-emerald-600 dark:text-emerald-400">
+                        {quizResult.correct} / {quizResult.total}
+                      </strong>
+                    </div>
+
+                    <div className="rounded-xl bg-background/60 p-2.5 text-center shadow-2xs">
+                      <span className="block text-[10px] font-bold text-muted-foreground">المحاولات المتبقية</span>
+                      <strong className="block text-base font-black text-amber-600 dark:text-amber-400">
+                        {quizResult.attemptsRemaining}
+                      </strong>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <Button
