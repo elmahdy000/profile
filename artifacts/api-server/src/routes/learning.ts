@@ -767,6 +767,10 @@ router.patch("/admin/payment-receipts/:id", requireAdmin, async (req, res, next)
       res.status(404).json({ error: "الإيصال غير موجود" });
       return;
     }
+    if (receipt.status !== "pending") {
+      res.status(409).json({ error: "الإيصال تمت مراجعته بالفعل" });
+      return;
+    }
     const [updated] = await db
       .update(paymentReceiptsTable)
       .set({ status, adminNotes, reviewedAt: new Date() })

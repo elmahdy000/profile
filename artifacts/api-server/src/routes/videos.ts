@@ -261,11 +261,11 @@ router.get("/videos", async (req, res, next) => {
         isFirstVideo ||
         (v.accessKey && studentKeys.includes(v.accessKey.toLowerCase().trim()));
 
-      // Payment gating: unpaid students only get free preview videos
+      // Payment gating: unpaid students only get free preview videos (first 2 per course)
       const paymentLocked = isUnpaidStudent && !freePreviewIds.has(v.id);
 
       const isLocalFile = v.youtubeUrl.startsWith("/uploads/");
-      const videoSrcUrl = (isUnlocked && !paymentLocked)
+      const videoSrcUrl = (!paymentLocked && isUnlocked)
         ? isLocalFile
           ? getProtectedStreamUrl(v.id)
           : v.youtubeUrl
@@ -682,8 +682,8 @@ router.get("/videos/:id/stream", async (req, res, next) => {
       const courseVideos = videos
         .filter((v) => String(v.courseId ?? v.category) === courseKey && v.isPublished)
         .sort((a, b) => a.order !== b.order ? a.order - b.order : a.id - b.id);
-      const isFreePreview = courseVideos.indexOf(courseVideos.find((v) => v.id === video.id)!) < 2;
-      if (!isFreePreview) {
+      const videoIndex = courseVideos.findIndex((v) => v.id === video.id);
+      if (videoIndex === -1 || videoIndex >= 2) {
         res.status(403).json({ error: "ادفع واستلم كل الفيديوهات. أول فيديوهين بس مجانية.", code: "PAYMENT_REQUIRED" });
         return;
       }
