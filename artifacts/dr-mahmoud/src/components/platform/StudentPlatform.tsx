@@ -1402,6 +1402,9 @@ function DashboardPanel({
   const continueProgress = continueVideo
     ? progressByVideo.get(continueVideo.id)?.progress || 0
     : 0;
+  const evaluationScore = Math.round((averageProgress * 0.5) + (quizzes.length > 0 ? 50 : 0));
+  const overallRating = evaluationScore >= 90 ? "ممتاز 🌟" : evaluationScore >= 75 ? "جيد جداً 🔥" : evaluationScore >= 50 ? "مستواك متوسط 👍" : "تحتاج للمزيد من المذاكرة 💪";
+
   const stats = [
     {
       label: "دروس متاحة",
@@ -1410,18 +1413,13 @@ function DashboardPanel({
       helper: "مخصصة لمرحلتك",
     },
     {
-      label: "ملفات مرفوعة",
-      value: String(files.length),
-      icon: FolderOpen,
-      helper: "جاهزة للتحميل",
-    },
-    {
-      label: "اختبارات",
+      label: "اختبارات متاحة",
       value: String(quizzes.length),
       icon: ClipboardCheck,
-      helper: "منشورة حاليًا",
+      helper: "جاهزة للحل",
     },
-    { label: "إجمالي التقدم", value: `${averageProgress}%`, icon: BarChart3, helper: "عبر كل الدروس" },
+    { label: "إجمالي المشاهدة", value: `${averageProgress}%`, icon: BarChart3, helper: "عبر كل الدروس" },
+    { label: "التقييم العام", value: overallRating, icon: Trophy, helper: `مستوى الإنجاز: ${evaluationScore}%` },
   ];
   if (dataLoading)
     return (
