@@ -729,19 +729,34 @@ export function AdminLearning() {
   };
   const createQuiz = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!quizForm.title.trim()) {
+      toast({ variant: "destructive", description: "اسم الاختبار مطلوب." });
+      return;
+    }
     if (!quizForm.courseId || quizForm.stages.length === 0 || (quizForm.scope === "lesson" && !quizForm.videoId)) {
       toast({ variant: "destructive", description: "اختر الكورس ومرحلة واحدة على الأقل، وحدد الدرس إذا كان الاختبار تابعًا لدرس." });
       return;
     }
+    if (!quizForm.questions || quizForm.questions.length === 0 || quizForm.questions.some(q => !q.prompt.trim())) {
+      toast({ variant: "destructive", description: "أضف سؤالًا واحدًا على الأقل، وتأكد أن جميع نص الأسئلة مكتوب." });
+      return;
+    }
     const wasEditing = editingQuizId !== null;
     try {
+      const payload = {
+        ...quizForm,
+        courseId: Number(quizForm.courseId),
+        videoId: quizForm.scope === "lesson" && quizForm.videoId ? Number(quizForm.videoId) : null,
+        durationMinutes: quizForm.durationMinutes ? Number(quizForm.durationMinutes) : null,
+        questionsToShow: quizForm.questionsToShow ? Number(quizForm.questionsToShow) : null,
+      };
       const created = await adminApi<Quiz>(editingQuizId ? `/api/admin/learning/quizzes/${editingQuizId}` : "/api/admin/learning/quizzes", {
         method: editingQuizId ? "PATCH" : "POST",
-        body: JSON.stringify(quizForm),
+        body: JSON.stringify(payload),
       });
       setQuizzes(editingQuizId ? quizzes.map((quiz) => quiz.id === editingQuizId ? created : quiz) : [created, ...quizzes]);
       resetQuizForm();
-      toast({ title: wasEditing ? "تم تحديث الاختبار" : "تم إنشاء الاختبار" });
+      toast({ title: wasEditing ? "تم تحديث الاختبار بنجاح" : "تم إنشاء الاختبار بنجاح" });
     } catch (e) {
       toast({ variant: "destructive", description: (e as Error).message });
     }

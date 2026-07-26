@@ -1185,7 +1185,16 @@ export function ExamWizard({
               </div>
 
               <div className="flex items-center gap-2 border-t border-slate-200/60 pt-3">
-                <Button variant="outline" size="sm" onClick={() => editQuiz(q)} className="h-8 text-xs font-bold">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    editQuiz(q);
+                    setCurrentStep(1);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="h-8 text-xs font-bold"
+                >
                   <Edit2 className="h-3.5 w-3.5" /> تعديل
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => toggleQuiz(q)} className="h-8 text-xs font-bold">
