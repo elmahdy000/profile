@@ -1927,7 +1927,7 @@ export function StudentPlatform() {
             onClick={() => setActiveQuiz(null)}
           >
             <motion.div
-              className="w-full max-w-3xl rounded-3xl bg-background p-6 md:p-8 shadow-2xl relative border border-border"
+              className="w-full max-w-xl rounded-3xl bg-background p-5 md:p-6 shadow-2xl relative border border-border"
               onClick={(e) => e.stopPropagation()}
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -1935,7 +1935,7 @@ export function StudentPlatform() {
             >
               <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
                 <div>
-                  <h2 className="text-xl font-black text-foreground">
+                  <h2 className="text-lg font-black text-foreground" dir="auto">
                     {activeQuiz.title}
                   </h2>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -1954,7 +1954,7 @@ export function StudentPlatform() {
                 )}
               </div>
 
-              <div className="mt-4 space-y-7 text-right max-h-[65vh] overflow-y-auto px-2">
+              <div className="mt-4 space-y-6 max-h-[60vh] overflow-y-auto px-1">
                 {activeQuiz.questions.map((q, qi) => {
                   const isSelected = quizAnswers[qi] !== undefined && quizAnswers[qi] >= 0;
                   const isCorrect = quizResult && quizAnswers[qi] === q.correctIndex;
@@ -1964,14 +1964,14 @@ export function StudentPlatform() {
                     <fieldset key={qi} className={`space-y-3 rounded-2xl border p-4 transition-colors ${
                       quizResult
                         ? isCorrect
-                          ? "border-emerald-500/30 bg-emerald-500/5"
+                          ? "border-emerald-500/30 bg-emerald-50/5"
                           : isWrong
-                          ? "border-red-500/30 bg-red-500/5"
+                          ? "border-red-500/30 bg-red-50/5"
                           : "border-border"
                         : "border-border bg-card/50"
                     }`}>
                       <legend className="font-extrabold text-base mb-2 text-foreground flex items-center justify-between w-full gap-3">
-                        <span dir="auto" className="flex-1 text-right">{qi + 1}. {q.prompt}</span>
+                        <span dir="auto" className="flex-1 text-left">{qi + 1}. {q.prompt}</span>
                         {quizResult && (
                           <span className={`text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${
                             isCorrect ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-red-500/10 text-red-600 dark:text-red-400"
@@ -1982,12 +1982,12 @@ export function StudentPlatform() {
                       </legend>
 
                       {q.imageUrl && (
-                        <div className="my-3 overflow-hidden rounded-xl border border-border bg-slate-100 dark:bg-slate-950 max-h-60 flex justify-center">
-                          <img src={q.imageUrl} alt={`صورة سؤال ${qi + 1}`} className="object-contain max-h-60" />
+                        <div className="my-3 overflow-hidden rounded-xl border border-border bg-slate-100 dark:bg-slate-950 max-h-56 flex justify-center">
+                          <img src={q.imageUrl} alt={`صورة سؤال ${qi + 1}`} className="object-contain max-h-56" />
                         </div>
                       )}
 
-                      <div className="space-y-2.5">
+                      <div className="space-y-2">
                         {q.options.map((option, oi) => {
                           const optionSelected = quizAnswers[qi] === oi;
                           const optionIsCorrect = q.correctIndex === oi;
@@ -2008,7 +2008,7 @@ export function StudentPlatform() {
                           return (
                             <label
                               key={oi}
-                              className={`flex min-h-12 cursor-pointer items-center justify-between gap-3 rounded-xl border p-3.5 transition-all ${optionStyle}`}
+                              className={`flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-2.5 transition-all ${optionStyle}`}
                             >
                               <input
                                 type="radio"
@@ -2022,7 +2022,7 @@ export function StudentPlatform() {
                                 }
                                 className="text-primary focus:ring-primary h-4 w-4 shrink-0"
                               />
-                              <span dir="auto" className="text-sm font-semibold flex-1 text-right leading-relaxed">
+                              <span dir="auto" className="text-sm font-semibold flex-1 text-left leading-relaxed">
                                 {option}
                               </span>
                             </label>
@@ -2043,20 +2043,20 @@ export function StudentPlatform() {
 
               {quizResult ? (
                 <div
-                  className={`mt-6 rounded-2xl p-5 text-center transition-all ${
+                  className={`mt-5 rounded-2xl p-4 text-center transition-all ${
                     quizResult.passed
                       ? "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 border border-emerald-500/30"
                       : "bg-red-500/15 text-red-800 dark:text-red-200 border border-red-500/30"
                   }`}
                 >
-                  <CheckCircle2 className="mx-auto mb-2 h-9 w-9 text-center" />
-                  <strong className="text-3xl font-black">{quizResult.score}%</strong>
-                  <p className="mt-1 text-base font-extrabold">
+                  <CheckCircle2 className="mx-auto mb-1.5 h-8 w-8 text-center" />
+                  <strong className="text-2xl font-black">{quizResult.score}%</strong>
+                  <p className="mt-1 text-sm font-extrabold">
                     {quizResult.passed
                       ? "مبروك! تم اجتياز الاختبار بنجاح 🎉"
                       : "للأسف لم تتخطى درجة النجاح، ادرس المادة جيداً وجرب ثانيةً!"}
                   </p>
-                  <p className="mt-2 text-xs font-bold opacity-80">
+                  <p className="mt-1.5 text-xs font-bold opacity-80">
                     {quizResult.correct} إجابة صحيحة من {quizResult.total} · {quizResult.attemptsRemaining} محاولة متبقية
                   </p>
                 </div>
@@ -2064,7 +2064,7 @@ export function StudentPlatform() {
                 <Button
                   onClick={submitQuiz}
                   disabled={quizSubmitting || quizAnswers.some((a) => a < 0)}
-                  className="mt-6 w-full h-12 text-base font-bold rounded-xl shadow-lg"
+                  className="mt-5 w-full h-11 text-sm font-bold rounded-xl shadow-md"
                 >
                   {quizSubmitting ? (
                     <Loader2 className="animate-spin h-5 w-5 mx-auto" />
@@ -2076,7 +2076,7 @@ export function StudentPlatform() {
               <Button
                 variant="ghost"
                 onClick={() => setActiveQuiz(null)}
-                className="mt-2 w-full font-bold text-muted-foreground"
+                className="mt-1.5 w-full font-bold text-xs text-muted-foreground"
               >
                 إغلاق
               </Button>
