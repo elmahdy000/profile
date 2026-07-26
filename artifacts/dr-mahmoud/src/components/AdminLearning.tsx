@@ -44,6 +44,7 @@ type Student = {
   grade?: string | null;
   otherGradeDetail?: string | null;
   learningMode?: "online" | "offline";
+  paymentStatus?: string;
   enrolledCourseIds?: number[];
   enrolledCategories?: string[];
   createdAt: string;
@@ -1018,7 +1019,7 @@ export function AdminLearning() {
           </button>
         ))}
       </div>
-      <div className="grid grid-cols-5 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
         {tabs.map(([value, label, Icon]) => (
           <button
             key={value}
@@ -1061,6 +1062,11 @@ export function AdminLearning() {
                         <div className="flex flex-wrap items-center gap-2">
                           <h3 className="font-black text-lg">{s.name}</h3>
                           <Status status={s.status} />
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-xs font-bold ${s.paymentStatus === "paid" ? "bg-emerald-500/10 text-emerald-700" : s.paymentStatus === "pending_review" ? "bg-amber-500/10 text-amber-700 border border-amber-300" : "bg-slate-100 text-slate-600"}`}
+                          >
+                            {s.paymentStatus === "paid" ? "💳 اشتراك مدفوع" : s.paymentStatus === "pending_review" ? "⏳ إيصال قيد المراجعة" : "🆓 مشاهدة مجانية (أول 2)"}
+                          </span>
                           <span
                             className={`rounded-full px-2.5 py-1 text-xs font-bold ${s.learningMode === "offline" ? "bg-violet-500/10 text-violet-700" : "bg-sky-500/10 text-sky-700"}`}
                           >
