@@ -2017,14 +2017,14 @@ export function StudentPlatform() {
               <div className="border-b border-border mt-4 mb-4" />
 
 
-              <div className="mt-4 space-y-5 max-h-[60vh] overflow-y-auto px-1" dir="rtl">
+              <div className="mt-4 space-y-5 max-h-[60vh] overflow-y-auto px-1 font-sans" dir="ltr">
                 {activeQuiz.questions.map((q, qi) => {
                   const isSelected = quizAnswers[qi] !== undefined && quizAnswers[qi] >= 0;
                   const isCorrect = quizResult && quizAnswers[qi] === q.correctIndex;
                   const isWrong = quizResult && isSelected && !isCorrect;
 
                   return (
-                    <fieldset key={qi} dir="rtl" className={`space-y-3 rounded-2xl border p-4.5 transition-all shadow-xs text-right ${
+                    <fieldset key={qi} dir="ltr" className={`space-y-3 rounded-2xl border p-4.5 transition-all shadow-xs text-left ${
                       quizResult
                         ? isCorrect
                           ? "border-emerald-500/40 bg-emerald-500/5"
@@ -2033,8 +2033,8 @@ export function StudentPlatform() {
                           : "border-border bg-card/40"
                         : "border-border bg-card/60"
                     }`}>
-                      <legend className="font-extrabold text-base md:text-[17px] mb-3 text-foreground flex items-center justify-between w-full gap-3 text-right" dir="rtl">
-                        <span className="flex-1 text-right whitespace-pre-wrap leading-relaxed tracking-normal font-bold" dir="rtl">{qi + 1}. {q.prompt}</span>
+                      <legend className="font-extrabold text-base md:text-[17px] mb-3 text-foreground flex items-center justify-between w-full gap-3 text-left" dir="ltr">
+                        <span className="flex-1 text-left whitespace-pre-wrap leading-relaxed tracking-wide font-sans font-bold" dir="auto">{qi + 1}. {q.prompt}</span>
                         {quizResult && (
                           <span className={`text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${
                             isCorrect ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-red-500/15 text-red-600 dark:text-red-400"
@@ -2050,7 +2050,7 @@ export function StudentPlatform() {
                         </div>
                       )}
 
-                      <div className="space-y-2.5" dir="rtl">
+                      <div className="space-y-2.5" dir="ltr">
                         {q.options.map((option, oi) => {
                           const optionSelected = quizAnswers[qi] === oi;
                           const optionIsCorrect = q.correctIndex === oi;
@@ -2071,8 +2071,8 @@ export function StudentPlatform() {
                           return (
                             <label
                               key={oi}
-                              dir="rtl"
-                              className={`flex min-h-12 cursor-pointer items-center justify-start gap-3 rounded-xl border px-4 py-3 text-right transition-all ${optionStyle}`}
+                              dir="ltr"
+                              className={`flex min-h-12 cursor-pointer items-center justify-start gap-3 rounded-xl border px-4 py-3 text-left transition-all font-mono ${optionStyle}`}
                             >
                               <input
                                 type="radio"
@@ -2086,7 +2086,7 @@ export function StudentPlatform() {
                                 }
                                 className="text-primary focus:ring-primary h-4 w-4 shrink-0 cursor-pointer"
                               />
-                              <span dir="rtl" className="text-sm md:text-[15px] font-semibold flex-1 text-right leading-relaxed">
+                              <span dir="auto" className="text-sm md:text-[15px] font-semibold flex-1 text-left leading-relaxed font-sans">
                                 {option}
                               </span>
                             </label>
@@ -2097,7 +2097,7 @@ export function StudentPlatform() {
                       {quizResult && activeQuiz.showExplanations !== false && q.explanation && (
                         <div className="mt-3 rounded-xl border border-primary/20 bg-primary/8 p-3.5 text-xs text-foreground text-right" dir="rtl">
                           <strong className="block font-bold mb-1 text-primary">الشرح:</strong>
-                          <span className="text-muted-foreground">{q.explanation}</span>
+                          <span className="text-muted-foreground" dir="auto">{q.explanation}</span>
                         </div>
                       )}
                     </fieldset>
