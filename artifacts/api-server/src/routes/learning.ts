@@ -2564,4 +2564,69 @@ router.delete("/learning/notes/:id", requireStudent, async (req, res, next) => {
   }
 });
 
+// C++ Code Execution endpoint using Wandbox / GCC Online API
+router.post(
+  "/learning/compiler/run",
+  requireStudent,
+  async (req, res, next) => {
+    try {
+      const code = String(req.body.code ?? "");
+      const stdin = String(req.body.stdin ?? "");
+      
+      if (!code.trim()) {
+        res.status(400).json({ error: "الكود فارغ" });
+        return;
+      }
+
+      if (code.length > 50000) {
+        res.status(400).json({ error: "حجم الكود كبير جداً" });
+        return;
+      }
+
+      // Call Wandbox API (GCC Latest for C++)
+      const response = await fetch("https://wandbox.org/api/compile.json", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          compiler: "gcc-head",
+          code,
+          stdin,
+          options: "warning,c++20",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Wandbox API error: ${response.status}`);
+      }
+
+      const result = (await response.json()) as {
+        status?: string;
+        signal?: string;
+        compiler_output?: string;
+        compiler_error?: string;
+        program_output?: string;
+        program_error?: string;
+      };
+
+      const stdout = result.program_output ?? "";
+      const stderr = result.program_error || result.compiler_error || result.compiler_output || "";
+      const exitCode = result.status === "0" ? 0 : Number(result.status ?? 1);
+
+      res.json({
+        output: stdout,
+        error: stderr,
+        exitCode,
+        success: exitCode === 0 && !stderr.includes("error:"),
+      });
+    } catch (error) {
+      res.status(500).json({
+        output: "",
+        error: "تعذر الاتصال بـ C++ Compiler Server حالياً. يرجى المحاولة مرة أخرى.",
+        exitCode: 1,
+        success: false,
+      });
+    }
+  },
+);
+
 export default router;
