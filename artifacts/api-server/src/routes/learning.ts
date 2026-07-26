@@ -1890,6 +1890,51 @@ router.post("/admin/learning/question-bank", requireAdmin, async (req, res, next
   }
 });
 
+router.post("/admin/learning/question-bank/batch-import", requireAdmin, async (req, res, next) => {
+  try {
+    const { questions, courseId, category, stage, stages } = req.body;
+    if (!Array.isArray(questions) || questions.length === 0) {
+      res.status(400).json({ error: "قائمة الأسئلة فارغة" });
+      return;
+    }
+
+    const validQuestions = questions.filter(
+      (q) => q && typeof q.prompt === "string" && q.prompt.trim() && Array.isArray(q.options) && q.options.length >= 2
+    );
+
+    if (validQuestions.length === 0) {
+      res.status(400).json({ error: "لا توجد أسئلة صالحة للحفظ" });
+      return;
+    }
+
+    const inserted = await db
+      .insert(questionBankTable)
+      .values(
+        validQuestions.map((q) => ({
+          courseId: Number(courseId) || null,
+          category: String(category || "عام"),
+          stage: String(stage || ""),
+          stages: Array.isArray(stages) ? stages : [],
+          difficulty: "medium",
+          subject: "",
+          tags: [],
+          question: {
+            prompt: String(q.prompt).trim(),
+            options: q.options.map((o: unknown) => String(o).trim()),
+            correctIndex: Math.max(0, Math.min(q.options.length - 1, Number(q.correctIndex) || 0)),
+            explanation: String(q.explanation || "").trim() || undefined,
+            imageUrl: String(q.imageUrl || "").trim() || undefined,
+          },
+        }))
+      )
+      .returning();
+
+    res.status(201).json({ count: inserted.length });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.delete("/admin/learning/question-bank/:id", requireAdmin, async (req, res, next) => {
   try {
     const [deleted] = await db

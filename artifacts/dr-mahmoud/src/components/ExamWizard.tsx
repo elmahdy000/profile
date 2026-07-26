@@ -890,18 +890,66 @@ export function ExamWizard({
                       }
                     }}
                   />
-                  <Button
-                    type="button"
-                    disabled={isImportingQuestions}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      quizImportInputRef.current?.click();
-                    }}
-                    className="font-bold text-xs"
-                  >
-                    {isImportingQuestions ? "جارٍ قراءة الأسئلة..." : "تصفح واختيار الملف"}
-                  </Button>
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <Button
+                      type="button"
+                      disabled={isImportingQuestions}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        quizImportInputRef.current?.click();
+                      }}
+                      className="font-bold text-xs"
+                    >
+                      {isImportingQuestions ? "جارٍ قراءة الأسئلة..." : "استيراد ملف للاختبار الحالي"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={isImportingQuestions}
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!quizImportInputRef.current?.files?.[0]) {
+                          quizImportInputRef.current?.click();
+                          return;
+                        }
+                        const file = quizImportInputRef.current.files[0];
+                        setIsImportingQuestions(true);
+                        try {
+                          const formData = new FormData();
+                          formData.append("file", file);
+                          const result = await adminApi<{ questions: Question[] }>(
+                            "/api/admin/learning/quizzes/import",
+                            { method: "POST", body: formData }
+                          );
+                          if (result.questions?.length) {
+                            const batchRes = await adminApi<{ count: number }>(
+                              "/api/admin/learning/question-bank/batch-import",
+                              {
+                                method: "POST",
+                                body: JSON.stringify({
+                                  questions: result.questions,
+                                  courseId: quizForm.courseId,
+                                  category: quizForm.category,
+                                  stage: quizForm.stage,
+                                  stages: quizForm.stages,
+                                }),
+                              }
+                            );
+                            toast({ title: `تمت إضافة ${batchRes.count} سؤال بنجاح إلى بنك الأسئلة الشامل 📚` });
+                          }
+                        } catch (err) {
+                          toast({ variant: "destructive", description: (err as Error).message });
+                        } finally {
+                          setIsImportingQuestions(false);
+                        }
+                      }}
+                      className="border-emerald-500 text-emerald-700 hover:bg-emerald-50 font-bold text-xs"
+                    >
+                      <BookOpen className="h-4 w-4 ml-1" /> استيراد وحفظ في بنك الأسئلة فوراً
+                    </Button>
+                  </div>
                 </div>
 
                 {importWarnings.length > 0 && (
@@ -917,41 +965,58 @@ export function ExamWizard({
 
             {/* QUESTION BANK MODE */}
             {questionSource === "bank" && (
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-6 shadow-sm space-y-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-emerald-100 pb-3">
-                  <div>
-                    <h3 className="text-base font-black text-emerald-950 flex items-center gap-2">
-                      <BookOpen className="h-5 w-5 text-emerald-600" /> السحب التلقائي من بنك الأسئلة
-                    </h3>
-                    <p className="text-xs text-emerald-700 mt-0.5">اختر عشوائياً أسئلة محفوظة سلفاً في بنك الأسئلة.</p>
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-6 shadow-sm space-y-5">
+                <div className="border-b border-emerald-100 pb-3">
+                  <h3 className="text-base font-black text-emerald-950 flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-emerald-600" /> السحب التلقائي والمخصص من بنك الأسئلة
+                  </h3>
+                  <p className="text-xs text-emerald-700 mt-0.5">تحديد عدد الأسئلة المطلوبة وسحبها عشوائياً من الأسئلة المحفوظة لديك.</p>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-3 items-end bg-white p-4 rounded-xl border border-emerald-100">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700">عدد الأسئلة المطلوب اختيارها للاختبار:</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      defaultValue={10}
+                      id="bankQuestionCountInput"
+                      placeholder="مثال: 15"
+                      className="w-full rounded-lg border border-slate-200 p-2.5 text-sm font-bold text-center"
+                    />
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-emerald-300 text-emerald-800 hover:bg-emerald-100 font-bold text-xs"
-                    onClick={async () => {
-                      try {
-                        const res = await adminApi<{ title: string; questions: Question[] }>(
-                          "/api/admin/learning/question-bank/generate-quiz",
-                          {
-                            method: "POST",
-                            body: JSON.stringify({
-                              courseId: quizForm.courseId,
-                              category: quizForm.category,
-                              count: 10,
-                            }),
-                          }
-                        );
-                        setQuizForm({ ...quizForm, questions: res.questions });
-                        toast({ title: `تم سحب ${res.questions.length} سؤال من البنك بنجاح 🎉` });
-                        setQuestionSource("manual");
-                      } catch (e) {
-                        toast({ variant: "destructive", description: (e as Error).message });
-                      }
-                    }}
-                  >
-                    سحب 10 أسئلة عشوائية من البنك
-                  </Button>
+
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Button
+                      type="button"
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm h-11"
+                      onClick={async () => {
+                        const countInput = (document.getElementById("bankQuestionCountInput") as HTMLInputElement)?.value;
+                        const count = Number(countInput) || 10;
+                        try {
+                          const res = await adminApi<{ title: string; questions: Question[] }>(
+                            "/api/admin/learning/question-bank/generate-quiz",
+                            {
+                              method: "POST",
+                              body: JSON.stringify({
+                                courseId: quizForm.courseId,
+                                category: quizForm.category,
+                                count,
+                              }),
+                            }
+                          );
+                          setQuizForm({ ...quizForm, questions: res.questions });
+                          toast({ title: `تم سحب ${res.questions.length} سؤال من البنك بنجاح 🎉` });
+                          setQuestionSource("manual");
+                        } catch (e) {
+                          toast({ variant: "destructive", description: (e as Error).message });
+                        }
+                      }}
+                    >
+                      <Sparkles className="h-4 w-4 ml-1" /> سحب الأسئلة المحددة وإضافتها للاختبار
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
