@@ -387,9 +387,9 @@ function SearchableCombobox({
   );
 
   return (
-    <div className="space-y-1 relative text-right w-full" dir="rtl">
-      <label htmlFor={id} className="block text-xs font-bold text-foreground/80">
-        {label} {required && <span className="text-red-500">*</span>}
+    <div className="space-y-2 relative text-right w-full" dir="rtl">
+      <label htmlFor={id} className="block text-sm font-semibold text-[#E2E8F0]">
+        {label} {required && <span className="text-[#F87171]">*</span>}
       </label>
       <input
         id={id}
@@ -405,10 +405,10 @@ function SearchableCombobox({
         }}
         required={required}
         placeholder={placeholder}
-        className="h-10 w-full rounded-lg border border-border/80 bg-background px-3 text-right text-xs font-medium outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 shadow-xs"
+        className="h-[52px] w-full rounded-[14px] border border-[rgba(148,163,184,0.20)] bg-[#091426] px-4 text-right text-sm font-medium text-[#F8FAFC] placeholder-[#64748B] outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[rgba(59,130,246,0.14)]"
       />
       {isOpen && (filtered.length > 0 || search.trim() !== "") && (
-        <ul className="absolute z-50 w-full max-h-48 overflow-y-auto rounded-xl border border-border bg-card shadow-lg mt-1 py-1 text-right">
+        <ul className="absolute z-50 w-full max-h-48 overflow-y-auto rounded-[14px] border border-[rgba(148,163,184,0.25)] bg-[#101D31] shadow-2xl mt-1 py-1 text-right">
           {filtered.map((opt) => (
             <li key={opt}>
               <button
@@ -418,7 +418,7 @@ function SearchableCombobox({
                   setSearch(opt);
                   setIsOpen(false);
                 }}
-                className="w-full px-4 py-2.5 text-right hover:bg-primary/10 text-sm transition-colors text-foreground font-medium"
+                className="w-full px-4 py-2.5 text-right hover:bg-[rgba(59,130,246,0.15)] text-sm transition-colors text-[#F8FAFC] font-medium"
               >
                 {opt}
               </button>
@@ -432,7 +432,7 @@ function SearchableCombobox({
                   onChange(search);
                   setIsOpen(false);
                 }}
-                className="w-full px-4 py-2.5 text-right text-muted-foreground hover:bg-primary/10 text-xs transition-colors"
+                className="w-full px-4 py-2.5 text-right text-[#94A3B8] hover:bg-[rgba(59,130,246,0.15)] text-xs transition-colors"
               >
                 استخدام: "{search}"
               </button>
@@ -581,99 +581,110 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
 
   return (
     <main
-      className="relative min-h-[calc(100vh-4rem)] w-full overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/10 via-slate-50 to-blue-50/50 px-4 py-12 lg:py-16 dir-rtl"
+      className="relative min-h-[calc(100vh-4rem)] w-full overflow-hidden bg-[#07111F] text-[#F8FAFC] px-4 py-10 lg:py-14 dir-rtl font-sans"
       dir="rtl"
     >
-      {/* Glowing Ambient Background Elements */}
-      <div className="absolute top-12 right-1/4 h-96 w-96 rounded-full bg-blue-500/15 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-12 left-1/4 h-96 w-96 rounded-full bg-indigo-500/15 blur-[120px] pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
+      {/* Refined Layered Background System */}
+      <div className="absolute top-0 right-1/4 h-[500px] w-[500px] rounded-full bg-[#3B82F6]/10 blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-0 left-1/4 h-[500px] w-[500px] rounded-full bg-[#1E3A5F]/20 blur-[160px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(rgba(148,163,184,0.12)_1px,transparent_1px)] [background-size:24px_24px] opacity-25 pointer-events-none" />
 
-      <div className="relative mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(560px,640px)] lg:gap-14">
-        {/* Hero Left Info Column */}
-        <div className="space-y-7 text-right">
-          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200/80 bg-blue-50/90 px-4 py-2 text-xs md:text-sm font-bold text-blue-700 shadow-xs backdrop-blur-md">
-            <ShieldCheck className="h-4 w-4 text-blue-600" />
-            <span>منصة تعليمية آمنة ومخصصة للطلاب</span>
+      <div className="relative mx-auto grid max-w-[1440px] items-center gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-12 xl:gap-16">
+        {/* Introductory Content Column (Right in RTL) */}
+        <div className="space-y-8 text-right">
+          {/* Trust Badge */}
+          <div className="inline-flex h-[40px] items-center gap-2.5 rounded-full border border-[rgba(96,165,250,0.24)] bg-[rgba(59,130,246,0.10)] px-4 text-xs sm:text-sm font-semibold text-[#BFDBFE] backdrop-blur-md">
+            <ShieldCheck className="h-4 w-4 text-[#60A5FA]" />
+            <span>منصة تعليمية آمنة ومخصصة للطلاب وأولياء الأمور</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.15]">
-            أهلاً بك في منصة <br />
-            <span className="bg-gradient-to-r from-primary via-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          {/* Main Heading */}
+          <h1 className="text-[36px] sm:text-[46px] lg:text-[56px] font-extrabold tracking-tight text-[#F8FAFC] leading-[1.2]">
+            منصتك التعليمية مع <br />
+            <span className="text-[#60A5FA]">
               د. محمود المهدي
             </span>
           </h1>
 
-          <p className="text-slate-600 text-base md:text-lg leading-8 max-w-2xl font-medium">
-            بوابتك الذكية للتأسيس العملي، مشاهدة الدروس، تحميل المذكرات، وحل الاختبارات التفاعلية. سجّل حسابك واطلع على محتوى مرحلتك فور تفعيل كود الدخول.
+          {/* Supporting Paragraph */}
+          <p className="text-[#CBD5E1] text-base sm:text-lg leading-[1.9] max-w-[680px] font-normal">
+            بوابتك الذكية للتأسيس العملي، مشاهدة الدروس، معاينة المذكرات، وحل الاختبارات التفاعلية. سجّل حسابك واطلع على محتوى مرحلتك فور تفعيل كود الدخول.
           </p>
 
-          {/* 3-Step Journey */}
-          <div
-            className="grid grid-cols-3 gap-3"
-            aria-label="خطوات الانضمام للمنصة"
-          >
-            {[
-              ["1", "سجّل بياناتك", "أدخل اسمك ومرحلتك"],
-              ["2", "موافقة الأدمن", "تفعيل حسابك بالكود"],
-              ["3", "ابدأ التعلّم", "دروس ومذكرات واختبارات"],
-            ].map(([number, label, desc], index) => (
-              <div
-                key={number}
-                className="relative rounded-2xl border border-slate-200/90 bg-card/80 p-3.5 text-center shadow-xs transition-all hover:shadow-md hover:border-blue-300 backdrop-blur-sm"
-              >
-                <span className="mx-auto grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-tr from-primary to-blue-500 text-xs font-black text-white shadow-md shadow-blue-500/20">
-                  {number}
-                </span>
-                <strong className="mt-2.5 block text-xs sm:text-sm font-black text-slate-900">
-                  {label}
-                </strong>
-                <span className="hidden sm:block mt-1 text-[11px] text-slate-500 font-medium truncate">
-                  {desc}
-                </span>
-                {index < 2 && (
-                  <span className="absolute -left-3 top-8 hidden h-px w-4 bg-blue-300 sm:block" />
-                )}
-              </div>
-            ))}
+          {/* Connected 3-Step Journey */}
+          <div className="space-y-3">
+            <h2 className="text-sm font-bold text-[#94A3B8]">خطوات الانضمام للمنصة:</h2>
+            <div
+              className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 relative"
+              aria-label="خطوات الانضمام للمنصة"
+            >
+              {[
+                ["1", "سجّل بياناتك", "أدخل اسمك ومرحلتك الدراسية"],
+                ["2", "موافقة الأدمن", "استلم كود التفعيل المخصص"],
+                ["3", "ابدأ التعلّم", "دروس ومذكرات واختبارات حية"],
+              ].map(([number, label, desc], index) => (
+                <div
+                  key={number}
+                  className="relative flex flex-col justify-between rounded-[18px] border border-[rgba(148,163,184,0.18)] bg-[#101D31]/80 p-4 text-right transition-all duration-200 hover:border-[#3B82F6]/40 min-h-[128px]"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="grid h-[38px] w-[38px] place-items-center rounded-full bg-[#3B82F6] text-sm font-bold text-white shadow-md shadow-blue-500/20">
+                      {number}
+                    </span>
+                    {index < 2 && (
+                      <span className="hidden sm:block text-[rgba(148,163,184,0.3)] text-xs font-mono">←</span>
+                    )}
+                  </div>
+                  <div className="mt-3">
+                    <strong className="block text-sm font-bold text-[#F8FAFC]">
+                      {label}
+                    </strong>
+                    <span className="mt-1 block text-xs text-[#94A3B8] leading-relaxed">
+                      {desc}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Key Features Pills */}
-          <div className="grid sm:grid-cols-3 gap-3 pt-2">
+          {/* Compact Feature Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-1">
             {[
               ["دروس شرح منظمة", BookOpen, "مباشرة وأونلاين"],
-              ["مذكرات وقوالب PDF", FileText, "معاينة وتحميل سريع"],
+              ["مذكرات وقوالب PDF", FileText, "معاينة داخل المنصة"],
               ["اختبارات وتقييم آلي", ClipboardCheck, "تصحيح ونتائج فورية"],
             ].map(([label, Icon, sub]) => (
               <div
                 key={label as string}
-                className="rounded-2xl border border-slate-200/80 bg-card/90 p-4 flex items-center gap-3.5 font-bold shadow-xs transition-all hover:shadow-md hover:border-blue-300"
+                className="rounded-[18px] border border-[rgba(148,163,184,0.16)] bg-[#101D31]/72 p-4 flex items-center gap-3.5 min-h-[90px] transition-all duration-200 hover:border-[#3B82F6]/35"
               >
-                <div className="p-2.5 rounded-xl bg-blue-50 text-primary">
+                <div className="grid h-[44px] w-[44px] shrink-0 place-items-center rounded-[12px] bg-[rgba(59,130,246,0.12)] text-[#60A5FA]">
                   <Icon className="h-5 w-5" />
                 </div>
-                <div>
-                  <strong className="block text-xs md:text-sm text-slate-900">{label as string}</strong>
-                  <span className="text-[11px] text-slate-500 font-normal">{sub as string}</span>
+                <div className="min-w-0">
+                  <strong className="block text-sm font-bold text-[#F8FAFC] truncate">{label as string}</strong>
+                  <span className="text-xs text-[#94A3B8] leading-relaxed block truncate">{sub as string}</span>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Right Glassmorphism Access Card */}
-        <div className="w-full rounded-[28px] border border-slate-200/90 bg-card/95 p-6 shadow-2xl shadow-blue-900/10 backdrop-blur-2xl sm:p-9">
-          <div className="grid grid-cols-2 rounded-2xl bg-slate-100/90 p-1.5 mb-7 border border-slate-200/60 shadow-inner">
+        {/* Form Column (Left in RTL) */}
+        <div className="w-full rounded-[28px] border border-[rgba(148,163,184,0.20)] bg-[#101D31] p-6 sm:p-9 shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
+          {/* Segmented Tab Switcher */}
+          <div className="grid grid-cols-2 rounded-[16px] bg-[#091426] p-[5px] mb-8 border border-[rgba(148,163,184,0.15)] h-[54px]">
             <button
               type="button"
               onClick={() => {
                 setMode("login");
                 setError("");
               }}
-              className={`rounded-xl py-3 font-extrabold text-xs sm:text-sm transition-all ${
+              className={`rounded-[12px] h-full font-bold text-sm transition-all duration-200 ${
                 mode === "login"
-                  ? "bg-card text-primary shadow-sm shadow-slate-200"
-                  : "text-slate-500 hover:text-slate-900"
+                  ? "bg-[rgba(59,130,246,0.20)] text-[#F8FAFC] border border-[#3B82F6]/40 shadow-sm"
+                  : "text-[#94A3B8] hover:text-[#CBD5E1]"
               }`}
             >
               دخول الطالب
@@ -684,29 +695,30 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                 setMode("register");
                 setError("");
               }}
-              className={`rounded-xl py-3 font-extrabold text-xs sm:text-sm transition-all ${
+              className={`rounded-[12px] h-full font-bold text-sm transition-all duration-200 ${
                 mode === "register"
-                  ? "bg-card text-primary shadow-sm shadow-slate-200"
-                  : "text-slate-500 hover:text-slate-900"
+                  ? "bg-[rgba(59,130,246,0.20)] text-[#F8FAFC] border border-[#3B82F6]/40 shadow-sm"
+                  : "text-[#94A3B8] hover:text-[#CBD5E1]"
               }`}
             >
               تسجيل طالب جديد
             </button>
           </div>
+
           {mode === "register" && (registeredCode || message) ? (
             <div className="py-4 text-center" role="status">
-              <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-emerald-500/10 text-emerald-600">
+              <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-[#22C55E]/15 text-[#22C55E]">
                 <CheckCircle2 className="h-10 w-10" />
               </div>
-              <h2 className="mt-4 text-2xl font-black text-slate-900">تم إنشاء حسابك وتفعيله فوراً 🎉</h2>
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+              <h2 className="mt-4 text-2xl font-bold text-[#F8FAFC]">تم إنشاء حسابك وتفعيله فوراً 🎉</h2>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#CBD5E1]">
                 كود الدخول الخاص بك جاهز. احفظه جيداً واستخدمه للدخول إلى المنصة.
               </p>
 
               {registeredCode && (
-                <div className="mt-5 rounded-2xl border-2 border-primary/30 bg-primary/5 p-5 text-center shadow-xs">
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">كود الدخول الخاص بك</span>
-                  <strong className="mt-2 block font-mono text-3xl font-black text-primary tracking-widest dir-ltr select-all">
+                <div className="mt-5 rounded-[18px] border border-[#3B82F6]/40 bg-[#091426] p-5 text-center shadow-xs">
+                  <span className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider block">كود الدخول الخاص بك</span>
+                  <strong className="mt-2 block font-mono text-3xl font-bold text-[#60A5FA] tracking-widest dir-ltr select-all">
                     {registeredCode}
                   </strong>
                   <button
@@ -715,19 +727,19 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                       navigator.clipboard.writeText(registeredCode);
                       toast({ title: "تم نسخ الكود!" });
                     }}
-                    className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-colors"
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[rgba(59,130,246,0.15)] px-3 py-1.5 text-xs font-bold text-[#60A5FA] hover:bg-[rgba(59,130,246,0.25)] transition-colors"
                   >
                     <Copy className="h-3.5 w-3.5" /> نسخ الكود
                   </button>
                 </div>
               )}
 
-              <div className="mt-5 rounded-2xl border bg-card p-4 text-right text-xs space-y-2 leading-relaxed">
-                <div className="flex items-start gap-2 text-emerald-700 dark:text-emerald-400 font-bold">
-                  <span className="shrink-0 font-black">1.</span>
+              <div className="mt-5 rounded-[18px] border border-[rgba(148,163,184,0.18)] bg-[#091426] p-4 text-right text-xs space-y-2 leading-relaxed">
+                <div className="flex items-start gap-2 text-[#22C55E] font-bold">
+                  <span className="shrink-0 font-bold">1.</span>
                   <span><strong>أول فيديوهين مجانًا:</strong> يمكنك الدخول فوراً بالكود ومشاهدة أول درسين في كورساتك.</span>
                 </div>
-                <div className="flex items-start gap-2 text-blue-700 dark:text-blue-400 font-bold">
+                <div className="flex items-start gap-2 text-[#60A5FA] font-bold">
                   <span className="shrink-0 font-black">2.</span>
                   <span><strong>تأكيد الحجز:</strong> لفتح باقي فيديوهات المنصة والاختبارات، يرجى رفع إيصال الدفع من داخل حسابك، وسيقوم الأدمن بمراجعته وتأكيد الحجز لك.</span>
                 </div>
@@ -743,56 +755,56 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                   setMessage("");
                   setRegisteredCode("");
                 }}
-                className="mt-6 h-12 w-full rounded-xl font-bold text-sm shadow-md"
+                className="mt-6 h-[58px] w-full rounded-[14px] bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold text-base shadow-md transition-all duration-200"
               >
                 الدخول للمنصة بالكود الآن 🚀
               </Button>
               <a
                 href="https://wa.me/201044348610"
-                className="mt-3 inline-flex h-11 w-full items-center justify-center rounded-xl border font-bold text-primary"
+                className="mt-3 inline-flex h-11 w-full items-center justify-center rounded-[14px] border border-[rgba(148,163,184,0.20)] font-bold text-[#60A5FA] hover:text-[#93C5FD] transition-colors"
               >
                 محتاج مساعدة؟ كلمنا واتساب
               </a>
             </div>
           ) : mode === "recover" ? (
-            <form onSubmit={submitRecovery} className="space-y-5">
+            <form onSubmit={submitRecovery} className="space-y-6">
               <div>
-                <h2 className="text-2xl font-black">استرجاع كود الدخول</h2>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                <h2 className="text-2xl font-bold text-[#F8FAFC]">استرجاع كود الدخول</h2>
+                <p className="mt-1.5 text-sm leading-relaxed text-[#94A3B8]">
                   اكتب نفس الاسم ورقم الموبايل اللي سجلت بيهم، والأدمن هيراجع الطلب ويتواصل معاك بأمان.
                 </p>
               </div>
               {message ? (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-bold leading-6 text-emerald-800" role="status">
+                <div className="rounded-[14px] border border-[#22C55E]/30 bg-[#22C55E]/10 p-4 text-sm font-bold leading-relaxed text-[#22C55E]" role="status">
                   {message}
                 </div>
               ) : (
                 <>
-                  <div className="space-y-2">
-                    <label htmlFor="recovery-name" className="text-sm font-bold">اسم الطالب</label>
+                  <div className="space-y-2 text-right">
+                    <label htmlFor="recovery-name" className="block text-sm font-semibold text-[#E2E8F0]">اسم الطالب</label>
                     <input
                       id="recovery-name"
                       required
                       value={recoveryForm.name}
                       onChange={(event) => setRecoveryForm({ ...recoveryForm, name: event.target.value })}
-                      className="h-12 w-full rounded-xl border border-border bg-background px-4"
+                      className="h-[58px] w-full rounded-[14px] border border-[rgba(148,163,184,0.20)] bg-[#091426] px-4 text-[#F8FAFC] placeholder-[#64748B] text-sm focus:border-[#3B82F6] focus:outline-none focus:ring-4 focus:ring-[rgba(59,130,246,0.14)]"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label htmlFor="recovery-phone" className="text-sm font-bold">رقم الموبايل المسجل</label>
+                  <div className="space-y-2 text-right">
+                    <label htmlFor="recovery-phone" className="block text-sm font-semibold text-[#E2E8F0]">رقم الموبايل المسجل</label>
                     <input
                       id="recovery-phone"
                       type="tel"
                       required
                       value={recoveryForm.phone}
                       onChange={(event) => setRecoveryForm({ ...recoveryForm, phone: event.target.value })}
-                      className="h-12 w-full rounded-xl border border-border bg-background px-4 text-left"
+                      className="h-[58px] w-full rounded-[14px] border border-[rgba(148,163,184,0.20)] bg-[#091426] px-4 text-left text-[#F8FAFC] placeholder-[#64748B] text-sm focus:border-[#3B82F6] focus:outline-none focus:ring-4 focus:ring-[rgba(59,130,246,0.14)]"
                       dir="ltr"
                     />
                   </div>
-                  {error && <p role="alert" className="rounded-xl bg-red-500/10 p-3 text-sm text-red-600">{error}</p>}
-                  <Button disabled={loading} className="h-12 w-full rounded-xl font-bold">
-                    {loading ? <Loader2 className="animate-spin" /> : <ShieldCheck />}
+                  {error && <p role="alert" className="rounded-[14px] border border-[#F87171]/30 bg-[#F87171]/10 p-3 text-sm font-medium text-[#F87171]">{error}</p>}
+                  <Button disabled={loading} className="h-[58px] w-full rounded-[14px] bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold text-base shadow-md transition-all duration-200">
+                    {loading ? <Loader2 className="animate-spin" /> : <ShieldCheck className="h-5 w-5" />}
                     إرسال طلب الاسترجاع
                   </Button>
                 </>
@@ -800,21 +812,21 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
               <button
                 type="button"
                 onClick={() => { setMode("login"); setError(""); setMessage(""); }}
-                className="w-full text-sm font-bold text-primary"
+                className="w-full text-center text-sm font-bold text-[#60A5FA] hover:text-[#93C5FD] transition-colors"
               >
                 رجوع لتسجيل الدخول
               </button>
             </form>
           ) : mode === "login" ? (
-            <form onSubmit={submitLogin} className="space-y-5">
+            <form onSubmit={submitLogin} className="space-y-6">
               <div>
-                <h2 className="text-2xl font-black">دخول الطلاب</h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  اكتب كود الدخول المكوّن من 6 خانات بعد موافقة الأدمن.
+                <h2 className="text-[28px] font-bold text-[#F8FAFC]">دخول الطلاب</h2>
+                <p className="text-sm text-[#94A3B8] mt-1.5 leading-relaxed">
+                  اكتب كود الدخول المكوّن من 6 خانات المخصص لحسابك.
                 </p>
               </div>
-              <div className="space-y-2">
-                <label htmlFor="student-code" className="text-sm font-bold">
+              <div className="space-y-2 text-right">
+                <label htmlFor="student-code" className="block text-sm font-semibold text-[#E2E8F0]">
                   كود الدخول الشخصي
                 </label>
                 <div className="relative">
@@ -826,77 +838,77 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                     required
                     autoComplete="one-time-code"
                     placeholder="A7K9P2"
-                    className="h-14 w-full rounded-xl border border-border bg-background px-12 text-center font-mono text-lg tracking-widest focus:border-primary focus:outline-none"
+                    className="h-[58px] w-full rounded-[14px] border border-[rgba(148,163,184,0.20)] bg-[#091426] px-12 text-center font-mono text-xl font-bold tracking-widest text-[#F8FAFC] placeholder-[#64748B] focus:border-[#3B82F6] focus:outline-none focus:ring-4 focus:ring-[rgba(59,130,246,0.14)]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowAccessCode((visible) => !visible)}
                     aria-label={showAccessCode ? "إخفاء كود الدخول" : "إظهار كود الدخول"}
                     aria-pressed={showAccessCode}
-                    className="absolute left-2 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-primary"
+                    className="absolute left-2 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-lg text-[#94A3B8] hover:bg-[rgba(59,130,246,0.15)] hover:text-[#60A5FA] transition-colors"
                   >
                     {showAccessCode ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
               </div>
-              <label className="flex cursor-pointer items-start gap-3 rounded-xl border bg-muted/30 p-3">
+              <label className="flex cursor-pointer items-start gap-3 rounded-[14px] border border-[rgba(148,163,184,0.18)] bg-[#091426] p-3.5 hover:border-[rgba(96,165,250,0.45)] transition-all">
                 <input
                   type="checkbox"
                   checked={rememberCode}
                   onChange={(e) => setRememberCode(e.target.checked)}
-                  className="mt-1 h-4 w-4"
+                  className="mt-1 h-4 w-4 rounded border-slate-600 bg-slate-900 text-[#3B82F6] focus:ring-[#3B82F6]"
                 />
-                <span>
-                  <strong className="block text-sm">
-                    افتكر الكود على الجهاز
+                <div>
+                  <strong className="block text-sm font-semibold text-[#F8FAFC]">
+                    افتكر الكود على هذا الجهاز
                   </strong>
-                  <small className="text-muted-foreground">
-                    ماتفعّلهاش لو الجهاز مش شخصي.
-                  </small>
-                </span>
+                  <span className="text-xs text-[#94A3B8] block mt-0.5">
+                    لا تفعّلها إذا كنت تستخدم جهازاً عاماً.
+                  </span>
+                </div>
               </label>
               {error && (
                 <p
                   role="alert"
-                  className="rounded-xl bg-red-500/10 p-3 text-sm text-red-600"
+                  className="rounded-[14px] border border-[#F87171]/30 bg-[#F87171]/10 p-3.5 text-sm font-medium text-[#F87171]"
                 >
                   {error}
                 </p>
               )}
               <Button
                 disabled={loading}
-                className="h-13 w-full rounded-xl text-base font-bold"
+                className="h-[58px] w-full rounded-[14px] bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold text-base shadow-md transition-all duration-200"
               >
                 {loading ? (
-                  <Loader2 className="animate-spin" />
+                  <Loader2 className="animate-spin h-5 w-5" />
                 ) : (
-                  <ShieldCheck />
+                  <ShieldCheck className="h-5 w-5" />
                 )}{" "}
                 دخول المنصة
               </Button>
               <button
                 type="button"
                 onClick={() => { setMode("recover"); setError(""); setMessage(""); }}
-                className="w-full text-center text-sm font-bold text-primary hover:underline"
+                className="w-full text-center text-sm font-semibold text-[#60A5FA] hover:text-[#93C5FD] hover:underline transition-colors"
               >
                 نسيت كود الدخول؟
               </button>
-              <p className="text-center text-xs text-muted-foreground">
-                لسه طلبك ما اتقبلش؟ كلمنا بعد ما تبعت التسجيل.
+              <p className="text-center text-xs text-[#94A3B8]">
+                لم يتم تفعيل حسابك بعد؟ كلمنا بعد إرسال طلب التسجيل.
               </p>
             </form>
           ) : (
-            <form onSubmit={submitRegistration} className="space-y-4" noValidate>
+            <form onSubmit={submitRegistration} className="space-y-5" noValidate>
               <div>
-                <h2 className="text-xl font-bold leading-tight text-foreground">تسجيل طالب جديد</h2>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <h2 className="text-2xl font-bold text-[#F8FAFC]">تسجيل طالب جديد</h2>
+                <p className="mt-1 text-xs text-[#94A3B8] leading-relaxed">
                   اكتب بياناتك، والأدمن هيراجعها قبل ما يفعّل حسابك.
                 </p>
               </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="flex flex-col text-xs font-bold text-foreground/80">
-                  <label htmlFor="student-name" className="mb-1.5 block">
-                    اسم الطالب <span className="text-red-500">*</span>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="flex flex-col text-xs font-semibold text-[#E2E8F0]">
+                  <label htmlFor="student-name" className="mb-2 block text-sm">
+                    اسم الطالب <span className="text-[#F87171]">*</span>
                   </label>
                   <input
                     id="student-name"
@@ -904,13 +916,13 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     required
                     aria-invalid={Boolean(form.name) && !nameValid}
-                    className="h-10 w-full rounded-lg border border-border/80 bg-background px-3 text-xs outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 shadow-xs"
+                    className="h-[52px] w-full rounded-[14px] border border-[rgba(148,163,184,0.20)] bg-[#091426] px-4 text-sm font-medium text-[#F8FAFC] placeholder-[#64748B] outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[rgba(59,130,246,0.14)]"
                   />
-                  {form.name && !nameValid && <p className="mt-1 text-[11px] text-red-600">اكتب اسم الطالب بشكل صحيح.</p>}
+                  {form.name && !nameValid && <p className="mt-1 text-[11px] text-[#F87171]">اكتب اسم الطالب بشكل صحيح.</p>}
                 </div>
-                <div className="flex flex-col text-xs font-bold text-foreground/80">
-                  <label htmlFor="student-phone" className="mb-1.5 block">
-                    رقم الهاتف <span className="text-red-500">*</span>
+                <div className="flex flex-col text-xs font-semibold text-[#E2E8F0]">
+                  <label htmlFor="student-phone" className="mb-2 block text-sm">
+                    رقم الهاتف <span className="text-[#F87171]">*</span>
                   </label>
                   <input
                     id="student-phone"
@@ -920,13 +932,13 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                     inputMode="tel"
                     placeholder="01xxxxxxxxx"
                     aria-invalid={Boolean(form.phone) && !phoneValid}
-                    className="h-10 w-full rounded-lg border border-border/80 bg-background px-3 text-xs outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 shadow-xs"
+                    className="h-[52px] w-full rounded-[14px] border border-[rgba(148,163,184,0.20)] bg-[#091426] px-4 text-sm font-medium text-[#F8FAFC] placeholder-[#64748B] outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[rgba(59,130,246,0.14)]"
                   />
-                  {form.phone && !phoneValid && <p className="mt-1 text-[11px] text-red-600">رقم الهاتف من 10 إلى 15 رقمًا.</p>}
+                  {form.phone && !phoneValid && <p className="mt-1 text-[11px] text-[#F87171]">رقم الهاتف من 10 إلى 15 رقمًا.</p>}
                 </div>
               </div>
-              <div className="flex flex-col text-xs font-bold text-foreground/80">
-                <label htmlFor="student-email" className="mb-1.5 block">
+              <div className="flex flex-col text-xs font-semibold text-[#E2E8F0]">
+                <label htmlFor="student-email" className="mb-2 block text-sm">
                   البريد الإلكتروني (اختياري)
                 </label>
                 <input
@@ -935,11 +947,11 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   aria-invalid={!emailValid}
-                  className="h-10 w-full rounded-lg border border-border/80 bg-background px-3 text-xs outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 shadow-xs"
+                  className="h-[52px] w-full rounded-[14px] border border-[rgba(148,163,184,0.20)] bg-[#091426] px-4 text-sm font-medium text-[#F8FAFC] placeholder-[#64748B] outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[rgba(59,130,246,0.14)]"
                 />
-                {!emailValid && <p className="mt-1 text-[11px] text-red-600">صيغة البريد الإلكتروني غير صحيحة.</p>}
+                {!emailValid && <p className="mt-1 text-[11px] text-[#F87171]">صيغة البريد الإلكتروني غير صحيحة.</p>}
               </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <SearchableCombobox
                   id="student-governorate"
                   label="المحافظة"
@@ -971,8 +983,8 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                   setForm({ ...form, ...selection, otherGradeDetail: "" })
                 }
               />
-              <fieldset className="space-y-2 rounded-xl border border-border/70 bg-muted/15 p-3 sm:p-4">
-                <legend className="px-1 text-xs font-extrabold uppercase text-primary tracking-wide">
+              <fieldset className="space-y-2 rounded-[16px] border border-[rgba(148,163,184,0.18)] bg-[#091426] p-4">
+                <legend className="px-1 text-xs font-bold uppercase text-[#60A5FA] tracking-wide">
                   2. نظام الدراسة
                 </legend>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -984,7 +996,7 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                   ).map(([value, label, description]) => (
                     <label
                       key={value}
-                      className={`relative flex min-h-[56px] cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2 transition focus-within:ring-2 focus-within:ring-primary/30 ${form.learningMode === value ? "border-primary bg-blue-50/70 ring-1 ring-primary/20" : "border-border/80 bg-background hover:border-primary/40"}`}
+                      className={`relative flex min-h-[56px] cursor-pointer items-center gap-3 rounded-[12px] border px-3.5 py-2.5 transition focus-within:ring-2 focus-within:ring-[#3B82F6]/30 ${form.learningMode === value ? "border-[#3B82F6] bg-[rgba(59,130,246,0.12)] text-[#F8FAFC]" : "border-[rgba(148,163,184,0.18)] bg-[#101D31] text-[#CBD5E1] hover:border-[#3B82F6]/40"}`}
                     >
                       <input
                         type="radio"
@@ -997,10 +1009,10 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                         className="sr-only"
                       />
                       <span className="min-w-0 flex-1">
-                        <strong className="block text-xs font-bold">{label}</strong>
-                        <small className="block text-[11px] text-muted-foreground">{description}</small>
+                        <strong className="block text-xs font-bold text-[#F8FAFC]">{label}</strong>
+                        <small className="block text-[11px] text-[#94A3B8]">{description}</small>
                       </span>
-                      {form.learningMode === value && <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />}
+                      {form.learningMode === value && <CheckCircle2 className="h-4 w-4 shrink-0 text-[#60A5FA]" aria-hidden="true" />}
                     </label>
                   ))}
                 </div>
@@ -1008,16 +1020,16 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
               {error && (
                 <p
                   role="alert"
-                  className="rounded-lg bg-red-500/10 p-2.5 text-xs text-red-600 font-semibold"
+                  className="rounded-[14px] border border-[#F87171]/30 bg-[#F87171]/10 p-3 text-xs font-semibold text-[#F87171]"
                 >
                   {error}
                 </p>
               )}
               <Button
                 disabled={loading || !registrationValid}
-                className="mt-4 h-11 w-full rounded-lg text-sm font-bold shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-4 h-[58px] w-full rounded-[14px] bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold text-base shadow-md transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {loading ? <Loader2 className="animate-spin" /> : <UserPlus />}{" "}
+                {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <UserPlus className="h-5 w-5" />}{" "}
                 إرسال طلب التسجيل
               </Button>
             </form>

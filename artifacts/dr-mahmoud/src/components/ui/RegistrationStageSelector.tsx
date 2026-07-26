@@ -26,7 +26,7 @@ type Props = {
 };
 
 const fieldClass =
-  "h-10 w-full rounded-lg border border-border/80 bg-background px-3 text-xs font-medium text-foreground outline-none transition hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/15 shadow-xs";
+  "h-[52px] w-full rounded-[14px] border border-[rgba(148,163,184,0.20)] bg-[#091426] dark:bg-[#091426] px-4 text-sm font-medium text-[#F8FAFC] dark:text-[#F8FAFC] outline-none transition hover:border-[#3B82F6]/50 focus:border-[#3B82F6] focus:ring-4 focus:ring-[rgba(59,130,246,0.14)] shadow-xs";
 
 export function createDefaultRegistrationStage(): RegistrationStageSelection {
   return {
@@ -96,14 +96,14 @@ export function RegistrationStageSelector({ value, onChange }: Props) {
   };
 
   return (
-    <fieldset className="space-y-4 rounded-xl border border-border/80 bg-muted/15 p-4 sm:p-5">
-      <legend className="px-2 text-xs font-extrabold uppercase text-primary tracking-wide">
+    <fieldset className="space-y-4 rounded-[16px] border border-[rgba(148,163,184,0.18)] bg-[#091426] p-4 sm:p-5">
+      <legend className="px-2 text-xs font-bold uppercase text-[#60A5FA] tracking-wide">
         1. النظام والمرحلة الدراسية
       </legend>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <label className="flex flex-col text-xs font-bold text-foreground/80">
-          <span className="mb-1.5">النظام التعليمي <span className="text-red-500">*</span></span>
+        <label className="flex flex-col text-sm font-semibold text-[#E2E8F0]">
+          <span className="mb-2">النظام التعليمي <span className="text-[#F87171]">*</span></span>
           <select
             id="education-system"
             aria-label="النظام التعليمي"
