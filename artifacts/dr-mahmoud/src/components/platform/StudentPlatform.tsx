@@ -2017,14 +2017,14 @@ export function StudentPlatform() {
               <div className="border-b border-border mt-4 mb-4" />
 
 
-              <div className="mt-4 space-y-5 max-h-[60vh] overflow-y-auto px-1 font-sans" dir="ltr">
+              <div className="mt-4 space-y-5 max-h-[60vh] overflow-y-auto px-1" dir="ltr">
                 {activeQuiz.questions.map((q, qi) => {
                   const isSelected = quizAnswers[qi] !== undefined && quizAnswers[qi] >= 0;
                   const isCorrect = quizResult && quizAnswers[qi] === q.correctIndex;
                   const isWrong = quizResult && isSelected && !isCorrect;
 
                   return (
-                    <fieldset key={qi} dir="ltr" className={`space-y-3 rounded-2xl border p-4.5 transition-all shadow-xs text-left ${
+                    <fieldset key={qi} dir="ltr" className={`space-y-3 rounded-2xl border p-4 sm:p-5 transition-all shadow-xs text-left ${
                       quizResult
                         ? isCorrect
                           ? "border-emerald-500/40 bg-emerald-500/5"
@@ -2033,13 +2033,15 @@ export function StudentPlatform() {
                           : "border-border bg-card/40"
                         : "border-border bg-card/60"
                     }`}>
-                      <legend className="font-extrabold text-base md:text-[17px] mb-3 text-foreground flex items-center justify-between w-full gap-3 text-left" dir="ltr">
-                        <span className="flex-1 text-left whitespace-pre-wrap leading-relaxed tracking-wide font-sans font-bold" dir="auto">{qi + 1}. {q.prompt}</span>
+                      <legend className="font-bold text-base md:text-lg mb-3 text-foreground flex items-center justify-between w-full gap-3 text-left" dir="ltr">
+                        <span className="flex-1 text-left whitespace-pre-wrap leading-relaxed font-sans font-semibold tracking-normal" dir="auto">
+                          {qi + 1}. {q.prompt}
+                        </span>
                         {quizResult && (
                           <span className={`text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${
                             isCorrect ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-red-500/15 text-red-600 dark:text-red-400"
                           }`}>
-                            {isCorrect ? "إجابة صحيحة ✓" : "إجابة خاطئة ✗"}
+                            {isCorrect ? "Correct ✓" : "Incorrect ✗"}
                           </span>
                         )}
                       </legend>
@@ -2072,7 +2074,7 @@ export function StudentPlatform() {
                             <label
                               key={oi}
                               dir="ltr"
-                              className={`flex min-h-12 cursor-pointer items-center justify-start gap-3 rounded-xl border px-4 py-3 text-left transition-all font-mono ${optionStyle}`}
+                              className={`flex min-h-12 cursor-pointer items-center gap-3.5 rounded-xl border px-4 py-3 text-left transition-all ${optionStyle}`}
                             >
                               <input
                                 type="radio"
@@ -2086,7 +2088,7 @@ export function StudentPlatform() {
                                 }
                                 className="text-primary focus:ring-primary h-4 w-4 shrink-0 cursor-pointer"
                               />
-                              <span dir="auto" className="text-sm md:text-[15px] font-semibold flex-1 text-left leading-relaxed font-sans">
+                              <span dir="auto" className="text-sm md:text-base font-medium flex-1 text-left leading-normal font-mono tracking-tight">
                                 {option}
                               </span>
                             </label>
