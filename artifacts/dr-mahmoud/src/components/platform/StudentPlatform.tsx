@@ -2415,7 +2415,7 @@ export function StudentPlatform() {
             >
               {/* Sticky Timer Bar */}
               <div className="sticky top-0 z-10 -mx-5 -mt-5 md:-mx-6 md:-mt-6 mb-0">
-                <div className={`flex items-center justify-between px-5 py-3 md:px-6 rounded-t-3xl border-b border-border transition-colors duration-500 ${
+                <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3.5 md:px-6 rounded-t-3xl border-b border-border transition-colors duration-500 ${
                   quizResult
                     ? "bg-muted/80"
                     : quizTimeRemaining !== null
@@ -2425,35 +2425,47 @@ export function StudentPlatform() {
                         ? "bg-amber-500/12 border-amber-500/25"
                         : "bg-card"
                       : "bg-card"
-                }`}>
-                  {/* Left: Quiz title + meta */}
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-base font-black text-foreground leading-tight truncate" dir="auto">
+                }`} dir="rtl">
+                  {/* Right side (RTL): Quiz title & Stats */}
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <h2 className="text-base md:text-lg font-black text-foreground leading-tight truncate" dir="auto">
                       {activeQuiz.title}
                     </h2>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {activeQuiz.questions.length} سؤال · نجاح {activeQuiz.passingScore}%
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground font-semibold">
+                      <span>{activeQuiz.questions.length} سؤال</span>
+                      <span>•</span>
+                      <span>نجاح {activeQuiz.passingScore}%</span>
                       {!quizResult && (
-                        <span className="mr-2 font-bold text-primary">
-                          · أجبت: {quizAnswers.filter(a => a >= 0).length}/{activeQuiz.questions.length}
-                        </span>
+                        <>
+                          <span>•</span>
+                          <span className="font-bold text-primary">
+                            أجبت: {quizAnswers.filter(a => a >= 0).length}/{activeQuiz.questions.length}
+                          </span>
+                        </>
                       )}
-                    </p>
+                    </div>
                   </div>
 
-                  {/* Right: Timer + Anti-cheat badge */}
+                  {/* Left side (LTR): Timer & Anti-cheat warning badge */}
                   {!quizResult && (
-                    <div className="flex items-center gap-2 shrink-0">
-                      <div className={`flex items-center gap-2 rounded-xl px-3 py-1.5 transition-all duration-500 ${
+                    <div className="flex items-center gap-2 shrink-0 justify-end" dir="ltr">
+                      {quizTabSwitchCount > 0 && (
+                        <div className={`flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-bold ${quizTabSwitchCount >= MAX_TAB_SWITCHES - 1 ? "bg-red-500/20 text-red-500 border border-red-500/30 animate-pulse" : "bg-amber-500/15 text-amber-600 border border-amber-500/20"}`}>
+                          <span>⚠</span>
+                          <span>{quizTabSwitchCount}/{MAX_TAB_SWITCHES}</span>
+                        </div>
+                      )}
+
+                      <div className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-bold shadow-2xs transition-all duration-500 ${
                         quizTimeRemaining === null
                           ? "bg-muted text-muted-foreground"
                           : quizTimeRemaining < 30
-                          ? "bg-red-500/20 text-red-500 animate-pulse"
+                          ? "bg-red-500/20 text-red-500 border border-red-500/30 animate-pulse"
                           : quizTimeRemaining < 60
-                          ? "bg-amber-500/15 text-amber-500"
-                          : "bg-primary/10 text-primary"
+                          ? "bg-amber-500/15 text-amber-600 border border-amber-500/20"
+                          : "bg-primary/10 text-primary border border-primary/20"
                       }`}>
-                        <Clock className="h-4 w-4 shrink-0" />
+                        <Clock className="h-3.5 w-3.5 shrink-0" />
                         <span className="font-black text-sm tabular-nums">
                           {quizTimeRemaining !== null
                             ? `${Math.floor(quizTimeRemaining / 60)}:${String(quizTimeRemaining % 60).padStart(2, "0")}`
@@ -2461,16 +2473,11 @@ export function StudentPlatform() {
                           }
                         </span>
                         {quizTimeRemaining !== null && (
-                          <span className="text-[10px] font-bold opacity-60">
+                          <span className="text-[10px] font-bold opacity-70">
                             / {Math.floor((activeQuiz.durationMinutes ?? 0) * 60 / 60)}:{String((activeQuiz.durationMinutes ?? 0) * 60 % 60).padStart(2, "0")}
                           </span>
                         )}
                       </div>
-                      {quizTabSwitchCount > 0 && (
-                        <div className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-bold ${quizTabSwitchCount >= MAX_TAB_SWITCHES - 1 ? "bg-red-500/20 text-red-500 animate-pulse" : "bg-amber-500/15 text-amber-500"}`}>
-                          ⚠ {quizTabSwitchCount}/{MAX_TAB_SWITCHES}
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
