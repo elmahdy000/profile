@@ -1954,14 +1954,14 @@ export function StudentPlatform() {
                 )}
               </div>
 
-              <div className="mt-4 space-y-6 max-h-[60vh] overflow-y-auto px-1">
+              <div className="mt-4 space-y-5 max-h-[60vh] overflow-y-auto px-1" dir="ltr">
                 {activeQuiz.questions.map((q, qi) => {
                   const isSelected = quizAnswers[qi] !== undefined && quizAnswers[qi] >= 0;
                   const isCorrect = quizResult && quizAnswers[qi] === q.correctIndex;
                   const isWrong = quizResult && isSelected && !isCorrect;
 
                   return (
-                    <fieldset key={qi} className={`space-y-3 rounded-2xl border p-4 transition-colors ${
+                    <fieldset key={qi} dir="ltr" className={`space-y-3 rounded-2xl border p-4 text-left transition-colors ${
                       quizResult
                         ? isCorrect
                           ? "border-emerald-500/30 bg-emerald-50/5"
@@ -1970,24 +1970,24 @@ export function StudentPlatform() {
                           : "border-border"
                         : "border-border bg-card/50"
                     }`}>
-                      <legend className="font-extrabold text-base mb-2 text-foreground flex items-center justify-between w-full gap-3">
-                        <span dir="auto" className="flex-1 text-left">{qi + 1}. {q.prompt}</span>
+                      <legend className="font-extrabold text-base mb-2 text-foreground flex items-center justify-between w-full gap-3 text-left" dir="ltr">
+                        <span className="flex-1 text-left" dir="auto">{qi + 1}. {q.prompt}</span>
                         {quizResult && (
                           <span className={`text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${
                             isCorrect ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-red-500/10 text-red-600 dark:text-red-400"
                           }`}>
-                            {isCorrect ? "إجابة صحيحة ✓" : "إجابة خاطئة ✗"}
+                            {isCorrect ? "Correct ✓" : "Wrong ✗"}
                           </span>
                         )}
                       </legend>
 
                       {q.imageUrl && (
                         <div className="my-3 overflow-hidden rounded-xl border border-border bg-slate-100 dark:bg-slate-950 max-h-56 flex justify-center">
-                          <img src={q.imageUrl} alt={`صورة سؤال ${qi + 1}`} className="object-contain max-h-56" />
+                          <img src={q.imageUrl} alt={`Question ${qi + 1} image`} className="object-contain max-h-56" />
                         </div>
                       )}
 
-                      <div className="space-y-2">
+                      <div className="space-y-2" dir="ltr">
                         {q.options.map((option, oi) => {
                           const optionSelected = quizAnswers[qi] === oi;
                           const optionIsCorrect = q.correctIndex === oi;
@@ -2008,7 +2008,8 @@ export function StudentPlatform() {
                           return (
                             <label
                               key={oi}
-                              className={`flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-2.5 transition-all ${optionStyle}`}
+                              dir="ltr"
+                              className={`flex min-h-11 cursor-pointer items-center justify-start gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-all ${optionStyle}`}
                             >
                               <input
                                 type="radio"
@@ -2031,8 +2032,8 @@ export function StudentPlatform() {
                       </div>
 
                       {quizResult && activeQuiz.showExplanations !== false && q.explanation && (
-                        <div className="mt-3 rounded-xl border border-blue-500/20 bg-blue-500/10 p-3.5 text-xs text-blue-800 dark:text-blue-200" dir="auto">
-                          <strong className="block font-bold mb-1">💡 التفسير والشرح:</strong>
+                        <div className="mt-3 rounded-xl border border-blue-500/20 bg-blue-500/10 p-3.5 text-xs text-blue-800 dark:text-blue-200 text-left" dir="auto">
+                          <strong className="block font-bold mb-1">💡 Explanation:</strong>
                           <span>{q.explanation}</span>
                         </div>
                       )}
