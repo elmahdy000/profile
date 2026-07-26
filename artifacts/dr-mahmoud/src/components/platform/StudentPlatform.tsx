@@ -2601,7 +2601,7 @@ export function StudentPlatform() {
                           <span className="text-muted-foreground" dir="auto">{q.explanation}</span>
                         </div>
                       )}
-                    </fieldset>
+                    </div>
                   );
                 })}
               </div>
