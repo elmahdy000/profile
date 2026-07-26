@@ -278,11 +278,11 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
         correctIndex: null,
       };
     } else if (current.options.length === 0) {
-      // If question prompt already exists but zero choices found yet, append text to prompt
-      current.prompt += ` ${line}`;
+      // If question prompt already exists but zero choices found yet, append multiline with newline
+      current.prompt += `\n${line}`;
     } else if (!current.explanation) {
-      // If choices already exist, append extra lines to the last choice option
-      current.options[current.options.length - 1] += ` ${line}`;
+      // If choices already exist, append extra lines to the last choice option with newline
+      current.options[current.options.length - 1] += `\n${line}`;
     }
   }
 

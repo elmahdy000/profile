@@ -760,13 +760,14 @@ export function ExamWizard({
                     <div className={collapsedQuestions.has(qi) ? "hidden" : "space-y-4 p-5"}>
                       <div className="space-y-1.5">
                         <label className="text-xs font-extrabold text-slate-700">نص السؤال <span className="text-red-500">*</span></label>
-                        <input
+                        <textarea
                           required
                           dir="auto"
+                          rows={3}
                           placeholder="اكتب نص السؤال هنا..."
                           value={q.prompt}
                           onChange={(e) => setQuestion(qi, { prompt: e.target.value })}
-                          className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm font-semibold focus:border-primary focus:bg-white focus:outline-none"
+                          className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-sm font-semibold whitespace-pre-wrap leading-relaxed focus:border-primary focus:bg-white focus:outline-none"
                         />
                       </div>
 
