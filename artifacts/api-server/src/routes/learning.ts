@@ -386,7 +386,8 @@ router.post(
     try {
       const name = String(req.body.name ?? "").trim();
       const phone = String(req.body.phone ?? "").replace(/\s+/g, "");
-      const email = String(req.body.email ?? "").trim() || null;
+      const rawEmail = String(req.body.email ?? "").trim().toLowerCase();
+      const email = rawEmail.length > 0 ? rawEmail : null;
       const governorate = String(req.body.governorate ?? "").trim();
       const city = String(req.body.city ?? "").trim();
       const submittedGrade = String(req.body.grade ?? "").trim();
@@ -416,8 +417,12 @@ router.post(
         String(req.body.otherGradeDetail ?? "").trim() || null;
       const learningMode = String(req.body.learningMode ?? "online").trim();
 
-      if (name.length < 2 || !/^\+?\d{10,15}$/.test(phone)) {
+      if (name.length < 2 || !/^(?:01[0125]\d{8}|\+?\d{10,15})$/.test(phone)) {
         res.status(400).json({ error: "الاسم ورقم الهاتف مطلوبان بشكل صحيح" });
+        return;
+      }
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        res.status(400).json({ error: "البريد الإلكتروني غير صحيح" });
         return;
       }
       if (!governorate || !city || !grade) {
@@ -446,18 +451,32 @@ router.post(
         return;
       }
 
-      const [existing] = await db
+      const [existingByPhone] = await db
         .select()
         .from(studentsTable)
         .where(eq(studentsTable.phone, phone))
         .limit(1);
-      if (existing) {
+      if (existingByPhone) {
         res.json({
-          status: existing.status,
-          accessCode: existing.status === "approved" ? existing.accessCode : undefined,
+          status: existingByPhone.status,
+          accessCode: existingByPhone.status === "approved" ? existingByPhone.accessCode : undefined,
           message: "Registration already exists",
         });
         return;
+      }
+
+      if (email) {
+        const [existingByEmail] = await db
+          .select()
+          .from(studentsTable)
+          .where(ilike(studentsTable.email, email))
+          .limit(1);
+        if (existingByEmail) {
+          res.status(400).json({
+            error: "هذا البريد الإلكتروني مسجل بالفعل لمستخدم آخر",
+          });
+          return;
+        }
       }
       const accessCode = await generateAccessCode();
       const [student] = await db

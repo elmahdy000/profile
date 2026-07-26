@@ -29,6 +29,7 @@ export const studentsTable = pgTable("students", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => ({
   phoneUnique: uniqueIndex("students_phone_unique").on(table.phone),
+  emailUnique: uniqueIndex("students_email_unique").on(table.email),
   accessCodeUnique: uniqueIndex("students_access_code_unique").on(table.accessCode),
   statusIndex: index("students_status_idx").on(table.status),
 }));
