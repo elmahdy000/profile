@@ -2341,16 +2341,23 @@ router.post(
           res.status(403).json({ error: `أكمل ${quiz.requiredProgress}% من الدرس قبل بدء الاختبار` }); return;
         }
       }
-      const correct = quiz.questions.reduce(
-        (count, question, index) =>
-          count + (answers[index] === question.correctIndex ? 1 : 0),
-        0,
-      );
-      if (quiz.questions.length === 0) {
+      const effectiveTotal =
+        quiz.questionsToShow && quiz.questionsToShow > 0 && quiz.questionsToShow < quiz.questions.length
+          ? quiz.questionsToShow
+          : quiz.questions.length;
+
+      if (effectiveTotal === 0) {
         res.status(400).json({ error: "الاختبار لا يحتوي على أسئلة" });
         return;
       }
-      const score = Math.round((correct / quiz.questions.length) * 100);
+
+      const correct = quiz.questions.reduce(
+        (count, question, index) =>
+          count + (answers[index] !== undefined && answers[index] >= 0 && answers[index] === question.correctIndex ? 1 : 0),
+        0,
+      );
+
+      const score = Math.min(100, Math.round((correct / effectiveTotal) * 100));
       const passed = score >= quiz.passingScore;
       const timeSpentSeconds = Math.max(0, Math.round(Number(req.body.timeSpentSeconds ?? 0))) || 0;
       const details = quiz.questions.map((question, index) => ({
@@ -2393,7 +2400,7 @@ router.post(
         score,
         passed,
         correct,
-        total: quiz.questions.length,
+        total: effectiveTotal,
         attemptsUsed: result.attemptsUsed,
         attemptsRemaining: Math.max(0, quiz.maxAttempts - result.attemptsUsed),
         details,
