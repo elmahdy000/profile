@@ -1319,7 +1319,7 @@ function QuizzesPanel({
             )}
             <h3 className="text-lg font-extrabold text-foreground mt-2">{quiz.title}</h3>
             <div className="flex flex-wrap items-center gap-2 mt-2 text-[12px] font-semibold text-muted-foreground">
-              <span>{quiz.questions.length} أسئلة</span>
+              <span>{quiz.questionsToShow && quiz.questionsToShow > 0 ? quiz.questionsToShow : quiz.questions.length} سؤال</span>
               <span>·</span>
               <span>النجاح من {quiz.passingScore}%</span>
               {quiz.durationMinutes && (
@@ -2432,7 +2432,7 @@ export function StudentPlatform() {
                       {activeQuiz.title}
                     </h2>
                     <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground font-semibold">
-                      <span>{activeQuiz.questions.length} سؤال</span>
+                      <span>{activeQuiz.questionsToShow && activeQuiz.questionsToShow > 0 ? activeQuiz.questionsToShow : activeQuiz.questions.length} سؤال</span>
                       <span>•</span>
                       <span>نجاح {activeQuiz.passingScore}%</span>
                       {!quizResult && (
