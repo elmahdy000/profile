@@ -2583,34 +2583,55 @@ router.post(
         return;
       }
 
-      // Call Wandbox API (GCC Latest for C++)
-      const response = await fetch("https://wandbox.org/api/compile.json", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          compiler: "gcc-head",
-          code,
-          stdin,
-          options: "warning,c++20",
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Wandbox API error: ${response.status}`);
+      let response: Response;
+      try {
+        response = await fetch("https://wandbox.org/api/compile.json", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            compiler: "gcc-head",
+            code,
+            stdin,
+            options: "warning,c++20",
+          }),
+        });
+      } catch {
+        // Fallback to Paiza.IO C++ runner if Wandbox times out or is unreachable
+        response = await fetch("https://api.paiza.io/runners/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            language: "cpp",
+            source_code: code,
+            input: stdin,
+            api_key: "guest",
+          }),
+        });
       }
 
-      const result = (await response.json()) as {
-        status?: string;
-        signal?: string;
-        compiler_output?: string;
-        compiler_error?: string;
-        program_output?: string;
-        program_error?: string;
-      };
+      if (!response.ok) {
+        throw new Error(`Compiler API error: ${response.status}`);
+      }
 
-      const stdout = result.program_output ?? "";
-      const stderr = result.program_error || result.compiler_error || result.compiler_output || "";
-      const exitCode = result.status === "0" ? 0 : Number(result.status ?? 1);
+      const result = (await response.json()) as any;
+
+      let stdout = "";
+      let stderr = "";
+      let exitCode = 0;
+
+      if ("program_output" in result || "compiler_error" in result) {
+        stdout = result.program_output ?? "";
+        stderr = result.program_error || result.compiler_error || result.compiler_output || "";
+        exitCode = result.status === "0" ? 0 : Number(result.status ?? 1);
+      } else if (result.id) {
+        // Paiza runner polling
+        const runId = result.id;
+        const detailsRes = await fetch(`https://api.paiza.io/runners/get_details?id=${runId}&api_key=guest`);
+        const details = await detailsRes.json();
+        stdout = details.stdout ?? "";
+        stderr = details.stderr || details.build_stderr || "";
+        exitCode = details.build_exit_code === 0 && details.exit_code === 0 ? 0 : 1;
+      }
 
       res.json({
         output: stdout,
