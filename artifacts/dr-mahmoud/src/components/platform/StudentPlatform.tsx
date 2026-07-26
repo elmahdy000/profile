@@ -1622,53 +1622,66 @@ function CppCompilerPanel() {
             </button>
           </div>
 
-          {/* Console / Output Window */}
-          <div className="flex-1 p-4 font-mono text-xs sm:text-sm leading-relaxed text-slate-800 dark:text-slate-200 overflow-y-auto space-y-3 min-h-[460px]">
+          {/* Console / Output Window - Continuous Real Terminal Screen */}
+          <div
+            onClick={() => {
+              const inputEl = document.getElementById("terminal-inline-input");
+              if (inputEl) inputEl.focus();
+            }}
+            className="flex-1 p-4 font-mono text-xs sm:text-sm leading-relaxed text-slate-800 dark:text-slate-200 overflow-y-auto cursor-text min-h-[460px] bg-slate-50 dark:bg-[#0b0f19]"
+          >
+            {/* If there is output, show output. If program is waiting for input or executed, render inline */}
             {output ? (
-              <div>
-                <pre className="whitespace-pre-wrap font-mono text-slate-800 dark:text-slate-100">{output}</pre>
-                <div className="mt-4 text-[11px] text-emerald-600 dark:text-emerald-400 font-sans font-semibold">
-                  === Code Execution Successful ===
-                </div>
+              <div className="space-y-1 font-mono whitespace-pre-wrap">
+                <span className="text-slate-800 dark:text-slate-100">{output}</span>
+                {/* Inline Prompt Input inside the stream */}
+                <form
+                  onSubmit={handleInteractiveSubmit}
+                  className="inline-flex items-center gap-1.5 ml-1"
+                >
+                  <input
+                    id="terminal-inline-input"
+                    type="text"
+                    value={currentInputVal}
+                    onChange={(e) => setCurrentInputVal(e.target.value)}
+                    placeholder="type value & hit enter..."
+                    autoFocus
+                    className="bg-transparent border-b border-blue-500 text-blue-600 dark:text-blue-400 font-mono font-bold text-xs sm:text-sm focus:outline-none min-w-[140px] px-1 py-0"
+                  />
+                </form>
+                {!running && (
+                  <div className="mt-4 text-[11px] text-emerald-600 dark:text-emerald-400 font-sans font-semibold border-t border-slate-200 dark:border-slate-800/80 pt-2">
+                    === Code Execution Successful ===
+                  </div>
+                )}
               </div>
             ) : !errorOutput && !running ? (
-              <div className="text-slate-400 dark:text-slate-500 text-xs italic">
-                Click "Run" to see the output here...
+              <div className="text-slate-400 dark:text-slate-500 text-xs italic flex flex-col items-start gap-2">
+                <span>Click "Run" to execute program.</span>
+                <form
+                  onSubmit={handleInteractiveSubmit}
+                  className="flex items-center gap-2 mt-2"
+                >
+                  <span className="text-slate-500 dark:text-slate-400 font-mono text-xs">&gt;</span>
+                  <input
+                    id="terminal-inline-input"
+                    type="text"
+                    value={currentInputVal}
+                    onChange={(e) => setCurrentInputVal(e.target.value)}
+                    placeholder="Enter input values here..."
+                    className="bg-transparent border-b border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-mono text-xs focus:outline-none focus:border-blue-500 px-1 py-0.5"
+                  />
+                </form>
               </div>
             ) : null}
 
             {errorOutput && (
-              <div className="space-y-1">
+              <div className="space-y-1 mt-2">
                 <pre className="text-red-500 dark:text-red-400 whitespace-pre-wrap font-mono text-xs bg-red-50 dark:bg-red-950/30 p-3 rounded-lg border border-red-200 dark:border-red-900/50">
                   {errorOutput}
                 </pre>
               </div>
             )}
-
-            {/* Interactive User Input Field (when code uses cin or prompt) */}
-            <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2 mt-auto">
-              <form onSubmit={handleInteractiveSubmit} className="flex items-center gap-2">
-                <span className="text-xs text-blue-600 dark:text-blue-400 font-bold shrink-0">cin &gt;&gt;</span>
-                <input
-                  type="text"
-                  value={currentInputVal}
-                  onChange={(e) => setCurrentInputVal(e.target.value)}
-                  placeholder="Type input value & press Enter..."
-                  className="flex-1 px-3 py-1.5 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#161f33] text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
-                />
-                <button
-                  type="submit"
-                  className="px-3 py-1.5 text-xs font-bold bg-slate-200 dark:bg-slate-800 hover:bg-blue-600 hover:text-white rounded-lg transition-colors"
-                >
-                  Enter
-                </button>
-              </form>
-              {stdin && (
-                <div className="text-[10px] text-slate-400 font-mono truncate">
-                  Inputs provided: {stdin.replace(/\n/g, ", ")}
-                </div>
-              )}
-            </div>
             <div ref={outputEndRef} />
           </div>
         </div>
