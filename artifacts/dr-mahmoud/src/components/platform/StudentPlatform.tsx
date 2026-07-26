@@ -1646,10 +1646,12 @@ function DashboardPanel({
               </div>
               <h3 className="mt-3 line-clamp-1 text-[13px] font-bold text-foreground">{file.title}</h3>
               <a
-                href={`/api/learning/files/${file.id}/download`}
+                href={`/api/learning/files/${file.id}/preview`}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="mt-3 flex h-9 items-center justify-center gap-2 rounded-lg bg-primary/10 text-[12px] font-bold text-primary transition-colors hover:bg-primary/15"
               >
-                <Download className="h-4 w-4" /> تحميل
+                <Eye className="h-4 w-4" /> عرض الملف
               </a>
             </article>
           ))}
