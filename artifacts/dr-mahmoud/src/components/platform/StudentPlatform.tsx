@@ -29,6 +29,7 @@ import {
   EyeOff,
   Moon,
   Sun,
+  Copy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VideoLessonsSection } from "@/components/YoutubeSection";
@@ -455,6 +456,7 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
   const [message, setMessage] = useState("");
   const [accessCode, setAccessCode] = useState("");
   const [rememberCode, setRememberCode] = useState(false);
+  const [registeredCode, setRegisteredCode] = useState("");
   const [showAccessCode, setShowAccessCode] = useState(false);
   const [recoveryForm, setRecoveryForm] = useState({ name: "", phone: "" });
   const [form, setForm] = useState(() => ({
@@ -509,15 +511,15 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
     setLoading(true);
     setError("");
     setMessage("");
+    setRegisteredCode("");
     try {
       const result = await api<{ status: string; accessCode?: string; message: string }>("/api/student/register", {
         method: "POST",
         body: JSON.stringify(form),
       });
       if (result.accessCode) {
-        setMessage(
-          `✅ تم تفعيل حسابك!\n\nكود الدخول الخاص بيك:\n${result.accessCode}\n\nاحفظ الكود واستخدمه لتسجيل الدخول.\nأول فيديوهين مجانية، ارفع إيصال الدفع لفتح باقي المحتوى.`,
-        );
+        setRegisteredCode(result.accessCode);
+        setMessage("✅ تم تفعيل حسابك!");
       } else {
         setMessage(result.message);
       }
@@ -691,32 +693,59 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
               تسجيل طالب جديد
             </button>
           </div>
-          {mode === "register" && message ? (
+          {mode === "register" && (registeredCode || message) ? (
             <div className="py-4 text-center" role="status">
               <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-emerald-500/10 text-emerald-600">
                 <CheckCircle2 className="h-10 w-10" />
               </div>
-              <h2 className="mt-5 text-2xl font-black">طلبك وصل بنجاح</h2>
-              <p className="mx-auto mt-2 max-w-sm leading-7 text-muted-foreground">
-                الأدمن هيراجع بياناتك، وبعد الموافقة هيوصلك كود EDU الخاص بيك
-                عشان تدخل على محتوى مرحلتك.
+              <h2 className="mt-4 text-2xl font-black text-slate-900">تم إنشاء حسابك وتفعيله فوراً 🎉</h2>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+                كود الدخول الخاص بك جاهز. احفظه جيداً واستخدمه للدخول إلى المنصة.
               </p>
-              <div className="mt-6 rounded-2xl border bg-muted/40 p-4 text-right text-sm">
-                <strong className="block">الخطوة الجاية</strong>
-                <span className="mt-1 block text-muted-foreground">
-                  احتفظ بالكود لما يوصلك، والمنصة تقدر تفتكرهولك على جهازك
-                  الشخصي.
-                </span>
+
+              {registeredCode && (
+                <div className="mt-5 rounded-2xl border-2 border-primary/30 bg-primary/5 p-5 text-center shadow-xs">
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">كود الدخول الخاص بك</span>
+                  <strong className="mt-2 block font-mono text-3xl font-black text-primary tracking-widest dir-ltr select-all">
+                    {registeredCode}
+                  </strong>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(registeredCode);
+                      toast({ title: "تم نسخ الكود!" });
+                    }}
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-colors"
+                  >
+                    <Copy className="h-3.5 w-3.5" /> نسخ الكود
+                  </button>
+                </div>
+              )}
+
+              <div className="mt-5 rounded-2xl border bg-card p-4 text-right text-xs space-y-2 leading-relaxed">
+                <div className="flex items-start gap-2 text-emerald-700 dark:text-emerald-400 font-bold">
+                  <span className="shrink-0 font-black">1.</span>
+                  <span><strong>أول فيديوهين مجانًا:</strong> يمكنك الدخول فوراً بالكود ومشاهدة أول درسين في كورساتك.</span>
+                </div>
+                <div className="flex items-start gap-2 text-blue-700 dark:text-blue-400 font-bold">
+                  <span className="shrink-0 font-black">2.</span>
+                  <span><strong>تأكيد الحجز:</strong> لفتح باقي فيديوهات المنصة والاختبارات، يرجى رفع إيصال الدفع من داخل حسابك، وسيقوم الأدمن بمراجعته وتأكيد الحجز لك.</span>
+                </div>
               </div>
+
               <Button
                 type="button"
                 onClick={() => {
+                  if (registeredCode) {
+                    setAccessCode(registeredCode);
+                  }
                   setMode("login");
                   setMessage("");
+                  setRegisteredCode("");
                 }}
-                className="mt-6 h-12 w-full rounded-xl font-bold"
+                className="mt-6 h-12 w-full rounded-xl font-bold text-sm shadow-md"
               >
-                عندي الكود — دخول المنصة
+                الدخول للمنصة بالكود الآن 🚀
               </Button>
               <a
                 href="https://wa.me/201044348610"
