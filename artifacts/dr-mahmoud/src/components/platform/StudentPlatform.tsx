@@ -1445,49 +1445,22 @@ int main() {
 
 function CppCompilerPanel() {
   const [code, setCode] = useState(CPP_TEMPLATES.hello.code);
-  const [inputsList, setInputsList] = useState<string[]>([]);
-  const [currentInputVal, setCurrentInputVal] = useState("");
+  const [stdinText, setStdinText] = useState(CPP_TEMPLATES.hello.stdin || "");
   const [outputContent, setOutputContent] = useState("");
   const [errorOutput, setErrorOutput] = useState("");
   const [running, setRunning] = useState(false);
-  const [isWaitingCin, setIsWaitingCin] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState("hello");
   const [hasStarted, setHasStarted] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const consoleBottomRef = useRef<HTMLDivElement>(null);
 
   const lineNumbers = code.split("\n").map((_, i) => i + 1);
+  const hasCin = code.includes("cin");
 
-  const runWithInputs = async (inputs: string[]) => {
-    // Count how many cin inputs are required in the C++ source code
-    const cinCount = (code.match(/cin\s*>>/g) || []).length;
-
-    // If code expects cin inputs and student hasn't entered enough inputs yet:
-    if (cinCount > 0 && inputs.length < cinCount) {
-      setRunning(false);
-      setIsWaitingCin(true);
-      setErrorOutput("");
-      // Show prompt line in console without running backend yet to prevent garbage values
-      if (inputs.length === 0) {
-        // Extract prompt string preceding cin if any (e.g. cout << "Enter x:";)
-        const promptMatch = code.match(/cout\s*<<\s*"([^"]+)"/);
-        const initialPrompt = promptMatch ? promptMatch[1] : "";
-        setOutputContent(initialPrompt);
-      }
-      setTimeout(() => {
-        const inputEl = document.getElementById("programiz-cin-input");
-        if (inputEl) inputEl.focus();
-        consoleBottomRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 50);
-      return;
-    }
-
+  const runCode = async (providedStdin: string) => {
     setRunning(true);
     setErrorOutput("");
-    setIsWaitingCin(false);
 
     try {
-      const stdinCombined = inputs.join("\n");
       const res = await api<{
         output: string;
         error: string;
@@ -1495,7 +1468,7 @@ function CppCompilerPanel() {
         success: boolean;
       }>("/api/learning/compiler/run", {
         method: "POST",
-        body: JSON.stringify({ code, stdin: stdinCombined }),
+        body: JSON.stringify({ code, stdin: providedStdin }),
       });
 
       setOutputContent(res.output || "");
@@ -1514,21 +1487,9 @@ function CppCompilerPanel() {
 
   const handleRun = () => {
     setHasStarted(true);
-    setInputsList([]);
-    setCurrentInputVal("");
-    setOutputContent("");
     setErrorOutput("");
-    void runWithInputs([]);
-  };
-
-  const handleInputSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentInputVal && currentInputVal !== "0") return;
-
-    const nextInputs = [...inputsList, currentInputVal];
-    setInputsList(nextInputs);
-    setCurrentInputVal("");
-    void runWithInputs(nextInputs);
+    setOutputContent("");
+    void runCode(stdinText);
   };
 
   const handleTemplateChange = (key: string) => {
@@ -1536,14 +1497,14 @@ function CppCompilerPanel() {
     const tmpl = CPP_TEMPLATES[key];
     if (tmpl) {
       setCode(tmpl.code);
-      setInputsList([]);
+      setStdinText(tmpl.stdin || "");
       setOutputContent("");
       setErrorOutput("");
-      setIsWaitingCin(false);
       setHasStarted(false);
-      setCurrentInputVal("");
     }
   };
+
+  const [selectedTemplate, setSelectedTemplate] = useState("hello");
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Tab") {
@@ -1611,22 +1572,41 @@ function CppCompilerPanel() {
       {/* Main Split View */}
       <div className="grid lg:grid-cols-12 min-h-[520px] bg-slate-50 dark:bg-[#090d16]">
         {/* Left Side: Code Editor (7 Columns) */}
-        <div className="lg:col-span-7 flex bg-white dark:bg-[#0d1117] border-r border-slate-200 dark:border-slate-800/80 font-mono text-sm leading-relaxed relative">
-          <div className="py-4 pl-3 pr-2 select-none text-right text-slate-400 dark:text-slate-600 bg-slate-50 dark:bg-[#161b22] border-r border-slate-200 dark:border-slate-800 min-w-[44px] text-xs font-mono">
-            {lineNumbers.map((n) => (
-              <div key={n} className="leading-relaxed">{n}</div>
-            ))}
+        <div className="lg:col-span-7 flex flex-col bg-white dark:bg-[#0d1117] border-r border-slate-200 dark:border-slate-800/80 font-mono text-sm leading-relaxed relative">
+          <div className="flex-1 flex">
+            <div className="py-4 pl-3 pr-2 select-none text-right text-slate-400 dark:text-slate-600 bg-slate-50 dark:bg-[#161b22] border-r border-slate-200 dark:border-slate-800 min-w-[44px] text-xs font-mono">
+              {lineNumbers.map((n) => (
+                <div key={n} className="leading-relaxed">{n}</div>
+              ))}
+            </div>
+
+            <textarea
+              ref={textareaRef}
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              onKeyDown={handleKeyDown}
+              spellCheck={false}
+              className="w-full h-full min-h-[420px] bg-transparent p-4 font-mono text-xs sm:text-sm leading-relaxed text-slate-800 dark:text-slate-200 focus:outline-none resize-none selection:bg-blue-500/20"
+              placeholder="// Write C++ code here..."
+            />
           </div>
 
-          <textarea
-            ref={textareaRef}
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            onKeyDown={handleKeyDown}
-            spellCheck={false}
-            className="w-full h-full min-h-[500px] bg-transparent p-4 font-mono text-xs sm:text-sm leading-relaxed text-slate-800 dark:text-slate-200 focus:outline-none resize-none selection:bg-blue-500/20"
-            placeholder="// Write C++ code here..."
-          />
+          {/* Programiz STDIN Input Bar if code contains cin */}
+          {hasCin && (
+            <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#151c2c] space-y-1">
+              <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                <span>Input (STDIN for cin):</span>
+                <span className="text-[10px] text-slate-500 font-normal">Separate multiple inputs with spaces or lines</span>
+              </label>
+              <input
+                type="text"
+                value={stdinText}
+                onChange={(e) => setStdinText(e.target.value)}
+                placeholder="e.g. 5 4 (Values passed to cin on Run)"
+                className="w-full px-3 py-1.5 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0d1117] text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+          )}
         </div>
 
         {/* Right Side: Programiz Interactive Output Terminal (5 Columns) */}
@@ -1640,8 +1620,6 @@ function CppCompilerPanel() {
               onClick={() => {
                 setOutputContent("");
                 setErrorOutput("");
-                setInputsList([]);
-                setIsWaitingCin(false);
                 setHasStarted(false);
               }}
               className="text-[11px] font-mono text-slate-400 hover:text-white px-2 py-0.5 rounded border border-slate-700 bg-slate-900"
@@ -1650,15 +1628,9 @@ function CppCompilerPanel() {
             </button>
           </div>
 
-          {/* Real Interactive Console Screen */}
-          <div
-            onClick={() => {
-              const el = document.getElementById("programiz-cin-input");
-              if (el) el.focus();
-            }}
-            className="flex-1 p-4 font-mono text-xs sm:text-sm leading-relaxed overflow-y-auto cursor-text bg-[#090d16] text-slate-100 min-h-[460px]"
-          >
-            {!hasStarted ? (
+          {/* Console Screen */}
+          <div className="flex-1 p-4 font-mono text-xs sm:text-sm leading-relaxed overflow-y-auto bg-[#090d16] text-slate-100 min-h-[460px]">
+            {!hasStarted && !running ? (
               <div className="text-slate-500 text-xs italic">
                 Click "Run" to execute program.
               </div>
@@ -1666,28 +1638,13 @@ function CppCompilerPanel() {
               <div className="font-mono whitespace-pre-wrap leading-relaxed">
                 <span>{outputContent}</span>
 
-                {/* Programiz Active Interactive Prompt Line */}
-                {isWaitingCin && (
-                  <form onSubmit={handleInputSubmit} className="inline-flex items-center gap-1.5 ml-1">
-                    <input
-                      id="programiz-cin-input"
-                      type="text"
-                      value={currentInputVal}
-                      onChange={(e) => setCurrentInputVal(e.target.value)}
-                      autoFocus
-                      className="bg-transparent border-b-2 border-blue-500 text-blue-400 font-mono font-bold text-xs sm:text-sm focus:outline-none min-w-[80px] px-1 py-0"
-                    />
-                    <span className="h-3 w-1.5 bg-blue-500 animate-pulse inline-block" />
-                  </form>
-                )}
-
                 {errorOutput && (
                   <div className="mt-2 text-red-400 whitespace-pre-wrap font-mono text-xs bg-red-950/40 p-3 rounded-lg border border-red-900/60">
                     {errorOutput}
                   </div>
                 )}
 
-                {!running && !isWaitingCin && hasStarted && !errorOutput && (
+                {!running && hasStarted && !errorOutput && (
                   <div className="mt-4 text-[11px] text-emerald-400 font-sans font-semibold border-t border-slate-800/80 pt-2">
                     === Code Execution Successful ===
                   </div>
