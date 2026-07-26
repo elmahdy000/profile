@@ -1459,6 +1459,29 @@ function CppCompilerPanel() {
   const lineNumbers = code.split("\n").map((_, i) => i + 1);
 
   const runWithInputs = async (inputs: string[]) => {
+    // Count how many cin inputs are required in the C++ source code
+    const cinCount = (code.match(/cin\s*>>/g) || []).length;
+
+    // If code expects cin inputs and student hasn't entered enough inputs yet:
+    if (cinCount > 0 && inputs.length < cinCount) {
+      setRunning(false);
+      setIsWaitingCin(true);
+      setErrorOutput("");
+      // Show prompt line in console without running backend yet to prevent garbage values
+      if (inputs.length === 0) {
+        // Extract prompt string preceding cin if any (e.g. cout << "Enter x:";)
+        const promptMatch = code.match(/cout\s*<<\s*"([^"]+)"/);
+        const initialPrompt = promptMatch ? promptMatch[1] : "";
+        setOutputContent(initialPrompt);
+      }
+      setTimeout(() => {
+        const inputEl = document.getElementById("programiz-cin-input");
+        if (inputEl) inputEl.focus();
+        consoleBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 50);
+      return;
+    }
+
     setRunning(true);
     setErrorOutput("");
     setIsWaitingCin(false);
@@ -1479,19 +1502,11 @@ function CppCompilerPanel() {
       if (res.error) {
         setErrorOutput(res.error);
       }
-
-      // Check if code has cin and we have fewer inputs than expected cin statements
-      const cinCount = (code.match(/cin\s*>>/g) || []).length;
-      if (inputs.length < cinCount && !res.error) {
-        setIsWaitingCin(true);
-      }
     } catch (err) {
       setErrorOutput((err as Error).message || "Execution error.");
     } finally {
       setRunning(false);
       setTimeout(() => {
-        const inputEl = document.getElementById("programiz-cin-input");
-        if (inputEl) inputEl.focus();
         consoleBottomRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 50);
     }
