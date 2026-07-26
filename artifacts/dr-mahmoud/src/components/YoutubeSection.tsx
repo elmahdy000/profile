@@ -310,26 +310,16 @@ function VideoPlayerModal({
                     </div>
                   )}
 
-                  {(isStreamUrl || streamUrl) && (
-                    <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center overflow-hidden opacity-25 mix-blend-overlay">
-                      <div className="rotate-[-30deg] select-none text-center text-2xl font-black leading-relaxed text-white sm:text-4xl">
-                        د. محمود المهدي <br />
-                        <span className="mt-2 block font-mono text-base tracking-widest text-red-300 opacity-70 sm:text-2xl">
-                          {studentKeys ? studentKeys.split(",")[0] : "PROTECTED CONTENT"}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
                   {(isStreamUrl || streamUrl) ? (
                     <video
                       ref={videoRef}
-                      className="absolute inset-0 h-full w-full bg-black object-contain"
+                      className="absolute inset-0 h-full w-full bg-black object-contain select-none"
                       src={streamUrl || `/api/videos/${item.id}/stream`}
                       controls
                       playsInline
                       preload="metadata"
-                      controlsList="nodownload"
+                      controlsList="nodownload noremoteplayback"
+                      disablePictureInPicture
                       onContextMenu={(e) => e.preventDefault()}
                       onTimeUpdate={handleTimeUpdate}
                       onLoadedMetadata={() => {
@@ -1429,7 +1419,7 @@ export function VideoLessonsSection({
                         <div className="border-t border-border pt-4 space-y-2">
                           <span className="text-[10px] font-bold text-muted-foreground block">الملحقات والمرفقات:</span>
                           <div className="flex flex-col gap-2">
-                            {getAttachedFiles(item, files).map((file) => <a key={file.id} href={`/api/learning/files/${file.id}/download`} className="flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/10 hover:border-primary/30 p-2.5 text-xs text-primary font-bold transition-all text-right w-full" onClick={(e)=>e.stopPropagation()}><FileText className="w-4 h-4 shrink-0 text-primary"/><span className="line-clamp-1 flex-1 text-right">{file.title}</span>{file.sizeBytes&&<small className="text-[9px] text-muted-foreground">{(file.sizeBytes/1024/1024).toFixed(1)} MB</small>}<Download className="w-3.5 h-3.5 shrink-0 text-primary/70"/></a>)}
+                            {getAttachedFiles(item, files).map((file) => <a key={file.id} href={`/api/learning/files/${file.id}/preview`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/10 hover:border-primary/30 p-2.5 text-xs text-primary font-bold transition-all text-right w-full" onClick={(e)=>e.stopPropagation()}><FileText className="w-4 h-4 shrink-0 text-primary"/><span className="line-clamp-1 flex-1 text-right">{file.title}</span>{file.sizeBytes&&<small className="text-[9px] text-muted-foreground">{(file.sizeBytes/1024/1024).toFixed(1)} MB</small>}<Eye className="w-3.5 h-3.5 shrink-0 text-primary/70"/></a>)}
                             {item.quizId && (
                               (() => {
                                 const quiz = quizzes.find(q => q.id === item.quizId);

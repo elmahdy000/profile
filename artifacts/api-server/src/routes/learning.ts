@@ -1477,6 +1477,10 @@ router.get(["/learning/files/:id/preview", "/learning/files/:id/download"], asyn
       res.status(403).json({ error: "الملف غير متاح لحسابك أو مرحلتك الدراسية" });
       return;
     }
+    if (student && student.paymentStatus !== "paid") {
+      res.status(403).json({ error: "الملفات المرفقة متاحة فقط للمشتركين المدفوعين", code: "PAYMENT_REQUIRED" });
+      return;
+    }
     const filePath = path.join(
       privateUploadDir,
       path.basename(file.storageName),
@@ -1486,14 +1490,15 @@ router.get(["/learning/files/:id/preview", "/learning/files/:id/download"], asyn
       return;
     }
     res.setHeader("Content-Type", file.mimeType);
+    // Force inline rendering only, never trigger attachment download
     res.setHeader(
       "Content-Disposition",
-      `${req.path.endsWith("/preview") ? "inline" : "attachment"}; filename*=UTF-8''${encodeURIComponent(file.originalName)}`,
+      `inline; filename*=UTF-8''${encodeURIComponent(file.originalName)}`,
     );
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("X-Frame-Options", "SAMEORIGIN");
-    res.setHeader("Content-Security-Policy", "frame-ancestors 'self'");
-    res.setHeader("Cache-Control", "private, no-store");
+    res.setHeader("Content-Security-Policy", "default-src 'self'; frame-ancestors 'self'; sandbox allow-scripts allow-same-origin");
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
     fs.createReadStream(filePath).pipe(res);
   } catch (error) {
     next(error);
