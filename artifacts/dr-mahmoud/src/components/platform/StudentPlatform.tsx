@@ -2567,7 +2567,8 @@ export function StudentPlatform() {
                       <div className="space-y-2.5 pt-1" dir="ltr">
                         {q.options.map((option, oi) => {
                           const optionSelected = quizAnswers[qi] === oi;
-                          const optionIsCorrect = q.correctIndex === oi;
+                          const correctOptionIndex = detail ? detail.correctOption : q.correctIndex;
+                          const optionIsCorrect = correctOptionIndex !== undefined && correctOptionIndex === oi;
                           let optionStyle = "border-border hover:bg-muted/70 hover:border-primary/30";
 
                           if (quizResult) {
