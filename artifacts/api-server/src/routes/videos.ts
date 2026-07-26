@@ -623,7 +623,7 @@ router.get("/videos/:id/stream", async (req, res, next) => {
     const hasValidToken = isValidStreamToken(video.id, req.query.token);
 
     const approvedStudent = await getApprovedStudent(req);
-    if (!isAdmin && !approvedStudent) {
+    if (!isAdmin && !hasValidToken && !approvedStudent) {
       res
         .status(401)
         .json({ error: "Student approval and login are required" });
@@ -658,7 +658,9 @@ router.get("/videos/:id/stream", async (req, res, next) => {
     }
 
     // ── Payment gating on stream ──
-    if (approvedStudent && approvedStudent.paymentStatus !== "paid") {
+    // If student is logged in via session cookie and not paid, check preview limit.
+    // Short-lived signed stream tokens (hasValidToken) are pre-validated for authorized/paid users.
+    if (approvedStudent && !hasValidToken && approvedStudent.paymentStatus !== "paid") {
       const courseKey = video.courseId ? eq(videosTable.courseId, video.courseId) : eq(videosTable.category, video.category);
       const courseVideos = await db
         .select({ id: videosTable.id, order: videosTable.order })
