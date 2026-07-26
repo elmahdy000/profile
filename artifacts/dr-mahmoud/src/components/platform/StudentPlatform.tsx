@@ -1572,23 +1572,69 @@ function CppCompilerPanel() {
       {/* Main Split View */}
       <div className="grid lg:grid-cols-12 min-h-[520px] bg-slate-50 dark:bg-[#090d16]">
         {/* Left Side: Code Editor (7 Columns) */}
-        <div className="lg:col-span-7 flex flex-col bg-white dark:bg-[#0d1117] border-r border-slate-200 dark:border-slate-800/80 font-mono text-sm leading-relaxed relative">
-          <div className="flex-1 flex">
-            <div className="py-4 pl-3 pr-2 select-none text-right text-slate-400 dark:text-slate-600 bg-slate-50 dark:bg-[#161b22] border-r border-slate-200 dark:border-slate-800 min-w-[44px] text-xs font-mono">
+        <div className="lg:col-span-7 flex flex-col bg-[#0d1117] border-r border-slate-800/80 font-mono text-sm leading-relaxed relative">
+          {/* Code Editor with Full C++ Syntax Highlighting & Line Numbers */}
+          <div className="flex-1 flex relative overflow-hidden bg-[#0d1117] text-sm font-mono leading-relaxed">
+            {/* Line Numbers Gutter */}
+            <div className="py-4 pl-3 pr-2 select-none text-right text-slate-500 bg-[#161b22] border-r border-slate-800/80 min-w-[44px] text-xs font-mono">
               {lineNumbers.map((n) => (
                 <div key={n} className="leading-relaxed">{n}</div>
               ))}
             </div>
 
-            <textarea
-              ref={textareaRef}
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              onKeyDown={handleKeyDown}
-              spellCheck={false}
-              className="w-full h-full min-h-[420px] bg-transparent p-4 font-mono text-xs sm:text-sm leading-relaxed text-slate-800 dark:text-slate-200 focus:outline-none resize-none selection:bg-blue-500/20"
-              placeholder="// Write C++ code here..."
-            />
+            {/* Container for Code Overlay & Textarea */}
+            <div className="relative flex-1 h-full min-h-[460px] overflow-hidden">
+              {/* Highlighted Backdrop View */}
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 p-4 pointer-events-none whitespace-pre font-mono text-xs sm:text-sm leading-relaxed overflow-hidden text-slate-200 select-none"
+              >
+                {code.split("\n").map((line, lineIdx) => {
+                  // Helper function to render C++ highlighted tokens
+                  const tokens = line.split(/(\/\/.search|\/\/.*|".*?"|<.*?>|\b(?:include|using|namespace|int|float|double|char|string|bool|void|if|else|for|while|do|return|cout|cin|endl|struct|class|public|private|true|false)\b|\b\d+\b)/g);
+                  return (
+                    <div key={lineIdx} className="leading-relaxed min-h-[1.5rem]">
+                      {tokens.map((token, tokIdx) => {
+                        if (!token) return null;
+                        if (token.startsWith("//")) {
+                          return <span key={tokIdx} className="text-slate-500 italic">{token}</span>;
+                        }
+                        if (token.startsWith('"') && token.endsWith('"')) {
+                          return <span key={tokIdx} className="text-emerald-400 font-semibold">{token}</span>;
+                        }
+                        if (token.startsWith("<") && token.endsWith(">") && line.includes("#include")) {
+                          return <span key={tokIdx} className="text-amber-300 font-semibold">{token}</span>;
+                        }
+                        if (/\b(include|using|namespace|if|else|for|while|do|return|struct|class|public|private)\b/.test(token)) {
+                          return <span key={tokIdx} className="text-pink-500 font-extrabold">{token}</span>;
+                        }
+                        if (/\b(int|float|double|char|string|bool|void)\b/.test(token)) {
+                          return <span key={tokIdx} className="text-blue-400 font-bold">{token}</span>;
+                        }
+                        if (/\b(cout|cin|endl)\b/.test(token)) {
+                          return <span key={tokIdx} className="text-purple-400 font-bold">{token}</span>;
+                        }
+                        if (/^\d+$/.test(token)) {
+                          return <span key={tokIdx} className="text-amber-400 font-medium">{token}</span>;
+                        }
+                        return <span key={tokIdx} className="text-slate-200">{token}</span>;
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Transparent Overlay Textarea for Editing */}
+              <textarea
+                ref={textareaRef}
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                onKeyDown={handleKeyDown}
+                spellCheck={false}
+                className="absolute inset-0 w-full h-full p-4 font-mono text-xs sm:text-sm leading-relaxed text-transparent caret-white bg-transparent focus:outline-none resize-none selection:bg-blue-600/40"
+                placeholder="// Write C++ code here..."
+              />
+            </div>
           </div>
 
           {/* Programiz STDIN Input Bar if code contains cin */}
