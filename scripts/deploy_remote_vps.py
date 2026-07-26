@@ -27,7 +27,7 @@ def main():
             "git reset --hard origin/main",
             "git clean -fd",
             "pnpm install --frozen-lockfile",
-            "DATABASE_URL=$(grep DATABASE_URL .env | head -1 | cut -d= -f2-) && psql \"$DATABASE_URL\" -f lib/db/migrations/0002_complete_learning_platform.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0003_learning_file_targets.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0004_course_content_model.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0005_unified_learning_content.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0006_video_views_and_notes.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0007_enhanced_quiz_system.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0008_question_bank.sql",
+            "DATABASE_URL=$(grep DATABASE_URL .env | head -1 | cut -d= -f2-) && psql \"$DATABASE_URL\" -f lib/db/migrations/0002_complete_learning_platform.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0003_learning_file_targets.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0004_course_content_model.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0005_unified_learning_content.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0006_video_views_and_notes.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0007_enhanced_quiz_system.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0008_question_bank.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0009_questions_to_show.sql",
             "pnpm run build",
             "pm2 restart drelmahdy-backend",
             "cp artifacts/drelmahdy_nginx.conf /etc/nginx/sites-available/drelmahdy",
