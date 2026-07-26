@@ -1362,9 +1362,9 @@ function DashboardPanel({
             {quizzes[0] && (
               <button
                 onClick={() => onOpen("quizzes")}
-                className="flex w-full items-center gap-3 rounded-xl border border-amber-100 bg-amber-50/60 p-3.5 text-right transition-colors hover:bg-amber-50"
+                className="flex w-full items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-right transition-colors hover:bg-amber-500/20"
               >
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-amber-100 text-amber-600"><ClipboardCheck className="h-[18px] w-[18px]" /></span>
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-amber-500/20 text-amber-500 dark:text-amber-400"><ClipboardCheck className="h-[18px] w-[18px]" /></span>
                 <span className="min-w-0">
                   <strong className="block text-[13px] font-bold text-foreground truncate">{quizzes[0].title}</strong>
                   <small className="text-[11px] text-muted-foreground">
@@ -1376,7 +1376,7 @@ function DashboardPanel({
             {files[0] && (
               <button
                 onClick={() => onOpen("files")}
-                className="flex w-full items-center gap-3 rounded-xl border border-primary/10 bg-primary/10/50 p-3.5 text-right transition-colors hover:bg-primary/10"
+                className="flex w-full items-center gap-3 rounded-xl border border-border bg-card p-3.5 text-right transition-colors hover:bg-muted"
               >
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><FileText className="h-[18px] w-[18px]" /></span>
                 <span className="min-w-0">

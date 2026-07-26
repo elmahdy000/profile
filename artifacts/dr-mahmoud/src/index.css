@@ -250,55 +250,60 @@
   --destructive-border: hsl(var(--destructive));
 }
 
-/* DARK MODE (Professional Obsidian Charcoal Theme) */
+/* DARK MODE (Refined Educational Dark System) */
 .dark {
-  --button-outline: rgba(255,255,255, .15);
-  --badge-outline: rgba(255,255,255, .10);
+  --button-outline: rgba(255, 255, 255, 0.12);
+  --badge-outline: rgba(255, 255, 255, 0.08);
   --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(255,255,255, .03);
-  --elevate-2: rgba(255,255,255, .06);
+  --elevate-1: rgba(255, 255, 255, 0.03);
+  --elevate-2: rgba(255, 255, 255, 0.06);
 
-  /* Deep Matte Obsidian Charcoal Background: #0D1117 */
-  --background: 216 28% 7%;
-  /* High contrast readable text: #F0F6FC */
-  --foreground: 213 31% 96%;
+  /* Tokens requested:
+     --background-main: #0B1120 (221 48% 8%)
+     --background-sidebar: #0F172A (222 47% 11%)
+     --surface-primary: #151E2E (218 37% 13%)
+     --border-subtle: #263449 (215 31% 22%)
+     --text-primary: #F8FAFC (210 40% 98%)
+     --text-muted: #94A3B8 (215 16% 65%)
+     --primary: #2383F7 (213 93% 55%)
+  */
+  --background: 221 48% 8%;
+  --foreground: 210 40% 98%;
 
-  /* Crisp Border: #30363D */
-  --border: 215 12% 21%;
+  --border: 215 31% 22%;
 
-  /* Differentiated Dark Card Surface: #161B22 */
-  --card: 215 21% 11%;
-  --card-foreground: 213 31% 96%;
-  --card-border: 215 12% 21%;
+  --card: 218 37% 13%;
+  --card-foreground: 210 40% 98%;
+  --card-border: 215 31% 22%;
 
-  --sidebar: 216 28% 7%;
-  --sidebar-foreground: 213 31% 96%;
-  --sidebar-border: 215 12% 21%;
-  --sidebar-primary: 212 92% 45%;
+  --sidebar: 222 47% 11%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-border: 215 31% 22%;
+  --sidebar-primary: 213 93% 55%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 215 21% 11%;
-  --sidebar-accent-foreground: 213 31% 96%;
-  --sidebar-ring: 212 92% 45%;
+  --sidebar-accent: 218 37% 16%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-ring: 213 93% 55%;
 
-  --popover: 215 21% 11%;
-  --popover-foreground: 213 31% 96%;
-  --popover-border: 215 12% 21%;
+  --popover: 218 37% 13%;
+  --popover-foreground: 210 40% 98%;
+  --popover-border: 215 31% 22%;
 
-  --primary: 212 92% 45%; /* Sleek Tech Blue */
+  --primary: 213 93% 55%; /* #2383F7 */
   --primary-foreground: 0 0% 100%;
-  --secondary: 215 15% 18%; /* Dark Charcoal Secondary */
-  --secondary-foreground: 213 31% 96%;
+  --secondary: 217 33% 18%;
+  --secondary-foreground: 210 40% 98%;
 
-  --muted: 215 15% 16%;
-  --muted-foreground: 215 14% 65%;
-  --accent: 215 15% 18%;
-  --accent-foreground: 213 31% 96%;
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 16% 65%;
+  --accent: 217 33% 18%;
+  --accent-foreground: 210 40% 98%;
 
-  --destructive: 0 72% 51%;
+  --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
-  --input: 215 12% 21%;
-  --ring: 212 92% 45%;
+  --input: 215 31% 22%;
+  --ring: 213 93% 55%;
 }
 
 html {
