@@ -1937,7 +1937,13 @@ export function StudentPlatform() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setActiveQuiz(null)}
+            onClick={() => {
+              if (activeQuiz && !quizResult) {
+                void submitQuiz();
+              } else {
+                setActiveQuiz(null);
+              }
+            }}
           >
             <motion.div
               className="w-full max-w-xl rounded-3xl bg-background p-5 md:p-6 shadow-2xl relative border border-border"
@@ -2141,10 +2147,16 @@ export function StudentPlatform() {
               )}
               <Button
                 variant="ghost"
-                onClick={() => setActiveQuiz(null)}
-                className="mt-1.5 w-full font-bold text-xs text-muted-foreground"
+                onClick={() => {
+                  if (activeQuiz && !quizResult) {
+                    void submitQuiz();
+                  } else {
+                    setActiveQuiz(null);
+                  }
+                }}
+                className="mt-1.5 w-full font-bold text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
               >
-                إغلاق
+                {activeQuiz && !quizResult ? "إنهاء وإغلاق الاختبار (تُحسب محاولة)" : "إغلاق النافذة"}
               </Button>
             </motion.div>
           </motion.div>

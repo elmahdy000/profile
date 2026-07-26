@@ -2006,11 +2006,13 @@ router.post(
           ),
         )
         .limit(1);
-      const answers: number[] = Array.isArray(req.body.answers)
-        ? req.body.answers.map((answer: unknown) => Number(answer))
-        : [];
-      if (!quiz || answers.length !== quiz.questions.length || answers.some((answer: number, index: number) => !Number.isInteger(answer) || answer < 0 || answer >= quiz.questions[index].options.length)) {
-        res.status(400).json({ error: "Quiz or answers are invalid" });
+      const rawAnswers = Array.isArray(req.body.answers) ? req.body.answers : [];
+      const answers: number[] = rawAnswers.map((answer: unknown) => {
+        const num = Number(answer);
+        return Number.isInteger(num) ? num : -1;
+      });
+      if (!quiz) {
+        res.status(404).json({ error: "الاختبار غير موجود" });
         return;
       }
       const student = res.locals.student as typeof studentsTable.$inferSelect;
