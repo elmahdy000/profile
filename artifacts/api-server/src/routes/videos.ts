@@ -595,38 +595,19 @@ router.get("/videos/:id/stream", async (req, res, next) => {
       return;
     }
 
-    // Determine first free video of each category
-    const videos = await db
-      .select()
-      .from(videosTable)
-      .orderBy(asc(videosTable.order));
-
-    const videosByCategory: Record<string, typeof videos> = {};
-    for (const v of videos) {
-      if (!videosByCategory[v.category]) {
-        videosByCategory[v.category] = [];
-      }
-      videosByCategory[v.category].push(v);
-    }
-
-    const firstVideoIds = new Set<number>();
-    for (const cat in videosByCategory) {
-      const list = videosByCategory[cat];
-      list.sort((a, b) => {
-        if (a.order !== b.order) return a.order - b.order;
-        return a.id - b.id;
-      });
-      if (list.length > 0) {
-        firstVideoIds.add(list[0].id);
-      }
-    }
-
     // Stream URLs use short-lived signed tokens. Unlock keys stay in request
     // headers and are never exposed in URLs, browser history, or proxy logs.
+    const firstVideo = await db
+      .select({ id: videosTable.id })
+      .from(videosTable)
+      .where(eq(videosTable.category, video.category))
+      .orderBy(asc(videosTable.order), asc(videosTable.id))
+      .limit(1)
+      .then((rows) => rows[0]);
+    const isFirstVideo = firstVideo?.id === video.id;
     const keysHeader = (
       (req.headers["x-unlock-keys"] as string) || ""
     ).toLowerCase();
-    const isFirstVideo = firstVideoIds.has(video.id);
     const studentKeys = keysHeader
       .split(/[\s,]+/)
       .map((k) => k.trim())
@@ -678,10 +659,12 @@ router.get("/videos/:id/stream", async (req, res, next) => {
 
     // ── Payment gating on stream ──
     if (approvedStudent && approvedStudent.paymentStatus !== "paid") {
-      const courseKey = String(video.courseId ?? video.category);
-      const courseVideos = videos
-        .filter((v) => String(v.courseId ?? v.category) === courseKey && v.isPublished)
-        .sort((a, b) => a.order !== b.order ? a.order - b.order : a.id - b.id);
+      const courseKey = video.courseId ? eq(videosTable.courseId, video.courseId) : eq(videosTable.category, video.category);
+      const courseVideos = await db
+        .select({ id: videosTable.id, order: videosTable.order })
+        .from(videosTable)
+        .where(and(courseKey, eq(videosTable.isPublished, true)))
+        .orderBy(asc(videosTable.order), asc(videosTable.id));
       const videoIndex = courseVideos.findIndex((v) => v.id === video.id);
       if (videoIndex === -1 || videoIndex >= 2) {
         res.status(403).json({ error: "ادفع واستلم كل الفيديوهات. أول فيديوهين بس مجانية.", code: "PAYMENT_REQUIRED" });
