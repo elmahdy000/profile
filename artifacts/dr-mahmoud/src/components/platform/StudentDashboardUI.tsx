@@ -213,8 +213,8 @@ export function StatusBadge({
 }) {
   const styles = {
     info: "border-primary/15 bg-primary/10 text-primary",
-    success: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-400",
-    warning: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400",
+    success: "border-emerald-500/25 bg-emerald-500/12 text-emerald-500",
+    warning: "border-amber-500/25 bg-amber-500/12 text-amber-500",
   };
 
   return (

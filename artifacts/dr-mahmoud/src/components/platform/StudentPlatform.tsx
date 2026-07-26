@@ -1002,16 +1002,16 @@ function FilesPanel({ files }: { files: LearningFile[] }) {
       {standaloneFiles.length === 0 ? (
         <EmptyState icon={FolderOpen} title="لا توجد ملفات مرفوعة" description="ستظهر مذكرات وأكواد الكورسات هنا فور نشرها لحسابك." />
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-slate-200bg-card">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card">
           {standaloneFiles.map((file) => (
-            <article key={file.id} className="grid gap-3 border-b border-slate-100 p-4 last:border-0 sm:grid-cols-[minmax(0,1fr)_160px_100px_auto] sm:items-center">
-              <div className="flex min-w-0 items-center gap-3"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-50 text-primary"><FileText className="h-5 w-5" /></span><div className="min-w-0"><h3 className="truncate text-base font-semibold">{file.title}</h3><p className="truncate text-[13px] text-slate-500">{file.originalName}</p></div></div>
-              <span className="text-sm text-slate-600">{getTrack(file.category)?.title || file.category}</span>
-              <span className="text-sm text-slate-500">{(file.sizeBytes / 1024 / 1024).toFixed(1)} MB</span>
+            <article key={file.id} className="grid gap-3 border-b border-border p-4 last:border-0 sm:grid-cols-[minmax(0,1fr)_160px_100px_auto] sm:items-center">
+              <div className="flex min-w-0 items-center gap-3"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><FileText className="h-5 w-5" /></span><div className="min-w-0"><h3 className="truncate text-base font-semibold text-foreground">{file.title}</h3><p className="truncate text-[13px] text-muted-foreground">{file.originalName}</p></div></div>
+              <span className="text-sm text-muted-foreground">{getTrack(file.category)?.title || file.category}</span>
+              <span className="text-sm text-muted-foreground">{(file.sizeBytes / 1024 / 1024).toFixed(1)} MB</span>
               <button
                 type="button"
                 onClick={() => setPreviewFile(file)}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-blue-200 px-4 text-sm font-bold text-primary hover:bg-blue-50"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-primary/20 px-4 text-sm font-bold text-primary hover:bg-primary/10 transition-colors"
               >
                 <Eye className="h-4 w-4" /> معاينة
               </button>
@@ -1037,17 +1037,17 @@ function FilesPanel({ files }: { files: LearningFile[] }) {
               aria-label={`معاينة ${previewFile.title}`}
               className="flex h-[min(90vh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-card shadow-2xl"
             >
-              <header className="flex items-center justify-between gap-3 border-b px-4 py-3">
-                <div className="min-w-0"><strong className="block truncate">{previewFile.title}</strong><span className="block truncate text-xs text-slate-500">{previewFile.originalName}</span></div>
-                <button type="button" onClick={() => setPreviewFile(null)} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl hover:bg-slate-100" aria-label="إغلاق المعاينة"><X className="h-5 w-5" /></button>
+              <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+                <div className="min-w-0"><strong className="block truncate text-foreground">{previewFile.title}</strong><span className="block truncate text-xs text-muted-foreground">{previewFile.originalName}</span></div>
+                <button type="button" onClick={() => setPreviewFile(null)} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl hover:bg-muted transition-colors" aria-label="إغلاق المعاينة"><X className="h-5 w-5" /></button>
               </header>
-              <div className="min-h-0 flex-1 bg-slate-100 p-2 sm:p-4">
+              <div className="min-h-0 flex-1 bg-muted p-2 sm:p-4">
                 {previewFile.mimeType?.startsWith("image/") ? (
                   <img src={`/api/learning/files/${previewFile.id}/preview`} alt={previewFile.title} className="h-full w-full object-contain" />
                 ) : previewFile.mimeType === "application/pdf" || previewFile.mimeType?.startsWith("text/") ? (
-                  <iframe src={`/api/learning/files/${previewFile.id}/preview`} title={previewFile.title} className="h-full w-full rounded-xl borderbg-card" />
+                  <iframe src={`/api/learning/files/${previewFile.id}/preview`} title={previewFile.title} className="h-full w-full rounded-xl border border-border bg-card" />
                 ) : (
-                  <div className="grid h-full place-items-center rounded-xl border bg-card p-8 text-center"><div><FileText className="mx-auto h-12 w-12 text-primary" /><strong className="mt-4 block">لا يمكن عرض هذا النوع داخل المتصفح</strong><p className="mt-2 text-sm text-slate-500">ارفع نسخة PDF من الملف لمعاينتها بأمان داخل المنصة.</p></div></div>
+                  <div className="grid h-full place-items-center rounded-xl border border-border bg-card p-8 text-center"><div><FileText className="mx-auto h-12 w-12 text-primary" /><strong className="mt-4 block text-foreground">لا يمكن عرض هذا النوع داخل المتصفح</strong><p className="mt-2 text-sm text-muted-foreground">ارفع نسخة PDF من الملف لمعاينتها بأمان داخل المنصة.</p></div></div>
                 )}
               </div>
             </motion.section>
@@ -1062,11 +1062,11 @@ function AppFilePreviewModal({ file, onClose }: { file: LearningFile | null; onC
   if (!file) return null;
   const previewUrl = `/api/learning/files/${file.id}/preview`;
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[110] grid place-items-center bg-slate-950/70 p-3 sm:p-6" onMouseDown={(event) => { if (event.currentTarget === event.target) onClose(); }}>
-      <motion.section initial={{ scale: 0.98, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.98, y: 12 }} role="dialog" aria-modal="true" aria-label={`معاينة ${file.title}`} className="flex h-[min(90vh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-card shadow-2xl">
-        <header className="flex items-center justify-between gap-3 border-b px-4 py-3"><div className="min-w-0"><strong className="block truncate">{file.title}</strong><span className="block truncate text-xs text-slate-500">{file.originalName}</span></div><button type="button" onClick={onClose} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl hover:bg-slate-100" aria-label="إغلاق المعاينة"><X className="h-5 w-5" /></button></header>
-        <div className="min-h-0 flex-1 bg-slate-100 p-2 sm:p-4">
-          {file.mimeType?.startsWith("image/") ? <img src={previewUrl} alt={file.title} className="h-full w-full object-contain" /> : file.mimeType === "application/pdf" || file.mimeType?.startsWith("text/") ? <iframe src={previewUrl} title={file.title} className="h-full w-full rounded-xl borderbg-card" /> : <div className="grid h-full place-items-center rounded-xl border bg-card p-8 text-center"><div><FileText className="mx-auto h-12 w-12 text-primary" /><strong className="mt-4 block">لا يمكن عرض هذا النوع داخل المتصفح</strong><p className="mt-2 text-sm text-slate-500">اطلب نسخة PDF لمعاينتها داخل المنصة.</p></div></div>}
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[110] grid place-items-center bg-black/70 backdrop-blur-sm p-3 sm:p-6" onMouseDown={(event) => { if (event.currentTarget === event.target) onClose(); }}>
+      <motion.section initial={{ scale: 0.98, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.98, y: 12 }} role="dialog" aria-modal="true" aria-label={`معاينة ${file.title}`} className="flex h-[min(90vh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-card border border-border shadow-2xl">
+        <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3"><div className="min-w-0"><strong className="block truncate text-foreground">{file.title}</strong><span className="block truncate text-xs text-muted-foreground">{file.originalName}</span></div><button type="button" onClick={onClose} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl hover:bg-muted transition-colors" aria-label="إغلاق المعاينة"><X className="h-5 w-5" /></button></header>
+        <div className="min-h-0 flex-1 bg-muted p-2 sm:p-4">
+          {file.mimeType?.startsWith("image/") ? <img src={previewUrl} alt={file.title} className="h-full w-full object-contain" /> : file.mimeType === "application/pdf" || file.mimeType?.startsWith("text/") ? <iframe src={previewUrl} title={file.title} className="h-full w-full rounded-xl border border-border bg-card" /> : <div className="grid h-full place-items-center rounded-xl border border-border bg-card p-8 text-center"><div><FileText className="mx-auto h-12 w-12 text-primary" /><strong className="mt-4 block text-foreground">لا يمكن عرض هذا النوع داخل المتصفح</strong><p className="mt-2 text-sm text-muted-foreground">اطلب نسخة PDF لمعاينتها داخل المنصة.</p></div></div>}
         </div>
       </motion.section>
     </motion.div>
@@ -1230,7 +1230,11 @@ function DashboardPanel({
           </p>
         </div>
         <span
-          className={`w-fit rounded-full px-3 py-1.5 text-[11px] font-bold ${student.learningMode === "offline" ? "bg-violet-50 text-violet-700 border border-violet-200/60" : "bg-primary/10 text-primary border border-primary/12"}`}
+          className={`w-fit rounded-full px-3 py-1.5 text-[11px] font-bold ${
+            student.learningMode === "offline"
+              ? "bg-violet-500/10 text-violet-400 border border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-400"
+              : "bg-primary/10 text-primary border border-primary/20"
+          }`}
         >
           {student.learningMode === "offline"
             ? "نظامك: أوفلاين"
@@ -1240,7 +1244,7 @@ function DashboardPanel({
       {dataError && (
         <div
           role="alert"
-          className="flex flex-col gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700 sm:flex-row sm:items-center sm:justify-between"
+          className="flex flex-col gap-3 rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-destructive sm:flex-row sm:items-center sm:justify-between"
         >
           <span>{dataError}</span>
           <Button
@@ -1281,12 +1285,12 @@ function DashboardPanel({
                 return (
                   <div
                     key={cat}
-                    className={`rounded-2xl border p-4 text-right shadow-sm ${isComplete ? "border-emerald-300 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-950/30" : "border-border bg-card"}`}
+                    className={`rounded-2xl border p-4 text-right shadow-sm ${isComplete ? "border-emerald-500/40 bg-emerald-500/8 dark:border-emerald-700 dark:bg-emerald-900/20" : "border-border bg-card"}`}
                   >
                     <div className="mb-2.5 flex items-center justify-between gap-2">
                       <p className="truncate text-[13px] font-bold text-foreground">{cat}</p>
                       {isComplete && (
-                        <span className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400">
+                        <span className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
                           <Trophy className="h-3 w-3" /> مكتمل
                         </span>
                       )}
@@ -1733,7 +1737,7 @@ export function StudentPlatform() {
   ] as const;
   return (
     <main
-      className="min-h-screen bg-muted pb-24 lg:pb-0"
+      className="min-h-screen bg-background pb-24 lg:pb-0"
       dir="rtl"
       onClickCapture={(event) => {
         const link = (event.target as HTMLElement).closest<HTMLAnchorElement>('a[href*="/api/learning/files/"]');
@@ -1747,8 +1751,8 @@ export function StudentPlatform() {
     >
       <div className="mx-auto grid max-w-[1600px] lg:grid-cols-[260px_1fr]">
         {sidebarOpen && <button className="fixed inset-0 z-40 bg-slate-950/35 lg:hidden" aria-label="إغلاق القائمة" onClick={() => setSidebarOpen(false)} />}
-        <aside className={`fixed inset-y-0 right-0 z-50 flex w-[252px] flex-col border-l border-border bg-card transition-transform lg:sticky lg:top-0 lg:z-20 lg:min-h-screen ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}`}>
-          <button className="absolute left-3 top-3 grid h-9 w-9 place-items-center rounded-lg text-muted-foreground hover:bg-slate-100 lg:hidden" onClick={() => setSidebarOpen(false)} aria-label="إغلاق القائمة"><X className="h-4.5 w-4.5" /></button>
+        <aside className={`fixed inset-y-0 right-0 z-50 flex w-[272px] flex-col border-l border-border bg-card transition-transform lg:sticky lg:top-0 lg:z-20 lg:min-h-screen ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}`}>
+          <button className="absolute left-3 top-3 grid h-9 w-9 place-items-center rounded-lg text-muted-foreground hover:bg-muted lg:hidden" onClick={() => setSidebarOpen(false)} aria-label="إغلاق القائمة"><X className="h-4.5 w-4.5" /></button>
           <div className="flex items-center gap-3 border-b border-border px-5 py-5">
             <img
               src="/logo.webp"
@@ -1757,7 +1761,7 @@ export function StudentPlatform() {
             />
             <div><strong className="block text-[13px] font-bold text-foreground">بوابة الطالب</strong><span className="text-[11px] text-muted-foreground">د. محمود المهدي</span></div>
           </div>
-          <div className="mx-4 mt-4 flex items-center gap-3 rounded-xl bg-muted p-3"><StudentAvatar name={student.name} src={student.avatarUrl} /><div className="min-w-0"><strong className="block truncate text-[13px] font-bold text-foreground">{student.name}</strong><span className="text-[11px] text-muted-foreground">طالب متفعّل</span></div></div>
+          <div className="mx-4 mt-4 flex items-center gap-3 rounded-xl border border-border bg-background/40 p-3"><StudentAvatar name={student.name} src={student.avatarUrl} /><div className="min-w-0"><strong className="block truncate text-[13px] font-bold text-foreground">{student.name}</strong><span className="text-[11px] text-muted-foreground">طالب متفعّل</span></div></div>
           <nav className="mt-5 space-y-0.5 px-3">
             {nav.map(([value, label, Icon]) => (
               <button
@@ -1800,7 +1804,7 @@ export function StudentPlatform() {
           </div>
         </aside>
         <section className="min-w-0">
-          <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-card/97 px-4 backdrop-blur-sm md:px-8">
+          <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-card/95 px-4 backdrop-blur-sm md:px-8 dark:bg-[#111827]/95">
             <div className="flex items-center gap-3">
               <button className="grid h-9 w-9 place-items-center rounded-lg border border-border text-muted-foreground lg:hidden" onClick={() => setSidebarOpen(true)} aria-label="فتح القائمة"><Menu className="h-[18px] w-[18px]" /></button>
               <div className="relative">
@@ -1982,7 +1986,7 @@ export function StudentPlatform() {
                       </legend>
 
                       {q.imageUrl && (
-                        <div className="my-3 overflow-hidden rounded-xl border border-border bg-slate-100 dark:bg-slate-950 max-h-56 flex justify-center">
+                        <div className="my-3 overflow-hidden rounded-xl border border-border bg-muted max-h-56 flex justify-center">
                           <img src={q.imageUrl} alt={`Question ${qi + 1} image`} className="object-contain max-h-56" />
                         </div>
                       )}
@@ -2032,9 +2036,9 @@ export function StudentPlatform() {
                       </div>
 
                       {quizResult && activeQuiz.showExplanations !== false && q.explanation && (
-                        <div className="mt-3 rounded-xl border border-blue-500/20 bg-blue-500/10 p-3.5 text-xs text-blue-800 dark:text-blue-200 text-left" dir="auto">
-                          <strong className="block font-bold mb-1">💡 Explanation:</strong>
-                          <span>{q.explanation}</span>
+                        <div className="mt-3 rounded-xl border border-primary/20 bg-primary/8 p-3.5 text-xs text-foreground text-left" dir="auto">
+                          <strong className="block font-bold mb-1 text-primary">الشرح:</strong>
+                          <span className="text-muted-foreground">{q.explanation}</span>
                         </div>
                       )}
                     </fieldset>
@@ -2046,16 +2050,16 @@ export function StudentPlatform() {
                 <div
                   className={`mt-5 rounded-2xl p-4 text-center transition-all ${
                     quizResult.passed
-                      ? "bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 border border-emerald-500/30"
-                      : "bg-red-500/15 text-red-800 dark:text-red-200 border border-red-500/30"
+                      ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                      : "bg-red-500/15 text-red-400 border border-red-500/30"
                   }`}
                 >
                   <CheckCircle2 className="mx-auto mb-1.5 h-8 w-8 text-center" />
                   <strong className="text-2xl font-black">{quizResult.score}%</strong>
                   <p className="mt-1 text-sm font-extrabold">
                     {quizResult.passed
-                      ? "مبروك! تم اجتياز الاختبار بنجاح 🎉"
-                      : "للأسف لم تتخطى درجة النجاح، ادرس المادة جيداً وجرب ثانيةً!"}
+                      ? "تم اجتياز الاختبار بنجاح"
+                      : "لم تتخطَ درجة النجاح، ادرس المادة جيداً وجرب ثانيةً"}
                   </p>
                   <p className="mt-1.5 text-xs font-bold opacity-80">
                     {quizResult.correct} إجابة صحيحة من {quizResult.total} · {quizResult.attemptsRemaining} محاولة متبقية

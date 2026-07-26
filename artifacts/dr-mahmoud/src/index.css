@@ -306,6 +306,93 @@
   --ring: 213 93% 55%;
 }
 
+/* ================================================================
+   GLOBAL DARK MODE OVERRIDES
+   Fixes any remaining hardcoded Tailwind light-only colors that
+   couldn't be addressed per-component.
+   ================================================================ */
+
+/* Sidebar and nav hover states */
+.dark .hover\:bg-slate-100:hover {
+  background-color: hsl(var(--muted)) !important;
+}
+
+/* Red alert boxes (error states) */
+.dark .bg-red-50 {
+  background-color: hsl(0 84% 60% / 0.1) !important;
+}
+.dark .text-red-700 {
+  color: hsl(0 84% 70%) !important;
+}
+.dark .border-red-200 {
+  border-color: hsl(0 84% 60% / 0.25) !important;
+}
+
+/* Violet badge for offline mode */
+.dark .bg-violet-50 {
+  background-color: hsl(270 91% 65% / 0.1) !important;
+}
+.dark .text-violet-700 {
+  color: hsl(270 91% 75%) !important;
+}
+.dark .border-violet-200\/60 {
+  border-color: hsl(270 91% 65% / 0.2) !important;
+}
+
+/* Emerald completed category badge */
+.dark .bg-emerald-100 {
+  background-color: hsl(142 71% 45% / 0.15) !important;
+}
+.dark .text-emerald-700 {
+  color: hsl(142 71% 55%) !important;
+}
+.dark .bg-emerald-50\/50 {
+  background-color: hsl(142 71% 45% / 0.08) !important;
+}
+.dark .border-emerald-300 {
+  border-color: hsl(142 71% 45% / 0.3) !important;
+}
+
+/* Blue explanation box in quiz */
+.dark .bg-blue-500\/10 {
+  background-color: hsl(var(--primary) / 0.12) !important;
+}
+.dark .text-blue-800 {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Slate image background (file preview, quiz image) */
+.dark .bg-slate-100 {
+  background-color: hsl(var(--muted)) !important;
+}
+.dark .bg-slate-100.dark\:bg-slate-950 {
+  background-color: hsl(var(--background)) !important;
+}
+.dark .text-slate-500 {
+  color: hsl(var(--muted-foreground)) !important;
+}
+.dark .text-slate-600 {
+  color: hsl(var(--muted-foreground)) !important;
+}
+.dark .border-slate-100 {
+  border-color: hsl(var(--border)) !important;
+}
+.dark .border-slate-200 {
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Blue file icon */
+.dark .bg-blue-50 {
+  background-color: hsl(var(--primary) / 0.12) !important;
+}
+.dark .border-blue-200 {
+  border-color: hsl(var(--primary) / 0.2) !important;
+}
+.dark .hover\:bg-blue-50:hover {
+  background-color: hsl(var(--primary) / 0.15) !important;
+}
+
+
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
