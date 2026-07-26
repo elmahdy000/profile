@@ -212,6 +212,28 @@ router.get("/videos", async (req, res, next) => {
       }
     }
 
+    // 2b. Build free preview set: first 2 videos per course for unpaid students
+    const isUnpaidStudent = approvedStudent.paymentStatus !== "paid";
+    const freePreviewIds = new Set<number>();
+    if (isUnpaidStudent) {
+      const videosByCourse: Record<string, typeof videos> = {};
+      for (const v of allowedVideos) {
+        const key = String(v.courseId ?? v.category);
+        if (!videosByCourse[key]) videosByCourse[key] = [];
+        videosByCourse[key].push(v);
+      }
+      for (const key in videosByCourse) {
+        const list = videosByCourse[key];
+        list.sort((a, b) => {
+          if (a.order !== b.order) return a.order - b.order;
+          return a.id - b.id;
+        });
+        for (let i = 0; i < Math.min(2, list.length); i++) {
+          freePreviewIds.add(list[i].id);
+        }
+      }
+    }
+
     // 3. Parse student's unlocked keys from x-unlock-keys header
     const unlockKeysHeader = (
       (req.headers["x-unlock-keys"] as string) || ""
@@ -239,8 +261,11 @@ router.get("/videos", async (req, res, next) => {
         isFirstVideo ||
         (v.accessKey && studentKeys.includes(v.accessKey.toLowerCase().trim()));
 
+      // Payment gating: unpaid students only get free preview videos
+      const paymentLocked = isUnpaidStudent && !freePreviewIds.has(v.id);
+
       const isLocalFile = v.youtubeUrl.startsWith("/uploads/");
-      const videoSrcUrl = isUnlocked
+      const videoSrcUrl = (isUnlocked && !paymentLocked)
         ? isLocalFile
           ? getProtectedStreamUrl(v.id)
           : v.youtubeUrl
@@ -281,6 +306,7 @@ router.get("/videos", async (req, res, next) => {
         quizId: v.quizId,
         maxViews: v.maxViews,
         viewCount: viewCountMap.get(v.id) ?? 0,
+        paymentLocked,
         createdAt: v.createdAt,
       };
     });
@@ -648,6 +674,19 @@ router.get("/videos/:id/stream", async (req, res, next) => {
     if (!isUnlocked && !isAdmin && !hasValidToken) {
       res.status(403).json({ error: "This content is protected and locked." });
       return;
+    }
+
+    // ── Payment gating on stream ──
+    if (approvedStudent && approvedStudent.paymentStatus !== "paid") {
+      const courseKey = String(video.courseId ?? video.category);
+      const courseVideos = videos
+        .filter((v) => String(v.courseId ?? v.category) === courseKey && v.isPublished)
+        .sort((a, b) => a.order !== b.order ? a.order - b.order : a.id - b.id);
+      const isFreePreview = courseVideos.indexOf(courseVideos.find((v) => v.id === video.id)!) < 2;
+      if (!isFreePreview) {
+        res.status(403).json({ error: "ادفع واستلم كل الفيديوهات. أول فيديوهين بس مجانية.", code: "PAYMENT_REQUIRED" });
+        return;
+      }
     }
 
     // ── Video view-count enforcement ──

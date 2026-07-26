@@ -693,6 +693,13 @@ export function VideoLessonsSection({
   }, [toast]);
 
   const handlePlayClick = (item: VideoItem) => {
+    if (item.paymentLocked) {
+      toast({
+        title: "محتوى مدفوع",
+        description: "ادفع وارفع إيصال الدفع من الصفحة الرئيسية علشان تفتح باقي الفيديوهات.",
+      });
+      return;
+    }
     if (item.youtubeUrl === "locked") {
       setUnlockModalItem(item);
     } else {

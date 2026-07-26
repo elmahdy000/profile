@@ -57,6 +57,7 @@ type Student = {
   otherGradeDetail?: string | null;
   learningMode?: "online" | "offline";
   enrolledCourseIds?: number[];
+  paymentStatus?: string;
   createdAt?: string;
 };
 type LearningFile = {
@@ -509,13 +510,17 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
     setError("");
     setMessage("");
     try {
-      await api("/api/student/register", {
+      const result = await api<{ status: string; accessCode?: string; message: string }>("/api/student/register", {
         method: "POST",
         body: JSON.stringify(form),
       });
-      setMessage(
-        "طلبك اتبعت بنجاح. أول ما الأدمن يوافق هيوصلك كود الدخول بتاعك.",
-      );
+      if (result.accessCode) {
+        setMessage(
+          `✅ تم تفعيل حسابك!\n\nكود الدخول الخاص بيك:\n${result.accessCode}\n\nاحفظ الكود واستخدمه لتسجيل الدخول.\nأول فيديوهين مجانية، ارفع إيصال الدفع لفتح باقي المحتوى.`,
+        );
+      } else {
+        setMessage(result.message);
+      }
       setForm({
         name: "",
         phone: "",
@@ -1130,6 +1135,65 @@ function QuizzesPanel({
   );
 }
 
+function PaymentBanner({ paymentStatus, onUploaded }: { paymentStatus: string; onUploaded: () => void }) {
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("receipt", file);
+      const res = await fetch("/api/student/payment-receipt", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "تعذر رفع الإيصال");
+      toast({ title: "تم رفع الإيصال", description: "جاري المراجعة من الأدمن. هيتم إخطارك لما يتأكد." });
+      onUploaded();
+    } catch (err) {
+      toast({ title: "خطأ", description: (err as Error).message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  if (paymentStatus === "pending_review") {
+    return (
+      <div className="flex items-center gap-3 rounded-2xl border border-amber-300/50 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-950/20">
+        <Clock className="h-6 w-6 shrink-0 text-amber-600" />
+        <div className="flex-1">
+          <p className="text-sm font-bold text-amber-800 dark:text-amber-300">تم رفع إيصال الدفع — جاري المراجعة</p>
+          <p className="text-xs text-amber-700/80 dark:text-amber-400/70">هيتم إخطارك لما الأدمن يراجع الإيصال ويفتحلك باقي المحتوى.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-blue-200/60 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-blue-500/20 dark:from-blue-950/20 dark:to-indigo-950/20">
+      <div className="flex items-center gap-3">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-600 text-white shadow-md">
+          <ShieldCheck className="h-5 w-5" />
+        </div>
+        <div>
+          <p className="text-sm font-bold text-blue-900 dark:text-blue-200">أول فيديوهين مجانية — ارفع إيصال الدفع لفتح كل المحتوى</p>
+          <p className="text-xs text-blue-700/70 dark:text-blue-400/60">ارفع صورة الإيصال وهنراجعها ونفتحلك باقي الفيديوهات والملفات.</p>
+        </div>
+      </div>
+      <div>
+        <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => { if (e.target.files?.[0]) handleUpload(e.target.files[0]); }} />
+        <Button onClick={() => fileRef.current?.click()} disabled={uploading} className="gap-2 font-bold whitespace-nowrap">
+          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+          {uploading ? "جاري الرفع..." : "ارفع إيصال الدفع"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function DashboardPanel({
   student,
   files,
@@ -1257,6 +1321,9 @@ function DashboardPanel({
             حاول تاني
           </Button>
         </div>
+      )}
+      {student.paymentStatus !== "paid" && (
+        <PaymentBanner paymentStatus={student.paymentStatus || "unpaid"} onUploaded={() => window.location.reload()} />
       )}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => <StatisticCard key={stat.label} {...stat} />)}

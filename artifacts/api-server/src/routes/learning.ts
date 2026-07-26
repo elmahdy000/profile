@@ -11,6 +11,7 @@ import {
   coursesTable,
   db,
   learningFilesTable,
+  paymentReceiptsTable,
   quizAttemptsTable,
   quizzesTable,
   questionBankTable,
@@ -65,6 +66,27 @@ const privateUploadDir = process.env.LEARNING_FILES_DIR || (
     : path.join(process.cwd(), "private", "learning-files")
 );
 fs.mkdirSync(privateUploadDir, { recursive: true });
+
+const paymentReceiptsDir = path.join(privateUploadDir, "payment-receipts");
+fs.mkdirSync(paymentReceiptsDir, { recursive: true });
+
+const paymentReceiptUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, paymentReceiptsDir),
+    filename: (_req, file, cb) => {
+      const safeExt = path
+        .extname(file.originalname)
+        .toLowerCase()
+        .replace(/[^.a-z0-9]/g, "");
+      cb(null, `${Date.now()}-${randomBytes(8).toString("hex")}${safeExt}`);
+    },
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) cb(null, true);
+    else cb(new Error("ارفع صورة فقط (JPG أو PNG أو WebP)"));
+  },
+}).single("receipt");
 
 const allowedFileTypes = new Set([
   "application/pdf",
@@ -135,6 +157,7 @@ function publicStudent(student: typeof studentsTable.$inferSelect) {
     learningMode: student.learningMode,
     enrolledCategories: student.enrolledCategories,
     enrolledCourseIds: student.enrolledCourseIds,
+    paymentStatus: student.paymentStatus,
     createdAt: student.createdAt,
   };
 }
@@ -431,10 +454,12 @@ router.post(
       if (existing) {
         res.json({
           status: existing.status,
+          accessCode: existing.status === "approved" ? existing.accessCode : undefined,
           message: "Registration already exists",
         });
         return;
       }
+      const accessCode = await generateAccessCode();
       const [student] = await db
         .insert(studentsTable)
         .values({
@@ -450,12 +475,17 @@ router.post(
           academicTrack,
           otherGradeDetail,
           learningMode,
+          status: "approved",
+          accessCode,
+          approvedAt: new Date(),
+          paymentStatus: "unpaid",
           ...(await getAutomaticCourseAssignments(grade === "أخرى" ? otherGradeDetail || grade : grade)),
         })
         .returning();
       res.status(201).json({
         status: student.status,
-        message: "Registration submitted for admin approval",
+        accessCode: student.accessCode,
+        message: "تم تفعيل حسابك. استخدم الكود للدخول على المنصة. أول فيديوهين مجانية، ارفع إيصال الدفع لفتح باقي المحتوى.",
       });
     } catch (error) {
       next(error);
@@ -614,6 +644,185 @@ router.post("/student/logout", async (req, res, next) => {
     }
     res.clearCookie(STUDENT_COOKIE, { path: "/" });
     res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ── Payment Receipt Endpoints ──
+
+router.post("/student/payment-receipt", requireStudent, (req, res, next) => {
+  paymentReceiptUpload(req, res, async (uploadError) => {
+    if (uploadError) {
+      res.status(400).json({ error: uploadError.message || "تعذر رفع الصورة" });
+      return;
+    }
+    try {
+      if (!req.file) {
+        res.status(400).json({ error: "ارفع صورة إيصال الدفع" });
+        return;
+      }
+      const student = res.locals.student as typeof studentsTable.$inferSelect;
+      if (student.paymentStatus === "paid") {
+        fs.rmSync(req.file.path, { force: true });
+        res.status(409).json({ error: "حسابك مفعّل بالفعل ومدفوع" });
+        return;
+      }
+      const [pendingReceipt] = await db
+        .select()
+        .from(paymentReceiptsTable)
+        .where(and(
+          eq(paymentReceiptsTable.studentId, student.id),
+          eq(paymentReceiptsTable.status, "pending"),
+        ))
+        .limit(1);
+      if (pendingReceipt) {
+        fs.rmSync(req.file.path, { force: true });
+        res.status(409).json({ error: "عندك إيصال مرفوع بالفعل وجاري مراجعته" });
+        return;
+      }
+      const [receipt] = await db
+        .insert(paymentReceiptsTable)
+        .values({
+          studentId: student.id,
+          imageStorageName: req.file.filename,
+          originalName: path.basename(req.file.originalname),
+          mimeType: req.file.mimetype,
+          sizeBytes: req.file.size,
+        })
+        .returning();
+      await db
+        .update(studentsTable)
+        .set({ paymentStatus: "pending_review", updatedAt: new Date() })
+        .where(eq(studentsTable.id, student.id));
+      res.status(201).json({ receipt, paymentStatus: "pending_review" });
+    } catch (error) {
+      next(error);
+    }
+  });
+});
+
+router.get("/student/payment-status", requireStudent, async (_req, res, next) => {
+  try {
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    const [latestReceipt] = await db
+      .select()
+      .from(paymentReceiptsTable)
+      .where(eq(paymentReceiptsTable.studentId, student.id))
+      .orderBy(desc(paymentReceiptsTable.createdAt))
+      .limit(1);
+    res.json({
+      paymentStatus: student.paymentStatus,
+      receipt: latestReceipt ? {
+        id: latestReceipt.id,
+        status: latestReceipt.status,
+        adminNotes: latestReceipt.adminNotes,
+        createdAt: latestReceipt.createdAt,
+      } : null,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/admin/payment-receipts", requireAdmin, async (_req, res, next) => {
+  try {
+    const rows = await db
+      .select({
+        id: paymentReceiptsTable.id,
+        status: paymentReceiptsTable.status,
+        adminNotes: paymentReceiptsTable.adminNotes,
+        reviewedAt: paymentReceiptsTable.reviewedAt,
+        createdAt: paymentReceiptsTable.createdAt,
+        originalName: paymentReceiptsTable.originalName,
+        studentId: studentsTable.id,
+        studentName: studentsTable.name,
+        studentPhone: studentsTable.phone,
+        paymentStatus: studentsTable.paymentStatus,
+      })
+      .from(paymentReceiptsTable)
+      .innerJoin(studentsTable, eq(paymentReceiptsTable.studentId, studentsTable.id))
+      .orderBy(desc(paymentReceiptsTable.createdAt));
+    res.json(rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.patch("/admin/payment-receipts/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const receiptId = Number(req.params.id);
+    const status = String(req.body.status ?? "");
+    const adminNotes = String(req.body.adminNotes ?? "").trim() || null;
+    if (!["approved", "rejected"].includes(status)) {
+      res.status(400).json({ error: "الحالة لازم تكون approved أو rejected" });
+      return;
+    }
+    const [receipt] = await db
+      .select()
+      .from(paymentReceiptsTable)
+      .where(eq(paymentReceiptsTable.id, receiptId))
+      .limit(1);
+    if (!receipt) {
+      res.status(404).json({ error: "الإيصال غير موجود" });
+      return;
+    }
+    const [updated] = await db
+      .update(paymentReceiptsTable)
+      .set({ status, adminNotes, reviewedAt: new Date() })
+      .where(eq(paymentReceiptsTable.id, receiptId))
+      .returning();
+    if (status === "approved") {
+      await db
+        .update(studentsTable)
+        .set({ paymentStatus: "paid", updatedAt: new Date() })
+        .where(eq(studentsTable.id, receipt.studentId));
+      await db.insert(studentNotificationsTable).values({
+        studentId: receipt.studentId,
+        type: "success",
+        title: "تم تأكيد الدفع",
+        message: "تم تأكيد إيصال الدفع بنجاح. تقدر دلوقتي تشوف كل الفيديوهات والمحتوى.",
+      });
+    } else {
+      await db
+        .update(studentsTable)
+        .set({ paymentStatus: "unpaid", updatedAt: new Date() })
+        .where(eq(studentsTable.id, receipt.studentId));
+      await db.insert(studentNotificationsTable).values({
+        studentId: receipt.studentId,
+        type: "warning",
+        title: "تم رفض إيصال الدفع",
+        message: adminNotes
+          ? `تم رفض الإيصال: ${adminNotes}. ارفع إيصال صحيح.`
+          : "تم رفض الإيصال. ارفع إيصال دفع صحيح وواضح.",
+      });
+    }
+    res.json(updated);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/admin/payment-receipts/:id/image", requireAdmin, async (req, res, next) => {
+  try {
+    const [receipt] = await db
+      .select()
+      .from(paymentReceiptsTable)
+      .where(eq(paymentReceiptsTable.id, Number(req.params.id)))
+      .limit(1);
+    if (!receipt) {
+      res.status(404).json({ error: "الإيصال غير موجود" });
+      return;
+    }
+    const filePath = path.join(paymentReceiptsDir, path.basename(receipt.imageStorageName));
+    if (!fs.existsSync(filePath)) {
+      res.status(404).json({ error: "ملف الصورة غير موجود" });
+      return;
+    }
+    res.setHeader("Content-Type", receipt.mimeType);
+    res.setHeader("Content-Disposition", `inline; filename*=UTF-8''${encodeURIComponent(receipt.originalName)}`);
+    res.setHeader("Cache-Control", "private, no-store");
+    fs.createReadStream(filePath).pipe(res);
   } catch (error) {
     next(error);
   }

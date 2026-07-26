@@ -34,6 +34,7 @@ export interface VideoItem {
   quizId?: number | null;
   maxViews?: number | null;
   viewCount?: number;
+  paymentLocked?: boolean;
 }
 
 export function getYouTubeVideoId(url: string): string | null {

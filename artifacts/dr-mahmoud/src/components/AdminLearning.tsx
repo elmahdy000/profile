@@ -196,7 +196,7 @@ async function optimizeLearningImage(file: File): Promise<File> {
 
 export function AdminLearning() {
   const { toast } = useToast();
-  const [tab, setTab] = useState<"students" | "files" | "quizzes" | "results" | "reports">(
+  const [tab, setTab] = useState<"students" | "payments" | "files" | "quizzes" | "results" | "reports">(
     "files",
   );
   const [students, setStudents] = useState<Student[]>([]),
@@ -916,6 +916,7 @@ export function AdminLearning() {
   }, [fileSearch, fileCourseFilter, fileStageFilter, fileStatusFilter]);
   const tabs = [
     ["students", "الطلاب", GraduationCap],
+    ["payments", "إيصالات الدفع", FileCheck2],
     ["files", "الملفات", FileText],
     ["quizzes", "الاختبارات", ClipboardCheck],
     ["results", "النتائج", Check],
@@ -923,6 +924,7 @@ export function AdminLearning() {
   ] as const;
   const tabMeta = {
     students: ["إدارة الطلاب", "راجع التسجيلات والصلاحيات والكورسات المخصصة لكل طالب."],
+    payments: ["إيصالات الدفع", "راجع إيصالات الدفع من الطلاب ووافق أو ارفض."],
     files: ["مكتبة الملفات التعليمية", "ارفع الملفات وحدد مكان ظهورها للطلاب أو داخل الدروس."],
     quizzes: ["بناء وإدارة الاختبارات", "أنشئ الاختبارات وحدد الجمهور والإعدادات والأسئلة ثم انشرها."],
     results: ["نتائج الاختبارات", "تابع محاولات الطلاب ودرجات النجاح من مكان واحد."],
@@ -1153,6 +1155,9 @@ export function AdminLearning() {
                 ))
               )}
             </div>
+          )}
+          {tab === "payments" && (
+            <PaymentReceiptsPanel />
           )}
           {tab === "files" && (
             <div className="space-y-6">
@@ -2067,6 +2072,151 @@ function LocalFilePreview({ file }: { file: File }) {
       <p className="mt-1 text-[10px] text-muted-foreground">
         {file.type || "نوع غير معروف"}
       </p>
+    </div>
+  );
+}
+
+// ── Payment Receipts Admin Panel ──
+
+type PaymentReceipt = {
+  id: number;
+  status: string;
+  adminNotes?: string | null;
+  reviewedAt?: string | null;
+  createdAt: string;
+  originalName: string;
+  studentId: number;
+  studentName: string;
+  studentPhone: string;
+  paymentStatus: string;
+};
+
+function PaymentReceiptsPanel() {
+  const { toast } = useToast();
+  const [receipts, setReceipts] = useState<PaymentReceipt[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [actionId, setActionId] = useState<number | null>(null);
+  const [previewId, setPreviewId] = useState<number | null>(null);
+  const [rejectNotes, setRejectNotes] = useState("");
+  const [showRejectForm, setShowRejectForm] = useState<number | null>(null);
+
+  const loadReceipts = async () => {
+    setLoading(true);
+    try {
+      const data = await adminApi<PaymentReceipt[]>("/api/admin/payment-receipts");
+      setReceipts(data);
+    } catch (err) {
+      toast({ title: "خطأ", description: (err as Error).message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadReceipts(); }, []);
+
+  const handleAction = async (receiptId: number, status: "approved" | "rejected", adminNotes?: string) => {
+    setActionId(receiptId);
+    try {
+      await adminApi(`/api/admin/payment-receipts/${receiptId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status, adminNotes: adminNotes || undefined }),
+      });
+      toast({ title: status === "approved" ? "تم تأكيد الدفع" : "تم رفض الإيصال" });
+      setShowRejectForm(null);
+      setRejectNotes("");
+      loadReceipts();
+    } catch (err) {
+      toast({ title: "خطأ", description: (err as Error).message, variant: "destructive" });
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  const filtered = filter === "all" ? receipts : receipts.filter((r) => r.status === filter);
+  const pendingCount = receipts.filter((r) => r.status === "pending").length;
+
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center gap-2">
+        {(["all", "pending", "approved", "rejected"] as const).map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${filter === f ? "bg-primary text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+          >
+            {f === "all" ? "الكل" : f === "pending" ? `قيد المراجعة (${pendingCount})` : f === "approved" ? "مقبول" : "مرفوض"}
+          </button>
+        ))}
+        <button onClick={loadReceipts} className="mr-auto rounded-lg bg-slate-100 p-1.5 text-slate-500 hover:bg-slate-200">
+          <RefreshCw className="h-4 w-4" />
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center p-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">لا توجد إيصالات {filter !== "all" && "بهذه الحالة"}</div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map((receipt) => (
+            <div key={receipt.id} className={`rounded-2xl border p-4 transition ${receipt.status === "pending" ? "border-amber-200 bg-amber-50/50" : receipt.status === "approved" ? "border-green-200 bg-green-50/30" : "border-red-200 bg-red-50/30"}`}>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-slate-900">{receipt.studentName}</span>
+                    <span className="text-xs text-slate-500">{receipt.studentPhone}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${receipt.status === "pending" ? "bg-amber-100 text-amber-700" : receipt.status === "approved" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                      {receipt.status === "pending" ? "قيد المراجعة" : receipt.status === "approved" ? "مقبول" : "مرفوض"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    {new Date(receipt.createdAt).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    {receipt.adminNotes && <span className="mr-2 text-slate-400">— {receipt.adminNotes}</span>}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => setPreviewId(previewId === receipt.id ? null : receipt.id)}>
+                    <Eye className="h-3.5 w-3.5" />
+                    {previewId === receipt.id ? "إخفاء" : "عرض الصورة"}
+                  </Button>
+                  {receipt.status === "pending" && (
+                    <>
+                      <Button size="sm" className="gap-1.5 text-xs bg-green-600 hover:bg-green-700" disabled={actionId === receipt.id} onClick={() => handleAction(receipt.id, "approved")}>
+                        {actionId === receipt.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserCheck className="h-3.5 w-3.5" />}
+                        قبول
+                      </Button>
+                      <Button size="sm" variant="destructive" className="gap-1.5 text-xs" disabled={actionId === receipt.id} onClick={() => setShowRejectForm(showRejectForm === receipt.id ? null : receipt.id)}>
+                        <UserX className="h-3.5 w-3.5" />
+                        رفض
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+              {previewId === receipt.id && (
+                <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-white">
+                  <img src={`/api/admin/payment-receipts/${receipt.id}/image`} alt="إيصال الدفع" className="mx-auto max-h-[500px] object-contain" />
+                </div>
+              )}
+              {showRejectForm === receipt.id && (
+                <div className="mt-3 flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="سبب الرفض (اختياري)..."
+                    value={rejectNotes}
+                    onChange={(e) => setRejectNotes(e.target.value)}
+                    className="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+                  />
+                  <Button size="sm" variant="destructive" disabled={actionId === receipt.id} onClick={() => handleAction(receipt.id, "rejected", rejectNotes)}>
+                    {actionId === receipt.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "تأكيد الرفض"}
+                  </Button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

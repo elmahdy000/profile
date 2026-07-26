@@ -21,6 +21,7 @@ export const studentsTable = pgTable("students", {
   learningMode: text("learning_mode").notNull().default("online"),
   enrolledCourseIds: jsonb("enrolled_course_ids").$type<number[]>().notNull().default([]),
   enrolledCategories: jsonb("enrolled_categories").$type<string[]>().notNull().default([]),
+  paymentStatus: text("payment_status").notNull().default("unpaid"),  // unpaid | pending_review | paid
   subscriptionEndDate: timestamp("subscription_end_date"),  // null = no expiry set
   subscriptionNotifiedAt: timestamp("subscription_notified_at"),  // last time we notified about expiry
   approvedAt: timestamp("approved_at"),
@@ -182,4 +183,20 @@ export const codeRecoveryRequestsTable = pgTable("code_recovery_requests", {
 }, (table) => ({
   studentIndex: index("code_recovery_requests_student_idx").on(table.studentId),
   statusIndex: index("code_recovery_requests_status_idx").on(table.status),
+}));
+
+export const paymentReceiptsTable = pgTable("payment_receipts", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => studentsTable.id, { onDelete: "cascade" }),
+  imageStorageName: text("image_storage_name").notNull(),
+  originalName: text("original_name").notNull(),
+  mimeType: text("mime_type").notNull(),
+  sizeBytes: integer("size_bytes").notNull(),
+  status: text("status").notNull().default("pending"),  // pending | approved | rejected
+  adminNotes: text("admin_notes"),
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  studentIndex: index("payment_receipts_student_idx").on(table.studentId),
+  statusIndex: index("payment_receipts_status_idx").on(table.status),
 }));
