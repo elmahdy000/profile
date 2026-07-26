@@ -54,6 +54,7 @@ export type QuizFormState = {
   passingScore: number;
   maxAttempts: number;
   requiredProgress: number;
+  questionsToShow?: number | null;
   shuffleQuestions: boolean;
   showExplanations: boolean;
   isPublished: boolean;
@@ -71,6 +72,7 @@ export type QuizItem = {
   stages?: string[];
   passingScore: number;
   durationMinutes?: number | null;
+  questionsToShow?: number | null;
   shuffleQuestions?: boolean;
   showExplanations?: boolean;
   maxAttempts?: number | null;
@@ -578,6 +580,34 @@ export function ExamWizard({
                 />
                 <p className="text-[11px] text-slate-400">الحد الأقصى لإعادة دخول الامتحان للطالب.</p>
               </div>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-2 sm:col-span-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+                    <ListCheck className="h-4 w-4 text-purple-500" /> عدد الأسئلة التي تظهر للطالب (من إجمالي {quizForm.questions.length} سؤال)
+                  </label>
+                  <label className="flex items-center gap-1 text-[11px] font-bold text-slate-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={!quizForm.questionsToShow}
+                      onChange={(e) => setQuizForm({ ...quizForm, questionsToShow: e.target.checked ? null : quizForm.questions.length })}
+                      className="rounded"
+                    />
+                    عرض جميع الأسئلة
+                  </label>
+                </div>
+                <input
+                  type="number"
+                  min={1}
+                  max={quizForm.questions.length || 1}
+                  disabled={!quizForm.questionsToShow}
+                  value={quizForm.questionsToShow ?? ""}
+                  placeholder={!quizForm.questionsToShow ? `سيتم عرض الإجمالي كامل (${quizForm.questions.length} سؤال)` : "مثال: 10"}
+                  onChange={(e) => setQuizForm({ ...quizForm, questionsToShow: e.target.value ? Number(e.target.value) : null })}
+                  className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-sm font-bold text-center disabled:bg-slate-100 focus:outline-none"
+                />
+                <p className="text-[11px] text-slate-400">إذا حددت عدداً أقل، سيتم اختيار أسئلة عشوائية لكل طالب من إجمالي بنك الأسئلة المضاف للاختبار.</p>
+              </div>
             </div>
 
             <div className="border-t border-slate-100 pt-5 space-y-4">
@@ -1064,7 +1094,8 @@ export function ExamWizard({
               <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-2">
                 <strong className="block text-xs font-black text-slate-500 uppercase">الأسئلة والدرجات</strong>
                 <div className="grid grid-cols-2 gap-2 text-xs font-bold text-slate-700">
-                  <div>عدد الأسئلة: <b className="text-primary">{quizForm.questions.length}</b></div>
+                  <div>إجمالي الأسئلة: <b className="text-primary">{quizForm.questions.length}</b></div>
+                  <div>الأسئلة للطالب: <b className="text-purple-600">{quizForm.questionsToShow ? `${quizForm.questionsToShow} من ${quizForm.questions.length}` : "الكل"}</b></div>
                   <div>درجة النجاح: <b>{quizForm.passingScore}%</b></div>
                   <div>المدة: <b>{isTimeUnlimited ? "مفتوح" : `${quizForm.durationMinutes} دقيقة`}</b></div>
                   <div>المحاولات: <b>{isAttemptsUnlimited ? "غير محدود" : quizForm.maxAttempts}</b></div>

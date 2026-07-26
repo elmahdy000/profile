@@ -92,6 +92,7 @@ type Quiz = {
   passingScore: number;
   maxAttempts?: number;
   shuffleQuestions?: boolean;
+  questionsToShow?: number | null;
   showExplanations?: boolean;
   attemptsUsed?: number;
   locked?: boolean;
@@ -1561,6 +1562,9 @@ export function StudentPlatform() {
     if (quiz.shuffleQuestions) {
       questions = questions.sort(() => Math.random() - 0.5);
     }
+    if (quiz.questionsToShow && quiz.questionsToShow > 0 && quiz.questionsToShow < questions.length) {
+      questions = questions.slice(0, quiz.questionsToShow);
+    }
     setActiveQuiz({ ...quiz, questions });
     setQuizAnswers(Array(questions.length).fill(-1));
     setQuizResult(null);
@@ -2013,29 +2017,29 @@ export function StudentPlatform() {
               <div className="border-b border-border mt-4 mb-4" />
 
 
-              <div className="mt-4 space-y-5 max-h-[60vh] overflow-y-auto px-1" dir="ltr">
+              <div className="mt-4 space-y-5 max-h-[60vh] overflow-y-auto px-1 font-sans">
                 {activeQuiz.questions.map((q, qi) => {
                   const isSelected = quizAnswers[qi] !== undefined && quizAnswers[qi] >= 0;
                   const isCorrect = quizResult && quizAnswers[qi] === q.correctIndex;
                   const isWrong = quizResult && isSelected && !isCorrect;
 
                   return (
-                    <fieldset key={qi} dir="ltr" className={`space-y-3 rounded-2xl border p-4 text-left transition-colors ${
+                    <fieldset key={qi} className={`space-y-3 rounded-2xl border p-4.5 transition-all shadow-xs ${
                       quizResult
                         ? isCorrect
-                          ? "border-emerald-500/30 bg-emerald-50/5"
+                          ? "border-emerald-500/40 bg-emerald-500/5"
                           : isWrong
-                          ? "border-red-500/30 bg-red-50/5"
-                          : "border-border"
-                        : "border-border bg-card/50"
+                          ? "border-red-500/40 bg-red-500/5"
+                          : "border-border bg-card/40"
+                        : "border-border bg-card/60"
                     }`}>
-                      <legend className="font-extrabold text-base mb-2 text-foreground flex items-center justify-between w-full gap-3 text-left" dir="ltr">
-                        <span className="flex-1 text-left whitespace-pre-wrap leading-relaxed" dir="auto">{qi + 1}. {q.prompt}</span>
+                      <legend className="font-extrabold text-base md:text-[17px] mb-3 text-foreground flex items-center justify-between w-full gap-3 text-right" dir="auto">
+                        <span className="flex-1 text-right whitespace-pre-wrap leading-relaxed tracking-normal font-sans font-bold" dir="auto">{qi + 1}. {q.prompt}</span>
                         {quizResult && (
                           <span className={`text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${
-                            isCorrect ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-red-500/10 text-red-600 dark:text-red-400"
+                            isCorrect ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-red-500/15 text-red-600 dark:text-red-400"
                           }`}>
-                            {isCorrect ? "Correct ✓" : "Wrong ✗"}
+                            {isCorrect ? "صحيحة ✓" : "خاطئة ✗"}
                           </span>
                         )}
                       </legend>
@@ -2046,11 +2050,11 @@ export function StudentPlatform() {
                         </div>
                       )}
 
-                      <div className="space-y-2" dir="ltr">
+                      <div className="space-y-2.5" dir="auto">
                         {q.options.map((option, oi) => {
                           const optionSelected = quizAnswers[qi] === oi;
                           const optionIsCorrect = q.correctIndex === oi;
-                          let optionStyle = "border-border hover:bg-muted";
+                          let optionStyle = "border-border hover:bg-muted/70 hover:border-primary/30";
 
                           if (quizResult) {
                             if (optionIsCorrect) {
@@ -2061,14 +2065,14 @@ export function StudentPlatform() {
                               optionStyle = "border-border opacity-50";
                             }
                           } else if (optionSelected) {
-                            optionStyle = "border-primary bg-primary/10 text-primary font-bold ring-2 ring-primary/20";
+                            optionStyle = "border-primary bg-primary/10 text-primary font-bold ring-2 ring-primary/20 shadow-xs";
                           }
 
                           return (
                             <label
                               key={oi}
-                              dir="ltr"
-                              className={`flex min-h-11 cursor-pointer items-center justify-start gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-all ${optionStyle}`}
+                              dir="auto"
+                              className={`flex min-h-12 cursor-pointer items-center justify-start gap-3 rounded-xl border px-4 py-3 text-right transition-all font-sans ${optionStyle}`}
                             >
                               <input
                                 type="radio"
@@ -2080,9 +2084,9 @@ export function StudentPlatform() {
                                     quizAnswers.map((a, i) => (i === qi ? oi : a)),
                                   )
                                 }
-                                className="text-primary focus:ring-primary h-4 w-4 shrink-0"
+                                className="text-primary focus:ring-primary h-4 w-4 shrink-0 cursor-pointer"
                               />
-                              <span dir="auto" className="text-sm font-semibold flex-1 text-left leading-relaxed">
+                              <span dir="auto" className="text-sm md:text-[15px] font-semibold flex-1 text-right leading-relaxed">
                                 {option}
                               </span>
                             </label>

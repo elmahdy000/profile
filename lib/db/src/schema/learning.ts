@@ -88,6 +88,7 @@ export const quizzesTable = pgTable("quizzes", {
   maxAttempts: integer("max_attempts").notNull().default(3),
   requiredProgress: integer("required_progress").notNull().default(80),
   shuffleQuestions: boolean("shuffle_questions").notNull().default(false),
+  questionsToShow: integer("questions_to_show"),
   showExplanations: boolean("show_explanations").notNull().default(true),
   questions: jsonb("questions").$type<QuizQuestion[]>().notNull(),
   isPublished: boolean("is_published").notNull().default(false),
