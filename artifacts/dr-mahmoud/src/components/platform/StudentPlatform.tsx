@@ -2026,11 +2026,15 @@ export function StudentPlatform() {
     setQuizSubmitting(true);
     const timeSpentSeconds = Math.round((Date.now() - quizStartTime) / 1000);
 
-    // Map displayed answers back to backend original question order
-    const originalAnswers = Array(activeQuiz.questions.length).fill(-1);
+    // Map answers back using full quiz original questions length
+    const totalOriginalQuestions = activeQuiz.questions ? activeQuiz.questions.length : 0;
+    const originalAnswers = Array(totalOriginalQuestions).fill(-1);
+    
     activeQuiz.questions.forEach((q: any, i: number) => {
       const targetIdx = q._originalIndex !== undefined ? q._originalIndex : i;
-      originalAnswers[targetIdx] = quizAnswers[i];
+      if (targetIdx >= 0 && targetIdx < totalOriginalQuestions) {
+        originalAnswers[targetIdx] = quizAnswers[i];
+      }
     });
 
     try {
@@ -2658,15 +2662,12 @@ export function StudentPlatform() {
               <Button
                 variant="ghost"
                 onClick={() => {
-                  if (activeQuiz && !quizResult) {
-                    void submitQuiz();
-                  } else {
-                    setActiveQuiz(null);
-                  }
+                  setActiveQuiz(null);
+                  setQuizResult(null);
                 }}
-                className="mt-1.5 w-full font-bold text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                className="mt-2 w-full font-bold text-xs text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                {activeQuiz && !quizResult ? "إنهاء وإغلاق الاختبار (تُحسب محاولة)" : "إغلاق النافذة"}
+                إغلاق نافذة الاختبار ✕
               </Button>
             </motion.div>
           </motion.div>
