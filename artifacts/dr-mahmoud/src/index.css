@@ -250,55 +250,55 @@
   --destructive-border: hsl(var(--destructive));
 }
 
-/* DARK MODE (Soft Slate & Warm Obsidian Theme) */
+/* DARK MODE (Professional Obsidian Charcoal Theme) */
 .dark {
-  --button-outline: rgba(255,255,255, .12);
-  --badge-outline: rgba(255,255,255, .08);
+  --button-outline: rgba(255,255,255, .15);
+  --badge-outline: rgba(255,255,255, .10);
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255,255,255, .03);
   --elevate-2: rgba(255,255,255, .06);
 
-  /* Warm Soft Dark Background: #0F172A */
-  --background: 222 47% 11%;
-  /* Bright Crisp Text: #F8FAFC */
-  --foreground: 210 40% 98%;
+  /* Deep Matte Obsidian Charcoal Background: #0D1117 */
+  --background: 216 28% 7%;
+  /* High contrast readable text: #F0F6FC */
+  --foreground: 213 31% 96%;
 
-  /* Soft Slate Border: #1E293B */
-  --border: 217 33% 17%;
+  /* Crisp Border: #30363D */
+  --border: 215 12% 21%;
 
-  /* Comfortable Card Surface: #1E293B */
-  --card: 222 47% 14%;
-  --card-foreground: 210 40% 98%;
-  --card-border: 217 33% 20%;
+  /* Differentiated Dark Card Surface: #161B22 */
+  --card: 215 21% 11%;
+  --card-foreground: 213 31% 96%;
+  --card-border: 215 12% 21%;
 
-  --sidebar: 222 47% 11%;
-  --sidebar-foreground: 210 40% 98%;
-  --sidebar-border: 217 33% 17%;
-  --sidebar-primary: 217 91% 60%;
+  --sidebar: 216 28% 7%;
+  --sidebar-foreground: 213 31% 96%;
+  --sidebar-border: 215 12% 21%;
+  --sidebar-primary: 212 92% 45%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 222 47% 14%;
-  --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-ring: 217 91% 60%;
+  --sidebar-accent: 215 21% 11%;
+  --sidebar-accent-foreground: 213 31% 96%;
+  --sidebar-ring: 212 92% 45%;
 
-  --popover: 222 47% 14%;
-  --popover-foreground: 210 40% 98%;
-  --popover-border: 217 33% 20%;
+  --popover: 215 21% 11%;
+  --popover-foreground: 213 31% 96%;
+  --popover-border: 215 12% 21%;
 
-  --primary: 217 91% 60%; /* Vibrant Soft Blue */
+  --primary: 212 92% 45%; /* Sleek Tech Blue */
   --primary-foreground: 0 0% 100%;
-  --secondary: 217 33% 22%; /* Slate Neutral */
-  --secondary-foreground: 210 40% 98%;
+  --secondary: 215 15% 18%; /* Dark Charcoal Secondary */
+  --secondary-foreground: 213 31% 96%;
 
-  --muted: 217 33% 17%;
-  --muted-foreground: 215 20% 75%;
-  --accent: 217 33% 22%;
-  --accent-foreground: 210 40% 98%;
+  --muted: 215 15% 16%;
+  --muted-foreground: 215 14% 65%;
+  --accent: 215 15% 18%;
+  --accent-foreground: 213 31% 96%;
 
   --destructive: 0 72% 51%;
-  --destructive-foreground: 210 40% 98%;
+  --destructive-foreground: 0 0% 100%;
 
-  --input: 217 33% 20%;
-  --ring: 217 91% 60%;
+  --input: 215 12% 21%;
+  --ring: 212 92% 45%;
 }
 
 html {

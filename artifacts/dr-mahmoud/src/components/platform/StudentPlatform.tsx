@@ -1221,7 +1221,7 @@ function DashboardPanel({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-[24px] font-extrabold text-foreground md:text-[28px] leading-tight">
-            مرحبًا، {student.name} 👋
+            مرحبًا، {student.name}
           </h1>
           <p className="mt-1.5 text-[13px] leading-6 text-muted-foreground">
             {academicTrack
