@@ -1450,18 +1450,17 @@ function CppCompilerPanel() {
   const [errorOutput, setErrorOutput] = useState("");
   const [running, setRunning] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("hello");
-  const [activeTab, setActiveTab] = useState<"output" | "stdin">("output");
-  const [execTime, setExecTime] = useState<number | null>(null);
+  const [isInteractiveWaiting, setIsInteractiveWaiting] = useState(false);
+  const [currentInputVal, setCurrentInputVal] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const outputEndRef = useRef<HTMLDivElement>(null);
 
   const lineNumbers = code.split("\n").map((_, i) => i + 1);
 
-  const runCode = async () => {
+  const runCodeWithInput = async (providedStdin: string) => {
     setRunning(true);
-    setOutput("");
     setErrorOutput("");
-    setActiveTab("output");
-    const startTime = performance.now();
+    setIsInteractiveWaiting(false);
 
     try {
       const res = await api<{
@@ -1471,26 +1470,38 @@ function CppCompilerPanel() {
         success: boolean;
       }>("/api/learning/compiler/run", {
         method: "POST",
-        body: JSON.stringify({ code, stdin }),
+        body: JSON.stringify({ code, stdin: providedStdin }),
       });
 
-      const duration = Math.round(performance.now() - startTime);
-      setExecTime(duration);
       setOutput(res.output);
       if (res.error) {
         setErrorOutput(res.error);
       }
-      if (res.success) {
-        toast({ title: "✨ Code executed successfully!", description: `Finished in ${duration}ms` });
-      } else {
-        toast({ variant: "destructive", title: "Compilation Error", description: "Check terminal output for details." });
+
+      // Check if code seems to expect cin but got no/insufficient input
+      if (code.includes("cin") && !providedStdin.trim() && !res.output.trim() && !res.error) {
+        setIsInteractiveWaiting(true);
       }
     } catch (err) {
-      setErrorOutput((err as Error).message || "Execution engine unreachable.");
-      toast({ variant: "destructive", title: "Error", description: "Failed to run code." });
+      setErrorOutput((err as Error).message || "Execution error.");
     } finally {
       setRunning(false);
     }
+  };
+
+  const handleRun = () => {
+    setCurrentInputVal("");
+    setStdin("");
+    void runCodeWithInput(stdin);
+  };
+
+  const handleInteractiveSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentInputVal) return;
+    const newStdin = stdin ? `${stdin}\n${currentInputVal}` : currentInputVal;
+    setStdin(newStdin);
+    setCurrentInputVal("");
+    void runCodeWithInput(newStdin);
   };
 
   const handleTemplateChange = (key: string) => {
@@ -1501,7 +1512,7 @@ function CppCompilerPanel() {
       setStdin(tmpl.stdin || "");
       setOutput("");
       setErrorOutput("");
-      setExecTime(null);
+      setIsInteractiveWaiting(false);
     }
   };
 
@@ -1522,37 +1533,44 @@ function CppCompilerPanel() {
   };
 
   return (
-    <div className="space-y-4" dir="ltr">
-      {/* Top Header / Action Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-card border border-border rounded-2xl p-4 shadow-sm">
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f172a] shadow-xl overflow-hidden font-sans" dir="ltr">
+      {/* Top Header Bar (Programiz Header) */}
+      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-[#1e293b] border-b border-slate-200 dark:border-slate-800">
+        {/* Left Side File Tab */}
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-blue-600/10 text-blue-600 grid place-items-center font-bold text-lg">
-            C++
+          <div className="flex items-center gap-2 px-3 py-1 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-slate-700 dark:text-slate-200 shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-blue-500" />
+            main.cpp
           </div>
-          <div>
-            <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-              Online C++ Compiler (GCC 20)
-              <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-medium px-2 py-0.5 rounded-full border border-emerald-500/20">
-                Programiz Style
-              </span>
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              Write, run, and debug C++ code directly in your browser with real-time output.
-            </p>
+          {/* Example selector pills */}
+          <div className="hidden sm:flex items-center gap-1.5 overflow-x-auto">
+            {Object.entries(CPP_TEMPLATES).map(([key, item]) => (
+              <button
+                key={key}
+                onClick={() => handleTemplateChange(key)}
+                className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition-all ${
+                  selectedTemplate === key
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Primary Run Button */}
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+        {/* Center / Right Header Actions: Run & Clear */}
+        <div className="flex items-center gap-2">
           <Button
-            onClick={runCode}
+            onClick={handleRun}
             disabled={running}
-            className="h-10 px-6 font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md transition-all active:scale-95 gap-2 w-full sm:w-auto"
+            className="h-9 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow transition-all active:scale-95 flex items-center gap-1.5"
           >
             {running ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Running...</span>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <span>Compiling...</span>
               </>
             ) : (
               <>
@@ -1564,148 +1582,94 @@ function CppCompilerPanel() {
         </div>
       </div>
 
-      {/* Templates Selector */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-        <span className="text-xs font-semibold text-muted-foreground shrink-0 pr-1">Code Examples:</span>
-        {Object.entries(CPP_TEMPLATES).map(([key, item]) => (
-          <button
-            key={key}
-            onClick={() => handleTemplateChange(key)}
-            className={`text-xs font-medium px-3 py-1.5 rounded-xl border transition-all shrink-0 flex items-center gap-1.5 ${
-              selectedTemplate === key
-                ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                : "bg-card text-muted-foreground border-border hover:border-slate-400 hover:text-foreground"
-            }`}
-          >
-            <span>{item.icon}</span>
-            <span>{item.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Split Workspace Editor (Programiz Layout: Code Left/Top, Output Right/Bottom) */}
-      <div className="grid lg:grid-cols-12 gap-4 items-stretch min-h-[540px]">
+      {/* Programiz Main Split Layout */}
+      <div className="grid lg:grid-cols-12 min-h-[520px] bg-slate-50 dark:bg-[#090d16]">
         {/* Left Side: Code Editor (7 Columns) */}
-        <div className="lg:col-span-7 flex flex-col rounded-2xl border border-slate-800 bg-[#1e1e2e] shadow-xl overflow-hidden">
-          {/* File Header Bar */}
-          <div className="flex items-center justify-between bg-[#181825] px-4 py-2.5 border-b border-slate-800/80">
-            <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-red-500/80 inline-block" />
-              <span className="h-3 w-3 rounded-full bg-yellow-500/80 inline-block" />
-              <span className="h-3 w-3 rounded-full bg-green-500/80 inline-block" />
-              <span className="ml-2 text-xs font-mono font-semibold text-slate-200 flex items-center gap-1.5">
-                <Code2 className="h-3.5 w-3.5 text-blue-400" />
-                main.cpp
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  void navigator.clipboard.writeText(code);
-                  toast({ title: "Copied!", description: "Source code copied to clipboard." });
-                }}
-                className="text-[11px] font-medium text-slate-400 hover:text-white flex items-center gap-1 bg-slate-800/60 hover:bg-slate-700 px-2.5 py-1 rounded-lg transition-colors"
-                title="Copy code"
-              >
-                <Copy className="h-3 w-3" /> Copy
-              </button>
-              <button
-                onClick={() => setCode(CPP_TEMPLATES[selectedTemplate]?.code || "")}
-                className="text-[11px] font-medium text-slate-400 hover:text-white flex items-center gap-1 bg-slate-800/60 hover:bg-slate-700 px-2.5 py-1 rounded-lg transition-colors"
-                title="Reset code"
-              >
-                <RotateCcw className="h-3 w-3" /> Reset
-              </button>
-            </div>
+        <div className="lg:col-span-7 flex bg-white dark:bg-[#0d1117] border-r border-slate-200 dark:border-slate-800/80 font-mono text-sm leading-relaxed relative">
+          {/* Line Numbers Gutter */}
+          <div className="py-4 pl-3 pr-2 select-none text-right text-slate-400 dark:text-slate-600 bg-slate-50 dark:bg-[#161b22] border-r border-slate-200 dark:border-slate-800 min-w-[44px] text-xs font-mono">
+            {lineNumbers.map((n) => (
+              <div key={n} className="leading-relaxed">{n}</div>
+            ))}
           </div>
 
-          {/* Textarea Code Editor with Line Numbers */}
-          <div className="flex-1 flex bg-[#1e1e2e] relative overflow-hidden font-mono text-sm leading-relaxed">
-            {/* Line Numbers Gutter */}
-            <div className="py-4 pl-3 pr-2 select-none text-right text-slate-600 bg-[#181825]/50 border-r border-slate-800/50 min-w-[42px] text-xs leading-relaxed font-mono">
-              {lineNumbers.map((n) => (
-                <div key={n}>{n}</div>
-              ))}
-            </div>
-
-            {/* Code Input */}
-            <textarea
-              ref={textareaRef}
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              onKeyDown={handleKeyDown}
-              spellCheck={false}
-              className="w-full h-full min-h-[460px] bg-transparent p-4 font-mono text-xs sm:text-sm leading-relaxed text-blue-100 focus:outline-none resize-none selection:bg-blue-600/40"
-              placeholder="// Write C++ code here..."
-            />
-          </div>
+          {/* Text Area */}
+          <textarea
+            ref={textareaRef}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            onKeyDown={handleKeyDown}
+            spellCheck={false}
+            className="w-full h-full min-h-[500px] bg-transparent p-4 font-mono text-xs sm:text-sm leading-relaxed text-slate-800 dark:text-slate-200 focus:outline-none resize-none selection:bg-blue-500/20"
+            placeholder="// Online C++ compiler to run C++ program online"
+          />
         </div>
 
-        {/* Right Side: Output Terminal (5 Columns) - Programiz Interactive Terminal */}
-        <div className="lg:col-span-5 flex flex-col rounded-2xl border border-slate-800 bg-[#181825] shadow-xl overflow-hidden">
-          {/* Header Bar */}
-          <div className="flex items-center justify-between bg-[#11111b] px-4 py-2.5 border-b border-slate-800">
-            <div className="flex items-center gap-2">
-              <Terminal className="h-4 w-4 text-blue-400" />
-              <span className="text-xs font-semibold text-slate-200">Terminal Output</span>
-            </div>
-
-            {execTime !== null && (
-              <span className="text-[10px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-md">
-                Execution: {execTime}ms
-              </span>
-            )}
+        {/* Right Side: Programiz Terminal Output (5 Columns) */}
+        <div className="lg:col-span-5 flex flex-col bg-slate-50 dark:bg-[#0b0f19] border-t lg:border-t-0 border-slate-200 dark:border-slate-800">
+          {/* Output Header */}
+          <div className="flex items-center justify-between px-4 py-2 bg-slate-100 dark:bg-[#151c2c] border-b border-slate-200 dark:border-slate-800">
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Output</span>
+            <button
+              onClick={() => {
+                setOutput("");
+                setErrorOutput("");
+                setIsInteractiveWaiting(false);
+              }}
+              className="text-[11px] font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0f172a]"
+            >
+              Clear
+            </button>
           </div>
 
-          {/* Terminal Screen & In-line STDIN Input Area */}
-          <div className="flex-1 flex flex-col p-4 bg-[#11111b] font-mono text-xs leading-relaxed space-y-4 overflow-y-auto min-h-[460px]">
+          {/* Console / Output Window */}
+          <div className="flex-1 p-4 font-mono text-xs sm:text-sm leading-relaxed text-slate-800 dark:text-slate-200 overflow-y-auto space-y-3 min-h-[460px]">
             {output ? (
-              <div className="space-y-2">
-                <span className="text-[10px] font-bold text-emerald-400 tracking-wider uppercase block border-b border-slate-800 pb-1">
-                  === Output ===
-                </span>
-                <pre className="text-emerald-300 whitespace-pre-wrap font-mono">{output}</pre>
+              <div>
+                <pre className="whitespace-pre-wrap font-mono text-slate-800 dark:text-slate-100">{output}</pre>
+                <div className="mt-4 text-[11px] text-emerald-600 dark:text-emerald-400 font-sans font-semibold">
+                  === Code Execution Successful ===
+                </div>
               </div>
             ) : !errorOutput && !running ? (
-              <div className="flex-1 grid place-items-center text-center p-6 text-slate-500">
-                <div className="space-y-2">
-                  <div className="h-10 w-10 rounded-full bg-slate-800/80 text-slate-400 grid place-items-center mx-auto">
-                    <PlayCircle className="h-5 w-5" />
-                  </div>
-                  <p className="text-xs">Click "Run" to execute your program.</p>
-                </div>
+              <div className="text-slate-400 dark:text-slate-500 text-xs italic">
+                Click "Run" to see the output here...
               </div>
             ) : null}
 
             {errorOutput && (
-              <div className="space-y-1 border-t border-slate-800/80 pt-2">
-                <span className="text-[10px] font-bold text-red-400 tracking-wider uppercase block pb-1">
-                  === Errors ===
-                </span>
-                <pre className="text-red-400 whitespace-pre-wrap font-mono text-[11px] bg-red-950/30 p-3 rounded-xl border border-red-900/50">
+              <div className="space-y-1">
+                <pre className="text-red-500 dark:text-red-400 whitespace-pre-wrap font-mono text-xs bg-red-50 dark:bg-red-950/30 p-3 rounded-lg border border-red-200 dark:border-red-900/50">
                   {errorOutput}
                 </pre>
               </div>
             )}
 
-            {/* Embedded STDIN Box directly inside Output Window */}
-            <div className="mt-auto pt-3 border-t border-slate-800/80 space-y-2">
-              <label className="text-[11px] font-bold text-slate-300 flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-blue-400">
-                  <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
-                  Input Values (cin):
-                </span>
-                <span className="text-[10px] text-slate-500 font-normal">Passed to program on Run</span>
-              </label>
-              <textarea
-                value={stdin}
-                onChange={(e) => setStdin(e.target.value)}
-                rows={2}
-                className="w-full rounded-xl border border-slate-800 bg-[#181825] p-3 font-mono text-xs text-blue-200 placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50 resize-none shadow-inner"
-                placeholder="Enter input values for cin here (e.g. 20 Mahmoud)..."
-              />
+            {/* Interactive User Input Field (when code uses cin or prompt) */}
+            <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2 mt-auto">
+              <form onSubmit={handleInteractiveSubmit} className="flex items-center gap-2">
+                <span className="text-xs text-blue-600 dark:text-blue-400 font-bold shrink-0">cin &gt;&gt;</span>
+                <input
+                  type="text"
+                  value={currentInputVal}
+                  onChange={(e) => setCurrentInputVal(e.target.value)}
+                  placeholder="Type input value & press Enter..."
+                  className="flex-1 px-3 py-1.5 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#161f33] text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
+                />
+                <button
+                  type="submit"
+                  className="px-3 py-1.5 text-xs font-bold bg-slate-200 dark:bg-slate-800 hover:bg-blue-600 hover:text-white rounded-lg transition-colors"
+                >
+                  Enter
+                </button>
+              </form>
+              {stdin && (
+                <div className="text-[10px] text-slate-400 font-mono truncate">
+                  Inputs provided: {stdin.replace(/\n/g, ", ")}
+                </div>
+              )}
             </div>
+            <div ref={outputEndRef} />
           </div>
         </div>
       </div>
