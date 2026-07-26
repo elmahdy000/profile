@@ -158,8 +158,13 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
       setStreamSrc(refreshed.youtubeUrl);
       setPlayerError(false);
       setPlayerErrorMessage("");
-    } catch {
-      setPlayerErrorMessage("رابط الفيديو غير صالح أو الملف غير موجود على السيرفر.");
+    } catch (err) {
+      const msg = (err as Error)?.message || "";
+      if (msg.includes("403") || msg.includes("PAYMENT")) {
+        setPlayerErrorMessage("هذا الدرس مغلق. يُرجى رفع إيصال الدفع لفتح جميع فيديوهات المنصة.");
+      } else {
+        setPlayerErrorMessage("رابط الفيديو غير صالح أو الملف غير موجود على السيرفر.");
+      }
       setPlayerError(true);
     }
   };
