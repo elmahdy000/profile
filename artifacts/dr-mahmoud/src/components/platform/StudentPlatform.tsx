@@ -2493,15 +2493,26 @@ export function StudentPlatform() {
                           : "border-border bg-card/40"
                         : "border-border bg-card/60"
                     }`}>
-                      <legend className="font-bold text-base md:text-lg mb-3 text-foreground flex items-center justify-between w-full gap-3 text-left" dir="ltr">
-                        <span className="flex-1 text-left whitespace-pre-wrap leading-relaxed font-sans font-semibold tracking-normal" dir="auto">
-                          {qi + 1}. {q.prompt}
+                      <legend className="font-bold text-base md:text-lg mb-3 text-foreground flex items-center justify-between w-full gap-3">
+                        <span className="flex-1 whitespace-pre-wrap leading-relaxed font-sans font-semibold tracking-normal space-y-0.5">
+                          {q.prompt.split('\n').map((line, li) => {
+                            const isAr = /[\u0600-\u06FF]/.test(line);
+                            return (
+                              <span
+                                key={li}
+                                dir={isAr ? 'rtl' : 'ltr'}
+                                className={`block ${isAr ? 'text-right font-medium text-muted-foreground' : 'text-left'}`}
+                              >
+                                {li === 0 ? `${qi + 1}. ${line}` : line}
+                              </span>
+                            );
+                          })}
                         </span>
                         {quizResult && (
                           <span className={`text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${
-                            isCorrect ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-red-500/15 text-red-600 dark:text-red-400"
+                            isCorrect ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/15 text-red-600 dark:text-red-400'
                           }`}>
-                            {isCorrect ? "Correct ✓" : "Incorrect ✗"}
+                            {isCorrect ? '✓ صح' : '✗ غلط'}
                           </span>
                         )}
                       </legend>
@@ -2533,8 +2544,8 @@ export function StudentPlatform() {
                           return (
                             <label
                               key={oi}
-                              dir="ltr"
-                              className={`flex min-h-12 cursor-pointer items-center gap-3.5 rounded-xl border px-4 py-3 text-left transition-all ${optionStyle}`}
+                              dir="auto"
+                              className={`flex min-h-12 cursor-pointer items-center gap-3.5 rounded-xl border px-4 py-3 transition-all ${optionStyle}`}
                             >
                               <input
                                 type="radio"
@@ -2548,7 +2559,7 @@ export function StudentPlatform() {
                                 }
                                 className="text-primary focus:ring-primary h-4 w-4 shrink-0 cursor-pointer"
                               />
-                              <span dir="auto" className="text-sm md:text-base font-medium flex-1 text-left leading-normal font-mono tracking-tight">
+                              <span dir="auto" className="text-sm md:text-base font-medium flex-1 leading-normal">
                                 {option}
                               </span>
                             </label>
