@@ -73,6 +73,12 @@ export function AcademyHome() {
     const details = `اسم الطالب: ${form.studentName}\nالمرحلة: ${form.grade}\nنوع المدرسة: ${form.schoolType}\nطريقة الدراسة: ${form.mode}\nالرسالة: ${form.message || "لا توجد"}`;
     try {
       await createBooking({ data: { name: form.parentName, phone: form.phone, message: details } });
+      
+      const text = encodeURIComponent(
+        `مرحبًا د. محمود 👋\n\nأود حجز تقييم مجاني:\n- اسم ولي الأمر: ${form.parentName}\n- اسم الطالب: ${form.studentName}\n- رقم الهاتف: ${form.phone}\n- المرحلة الدراسية: ${form.grade}\n- نوع المدرسة: ${form.schoolType}\n- طريقة الدراسة: ${form.mode}\n- رسالة إضافية: ${form.message || "لا توجد"}`
+      );
+      window.open(`https://wa.me/${whatsapp}?text=${text}`, "_blank");
+
       setSubmitted(true);
       setForm(initialBooking);
     } catch {
