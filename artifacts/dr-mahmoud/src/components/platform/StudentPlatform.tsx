@@ -8,15 +8,12 @@ import {
   ChevronLeft,
   ClipboardCheck,
   Clock,
-  Download,
   FileText,
   FolderOpen,
-  GraduationCap,
   Home,
   Loader2,
   LogOut,
   Play,
-  Settings,
   ShieldCheck,
   Trophy,
   User,
@@ -33,9 +30,6 @@ import {
   Sparkles,
   AlertCircle,
   Code2,
-  Terminal,
-  PlayCircle,
-  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VideoLessonsSection } from "@/components/YoutubeSection";
@@ -46,6 +40,7 @@ import {
   createDefaultRegistrationStage,
 } from "@/components/ui/RegistrationStageSelector";
 import { EmptyState, PageHeader, ProfileInfoRow, StatisticCard, StatusBadge, StudentAvatar } from "./StudentDashboardUI";
+import { CppCompilerPanel } from "./CppCompilerPanel";
 
 type Student = {
   id: number;
@@ -977,7 +972,7 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
                           aria-invalid={Boolean(form.name) && !nameValid}
                           className="h-[54px] w-full rounded-[14px] border border-[rgba(148,163,184,0.18)] bg-[#091426] px-4 text-sm font-medium text-[#F8FAFC] placeholder-[#71809A] outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[rgba(59,130,246,0.12)]"
                         />
-                        {form.name && !nameValid && <p className="mt-1 text.xs text-[#F87171]">اكتب اسم الطالب بشكل صحيح (حرفين على الأقل).</p>}
+                        {form.name && !nameValid && <p className="mt-1 text-xs text-[#F87171]">اكتب اسم الطالب بشكل صحيح (حرفين على الأقل).</p>}
                       </div>
                       <div className="flex flex-col text-xs font-semibold text-[#E2E8F0]">
                         <label htmlFor="student-phone" className="mb-2 block text-sm font-medium">
@@ -1358,354 +1353,6 @@ function QuizzesPanel({
   );
 }
 
-const CPP_TEMPLATES: Record<string, { label: string; icon: string; code: string; stdin?: string }> = {
-  hello: {
-    label: "Hello World",
-    icon: "👋",
-    code: `#include <iostream>
-using namespace std;
-
-int main() {
-    // Welcome to C++ Online Compiler
-    cout << "Hello, World!" << endl;
-    cout << "Welcome to Dr. Mahmoud Elmahdy's Platform 🚀" << endl;
-    return 0;
-}`,
-  },
-  input: {
-    label: "User Input (cin)",
-    icon: "📥",
-    code: `#include <iostream>
-#include <string>
-using namespace std;
-
-int main() {
-    string name;
-    int age;
-    
-    // Reads input from STDIN box below
-    cin >> name >> age;
-    cout << "Welcome, " << name << "!" << endl;
-    cout << "Your age is: " << age << endl;
-    return 0;
-}`,
-    stdin: "Mahmoud 22",
-  },
-  loops: {
-    label: "For Loop",
-    icon: "🔄",
-    code: `#include <iostream>
-using namespace std;
-
-int main() {
-    cout << "Counting from 1 to 5:" << endl;
-    for (int i = 1; i <= 5; i++) {
-        cout << "Item #" << i << endl;
-    }
-    return 0;
-}`,
-  },
-  arrays: {
-    label: "Arrays & Calculation",
-    icon: "📊",
-    code: `#include <iostream>
-using namespace std;
-
-int main() {
-    int numbers[] = {10, 25, 30, 45, 50};
-    int sum = 0;
-    int size = sizeof(numbers) / sizeof(numbers[0]);
-
-    for (int i = 0; i < size; i++) {
-        sum += numbers[i];
-    }
-
-    cout << "Array Sum: " << sum << endl;
-    cout << "Average: " << (double)sum / size << endl;
-    return 0;
-}`,
-  },
-  functions: {
-    label: "Functions",
-    icon: "⚡",
-    code: `#include <iostream>
-using namespace std;
-
-int addNumbers(int a, int b) {
-    return a + b;
-}
-
-int main() {
-    int x = 15, y = 25;
-    cout << "Sum of " << x << " and " << y << " is: " << addNumbers(x, y) << endl;
-    return 0;
-}`,
-  },
-};
-
-function CppCompilerPanel() {
-  const [code, setCode] = useState(CPP_TEMPLATES.hello.code);
-  const [stdinText, setStdinText] = useState(CPP_TEMPLATES.hello.stdin || "");
-  const [outputContent, setOutputContent] = useState("");
-  const [errorOutput, setErrorOutput] = useState("");
-  const [running, setRunning] = useState(false);
-  const [hasStarted, setHasStarted] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const consoleBottomRef = useRef<HTMLDivElement>(null);
-
-  const lineNumbers = code.split("\n").map((_, i) => i + 1);
-  const hasCin = code.includes("cin");
-
-  const runCode = async (providedStdin: string) => {
-    setRunning(true);
-    setErrorOutput("");
-
-    try {
-      const res = await api<{
-        output: string;
-        error: string;
-        exitCode: number;
-        success: boolean;
-      }>("/api/learning/compiler/run", {
-        method: "POST",
-        body: JSON.stringify({ code, stdin: providedStdin }),
-      });
-
-      setOutputContent(res.output || "");
-      if (res.error) {
-        setErrorOutput(res.error);
-      }
-    } catch (err) {
-      setErrorOutput((err as Error).message || "Execution error.");
-    } finally {
-      setRunning(false);
-      setTimeout(() => {
-        consoleBottomRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, 50);
-    }
-  };
-
-  const handleRun = () => {
-    setHasStarted(true);
-    setErrorOutput("");
-    setOutputContent("");
-    void runCode(stdinText);
-  };
-
-  const handleTemplateChange = (key: string) => {
-    setSelectedTemplate(key);
-    const tmpl = CPP_TEMPLATES[key];
-    if (tmpl) {
-      setCode(tmpl.code);
-      setStdinText(tmpl.stdin || "");
-      setOutputContent("");
-      setErrorOutput("");
-      setHasStarted(false);
-    }
-  };
-
-  const [selectedTemplate, setSelectedTemplate] = useState("hello");
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Tab") {
-      e.preventDefault();
-      const target = e.currentTarget;
-      const start = target.selectionStart;
-      const end = target.selectionEnd;
-      const newCode = code.substring(0, start) + "    " + code.substring(end);
-      setCode(newCode);
-      setTimeout(() => {
-        if (textareaRef.current) {
-          textareaRef.current.selectionStart = textareaRef.current.selectionEnd = start + 4;
-        }
-      }, 0);
-    }
-  };
-
-  return (
-    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f172a] shadow-xl overflow-hidden font-sans" dir="ltr">
-      {/* Top Header Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-[#1e293b] border-b border-slate-200 dark:border-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono font-bold text-slate-700 dark:text-slate-200 shadow-sm">
-            <span className="h-2 w-2 rounded-full bg-blue-500" />
-            main.cpp
-          </div>
-          <div className="hidden sm:flex items-center gap-1.5 overflow-x-auto">
-            {Object.entries(CPP_TEMPLATES).map(([key, item]) => (
-              <button
-                key={key}
-                onClick={() => handleTemplateChange(key)}
-                className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition-all ${
-                  selectedTemplate === key
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={handleRun}
-            disabled={running}
-            className="h-9 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow transition-all active:scale-95 flex items-center gap-1.5"
-          >
-            {running ? (
-              <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                <span>Compiling...</span>
-              </>
-            ) : (
-              <>
-                <PlayCircle className="h-4 w-4 fill-white" />
-                <span>Run</span>
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-
-      {/* Main Split View */}
-      <div className="grid lg:grid-cols-12 min-h-[520px] bg-slate-50 dark:bg-[#090d16]">
-        {/* Left Side: Code Editor (7 Columns) */}
-        <div className="lg:col-span-7 flex flex-col bg-[#0d1117] border-r border-slate-800/80 font-mono text-sm leading-relaxed relative">
-          {/* Code Editor with Full C++ Syntax Highlighting & Line Numbers */}
-          <div className="flex-1 flex relative overflow-hidden bg-[#0d1117] text-sm font-mono leading-relaxed">
-            {/* Line Numbers Gutter */}
-            <div className="py-4 pl-3 pr-2 select-none text-right text-slate-500 bg-[#161b22] border-r border-slate-800/80 min-w-[44px] text-xs font-mono">
-              {lineNumbers.map((n) => (
-                <div key={n} className="leading-relaxed">{n}</div>
-              ))}
-            </div>
-
-            {/* Container for Code Overlay & Textarea */}
-            <div className="relative flex-1 h-full min-h-[460px] overflow-hidden">
-              {/* Highlighted Backdrop View */}
-              <div
-                aria-hidden="true"
-                className="absolute inset-0 p-4 pointer-events-none whitespace-pre font-mono text-xs sm:text-sm leading-relaxed overflow-hidden text-slate-200 select-none"
-              >
-                {code.split("\n").map((line, lineIdx) => {
-                  // Helper function to render C++ highlighted tokens
-                  const tokens = line.split(/(\/\/.search|\/\/.*|".*?"|<.*?>|\b(?:include|using|namespace|int|float|double|char|string|bool|void|if|else|for|while|do|return|cout|cin|endl|struct|class|public|private|true|false)\b|\b\d+\b)/g);
-                  return (
-                    <div key={lineIdx} className="leading-relaxed min-h-[1.5rem]">
-                      {tokens.map((token, tokIdx) => {
-                        if (!token) return null;
-                        if (token.startsWith("//")) {
-                          return <span key={tokIdx} className="text-slate-500 italic">{token}</span>;
-                        }
-                        if (token.startsWith('"') && token.endsWith('"')) {
-                          return <span key={tokIdx} className="text-emerald-400 font-semibold">{token}</span>;
-                        }
-                        if (token.startsWith("<") && token.endsWith(">") && line.includes("#include")) {
-                          return <span key={tokIdx} className="text-amber-300 font-semibold">{token}</span>;
-                        }
-                        if (/\b(include|using|namespace|if|else|for|while|do|return|struct|class|public|private)\b/.test(token)) {
-                          return <span key={tokIdx} className="text-pink-500 font-extrabold">{token}</span>;
-                        }
-                        if (/\b(int|float|double|char|string|bool|void)\b/.test(token)) {
-                          return <span key={tokIdx} className="text-blue-400 font-bold">{token}</span>;
-                        }
-                        if (/\b(cout|cin|endl)\b/.test(token)) {
-                          return <span key={tokIdx} className="text-purple-400 font-bold">{token}</span>;
-                        }
-                        if (/^\d+$/.test(token)) {
-                          return <span key={tokIdx} className="text-amber-400 font-medium">{token}</span>;
-                        }
-                        return <span key={tokIdx} className="text-slate-200">{token}</span>;
-                      })}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Transparent Overlay Textarea for Editing */}
-              <textarea
-                ref={textareaRef}
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                onKeyDown={handleKeyDown}
-                spellCheck={false}
-                className="absolute inset-0 w-full h-full p-4 font-mono text-xs sm:text-sm leading-relaxed text-transparent caret-white bg-transparent focus:outline-none resize-none selection:bg-blue-600/40"
-                placeholder="// Write C++ code here..."
-              />
-            </div>
-          </div>
-
-          {/* Programiz STDIN Input Bar if code contains cin */}
-          {hasCin && (
-            <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#151c2c] space-y-1">
-              <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                <span>Input (STDIN for cin):</span>
-                <span className="text-[10px] text-slate-500 font-normal">Separate multiple inputs with spaces or lines</span>
-              </label>
-              <input
-                type="text"
-                value={stdinText}
-                onChange={(e) => setStdinText(e.target.value)}
-                placeholder="e.g. 5 4 (Values passed to cin on Run)"
-                className="w-full px-3 py-1.5 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0d1117] text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-500"
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Right Side: Programiz Interactive Output Terminal (5 Columns) */}
-        <div className="lg:col-span-5 flex flex-col bg-slate-900 text-slate-100 border-t lg:border-t-0 border-slate-800">
-          <div className="flex items-center justify-between px-4 py-2 bg-slate-950 border-b border-slate-800">
-            <span className="text-xs font-mono font-semibold text-slate-300 flex items-center gap-2">
-              <Terminal className="h-3.5 w-3.5 text-blue-400" />
-              Output
-            </span>
-            <button
-              onClick={() => {
-                setOutputContent("");
-                setErrorOutput("");
-                setHasStarted(false);
-              }}
-              className="text-[11px] font-mono text-slate-400 hover:text-white px-2 py-0.5 rounded border border-slate-700 bg-slate-900"
-            >
-              Clear
-            </button>
-          </div>
-
-          {/* Console Screen */}
-          <div className="flex-1 p-4 font-mono text-xs sm:text-sm leading-relaxed overflow-y-auto bg-[#090d16] text-slate-100 min-h-[460px]">
-            {!hasStarted && !running ? (
-              <div className="text-slate-500 text-xs italic">
-                Click "Run" to execute program.
-              </div>
-            ) : (
-              <div className="font-mono whitespace-pre-wrap leading-relaxed">
-                <span>{outputContent}</span>
-
-                {errorOutput && (
-                  <div className="mt-2 text-red-400 whitespace-pre-wrap font-mono text-xs bg-red-950/40 p-3 rounded-lg border border-red-900/60">
-                    {errorOutput}
-                  </div>
-                )}
-
-                {!running && hasStarted && !errorOutput && (
-                  <div className="mt-4 text-[11px] text-emerald-400 font-sans font-semibold border-t border-slate-800/80 pt-2">
-                    === Code Execution Successful ===
-                  </div>
-                )}
-              </div>
-            )}
-            <div ref={consoleBottomRef} />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
 function PaymentBanner({ paymentStatus, onUploaded }: { paymentStatus: string; onUploaded: () => void }) {
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -2053,7 +1700,7 @@ function DashboardPanel({
                 return (
                   <div
                     key={cat}
-                    className={`rounded-2xl border p-4 text-right shadow-sm ${isComplete ? "border-emerald-500/40 bg-emerald-500/8 dark:border-emerald-700 dark:bg-emerald-900/20" : "border-border bg-card"}`}
+                    className={`rounded-2xl border p-4 text-right shadow-sm ${isComplete ? "border-emerald-500/40 bg-emerald-500/10 dark:border-emerald-700 dark:bg-emerald-900/20" : "border-border bg-card"}`}
                   >
                     <div className="mb-2.5 flex items-center justify-between gap-2">
                       <p className="truncate text-[13px] font-bold text-foreground">{cat}</p>
@@ -2302,6 +1949,7 @@ export function StudentPlatform() {
   const [quizElapsedSeconds, setQuizElapsedSeconds] = useState(0);
   const [quizTabSwitchCount, setQuizTabSwitchCount] = useState(0);
   const MAX_TAB_SWITCHES = 3;
+  const submitQuizRef = useRef<() => Promise<void>>(() => Promise.resolve());
 
   // Anti-cheat: detect tab/window switching during active quiz
   useEffect(() => {
@@ -2313,10 +1961,10 @@ export function StudentPlatform() {
           if (next >= MAX_TAB_SWITCHES) {
             toast({
               variant: "destructive",
-              title: "تم رصد ${MAX_TAB_SWITCHES} مغادرة للاختبار",
+              title: `تم رصد ${MAX_TAB_SWITCHES} مغادرة للاختبار`,
               description: "جاري تسليم إجاباتك تلقائياً...",
             });
-            void submitQuiz();
+            void submitQuizRef.current();
           } else {
             toast({
               variant: "destructive",
@@ -2337,7 +1985,7 @@ export function StudentPlatform() {
     if (!activeQuiz || quizResult) return;
     if (quizTimeRemaining !== null && quizTimeRemaining <= 0) {
       toast({ title: "انتهى وقت الاختبار", description: "جاري تسليم إجاباتك تلقائياً..." });
-      void submitQuiz();
+      void submitQuizRef.current();
       return;
     }
     const timer = setInterval(() => {
@@ -2361,7 +2009,10 @@ export function StudentPlatform() {
     // Map questions with their original index before shuffling
     let mappedQuestions = quiz.questions.map((q, idx) => ({ ...q, _originalIndex: idx }));
     if (quiz.shuffleQuestions) {
-      mappedQuestions = mappedQuestions.sort(() => Math.random() - 0.5);
+      for (let i = mappedQuestions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [mappedQuestions[i], mappedQuestions[j]] = [mappedQuestions[j], mappedQuestions[i]];
+      }
     }
     if (quiz.questionsToShow && quiz.questionsToShow > 0 && quiz.questionsToShow < mappedQuestions.length) {
       mappedQuestions = mappedQuestions.slice(0, quiz.questionsToShow);
@@ -2427,6 +2078,7 @@ export function StudentPlatform() {
       setQuizSubmitting(false);
     }
   };
+  submitQuizRef.current = submitQuiz;
 
   useEffect(() => {
     api<{ student: Student | null }>("/api/student/me")
@@ -2678,7 +2330,7 @@ export function StudentPlatform() {
                               if (notification.type === "quiz") setTab("quizzes");
                               setShowNotifications(false);
                             }}
-                            className={`mb-0.5 w-full rounded-xl p-3 text-right transition-colors hover:bg-muted ${notification.readAt ? "opacity-60" : "bg-primary/10/50"}`}
+                            className={`mb-0.5 w-full rounded-xl p-3 text-right transition-colors hover:bg-muted ${notification.readAt ? "opacity-60" : "bg-primary/5"}`}
                           >
                             <span className="flex items-start gap-2.5">
                               <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${notification.readAt ? "bg-border" : "bg-primary"}`} />
@@ -2732,9 +2384,9 @@ export function StudentPlatform() {
 
       <nav
         aria-label="التنقل الرئيسي"
-        className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/97 px-1 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-sm lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-sm lg:hidden"
       >
-        <div className="mx-auto grid max-w-lg grid-cols-5">
+        <div className="mx-auto grid max-w-lg grid-cols-6">
           {nav.map(([value, label, Icon]) => (
             <button
               key={value}
@@ -2982,7 +2634,7 @@ export function StudentPlatform() {
                       </div>
 
                       {quizResult && activeQuiz.showExplanations !== false && q.explanation && (
-                        <div className="mt-3 rounded-xl border border-primary/20 bg-primary/8 p-3.5 text-xs text-foreground text-right" dir="rtl">
+                        <div className="mt-3 rounded-xl border border-primary/20 bg-primary/10 p-3.5 text-xs text-foreground text-right" dir="rtl">
                           <strong className="block font-bold mb-1 text-primary">الشرح:</strong>
                           <span className="text-muted-foreground" dir="auto">{q.explanation}</span>
                         </div>
