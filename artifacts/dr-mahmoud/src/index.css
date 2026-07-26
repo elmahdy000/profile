@@ -250,53 +250,55 @@
   --destructive-border: hsl(var(--destructive));
 }
 
-/* DARK MODE (Deep Navy Academic Theme) */
+/* DARK MODE (Soft Slate & Warm Obsidian Theme) */
 .dark {
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
+  --button-outline: rgba(255,255,255, .12);
+  --badge-outline: rgba(255,255,255, .08);
   --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
+  --elevate-1: rgba(255,255,255, .03);
+  --elevate-2: rgba(255,255,255, .06);
 
-  /* Premium Deep Slate/Navy background */
-  --background: 222 47% 6%;
+  /* Warm Soft Dark Background: #0F172A */
+  --background: 222 47% 11%;
+  /* Bright Crisp Text: #F8FAFC */
   --foreground: 210 40% 98%;
 
-  --border: 222 47% 12%;
+  /* Soft Slate Border: #1E293B */
+  --border: 217 33% 17%;
 
-  /* Differentiated surfaces for cards */
-  --card: 222 47% 9%;
+  /* Comfortable Card Surface: #1E293B */
+  --card: 222 47% 14%;
   --card-foreground: 210 40% 98%;
-  --card-border: 222 47% 12%;
+  --card-border: 217 33% 20%;
 
-  --sidebar: 222 47% 6%;
+  --sidebar: 222 47% 11%;
   --sidebar-foreground: 210 40% 98%;
-  --sidebar-border: 222 47% 12%;
-  --sidebar-primary: 221 83% 53%;
+  --sidebar-border: 217 33% 17%;
+  --sidebar-primary: 217 91% 60%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 222 47% 9%;
+  --sidebar-accent: 222 47% 14%;
   --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-ring: 221 83% 53%;
+  --sidebar-ring: 217 91% 60%;
 
-  --popover: 222 47% 9%;
+  --popover: 222 47% 14%;
   --popover-foreground: 210 40% 98%;
-  --popover-border: 222 47% 12%;
+  --popover-border: 217 33% 20%;
 
-  --primary: 221 83% 53%; /* Royal Blue in dark mode */
+  --primary: 217 91% 60%; /* Vibrant Soft Blue */
   --primary-foreground: 0 0% 100%;
-  --secondary: 221 72% 40%; /* Deep Blue */
-  --secondary-foreground: 0 0% 100%;
+  --secondary: 217 33% 22%; /* Slate Neutral */
+  --secondary-foreground: 210 40% 98%;
 
-  --muted: 222 47% 9%;
-  --muted-foreground: 215 20% 65%;
-  --accent: 221 72% 40%; /* Deep Blue */
-  --accent-foreground: 0 0% 100%;
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 20% 75%;
+  --accent: 217 33% 22%;
+  --accent-foreground: 210 40% 98%;
 
-  --destructive: 0 62.8% 30.6%;
+  --destructive: 0 72% 51%;
   --destructive-foreground: 210 40% 98%;
 
-  --input: 222 47% 12%;
-  --ring: 221 83% 53%;
+  --input: 217 33% 20%;
+  --ring: 217 91% 60%;
 }
 
 html {
