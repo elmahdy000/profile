@@ -1812,48 +1812,40 @@ export default function AdminDashboard() {
                     bookingsQuery.data &&
                     bookingsQuery.data.length > 0 && (
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-muted/40 border border-border rounded-2xl p-4 flex flex-col justify-between">
-                          <span className="text-xs text-muted-foreground">
-                            إجمالي الحجوزات
-                          </span>
-                          <span className="text-2xl font-bold text-foreground mt-2">
+                        <div className="bg-gradient-to-br from-card to-card/60 border border-border/70 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-muted-foreground">إجمالي الحجوزات</span>
+                            <span className="p-1.5 rounded-lg bg-primary/10 text-primary"><Calendar className="w-4 h-4" /></span>
+                          </div>
+                          <span className="text-3xl font-extrabold text-foreground mt-3">
                             {bookingsQuery.data.length}
                           </span>
                         </div>
-                        <div className="bg-muted/40 border border-border rounded-2xl p-4 flex flex-col justify-between">
-                          <span className="text-xs text-muted-foreground">
-                            قيد الانتظار
-                          </span>
-                          <span className="text-2xl font-bold text-primary mt-2">
-                            {
-                              bookingsQuery.data.filter(
-                                (b) => b.status === "pending",
-                              ).length
-                            }
+                        <div className="bg-gradient-to-br from-amber-500/5 to-card border border-amber-500/20 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-amber-500">قيد الانتظار</span>
+                            <span className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500"><Clock className="w-4 h-4" /></span>
+                          </div>
+                          <span className="text-3xl font-extrabold text-amber-500 mt-3">
+                            {bookingsQuery.data.filter((b) => b.status === "pending").length}
                           </span>
                         </div>
-                        <div className="bg-muted/40 border border-border rounded-2xl p-4 flex flex-col justify-between">
-                          <span className="text-xs text-muted-foreground">
-                            حجوزات مؤكدة
-                          </span>
-                          <span className="text-2xl font-bold text-primary mt-2">
-                            {
-                              bookingsQuery.data.filter(
-                                (b) => b.status === "confirmed",
-                              ).length
-                            }
+                        <div className="bg-gradient-to-br from-emerald-500/5 to-card border border-emerald-500/20 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-emerald-500">حجوزات مؤكدة</span>
+                            <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500"><CheckCircle2 className="w-4 h-4" /></span>
+                          </div>
+                          <span className="text-3xl font-extrabold text-emerald-500 mt-3">
+                            {bookingsQuery.data.filter((b) => b.status === "confirmed").length}
                           </span>
                         </div>
-                        <div className="bg-muted/40 border border-border rounded-2xl p-4 flex flex-col justify-between">
-                          <span className="text-xs text-muted-foreground">
-                            حجوزات مكتملة
-                          </span>
-                          <span className="text-2xl font-bold text-blue-400 mt-2">
-                            {
-                              bookingsQuery.data.filter(
-                                (b) => b.status === "completed",
-                              ).length
-                            }
+                        <div className="bg-gradient-to-br from-blue-500/5 to-card border border-blue-500/20 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-blue-400">حجوزات مكتملة</span>
+                            <span className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400"><GraduationCap className="w-4 h-4" /></span>
+                          </div>
+                          <span className="text-3xl font-extrabold text-blue-400 mt-3">
+                            {bookingsQuery.data.filter((b) => b.status === "completed").length}
                           </span>
                         </div>
                       </div>
@@ -1864,7 +1856,7 @@ export default function AdminDashboard() {
                       {[1, 2, 3].map((i) => (
                         <div
                           key={i}
-                          className="bg-card border border-border shadow-lg shadow-sm rounded-2xl p-6 animate-pulse"
+                          className="bg-card border border-border shadow-lg rounded-2xl p-6 animate-pulse"
                         >
                           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                             <div className="flex-1 space-y-3 w-full">
@@ -1885,103 +1877,141 @@ export default function AdminDashboard() {
                       ))}
                     </div>
                   ) : bookingsQuery.data?.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-24 bg-gradient-to-b from-card/20 to-transparent border border-border rounded-3xl text-center px-4">
-                      <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4 border border-primary/20">
-                        <Calendar className="w-8 h-8 text-primary/60" />
+                    <div className="flex flex-col items-center justify-center py-24 bg-gradient-to-b from-card/40 to-card/10 border border-border/80 rounded-3xl text-center px-4 shadow-inner">
+                      <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mb-4 border border-primary/20 shadow-lg shadow-primary/5">
+                        <Calendar className="w-10 h-10 text-primary" />
                       </div>
-                      <p className="text-foreground font-bold text-lg">
+                      <p className="text-foreground font-extrabold text-xl">
                         لا توجد حجوزات مسجلة حتى الآن
                       </p>
-                      <p className="text-muted-foreground text-sm mt-1">
-                        عند قيام الطلاب بالتسجيل ستظهر طلباتهم هنا
+                      <p className="text-muted-foreground text-sm mt-1.5 max-w-sm leading-relaxed">
+                        عند قيام الطلاب أو أولياء الأمور بحجز استفسار من الموقع الرئيسي ستظهر طلباتهم هنا مباشرة
                       </p>
                     </div>
                   ) : (
                     <div className="grid gap-4">
-                      {bookingsQuery.data?.map((booking) => (
-                        <div
-                          key={booking.id}
-                          className="bg-card border border-border shadow-lg shadow-sm hover:border-border rounded-2xl p-6 transition-all relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6"
-                        >
-                          {/* Left side details */}
-                          <div className="space-y-2 flex-1">
-                            <div className="flex items-center gap-3">
-                              <h3 className="font-bold text-foreground text-lg">
-                                {booking.name}
-                              </h3>
-                              <span
-                                className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                                  booking.status === "confirmed"
-                                    ? "bg-primary/10 text-primary border border-primary/20"
-                                    : booking.status === "completed"
-                                      ? "bg-secondary/10 text-secondary border-secondary/20"
-                                      : "bg-muted text-muted-foreground border border-border"
-                                }`}
-                              >
-                                {booking.status === "confirmed"
-                                  ? "مؤكد"
-                                  : booking.status === "completed"
-                                    ? "مكتمل"
-                                    : "قيد الانتظار"}
-                              </span>
-                            </div>
-                            <p
-                              className="text-foreground/90 text-sm font-sans"
-                              dir="ltr"
-                            >
-                              {booking.phone}
-                            </p>
-                            <p className="text-muted-foreground text-sm bg-muted/50 rounded-xl p-3 border border-border/60 mt-2 whitespace-pre-wrap">
-                              {booking.message}
-                            </p>
-                            <p className="text-muted-foreground text-[10px]">
-                              تاريخ الطلب:{" "}
-                              {new Date(booking.createdAt).toLocaleString(
-                                "ar-EG",
-                              )}
-                            </p>
-                          </div>
+                      {bookingsQuery.data?.map((booking) => {
+                        const cleanPhone = booking.phone.replace(/[^\d+]/g, "");
+                        const formattedPhone = cleanPhone.startsWith("0") ? `2${cleanPhone}` : cleanPhone;
+                        const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(`مرحباً ${booking.name} 👋، تواصل من منصة د. محمود المهدي بشأن طلب الحجز الخاص بك.`)}`;
 
-                          {/* Quick Action controls */}
-                          <div className="flex items-center gap-2 flex-shrink-0 self-stretch md:self-auto justify-end border-t md:border-t-0 border-border/60 pt-4 md:pt-0">
-                            {booking.status === "pending" && (
+                        return (
+                          <div
+                            key={booking.id}
+                            className={`bg-card border transition-all duration-200 rounded-2xl p-5 md:p-6 shadow-md relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-5 ${
+                              booking.status === "pending"
+                                ? "border-amber-500/30 bg-gradient-to-r from-amber-500/[0.03] to-card"
+                                : booking.status === "confirmed"
+                                ? "border-emerald-500/30 bg-gradient-to-r from-emerald-500/[0.03] to-card"
+                                : "border-border hover:border-border/80"
+                            }`}
+                          >
+                            {/* Left side details */}
+                            <div className="space-y-2.5 flex-1 w-full">
+                              <div className="flex flex-wrap items-center gap-3">
+                                <span className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-sm border border-primary/20 shrink-0">
+                                  {booking.name.slice(0, 1) || "ط"}
+                                </span>
+                                <div>
+                                  <h3 className="font-extrabold text-foreground text-lg leading-tight">
+                                    {booking.name}
+                                  </h3>
+                                  <span className="text-muted-foreground text-[11px] block mt-0.5">
+                                    {new Date(booking.createdAt).toLocaleString("ar-EG", {
+                                      dateStyle: "medium",
+                                      timeStyle: "short",
+                                    })}
+                                  </span>
+                                </div>
+                                <span
+                                  className={`px-3 py-1 rounded-full text-xs font-bold mr-auto md:mr-0 inline-flex items-center gap-1.5 ${
+                                    booking.status === "confirmed"
+                                      ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                                      : booking.status === "completed"
+                                      ? "bg-blue-500/15 text-blue-400 border border-blue-500/30"
+                                      : "bg-amber-500/15 text-amber-400 border border-amber-500/30 animate-pulse"
+                                  }`}
+                                >
+                                  <span className={`w-1.5 h-1.5 rounded-full ${
+                                    booking.status === "confirmed" ? "bg-emerald-400" : booking.status === "completed" ? "bg-blue-400" : "bg-amber-400"
+                                  }`} />
+                                  {booking.status === "confirmed"
+                                    ? "مؤكد"
+                                    : booking.status === "completed"
+                                    ? "مكتمل"
+                                    : "جديد - قيد الانتظار"}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-3 pt-1">
+                                <a
+                                  href={`tel:${booking.phone}`}
+                                  className="text-foreground/90 font-mono text-sm font-semibold hover:text-primary transition-colors dir-ltr inline-flex items-center gap-1.5"
+                                >
+                                  <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+                                  {booking.phone}
+                                </a>
+                                <a
+                                  href={whatsappUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-2.5 py-1 rounded-lg border border-emerald-500/20 transition-all"
+                                >
+                                  <MessageCircle className="w-3.5 h-3.5" />
+                                  مراسلة واتساب
+                                </a>
+                              </div>
+
+                              {booking.message && (
+                                <div className="text-foreground/80 text-sm bg-muted/30 rounded-xl p-3.5 border border-border/50 whitespace-pre-wrap leading-relaxed">
+                                  {booking.message}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Quick Action controls */}
+                            <div className="flex items-center gap-2 flex-shrink-0 self-stretch md:self-auto justify-end border-t md:border-t-0 border-border/60 pt-3 md:pt-0">
+                              {booking.status === "pending" && (
+                                <button
+                                  onClick={() =>
+                                    handleBookingStatusUpdate(
+                                      booking.id,
+                                      "confirmed",
+                                    )
+                                  }
+                                  className="px-3.5 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm"
+                                  title="تأكيد الحجز"
+                                >
+                                  <Check className="w-4 h-4" />
+                                  تأكيد الحجز
+                                </button>
+                              )}
+                              {booking.status === "confirmed" && (
+                                <button
+                                  onClick={() =>
+                                    handleBookingStatusUpdate(
+                                      booking.id,
+                                      "completed",
+                                    )
+                                  }
+                                  className="px-3.5 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm"
+                                  title="وضع علامة مكتمل"
+                                >
+                                  <Check className="w-4 h-4" />
+                                  إكتمال
+                                </button>
+                              )}
                               <button
-                                onClick={() =>
-                                  handleBookingStatusUpdate(
-                                    booking.id,
-                                    "confirmed",
-                                  )
-                                }
-                                className="p-2.5 bg-secondary/10 hover:bg-secondary/20 border border-secondary/20 text-secondary rounded-xl transition-all"
-                                title="تأكيد الحجز"
+                                onClick={() => handleBookingDelete(booking.id)}
+                                className="p-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-xl transition-all"
+                                title="حذف الحجز"
                               >
-                                <Check className="w-4 h-4" />
+                                <Trash2 className="w-4 h-4" />
                               </button>
-                            )}
-                            {booking.status === "confirmed" && (
-                              <button
-                                onClick={() =>
-                                  handleBookingStatusUpdate(
-                                    booking.id,
-                                    "completed",
-                                  )
-                                }
-                                className="p-2.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400 rounded-xl transition-all"
-                                title="وضع علامة مكتمل"
-                              >
-                                <Check className="w-4 h-4" />
-                              </button>
-                            )}
-                            <button
-                              onClick={() => handleBookingDelete(booking.id)}
-                              className="p-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-xl transition-all"
-                              title="حذف الحجز"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
