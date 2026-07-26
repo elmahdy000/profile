@@ -62,6 +62,11 @@ import {
   Eye,
   EyeOff,
   ShieldCheck,
+  Clock,
+  CheckCircle2,
+  GraduationCap,
+  Phone,
+  MessageCircle,
 } from "lucide-react";
 import { AdminSettings } from "./AdminSettings";
 import { AdminLearning } from "./AdminLearning";
