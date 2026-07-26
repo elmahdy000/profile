@@ -30,6 +30,8 @@ import {
   Moon,
   Sun,
   Copy,
+  Sparkles,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VideoLessonsSection } from "@/components/YoutubeSection";
