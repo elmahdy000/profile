@@ -1358,20 +1358,23 @@ function QuizzesPanel({
   );
 }
 
-const CPP_TEMPLATES: Record<string, { label: string; code: string; stdin?: string }> = {
+const CPP_TEMPLATES: Record<string, { label: string; icon: string; code: string; stdin?: string }> = {
   hello: {
-    label: "👋 Hello World (البداية الأساسية)",
+    label: "Hello World",
+    icon: "👋",
     code: `#include <iostream>
 using namespace std;
 
 int main() {
-    cout << "مرحباً بك في منصة د. محمود المهدي للبرمجة!" << endl;
-    cout << "C++ Programming Environment Ready 🚀" << endl;
+    // Welcome to C++ Online Compiler
+    cout << "Hello, World!" << endl;
+    cout << "Welcome to Dr. Mahmoud Elmahdy's Platform 🚀" << endl;
     return 0;
 }`,
   },
   input: {
-    label: "📥 الإدخال والإخراج (cin / cout)",
+    label: "User Input (cin)",
+    icon: "📥",
     code: `#include <iostream>
 #include <string>
 using namespace std;
@@ -1380,34 +1383,36 @@ int main() {
     string name;
     int age;
     
-    cout << "أدخل اسمك وعمرك:" << endl;
-    if (cin >> name >> age) {
-        cout << "أهلاً بك يا " << name << "! عمرك هو: " << age << " سنة." << endl;
-    }
+    // Reads input from STDIN box below
+    cin >> name >> age;
+    cout << "Welcome, " << name << "!" << endl;
+    cout << "Your age is: " << age << endl;
     return 0;
 }`,
-    stdin: "Mahmoud 20",
+    stdin: "Mahmoud 22",
   },
   loops: {
-    label: "🔄 الحلقات التكرارية (For Loop)",
+    label: "For Loop",
+    icon: "🔄",
     code: `#include <iostream>
 using namespace std;
 
 int main() {
-    cout << "--- طباعة الأعداد من 1 إلى 5 ---" << endl;
+    cout << "Counting from 1 to 5:" << endl;
     for (int i = 1; i <= 5; i++) {
-        cout << "العدد الحالي: " << i << endl;
+        cout << "Item #" << i << endl;
     }
     return 0;
 }`,
   },
   arrays: {
-    label: "📊 المصفوفات وقسمة العناصر (Arrays)",
+    label: "Arrays & Calculation",
+    icon: "📊",
     code: `#include <iostream>
 using namespace std;
 
 int main() {
-    int numbers[] = {10, 20, 30, 40, 50};
+    int numbers[] = {10, 25, 30, 45, 50};
     int sum = 0;
     int size = sizeof(numbers) / sizeof(numbers[0]);
 
@@ -1415,8 +1420,24 @@ int main() {
         sum += numbers[i];
     }
 
-    cout << "مجموع عناصر المصفوفة = " << sum << endl;
-    cout << "المتوسط الحسابي = " << (double)sum / size << endl;
+    cout << "Array Sum: " << sum << endl;
+    cout << "Average: " << (double)sum / size << endl;
+    return 0;
+}`,
+  },
+  functions: {
+    label: "Functions",
+    icon: "⚡",
+    code: `#include <iostream>
+using namespace std;
+
+int addNumbers(int a, int b) {
+    return a + b;
+}
+
+int main() {
+    int x = 15, y = 25;
+    cout << "Sum of " << x << " and " << y << " is: " << addNumbers(x, y) << endl;
     return 0;
 }`,
   },
@@ -1429,11 +1450,18 @@ function CppCompilerPanel() {
   const [errorOutput, setErrorOutput] = useState("");
   const [running, setRunning] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("hello");
+  const [activeTab, setActiveTab] = useState<"output" | "stdin">("output");
+  const [execTime, setExecTime] = useState<number | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const lineNumbers = code.split("\n").map((_, i) => i + 1);
 
   const runCode = async () => {
     setRunning(true);
     setOutput("");
     setErrorOutput("");
+    setActiveTab("output");
+    const startTime = performance.now();
 
     try {
       const res = await api<{
@@ -1446,18 +1474,20 @@ function CppCompilerPanel() {
         body: JSON.stringify({ code, stdin }),
       });
 
+      const duration = Math.round(performance.now() - startTime);
+      setExecTime(duration);
       setOutput(res.output);
       if (res.error) {
         setErrorOutput(res.error);
       }
       if (res.success) {
-        toast({ title: "✨ تم تشغيل الكود بنجاح!", description: "تم كتابة ومحاكاة مخرجات الكود بشكل ممتاز." });
+        toast({ title: "✨ Code executed successfully!", description: `Finished in ${duration}ms` });
       } else {
-        toast({ variant: "destructive", title: "تنبيه في الكود", description: "راجع مخرجات محطة الأخطاء بالأسفل لتصحيح السطر." });
+        toast({ variant: "destructive", title: "Compilation Error", description: "Check terminal output for details." });
       }
     } catch (err) {
-      setErrorOutput((err as Error).message || "حدث خطأ أثناء تشغيل محرك الـ C++ Compiler");
-      toast({ variant: "destructive", title: "خطأ في التشغيل", description: "تعذر تشغيل الكود حالياً." });
+      setErrorOutput((err as Error).message || "Execution engine unreachable.");
+      toast({ variant: "destructive", title: "Error", description: "Failed to run code." });
     } finally {
       setRunning(false);
     }
@@ -1471,174 +1501,218 @@ function CppCompilerPanel() {
       setStdin(tmpl.stdin || "");
       setOutput("");
       setErrorOutput("");
+      setExecTime(null);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const target = e.currentTarget;
+      const start = target.selectionStart;
+      const end = target.selectionEnd;
+      const newCode = code.substring(0, start) + "    " + code.substring(end);
+      setCode(newCode);
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.selectionStart = textareaRef.current.selectionEnd = start + 4;
+        }
+      }, 0);
     }
   };
 
   return (
-    <section className="space-y-6" dir="rtl">
-      <PageHeader
-        title="محرر كود C++ التفاعلي (Interactive Compiler)"
-        description="اكتب وجرب كود C++ مباشرة من متصفحك واعرف المخرجات والأخطاء فوراً."
-        action={
-          <div className="flex items-center gap-2">
-            <StatusBadge>C++20 GCC Engine</StatusBadge>
+    <div className="space-y-4" dir="ltr">
+      {/* Top Header / Action Bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-card border border-border rounded-2xl p-4 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-blue-600/10 text-blue-600 grid place-items-center font-bold text-lg">
+            C++
           </div>
-        }
-      />
-
-      {/* Editor Controls Bar */}
-      <div className="rounded-3xl border border-border bg-card p-4 shadow-sm space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-border pb-3">
-          <div className="flex items-center gap-2">
-            <Code2 className="h-5 w-5 text-primary shrink-0" />
-            <span className="text-sm font-bold text-foreground">اختر قالب جاهز لتجربته:</span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            {Object.entries(CPP_TEMPLATES).map(([key, item]) => (
-              <button
-                key={key}
-                onClick={() => handleTemplateChange(key)}
-                className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-                  selectedTemplate === key
-                    ? "bg-primary text-white shadow-sm"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
+          <div>
+            <h2 className="text-base font-bold text-foreground flex items-center gap-2">
+              Online C++ Compiler (GCC 20)
+              <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-medium px-2 py-0.5 rounded-full border border-emerald-500/20">
+                Programiz Style
+              </span>
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Write, run, and debug C++ code directly in your browser with real-time output.
+            </p>
           </div>
         </div>
 
-        {/* Code Editor & Input Layout */}
-        <div className="grid lg:grid-cols-12 gap-4">
-          {/* Main Code Editor (8 Columns) */}
-          <div className="lg:col-span-8 space-y-2">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
-                <Terminal className="h-3.5 w-3.5 text-primary" />
-                محرر الكود (main.cpp):
+        {/* Primary Run Button */}
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <Button
+            onClick={runCode}
+            disabled={running}
+            className="h-10 px-6 font-bold text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md transition-all active:scale-95 gap-2 w-full sm:w-auto"
+          >
+            {running ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Running...</span>
+              </>
+            ) : (
+              <>
+                <PlayCircle className="h-4 w-4 fill-white" />
+                <span>Run</span>
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* Templates Selector */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+        <span className="text-xs font-semibold text-muted-foreground shrink-0 pr-1">Code Examples:</span>
+        {Object.entries(CPP_TEMPLATES).map(([key, item]) => (
+          <button
+            key={key}
+            onClick={() => handleTemplateChange(key)}
+            className={`text-xs font-medium px-3 py-1.5 rounded-xl border transition-all shrink-0 flex items-center gap-1.5 ${
+              selectedTemplate === key
+                ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                : "bg-card text-muted-foreground border-border hover:border-slate-400 hover:text-foreground"
+            }`}
+          >
+            <span>{item.icon}</span>
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Split Workspace Editor (Programiz Layout: Code Left/Top, Output Right/Bottom) */}
+      <div className="grid lg:grid-cols-12 gap-4 items-stretch min-h-[540px]">
+        {/* Left Side: Code Editor (7 Columns) */}
+        <div className="lg:col-span-7 flex flex-col rounded-2xl border border-slate-800 bg-[#1e1e2e] shadow-xl overflow-hidden">
+          {/* File Header Bar */}
+          <div className="flex items-center justify-between bg-[#181825] px-4 py-2.5 border-b border-slate-800/80">
+            <div className="flex items-center gap-2">
+              <span className="h-3 w-3 rounded-full bg-red-500/80 inline-block" />
+              <span className="h-3 w-3 rounded-full bg-yellow-500/80 inline-block" />
+              <span className="h-3 w-3 rounded-full bg-green-500/80 inline-block" />
+              <span className="ml-2 text-xs font-mono font-semibold text-slate-200 flex items-center gap-1.5">
+                <Code2 className="h-3.5 w-3.5 text-blue-400" />
+                main.cpp
               </span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    void navigator.clipboard.writeText(code);
-                    toast({ title: "تم النسخ!", description: "تم نسخ الكود للحافظة." });
-                  }}
-                  className="text-[11px] font-bold text-muted-foreground hover:text-foreground flex items-center gap-1 bg-muted/60 px-2 py-1 rounded-lg"
-                >
-                  <Copy className="h-3 w-3" /> نسخ الكود
-                </button>
-                <button
-                  onClick={() => setCode(CPP_TEMPLATES[selectedTemplate]?.code || "")}
-                  className="text-[11px] font-bold text-muted-foreground hover:text-foreground flex items-center gap-1 bg-muted/60 px-2 py-1 rounded-lg"
-                >
-                  <RotateCcw className="h-3 w-3" /> إعادة ضبط
-                </button>
-              </div>
             </div>
 
-            <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-[#0d1117] shadow-xl">
-              <div className="flex items-center justify-between bg-[#161b22] px-4 py-2 border-b border-slate-800 text-xs font-mono text-slate-400" dir="ltr">
-                <div className="flex items-center gap-2">
-                  <span className="h-3 w-3 rounded-full bg-red-500/80 inline-block" />
-                  <span className="h-3 w-3 rounded-full bg-amber-500/80 inline-block" />
-                  <span className="h-3 w-3 rounded-full bg-emerald-500/80 inline-block" />
-                  <span className="ml-2 font-bold text-slate-300">main.cpp</span>
-                </div>
-                <span className="text-[10px] text-slate-500">C++20 (GCC)</span>
-              </div>
-
-              <textarea
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                rows={16}
-                dir="ltr"
-                spellCheck={false}
-                className="w-full bg-transparent p-4 font-mono text-sm leading-relaxed text-emerald-400 focus:outline-none resize-y selection:bg-primary/30"
-                placeholder="// اكتب كود C++ هنا..."
-              />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  void navigator.clipboard.writeText(code);
+                  toast({ title: "Copied!", description: "Source code copied to clipboard." });
+                }}
+                className="text-[11px] font-medium text-slate-400 hover:text-white flex items-center gap-1 bg-slate-800/60 hover:bg-slate-700 px-2.5 py-1 rounded-lg transition-colors"
+                title="Copy code"
+              >
+                <Copy className="h-3 w-3" /> Copy
+              </button>
+              <button
+                onClick={() => setCode(CPP_TEMPLATES[selectedTemplate]?.code || "")}
+                className="text-[11px] font-medium text-slate-400 hover:text-white flex items-center gap-1 bg-slate-800/60 hover:bg-slate-700 px-2.5 py-1 rounded-lg transition-colors"
+                title="Reset code"
+              >
+                <RotateCcw className="h-3 w-3" /> Reset
+              </button>
             </div>
-
-            {/* Run Button */}
-            <Button
-              onClick={runCode}
-              disabled={running}
-              className="w-full h-12 text-base font-extrabold rounded-2xl shadow-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-all active:scale-[0.99] gap-2"
-            >
-              {running ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  <span>جاري ترجمة وتشغيل الكود...</span>
-                </>
-              ) : (
-                <>
-                  <PlayCircle className="h-5 w-5" />
-                  <span>تشغيل الكود وتجربته الآن (Run Code)</span>
-                </>
-              )}
-            </Button>
           </div>
 
-          {/* Standard Input & Terminal Output (4 Columns) */}
-          <div className="lg:col-span-4 space-y-4">
-            {/* Input (cin) Box */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground block text-right">
-                مدخلات البرنامج (Standard Input / cin):
+          {/* Textarea Code Editor with Line Numbers */}
+          <div className="flex-1 flex bg-[#1e1e2e] relative overflow-hidden font-mono text-sm leading-relaxed">
+            {/* Line Numbers Gutter */}
+            <div className="py-4 pl-3 pr-2 select-none text-right text-slate-600 bg-[#181825]/50 border-r border-slate-800/50 min-w-[42px] text-xs leading-relaxed font-mono">
+              {lineNumbers.map((n) => (
+                <div key={n}>{n}</div>
+              ))}
+            </div>
+
+            {/* Code Input */}
+            <textarea
+              ref={textareaRef}
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              onKeyDown={handleKeyDown}
+              spellCheck={false}
+              className="w-full h-full min-h-[460px] bg-transparent p-4 font-mono text-xs sm:text-sm leading-relaxed text-blue-100 focus:outline-none resize-none selection:bg-blue-600/40"
+              placeholder="// Write C++ code here..."
+            />
+          </div>
+        </div>
+
+        {/* Right Side: Output Terminal (5 Columns) - Programiz Interactive Terminal */}
+        <div className="lg:col-span-5 flex flex-col rounded-2xl border border-slate-800 bg-[#181825] shadow-xl overflow-hidden">
+          {/* Header Bar */}
+          <div className="flex items-center justify-between bg-[#11111b] px-4 py-2.5 border-b border-slate-800">
+            <div className="flex items-center gap-2">
+              <Terminal className="h-4 w-4 text-blue-400" />
+              <span className="text-xs font-semibold text-slate-200">Terminal Output</span>
+            </div>
+
+            {execTime !== null && (
+              <span className="text-[10px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-md">
+                Execution: {execTime}ms
+              </span>
+            )}
+          </div>
+
+          {/* Terminal Screen & In-line STDIN Input Area */}
+          <div className="flex-1 flex flex-col p-4 bg-[#11111b] font-mono text-xs leading-relaxed space-y-4 overflow-y-auto min-h-[460px]">
+            {output ? (
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold text-emerald-400 tracking-wider uppercase block border-b border-slate-800 pb-1">
+                  === Output ===
+                </span>
+                <pre className="text-emerald-300 whitespace-pre-wrap font-mono">{output}</pre>
+              </div>
+            ) : !errorOutput && !running ? (
+              <div className="flex-1 grid place-items-center text-center p-6 text-slate-500">
+                <div className="space-y-2">
+                  <div className="h-10 w-10 rounded-full bg-slate-800/80 text-slate-400 grid place-items-center mx-auto">
+                    <PlayCircle className="h-5 w-5" />
+                  </div>
+                  <p className="text-xs">Click "Run" to execute your program.</p>
+                </div>
+              </div>
+            ) : null}
+
+            {errorOutput && (
+              <div className="space-y-1 border-t border-slate-800/80 pt-2">
+                <span className="text-[10px] font-bold text-red-400 tracking-wider uppercase block pb-1">
+                  === Errors ===
+                </span>
+                <pre className="text-red-400 whitespace-pre-wrap font-mono text-[11px] bg-red-950/30 p-3 rounded-xl border border-red-900/50">
+                  {errorOutput}
+                </pre>
+              </div>
+            )}
+
+            {/* Embedded STDIN Box directly inside Output Window */}
+            <div className="mt-auto pt-3 border-t border-slate-800/80 space-y-2">
+              <label className="text-[11px] font-bold text-slate-300 flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-blue-400">
+                  <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+                  Input Values (cin):
+                </span>
+                <span className="text-[10px] text-slate-500 font-normal">Passed to program on Run</span>
               </label>
               <textarea
                 value={stdin}
                 onChange={(e) => setStdin(e.target.value)}
-                rows={3}
-                dir="ltr"
-                className="w-full rounded-xl border border-border bg-background p-3 font-mono text-xs text-foreground focus:ring-2 focus:ring-primary/20 focus:outline-none"
-                placeholder="ادخل أي قيم يتوقعها cin بفاصل مسافات..."
+                rows={2}
+                className="w-full rounded-xl border border-slate-800 bg-[#181825] p-3 font-mono text-xs text-blue-200 placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50 resize-none shadow-inner"
+                placeholder="Enter input values for cin here (e.g. 20 Mahmoud)..."
               />
-            </div>
-
-            {/* Output & Error Terminal Console */}
-            <div className="space-y-1.5">
-              <span className="text-xs font-bold text-muted-foreground block text-right flex items-center gap-1.5">
-                <Terminal className="h-3.5 w-3.5 text-primary" />
-                شاشة المخرجات (Console Output):
-              </span>
-
-              <div className="rounded-2xl border border-slate-800 bg-[#0d1117] p-4 font-mono text-xs min-h-[260px] max-h-[400px] overflow-y-auto space-y-3 shadow-inner" dir="ltr">
-                {output ? (
-                  <div>
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-500 block mb-1">
-                      === Output (cout) ===
-                    </span>
-                    <pre className="text-emerald-300 whitespace-pre-wrap leading-relaxed">
-                      {output}
-                    </pre>
-                  </div>
-                ) : !errorOutput && !running ? (
-                  <div className="h-44 grid place-items-center text-center text-slate-500">
-                    <p className="text-xs">اضغط على "تشغيل الكود" لعرض المخرجات هنا ✨</p>
-                  </div>
-                ) : null}
-
-                {errorOutput && (
-                  <div className="pt-2 border-t border-slate-800">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-red-400 block mb-1">
-                      === Compilation / Execution Errors ===
-                    </span>
-                    <pre className="text-red-300 whitespace-pre-wrap leading-relaxed text-[11px]">
-                      {errorOutput}
-                    </pre>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
+
 
 function PaymentBanner({ paymentStatus, onUploaded }: { paymentStatus: string; onUploaded: () => void }) {
   const [uploading, setUploading] = useState(false);
