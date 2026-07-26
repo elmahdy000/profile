@@ -2484,7 +2484,7 @@ export function StudentPlatform() {
                   const isWrong = quizResult && isSelected && !isCorrect;
 
                   return (
-                    <fieldset key={qi} dir="ltr" className={`space-y-3 rounded-2xl border p-4 sm:p-5 transition-all shadow-xs text-left ${
+                    <div key={qi} className={`space-y-4 rounded-2xl border p-5 transition-all shadow-xs text-left ${
                       quizResult
                         ? isCorrect
                           ? "border-emerald-500/40 bg-emerald-500/5"
@@ -2493,40 +2493,57 @@ export function StudentPlatform() {
                           : "border-border bg-card/40"
                         : "border-border bg-card/60"
                     }`}>
-                      <legend className="font-bold text-base md:text-lg mb-3 text-foreground flex items-center justify-between w-full gap-3">
-                        <span className="flex-1 whitespace-pre-wrap leading-relaxed font-sans tracking-normal space-y-2">
-                          {q.prompt.split('\n').map((line, li) => {
-                            const isAr = /[\u0600-\u06FF]/.test(line);
-                            if (isAr) {
+                      {/* Question Header & Prompt */}
+                      <div className="w-full space-y-2.5">
+                        <div className="flex items-start justify-between gap-3 w-full">
+                          <div className="flex-1 space-y-2">
+                            {(() => {
+                              const lines = q.prompt.split('\n').map((l) => l.trim()).filter(Boolean);
+                              const arLines = lines.filter((l) => /[\u0600-\u06FF]/.test(l));
+                              const enLines = lines.filter((l) => !/[\u0600-\u06FF]/.test(l));
+
+                              // Detect if English lines contain code (variables, cout, cin, braces, semicolons)
+                              const titleLine = enLines[0] || "";
+                              const codeLines = enLines.slice(1);
+
                               return (
-                                <span
-                                  key={li}
-                                  dir="rtl"
-                                  className="block text-right text-xs md:text-sm font-semibold text-primary/90 bg-primary/5 dark:bg-primary/10 border border-primary/15 rounded-xl px-3.5 py-2 mt-1.5 leading-relaxed shadow-2xs"
-                                >
-                                  {line}
-                                </span>
+                                <>
+                                  {/* English Title Line */}
+                                  {titleLine && (
+                                    <h3 dir="ltr" className="text-base md:text-lg font-bold text-foreground leading-snug">
+                                      {qi + 1}. {titleLine}
+                                    </h3>
+                                  )}
+
+                                  {/* Code Block if lines look like C++/Code */}
+                                  {codeLines.length > 0 && (
+                                    <div dir="ltr" className="my-2.5 overflow-x-auto rounded-xl bg-slate-900 dark:bg-slate-950 p-3.5 text-xs md:text-sm font-mono text-emerald-400 border border-slate-800 shadow-inner leading-relaxed">
+                                      {codeLines.map((cLine, ci) => (
+                                        <div key={ci} className="whitespace-pre">{cLine}</div>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {/* Arabic Translation Badge Card */}
+                                  {arLines.length > 0 && (
+                                    <div dir="rtl" className="text-right text-xs md:text-sm font-semibold text-primary/90 bg-primary/5 dark:bg-primary/10 border border-primary/15 rounded-xl px-3.5 py-2 mt-2 leading-relaxed shadow-2xs">
+                                      {arLines.join(" ")}
+                                    </div>
+                                  )}
+                                </>
                               );
-                            }
-                            return (
-                              <span
-                                key={li}
-                                dir="ltr"
-                                className="block text-left text-base md:text-lg font-bold text-foreground"
-                              >
-                                {li === 0 ? `${qi + 1}. ${line}` : line}
-                              </span>
-                            );
-                          })}
-                        </span>
-                        {quizResult && (
-                          <span className={`text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${
-                            isCorrect ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/15 text-red-600 dark:text-red-400'
-                          }`}>
-                            {isCorrect ? '✓ صح' : '✗ غلط'}
-                          </span>
-                        )}
-                      </legend>
+                            })()}
+                          </div>
+
+                          {quizResult && (
+                            <span className={`text-xs font-bold px-3 py-1 rounded-full shrink-0 ${
+                              isCorrect ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/15 text-red-600 dark:text-red-400'
+                            }`}>
+                              {isCorrect ? '✓ صح' : '✗ غلط'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
 
                       {q.imageUrl && (
                         <div className="my-3 overflow-hidden rounded-xl border border-border bg-muted max-h-56 flex justify-center">
@@ -2534,7 +2551,7 @@ export function StudentPlatform() {
                         </div>
                       )}
 
-                      <div className="space-y-2.5" dir="ltr">
+                      <div className="space-y-2.5 pt-1" dir="ltr">
                         {q.options.map((option, oi) => {
                           const optionSelected = quizAnswers[qi] === oi;
                           const optionIsCorrect = q.correctIndex === oi;
