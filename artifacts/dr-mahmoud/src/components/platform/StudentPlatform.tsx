@@ -2494,14 +2494,25 @@ export function StudentPlatform() {
                         : "border-border bg-card/60"
                     }`}>
                       <legend className="font-bold text-base md:text-lg mb-3 text-foreground flex items-center justify-between w-full gap-3">
-                        <span className="flex-1 whitespace-pre-wrap leading-relaxed font-sans font-semibold tracking-normal space-y-0.5">
+                        <span className="flex-1 whitespace-pre-wrap leading-relaxed font-sans tracking-normal space-y-2">
                           {q.prompt.split('\n').map((line, li) => {
                             const isAr = /[\u0600-\u06FF]/.test(line);
+                            if (isAr) {
+                              return (
+                                <span
+                                  key={li}
+                                  dir="rtl"
+                                  className="block text-right text-xs md:text-sm font-semibold text-primary/90 bg-primary/5 dark:bg-primary/10 border border-primary/15 rounded-xl px-3.5 py-2 mt-1.5 leading-relaxed shadow-2xs"
+                                >
+                                  {line}
+                                </span>
+                              );
+                            }
                             return (
                               <span
                                 key={li}
-                                dir={isAr ? 'rtl' : 'ltr'}
-                                className={`block ${isAr ? 'text-right font-medium text-muted-foreground' : 'text-left'}`}
+                                dir="ltr"
+                                className="block text-left text-base md:text-lg font-bold text-foreground"
                               >
                                 {li === 0 ? `${qi + 1}. ${line}` : line}
                               </span>
