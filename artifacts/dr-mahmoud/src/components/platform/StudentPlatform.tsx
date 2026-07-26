@@ -451,6 +451,7 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
   const [mode, setMode] = useState<"login" | "register" | "recover">(
     shouldStartRegistration ? "register" : "login",
   );
+  const [regStep, setRegStep] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -569,12 +570,9 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
       (form.educationSystem === "university" || form.schoolType) &&
       form.grade,
   );
+  const step1Valid = Boolean(nameValid && phoneValid && emailValid && form.governorate && form.city);
   const registrationValid = Boolean(
-    nameValid &&
-      phoneValid &&
-      emailValid &&
-      form.governorate &&
-      form.city &&
+    step1Valid &&
       educationValid &&
       form.learningMode,
   );
@@ -898,140 +896,318 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
               </p>
             </form>
           ) : (
-            <form onSubmit={submitRegistration} className="space-y-5" noValidate>
+            <form onSubmit={submitRegistration} className="space-y-6" noValidate dir="rtl">
               <div>
-                <h2 className="text-2xl font-bold text-[#F8FAFC]">تسجيل طالب جديد</h2>
-                <p className="mt-1 text-xs text-[#94A3B8] leading-relaxed">
-                  اكتب بياناتك، والأدمن هيراجعها قبل ما يفعّل حسابك.
+                <h2 className="text-[26px] sm:text-[30px] font-extrabold text-[#F8FAFC]">تسجيل طالب جديد</h2>
+                <p className="mt-1 text-sm text-[#94A3B8] leading-[1.7]">
+                  اكتب بيانات الطالب بدقة، وتأكد من موافقة ولي الأمر قبل تفعيل الحساب.
                 </p>
               </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="flex flex-col text-xs font-semibold text-[#E2E8F0]">
-                  <label htmlFor="student-name" className="mb-2 block text-sm">
-                    اسم الطالب <span className="text-[#F87171]">*</span>
-                  </label>
-                  <input
-                    id="student-name"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    required
-                    aria-invalid={Boolean(form.name) && !nameValid}
-                    className="h-[52px] w-full rounded-[14px] border border-[rgba(148,163,184,0.20)] bg-[#091426] px-4 text-sm font-medium text-[#F8FAFC] placeholder-[#64748B] outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[rgba(59,130,246,0.14)]"
-                  />
-                  {form.name && !nameValid && <p className="mt-1 text-[11px] text-[#F87171]">اكتب اسم الطالب بشكل صحيح.</p>}
+
+              {/* Progress Indicator Header */}
+              <div className="rounded-[16px] border border-[rgba(148,163,184,0.14)] bg-[#091426] p-2.5">
+                <div className="grid grid-cols-3 gap-1 text-center">
+                  {[
+                    [1, "البيانات الأساسية"],
+                    [2, "الدراسة"],
+                    [3, "التأكيد"],
+                  ].map(([stepNum, stepTitle]) => {
+                    const isActive = regStep === stepNum;
+                    const isCompleted = regStep > (stepNum as number);
+                    return (
+                      <button
+                        key={stepNum as number}
+                        type="button"
+                        onClick={() => {
+                          if (stepNum === 1 || (stepNum === 2 && step1Valid) || (stepNum === 3 && step1Valid && educationValid)) {
+                            setRegStep(stepNum as number);
+                          }
+                        }}
+                        className={`flex items-center justify-center gap-2 rounded-[12px] py-2 px-2 transition-all duration-200 text-xs sm:text-sm font-bold ${
+                          isActive
+                            ? "bg-[#3B82F6] text-white shadow-sm"
+                            : isCompleted
+                            ? "bg-[rgba(59,130,246,0.15)] text-[#60A5FA]"
+                            : "text-[#94A3B8] hover:text-[#CBD5E1]"
+                        }`}
+                      >
+                        <span className={`grid h-5 w-5 place-items-center rounded-full text-[11px] font-extrabold ${
+                          isActive ? "bg-white text-[#3B82F6]" : isCompleted ? "bg-[#60A5FA] text-white" : "bg-slate-800 text-[#94A3B8]"
+                        }`}>
+                          {isCompleted ? "✓" : (stepNum as number)}
+                        </span>
+                        <span className="truncate">{stepTitle as string}</span>
+                      </button>
+                    );
+                  })}
                 </div>
-                <div className="flex flex-col text-xs font-semibold text-[#E2E8F0]">
-                  <label htmlFor="student-phone" className="mb-2 block text-sm">
-                    رقم الهاتف <span className="text-[#F87171]">*</span>
-                  </label>
-                  <input
-                    id="student-phone"
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    required
-                    inputMode="tel"
-                    placeholder="01xxxxxxxxx"
-                    aria-invalid={Boolean(form.phone) && !phoneValid}
-                    className="h-[52px] w-full rounded-[14px] border border-[rgba(148,163,184,0.20)] bg-[#091426] px-4 text-sm font-medium text-[#F8FAFC] placeholder-[#64748B] outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[rgba(59,130,246,0.14)]"
-                  />
-                  {form.phone && !phoneValid && <p className="mt-1 text-[11px] text-[#F87171]">رقم الهاتف من 10 إلى 15 رقمًا.</p>}
-                </div>
               </div>
-              <div className="flex flex-col text-xs font-semibold text-[#E2E8F0]">
-                <label htmlFor="student-email" className="mb-2 block text-sm">
-                  البريد الإلكتروني (اختياري)
-                </label>
-                <input
-                  id="student-email"
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  aria-invalid={!emailValid}
-                  className="h-[52px] w-full rounded-[14px] border border-[rgba(148,163,184,0.20)] bg-[#091426] px-4 text-sm font-medium text-[#F8FAFC] placeholder-[#64748B] outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[rgba(59,130,246,0.14)]"
-                />
-                {!emailValid && <p className="mt-1 text-[11px] text-[#F87171]">صيغة البريد الإلكتروني غير صحيحة.</p>}
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <SearchableCombobox
-                  id="student-governorate"
-                  label="المحافظة"
-                  value={form.governorate}
-                  onChange={(val) =>
-                    setForm({ ...form, governorate: val, city: "" })
-                  }
-                  options={Object.keys(EGYPT_GOVERNORATES)}
-                  placeholder="مثال: القاهرة"
-                  required
-                />
-                <SearchableCombobox
-                  id="student-city"
-                  label="المدينة / المركز"
-                  value={form.city}
-                  onChange={(val) => setForm({ ...form, city: val })}
-                  options={
-                    form.governorate && EGYPT_GOVERNORATES[form.governorate]
-                      ? EGYPT_GOVERNORATES[form.governorate]
-                      : []
-                  }
-                  placeholder="مثال: حلوان"
-                  required
-                />
-              </div>
-              <RegistrationStageSelector
-                value={form}
-                onChange={(selection) =>
-                  setForm({ ...form, ...selection, otherGradeDetail: "" })
-                }
-              />
-              <fieldset className="space-y-2 rounded-[16px] border border-[rgba(148,163,184,0.18)] bg-[#091426] p-4">
-                <legend className="px-1 text-xs font-bold uppercase text-[#60A5FA] tracking-wide">
-                  2. نظام الدراسة
-                </legend>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {(
-                    [
-                      ["online", "أونلاين", "متابعة فيديوهات الأونلاين"],
-                      ["offline", "أوفلاين", "متابعة فيديوهات السنتر"],
-                    ] as const
-                  ).map(([value, label, description]) => (
-                    <label
-                      key={value}
-                      className={`relative flex min-h-[56px] cursor-pointer items-center gap-3 rounded-[12px] border px-3.5 py-2.5 transition focus-within:ring-2 focus-within:ring-[#3B82F6]/30 ${form.learningMode === value ? "border-[#3B82F6] bg-[rgba(59,130,246,0.12)] text-[#F8FAFC]" : "border-[rgba(148,163,184,0.18)] bg-[#101D31] text-[#CBD5E1] hover:border-[#3B82F6]/40"}`}
-                    >
-                      <input
-                        type="radio"
-                        name="learning-mode"
-                        value={value}
-                        checked={form.learningMode === value}
-                        onChange={() =>
-                          setForm({ ...form, learningMode: value })
-                        }
-                        className="sr-only"
-                      />
-                      <span className="min-w-0 flex-1">
-                        <strong className="block text-xs font-bold text-[#F8FAFC]">{label}</strong>
-                        <small className="block text-[11px] text-[#94A3B8]">{description}</small>
+
+              {/* Step 1: Basic Information */}
+              {regStep === 1 && (
+                <div className="space-y-5 animate-in fade-in duration-200">
+                  <div className="rounded-[18px] border border-[rgba(148,163,184,0.12)] bg-[rgba(9,20,38,0.35)] p-5 space-y-4">
+                    <div className="flex items-center gap-3 border-b border-[rgba(148,163,184,0.12)] pb-3">
+                      <span className="grid h-[32px] w-[32px] place-items-center rounded-full bg-[rgba(59,130,246,0.12)] text-[#60A5FA] text-xs font-bold">
+                        01
                       </span>
-                      {form.learningMode === value && <CheckCircle2 className="h-4 w-4 shrink-0 text-[#60A5FA]" aria-hidden="true" />}
-                    </label>
-                  ))}
+                      <div>
+                        <h3 className="text-base font-bold text-[#F8FAFC]">البيانات الأساسية</h3>
+                        <p className="text-xs text-[#94A3B8]">بيانات التواصل والموقع الخاصة بالطالب</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div className="flex flex-col text-xs font-semibold text-[#E2E8F0]">
+                        <label htmlFor="student-name" className="mb-2 block text-sm font-medium">
+                          اسم الطالب <span className="text-[#F87171]">*</span>
+                        </label>
+                        <input
+                          id="student-name"
+                          value={form.name}
+                          onChange={(e) => setForm({ ...form, name: e.target.value })}
+                          required
+                          placeholder="الاسم ثلاثي أو رباعي"
+                          aria-invalid={Boolean(form.name) && !nameValid}
+                          className="h-[54px] w-full rounded-[14px] border border-[rgba(148,163,184,0.18)] bg-[#091426] px-4 text-sm font-medium text-[#F8FAFC] placeholder-[#71809A] outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[rgba(59,130,246,0.12)]"
+                        />
+                        {form.name && !nameValid && <p className="mt-1 text.xs text-[#F87171]">اكتب اسم الطالب بشكل صحيح (حرفين على الأقل).</p>}
+                      </div>
+                      <div className="flex flex-col text-xs font-semibold text-[#E2E8F0]">
+                        <label htmlFor="student-phone" className="mb-2 block text-sm font-medium">
+                          رقم الهاتف <span className="text-[#F87171]">*</span>
+                        </label>
+                        <input
+                          id="student-phone"
+                          value={form.phone}
+                          onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                          required
+                          inputMode="tel"
+                          placeholder="01XXXXXXXXX"
+                          dir="ltr"
+                          aria-invalid={Boolean(form.phone) && !phoneValid}
+                          className="h-[54px] w-full rounded-[14px] border border-[rgba(148,163,184,0.18)] bg-[#091426] px-4 text-left font-mono text-sm font-medium text-[#F8FAFC] placeholder-[#71809A] outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[rgba(59,130,246,0.12)]"
+                        />
+                        {form.phone && !phoneValid && <p className="mt-1 text-xs text-[#F87171]">رقم الهاتف من 10 إلى 15 رقمًا.</p>}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col text-xs font-semibold text-[#E2E8F0]">
+                      <div className="mb-2 flex items-center justify-between">
+                        <label htmlFor="student-email" className="text-sm font-medium">
+                          البريد الإلكتروني
+                        </label>
+                        <span className="rounded-full bg-[rgba(148,163,184,0.12)] px-2 py-0.5 text-[11px] font-normal text-[#94A3B8]">
+                          اختياري
+                        </span>
+                      </div>
+                      <input
+                        id="student-email"
+                        type="email"
+                        value={form.email}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                        dir="ltr"
+                        placeholder="student@example.com"
+                        aria-invalid={!emailValid}
+                        className="h-[54px] w-full rounded-[14px] border border-[rgba(148,163,184,0.18)] bg-[#091426] px-4 text-left font-sans text-sm font-medium text-[#F8FAFC] placeholder-[#71809A] outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[rgba(59,130,246,0.12)]"
+                      />
+                      {!emailValid && <p className="mt-1 text-xs text-[#F87171]">صيغة البريد الإلكتروني غير صحيحة.</p>}
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <SearchableCombobox
+                        id="student-governorate"
+                        label="المحافظة"
+                        value={form.governorate}
+                        onChange={(val) =>
+                          setForm({ ...form, governorate: val, city: "" })
+                        }
+                        options={Object.keys(EGYPT_GOVERNORATES)}
+                        placeholder="اختر المحافظة..."
+                        required
+                      />
+                      <SearchableCombobox
+                        id="student-city"
+                        label="المدينة / المركز"
+                        value={form.city}
+                        onChange={(val) => setForm({ ...form, city: val })}
+                        options={
+                          form.governorate && EGYPT_GOVERNORATES[form.governorate]
+                            ? EGYPT_GOVERNORATES[form.governorate]
+                            : []
+                        }
+                        placeholder="اختر المدينة..."
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <Button
+                      type="button"
+                      disabled={!step1Valid}
+                      onClick={() => setRegStep(2)}
+                      className="h-[56px] min-w-[150px] rounded-[14px] bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold text-base shadow-md transition-all duration-200 disabled:opacity-50"
+                    >
+                      التالي ←
+                    </Button>
+                  </div>
                 </div>
-              </fieldset>
-              {error && (
-                <p
-                  role="alert"
-                  className="rounded-[14px] border border-[#F87171]/30 bg-[#F87171]/10 p-3 text-xs font-semibold text-[#F87171]"
-                >
-                  {error}
-                </p>
               )}
-              <Button
-                disabled={loading || !registrationValid}
-                className="mt-4 h-[58px] w-full rounded-[14px] bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold text-base shadow-md transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <UserPlus className="h-5 w-5" />}{" "}
-                إرسال طلب التسجيل
-              </Button>
+
+              {/* Step 2: Educational Details */}
+              {regStep === 2 && (
+                <div className="space-y-5 animate-in fade-in duration-200">
+                  <div className="rounded-[18px] border border-[rgba(148,163,184,0.12)] bg-[rgba(9,20,38,0.35)] p-5 space-y-4">
+                    <div className="flex items-center gap-3 border-b border-[rgba(148,163,184,0.12)] pb-3">
+                      <span className="grid h-[32px] w-[32px] place-items-center rounded-full bg-[rgba(59,130,246,0.12)] text-[#60A5FA] text-xs font-bold">
+                        02
+                      </span>
+                      <div>
+                        <h3 className="text-base font-bold text-[#F8FAFC]">النظام والمرحلة الدراسية</h3>
+                        <p className="text-xs text-[#94A3B8]">حدد النظام والصف الحالي لعرض المحتوى المناسب للطالب</p>
+                      </div>
+                    </div>
+
+                    <RegistrationStageSelector
+                      value={form}
+                      onChange={(selection) =>
+                        setForm({ ...form, ...selection, otherGradeDetail: "" })
+                      }
+                    />
+
+                    <fieldset className="space-y-3 rounded-[16px] border border-[rgba(148,163,184,0.18)] bg-[#091426] p-4">
+                      <legend className="px-1 text-xs font-bold uppercase text-[#60A5FA] tracking-wide">
+                        طريقة المتابعة والدراسة
+                      </legend>
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        {(
+                          [
+                            ["online", "أونلاين", "متابعة فيديوهات الأونلاين"],
+                            ["offline", "أوفلاين", "متابعة فيديوهات السنتر"],
+                          ] as const
+                        ).map(([value, label, description]) => (
+                          <label
+                            key={value}
+                            className={`relative flex min-h-[56px] cursor-pointer items-center gap-3 rounded-[14px] border px-4 py-3 transition-all focus-within:ring-2 focus-within:ring-[#3B82F6]/30 ${form.learningMode === value ? "border-[#3B82F6] bg-[rgba(59,130,246,0.14)] text-[#F8FAFC]" : "border-[rgba(148,163,184,0.18)] bg-[#101D31] text-[#CBD5E1] hover:border-[#3B82F6]/40"}`}
+                          >
+                            <input
+                              type="radio"
+                              name="learning-mode"
+                              value={value}
+                              checked={form.learningMode === value}
+                              onChange={() =>
+                                setForm({ ...form, learningMode: value })
+                              }
+                              className="sr-only"
+                            />
+                            <span className="min-w-0 flex-1">
+                              <strong className="block text-sm font-bold text-[#F8FAFC]">{label}</strong>
+                              <small className="block text-xs text-[#94A3B8]">{description}</small>
+                            </span>
+                            {form.learningMode === value && <CheckCircle2 className="h-5 w-5 shrink-0 text-[#60A5FA]" aria-hidden="true" />}
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 gap-3">
+                    <Button
+                      type="button"
+                      onClick={() => setRegStep(1)}
+                      className="h-[56px] rounded-[14px] border border-[rgba(148,163,184,0.22)] bg-transparent text-[#CBD5E1] hover:bg-[rgba(148,163,184,0.08)] font-bold text-sm"
+                    >
+                      → السابق
+                    </Button>
+                    <Button
+                      type="button"
+                      disabled={!educationValid}
+                      onClick={() => setRegStep(3)}
+                      className="h-[56px] min-w-[150px] rounded-[14px] bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold text-base shadow-md transition-all duration-200 disabled:opacity-50"
+                    >
+                      التالي ←
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Review and Submit */}
+              {regStep === 3 && (
+                <div className="space-y-5 animate-in fade-in duration-200">
+                  <div className="rounded-[18px] border border-[rgba(148,163,184,0.12)] bg-[rgba(9,20,38,0.35)] p-5 space-y-4">
+                    <div className="flex items-center gap-3 border-b border-[rgba(148,163,184,0.12)] pb-3">
+                      <span className="grid h-[32px] w-[32px] place-items-center rounded-full bg-[rgba(59,130,246,0.12)] text-[#60A5FA] text-xs font-bold">
+                        03
+                      </span>
+                      <div>
+                        <h3 className="text-base font-bold text-[#F8FAFC]">مراجعة وتأكيد البيانات</h3>
+                        <p className="text-xs text-[#94A3B8]">راجع البيانات المدخلة قبل إرسال طلب التسجيل للأدمن</p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-[16px] border border-[rgba(148,163,184,0.18)] bg-[#091426] p-4 space-y-3 text-sm">
+                      <div className="flex justify-between border-b border-[rgba(148,163,184,0.10)] pb-2">
+                        <span className="text-[#94A3B8]">اسم الطالب:</span>
+                        <strong className="text-[#F8FAFC]">{form.name}</strong>
+                      </div>
+                      <div className="flex justify-between border-b border-[rgba(148,163,184,0.10)] pb-2">
+                        <span className="text-[#94A3B8]">رقم الهاتف:</span>
+                        <strong className="text-[#F8FAFC] font-mono" dir="ltr">{form.phone}</strong>
+                      </div>
+                      {form.email && (
+                        <div className="flex justify-between border-b border-[rgba(148,163,184,0.10)] pb-2">
+                          <span className="text-[#94A3B8]">البريد الإلكتروني:</span>
+                          <strong className="text-[#F8FAFC] font-sans" dir="ltr">{form.email}</strong>
+                        </div>
+                      )}
+                      <div className="flex justify-between border-b border-[rgba(148,163,184,0.10)] pb-2">
+                        <span className="text-[#94A3B8]">المحافظة والمدينة:</span>
+                        <strong className="text-[#F8FAFC]">{form.governorate} - {form.city}</strong>
+                      </div>
+                      <div className="flex justify-between border-b border-[rgba(148,163,184,0.10)] pb-2">
+                        <span className="text-[#94A3B8]">المرحلة والصف:</span>
+                        <strong className="text-[#60A5FA]">{form.grade || "غير محدد"}</strong>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#94A3B8]">نظام الدراسة:</span>
+                        <strong className="text-[#F8FAFC]">{form.learningMode === "online" ? "أونلاين" : "أوفلاين (سنتر)"}</strong>
+                      </div>
+                    </div>
+
+                    <div className="rounded-[14px] border border-[rgba(59,130,246,0.20)] bg-[rgba(59,130,246,0.08)] p-3.5 text-xs text-[#CBD5E1] leading-relaxed">
+                      <ShieldCheck className="h-4 w-4 text-[#60A5FA] inline ml-1.5" />
+                      سيتم مراجعة الطلب بواسطة إدارة المنصة وتوليد كود دخول آمن للطالب فور الاعتماد.
+                    </div>
+                  </div>
+
+                  {error && (
+                    <p
+                      role="alert"
+                      className="rounded-[14px] border border-[#F87171]/30 bg-[#F87171]/10 p-3.5 text-xs font-semibold text-[#F87171]"
+                    >
+                      {error}
+                    </p>
+                  )}
+
+                  <div className="flex items-center justify-between pt-2 gap-3">
+                    <Button
+                      type="button"
+                      onClick={() => setRegStep(2)}
+                      className="h-[56px] rounded-[14px] border border-[rgba(148,163,184,0.22)] bg-transparent text-[#CBD5E1] hover:bg-[rgba(148,163,184,0.08)] font-bold text-sm"
+                    >
+                      → السابق
+                    </Button>
+                    <Button
+                      disabled={loading || !registrationValid}
+                      className="h-[56px] min-w-[180px] rounded-[14px] bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold text-base shadow-md transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <UserPlus className="h-5 w-5" />}{" "}
+                      إنشاء الحساب 🚀
+                    </Button>
+                  </div>
+                </div>
+              )}
             </form>
           )}
         </div>
