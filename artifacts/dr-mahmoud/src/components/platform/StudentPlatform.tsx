@@ -1529,17 +1529,21 @@ export function StudentPlatform() {
     attemptsRemaining: number;
   } | null>(null);
   const [quizSubmitting, setQuizSubmitting] = useState(false);
+  const [quizElapsedSeconds, setQuizElapsedSeconds] = useState(0);
 
   // Exam Countdown Timer Effect
   useEffect(() => {
-    if (!activeQuiz || quizResult || quizTimeRemaining === null) return;
-    if (quizTimeRemaining <= 0) {
+    if (!activeQuiz || quizResult) return;
+    if (quizTimeRemaining !== null && quizTimeRemaining <= 0) {
       toast({ title: "انتهى وقت الاختبار", description: "جاري تسليم إجاباتك تلقائياً..." });
       void submitQuiz();
       return;
     }
     const timer = setInterval(() => {
-      setQuizTimeRemaining((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
+      if (quizTimeRemaining !== null) {
+        setQuizTimeRemaining((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
+      }
+      setQuizElapsedSeconds((prev) => prev + 1);
     }, 1000);
     return () => clearInterval(timer);
   }, [activeQuiz, quizResult, quizTimeRemaining]);
@@ -1561,6 +1565,7 @@ export function StudentPlatform() {
     setQuizAnswers(Array(questions.length).fill(-1));
     setQuizResult(null);
     setQuizStartTime(Date.now());
+    setQuizElapsedSeconds(0);
     setQuizTimeRemaining(quiz.durationMinutes ? quiz.durationMinutes * 60 : null);
   };
 
@@ -1937,26 +1942,76 @@ export function StudentPlatform() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
             >
-              <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
-                <div>
-                  <h2 className="text-lg font-black text-foreground" dir="auto">
-                    {activeQuiz.title}
-                  </h2>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {activeQuiz.questions.length} أسئلة · نسبة النجاح {activeQuiz.passingScore}%
-                  </p>
+              {/* Sticky Timer Bar */}
+              <div className="sticky top-0 z-10 -mx-5 -mt-5 md:-mx-6 md:-mt-6 mb-0">
+                <div className={`flex items-center justify-between px-5 py-3 md:px-6 rounded-t-3xl border-b border-border transition-colors duration-500 ${
+                  quizResult
+                    ? "bg-muted/80"
+                    : quizTimeRemaining !== null
+                      ? quizTimeRemaining < 30
+                        ? "bg-red-500/15 border-red-500/30"
+                        : quizTimeRemaining < 60
+                        ? "bg-amber-500/12 border-amber-500/25"
+                        : "bg-card"
+                      : "bg-card"
+                }`}>
+                  {/* Left: Quiz title + meta */}
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-base font-black text-foreground leading-tight truncate" dir="auto">
+                      {activeQuiz.title}
+                    </h2>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {activeQuiz.questions.length} سؤال · نجاح {activeQuiz.passingScore}%
+                      {!quizResult && (
+                        <span className="mr-2 font-bold text-primary">
+                          · أجبت: {quizAnswers.filter(a => a >= 0).length}/{activeQuiz.questions.length}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Right: Timer */}
+                  {!quizResult && (
+                    <div className={`flex items-center gap-2 rounded-xl px-3 py-1.5 mr-3 shrink-0 transition-all duration-500 ${
+                      quizTimeRemaining === null
+                        ? "bg-muted text-muted-foreground"
+                        : quizTimeRemaining < 30
+                        ? "bg-red-500/20 text-red-500 animate-pulse"
+                        : quizTimeRemaining < 60
+                        ? "bg-amber-500/15 text-amber-500"
+                        : "bg-primary/10 text-primary"
+                    }`}>
+                      <Clock className="h-4 w-4 shrink-0" />
+                      <span className="font-black text-sm tabular-nums">
+                        {quizTimeRemaining !== null
+                          ? `${Math.floor(quizTimeRemaining / 60)}:${String(quizTimeRemaining % 60).padStart(2, "0")}`
+                          : `${Math.floor(quizElapsedSeconds / 60)}:${String(quizElapsedSeconds % 60).padStart(2, "0")}`
+                        }
+                      </span>
+                      {quizTimeRemaining !== null && (
+                        <span className="text-[10px] font-bold opacity-60">
+                          / {Math.floor((activeQuiz.durationMinutes ?? 0) * 60 / 60)}:{String((activeQuiz.durationMinutes ?? 0) * 60 % 60).padStart(2, "0")}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
-                {quizTimeRemaining !== null && !quizResult && (
-                  <div className={`flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-black transition-colors ${
-                    quizTimeRemaining < 60 ? "bg-red-500/10 text-red-500 animate-pulse" : "bg-primary/10 text-primary"
-                  }`}>
-                    <Clock className="h-4 w-4" />
-                    <span>
-                      {Math.floor(quizTimeRemaining / 60)}:{String(quizTimeRemaining % 60).padStart(2, "0")}
-                    </span>
+
+                {/* Progress bar for countdown */}
+                {quizTimeRemaining !== null && !quizResult && activeQuiz.durationMinutes && (
+                  <div className="h-1 w-full bg-border overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-1000 ease-linear ${
+                        quizTimeRemaining < 30 ? "bg-red-500" : quizTimeRemaining < 60 ? "bg-amber-500" : "bg-primary"
+                      }`}
+                      style={{ width: `${(quizTimeRemaining / (activeQuiz.durationMinutes * 60)) * 100}%` }}
+                    />
                   </div>
                 )}
               </div>
+
+              <div className="border-b border-border mt-4 mb-4" />
+
 
               <div className="mt-4 space-y-5 max-h-[60vh] overflow-y-auto px-1" dir="ltr">
                 {activeQuiz.questions.map((q, qi) => {
