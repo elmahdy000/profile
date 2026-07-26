@@ -717,7 +717,7 @@ export function ExamWizard({
                           {qi + 1}
                         </span>
                         <strong className="truncate text-sm font-bold text-slate-800" dir="auto">
-                          {q.prompt || `السؤال ${qi + 1}`}
+                          {q.prompt ? q.prompt.split("\n")[0] : `السؤال ${qi + 1}`}
                         </strong>
                       </div>
                       <div className="flex items-center gap-1">
