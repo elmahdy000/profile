@@ -222,6 +222,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
 
   type DraftQuestion = {
     prompt: string;
+    arabicTranslation?: string;
     options: string[];
     correctIndex: number | null;
     explanation?: string;
@@ -231,9 +232,13 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
 
   const finishCurrent = () => {
     if (!current) return;
-    if (current.prompt && current.options.length >= 2) {
+    // Merge English prompt + Arabic translation if both exist
+    const finalPrompt = current.arabicTranslation
+      ? `${current.prompt}\n${current.arabicTranslation}`
+      : current.prompt;
+    if (finalPrompt && current.options.length >= 2) {
       questions.push({
-        prompt: current.prompt,
+        prompt: finalPrompt,
         options: current.options,
         correctIndex: current.correctIndex ?? 0,
         explanation: current.explanation,
@@ -247,36 +252,82 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
     current = null;
   };
 
+  // Helper: detect if a line is Arabic (contains Arabic Unicode chars)
+  const isArabicLine = (line: string) => /[\u0600-\u06FF]/.test(line);
+
+  // Helper: detect if line looks like an option prefix (A), B), 1., etc.)
+  const CHOICE_RE = /^(?:\(?([A-Fa-fأابجده]|هـ|[1-6])\)?[.):\-\s]\s*)(.+)$/;
+
+  // Helper: detect "Correct Answer: X)" or "Answer: B) main()" — flexible
+  const ANSWER_RE = /^(?:correct\s*answer|answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة)\s*[:：\-]?\s*(.+)$/i;
+
+  // Helper: detect explanation line — handles ":التوضيح" (RTL colon first) and "التوضيح:"
+  const EXPLANATION_HEADER_RE = /^(?::?\s*(?:explanation|note|التوضيح|التفسير|الشرح|تفسير|شرح|ملاحظة)\s*:?\s*)(.*)$/i;
+
+  // Helper: detect question number header "1." "1)" "Q1:" "س1)" "#1"
+  const QUESTION_HEADER_RE = /^(?:(?:س(?:ؤال)?\s*)?\d+|Q(?:uestion)?\s*\d+|#\d+)\s*[.):\-]\s*(.+)$/i;
+
+  let collectingExplanation = false;
+
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
 
-    // 1. Check Explanation line
-    const explanationMatch = line.match(/^(?:explanation|note|التفسير|الشرح|تفسير|ملاحظة)\s*[:：\-]?\s*(.+)$/i);
-    if (explanationMatch && current) {
-      current.explanation = explanationMatch[1].trim();
-      continue;
-    }
-
-    // 2. Check Answer line
-    const answerMatch = line.match(/^(?:answer|correct\s*answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة)\s*[:：\-]?\s*(.+)$/i);
-    if (answerMatch && current) {
-      const answerVal = answerMatch[1].trim();
-      const firstToken = answerVal.split(/\s+/)[0];
-      const byIndex = optionIndex(firstToken);
-      const byText = current.options.findIndex((o) => o.toLowerCase() === answerVal.toLowerCase());
-      if (byIndex !== null && byIndex < current.options.length) {
-        current.correctIndex = byIndex;
-      } else if (byText >= 0) {
-        current.correctIndex = byText;
+    // 1. Explanation header (handles ":التوضيح" with leading colon in RTL docs)
+    const explanationHeaderMatch = line.match(EXPLANATION_HEADER_RE);
+    if (explanationHeaderMatch && current) {
+      collectingExplanation = true;
+      const inlineText = explanationHeaderMatch[1].trim();
+      if (inlineText) {
+        current.explanation = inlineText;
       }
       continue;
     }
 
-    // 3. Check for Question start: e.g. "1.", "1)", "Q1:", "س1)", "س1.", "س1:"
-    const questionHeaderMatch = line.match(/^(?:(?:س(?:ؤال)?\s*)?\d+|Q(?:uestion)?\s*\d+|#\d+)\s*[.):\-]\s*(.+)$/i);
+    // 1b. If we're collecting multi-line explanation
+    if (collectingExplanation && current) {
+      // Stop collecting if we hit a new question header or answer line
+      if (line.match(QUESTION_HEADER_RE) || line.match(ANSWER_RE) || line.match(CHOICE_RE)) {
+        collectingExplanation = false;
+        // fall through to process line normally
+      } else {
+        current.explanation = (current.explanation ? current.explanation + "\n" : "") + line;
+        continue;
+      }
+    }
 
+    // 2. Answer line — "Correct Answer: B) main()" or "Answer: B"
+    const answerMatch = line.match(ANSWER_RE);
+    if (answerMatch && current) {
+      collectingExplanation = false;
+      const answerVal = answerMatch[1].trim();
+      // Extract just the leading letter/number before ")" or "."
+      const leadingToken = answerVal.match(/^([A-Fa-fأابجده]|هـ|[1-6])\b/)?.[1];
+      const byIndex = leadingToken ? optionIndex(leadingToken) : null;
+      const byText = current.options.findIndex((o) => o.toLowerCase().trim() === answerVal.toLowerCase().trim());
+      if (byIndex !== null && byIndex < current.options.length) {
+        current.correctIndex = byIndex;
+      } else if (byText >= 0) {
+        current.correctIndex = byText;
+      } else {
+        // Try matching by the text after the letter: "B) main()" → compare "main()" with options
+        const afterLetter = answerVal.replace(/^([A-Fa-fأابجده]|هـ|[1-6])\)?[.):\-\s]+/, "").trim();
+        const byTextAfter = current.options.findIndex((o) =>
+          o.toLowerCase().replace(/[()]/g, "").trim().includes(afterLetter.toLowerCase().replace(/[()]/g, "").trim())
+        );
+        if (byTextAfter >= 0) {
+          current.correctIndex = byTextAfter;
+        } else if (byIndex !== null) {
+          current.correctIndex = byIndex;
+        }
+      }
+      continue;
+    }
+
+    // 3. Question number header: "1. Which function..."
+    const questionHeaderMatch = line.match(QUESTION_HEADER_RE);
     if (questionHeaderMatch) {
       finishCurrent();
+      collectingExplanation = false;
       current = {
         prompt: questionHeaderMatch[1].trim(),
         options: [],
@@ -285,26 +336,38 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
       continue;
     }
 
-    // 4. Check for Choice line: e.g. "A)", "A.", "(A)", "أ)", "أ.", "1)", "1."
-    const choiceMatch = line.match(/^(?:\(?([A-Fa-fأابجده]|هـ|[1-6])\)?[.):\-\s]\s*)(.+)$/);
+    // 4. Choice line: "A) start()" or "A. start()"
+    const choiceMatch = line.match(CHOICE_RE);
     if (choiceMatch && current && current.options.length < 8) {
+      collectingExplanation = false;
       current.options.push(choiceMatch[2].trim());
       continue;
     }
 
-    // 5. Fallback logic:
+    // 5. Fallback logic
     if (!current) {
-      // If no question active yet, treat this line as the start of Question 1
+      // Start new question from this line
       current = {
         prompt: line,
         options: [],
         correctIndex: null,
       };
+      collectingExplanation = false;
+    } else if (current.options.length === 0 && !current.arabicTranslation) {
+      // We have a prompt but no options yet — check if this is the Arabic translation
+      // (Arabic line immediately after English question, before any choices)
+      if (isArabicLine(line) && !isArabicLine(current.prompt)) {
+        // This is the Arabic translation of an English question
+        current.arabicTranslation = line;
+      } else {
+        // Multi-line English question prompt
+        current.prompt += `\n${line}`;
+      }
     } else if (current.options.length === 0) {
-      // If question prompt already exists but zero choices found yet, append multiline with newline
+      // Already have Arabic or same-language prompt — just append
       current.prompt += `\n${line}`;
-    } else if (!current.explanation) {
-      // If choices already exist, append extra lines to the last choice option with newline
+    } else if (!collectingExplanation) {
+      // After options, unrecognised line → append to last option as continuation
       current.options[current.options.length - 1] += `\n${line}`;
     }
   }
@@ -312,6 +375,8 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   finishCurrent();
   return { questions, warnings };
 }
+
+
 
 function normalizeStringList(value: unknown): string[] {
   const values: unknown[] = Array.isArray(value) ? value : [value];
