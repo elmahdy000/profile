@@ -2004,15 +2004,16 @@ export function StudentPlatform() {
       });
       return;
     }
-    let questions = [...quiz.questions];
+    // Map questions with their original index before shuffling
+    let mappedQuestions = quiz.questions.map((q, idx) => ({ ...q, _originalIndex: idx }));
     if (quiz.shuffleQuestions) {
-      questions = questions.sort(() => Math.random() - 0.5);
+      mappedQuestions = mappedQuestions.sort(() => Math.random() - 0.5);
     }
-    if (quiz.questionsToShow && quiz.questionsToShow > 0 && quiz.questionsToShow < questions.length) {
-      questions = questions.slice(0, quiz.questionsToShow);
+    if (quiz.questionsToShow && quiz.questionsToShow > 0 && quiz.questionsToShow < mappedQuestions.length) {
+      mappedQuestions = mappedQuestions.slice(0, quiz.questionsToShow);
     }
-    setActiveQuiz({ ...quiz, questions });
-    setQuizAnswers(Array(questions.length).fill(-1));
+    setActiveQuiz({ ...quiz, questions: mappedQuestions });
+    setQuizAnswers(Array(mappedQuestions.length).fill(-1));
     setQuizResult(null);
     setQuizTabSwitchCount(0);
     setQuizStartTime(Date.now());
@@ -2024,6 +2025,14 @@ export function StudentPlatform() {
     if (!activeQuiz) return;
     setQuizSubmitting(true);
     const timeSpentSeconds = Math.round((Date.now() - quizStartTime) / 1000);
+
+    // Map displayed answers back to backend original question order
+    const originalAnswers = Array(activeQuiz.questions.length).fill(-1);
+    activeQuiz.questions.forEach((q: any, i: number) => {
+      const targetIdx = q._originalIndex !== undefined ? q._originalIndex : i;
+      originalAnswers[targetIdx] = quizAnswers[i];
+    });
+
     try {
       const res = await api<{
         score: number;
@@ -2032,11 +2041,12 @@ export function StudentPlatform() {
         total: number;
         attemptsUsed: number;
         attemptsRemaining: number;
+        details?: Array<{ questionIndex: number; selectedOption: number; correctOption: number; isCorrect: boolean }>;
       }>(
         `/api/learning/quizzes/${activeQuiz.id}/submit`,
         {
           method: "POST",
-          body: JSON.stringify({ answers: quizAnswers, timeSpentSeconds }),
+          body: JSON.stringify({ answers: originalAnswers, timeSpentSeconds }),
         },
       );
       setQuizResult(res);
@@ -2479,8 +2489,10 @@ export function StudentPlatform() {
 
               <div className="mt-4 space-y-5 max-h-[60vh] overflow-y-auto px-1" dir="ltr">
                 {activeQuiz.questions.map((q, qi) => {
+                  const origIdx = (q as any)._originalIndex !== undefined ? (q as any)._originalIndex : qi;
+                  const detail = quizResult?.details?.find((d) => d.questionIndex === origIdx);
                   const isSelected = quizAnswers[qi] !== undefined && quizAnswers[qi] >= 0;
-                  const isCorrect = quizResult && quizAnswers[qi] === q.correctIndex;
+                  const isCorrect = detail ? detail.isCorrect : Boolean(quizResult && quizAnswers[qi] === q.correctIndex);
                   const isWrong = quizResult && isSelected && !isCorrect;
 
                   return (
@@ -2628,11 +2640,14 @@ export function StudentPlatform() {
               ) : (
                 <Button
                   onClick={submitQuiz}
-                  disabled={quizSubmitting || quizAnswers.some((a) => a < 0)}
-                  className="mt-5 w-full h-11 text-sm font-bold rounded-xl shadow-md"
+                  disabled={quizSubmitting}
+                  className="mt-5 w-full h-12 text-base font-extrabold rounded-xl shadow-lg bg-primary hover:bg-primary/90 text-white transition-all active:scale-[0.98]"
                 >
                   {quizSubmitting ? (
-                    <Loader2 className="animate-spin h-5 w-5 mx-auto" />
+                    <div className="flex items-center justify-center gap-2">
+                      <Loader2 className="animate-spin h-5 w-5" />
+                      <span>جارٍ التصحيح وحساب النتيجة...</span>
+                    </div>
                   ) : (
                     "تسليم وتصحيح الاختبار"
                   )}
