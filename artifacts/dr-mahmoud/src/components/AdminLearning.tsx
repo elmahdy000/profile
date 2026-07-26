@@ -223,6 +223,7 @@ export function AdminLearning() {
   const [studentSearch, setStudentSearch] = useState("");
   const [studentStatusFilter, setStudentStatusFilter] = useState("all");
   const [studentStageFilter, setStudentStageFilter] = useState("all");
+  const [studentPaymentFilter, setStudentPaymentFilter] = useState("all");
   const [resultSearch, setResultSearch] = useState("");
   const [filePage, setFilePage] = useState(1);
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
@@ -927,9 +928,10 @@ export function AdminLearning() {
     return students.filter((student) =>
       (!query || [student.name, student.phone, student.email, student.accessCode].some((value) => String(value || "").toLocaleLowerCase("ar").includes(query))) &&
       (studentStatusFilter === "all" || student.status === studentStatusFilter) &&
-      (studentStageFilter === "all" || student.grade === studentStageFilter),
+      (studentStageFilter === "all" || student.grade === studentStageFilter) &&
+      (studentPaymentFilter === "all" || (student as { paymentStatus?: string }).paymentStatus === studentPaymentFilter),
     );
-  }, [students, studentSearch, studentStatusFilter, studentStageFilter]);
+  }, [students, studentSearch, studentStatusFilter, studentStageFilter, studentPaymentFilter]);
   const filteredAttempts = attempts.filter((attempt) => {
     const query = resultSearch.trim().toLocaleLowerCase("ar");
     return !query || attempt.studentName.toLocaleLowerCase("ar").includes(query) || attempt.quizTitle.toLocaleLowerCase("ar").includes(query);
@@ -1082,12 +1084,13 @@ export function AdminLearning() {
         <>
           {tab === "students" && (
             <div className="space-y-3">
-              <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-3">
-                <label className="relative"><Search className="absolute right-3 top-3.5 h-4 w-4 text-slate-400" /><input value={studentSearch} onChange={(event) => setStudentSearch(event.target.value)} placeholder="ابحث بالاسم أو الهاتف أو الكود..." className="input-admin pr-9" /></label>
+              <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-4">
+                <label className="relative col-span-2 lg:col-span-1"><Search className="absolute right-3 top-3.5 h-4 w-4 text-slate-400" /><input value={studentSearch} onChange={(event) => setStudentSearch(event.target.value)} placeholder="ابحث بالاسم أو الهاتف أو الكود..." className="input-admin pr-9" /></label>
                 <select value={studentStatusFilter} onChange={(event) => setStudentStatusFilter(event.target.value)} className="input-admin"><option value="all">كل الحالات</option><option value="pending">قيد المراجعة</option><option value="approved">معتمد</option><option value="suspended">موقوف</option></select>
+                <select value={studentPaymentFilter} onChange={(event) => setStudentPaymentFilter(event.target.value)} className="input-admin"><option value="all">كل حالات الدفع</option><option value="paid">دفع مكتمل</option><option value="pending">دفع قيد المراجعة</option><option value="unpaid">لم يدفع</option></select>
                 <select value={studentStageFilter} onChange={(event) => setStudentStageFilter(event.target.value)} className="input-admin"><option value="all">كل المراحل</option>{studentStages.map((stage) => <option key={stage} value={stage}>{stage}</option>)}</select>
               </div>
-              <div className="flex items-center justify-between px-1 text-xs text-slate-500"><span>عرض {filteredStudents.length} من {students.length} طالب</span>{(studentSearch || studentStatusFilter !== "all" || studentStageFilter !== "all") && <button type="button" className="font-bold text-primary" onClick={() => { setStudentSearch(""); setStudentStatusFilter("all"); setStudentStageFilter("all"); }}>مسح الفلاتر</button>}</div>
+              <div className="flex items-center justify-between px-1 text-xs text-slate-500"><span>عرض {filteredStudents.length} من {students.length} طالب</span>{(studentSearch || studentStatusFilter !== "all" || studentStageFilter !== "all" || studentPaymentFilter !== "all") && <button type="button" className="font-bold text-primary" onClick={() => { setStudentSearch(""); setStudentStatusFilter("all"); setStudentStageFilter("all"); setStudentPaymentFilter("all"); }}>مسح الفلاتر</button>}</div>
               {filteredStudents.length === 0 ? (
                 <Empty text={students.length ? "لا توجد نتائج مطابقة للفلاتر" : "لا توجد طلبات تسجيل بعد"} />
               ) : (
@@ -1941,6 +1944,15 @@ export function AdminLearning() {
           )}
           {tab === "reports" && analytics && (
             <div className="space-y-6">
+              <div className="flex justify-end">
+                <a
+                  href="/api/admin/learning/analytics/export"
+                  download
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
+                >
+                  <Download className="h-4 w-4" /> تصدير بيانات الطلاب CSV
+                </a>
+              </div>
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {[
                   ["طلاب نشطين آخر 14 يوم", analytics.summary.activeStudents, Activity, "bg-emerald-50 text-emerald-700"],

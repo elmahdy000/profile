@@ -1946,6 +1946,37 @@ export function StudentPlatform() {
   } | null>(null);
   const [quizSubmitting, setQuizSubmitting] = useState(false);
   const [quizElapsedSeconds, setQuizElapsedSeconds] = useState(0);
+  const [quizTabSwitchCount, setQuizTabSwitchCount] = useState(0);
+  const MAX_TAB_SWITCHES = 3;
+
+  // Anti-cheat: detect tab/window switching during active quiz
+  useEffect(() => {
+    if (!activeQuiz || quizResult) return;
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setQuizTabSwitchCount((prev) => {
+          const next = prev + 1;
+          if (next >= MAX_TAB_SWITCHES) {
+            toast({
+              variant: "destructive",
+              title: "تم رصد ${MAX_TAB_SWITCHES} مغادرة للاختبار",
+              description: "جاري تسليم إجاباتك تلقائياً...",
+            });
+            void submitQuiz();
+          } else {
+            toast({
+              variant: "destructive",
+              title: `تحذير — غادرت الاختبار (${next}/${MAX_TAB_SWITCHES})`,
+              description: next === MAX_TAB_SWITCHES - 1 ? "المرة الجاية سيتم التسليم تلقائياً!" : "يُمنع مغادرة نافذة الاختبار أثناء الحل.",
+            });
+          }
+          return next;
+        });
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [activeQuiz, quizResult]);
 
   // Exam Countdown Timer Effect
   useEffect(() => {
@@ -1983,6 +2014,7 @@ export function StudentPlatform() {
     setActiveQuiz({ ...quiz, questions });
     setQuizAnswers(Array(questions.length).fill(-1));
     setQuizResult(null);
+    setQuizTabSwitchCount(0);
     setQuizStartTime(Date.now());
     setQuizElapsedSeconds(0);
     setQuizTimeRemaining(quiz.durationMinutes ? quiz.durationMinutes * 60 : null);
@@ -2395,28 +2427,35 @@ export function StudentPlatform() {
                     </p>
                   </div>
 
-                  {/* Right: Timer */}
+                  {/* Right: Timer + Anti-cheat badge */}
                   {!quizResult && (
-                    <div className={`flex items-center gap-2 rounded-xl px-3 py-1.5 mr-3 shrink-0 transition-all duration-500 ${
-                      quizTimeRemaining === null
-                        ? "bg-muted text-muted-foreground"
-                        : quizTimeRemaining < 30
-                        ? "bg-red-500/20 text-red-500 animate-pulse"
-                        : quizTimeRemaining < 60
-                        ? "bg-amber-500/15 text-amber-500"
-                        : "bg-primary/10 text-primary"
-                    }`}>
-                      <Clock className="h-4 w-4 shrink-0" />
-                      <span className="font-black text-sm tabular-nums">
-                        {quizTimeRemaining !== null
-                          ? `${Math.floor(quizTimeRemaining / 60)}:${String(quizTimeRemaining % 60).padStart(2, "0")}`
-                          : `${Math.floor(quizElapsedSeconds / 60)}:${String(quizElapsedSeconds % 60).padStart(2, "0")}`
-                        }
-                      </span>
-                      {quizTimeRemaining !== null && (
-                        <span className="text-[10px] font-bold opacity-60">
-                          / {Math.floor((activeQuiz.durationMinutes ?? 0) * 60 / 60)}:{String((activeQuiz.durationMinutes ?? 0) * 60 % 60).padStart(2, "0")}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className={`flex items-center gap-2 rounded-xl px-3 py-1.5 transition-all duration-500 ${
+                        quizTimeRemaining === null
+                          ? "bg-muted text-muted-foreground"
+                          : quizTimeRemaining < 30
+                          ? "bg-red-500/20 text-red-500 animate-pulse"
+                          : quizTimeRemaining < 60
+                          ? "bg-amber-500/15 text-amber-500"
+                          : "bg-primary/10 text-primary"
+                      }`}>
+                        <Clock className="h-4 w-4 shrink-0" />
+                        <span className="font-black text-sm tabular-nums">
+                          {quizTimeRemaining !== null
+                            ? `${Math.floor(quizTimeRemaining / 60)}:${String(quizTimeRemaining % 60).padStart(2, "0")}`
+                            : `${Math.floor(quizElapsedSeconds / 60)}:${String(quizElapsedSeconds % 60).padStart(2, "0")}`
+                          }
                         </span>
+                        {quizTimeRemaining !== null && (
+                          <span className="text-[10px] font-bold opacity-60">
+                            / {Math.floor((activeQuiz.durationMinutes ?? 0) * 60 / 60)}:{String((activeQuiz.durationMinutes ?? 0) * 60 % 60).padStart(2, "0")}
+                          </span>
+                        )}
+                      </div>
+                      {quizTabSwitchCount > 0 && (
+                        <div className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-bold ${quizTabSwitchCount >= MAX_TAB_SWITCHES - 1 ? "bg-red-500/20 text-red-500 animate-pulse" : "bg-amber-500/15 text-amber-500"}`}>
+                          ⚠ {quizTabSwitchCount}/{MAX_TAB_SWITCHES}
+                        </div>
                       )}
                     </div>
                   )}
