@@ -92,6 +92,7 @@ interface Quiz {
   passingScore: number;
   maxAttempts: number;
   requiredProgress: number;
+  questionsToShow?: number | null;
   shuffleQuestions?: boolean;
   showExplanations?: boolean;
   questions: Question[];
@@ -262,6 +263,7 @@ export function AdminLearning() {
     passingScore: 60,
     maxAttempts: 3,
     requiredProgress: 80,
+    questionsToShow: null as number | null,
     shuffleQuestions: false,
     showExplanations: true,
     isPublished: false,
@@ -292,6 +294,7 @@ export function AdminLearning() {
       passingScore: 60,
       maxAttempts: 3,
       requiredProgress: 80,
+      questionsToShow: null,
       shuffleQuestions: false,
       showExplanations: true,
       isPublished: false,
@@ -737,7 +740,7 @@ export function AdminLearning() {
       toast({ variant: "destructive", description: "اختر الكورس ومرحلة واحدة على الأقل، وحدد الدرس إذا كان الاختبار تابعًا لدرس." });
       return;
     }
-    if (!quizForm.questions || quizForm.questions.length === 0 || quizForm.questions.some(q => !q.prompt.trim())) {
+    if (!quizForm.questions || quizForm.questions.length === 0 || quizForm.questions.some((q) => !(q as Question).prompt?.trim())) {
       toast({ variant: "destructive", description: "أضف سؤالًا واحدًا على الأقل، وتأكد أن جميع نص الأسئلة مكتوب." });
       return;
     }
@@ -776,6 +779,7 @@ export function AdminLearning() {
       passingScore: quiz.passingScore,
       maxAttempts: quiz.maxAttempts || 3,
       requiredProgress: quiz.requiredProgress ?? 80,
+      questionsToShow: quiz.questionsToShow ?? null,
       shuffleQuestions: quiz.shuffleQuestions ?? false,
       showExplanations: quiz.showExplanations ?? true,
       isPublished: quiz.isPublished,
