@@ -1849,7 +1849,7 @@ function DashboardPanel({
   dataLoading: boolean;
   dataError: string;
   onRetry: () => void;
-  onOpen: (tab: "lessons" | "files" | "quizzes") => void;
+  onOpen: (tab: "lessons" | "compiler" | "files" | "quizzes") => void;
 }) {
   const academicTrack = getTrackForStage(student.grade);
   const progressByVideo = new Map(progress.map((row) => [row.videoId, row]));
@@ -2198,7 +2198,7 @@ export function StudentPlatform() {
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<
-    "dashboard" | "lessons" | "files" | "quizzes" | "profile"
+    "dashboard" | "lessons" | "compiler" | "files" | "quizzes" | "profile"
   >("dashboard");
   const [files, setFiles] = useState<LearningFile[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
