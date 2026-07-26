@@ -2490,7 +2490,8 @@ export function StudentPlatform() {
               <div className="mt-4 space-y-5 max-h-[60vh] overflow-y-auto px-1" dir="ltr">
                 {activeQuiz.questions.map((q, qi) => {
                   const origIdx = (q as any)._originalIndex !== undefined ? (q as any)._originalIndex : qi;
-                  const detail = quizResult?.details?.find((d) => d.questionIndex === origIdx);
+                  const details = (quizResult as any)?.details as Array<{ questionIndex: number; selectedOption: number; correctOption: number; isCorrect: boolean }> | undefined;
+                  const detail = details?.find((d: { questionIndex: number }) => d.questionIndex === origIdx);
                   const isSelected = quizAnswers[qi] !== undefined && quizAnswers[qi] >= 0;
                   const isCorrect = detail ? detail.isCorrect : Boolean(quizResult && quizAnswers[qi] === q.correctIndex);
                   const isWrong = quizResult && isSelected && !isCorrect;
