@@ -1447,25 +1447,24 @@ function CppCompilerPanel() {
   const [code, setCode] = useState(CPP_TEMPLATES.hello.code);
   const [inputsList, setInputsList] = useState<string[]>([]);
   const [currentInputVal, setCurrentInputVal] = useState("");
-  const [outputLines, setOutputLines] = useState<string[]>([]);
+  const [outputContent, setOutputContent] = useState("");
   const [errorOutput, setErrorOutput] = useState("");
   const [running, setRunning] = useState(false);
-  const [waitingForInput, setWaitingForInput] = useState(false);
+  const [isWaitingCin, setIsWaitingCin] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("hello");
-  const [executionDone, setExecutionDone] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const consoleBottomRef = useRef<HTMLDivElement>(null);
 
   const lineNumbers = code.split("\n").map((_, i) => i + 1);
 
-  // Helper to run code with gathered inputs
-  const executeCode = async (providedInputs: string[]) => {
+  const runWithInputs = async (inputs: string[]) => {
     setRunning(true);
     setErrorOutput("");
-    setWaitingForInput(false);
+    setIsWaitingCin(false);
 
     try {
-      const stdinCombined = providedInputs.join("\n");
+      const stdinCombined = inputs.join("\n");
       const res = await api<{
         output: string;
         error: string;
@@ -1476,66 +1475,45 @@ function CppCompilerPanel() {
         body: JSON.stringify({ code, stdin: stdinCombined }),
       });
 
-      if (res.error && !res.output) {
-        setErrorOutput(res.error);
-        setExecutionDone(true);
-        setRunning(false);
-        return;
-      }
-
-      // Parse output into lines
-      const rawOutput = res.output || "";
-      const lines = rawOutput ? rawOutput.split("\n") : [];
-      
-      // Determine how many cin calls exist in code vs inputs provided
-      const cinMatches = code.match(/cin\s*>>/g) || [];
-      const requiredInputsCount = cinMatches.length;
-
-      setOutputLines(lines);
-
+      setOutputContent(res.output || "");
       if (res.error) {
         setErrorOutput(res.error);
       }
 
-      // If program needs more input and hasn't produced final completion
-      if (providedInputs.length < requiredInputsCount && !res.error) {
-        setWaitingForInput(true);
-      } else {
-        setExecutionDone(true);
+      // Check if code has cin and we have fewer inputs than expected cin statements
+      const cinCount = (code.match(/cin\s*>>/g) || []).length;
+      if (inputs.length < cinCount && !res.error) {
+        setIsWaitingCin(true);
       }
     } catch (err) {
-      setErrorOutput((err as Error).message || "Compilation failed.");
-      setExecutionDone(true);
+      setErrorOutput((err as Error).message || "Execution error.");
     } finally {
       setRunning(false);
-      setTimeout(() => consoleBottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+      setTimeout(() => {
+        const inputEl = document.getElementById("programiz-cin-input");
+        if (inputEl) inputEl.focus();
+        consoleBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 50);
     }
   };
 
   const handleRun = () => {
+    setHasStarted(true);
     setInputsList([]);
-    setOutputLines([]);
-    setErrorOutput("");
-    setExecutionDone(false);
     setCurrentInputVal("");
-
-    const cinMatches = code.match(/cin\s*>>/g) || [];
-    if (cinMatches.length > 0) {
-      // If code requires input, execute initial run to show prompt outputs
-      void executeCode([]);
-    } else {
-      void executeCode([]);
-    }
+    setOutputContent("");
+    setErrorOutput("");
+    void runWithInputs([]);
   };
 
   const handleInputSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentInputVal.trim() && currentInputVal !== "0") return;
+    if (!currentInputVal && currentInputVal !== "0") return;
 
-    const updatedInputs = [...inputsList, currentInputVal];
-    setInputsList(updatedInputs);
+    const nextInputs = [...inputsList, currentInputVal];
+    setInputsList(nextInputs);
     setCurrentInputVal("");
-    void executeCode(updatedInputs);
+    void runWithInputs(nextInputs);
   };
 
   const handleTemplateChange = (key: string) => {
@@ -1544,10 +1522,10 @@ function CppCompilerPanel() {
     if (tmpl) {
       setCode(tmpl.code);
       setInputsList([]);
-      setOutputLines([]);
+      setOutputContent("");
       setErrorOutput("");
-      setWaitingForInput(false);
-      setExecutionDone(false);
+      setIsWaitingCin(false);
+      setHasStarted(false);
       setCurrentInputVal("");
     }
   };
@@ -1632,25 +1610,24 @@ function CppCompilerPanel() {
             onKeyDown={handleKeyDown}
             spellCheck={false}
             className="w-full h-full min-h-[500px] bg-transparent p-4 font-mono text-xs sm:text-sm leading-relaxed text-slate-800 dark:text-slate-200 focus:outline-none resize-none selection:bg-blue-500/20"
-            placeholder="// Online C++ compiler"
+            placeholder="// Write C++ code here..."
           />
         </div>
 
-        {/* Right Side: Interactive Programiz Console Output (5 Columns) */}
+        {/* Right Side: Programiz Interactive Output Terminal (5 Columns) */}
         <div className="lg:col-span-5 flex flex-col bg-slate-900 text-slate-100 border-t lg:border-t-0 border-slate-800">
-          {/* Header */}
           <div className="flex items-center justify-between px-4 py-2 bg-slate-950 border-b border-slate-800">
             <span className="text-xs font-mono font-semibold text-slate-300 flex items-center gap-2">
               <Terminal className="h-3.5 w-3.5 text-blue-400" />
-              Console Output
+              Output
             </span>
             <button
               onClick={() => {
-                setOutputLines([]);
+                setOutputContent("");
                 setErrorOutput("");
                 setInputsList([]);
-                setWaitingForInput(false);
-                setExecutionDone(false);
+                setIsWaitingCin(false);
+                setHasStarted(false);
               }}
               className="text-[11px] font-mono text-slate-400 hover:text-white px-2 py-0.5 rounded border border-slate-700 bg-slate-900"
             >
@@ -1658,73 +1635,50 @@ function CppCompilerPanel() {
             </button>
           </div>
 
-          {/* Interactive Console Screen */}
+          {/* Real Interactive Console Screen */}
           <div
             onClick={() => {
-              const el = document.getElementById("interactive-console-input");
+              const el = document.getElementById("programiz-cin-input");
               if (el) el.focus();
             }}
-            className="flex-1 p-4 font-mono text-xs sm:text-sm leading-relaxed overflow-y-auto cursor-text bg-[#090d16] text-emerald-400 space-y-2 min-h-[460px] flex flex-col justify-between"
+            className="flex-1 p-4 font-mono text-xs sm:text-sm leading-relaxed overflow-y-auto cursor-text bg-[#090d16] text-slate-100 min-h-[460px]"
           >
-            <div className="space-y-1">
-              {outputLines.length > 0 ? (
-                outputLines.map((line, idx) => (
-                  <div key={idx} className="whitespace-pre-wrap leading-relaxed text-slate-100">
-                    {line}
-                  </div>
-                ))
-              ) : !errorOutput && !running ? (
-                <div className="text-slate-500 text-xs italic">
-                  Press "Run" to start execution...
-                </div>
-              ) : null}
+            {!hasStarted ? (
+              <div className="text-slate-500 text-xs italic">
+                Click "Run" to execute program.
+              </div>
+            ) : (
+              <div className="font-mono whitespace-pre-wrap leading-relaxed">
+                <span>{outputContent}</span>
 
-              {errorOutput && (
-                <div className="text-red-400 whitespace-pre-wrap font-mono text-xs bg-red-950/40 p-3 rounded-lg border border-red-900/60 my-2">
-                  {errorOutput}
-                </div>
-              )}
-            </div>
-
-            {/* Waiting for Student Input Box (Programiz interactive prompt) */}
-            <div className="pt-3 border-t border-slate-800/80 mt-4 space-y-2">
-              {(waitingForInput || code.includes("cin")) && !executionDone ? (
-                <form onSubmit={handleInputSubmit} className="space-y-1.5 bg-blue-950/30 p-2.5 rounded-xl border border-blue-900/60">
-                  <div className="flex items-center justify-between text-[11px] font-sans text-blue-300 font-bold">
-                    <span className="flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-blue-400 animate-ping" />
-                      البرنامج ينتظر إدخال قيمة (cin &gt;&gt;):
-                    </span>
-                    <span className="text-[10px] text-blue-400/80 font-normal">اكتب القيمة ثم اضغط Enter</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-blue-400 font-mono font-bold text-sm">&gt;</span>
+                {/* Programiz Active Interactive Prompt Line */}
+                {isWaitingCin && (
+                  <form onSubmit={handleInputSubmit} className="inline-flex items-center gap-1.5 ml-1">
                     <input
-                      id="interactive-console-input"
+                      id="programiz-cin-input"
                       type="text"
                       value={currentInputVal}
                       onChange={(e) => setCurrentInputVal(e.target.value)}
-                      placeholder="أدخل القيمة المطلوبة هنا..."
                       autoFocus
-                      className="flex-1 bg-slate-900 border border-blue-700/60 rounded-lg px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-blue-400 shadow-inner"
+                      className="bg-transparent border-b-2 border-blue-500 text-blue-400 font-mono font-bold text-xs sm:text-sm focus:outline-none min-w-[80px] px-1 py-0"
                     />
-                    <button
-                      type="submit"
-                      disabled={running}
-                      className="px-3 py-1.5 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
-                    >
-                      إرسال
-                    </button>
-                  </div>
-                </form>
-              ) : null}
+                    <span className="h-3 w-1.5 bg-blue-500 animate-pulse inline-block" />
+                  </form>
+                )}
 
-              {executionDone && outputLines.length > 0 && !errorOutput && (
-                <div className="text-[11px] text-emerald-400 font-mono font-semibold pt-1">
-                  === Code Execution Successful ===
-                </div>
-              )}
-            </div>
+                {errorOutput && (
+                  <div className="mt-2 text-red-400 whitespace-pre-wrap font-mono text-xs bg-red-950/40 p-3 rounded-lg border border-red-900/60">
+                    {errorOutput}
+                  </div>
+                )}
+
+                {!running && !isWaitingCin && hasStarted && !errorOutput && (
+                  <div className="mt-4 text-[11px] text-emerald-400 font-sans font-semibold border-t border-slate-800/80 pt-2">
+                    === Code Execution Successful ===
+                  </div>
+                )}
+              </div>
+            )}
             <div ref={consoleBottomRef} />
           </div>
         </div>
