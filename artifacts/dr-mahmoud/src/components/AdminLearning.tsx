@@ -130,12 +130,22 @@ type LearningAnalytics = {
     completedLessons: number;
     averageProgress: number;
     quizPassRate: number;
+    paidStudents?: number;
+    pendingReviewPayments?: number;
   };
+  governorateDistribution?: Array<{ name: string; count: number; percentage: number }>;
+  topCities?: Array<{ name: string; count: number }>;
+  gradeDistribution?: Array<{ name: string; count: number }>;
   students: Array<{
     studentId: number;
     name: string;
     phone: string;
+    email?: string | null;
+    governorate?: string;
+    city?: string;
+    grade?: string;
     status: string;
+    paymentStatus?: string;
     assignedLessons: number;
     startedLessons: number;
     completedLessons: number;
@@ -2183,15 +2193,83 @@ export function AdminLearning() {
                 </div>
               </section>
 
-              <section className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <div className="border-b p-5">
-                  <h3 className="text-lg font-black">متابعة تقدم الطلاب</h3>
-                  <p className="text-xs text-slate-500">الأقل نشاطًا ظاهرين الأول علشان المتابعة تكون أسرع.</p>
+              {/* Geographic & Grade Distribution Section */}
+              <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+                {/* 1. Top Governorates Distribution */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between border-b pb-3">
+                    <div>
+                      <h3 className="text-base font-extrabold text-slate-900">أكثر المحافظات إقبالاً على المنصة 📍</h3>
+                      <p className="text-xs text-slate-500 mt-0.5">توزيع الطلاب حسب المحافظة والعنوان المسجل.</p>
+                    </div>
+                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
+                      {analytics.governorateDistribution?.length || 0} محافظة
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {(analytics.governorateDistribution || []).slice(0, 7).map((gov) => (
+                      <div key={gov.name} className="space-y-1">
+                        <div className="flex justify-between text-xs font-bold">
+                          <span className="text-slate-800">{gov.name}</span>
+                          <span className="text-slate-600">{gov.count} طالب ({gov.percentage}%)</span>
+                        </div>
+                        <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-[#0866D9] transition-all duration-500"
+                            style={{ width: `${Math.max(4, gov.percentage)}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <table className="w-full min-w-[850px] text-sm">
-                  <thead className="bg-slate-50 text-slate-600">
+
+                {/* 2. Top Cities & Centered Hubs */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between border-b pb-3">
+                    <div>
+                      <h3 className="text-base font-extrabold text-slate-900">أعلى المراكز والمدن نشاطاً 🏛️</h3>
+                      <p className="text-xs text-slate-500 mt-0.5">أكثر المدن والمراكز المسجل منها طلاب.</p>
+                    </div>
+                    <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
+                      Top 10 مدن
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {(analytics.topCities || []).slice(0, 10).map((city, idx) => (
+                      <div key={city.name} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 text-xs font-semibold">
+                        <div className="flex items-center gap-2 truncate">
+                          <span className="grid h-5 w-5 place-items-center rounded-md bg-white border text-[10px] font-bold text-slate-600 shadow-2xs">
+                            {idx + 1}
+                          </span>
+                          <span className="truncate text-slate-800">{city.name}</span>
+                        </div>
+                        <span className="rounded-md bg-white px-2 py-0.5 font-bold text-[#0866D9] shadow-2xs shrink-0">
+                          {city.count}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Detailed Student Progress & Location Table */}
+              <section className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="border-b p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h3 className="text-lg font-black text-slate-900">تحليلات تقدم ومواقع الطلاب التفصيلية</h3>
+                    <p className="text-xs text-slate-500">الأقل نشاطاً ظاهرين في البداية لتسهيل المتابعة الفورية.</p>
+                  </div>
+                  <span className="text-xs font-bold text-slate-500">
+                    إجمالي المسجلين: {analytics.students.length} طالب
+                  </span>
+                </div>
+                <table className="w-full min-w-[950px] text-sm">
+                  <thead className="bg-slate-50 text-slate-600 font-bold">
                     <tr>
-                      <th className="p-4 text-right">الطالب</th>
+                      <th className="p-4 text-right">الطالب والمعلومات</th>
+                      <th className="p-4 text-right">المحافظة والمدينة</th>
+                      <th className="p-4">المرحلة الدراسية</th>
                       <th className="p-4">الدروس</th>
                       <th className="p-4">مكتمل</th>
                       <th className="p-4">متوسط التقدم</th>
@@ -2201,17 +2279,37 @@ export function AdminLearning() {
                   </thead>
                   <tbody>
                     {[...analytics.students].sort((a, b) => Number(a.isActive) - Number(b.isActive)).map((row) => (
-                      <tr key={row.studentId} className="border-t">
-                        <td className="p-4"><strong className="block">{row.name}</strong><span className="text-xs text-slate-500" dir="ltr">{row.phone}</span></td>
-                        <td className="p-4 text-center">{row.startedLessons}/{row.assignedLessons}</td>
+                      <tr key={row.studentId} className="border-t hover:bg-slate-50/60 transition">
+                        <td className="p-4">
+                          <strong className="block text-slate-900">{row.name}</strong>
+                          <span className="text-xs text-slate-500 font-mono" dir="ltr">{row.phone}</span>
+                        </td>
+                        <td className="p-4 text-right">
+                          <span className="block text-xs font-bold text-slate-800">{row.governorate}</span>
+                          <span className="text-[11px] text-slate-500">{row.city}</span>
+                        </td>
+                        <td className="p-4 text-center">
+                          <span className="inline-block rounded-md bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-700">
+                            {row.grade}
+                          </span>
+                        </td>
+                        <td className="p-4 text-center font-semibold">{row.startedLessons}/{row.assignedLessons}</td>
                         <td className="p-4 text-center font-bold text-emerald-700">{row.completedLessons}</td>
                         <td className="p-4">
-                          <div className="mx-auto w-28"><div className="mb-1 flex justify-between text-[11px]"><span className="text-slate-500">التقدم</span><strong>{row.averageProgress}%</strong></div><div className="h-1.5 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, Math.max(0, row.averageProgress))}%` }} /></div></div>
+                          <div className="mx-auto w-28">
+                            <div className="mb-1 flex justify-between text-[11px]">
+                              <span className="text-slate-500">التقدم</span>
+                              <strong>{row.averageProgress}%</strong>
+                            </div>
+                            <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                              <div className="h-full rounded-full bg-[#0866D9]" style={{ width: `${Math.min(100, Math.max(0, row.averageProgress))}%` }} />
+                            </div>
+                          </div>
                         </td>
-                        <td className="p-4 text-center">{row.quizAttempts} · {row.averageQuizScore}%</td>
+                        <td className="p-4 text-center font-medium">{row.quizAttempts} · {row.averageQuizScore}%</td>
                         <td className="p-4 text-center">
-                          <span className={`rounded-full px-2 py-1 text-xs font-bold ${row.isActive ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
-                            {row.lastActivity ? new Date(row.lastActivity).toLocaleDateString("ar-EG") : "لسه مبدأش"}
+                          <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${row.isActive ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                            {row.lastActivity ? new Date(row.lastActivity).toLocaleDateString("ar-EG") : "لم يبدأ بعد"}
                           </span>
                         </td>
                       </tr>

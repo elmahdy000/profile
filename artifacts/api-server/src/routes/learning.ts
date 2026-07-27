@@ -1914,6 +1914,41 @@ router.get("/admin/learning/analytics", requireAdmin, async (_req, res, next) =>
     ]);
     const now = Date.now();
     const activeCutoff = now - 14 * 24 * 60 * 60 * 1000;
+
+    // Geographic and Grade Aggregations
+    const governorateCounts: Record<string, number> = {};
+    const cityCounts: Record<string, number> = {};
+    const gradeCounts: Record<string, number> = {};
+    const paymentStatusCounts: Record<string, number> = {};
+
+    students.forEach((student) => {
+      const gov = student.governorate?.trim() || "غير محدد";
+      const city = student.city?.trim() || "غير محدد";
+      const grade = student.grade === "أخرى" ? student.otherGradeDetail || "أخرى" : student.grade?.trim() || "غير محدد";
+      const payment = student.paymentStatus || "unpaid";
+
+      governorateCounts[gov] = (governorateCounts[gov] || 0) + 1;
+      if (student.governorate) {
+        const fullCityKey = `${gov} - ${city}`;
+        cityCounts[fullCityKey] = (cityCounts[fullCityKey] || 0) + 1;
+      }
+      gradeCounts[grade] = (gradeCounts[grade] || 0) + 1;
+      paymentStatusCounts[payment] = (paymentStatusCounts[payment] || 0) + 1;
+    });
+
+    const governorateDistribution = Object.entries(governorateCounts)
+      .map(([name, count]) => ({ name, count, percentage: Math.round((count / (students.length || 1)) * 100) }))
+      .sort((a, b) => b.count - a.count);
+
+    const topCities = Object.entries(cityCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    const gradeDistribution = Object.entries(gradeCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+
     const studentRows = students.map((student) => {
       const ownProgress = progressRows.filter((row) => row.studentId === student.id);
       const ownAttempts = attempts.filter((row) => row.studentId === student.id);
@@ -1931,7 +1966,12 @@ router.get("/admin/learning/analytics", requireAdmin, async (_req, res, next) =>
         studentId: student.id,
         name: student.name,
         phone: student.phone,
+        email: student.email,
+        governorate: student.governorate || "غير محدد",
+        city: student.city || "غير محدد",
+        grade: student.grade === "أخرى" ? student.otherGradeDetail || "أخرى" : student.grade || "غير محدد",
         status: student.status,
+        paymentStatus: student.paymentStatus || "unpaid",
         learningMode: student.learningMode,
         assignedLessons: eligibleVideos.length,
         startedLessons: ownProgress.length,
@@ -1961,7 +2001,13 @@ router.get("/admin/learning/analytics", requireAdmin, async (_req, res, next) =>
         quizPassRate: attempts.length
           ? Math.round((attempts.filter((row) => row.passed).length / attempts.length) * 100)
           : 0,
+        paidStudents: paymentStatusCounts["paid"] || 0,
+        pendingReviewPayments: paymentStatusCounts["pending_review"] || 0,
       },
+      governorateDistribution,
+      topCities,
+      gradeDistribution,
+      paymentStatusCounts,
       students: studentRows,
     });
   } catch (error) {
