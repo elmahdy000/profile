@@ -1512,7 +1512,7 @@ function PaymentBanner({ paymentStatus, onUploaded }: { paymentStatus: string; o
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex w-full sm:w-auto items-center gap-2 shrink-0">
                 <Button
                   type="button"
                   variant="outline"
@@ -1521,7 +1521,7 @@ function PaymentBanner({ paymentStatus, onUploaded }: { paymentStatus: string; o
                     setSelectedFile(null);
                     setPreviewUrl(null);
                   }}
-                  className="h-10 text-xs font-bold"
+                  className="h-10 flex-1 sm:flex-none text-xs font-bold"
                 >
                   تغيير الصورة
                 </Button>
@@ -1532,10 +1532,10 @@ function PaymentBanner({ paymentStatus, onUploaded }: { paymentStatus: string; o
                     handleUpload();
                   }}
                   disabled={uploading}
-                  className="h-10 gap-2 font-black text-xs shadow-md shadow-primary/20 bg-primary hover:bg-primary/90 text-white"
+                  className="h-10 flex-1 sm:flex-none gap-2 font-black text-xs shadow-md shadow-primary/20 bg-primary hover:bg-primary/90 text-white"
                 >
                   {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-                  {uploading ? "جاري الرفع والارسال..." : "تأكيد ورفع الإيصال الآن 📤"}
+                  {uploading ? "جاري الرفع..." : "تأكيد ورفع الإيصال 📤"}
                 </Button>
               </div>
             </div>
