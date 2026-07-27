@@ -265,7 +265,7 @@ function VideoPlayerModal({
           aria-modal="true"
           aria-labelledby="video-player-title"
           dir="rtl"
-          className="relative flex max-h-[96dvh] w-full max-w-6xl flex-col overflow-hidden rounded-t-[28px] border border-border bg-background shadow-2xl sm:max-h-[94dvh] sm:rounded-[28px]"
+          className="relative flex h-[100dvh] max-h-[100dvh] w-full max-w-6xl flex-col overflow-hidden rounded-none border-0 sm:border sm:border-border bg-background shadow-2xl sm:h-auto sm:max-h-[94dvh] sm:rounded-[28px]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -291,10 +291,10 @@ function VideoPlayerModal({
             </button>
           </div>
 
-          <div className="min-h-0 overflow-y-auto bg-slate-50/70">
+          <div className="min-h-0 flex-1 overflow-y-auto bg-background text-foreground">
             <div className="grid lg:grid-cols-[minmax(0,1fr)_300px]">
               {/* Player Container */}
-              <div className="bg-slate-950 p-0 sm:p-4 lg:order-2">
+              <div className="bg-black p-0 sm:p-4 lg:order-2">
                 <div
                   className="relative aspect-video w-full select-none overflow-hidden bg-black sm:rounded-2xl sm:ring-2 sm:ring-primary/30 shadow-[0_0_50px_rgba(11,99,206,0.2)]"
                   onContextMenu={(e) => e.preventDefault()}
@@ -346,7 +346,7 @@ function VideoPlayerModal({
                       className="absolute inset-0 h-full w-full"
                       src={embedUrl}
                       title={item.title}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                       allowFullScreen
                     />
                   ) : (
@@ -370,7 +370,7 @@ function VideoPlayerModal({
               </div>
 
               {/* Lesson information */}
-              <aside className="space-y-4 border-t border-border bg-background p-4 text-right sm:p-5 lg:order-1 lg:border-l lg:border-t-0">
+              <aside className="space-y-4 border-t border-border bg-card p-4 text-right sm:p-5 lg:order-1 lg:border-l lg:border-t-0">
                 <div>
                   <div className="mb-2 flex items-center gap-2 text-xs font-extrabold text-foreground">
                     <Info className="h-4 w-4 text-primary" />
@@ -382,7 +382,7 @@ function VideoPlayerModal({
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/35 p-3">
+                  <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/40 p-3">
                     <Layers3 className="h-4 w-4 shrink-0 text-primary" />
                     <div className="min-w-0">
                       <p className="text-[10px] text-muted-foreground">الكورس</p>
@@ -390,7 +390,7 @@ function VideoPlayerModal({
                     </div>
                   </div>
                   {stages.length > 0 && (
-                    <div className="flex items-start gap-2 rounded-xl border border-border bg-muted/35 p-3">
+                    <div className="flex items-start gap-2 rounded-xl border border-border bg-muted/40 p-3">
                       <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                       <div className="min-w-0">
                         <p className="text-[10px] text-muted-foreground">المرحلة</p>
@@ -399,7 +399,7 @@ function VideoPlayerModal({
                     </div>
                   )}
                   {learningModeLabel && (
-                    <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/35 p-3">
+                    <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/40 p-3">
                       <Signal className="h-4 w-4 shrink-0 text-primary" />
                       <div>
                         <p className="text-[10px] text-muted-foreground">نظام الدراسة</p>
@@ -407,10 +407,10 @@ function VideoPlayerModal({
                       </div>
                     </div>
                   )}
-                  <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-emerald-800">
+                  <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-emerald-600 dark:text-emerald-400">
                     <ShieldCheck className="h-4 w-4 shrink-0" />
                     <div>
-                      <p className="text-[10px] text-emerald-700/75">مصدر العرض</p>
+                      <p className="text-[10px] opacity-75">مصدر العرض</p>
                       <p className="text-xs font-bold">{sourceLabel}</p>
                     </div>
                   </div>

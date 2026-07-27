@@ -195,9 +195,9 @@ export function ProfileInfoRow({
   value?: string | null;
 }) {
   return (
-    <div className="border-b border-muted py-3.5 last:border-0 flex items-center justify-between gap-4">
+    <div className="border-b border-border/60 py-3.5 last:border-0 flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
       <dt className="text-[12px] font-bold text-muted-foreground shrink-0">{label}</dt>
-      <dd className="text-[13px] font-bold text-foreground text-left truncate">
+      <dd className="text-[13px] font-bold text-foreground sm:text-left break-words">
         {value || "غير محدد"}
       </dd>
     </div>
