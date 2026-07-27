@@ -1901,21 +1901,55 @@ function ProfilePanel({ student, onStudentChange }: { student: Student; onStuden
     finally { setAvatarLoading(false); }
   };
   return (
-    <div className="space-y-7">
+    <div className="space-y-5 pb-6">
       <PageHeader title="حسابي" description="بياناتك الشخصية والتعليمية وإعدادات الحساب." />
-      <article className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-          <StudentAvatar name={student.name} src={student.avatarUrl} size="lg" />
-          <div>
-            <StatusBadge>حساب متفعّل</StatusBadge><h2 className="mt-3 text-xl font-extrabold text-foreground">{student.name}</h2><p className="text-[13px] text-muted-foreground">{student.grade || "طالب بمنصة د. محمود المهدي"}</p>
-            <div className="mt-4 flex flex-wrap gap-2"><input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => void uploadAvatar(event.target.files?.[0])} /><Button type="button" variant="outline" disabled={avatarLoading} onClick={() => inputRef.current?.click()}><Camera className="h-4 w-4" /> {avatarLoading ? "جاري الحفظ" : "تغيير الصورة"}</Button>{student.avatarUrl && <Button type="button" variant="ghost" disabled={avatarLoading} onClick={() => void removeAvatar()} className="text-muted-foreground hover:text-red-600"><Trash2 className="h-4 w-4" /> حذف</Button>}</div>
+
+      {/* Avatar Card */}
+      <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-right sm:items-center sm:gap-5">
+          <div className="shrink-0">
+            <StudentAvatar name={student.name} src={student.avatarUrl} size="lg" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <StatusBadge>حساب متفعّل</StatusBadge>
+            <h2 className="mt-2 text-xl font-extrabold text-foreground truncate">{student.name}</h2>
+            <p className="text-[13px] text-muted-foreground">{student.grade || "طالب بمنصة د. محمود المهدي"}</p>
+            <div className="mt-4 flex flex-wrap justify-center sm:justify-start gap-2">
+              <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => void uploadAvatar(event.target.files?.[0])} />
+              <Button type="button" variant="outline" size="sm" disabled={avatarLoading} onClick={() => inputRef.current?.click()}>
+                <Camera className="h-4 w-4" /> {avatarLoading ? "جاري الحفظ..." : "تغيير الصورة"}
+              </Button>
+              {student.avatarUrl && (
+                <Button type="button" variant="ghost" size="sm" disabled={avatarLoading} onClick={() => void removeAvatar()} className="text-muted-foreground hover:text-red-600">
+                  <Trash2 className="h-4 w-4" /> حذف
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </article>
-      <div className="grid gap-5 lg:grid-cols-[1.3fr_.7fr]">
-        <article className="rounded-2xl border border-border bg-card p-6 shadow-sm"><h2 className="text-base font-extrabold text-foreground">المعلومات الشخصية</h2><dl className="mt-3 grid sm:grid-cols-2"><ProfileInfoRow label="الاسم" value={student.name} /><ProfileInfoRow label="رقم الموبايل" value={student.phone} /><ProfileInfoRow label="البريد الإلكتروني" value={student.email || "غير مضاف"} /><ProfileInfoRow label="المحافظة والمدينة" value={[student.governorate, student.city].filter(Boolean).join("، ")} /></dl>
+
+      {/* Info Cards */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <h2 className="text-sm font-extrabold text-foreground mb-3">المعلومات الشخصية</h2>
+          <dl className="divide-y divide-border">
+            <ProfileInfoRow label="الاسم" value={student.name} />
+            <ProfileInfoRow label="رقم الموبايل" value={student.phone} />
+            <ProfileInfoRow label="البريد الإلكتروني" value={student.email || "غير مضاف"} />
+            <ProfileInfoRow label="المحافظة" value={student.governorate || "—"} />
+            <ProfileInfoRow label="المدينة" value={student.city || "—"} />
+          </dl>
         </article>
-        <article className="rounded-2xl border border-border bg-card p-6 shadow-sm"><h2 className="text-base font-extrabold text-foreground">المعلومات التعليمية</h2><dl className="mt-3"><ProfileInfoRow label="المرحلة الدراسية" value={student.grade} /><ProfileInfoRow label="نظام الدراسة" value={student.learningMode === "offline" ? "حضوري" : "أونلاين"} /><ProfileInfoRow label="حالة الحساب" value="متفعّل" /></dl></article>
+        <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <h2 className="text-sm font-extrabold text-foreground mb-3">المعلومات التعليمية</h2>
+          <dl className="divide-y divide-border">
+            <ProfileInfoRow label="المرحلة الدراسية" value={student.grade || "—"} />
+            <ProfileInfoRow label="نظام الدراسة" value={student.learningMode === "offline" ? "حضوري" : "أونلاين"} />
+            <ProfileInfoRow label="حالة الحساب" value="متفعّل ✅" />
+            <ProfileInfoRow label="حالة الاشتراك" value={student.paymentStatus === "paid" ? "مدفوع 💳" : student.paymentStatus === "pending_review" ? "قيد المراجعة ⏳" : "مجاني 🆓"} />
+          </dl>
+        </article>
       </div>
     </div>
   );
