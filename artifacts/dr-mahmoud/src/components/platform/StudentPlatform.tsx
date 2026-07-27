@@ -368,6 +368,7 @@ function SearchableCombobox({
   options,
   placeholder,
   required,
+  isLight = true,
 }: {
   id: string;
   label: string;
@@ -376,6 +377,7 @@ function SearchableCombobox({
   options: string[];
   placeholder: string;
   required?: boolean;
+  isLight?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -392,7 +394,7 @@ function SearchableCombobox({
 
   return (
     <div className="space-y-2 relative text-right w-full" dir="rtl">
-      <label htmlFor={id} className="block text-sm font-semibold text-[#334155] dark:text-[#E2E8F0]">
+      <label htmlFor={id} className={`block text-xs font-semibold ${isLight ? "text-[#334155]" : "text-[#E2E8F0]"}`}>
         {label} {required && <span className="text-[#EF4444]">*</span>}
       </label>
       <input
@@ -409,10 +411,18 @@ function SearchableCombobox({
         }}
         required={required}
         placeholder={placeholder}
-        className="h-[56px] w-full rounded-[12px] border border-[#CBD5E1] dark:border-[rgba(148,163,184,0.20)] bg-[#F8FAFC] dark:bg-[#091426] px-4 text-right text-sm font-medium text-[#0F172A] dark:text-[#F8FAFC] placeholder-[#94A3B8] outline-none transition focus:border-[#3B82F6] focus:bg-white dark:focus:bg-[#091426] focus:ring-4 focus:ring-[#3B82F6]/12 shadow-xs"
+        className={`h-[56px] w-full rounded-[12px] border px-4 text-right text-sm font-medium outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[#3B82F6]/12 shadow-xs ${
+          isLight
+            ? "border-[#CBD5E1] bg-[#F8FAFC] text-[#0F172A] placeholder-[#94A3B8] focus:bg-white"
+            : "border-[rgba(148,163,184,0.20)] bg-[#091426] text-[#F8FAFC] placeholder-[#64748B] focus:bg-[#091426]"
+        }`}
       />
       {isOpen && (filtered.length > 0 || search.trim() !== "") && (
-        <ul className="absolute z-50 w-full max-h-48 overflow-y-auto rounded-[14px] border border-[#CBD5E1] dark:border-[rgba(148,163,184,0.25)] bg-white dark:bg-[#101D31] shadow-lg mt-1 py-1 text-right">
+        <ul className={`absolute z-50 w-full max-h-48 overflow-y-auto rounded-[14px] border shadow-lg mt-1 py-1 text-right ${
+          isLight
+            ? "border-[#CBD5E1] bg-white text-[#0F172A]"
+            : "border-[rgba(148,163,184,0.25)] bg-[#101D31] text-[#F8FAFC]"
+        }`}>
           {filtered.map((opt) => (
             <li key={opt}>
               <button
@@ -422,7 +432,11 @@ function SearchableCombobox({
                   setSearch(opt);
                   setIsOpen(false);
                 }}
-                className="w-full px-4 py-2.5 text-right hover:bg-[#E8F1FF] dark:hover:bg-[rgba(59,130,246,0.15)] text-sm transition-colors text-[#0F172A] dark:text-[#F8FAFC] font-medium"
+                className={`w-full px-4 py-2.5 text-right text-sm transition-colors font-medium ${
+                  isLight
+                    ? "hover:bg-[#E8F1FF] text-[#0F172A]"
+                    : "hover:bg-[rgba(59,130,246,0.15)] text-[#F8FAFC]"
+                }`}
               >
                 {opt}
               </button>
@@ -1044,7 +1058,7 @@ function getOrCreateDeviceId(): string {
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div className="flex flex-col text-xs font-semibold">
-                        <label htmlFor="student-name" className="mb-1.5 block text-xs font-semibold text-[#334155]">
+                        <label htmlFor="student-name" className={`mb-1.5 block text-xs font-semibold ${isLight ? "text-[#334155]" : "text-[#E2E8F0]"}`}>
                           اسم الطالب <span className="text-[#EF4444]">*</span>
                         </label>
                         <input
@@ -1054,12 +1068,16 @@ function getOrCreateDeviceId(): string {
                           required
                           placeholder="الاسم ثلاثي أو رباعي"
                           aria-invalid={Boolean(form.name) && !nameValid}
-                          className="h-[56px] w-full rounded-[12px] border border-[#CBD5E1] bg-[#F8FAFC] px-4 text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] outline-none transition focus:border-[#3B82F6] focus:bg-white focus:ring-4 focus:ring-[#3B82F6]/12"
+                          className={`h-[56px] w-full rounded-[12px] border px-4 text-sm font-medium outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[#3B82F6]/12 ${
+                            isLight
+                              ? "border-[#CBD5E1] bg-[#F8FAFC] text-[#0F172A] placeholder-[#94A3B8] focus:bg-white"
+                              : "border-[rgba(148,163,184,0.20)] bg-[#091426] text-[#F8FAFC] placeholder-[#64748B] focus:bg-[#091426]"
+                          }`}
                         />
                         {form.name && !nameValid && <p className="mt-1 text-xs text-[#EF4444]">اكتب اسم الطالب بشكل صحيح (حرفين على الأقل).</p>}
                       </div>
                       <div className="flex flex-col text-xs font-semibold">
-                        <label htmlFor="student-phone" className="mb-1.5 block text-xs font-semibold text-[#334155]">
+                        <label htmlFor="student-phone" className={`mb-1.5 block text-xs font-semibold ${isLight ? "text-[#334155]" : "text-[#E2E8F0]"}`}>
                           رقم الهاتف <span className="text-[#EF4444]">*</span>
                         </label>
                         <input
@@ -1071,7 +1089,11 @@ function getOrCreateDeviceId(): string {
                           placeholder="01XXXXXXXXX"
                           dir="ltr"
                           aria-invalid={Boolean(form.phone) && !phoneValid}
-                          className="h-[56px] w-full rounded-[12px] border border-[#CBD5E1] bg-[#F8FAFC] px-4 text-left font-mono text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] outline-none transition focus:border-[#3B82F6] focus:bg-white focus:ring-4 focus:ring-[#3B82F6]/12"
+                          className={`h-[56px] w-full rounded-[12px] border px-4 text-left font-mono text-sm font-medium outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[#3B82F6]/12 ${
+                            isLight
+                              ? "border-[#CBD5E1] bg-[#F8FAFC] text-[#0F172A] placeholder-[#94A3B8] focus:bg-white"
+                              : "border-[rgba(148,163,184,0.20)] bg-[#091426] text-[#F8FAFC] placeholder-[#64748B] focus:bg-[#091426]"
+                          }`}
                         />
                         {form.phone && !phoneValid && <p className="mt-1 text-xs text-[#EF4444]">رقم الهاتف من 10 إلى 15 رقمًا.</p>}
                       </div>
@@ -1079,10 +1101,10 @@ function getOrCreateDeviceId(): string {
 
                     <div className="flex flex-col text-xs font-semibold">
                       <div className="mb-1.5 flex items-center justify-between">
-                        <label htmlFor="student-email" className="text-xs font-semibold text-[#334155]">
+                        <label htmlFor="student-email" className={`text-xs font-semibold ${isLight ? "text-[#334155]" : "text-[#E2E8F0]"}`}>
                           البريد الإلكتروني
                         </label>
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-normal text-[#64748B]">
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-normal ${isLight ? "bg-slate-100 text-[#64748B]" : "bg-[#091426] border border-[rgba(148,163,184,0.15)] text-[#94A3B8]"}`}>
                           اختياري
                         </span>
                       </div>
@@ -1094,7 +1116,11 @@ function getOrCreateDeviceId(): string {
                         dir="ltr"
                         placeholder="student@example.com"
                         aria-invalid={!emailValid}
-                        className="h-[56px] w-full rounded-[12px] border border-[#CBD5E1] bg-[#F8FAFC] px-4 text-left font-sans text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] outline-none transition focus:border-[#3B82F6] focus:bg-white focus:ring-4 focus:ring-[#3B82F6]/12"
+                        className={`h-[56px] w-full rounded-[12px] border px-4 text-left font-sans text-sm font-medium outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[#3B82F6]/12 ${
+                          isLight
+                            ? "border-[#CBD5E1] bg-[#F8FAFC] text-[#0F172A] placeholder-[#94A3B8] focus:bg-white"
+                            : "border-[rgba(148,163,184,0.20)] bg-[#091426] text-[#F8FAFC] placeholder-[#64748B] focus:bg-[#091426]"
+                        }`}
                       />
                       {!emailValid && <p className="mt-1 text-xs text-[#EF4444]">صيغة البريد الإلكتروني غير صحيحة.</p>}
                     </div>
@@ -1110,6 +1136,7 @@ function getOrCreateDeviceId(): string {
                         options={Object.keys(EGYPT_GOVERNORATES)}
                         placeholder="اختر المحافظة..."
                         required
+                        isLight={isLight}
                       />
                       <SearchableCombobox
                         id="student-city"
@@ -1123,6 +1150,7 @@ function getOrCreateDeviceId(): string {
                         }
                         placeholder="اختر المدينة..."
                         required
+                        isLight={isLight}
                       />
                     </div>
                   </div>
