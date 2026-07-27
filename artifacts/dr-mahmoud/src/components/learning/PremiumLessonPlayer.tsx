@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Captions, Check, ChevronLeft, ChevronRight, Clock3, Download,
   FileText, Gauge, ListVideo, Loader2, Maximize, MessageCircle,
-  Minimize, Pause, PictureInPicture, Play, RefreshCw, StickyNote,
+  Minimize, Pause, PictureInPicture, Play, RefreshCw, RotateCcw, RotateCw, StickyNote,
   Volume2, VolumeX, X,
 } from "lucide-react";
 import { getYouTubePlaylistId, getYouTubeVideoId, getYoutubeThumbnail, type VideoItem } from "@/lib/video";
@@ -109,9 +109,8 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
       if (!isProtected || ["INPUT", "TEXTAREA"].includes((event.target as HTMLElement)?.tagName)) return;
-      if (event.code === "Space") { event.preventDefault(); void togglePlay(); }
-      if (event.key === "ArrowRight" && videoRef.current) videoRef.current.currentTime += 10;
-      if (event.key === "ArrowLeft" && videoRef.current) videoRef.current.currentTime -= 10;
+      if (event.key === "ArrowRight" && videoRef.current) { event.preventDefault(); seekRelative(10); }
+      if (event.key === "ArrowLeft" && videoRef.current) { event.preventDefault(); seekRelative(-10); }
     };
 
     const handleOrientation = () => {
@@ -154,6 +153,20 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
     }, 12000);
     return () => window.clearInterval(saveTimer.current);
   }, [isProtected, item]);
+
+  const [seekNotice, setSeekNotice] = useState<string | null>(null);
+
+  const seekRelative = (seconds: number) => {
+    if (videoRef.current) {
+      const duration = videoRef.current.duration || 0;
+      const target = Math.max(0, Math.min(duration, videoRef.current.currentTime + seconds));
+      videoRef.current.currentTime = target;
+      setCurrentTime(target);
+      const label = seconds > 0 ? "+10ث" : "-10ث";
+      setSeekNotice(label);
+      setTimeout(() => setSeekNotice((current) => (current === label ? null : current)), 800);
+    }
+  };
 
   const togglePlay = async () => {
     const video = videoRef.current;
@@ -306,7 +319,57 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                     }}
                     onEnded={() => { void markComplete(); }}
                   />
-                  {playerReady && !playing && !playerError && <button onClick={() => void togglePlay()} className="absolute inset-0 grid place-items-center bg-black/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-400" aria-label="تشغيل الفيديو"><span className="grid h-16 w-16 place-items-center rounded-full bg-sky-500 text-slate-950 shadow-xl transition hover:scale-105 sm:h-20 sm:w-20"><Play className="h-7 w-7 fill-current sm:h-9 sm:w-9"/></span></button>}
+                  <AnimatePresence>
+                    {seekNotice && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.6 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.6 }}
+                        className="absolute inset-0 z-30 pointer-events-none grid place-items-center"
+                      >
+                        <div className="flex items-center gap-2 rounded-2xl bg-sky-500/90 border border-sky-300/40 px-5 py-3 text-lg font-black text-slate-950 shadow-2xl backdrop-blur-md">
+                          {seekNotice.startsWith("+") ? <RotateCw className="h-6 w-6" /> : <RotateCcw className="h-6 w-6" />}
+                          <span>{seekNotice}</span>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {playerReady && !playing && !playerError && (
+                    <div className="absolute inset-0 z-20 flex items-center justify-center gap-5 bg-black/40 backdrop-blur-[2px] transition-all">
+                      <button
+                        onClick={() => seekRelative(-10)}
+                        className="group grid h-12 w-12 place-items-center rounded-full bg-slate-900/80 border border-white/20 text-white shadow-xl backdrop-blur-md transition hover:scale-110 active:scale-95 hover:bg-slate-800"
+                        aria-label="تأخير 10 ثواني"
+                        title="تأخير 10 ثوانٍ"
+                      >
+                        <div className="flex flex-col items-center">
+                          <RotateCcw className="h-5 w-5 transition group-hover:-rotate-45" />
+                          <span className="text-[9px] font-black leading-none mt-0.5 text-sky-400">10ث</span>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => void togglePlay()}
+                        className="grid h-16 w-16 place-items-center rounded-full bg-sky-500 text-slate-950 shadow-2xl transition hover:scale-110 active:scale-95 sm:h-20 sm:w-20"
+                        aria-label="تشغيل الفيديو"
+                      >
+                        <Play className="h-7 w-7 fill-current sm:h-9 sm:w-9" />
+                      </button>
+
+                      <button
+                        onClick={() => seekRelative(10)}
+                        className="group grid h-12 w-12 place-items-center rounded-full bg-slate-900/80 border border-white/20 text-white shadow-xl backdrop-blur-md transition hover:scale-110 active:scale-95 hover:bg-slate-800"
+                        aria-label="تقديم 10 ثواني"
+                        title="تقديم 10 ثوانٍ"
+                      >
+                        <div className="flex flex-col items-center">
+                          <RotateCw className="h-5 w-5 transition group-hover:rotate-45" />
+                          <span className="text-[9px] font-black leading-none mt-0.5 text-sky-400">10ث</span>
+                        </div>
+                      </button>
+                    </div>
+                  )}
                 </> : youtubeUrl ? <>
                   {!youtubeStarted ? <button onClick={() => setYoutubeStarted(true)} className="absolute inset-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-400" aria-label="تشغيل الفيديو"><img src={poster} alt="" className="h-full w-full object-cover"/><span className="absolute inset-0 bg-black/35"/><span className="absolute inset-0 grid place-items-center"><span className="grid h-16 w-16 place-items-center rounded-full bg-sky-500 text-slate-950 shadow-xl transition group-hover:scale-105 sm:h-20 sm:w-20"><Play className="h-8 w-8 fill-current"/></span></span></button> : <iframe className="absolute inset-0 h-full w-full border-0 object-contain" src={youtubeUrl} title={item.title} loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin"/>}
                 </> : <div className="absolute inset-0 grid place-items-center p-6 text-center text-slate-300">مصدر الفيديو غير مدعوم داخل المنصة.</div>}
@@ -314,8 +377,20 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
 
               {isProtected && (
                 <div className="flex h-12 shrink-0 items-center gap-1 border-t border-white/10 bg-slate-950 px-2 sm:px-4" dir="ltr">
+                  <PlayerButton label="تأخير 10 ثواني" onClick={() => seekRelative(-10)}>
+                    <div className="flex flex-col items-center">
+                      <RotateCcw className="h-4 w-4" />
+                    </div>
+                  </PlayerButton>
+
                   <PlayerButton label={playing ? "إيقاف مؤقت" : "تشغيل"} onClick={() => void togglePlay()}>
                     {playing ? <Pause className="h-5 w-5 fill-current"/> : <Play className="h-5 w-5 fill-current"/>}
+                  </PlayerButton>
+
+                  <PlayerButton label="تقديم 10 ثواني" onClick={() => seekRelative(10)}>
+                    <div className="flex flex-col items-center">
+                      <RotateCw className="h-4 w-4" />
+                    </div>
                   </PlayerButton>
                   <span className="min-w-[82px] text-xs tabular-nums text-slate-300">
                     {formatTime(currentTime)} / {formatTime(duration)}
