@@ -280,22 +280,98 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                 {isProtected ? <>
                   {!playerReady && !playerError && <div className="absolute inset-0 z-10 animate-pulse bg-slate-900"><div className="absolute inset-0 grid place-items-center"><Loader2 className="h-8 w-8 animate-spin text-sky-400"/></div></div>}
                   {playerError ? <div className="absolute inset-0 z-20 grid place-items-center bg-slate-950 p-6 text-center"><div><p className="font-bold text-white">تعذر تشغيل الدرس</p><p className="mt-2 text-sm text-slate-400">{playerErrorMessage}</p><button onClick={() => { refreshAttempted.current = false; setPlayerError(false); void refreshStreamUrl(); }} className="mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-sky-500 px-5 font-bold text-slate-950 hover:bg-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><RefreshCw className="h-4 w-4"/>تحديث رابط الفيديو</button></div></div> : null}
-                  <video ref={videoRef} className="h-full w-full object-contain" src={streamSrc} poster={poster || undefined} preload="metadata" playsInline onLoadedMetadata={(event) => { const video = event.currentTarget; setDuration(video.duration); setPlayerReady(true); setPlayerError(false); const position = item.id ? readJson<Record<number, number>>("dr_mahmoud_watch_positions", {})[item.id] || 0 : 0; if (position < video.duration - 5) video.currentTime = position; }} onError={() => void refreshStreamUrl()} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onTimeUpdate={(event) => { const video = event.currentTarget; setCurrentTime(video.currentTime); const percent = video.duration ? Math.round(video.currentTime / video.duration * 100) : 0; setProgress((old) => Math.max(old, percent >= 90 ? 100 : percent)); }} onEnded={() => void markComplete()} />
+                  <video
+                    ref={videoRef}
+                    className="h-full w-full object-contain"
+                    src={streamSrc}
+                    poster={poster || undefined}
+                    preload="metadata"
+                    playsInline
+                    onLoadedMetadata={(event) => {
+                      const video = event.currentTarget;
+                      setDuration(video.duration);
+                      setPlayerReady(true);
+                      setPlayerError(false);
+                      const position = item.id ? readJson<Record<number, number>>("dr_mahmoud_watch_positions", {})[item.id] || 0 : 0;
+                      if (position < video.duration - 5) video.currentTime = position;
+                    }}
+                    onError={() => { void refreshStreamUrl(); }}
+                    onPlay={() => setPlaying(true)}
+                    onPause={() => setPlaying(false)}
+                    onTimeUpdate={(event) => {
+                      const video = event.currentTarget;
+                      setCurrentTime(video.currentTime);
+                      const percent = video.duration ? Math.round((video.currentTime / video.duration) * 100) : 0;
+                      setProgress((old) => Math.max(old, percent >= 90 ? 100 : percent));
+                    }}
+                    onEnded={() => { void markComplete(); }}
+                  />
                   {playerReady && !playing && !playerError && <button onClick={() => void togglePlay()} className="absolute inset-0 grid place-items-center bg-black/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-400" aria-label="تشغيل الفيديو"><span className="grid h-16 w-16 place-items-center rounded-full bg-sky-500 text-slate-950 shadow-xl transition hover:scale-105 sm:h-20 sm:w-20"><Play className="h-7 w-7 fill-current sm:h-9 sm:w-9"/></span></button>}
                 </> : youtubeUrl ? <>
                   {!youtubeStarted ? <button onClick={() => setYoutubeStarted(true)} className="absolute inset-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-400" aria-label="تشغيل الفيديو"><img src={poster} alt="" className="h-full w-full object-cover"/><span className="absolute inset-0 bg-black/35"/><span className="absolute inset-0 grid place-items-center"><span className="grid h-16 w-16 place-items-center rounded-full bg-sky-500 text-slate-950 shadow-xl transition group-hover:scale-105 sm:h-20 sm:w-20"><Play className="h-8 w-8 fill-current"/></span></span></button> : <iframe className="absolute inset-0 h-full w-full" src={youtubeUrl} title={item.title} loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin"/>}
                 </> : <div className="absolute inset-0 grid place-items-center p-6 text-center text-slate-300">مصدر الفيديو غير مدعوم داخل المنصة.</div>}
               </div>
 
-              {isProtected && <div className="flex h-14 items-center gap-1 border-t border-white/10 px-2 sm:px-4" dir="ltr">
-                <PlayerButton label={playing ? "إيقاف مؤقت" : "تشغيل"} onClick={() => void togglePlay()}>{playing ? <Pause className="h-5 w-5 fill-current"/> : <Play className="h-5 w-5 fill-current"/>}</PlayerButton>
-                <span className="min-w-[82px] text-xs tabular-nums text-slate-300">{formatTime(currentTime)} / {formatTime(duration)}</span>
-                <input aria-label="موضع تشغيل الفيديو" type="range" min={0} max={duration || 0} value={currentTime} onChange={(event) => { if (videoRef.current) videoRef.current.currentTime = Number(event.target.value); }} className="h-11 min-w-0 flex-1 accent-sky-500"/>
-                <PlayerButton label={volume ? "كتم الصوت" : "تشغيل الصوت"} onClick={() => { const nextVolume = volume ? 0 : 1; setVolume(nextVolume); if (videoRef.current) videoRef.current.volume = nextVolume; }}>{volume ? <Volume2 className="h-5 w-5"/> : <VolumeX className="h-5 w-5"/>}</PlayerButton>
-                <div className="relative hidden sm:block"><PlayerButton label="سرعة التشغيل" onClick={() => setShowSpeed(!showSpeed)}><Gauge className="h-5 w-5"/></PlayerButton>{showSpeed && <div className="absolute bottom-12 right-0 z-30 rounded-xl border border-white/10 bg-slate-900 p-1 shadow-xl">{[.75,1,1.25,1.5,2].map(value => <button key={value} onClick={() => { setSpeed(value); if(videoRef.current) videoRef.current.playbackRate=value; setShowSpeed(false); }} className={`block h-10 w-20 rounded-lg text-sm hover:bg-white/10 ${speed===value ? "text-sky-400" : "text-white"}`}>{value}×</button>)}</div>}</div>
-                <PlayerButton label="صورة داخل صورة" className="hidden sm:grid" onClick={() => void videoRef.current?.requestPictureInPicture?.()}><PictureInPicture className="h-5 w-5"/></PlayerButton>
-                <PlayerButton label={isFullscreen ? "الخروج من ملء الشاشة" : "ملء الشاشة"} onClick={() => void toggleFullscreen()}>{isFullscreen ? <Minimize className="h-5 w-5"/> : <Maximize className="h-5 w-5"/></PlayerButton>
-              </div>}
+              {isProtected && (
+                <div className="flex h-14 items-center gap-1 border-t border-white/10 px-2 sm:px-4" dir="ltr">
+                  <PlayerButton label={playing ? "إيقاف مؤقت" : "تشغيل"} onClick={() => void togglePlay()}>
+                    {playing ? <Pause className="h-5 w-5 fill-current"/> : <Play className="h-5 w-5 fill-current"/>}
+                  </PlayerButton>
+                  <span className="min-w-[82px] text-xs tabular-nums text-slate-300">
+                    {formatTime(currentTime)} / {formatTime(duration)}
+                  </span>
+                  <input
+                    aria-label="موضع تشغيل الفيديو"
+                    type="range"
+                    min={0}
+                    max={duration || 0}
+                    value={currentTime}
+                    onChange={(event) => {
+                      if (videoRef.current) videoRef.current.currentTime = Number(event.target.value);
+                    }}
+                    className="h-11 min-w-0 flex-1 accent-sky-500"
+                  />
+                  <PlayerButton
+                    label={volume ? "كتم الصوت" : "تشغيل الصوت"}
+                    onClick={() => {
+                      const nextVolume = volume ? 0 : 1;
+                      setVolume(nextVolume);
+                      if (videoRef.current) videoRef.current.volume = nextVolume;
+                    }}
+                  >
+                    {volume ? <Volume2 className="h-5 w-5"/> : <VolumeX className="h-5 w-5"/>}
+                  </PlayerButton>
+                  <div className="relative hidden sm:block">
+                    <PlayerButton label="سرعة التشغيل" onClick={() => setShowSpeed(!showSpeed)}>
+                      <Gauge className="h-5 w-5"/>
+                    </PlayerButton>
+                    {showSpeed && (
+                      <div className="absolute bottom-12 right-0 z-30 rounded-xl border border-white/10 bg-slate-900 p-1 shadow-xl">
+                        {[0.75, 1, 1.25, 1.5, 2].map((val) => (
+                          <button
+                            key={val}
+                            type="button"
+                            onClick={() => {
+                              setSpeed(val);
+                              if (videoRef.current) videoRef.current.playbackRate = val;
+                              setShowSpeed(false);
+                            }}
+                            className={`block h-10 w-20 rounded-lg text-sm hover:bg-white/10 ${speed === val ? "text-sky-400" : "text-white"}`}
+                          >
+                            {val}×
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <PlayerButton label="صورة داخل صورة" className="hidden sm:grid" onClick={() => void videoRef.current?.requestPictureInPicture?.()}>
+                    <PictureInPicture className="h-5 w-5"/>
+                  </PlayerButton>
+                  <PlayerButton label={isFullscreen ? "الخروج من ملء الشاشة" : "ملء الشاشة"} onClick={() => void toggleFullscreen()}>
+                    {isFullscreen ? <Minimize className="h-5 w-5"/> : <Maximize className="h-5 w-5"/>}
+                  </PlayerButton>
+                </div>
+              )}
             </section>
 
             <div className="bg-slate-900 text-slate-100 landscape:max-h-[500px]:hidden">
