@@ -381,8 +381,10 @@ export function AdminLearning() {
     }
   };
 
+  const [isRefreshingData, setIsRefreshingData] = useState(false);
+
   const load = async () => {
-    setLoading(true);
+    setIsRefreshingData(true);
     try {
       const [s, f, q, a, v, c, analyticsData, recoveryData, receiptsData] = await Promise.all([
         adminApi<Student[]>("/api/admin/students"),
@@ -414,14 +416,20 @@ export function AdminLearning() {
           ),
         ),
       );
+      toast({
+        variant: "success",
+        title: "تم تحديث البيانات",
+        description: "تم تحديث إحصائيات المنصة وقائمة الطلاب بنجاح. 🔄",
+      });
     } catch (e) {
       toast({
         variant: "destructive",
-        title: "خطأ",
+        title: "خطأ في التحديث",
         description: (e as Error).message,
       });
     } finally {
       setLoading(false);
+      setIsRefreshingData(false);
     }
   };
   const resolveRecoveryRequest = async (id: number) => {
@@ -1046,10 +1054,12 @@ export function AdminLearning() {
           <Button
             type="button"
             variant="outline"
+            disabled={isRefreshingData}
             onClick={load}
-            className="h-10 px-4 rounded-xl border-[#E4EAF2] bg-white hover:bg-[#F6F8FC] text-[#0F172A] text-xs font-bold transition-colors"
+            className="h-10 px-4 rounded-xl border-[#E4EAF2] bg-white hover:bg-[#F6F8FC] text-[#0F172A] text-xs font-bold transition-all disabled:opacity-75"
           >
-            <RefreshCw className="h-4 w-4 ml-1 text-[#64748B]" /> تحديث البيانات
+            <RefreshCw className={`h-4 w-4 ml-1 text-[#64748B] ${isRefreshingData ? "animate-spin text-[#0866D9]" : ""}`} />
+            {isRefreshingData ? "جاري التحديث..." : "تحديث البيانات"}
           </Button>
         </div>
       </div>
