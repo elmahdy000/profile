@@ -1151,7 +1151,7 @@ export function AdminLearning() {
                             variant="outline"
                             onClick={() => updateStudent(s.id, "suspended")}
                           >
-                            <UserX /> إيقاف
+                            <UserX className="h-4 w-4 me-1" /> إيقاف
                           </Button>
                         )}
                         {s.status === "suspended" && (
@@ -1159,26 +1159,26 @@ export function AdminLearning() {
                             variant="outline"
                             onClick={() => updateStudent(s.id, "approved")}
                           >
-                            <UserCheck /> إعادة تفعيل
+                            <UserCheck className="h-4 w-4 me-1" /> إعادة تفعيل
                           </Button>
                         )}
-                        {s.deviceId && (
-                          <Button
-                            variant="outline"
-                            className="border-amber-400 text-amber-700 hover:bg-amber-50"
-                            onClick={async () => {
-                              try {
-                                await adminApi(`/api/admin/students/${s.id}/reset-device`, { method: "POST" });
-                                toast({ title: "تم فك قفل الجهاز", description: `تمت إزالة ربط الجهاز للطالب ${s.name} بنجاح.` });
-                                setStudents((prev) => prev.map((item) => item.id === s.id ? { ...item, deviceId: null } : item));
-                              } catch (err) {
-                                toast({ variant: "destructive", description: (err as Error).message });
-                              }
-                            }}
-                          >
-                            <RefreshCw className="h-4 w-4" /> فك قفل الجهاز
-                          </Button>
-                        )}
+                        <Button
+                          variant="outline"
+                          disabled={!s.deviceId}
+                          className={s.deviceId ? "border-amber-400 text-amber-700 hover:bg-amber-50" : "opacity-50"}
+                          onClick={async () => {
+                            if (!s.deviceId) return;
+                            try {
+                              await adminApi(`/api/admin/students/${s.id}/reset-device`, { method: "POST" });
+                              toast({ title: "تم فك قفل الجهاز", description: `تمت إزالة ربط الجهاز للطالب ${s.name} بنجاح.` });
+                              setStudents((prev) => prev.map((item) => item.id === s.id ? { ...item, deviceId: null } : item));
+                            } catch (err) {
+                              toast({ variant: "destructive", description: (err as Error).message });
+                            }
+                          }}
+                        >
+                          <RefreshCw className="h-4 w-4 me-1" /> {s.deviceId ? "فك قفل الجهاز" : "لا يوجد جهاز مقترن"}
+                        </Button>
                         <Button
                           variant="destructive"
                           onClick={() => deleteStudent(s.id)}
