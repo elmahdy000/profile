@@ -111,8 +111,10 @@ app.use(
     next();
   },
   express.static(path.join(process.cwd(), "public/uploads"), {
+    maxAge: "7d",
     setHeaders(res) {
       res.setHeader("X-Content-Type-Options", "nosniff");
+      res.setHeader("Cache-Control", "public, max-age=604800, immutable");
     },
   }),
 );

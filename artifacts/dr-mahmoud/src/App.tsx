@@ -17,7 +17,16 @@ const CurriculumPage = lazy(() => import("@/pages/CurriculumPage"));
 const PlatformPage = lazy(() => import("@/pages/PlatformPage"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes cache validity
+      gcTime: 1000 * 60 * 15, // Keep unused data for 15 minutes
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 function HomePage() {
   useEffect(() => {
