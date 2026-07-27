@@ -210,7 +210,12 @@ export async function getApprovedStudent(
       ),
     )
     .limit(1);
-  return row?.student ?? null;
+  const reqDeviceId = String(req.headers["x-device-id"] ?? req.query.deviceId ?? "").trim();
+  const student = row?.student ?? null;
+  if (student && student.deviceId && reqDeviceId && student.deviceId !== reqDeviceId) {
+    return null;
+  }
+  return student;
 }
 
 export async function requireStudent(

@@ -131,11 +131,13 @@ type StudentNotification = {
 };
 
 async function api<T>(url: string, options?: RequestInit): Promise<T> {
+  const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
   const response = await fetch(url, {
     credentials: "include",
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(deviceId ? { "X-Device-Id": deviceId } : {}),
       ...(options?.headers || {}),
     },
   });
