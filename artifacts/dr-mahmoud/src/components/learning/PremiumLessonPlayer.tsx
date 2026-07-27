@@ -250,7 +250,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
   return <AnimatePresence>
     <motion.div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-black/85 p-0 backdrop-blur-sm sm:p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <motion.div ref={shellRef} role="dialog" aria-modal="true" aria-labelledby="lesson-player-title" dir="rtl" initial={{ opacity: 0, scale: .98, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: .98, y: 12 }} className="flex h-[100dvh] max-h-[100dvh] w-full max-w-[1280px] flex-col overflow-hidden bg-slate-950 shadow-2xl sm:h-auto sm:max-h-[92vh] sm:rounded-[20px] sm:border sm:border-white/10">
-        <header className="relative shrink-0 border-b border-white/10 bg-slate-950 px-4 py-3 sm:px-5">
+        <header className="relative shrink-0 border-b border-white/10 bg-slate-950 px-4 py-3 sm:px-5 landscape:max-h-[500px]:hidden">
           <div className="flex min-h-11 items-center gap-3">
             <div className="min-w-0 flex-1">
               <p className="mb-0.5 truncate text-[11px] font-bold text-sky-400">{item.category}</p>
@@ -263,10 +263,20 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
           <div className="absolute inset-x-0 bottom-0 h-0.5 bg-white/5"><div className="h-full bg-sky-500 transition-[width]" style={{ width: `${progress}%` }}/></div>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:overflow-hidden">
-          <main className="min-w-0 lg:min-h-0 lg:overflow-y-auto">
-            <section className="bg-black">
-              <div className="relative aspect-video w-full overflow-hidden bg-black">
+        <div className="min-h-0 flex-1 overflow-y-auto lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:overflow-hidden landscape:max-h-[500px]:overflow-hidden">
+          <main className="min-w-0 lg:min-h-0 lg:overflow-y-auto landscape:max-h-[500px]:h-full">
+            <section className="bg-black landscape:max-h-[500px]:h-full">
+              <div className="relative aspect-video w-full overflow-hidden bg-black landscape:max-h-[500px]:aspect-none landscape:max-h-[500px]:h-[calc(100vh-3.5rem)] landscape:max-h-[500px]:w-full">
+                {/* Floating close button in mobile landscape */}
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label="إغلاق"
+                  className="absolute top-3 right-3 z-50 hidden h-9 w-9 place-items-center rounded-full bg-black/70 text-white backdrop-blur-md transition hover:bg-black/90 landscape:max-h-[500px]:grid"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+
                 {isProtected ? <>
                   {!playerReady && !playerError && <div className="absolute inset-0 z-10 animate-pulse bg-slate-900"><div className="absolute inset-0 grid place-items-center"><Loader2 className="h-8 w-8 animate-spin text-sky-400"/></div></div>}
                   {playerError ? <div className="absolute inset-0 z-20 grid place-items-center bg-slate-950 p-6 text-center"><div><p className="font-bold text-white">تعذر تشغيل الدرس</p><p className="mt-2 text-sm text-slate-400">{playerErrorMessage}</p><button onClick={() => { refreshAttempted.current = false; setPlayerError(false); void refreshStreamUrl(); }} className="mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-sky-500 px-5 font-bold text-slate-950 hover:bg-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><RefreshCw className="h-4 w-4"/>تحديث رابط الفيديو</button></div></div> : null}
@@ -284,11 +294,11 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                 <PlayerButton label={volume ? "كتم الصوت" : "تشغيل الصوت"} onClick={() => { const nextVolume = volume ? 0 : 1; setVolume(nextVolume); if (videoRef.current) videoRef.current.volume = nextVolume; }}>{volume ? <Volume2 className="h-5 w-5"/> : <VolumeX className="h-5 w-5"/>}</PlayerButton>
                 <div className="relative hidden sm:block"><PlayerButton label="سرعة التشغيل" onClick={() => setShowSpeed(!showSpeed)}><Gauge className="h-5 w-5"/></PlayerButton>{showSpeed && <div className="absolute bottom-12 right-0 z-30 rounded-xl border border-white/10 bg-slate-900 p-1 shadow-xl">{[.75,1,1.25,1.5,2].map(value => <button key={value} onClick={() => { setSpeed(value); if(videoRef.current) videoRef.current.playbackRate=value; setShowSpeed(false); }} className={`block h-10 w-20 rounded-lg text-sm hover:bg-white/10 ${speed===value ? "text-sky-400" : "text-white"}`}>{value}×</button>)}</div>}</div>
                 <PlayerButton label="صورة داخل صورة" className="hidden sm:grid" onClick={() => void videoRef.current?.requestPictureInPicture?.()}><PictureInPicture className="h-5 w-5"/></PlayerButton>
-                <PlayerButton label={isFullscreen ? "الخروج من ملء الشاشة" : "ملء الشاشة"} onClick={() => void toggleFullscreen()}>{isFullscreen ? <Minimize className="h-5 w-5"/> : <Maximize className="h-5 w-5"/>}</PlayerButton>
+                <PlayerButton label={isFullscreen ? "الخروج من ملء الشاشة" : "ملء الشاشة"} onClick={() => void toggleFullscreen()}>{isFullscreen ? <Minimize className="h-5 w-5"/> : <Maximize className="h-5 w-5"/></PlayerButton>
               </div>}
             </section>
 
-            <div className="bg-slate-900 text-slate-100">
+            <div className="bg-slate-900 text-slate-100 landscape:max-h-[500px]:hidden">
               <div className="flex flex-wrap items-center gap-2 border-b border-white/10 p-3 sm:px-5">
                 <button disabled={!previous} onClick={() => previous && onSelectLesson(previous)} className="inline-flex h-11 items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-bold text-slate-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-40"><ChevronRight className="h-4 w-4"/>السابق</button>
                 <button disabled={!next} onClick={() => next && onSelectLesson(next)} className="inline-flex h-11 items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-bold text-slate-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-40">التالي<ChevronLeft className="h-4 w-4"/></button>
