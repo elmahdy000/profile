@@ -1160,10 +1160,12 @@ function getOrCreateDeviceId(): string {
                       type="button"
                       disabled={!step1Valid}
                       onClick={() => setRegStep(2)}
-                      className={`h-[56px] min-w-[140px] rounded-[12px] font-bold text-sm transition-all duration-200 ${
+                      className={`h-[44px] sm:h-[46px] min-w-[120px] rounded-[12px] px-5 font-bold text-xs sm:text-sm transition-all duration-200 ${
                         !step1Valid
-                          ? "bg-[#CBD5E1] text-[#64748B] cursor-not-allowed"
-                          : "bg-[#3B82F6] hover:bg-[#2563EB] text-white shadow-md"
+                          ? isLight
+                            ? "bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-200"
+                            : "bg-[#1E293B] text-slate-500 cursor-not-allowed border border-slate-800"
+                          : "bg-[#3B82F6] hover:bg-[#2563EB] text-white shadow-sm"
                       }`}
                     >
                       التالي ←
@@ -1237,7 +1239,11 @@ function getOrCreateDeviceId(): string {
                     <Button
                       type="button"
                       onClick={() => setRegStep(1)}
-                      className="h-[56px] rounded-[12px] border border-[#CBD5E1] bg-white text-[#334155] hover:bg-slate-50 px-5 font-bold text-xs sm:text-sm transition-all"
+                      className={`h-[44px] sm:h-[46px] rounded-[12px] border px-4 font-bold text-xs sm:text-sm transition-all ${
+                        isLight
+                          ? "border-[#CBD5E1] bg-white text-[#334155] hover:bg-slate-50"
+                          : "border-slate-700 bg-[#091426] text-[#E2E8F0] hover:bg-slate-800"
+                      }`}
                     >
                       → السابق
                     </Button>
@@ -1245,10 +1251,12 @@ function getOrCreateDeviceId(): string {
                       type="button"
                       disabled={!educationValid}
                       onClick={() => setRegStep(3)}
-                      className={`h-[56px] min-w-[140px] rounded-[12px] font-bold text-sm transition-all duration-200 ${
+                      className={`h-[44px] sm:h-[46px] min-w-[120px] rounded-[12px] px-5 font-bold text-xs sm:text-sm transition-all duration-200 ${
                         !educationValid
-                          ? "bg-[#CBD5E1] text-[#64748B] cursor-not-allowed"
-                          : "bg-[#3B82F6] hover:bg-[#2563EB] text-white shadow-md"
+                          ? isLight
+                            ? "bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-200"
+                            : "bg-[#1E293B] text-slate-500 cursor-not-allowed border border-slate-800"
+                          : "bg-[#3B82F6] hover:bg-[#2563EB] text-white shadow-sm"
                       }`}
                     >
                       التالي ←
@@ -1330,16 +1338,22 @@ function getOrCreateDeviceId(): string {
                     <Button
                       type="button"
                       onClick={() => setRegStep(2)}
-                      className="h-[56px] rounded-[12px] border border-[#CBD5E1] bg-white text-[#334155] hover:bg-slate-50 px-5 font-bold text-xs sm:text-sm transition-all"
+                      className={`h-[44px] sm:h-[46px] rounded-[12px] border px-4 font-bold text-xs sm:text-sm transition-all ${
+                        isLight
+                          ? "border-[#CBD5E1] bg-white text-[#334155] hover:bg-slate-50"
+                          : "border-slate-700 bg-[#091426] text-[#E2E8F0] hover:bg-slate-800"
+                      }`}
                     >
                       → السابق
                     </Button>
                     <Button
                       disabled={loading || !registrationValid}
-                      className={`h-[56px] min-w-[170px] rounded-[12px] font-bold text-sm transition-all duration-200 ${
+                      className={`h-[44px] sm:h-[46px] min-w-[140px] rounded-[12px] px-5 font-bold text-xs sm:text-sm transition-all duration-200 ${
                         loading || !registrationValid
-                          ? "bg-[#CBD5E1] text-[#64748B] cursor-not-allowed"
-                          : "bg-[#3B82F6] hover:bg-[#2563EB] text-white shadow-md"
+                          ? isLight
+                            ? "bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-200"
+                            : "bg-[#1E293B] text-slate-500 cursor-not-allowed border border-slate-800"
+                          : "bg-[#3B82F6] hover:bg-[#2563EB] text-white shadow-sm"
                       }`}
                     >
                       {loading ? <Loader2 className="animate-spin h-4 w-4 ml-1.5" /> : <UserPlus className="h-4.5 w-4.5 ml-1.5" />}{" "}
