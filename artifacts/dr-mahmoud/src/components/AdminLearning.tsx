@@ -45,6 +45,7 @@ type Student = {
   otherGradeDetail?: string | null;
   learningMode?: "online" | "offline";
   paymentStatus?: string;
+  deviceId?: string | null;
   enrolledCourseIds?: number[];
   enrolledCategories?: string[];
   createdAt: string;
