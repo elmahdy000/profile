@@ -262,7 +262,11 @@ export function Navbar() {
               aria-expanded={isOpen}
               aria-controls="mobile-navigation"
               aria-label="افتح القائمة"
-              className="grid h-[42px] w-[42px] place-items-center rounded-[10px] border border-[rgba(148,163,184,0.20)] bg-[rgba(148,163,184,0.08)] text-[#F8FAFC] transition hover:bg-[rgba(148,163,184,0.15)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6]"
+              className={`grid h-[42px] w-[42px] place-items-center rounded-[10px] border transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] ${
+                theme === "light"
+                  ? "border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200"
+                  : "border-[rgba(148,163,184,0.20)] bg-[rgba(148,163,184,0.08)] text-[#F8FAFC] hover:bg-[rgba(148,163,184,0.15)]"
+              }`}
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -275,7 +279,11 @@ export function Navbar() {
             aria-expanded={isOpen}
             aria-controls="mobile-navigation"
             aria-label="افتح القائمة"
-            className="hidden sm:grid lg:hidden h-[44px] w-[44px] place-items-center rounded-[12px] border border-[rgba(148,163,184,0.20)] bg-[rgba(148,163,184,0.08)] text-[#F8FAFC] transition hover:bg-[rgba(148,163,184,0.15)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6]"
+            className={`hidden sm:grid lg:hidden h-[44px] w-[44px] place-items-center rounded-[12px] border transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] ${
+              theme === "light"
+                ? "border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200"
+                : "border-[rgba(148,163,184,0.20)] bg-[rgba(148,163,184,0.08)] text-[#F8FAFC] hover:bg-[rgba(148,163,184,0.15)]"
+            }`}
           >
             <Menu className="h-6 w-6" />
           </button>
