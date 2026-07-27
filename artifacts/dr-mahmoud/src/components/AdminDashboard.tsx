@@ -135,7 +135,7 @@ export default function AdminDashboard() {
     | "upload-video"
     | "learning"
     | "settings"
-  >("bookings");
+  >("learning");
   const [selectedSubjectFilter, setSelectedSubjectFilter] =
     useState<string>("all");
   const [selectedVideoCategoryFilter, setSelectedVideoCategoryFilter] =

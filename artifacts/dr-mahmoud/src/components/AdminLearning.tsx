@@ -200,7 +200,7 @@ async function optimizeLearningImage(file: File): Promise<File> {
 export function AdminLearning() {
   const { toast } = useToast();
   const [tab, setTab] = useState<"students" | "payments" | "notifications" | "files" | "quizzes" | "results" | "reports">(
-    "files",
+    "students",
   );
   const [broadcastForm, setBroadcastForm] = useState({
     title: "",
@@ -1050,8 +1050,14 @@ export function AdminLearning() {
           [
             "إجمالي الطلاب",
             students.length,
-            "طالب مسجل بالمنصة",
+            `${students.filter((s) => new Date(s.createdAt).toDateString() === new Date().toDateString()).length} جديد اليوم (${students.filter((s) => s.paymentStatus === "pending_review").length} قيد المراجعة)`,
             GraduationCap,
+          ],
+          [
+            "الطلاب الجدد اليوم",
+            students.filter((s) => new Date(s.createdAt).toDateString() === new Date().toDateString()).length,
+            `${students.filter((s) => s.status === "approved").length} طالب معتمد ومُفعّل`,
+            UserCheck,
           ],
           [
             "الملفات التعليمية",
@@ -1065,17 +1071,11 @@ export function AdminLearning() {
             `${quizzes.length} اختبار إجمالي`,
             ClipboardCheck,
           ],
-          [
-            "النتائج المسجلة",
-            attempts.length,
-            `${attempts.filter((attempt) => attempt.passed).length} نتيجة ناجحة`,
-            ListChecks,
-          ],
         ].map(([label, value, helper, Icon]: any, index) => (
           <button
             type="button"
             key={String(label)}
-            onClick={() => setTab((['students', 'files', 'quizzes', 'results'] as const)[index])}
+            onClick={() => setTab((['students', 'students', 'files', 'quizzes'] as const)[index])}
             className="rounded-2xl border border-[#E4EAF2] bg-white p-4 text-right shadow-xs transition hover:border-[#0866D9]/40 flex flex-col justify-between"
           >
             <div className="flex items-start justify-between">
