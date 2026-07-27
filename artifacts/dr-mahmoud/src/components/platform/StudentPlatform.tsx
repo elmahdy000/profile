@@ -593,43 +593,61 @@ function getOrCreateDeviceId(): string {
       form.learningMode,
   );
 
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    return (localStorage.getItem("app-theme") as "dark" | "light") || "dark";
+  });
+
+  useEffect(() => {
+    const handleThemeChange = (e: CustomEvent<"dark" | "light">) => {
+      setTheme(e.detail);
+    };
+    window.addEventListener("app-theme-changed", handleThemeChange as EventListener);
+    return () => window.removeEventListener("app-theme-changed", handleThemeChange as EventListener);
+  }, []);
+
+  const isLight = theme === "light";
+
   return (
     <main
-      className="relative min-h-[calc(100vh-4rem)] w-full overflow-x-hidden bg-[#07111F] text-[#F8FAFC] px-3 sm:px-6 py-3 sm:py-5 lg:py-7 dir-rtl font-sans"
+      className={`relative min-h-[calc(100vh-4rem)] w-full overflow-x-hidden px-3 sm:px-6 py-3 sm:py-5 lg:py-7 dir-rtl font-sans transition-colors duration-300 ${
+        isLight ? "bg-[#F8FAFC] text-slate-900" : "bg-[#07111F] text-[#F8FAFC]"
+      }`}
       dir="rtl"
     >
       {/* Refined Layered Background System */}
-      <div className="absolute top-0 right-1/4 h-[300px] sm:h-[500px] w-[300px] sm:w-[500px] rounded-full bg-[#3B82F6]/10 blur-[100px] sm:blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-0 left-1/4 h-[300px] sm:h-[500px] w-[300px] sm:w-[500px] rounded-full bg-[#1E3A5F]/20 blur-[120px] sm:blur-[160px] pointer-events-none" />
+      <div className={`absolute top-0 right-1/4 h-[300px] sm:h-[500px] w-[300px] sm:w-[500px] rounded-full blur-[100px] sm:blur-[140px] pointer-events-none ${isLight ? "bg-blue-200/40" : "bg-[#3B82F6]/10"}`} />
+      <div className={`absolute bottom-0 left-1/4 h-[300px] sm:h-[500px] w-[300px] sm:w-[500px] rounded-full blur-[120px] sm:blur-[160px] pointer-events-none ${isLight ? "bg-sky-200/40" : "bg-[#1E3A5F]/20"}`} />
       <div className="absolute inset-0 bg-[radial-gradient(rgba(148,163,184,0.12)_1px,transparent_1px)] [background-size:24px_24px] opacity-25 pointer-events-none" />
 
       <div className="relative mx-auto grid max-w-[1440px] items-start gap-5 sm:gap-8 lg:grid-cols-[1.08fr_0.92fr] lg:gap-10 xl:gap-14">
         {/* Introductory Content Column (Right in RTL) */}
         <div className="space-y-6 text-right">
           {/* Trust Badge */}
-          <div className="inline-flex h-[36px] items-center gap-2 rounded-full border border-[rgba(96,165,250,0.24)] bg-[rgba(59,130,246,0.10)] px-3.5 text-xs font-semibold text-[#BFDBFE] backdrop-blur-md">
-            <ShieldCheck className="h-4 w-4 text-[#60A5FA]" />
+          <div className={`inline-flex h-[36px] items-center gap-2 rounded-full border px-3.5 text-xs font-semibold backdrop-blur-md ${
+            isLight ? "border-blue-300 bg-blue-50 text-blue-800" : "border-[rgba(96,165,250,0.24)] bg-[rgba(59,130,246,0.10)] text-[#BFDBFE]"
+          }`}>
+            <ShieldCheck className={`h-4 w-4 ${isLight ? "text-blue-600" : "text-[#60A5FA]"}`} />
             <span>منصة تعليمية آمنة ومخصصة للطلاب وأولياء الأمور</span>
           </div>
 
-          {/* Main Heading - reduced by ~15-20%, "منصتك التعليمية" strongest, "د. محمود المهدي" slightly smaller */}
-          <h1 className="tracking-tight text-[#F8FAFC] leading-[1.2]">
-            <span className="block text-[30px] sm:text-[38px] lg:text-[45px] font-black text-[#F8FAFC]">
+          {/* Main Heading */}
+          <h1 className="tracking-tight leading-[1.2]">
+            <span className={`block text-[30px] sm:text-[38px] lg:text-[45px] font-black ${isLight ? "text-slate-900" : "text-[#F8FAFC]"}`}>
               منصتك التعليمية
             </span>
-            <span className="block text-[24px] sm:text-[30px] lg:text-[36px] font-extrabold text-[#60A5FA] mt-1">
+            <span className="block text-[24px] sm:text-[30px] lg:text-[36px] font-extrabold text-[#3B82F6] mt-1">
               مع د. محمود المهدي
             </span>
           </h1>
 
           {/* Supporting Paragraph */}
-          <p className="text-[#CBD5E1] text-sm sm:text-base leading-[1.8] max-w-[650px] font-normal">
+          <p className={`text-sm sm:text-base leading-[1.8] max-w-[650px] font-normal ${isLight ? "text-slate-600" : "text-[#CBD5E1]"}`}>
             بوابتك الذكية للتأسيس العملي، مشاهدة الدروس، معاينة المذكرات، وحل الاختبارات التفاعلية. سجّل حسابك واطلع على محتوى مرحلتك فور تفعيل كود الدخول.
           </p>
 
           {/* Connected 3-Step Journey with Visible Connector Lines */}
           <div className="space-y-2.5">
-            <h2 className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider">خطوات الانضمام للمنصة:</h2>
+            <h2 className={`text-xs font-bold uppercase tracking-wider ${isLight ? "text-slate-500" : "text-[#94A3B8]"}`}>خطوات الانضمام للمنصة:</h2>
             <div
               className="grid grid-cols-1 sm:grid-cols-3 gap-3 relative"
               aria-label="خطوات الانضمام للمنصة"
@@ -641,24 +659,28 @@ function getOrCreateDeviceId(): string {
               ].map(([number, label, desc], index) => (
                 <div
                   key={number}
-                  className="relative flex flex-col justify-between rounded-[16px] border border-[rgba(148,163,184,0.18)] bg-[#101D31]/80 p-3.5 text-right transition-all duration-200 hover:border-[#3B82F6]/40"
+                  className={`relative flex flex-col justify-between rounded-[16px] border p-3.5 text-right transition-all duration-200 ${
+                    isLight
+                      ? "border-slate-200 bg-white shadow-xs hover:border-blue-400"
+                      : "border-[rgba(148,163,184,0.18)] bg-[#101D31]/80 hover:border-[#3B82F6]/40"
+                  }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="grid h-[34px] w-[34px] place-items-center rounded-full bg-[#3B82F6] text-xs font-extrabold text-white shadow-md shadow-blue-500/20">
                       {number}
                     </span>
                     {index < 2 && (
-                      <div className="hidden sm:flex items-center gap-1 text-[#60A5FA]/60">
+                      <div className="hidden sm:flex items-center gap-1 text-[#3B82F6]/60">
                         <span className="h-[2px] w-6 bg-gradient-to-l from-[#3B82F6]/50 to-transparent rounded-full" />
                         <span className="text-xs font-bold font-sans">←</span>
                       </div>
                     )}
                   </div>
                   <div className="mt-2.5">
-                    <strong className="block text-xs sm:text-sm font-bold text-[#F8FAFC]">
+                    <strong className={`block text-xs sm:text-sm font-bold ${isLight ? "text-slate-900" : "text-[#F8FAFC]"}`}>
                       {label}
                     </strong>
-                    <span className="mt-1 block text-xs text-[#CBD5E1] font-medium leading-relaxed">
+                    <span className={`mt-1 block text-xs font-medium leading-relaxed ${isLight ? "text-slate-600" : "text-[#CBD5E1]"}`}>
                       {desc}
                     </span>
                   </div>
@@ -667,7 +689,7 @@ function getOrCreateDeviceId(): string {
             </div>
           </div>
 
-          {/* Compact Feature Cards - Uncropped layout */}
+          {/* Compact Feature Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-0.5">
             {[
               ["دروس شرح منظمة", BookOpen, "مباشرة وأونلاين"],
@@ -676,24 +698,36 @@ function getOrCreateDeviceId(): string {
             ].map(([label, Icon, sub]) => (
               <div
                 key={label as string}
-                className="rounded-[16px] border border-[rgba(148,163,184,0.16)] bg-[#101D31]/72 p-3 flex items-center gap-3 transition-all duration-200 hover:border-[#3B82F6]/35"
+                className={`rounded-[16px] border p-3 flex items-center gap-3 transition-all duration-200 ${
+                  isLight
+                    ? "border-slate-200 bg-white shadow-xs hover:border-blue-400"
+                    : "border-[rgba(148,163,184,0.16)] bg-[#101D31]/72 hover:border-[#3B82F6]/35"
+                }`}
               >
-                <div className="grid h-[38px] w-[38px] shrink-0 place-items-center rounded-[10px] bg-[rgba(59,130,246,0.12)] text-[#60A5FA]">
+                <div className={`grid h-[38px] w-[38px] shrink-0 place-items-center rounded-[10px] ${
+                  isLight ? "bg-blue-50 text-blue-600" : "bg-[rgba(59,130,246,0.12)] text-[#60A5FA]"
+                }`}>
                   <Icon className="h-4.5 w-4.5" />
                 </div>
                 <div className="min-w-0">
-                  <strong className="block text-xs sm:text-sm font-bold text-[#F8FAFC] truncate">{label as string}</strong>
-                  <span className="text-[11px] text-[#94A3B8] leading-tight block truncate mt-0.5">{sub as string}</span>
+                  <strong className={`block text-xs sm:text-sm font-bold truncate ${isLight ? "text-slate-900" : "text-[#F8FAFC]"}`}>{label as string}</strong>
+                  <span className={`text-[11px] leading-tight block truncate mt-0.5 ${isLight ? "text-slate-500" : "text-[#94A3B8]"}`}>{sub as string}</span>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Form Column (Left in RTL) - Reduced height and tight clean layout */}
-        <div className="w-full rounded-[20px] sm:rounded-[24px] border border-[rgba(148,163,184,0.20)] bg-[#101D31] p-4 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.30)]">
+        {/* Form Column (Left in RTL) */}
+        <div className={`w-full rounded-[20px] sm:rounded-[24px] border p-4 sm:p-6 transition-all ${
+          isLight
+            ? "border-slate-200 bg-white shadow-lg shadow-slate-200/50 text-slate-900"
+            : "border-[rgba(148,163,184,0.20)] bg-[#101D31] shadow-[0_20px_60px_rgba(0,0,0,0.30)] text-[#F8FAFC]"
+        }`}>
           {/* Segmented Tab Switcher */}
-          <div className="grid grid-cols-2 rounded-[14px] bg-[#091426] p-1 mb-4 border border-[rgba(148,163,184,0.15)] h-[46px]">
+          <div className={`grid grid-cols-2 rounded-[14px] p-1 mb-4 border h-[46px] ${
+            isLight ? "bg-slate-100 border-slate-200" : "bg-[#091426] border-[rgba(148,163,184,0.15)]"
+          }`}>
             <button
               type="button"
               onClick={() => {
@@ -702,7 +736,11 @@ function getOrCreateDeviceId(): string {
               }}
               className={`rounded-[10px] h-full font-bold text-xs sm:text-sm transition-all duration-200 ${
                 mode === "login"
-                  ? "bg-[rgba(59,130,246,0.20)] text-[#F8FAFC] border border-[#3B82F6]/40 shadow-xs"
+                  ? isLight
+                    ? "bg-white text-blue-600 shadow-xs border border-slate-200"
+                    : "bg-[rgba(59,130,246,0.20)] text-[#F8FAFC] border border-[#3B82F6]/40 shadow-xs"
+                  : isLight
+                  ? "text-slate-600 hover:text-slate-900"
                   : "text-[#94A3B8] hover:text-[#CBD5E1]"
               }`}
             >
@@ -716,7 +754,11 @@ function getOrCreateDeviceId(): string {
               }}
               className={`rounded-[10px] h-full font-bold text-xs sm:text-sm transition-all duration-200 ${
                 mode === "register"
-                  ? "bg-[rgba(59,130,246,0.20)] text-[#F8FAFC] border border-[#3B82F6]/40 shadow-xs"
+                  ? isLight
+                    ? "bg-white text-blue-600 shadow-xs border border-slate-200"
+                    : "bg-[rgba(59,130,246,0.20)] text-[#F8FAFC] border border-[#3B82F6]/40 shadow-xs"
+                  : isLight
+                  ? "text-slate-600 hover:text-slate-900"
                   : "text-[#94A3B8] hover:text-[#CBD5E1]"
               }`}
             >
@@ -839,13 +881,13 @@ function getOrCreateDeviceId(): string {
           ) : mode === "login" ? (
             <form onSubmit={submitLogin} className="space-y-4">
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-[#F8FAFC]">دخول الطلاب</h2>
-                <p className="text-xs text-[#94A3B8] mt-1 leading-relaxed">
+                <h2 className={`text-xl sm:text-2xl font-bold ${isLight ? "text-slate-900" : "text-[#F8FAFC]"}`}>دخول الطلاب</h2>
+                <p className={`text-xs mt-1 leading-relaxed ${isLight ? "text-slate-600" : "text-[#94A3B8]"}`}>
                   اكتب كود الدخول المكوّن من 6 خانات المخصص لحسابك.
                 </p>
               </div>
               <div className="space-y-1.5 text-right">
-                <label htmlFor="student-code" className="block text-xs font-semibold text-[#E2E8F0]">
+                <label htmlFor="student-code" className={`block text-xs font-semibold ${isLight ? "text-slate-700" : "text-[#E2E8F0]"}`}>
                   كود الدخول الشخصي
                 </label>
                 <div className="relative flex items-center">
@@ -857,31 +899,41 @@ function getOrCreateDeviceId(): string {
                     required
                     autoComplete="one-time-code"
                     placeholder="A7K9P2"
-                    className="h-[48px] w-full rounded-[12px] border border-[rgba(148,163,184,0.20)] bg-[#091426] pl-11 pr-4 text-center font-mono text-lg sm:text-xl font-black tracking-widest text-[#FFFFFF] placeholder-[#475569] focus:border-[#3B82F6] focus:outline-none focus:ring-2 focus:ring-[rgba(59,130,246,0.14)]"
+                    className={`h-[48px] w-full rounded-[12px] border pl-11 pr-4 text-center font-mono text-lg sm:text-xl font-black tracking-widest focus:outline-none focus:ring-2 ${
+                      isLight
+                        ? "border-slate-300 bg-slate-50 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:ring-blue-500/20"
+                        : "border-[rgba(148,163,184,0.20)] bg-[#091426] text-[#FFFFFF] placeholder-[#475569] focus:border-[#3B82F6] focus:ring-[rgba(59,130,246,0.14)]"
+                    }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowAccessCode((visible) => !visible)}
                     aria-label={showAccessCode ? "إخفاء كود الدخول" : "إظهار كود الدخول"}
                     aria-pressed={showAccessCode}
-                    className="absolute left-1.5 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-lg text-[#94A3B8] hover:bg-[rgba(59,130,246,0.15)] hover:text-[#60A5FA] transition-colors"
+                    className={`absolute left-1.5 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+                      isLight ? "text-slate-500 hover:bg-slate-200 hover:text-slate-800" : "text-[#94A3B8] hover:bg-[rgba(59,130,246,0.15)] hover:text-[#60A5FA]"
+                    }`}
                   >
                     {showAccessCode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
-              <label className="flex cursor-pointer items-center gap-2.5 rounded-[12px] border border-[rgba(148,163,184,0.18)] bg-[#091426] p-2.5 hover:border-[rgba(96,165,250,0.45)] transition-all">
+              <label className={`flex cursor-pointer items-center gap-2.5 rounded-[12px] border p-2.5 transition-all ${
+                isLight
+                  ? "border-slate-200 bg-slate-50 hover:border-blue-300"
+                  : "border-[rgba(148,163,184,0.18)] bg-[#091426] hover:border-[rgba(96,165,250,0.45)]"
+              }`}>
                 <input
                   type="checkbox"
                   checked={rememberCode}
                   onChange={(e) => setRememberCode(e.target.checked)}
-                  className="h-4 w-4 shrink-0 rounded border-slate-600 bg-slate-900 text-[#3B82F6] focus:ring-[#3B82F6]"
+                  className="h-4 w-4 shrink-0 rounded border-slate-300 bg-white text-[#3B82F6] focus:ring-[#3B82F6]"
                 />
                 <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-                  <strong className="text-xs font-semibold text-[#F8FAFC]">
+                  <strong className={`text-xs font-semibold ${isLight ? "text-slate-900" : "text-[#F8FAFC]"}`}>
                     افتكر الكود على هذا الجهاز
                   </strong>
-                  <span className="text-[11px] text-[#94A3B8]">
+                  <span className={`text-[11px] ${isLight ? "text-slate-500" : "text-[#94A3B8]"}`}>
                     (تجنّب التفعيل على أجهزة عامة)
                   </span>
                 </div>
@@ -909,11 +961,11 @@ function getOrCreateDeviceId(): string {
                 <button
                   type="button"
                   onClick={() => { setMode("recover"); setError(""); setMessage(""); }}
-                  className="text-xs font-semibold text-[#60A5FA] hover:text-[#93C5FD] hover:underline transition-colors"
+                  className="text-xs font-semibold text-[#3B82F6] hover:underline transition-colors"
                 >
                   نسيت كود الدخول؟
                 </button>
-                <p className="text-[11px] text-[#94A3B8]">
+                <p className={`text-[11px] ${isLight ? "text-slate-500" : "text-[#94A3B8]"}`}>
                   ليس لديك كود؟ اختر <strong>«تسجيل طالب جديد»</strong> لأخذ كودك مجاناً.
                 </p>
               </div>

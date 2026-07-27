@@ -8,6 +8,8 @@ import {
   Menu,
   MessageCircle,
   MessageSquareQuote,
+  Moon,
+  Sun,
   UserRound,
   X,
 } from "lucide-react";
@@ -29,9 +31,19 @@ export function Navbar() {
   const [activeSection, setActiveSection] = useState("hero");
   const [student, setStudent] = useState<NavStudent | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    return (localStorage.getItem("app-theme") as "dark" | "light") || "dark";
+  });
   const studentCacheRef = useRef<{ data: NavStudent | null; ts: number } | null>(null);
   const { get } = useSiteSettings();
   const logoUrl = get(SETTINGS_KEYS.SITE_LOGO_URL, "/logo.webp");
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    localStorage.setItem("app-theme", nextTheme);
+    window.dispatchEvent(new CustomEvent("app-theme-changed", { detail: nextTheme }));
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -109,10 +121,12 @@ export function Navbar() {
       <nav
         aria-label="التنقل الرئيسي"
         className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-          isScrolled
-            ? "h-[74px] bg-[#07111f]/95 shadow-[0_8px_30px_rgba(0,0,0,0.25)]"
-            : "h-[78px] md:h-[82px] bg-[#07111f]/92 shadow-[0_8px_30px_rgba(0,0,0,0.18)]"
-        } backdrop-blur-[18px] border-b border-[rgba(148,163,184,0.14)]`}
+          theme === "light"
+            ? "bg-white/95 border-b border-slate-200 text-slate-900 shadow-sm"
+            : isScrolled
+            ? "h-[74px] bg-[#07111f]/95 shadow-[0_8px_30px_rgba(0,0,0,0.25)] border-b border-[rgba(148,163,184,0.14)]"
+            : "h-[78px] md:h-[82px] bg-[#07111f]/92 shadow-[0_8px_30px_rgba(0,0,0,0.18)] border-b border-[rgba(148,163,184,0.14)]"
+        } backdrop-blur-[18px]`}
         dir="rtl"
       >
         <div className="mx-auto flex h-full max-w-[1480px] items-center justify-between px-4 sm:px-6 md:px-8 lg:px-12">
@@ -131,10 +145,10 @@ export function Navbar() {
               />
             </div>
             <div className="flex flex-col justify-center text-right">
-              <span className="block text-[18px] sm:text-[20px] font-extrabold leading-[1.2] text-[#F8FAFC] tracking-tight">
+              <span className={`block text-[18px] sm:text-[20px] font-extrabold leading-[1.2] tracking-tight ${theme === "light" ? "text-slate-900" : "text-[#F8FAFC]"}`}>
                 د. محمود المهدي
               </span>
-              <span className="hidden sm:block text-[12px] font-medium leading-[1.4] text-[#94A3B8]">
+              <span className={`hidden sm:block text-[12px] font-medium leading-[1.4] ${theme === "light" ? "text-slate-500" : "text-[#94A3B8]"}`}>
                 منصة البرمجة وعلوم الحاسب
               </span>
             </div>
@@ -152,7 +166,9 @@ export function Navbar() {
                       aria-current={isActive ? "page" : undefined}
                       className={`relative flex h-[44px] items-center rounded-[10px] px-3 text-[15px] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] ${
                         isActive
-                          ? "font-bold text-[#60A5FA] bg-[rgba(59,130,246,0.10)]"
+                          ? "font-bold text-[#3B82F6] bg-[rgba(59,130,246,0.10)]"
+                          : theme === "light"
+                          ? "font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                           : "font-semibold text-[#94A3B8] hover:bg-[rgba(148,163,184,0.07)] hover:text-[#F8FAFC]"
                       }`}
                     >
@@ -169,12 +185,30 @@ export function Navbar() {
 
           {/* Actions (Left) */}
           <div className="hidden items-center gap-3 sm:flex">
+            {/* Theme Toggle Button */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              title={theme === "dark" ? "التحويل للوضع الفاتح (Light Mode)" : "التحويل للوضع الداكن (Dark Mode)"}
+              className={`flex h-[44px] w-[44px] items-center justify-center rounded-[12px] border transition-all ${
+                theme === "light"
+                  ? "border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  : "border-[rgba(148,163,184,0.22)] bg-transparent text-[#CBD5E1] hover:bg-[rgba(148,163,184,0.08)] hover:text-[#F8FAFC]"
+              }`}
+            >
+              {theme === "dark" ? <Sun className="h-5 w-5 text-amber-400" /> : <Moon className="h-5 w-5 text-indigo-600" />}
+            </button>
+
             <a
               href="https://wa.me/201044348610"
               target="_blank"
               rel="noreferrer"
               aria-label="تواصل عبر الواتساب"
-              className="flex h-[44px] items-center gap-2 rounded-[12px] border border-[rgba(148,163,184,0.22)] bg-transparent px-4 text-[14px] font-semibold text-[#CBD5E1] transition-all duration-200 hover:border-[rgba(148,163,184,0.34)] hover:bg-[rgba(148,163,184,0.08)] hover:text-[#F8FAFC] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6]"
+              className={`flex h-[44px] items-center gap-2 rounded-[12px] border px-4 text-[14px] font-semibold transition-all duration-200 ${
+                theme === "light"
+                  ? "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                  : "border-[rgba(148,163,184,0.22)] bg-transparent text-[#CBD5E1] hover:bg-[rgba(148,163,184,0.08)] hover:text-[#F8FAFC]"
+              }`}
             >
               <MessageCircle className="h-[18px] w-[18px] text-[#25D366]" />
               <span>واتساب</span>
@@ -182,7 +216,7 @@ export function Navbar() {
 
             <a
               href="/platform"
-              className="flex h-[44px] items-center justify-center rounded-[12px] bg-[#3B82F6] px-5 text-[14px] font-bold text-white shadow-[0_8px_20px_rgba(37,99,235,0.22)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#2563EB] active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#07111f]"
+              className="flex h-[44px] items-center justify-center rounded-[12px] bg-[#3B82F6] px-5 text-[14px] font-bold text-white shadow-[0_8px_20px_rgba(37,99,235,0.22)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-[#2563EB] active:translate-y-0"
             >
               {student ? "متابعة التعلم" : "دخول المنصة"}
             </a>
@@ -190,6 +224,18 @@ export function Navbar() {
 
           {/* Mobile Actions & Toggle */}
           <div className="flex items-center gap-2 sm:hidden">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className={`flex h-[40px] w-[40px] items-center justify-center rounded-[10px] border transition-all ${
+                theme === "light"
+                  ? "border-slate-300 bg-slate-100 text-slate-700"
+                  : "border-[rgba(148,163,184,0.22)] bg-transparent text-[#CBD5E1]"
+              }`}
+            >
+              {theme === "dark" ? <Sun className="h-4.5 w-4.5 text-amber-400" /> : <Moon className="h-4.5 w-4.5 text-indigo-600" />}
+            </button>
+
             <a
               href="/platform"
               className="flex h-[40px] items-center justify-center rounded-[10px] bg-[#3B82F6] px-3.5 text-[13px] font-bold text-white shadow-md transition hover:bg-[#2563EB]"
