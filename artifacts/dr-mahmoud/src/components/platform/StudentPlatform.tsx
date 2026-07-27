@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/RegistrationStageSelector";
 import { EmptyState, PageHeader, ProfileInfoRow, StatisticCard, StatusBadge, StudentAvatar } from "./StudentDashboardUI";
 import { CppCompilerPanel } from "./CppCompilerPanel";
+import { useNotificationSound } from "@/hooks/use-notification-sound";
 
 type Student = {
   id: number;
@@ -2161,12 +2162,14 @@ export function StudentPlatform() {
   useEffect(() => {
     void loadLearningData();
   }, [student]);
+  const playNotificationSound = useNotificationSound();
   useEffect(() => {
     if (!student) return;
     const stream = new EventSource("/api/learning/notifications/stream", { withCredentials: true });
     const refresh = (event: Event) => {
       const latestId = Number(JSON.parse((event as MessageEvent).data || "{}").latestId || 0);
       if (latestId) latestNotificationIdRef.current = latestId;
+      playNotificationSound();
       void loadLearningData();
       toast({ title: "محتوى جديد", description: "تم تحديث الدروس والملفات والاختبارات المتاحة لك." });
     };
@@ -2186,6 +2189,7 @@ export function StudentPlatform() {
         if (latestNotificationIdRef.current > 0 && latestId > latestNotificationIdRef.current) {
           latestNotificationIdRef.current = latestId;
           setNotifications(rows);
+          playNotificationSound();
           void loadLearningData();
           toast({ title: "محتوى جديد", description: "تم تحديث المحتوى المتاح لك تلقائيًا." });
         } else {
