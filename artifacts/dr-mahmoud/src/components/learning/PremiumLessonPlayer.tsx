@@ -263,10 +263,10 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
           <div className="absolute inset-x-0 bottom-0 h-0.5 bg-white/5"><div className="h-full bg-sky-500 transition-[width]" style={{ width: `${progress}%` }}/></div>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:overflow-hidden landscape:max-h-[500px]:overflow-hidden">
-          <main className="min-w-0 lg:min-h-0 lg:overflow-y-auto landscape:max-h-[500px]:h-full">
-            <section className="bg-black landscape:max-h-[500px]:h-full">
-              <div className="relative aspect-video w-full overflow-hidden bg-black landscape:max-h-[500px]:aspect-none landscape:max-h-[500px]:h-[calc(100vh-3.5rem)] landscape:max-h-[500px]:w-full">
+        <div className="min-h-0 flex-1 flex flex-col overflow-hidden lg:grid lg:grid-cols-[minmax(0,1fr)_300px]">
+          <main className="min-w-0 flex-1 flex flex-col overflow-hidden">
+            <section className="bg-black shrink-0 flex flex-col landscape:max-h-[500px]:h-full landscape:max-h-[500px]:flex-1">
+              <div className="relative aspect-video w-full max-h-[40vh] sm:max-h-none overflow-hidden bg-black landscape:max-h-[500px]:aspect-none landscape:max-h-[500px]:flex-1 landscape:max-h-[500px]:w-full">
                 {/* Floating close button in mobile landscape */}
                 <button
                   type="button"
@@ -374,7 +374,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
               )}
             </section>
 
-            <div className="bg-slate-900 text-slate-100 landscape:max-h-[500px]:hidden">
+            <div className="flex-1 min-h-0 overflow-y-auto bg-slate-900 text-slate-100 landscape:max-h-[500px]:hidden">
               <div className="flex flex-wrap items-center gap-2 border-b border-white/10 p-3 sm:px-5">
                 <button disabled={!previous} onClick={() => previous && onSelectLesson(previous)} className="inline-flex h-11 items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-bold text-slate-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-40"><ChevronRight className="h-4 w-4"/>السابق</button>
                 <button disabled={!next} onClick={() => next && onSelectLesson(next)} className="inline-flex h-11 items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-bold text-slate-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-40">التالي<ChevronLeft className="h-4 w-4"/></button>

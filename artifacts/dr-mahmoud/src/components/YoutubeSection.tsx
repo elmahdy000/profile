@@ -314,12 +314,12 @@ function VideoPlayerModal({
             </button>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto bg-background text-foreground landscape:max-h-[500px]:overflow-hidden">
-            <div className="grid lg:grid-cols-[minmax(0,1fr)_300px] landscape:max-h-[500px]:h-full">
+          <div className="min-h-0 flex-1 flex flex-col overflow-hidden bg-background text-foreground lg:grid lg:grid-cols-[minmax(0,1fr)_300px]">
+            <div className="grid lg:grid-cols-[minmax(0,1fr)_300px] flex-1 min-h-0 overflow-hidden landscape:max-h-[500px]:h-full">
               {/* Player Container */}
-              <div className="bg-black p-0 sm:p-4 lg:order-2 landscape:max-h-[500px]:h-full landscape:max-h-[500px]:p-0">
+              <div className="bg-black shrink-0 p-0 sm:p-4 lg:order-2 landscape:max-h-[500px]:h-full landscape:max-h-[500px]:p-0">
                 <div
-                  className="relative aspect-video w-full select-none overflow-hidden bg-black sm:rounded-2xl sm:ring-2 sm:ring-primary/30 shadow-[0_0_50px_rgba(11,99,206,0.2)] landscape:max-h-[500px]:aspect-none landscape:max-h-[500px]:h-full landscape:max-h-[500px]:w-full"
+                  className="relative aspect-video max-h-[42vh] sm:max-h-none w-full select-none overflow-hidden bg-black sm:rounded-2xl sm:ring-2 sm:ring-primary/30 shadow-[0_0_50px_rgba(11,99,206,0.2)] landscape:max-h-[500px]:aspect-none landscape:max-h-[500px]:h-full landscape:max-h-[500px]:w-full"
                   onContextMenu={(e) => e.preventDefault()}
                 >
                   <button
@@ -402,7 +402,7 @@ function VideoPlayerModal({
               </div>
 
               {/* Lesson information */}
-              <aside className="space-y-4 border-t border-border bg-card p-4 text-right sm:p-5 lg:order-1 lg:border-l lg:border-t-0 landscape:max-h-[500px]:hidden">
+              <aside className="flex-1 min-h-0 overflow-y-auto space-y-4 border-t border-border bg-card p-4 text-right sm:p-5 lg:order-1 lg:border-l lg:border-t-0 landscape:max-h-[500px]:hidden">
                 <div>
                   <div className="mb-2 flex items-center gap-2 text-xs font-extrabold text-foreground">
                     <Info className="h-4 w-4 text-primary" />
