@@ -250,7 +250,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
   return <AnimatePresence>
     <motion.div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-black/85 p-0 backdrop-blur-sm sm:p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <motion.div ref={shellRef} role="dialog" aria-modal="true" aria-labelledby="lesson-player-title" dir="rtl" initial={{ opacity: 0, scale: .98, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: .98, y: 12 }} className="flex h-[100dvh] max-h-[100dvh] w-full max-w-[1280px] flex-col overflow-hidden bg-slate-950 shadow-2xl sm:h-auto sm:max-h-[92vh] sm:rounded-[20px] sm:border sm:border-white/10">
-        <header className="relative shrink-0 border-b border-white/10 bg-slate-950 px-4 py-3 sm:px-5 landscape:max-h-[500px]:hidden">
+        <header className="relative shrink-0 border-b border-white/10 bg-slate-950 px-4 py-3 sm:px-5 landscape:hidden">
           <div className="flex min-h-11 items-center gap-3">
             <div className="min-w-0 flex-1">
               <p className="mb-0.5 truncate text-[11px] font-bold text-sky-400">{item.category}</p>
@@ -265,16 +265,16 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
 
         <div className="min-h-0 flex-1 flex flex-col overflow-hidden lg:grid lg:grid-cols-[minmax(0,1fr)_300px]">
           <main className="min-w-0 flex-1 flex flex-col overflow-hidden">
-            <section className="bg-black shrink-0 flex flex-col landscape:max-h-[500px]:h-full landscape:max-h-[500px]:flex-1">
-              <div className="relative aspect-video w-full max-h-[40vh] sm:max-h-none overflow-hidden bg-black landscape:max-h-[500px]:aspect-none landscape:max-h-[500px]:flex-1 landscape:max-h-[500px]:w-full">
-                {/* Floating close button in mobile landscape */}
+            <section className="bg-black flex-1 min-h-0 flex flex-col relative justify-center">
+              <div className="relative flex-1 min-h-0 w-full flex items-center justify-center bg-black overflow-hidden">
+                {/* Floating close button in mobile landscape - z-[999] for touch responsiveness */}
                 <button
                   type="button"
                   onClick={onClose}
                   aria-label="إغلاق"
-                  className="absolute top-3 right-3 z-50 hidden h-9 w-9 place-items-center rounded-full bg-black/70 text-white backdrop-blur-md transition hover:bg-black/90 landscape:max-h-[500px]:grid"
+                  className="absolute top-3 right-3 z-[999] hidden h-11 w-11 place-items-center rounded-full bg-slate-900/80 border border-white/20 text-white backdrop-blur-md transition hover:bg-slate-800 active:scale-95 shadow-2xl landscape:grid"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-6 w-6" />
                 </button>
 
                 {isProtected ? <>
@@ -282,7 +282,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                   {playerError ? <div className="absolute inset-0 z-20 grid place-items-center bg-slate-950 p-6 text-center"><div><p className="font-bold text-white">تعذر تشغيل الدرس</p><p className="mt-2 text-sm text-slate-400">{playerErrorMessage}</p><button onClick={() => { refreshAttempted.current = false; setPlayerError(false); void refreshStreamUrl(); }} className="mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-sky-500 px-5 font-bold text-slate-950 hover:bg-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><RefreshCw className="h-4 w-4"/>تحديث رابط الفيديو</button></div></div> : null}
                   <video
                     ref={videoRef}
-                    className="h-full w-full object-contain"
+                    className="h-full w-full object-contain max-h-full max-w-full"
                     src={streamSrc}
                     poster={poster || undefined}
                     preload="metadata"
@@ -308,12 +308,12 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                   />
                   {playerReady && !playing && !playerError && <button onClick={() => void togglePlay()} className="absolute inset-0 grid place-items-center bg-black/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-400" aria-label="تشغيل الفيديو"><span className="grid h-16 w-16 place-items-center rounded-full bg-sky-500 text-slate-950 shadow-xl transition hover:scale-105 sm:h-20 sm:w-20"><Play className="h-7 w-7 fill-current sm:h-9 sm:w-9"/></span></button>}
                 </> : youtubeUrl ? <>
-                  {!youtubeStarted ? <button onClick={() => setYoutubeStarted(true)} className="absolute inset-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-400" aria-label="تشغيل الفيديو"><img src={poster} alt="" className="h-full w-full object-cover"/><span className="absolute inset-0 bg-black/35"/><span className="absolute inset-0 grid place-items-center"><span className="grid h-16 w-16 place-items-center rounded-full bg-sky-500 text-slate-950 shadow-xl transition group-hover:scale-105 sm:h-20 sm:w-20"><Play className="h-8 w-8 fill-current"/></span></span></button> : <iframe className="absolute inset-0 h-full w-full" src={youtubeUrl} title={item.title} loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin"/>}
+                  {!youtubeStarted ? <button onClick={() => setYoutubeStarted(true)} className="absolute inset-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-400" aria-label="تشغيل الفيديو"><img src={poster} alt="" className="h-full w-full object-cover"/><span className="absolute inset-0 bg-black/35"/><span className="absolute inset-0 grid place-items-center"><span className="grid h-16 w-16 place-items-center rounded-full bg-sky-500 text-slate-950 shadow-xl transition group-hover:scale-105 sm:h-20 sm:w-20"><Play className="h-8 w-8 fill-current"/></span></span></button> : <iframe className="absolute inset-0 h-full w-full border-0 object-contain" src={youtubeUrl} title={item.title} loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin"/>}
                 </> : <div className="absolute inset-0 grid place-items-center p-6 text-center text-slate-300">مصدر الفيديو غير مدعوم داخل المنصة.</div>}
               </div>
 
               {isProtected && (
-                <div className="flex h-14 items-center gap-1 border-t border-white/10 px-2 sm:px-4" dir="ltr">
+                <div className="flex h-12 shrink-0 items-center gap-1 border-t border-white/10 bg-slate-950 px-2 sm:px-4" dir="ltr">
                   <PlayerButton label={playing ? "إيقاف مؤقت" : "تشغيل"} onClick={() => void togglePlay()}>
                     {playing ? <Pause className="h-5 w-5 fill-current"/> : <Play className="h-5 w-5 fill-current"/>}
                   </PlayerButton>
@@ -374,7 +374,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
               )}
             </section>
 
-            <div className="flex-1 min-h-0 overflow-y-auto bg-slate-900 text-slate-100 landscape:max-h-[500px]:hidden">
+            <div className="flex-1 min-h-0 overflow-y-auto bg-slate-900 text-slate-100 landscape:hidden">
               <div className="flex flex-wrap items-center gap-2 border-b border-white/10 p-3 sm:px-5">
                 <button disabled={!previous} onClick={() => previous && onSelectLesson(previous)} className="inline-flex h-11 items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-bold text-slate-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-40"><ChevronRight className="h-4 w-4"/>السابق</button>
                 <button disabled={!next} onClick={() => next && onSelectLesson(next)} className="inline-flex h-11 items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-bold text-slate-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-40">التالي<ChevronLeft className="h-4 w-4"/></button>

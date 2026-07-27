@@ -292,7 +292,7 @@ function VideoPlayerModal({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="z-10 flex shrink-0 items-center gap-3 border-b border-border bg-background px-4 py-3 sm:px-5 sm:py-4 landscape:max-h-[500px]:hidden">
+          <div className="z-10 flex shrink-0 items-center gap-3 border-b border-border bg-background px-4 py-3 sm:px-5 sm:py-4 landscape:hidden">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary sm:h-11 sm:w-11">
               <MonitorPlay className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
@@ -315,20 +315,20 @@ function VideoPlayerModal({
           </div>
 
           <div className="min-h-0 flex-1 flex flex-col overflow-hidden bg-background text-foreground lg:grid lg:grid-cols-[minmax(0,1fr)_300px]">
-            <div className="grid lg:grid-cols-[minmax(0,1fr)_300px] flex-1 min-h-0 overflow-hidden landscape:max-h-[500px]:h-full">
+            <div className="flex flex-col flex-1 min-h-0 overflow-hidden lg:grid lg:grid-cols-[minmax(0,1fr)_300px]">
               {/* Player Container */}
-              <div className="bg-black shrink-0 p-0 sm:p-4 lg:order-2 landscape:max-h-[500px]:h-full landscape:max-h-[500px]:p-0">
+              <div className="bg-black flex-1 min-h-0 flex flex-col justify-center relative p-0 lg:order-2">
                 <div
-                  className="relative aspect-video max-h-[42vh] sm:max-h-none w-full select-none overflow-hidden bg-black sm:rounded-2xl sm:ring-2 sm:ring-primary/30 shadow-[0_0_50px_rgba(11,99,206,0.2)] landscape:max-h-[500px]:aspect-none landscape:max-h-[500px]:h-full landscape:max-h-[500px]:w-full"
+                  className="relative flex-1 min-h-0 w-full flex items-center justify-center bg-black overflow-hidden sm:rounded-2xl sm:ring-2 sm:ring-primary/30"
                   onContextMenu={(e) => e.preventDefault()}
                 >
                   <button
                     type="button"
                     onClick={onClose}
                     aria-label="إغلاق"
-                    className="absolute top-3 right-3 z-50 hidden h-9 w-9 place-items-center rounded-full bg-black/70 text-white backdrop-blur-md transition hover:bg-black/90 landscape:max-h-[500px]:grid"
+                    className="absolute top-3 right-3 z-[999] hidden h-11 w-11 place-items-center rounded-full bg-slate-900/80 border border-white/20 text-white backdrop-blur-md transition hover:bg-slate-800 active:scale-95 shadow-2xl landscape:grid"
                   >
-                    <X className="h-5 w-5" />
+                    <X className="h-6 w-6" />
                   </button>
 
                   {!isFocused && (
@@ -402,7 +402,7 @@ function VideoPlayerModal({
               </div>
 
               {/* Lesson information */}
-              <aside className="flex-1 min-h-0 overflow-y-auto space-y-4 border-t border-border bg-card p-4 text-right sm:p-5 lg:order-1 lg:border-l lg:border-t-0 landscape:max-h-[500px]:hidden">
+              <aside className="flex-1 min-h-0 overflow-y-auto space-y-4 border-t border-border bg-card p-4 text-right sm:p-5 lg:order-1 lg:border-l lg:border-t-0 landscape:hidden">
                 <div>
                   <div className="mb-2 flex items-center gap-2 text-xs font-extrabold text-foreground">
                     <Info className="h-4 w-4 text-primary" />
