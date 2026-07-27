@@ -1687,7 +1687,7 @@ function DashboardPanel({
       {student.paymentStatus !== "paid" && (
         <PaymentBanner paymentStatus={student.paymentStatus || "unpaid"} onUploaded={() => window.location.reload()} />
       )}
-      <div className="grid gap-4 grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => <StatisticCard key={stat.label} {...stat} />)}
       </div>
       {(() => {

@@ -799,11 +799,7 @@ router.post("/student/payment-receipt", requireStudent, (req, res, next) => {
           sizeBytes: req.file.size,
         })
         .returning();
-      await db
-        .update(studentsTable)
-        .set({ paymentStatus: "pending_review", updatedAt: new Date() })
-        .where(eq(studentsTable.id, student.id));
-      res.status(201).json({ receipt, paymentStatus: "pending_review" });
+      res.status(201).json({ receipt, paymentStatus: student.paymentStatus || "unpaid" });
     } catch (error) {
       next(error);
     }
