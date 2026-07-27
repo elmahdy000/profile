@@ -47,6 +47,54 @@
   .admin-learning-workspace *::after { transition: none !important; }
 }
 
+/* ── Dedicated Forced Light Theme for Student Registration ── */
+.registration-light-theme {
+  color-scheme: light !important;
+  --registration-background: #ffffff;
+  --registration-soft-background: #f8fafc;
+  --registration-text: #0f172a;
+  --registration-muted: #64748b;
+  --registration-border: #e2e8f0;
+  --registration-input-border: #cbd5e1;
+  --registration-primary: #3b82f6;
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08) !important;
+}
+
+.registration-light-theme,
+.registration-light-theme * {
+  color-scheme: light !important;
+}
+
+.registration-light-theme input,
+.registration-light-theme select,
+.registration-light-theme textarea {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+.registration-light-theme input::placeholder,
+.registration-light-theme select::placeholder,
+.registration-light-theme textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+.registration-light-theme input:focus,
+.registration-light-theme select:focus,
+.registration-light-theme textarea:focus {
+  background-color: #ffffff !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+}
+
+.registration-light-theme option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
 /* ── Self-hosted Cairo (no network dependency) ── */
 /* Arabic subset */
 @font-face { font-family: 'Cairo'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/cairo-arabic-400.woff2') format('woff2'); unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FDFC-FDFD; }

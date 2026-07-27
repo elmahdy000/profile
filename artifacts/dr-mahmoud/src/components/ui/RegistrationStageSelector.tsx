@@ -26,7 +26,7 @@ type Props = {
 };
 
 const fieldClass =
-  "h-[56px] w-full rounded-[12px] border border-[#CBD5E1] dark:border-[rgba(148,163,184,0.20)] bg-[#F8FAFC] dark:bg-[#091426] px-4 text-sm font-medium text-[#0F172A] dark:text-[#F8FAFC] placeholder-[#94A3B8] outline-none transition focus:border-[#3B82F6] focus:bg-white dark:focus:bg-[#091426] focus:ring-4 focus:ring-[#3B82F6]/12 shadow-xs";
+  "h-[56px] w-full rounded-[12px] border border-[#CBD5E1] bg-[#F8FAFC] px-4 text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] outline-none transition focus:border-[#3B82F6] focus:bg-white focus:ring-4 focus:ring-[#3B82F6]/12 shadow-xs";
 
 export function createDefaultRegistrationStage(): RegistrationStageSelection {
   return {
@@ -96,13 +96,13 @@ export function RegistrationStageSelector({ value, onChange }: Props) {
   };
 
   return (
-    <fieldset className="space-y-4 rounded-[18px] border border-[#E2E8F0] dark:border-[rgba(148,163,184,0.18)] bg-white dark:bg-[#091426] p-4 sm:p-5">
-      <legend className="px-2 text-xs font-bold uppercase text-[#0866D9] dark:text-[#60A5FA] tracking-wide">
+    <fieldset className="space-y-4 rounded-[18px] border border-[#E2E8F0] bg-white p-4 sm:p-5">
+      <legend className="px-2 text-xs font-bold uppercase text-[#0866D9] tracking-wide">
         1. النظام والمرحلة الدراسية
       </legend>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <label className="flex flex-col text-sm font-semibold text-[#334155] dark:text-[#E2E8F0]">
+        <label className="flex flex-col text-sm font-semibold text-[#334155]">
           <span className="mb-2">النظام التعليمي <span className="text-[#EF4444]">*</span></span>
           <select
             id="education-system"
