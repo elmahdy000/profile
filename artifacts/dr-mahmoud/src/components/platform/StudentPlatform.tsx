@@ -392,8 +392,8 @@ function SearchableCombobox({
 
   return (
     <div className="space-y-2 relative text-right w-full" dir="rtl">
-      <label htmlFor={id} className="block text-sm font-semibold text-[#E2E8F0]">
-        {label} {required && <span className="text-[#F87171]">*</span>}
+      <label htmlFor={id} className="block text-sm font-semibold text-[#334155] dark:text-[#E2E8F0]">
+        {label} {required && <span className="text-[#EF4444]">*</span>}
       </label>
       <input
         id={id}
@@ -409,10 +409,10 @@ function SearchableCombobox({
         }}
         required={required}
         placeholder={placeholder}
-        className="h-[52px] w-full rounded-[14px] border border-[rgba(148,163,184,0.20)] bg-[#091426] px-4 text-right text-sm font-medium text-[#F8FAFC] placeholder-[#64748B] outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[rgba(59,130,246,0.14)]"
+        className="h-[56px] w-full rounded-[12px] border border-[#CBD5E1] dark:border-[rgba(148,163,184,0.20)] bg-[#F8FAFC] dark:bg-[#091426] px-4 text-right text-sm font-medium text-[#0F172A] dark:text-[#F8FAFC] placeholder-[#94A3B8] outline-none transition focus:border-[#3B82F6] focus:bg-white dark:focus:bg-[#091426] focus:ring-4 focus:ring-[#3B82F6]/12 shadow-xs"
       />
       {isOpen && (filtered.length > 0 || search.trim() !== "") && (
-        <ul className="absolute z-50 w-full max-h-48 overflow-y-auto rounded-[14px] border border-[rgba(148,163,184,0.25)] bg-[#101D31] shadow-2xl mt-1 py-1 text-right">
+        <ul className="absolute z-50 w-full max-h-48 overflow-y-auto rounded-[14px] border border-[#CBD5E1] dark:border-[rgba(148,163,184,0.25)] bg-white dark:bg-[#101D31] shadow-lg mt-1 py-1 text-right">
           {filtered.map((opt) => (
             <li key={opt}>
               <button
@@ -422,7 +422,7 @@ function SearchableCombobox({
                   setSearch(opt);
                   setIsOpen(false);
                 }}
-                className="w-full px-4 py-2.5 text-right hover:bg-[rgba(59,130,246,0.15)] text-sm transition-colors text-[#F8FAFC] font-medium"
+                className="w-full px-4 py-2.5 text-right hover:bg-[#E8F1FF] dark:hover:bg-[rgba(59,130,246,0.15)] text-sm transition-colors text-[#0F172A] dark:text-[#F8FAFC] font-medium"
               >
                 {opt}
               </button>
@@ -436,7 +436,7 @@ function SearchableCombobox({
                   onChange(search);
                   setIsOpen(false);
                 }}
-                className="w-full px-4 py-2.5 text-right text-[#94A3B8] hover:bg-[rgba(59,130,246,0.15)] text-xs transition-colors"
+                className="w-full px-4 py-2.5 text-right text-[#64748B] hover:bg-[#E8F1FF] dark:hover:bg-[rgba(59,130,246,0.15)] text-xs transition-colors"
               >
                 استخدام: "{search}"
               </button>
@@ -719,14 +719,14 @@ function getOrCreateDeviceId(): string {
         </div>
 
         {/* Form Column (Left in RTL) */}
-        <div className={`w-full rounded-[20px] sm:rounded-[24px] border p-4 sm:p-6 transition-all ${
+        <div className={`w-full rounded-[24px] border p-4 sm:p-6 transition-all ${
           isLight
-            ? "border-slate-200 bg-white shadow-lg shadow-slate-200/50 text-slate-900"
+            ? "border-[#E2E8F0] bg-white shadow-xs text-[#0F172A]"
             : "border-[rgba(148,163,184,0.20)] bg-[#101D31] shadow-[0_20px_60px_rgba(0,0,0,0.30)] text-[#F8FAFC]"
         }`}>
           {/* Segmented Tab Switcher */}
           <div className={`grid grid-cols-2 rounded-[14px] p-1 mb-4 border h-[46px] ${
-            isLight ? "bg-slate-100 border-slate-200" : "bg-[#091426] border-[rgba(148,163,184,0.15)]"
+            isLight ? "bg-[#F1F5F9] border-[#E2E8F0]" : "bg-[#091426] border-[rgba(148,163,184,0.15)]"
           }`}>
             <button
               type="button"
@@ -737,10 +737,10 @@ function getOrCreateDeviceId(): string {
               className={`rounded-[10px] h-full font-bold text-xs sm:text-sm transition-all duration-200 ${
                 mode === "login"
                   ? isLight
-                    ? "bg-white text-blue-600 shadow-xs border border-slate-200"
+                    ? "bg-white text-[#0866D9] shadow-xs border border-[#E2E8F0]"
                     : "bg-[rgba(59,130,246,0.20)] text-[#F8FAFC] border border-[#3B82F6]/40 shadow-xs"
                   : isLight
-                  ? "text-slate-600 hover:text-slate-900"
+                  ? "text-[#475569] hover:text-[#0F172A]"
                   : "text-[#94A3B8] hover:text-[#CBD5E1]"
               }`}
             >
@@ -755,10 +755,10 @@ function getOrCreateDeviceId(): string {
               className={`rounded-[10px] h-full font-bold text-xs sm:text-sm transition-all duration-200 ${
                 mode === "register"
                   ? isLight
-                    ? "bg-white text-blue-600 shadow-xs border border-slate-200"
+                    ? "bg-white text-[#0866D9] shadow-xs border border-[#E2E8F0]"
                     : "bg-[rgba(59,130,246,0.20)] text-[#F8FAFC] border border-[#3B82F6]/40 shadow-xs"
                   : isLight
-                  ? "text-slate-600 hover:text-slate-900"
+                  ? "text-[#475569] hover:text-[#0F172A]"
                   : "text-[#94A3B8] hover:text-[#CBD5E1]"
               }`}
             >
@@ -971,17 +971,19 @@ function getOrCreateDeviceId(): string {
               </div>
             </form>
           ) : (
-            <form onSubmit={submitRegistration} className="space-y-6" noValidate dir="rtl">
+            <form onSubmit={submitRegistration} className="space-y-5" noValidate dir="rtl">
               <div>
-                <h2 className="text-[26px] sm:text-[30px] font-extrabold text-[#F8FAFC]">تسجيل طالب جديد</h2>
-                <p className="mt-1 text-sm text-[#94A3B8] leading-[1.7]">
+                <h2 className={`text-xl sm:text-2xl font-bold ${isLight ? "text-[#0F172A]" : "text-[#F8FAFC]"}`}>تسجيل طالب جديد</h2>
+                <p className={`mt-1 text-xs leading-relaxed ${isLight ? "text-[#64748B]" : "text-[#94A3B8]"}`}>
                   اكتب بيانات الطالب بدقة، وتأكد من موافقة ولي الأمر قبل تفعيل الحساب.
                 </p>
               </div>
 
               {/* Progress Indicator Header */}
-              <div className="rounded-[16px] border border-[rgba(148,163,184,0.14)] bg-[#091426] p-2.5">
-                <div className="grid grid-cols-3 gap-1 text-center">
+              <div className={`rounded-[16px] border p-2 ${
+                isLight ? "border-[#E2E8F0] bg-[#F8FAFC]" : "border-[rgba(148,163,184,0.14)] bg-[#091426]"
+              }`}>
+                <div className="grid grid-cols-3 gap-1.5 text-center">
                   {[
                     [1, "البيانات الأساسية"],
                     [2, "الدراسة"],
@@ -998,16 +1000,20 @@ function getOrCreateDeviceId(): string {
                             setRegStep(stepNum as number);
                           }
                         }}
-                        className={`flex items-center justify-center gap-2 rounded-[12px] py-2 px-2 transition-all duration-200 text-xs sm:text-sm font-bold ${
+                        className={`flex items-center justify-center gap-1.5 rounded-[12px] py-2 px-2 transition-all duration-200 text-xs font-bold ${
                           isActive
-                            ? "bg-[#3B82F6] text-white shadow-sm"
+                            ? "bg-[#0866D9] text-white shadow-xs"
                             : isCompleted
-                            ? "bg-[rgba(59,130,246,0.15)] text-[#60A5FA]"
-                            : "text-[#94A3B8] hover:text-[#CBD5E1]"
+                            ? isLight ? "bg-[#E8F1FF] text-[#0866D9]" : "bg-[rgba(59,130,246,0.15)] text-[#60A5FA]"
+                            : isLight ? "bg-transparent text-[#64748B]" : "text-[#94A3B8] hover:text-[#CBD5E1]"
                         }`}
                       >
                         <span className={`grid h-5 w-5 place-items-center rounded-full text-[11px] font-extrabold ${
-                          isActive ? "bg-white text-[#3B82F6]" : isCompleted ? "bg-[#60A5FA] text-white" : "bg-slate-800 text-[#94A3B8]"
+                          isActive
+                            ? "bg-white text-[#0866D9]"
+                            : isCompleted
+                            ? "bg-[#0866D9] text-white"
+                            : isLight ? "bg-slate-200 text-[#64748B]" : "bg-slate-800 text-[#94A3B8]"
                         }`}>
                           {isCompleted ? "✓" : (stepNum as number)}
                         </span>
@@ -1020,22 +1026,26 @@ function getOrCreateDeviceId(): string {
 
               {/* Step 1: Basic Information */}
               {regStep === 1 && (
-                <div className="space-y-5 animate-in fade-in duration-200">
-                  <div className="rounded-[18px] border border-[rgba(148,163,184,0.12)] bg-[rgba(9,20,38,0.35)] p-5 space-y-4">
-                    <div className="flex items-center gap-3 border-b border-[rgba(148,163,184,0.12)] pb-3">
-                      <span className="grid h-[32px] w-[32px] place-items-center rounded-full bg-[rgba(59,130,246,0.12)] text-[#60A5FA] text-xs font-bold">
+                <div className="space-y-4 animate-in fade-in duration-200">
+                  <div className={`rounded-[18px] border p-5 space-y-4 ${
+                    isLight ? "border-[#E2E8F0] bg-white shadow-xs" : "border-[rgba(148,163,184,0.12)] bg-[rgba(9,20,38,0.35)]"
+                  }`}>
+                    <div className={`flex items-center gap-2.5 border-b pb-3 ${isLight ? "border-[#E2E8F0]" : "border-[rgba(148,163,184,0.12)]"}`}>
+                      <span className={`grid h-[30px] w-[30px] place-items-center rounded-full text-xs font-bold ${
+                        isLight ? "bg-[#E8F1FF] text-[#0866D9]" : "bg-[rgba(59,130,246,0.12)] text-[#60A5FA]"
+                      }`}>
                         01
                       </span>
                       <div>
-                        <h3 className="text-base font-bold text-[#F8FAFC]">البيانات الأساسية</h3>
-                        <p className="text-xs text-[#94A3B8]">بيانات التواصل والموقع الخاصة بالطالب</p>
+                        <h3 className={`text-sm font-bold ${isLight ? "text-[#0F172A]" : "text-[#F8FAFC]"}`}>البيانات الأساسية</h3>
+                        <p className={`text-xs ${isLight ? "text-[#64748B]" : "text-[#94A3B8]"}`}>بيانات التواصل والموقع الخاصة بالطالب</p>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="flex flex-col text-xs font-semibold text-[#E2E8F0]">
-                        <label htmlFor="student-name" className="mb-2 block text-sm font-medium">
-                          اسم الطالب <span className="text-[#F87171]">*</span>
+                      <div className="flex flex-col text-xs font-semibold">
+                        <label htmlFor="student-name" className={`mb-1.5 block text-xs font-semibold ${isLight ? "text-[#334155]" : "text-[#E2E8F0]"}`}>
+                          اسم الطالب <span className="text-[#EF4444]">*</span>
                         </label>
                         <input
                           id="student-name"
@@ -1044,13 +1054,17 @@ function getOrCreateDeviceId(): string {
                           required
                           placeholder="الاسم ثلاثي أو رباعي"
                           aria-invalid={Boolean(form.name) && !nameValid}
-                          className="h-[54px] w-full rounded-[14px] border border-[rgba(148,163,184,0.18)] bg-[#091426] px-4 text-sm font-medium text-[#F8FAFC] placeholder-[#71809A] outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[rgba(59,130,246,0.12)]"
+                          className={`h-[56px] w-full rounded-[12px] border px-4 text-sm font-medium outline-none transition focus:ring-4 ${
+                            isLight
+                              ? "border-[#CBD5E1] bg-[#F8FAFC] text-[#0F172A] placeholder-[#94A3B8] focus:border-[#3B82F6] focus:bg-white focus:ring-[#3B82F6]/12"
+                              : "border-[rgba(148,163,184,0.18)] bg-[#091426] text-[#F8FAFC] placeholder-[#71809A] focus:border-[#3B82F6] focus:ring-[rgba(59,130,246,0.12)]"
+                          }`}
                         />
-                        {form.name && !nameValid && <p className="mt-1 text-xs text-[#F87171]">اكتب اسم الطالب بشكل صحيح (حرفين على الأقل).</p>}
+                        {form.name && !nameValid && <p className="mt-1 text-xs text-[#EF4444]">اكتب اسم الطالب بشكل صحيح (حرفين على الأقل).</p>}
                       </div>
-                      <div className="flex flex-col text-xs font-semibold text-[#E2E8F0]">
-                        <label htmlFor="student-phone" className="mb-2 block text-sm font-medium">
-                          رقم الهاتف <span className="text-[#F87171]">*</span>
+                      <div className="flex flex-col text-xs font-semibold">
+                        <label htmlFor="student-phone" className={`mb-1.5 block text-xs font-semibold ${isLight ? "text-[#334155]" : "text-[#E2E8F0]"}`}>
+                          رقم الهاتف <span className="text-[#EF4444]">*</span>
                         </label>
                         <input
                           id="student-phone"
@@ -1061,18 +1075,22 @@ function getOrCreateDeviceId(): string {
                           placeholder="01XXXXXXXXX"
                           dir="ltr"
                           aria-invalid={Boolean(form.phone) && !phoneValid}
-                          className="h-[54px] w-full rounded-[14px] border border-[rgba(148,163,184,0.18)] bg-[#091426] px-4 text-left font-mono text-sm font-medium text-[#F8FAFC] placeholder-[#71809A] outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[rgba(59,130,246,0.12)]"
+                          className={`h-[56px] w-full rounded-[12px] border px-4 text-left font-mono text-sm font-medium outline-none transition focus:ring-4 ${
+                            isLight
+                              ? "border-[#CBD5E1] bg-[#F8FAFC] text-[#0F172A] placeholder-[#94A3B8] focus:border-[#3B82F6] focus:bg-white focus:ring-[#3B82F6]/12"
+                              : "border-[rgba(148,163,184,0.18)] bg-[#091426] text-[#F8FAFC] placeholder-[#71809A] focus:border-[#3B82F6] focus:ring-[rgba(59,130,246,0.12)]"
+                          }`}
                         />
-                        {form.phone && !phoneValid && <p className="mt-1 text-xs text-[#F87171]">رقم الهاتف من 10 إلى 15 رقمًا.</p>}
+                        {form.phone && !phoneValid && <p className="mt-1 text-xs text-[#EF4444]">رقم الهاتف من 10 إلى 15 رقمًا.</p>}
                       </div>
                     </div>
 
-                    <div className="flex flex-col text-xs font-semibold text-[#E2E8F0]">
-                      <div className="mb-2 flex items-center justify-between">
-                        <label htmlFor="student-email" className="text-sm font-medium">
+                    <div className="flex flex-col text-xs font-semibold">
+                      <div className="mb-1.5 flex items-center justify-between">
+                        <label htmlFor="student-email" className={`text-xs font-semibold ${isLight ? "text-[#334155]" : "text-[#E2E8F0]"}`}>
                           البريد الإلكتروني
                         </label>
-                        <span className="rounded-full bg-[rgba(148,163,184,0.12)] px-2 py-0.5 text-[11px] font-normal text-[#94A3B8]">
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-normal ${isLight ? "bg-slate-100 text-[#64748B]" : "bg-[rgba(148,163,184,0.12)] text-[#94A3B8]"}`}>
                           اختياري
                         </span>
                       </div>
@@ -1084,9 +1102,13 @@ function getOrCreateDeviceId(): string {
                         dir="ltr"
                         placeholder="student@example.com"
                         aria-invalid={!emailValid}
-                        className="h-[54px] w-full rounded-[14px] border border-[rgba(148,163,184,0.18)] bg-[#091426] px-4 text-left font-sans text-sm font-medium text-[#F8FAFC] placeholder-[#71809A] outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[rgba(59,130,246,0.12)]"
+                        className={`h-[56px] w-full rounded-[12px] border px-4 text-left font-sans text-sm font-medium outline-none transition focus:ring-4 ${
+                          isLight
+                            ? "border-[#CBD5E1] bg-[#F8FAFC] text-[#0F172A] placeholder-[#94A3B8] focus:border-[#3B82F6] focus:bg-white focus:ring-[#3B82F6]/12"
+                            : "border-[rgba(148,163,184,0.18)] bg-[#091426] text-[#F8FAFC] placeholder-[#71809A] focus:border-[#3B82F6] focus:ring-[rgba(59,130,246,0.12)]"
+                        }`}
                       />
-                      {!emailValid && <p className="mt-1 text-xs text-[#F87171]">صيغة البريد الإلكتروني غير صحيحة.</p>}
+                      {!emailValid && <p className="mt-1 text-xs text-[#EF4444]">صيغة البريد الإلكتروني غير صحيحة.</p>}
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -1117,12 +1139,16 @@ function getOrCreateDeviceId(): string {
                     </div>
                   </div>
 
-                  <div className="flex justify-end pt-2">
+                  <div className="flex justify-end pt-1">
                     <Button
                       type="button"
                       disabled={!step1Valid}
                       onClick={() => setRegStep(2)}
-                      className="h-[56px] min-w-[150px] rounded-[14px] bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold text-base shadow-md transition-all duration-200 disabled:opacity-50"
+                      className={`h-[56px] min-w-[140px] rounded-[12px] text-white font-bold text-sm transition-all duration-200 ${
+                        !step1Valid
+                          ? "bg-[#CBD5E1] text-[#64748B] cursor-not-allowed"
+                          : "bg-[#3B82F6] hover:bg-[#2563EB] shadow-md"
+                      }`}
                     >
                       التالي ←
                     </Button>
@@ -1132,15 +1158,19 @@ function getOrCreateDeviceId(): string {
 
               {/* Step 2: Educational Details */}
               {regStep === 2 && (
-                <div className="space-y-5 animate-in fade-in duration-200">
-                  <div className="rounded-[18px] border border-[rgba(148,163,184,0.12)] bg-[rgba(9,20,38,0.35)] p-5 space-y-4">
-                    <div className="flex items-center gap-3 border-b border-[rgba(148,163,184,0.12)] pb-3">
-                      <span className="grid h-[32px] w-[32px] place-items-center rounded-full bg-[rgba(59,130,246,0.12)] text-[#60A5FA] text-xs font-bold">
+                <div className="space-y-4 animate-in fade-in duration-200">
+                  <div className={`rounded-[18px] border p-5 space-y-4 ${
+                    isLight ? "border-[#E2E8F0] bg-white shadow-xs" : "border-[rgba(148,163,184,0.12)] bg-[rgba(9,20,38,0.35)]"
+                  }`}>
+                    <div className={`flex items-center gap-2.5 border-b pb-3 ${isLight ? "border-[#E2E8F0]" : "border-[rgba(148,163,184,0.12)]"}`}>
+                      <span className={`grid h-[30px] w-[30px] place-items-center rounded-full text-xs font-bold ${
+                        isLight ? "bg-[#E8F1FF] text-[#0866D9]" : "bg-[rgba(59,130,246,0.12)] text-[#60A5FA]"
+                      }`}>
                         02
                       </span>
                       <div>
-                        <h3 className="text-base font-bold text-[#F8FAFC]">النظام والمرحلة الدراسية</h3>
-                        <p className="text-xs text-[#94A3B8]">حدد النظام والصف الحالي لعرض المحتوى المناسب للطالب</p>
+                        <h3 className={`text-sm font-bold ${isLight ? "text-[#0F172A]" : "text-[#F8FAFC]"}`}>النظام والمرحلة الدراسية</h3>
+                        <p className={`text-xs ${isLight ? "text-[#64748B]" : "text-[#94A3B8]"}`}>حدد النظام والصف الحالي لعرض المحتوى المناسب للطالب</p>
                       </div>
                     </div>
 
@@ -1151,8 +1181,10 @@ function getOrCreateDeviceId(): string {
                       }
                     />
 
-                    <fieldset className="space-y-3 rounded-[16px] border border-[rgba(148,163,184,0.18)] bg-[#091426] p-4">
-                      <legend className="px-1 text-xs font-bold uppercase text-[#60A5FA] tracking-wide">
+                    <fieldset className={`space-y-3 rounded-[16px] border p-4 ${
+                      isLight ? "border-[#E2E8F0] bg-[#F8FAFC]" : "border-[rgba(148,163,184,0.18)] bg-[#091426]"
+                    }`}>
+                      <legend className="px-1 text-xs font-bold uppercase text-[#0866D9] dark:text-[#60A5FA] tracking-wide">
                         طريقة المتابعة والدراسة
                       </legend>
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -1164,7 +1196,15 @@ function getOrCreateDeviceId(): string {
                         ).map(([value, label, description]) => (
                           <label
                             key={value}
-                            className={`relative flex min-h-[56px] cursor-pointer items-center gap-3 rounded-[14px] border px-4 py-3 transition-all focus-within:ring-2 focus-within:ring-[#3B82F6]/30 ${form.learningMode === value ? "border-[#3B82F6] bg-[rgba(59,130,246,0.14)] text-[#F8FAFC]" : "border-[rgba(148,163,184,0.18)] bg-[#101D31] text-[#CBD5E1] hover:border-[#3B82F6]/40"}`}
+                            className={`relative flex min-h-[56px] cursor-pointer items-center gap-3 rounded-[12px] border px-4 py-3 transition-all focus-within:ring-2 focus-within:ring-[#3B82F6]/30 ${
+                              form.learningMode === value
+                                ? isLight
+                                  ? "border-[#3B82F6] bg-[#E8F1FF] text-[#0F172A]"
+                                  : "border-[#3B82F6] bg-[rgba(59,130,246,0.14)] text-[#F8FAFC]"
+                                : isLight
+                                ? "border-[#CBD5E1] bg-white text-[#334155] hover:border-[#3B82F6]/40"
+                                : "border-[rgba(148,163,184,0.18)] bg-[#101D31] text-[#CBD5E1] hover:border-[#3B82F6]/40"
+                            }`}
                           >
                             <input
                               type="radio"
@@ -1177,21 +1217,25 @@ function getOrCreateDeviceId(): string {
                               className="sr-only"
                             />
                             <span className="min-w-0 flex-1">
-                              <strong className="block text-sm font-bold text-[#F8FAFC]">{label}</strong>
-                              <small className="block text-xs text-[#94A3B8]">{description}</small>
+                              <strong className={`block text-sm font-bold ${isLight ? "text-[#0F172A]" : "text-[#F8FAFC]"}`}>{label}</strong>
+                              <small className={`block text-xs ${isLight ? "text-[#64748B]" : "text-[#94A3B8]"}`}>{description}</small>
                             </span>
-                            {form.learningMode === value && <CheckCircle2 className="h-5 w-5 shrink-0 text-[#60A5FA]" aria-hidden="true" />}
+                            {form.learningMode === value && <CheckCircle2 className="h-5 w-5 shrink-0 text-[#0866D9]" aria-hidden="true" />}
                           </label>
                         ))}
                       </div>
                     </fieldset>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 gap-3">
+                  <div className="flex items-center justify-between pt-1 gap-3">
                     <Button
                       type="button"
                       onClick={() => setRegStep(1)}
-                      className="h-[56px] rounded-[14px] border border-[rgba(148,163,184,0.22)] bg-transparent text-[#CBD5E1] hover:bg-[rgba(148,163,184,0.08)] font-bold text-sm"
+                      className={`h-[56px] rounded-[12px] border px-5 font-bold text-xs sm:text-sm transition-all ${
+                        isLight
+                          ? "border-[#CBD5E1] bg-white text-[#334155] hover:bg-slate-50"
+                          : "border-[rgba(148,163,184,0.22)] bg-transparent text-[#CBD5E1] hover:bg-[rgba(148,163,184,0.08)]"
+                      }`}
                     >
                       → السابق
                     </Button>
@@ -1199,7 +1243,11 @@ function getOrCreateDeviceId(): string {
                       type="button"
                       disabled={!educationValid}
                       onClick={() => setRegStep(3)}
-                      className="h-[56px] min-w-[150px] rounded-[14px] bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold text-base shadow-md transition-all duration-200 disabled:opacity-50"
+                      className={`h-[56px] min-w-[140px] rounded-[12px] text-white font-bold text-sm transition-all duration-200 ${
+                        !educationValid
+                          ? "bg-[#CBD5E1] text-[#64748B] cursor-not-allowed"
+                          : "bg-[#3B82F6] hover:bg-[#2563EB] shadow-md"
+                      }`}
                     >
                       التالي ←
                     </Button>
@@ -1209,49 +1257,72 @@ function getOrCreateDeviceId(): string {
 
               {/* Step 3: Review and Submit */}
               {regStep === 3 && (
-                <div className="space-y-5 animate-in fade-in duration-200">
-                  <div className="rounded-[18px] border border-[rgba(148,163,184,0.12)] bg-[rgba(9,20,38,0.35)] p-5 space-y-4">
-                    <div className="flex items-center gap-3 border-b border-[rgba(148,163,184,0.12)] pb-3">
-                      <span className="grid h-[32px] w-[32px] place-items-center rounded-full bg-[rgba(59,130,246,0.12)] text-[#60A5FA] text-xs font-bold">
-                        03
-                      </span>
-                      <div>
-                        <h3 className="text-base font-bold text-[#F8FAFC]">مراجعة وتأكيد البيانات</h3>
-                        <p className="text-xs text-[#94A3B8]">راجع البيانات المدخلة قبل إرسال طلب التسجيل للأدمن</p>
+                <div className="space-y-4 animate-in fade-in duration-200">
+                  <div className={`rounded-[18px] border p-5 space-y-4 ${
+                    isLight ? "border-[#E2E8F0] bg-white shadow-xs" : "border-[rgba(148,163,184,0.12)] bg-[rgba(9,20,38,0.35)]"
+                  }`}>
+                    <div className={`flex items-center justify-between border-b pb-3 ${isLight ? "border-[#E2E8F0]" : "border-[rgba(148,163,184,0.12)]"}`}>
+                      <div className="flex items-center gap-2.5">
+                        <span className={`grid h-[30px] w-[30px] place-items-center rounded-full text-xs font-bold ${
+                          isLight ? "bg-[#E8F1FF] text-[#0866D9]" : "bg-[rgba(59,130,246,0.12)] text-[#60A5FA]"
+                        }`}>
+                          03
+                        </span>
+                        <div>
+                          <h3 className={`text-sm font-bold ${isLight ? "text-[#0F172A]" : "text-[#F8FAFC]"}`}>مراجعة وتأكيد البيانات</h3>
+                          <p className={`text-xs ${isLight ? "text-[#64748B]" : "text-[#94A3B8]"}`}>راجع البيانات المدخلة قبل إرسال طلب التسجيل للأدمن</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setRegStep(1)}
+                          className={`text-xs font-bold underline px-2 py-1 rounded-md transition-colors ${
+                            isLight ? "text-[#0866D9] hover:bg-blue-50" : "text-[#60A5FA] hover:bg-blue-900/20"
+                          }`}
+                        >
+                          تعديل
+                        </button>
                       </div>
                     </div>
 
-                    <div className="rounded-[16px] border border-[rgba(148,163,184,0.18)] bg-[#091426] p-4 space-y-3 text-sm">
-                      <div className="flex justify-between border-b border-[rgba(148,163,184,0.10)] pb-2">
-                        <span className="text-[#94A3B8]">اسم الطالب:</span>
-                        <strong className="text-[#F8FAFC]">{form.name}</strong>
+                    <div className={`rounded-[16px] border p-4 space-y-3 text-xs sm:text-sm ${
+                      isLight ? "border-[#E2E8F0] bg-[#F8FAFC]" : "border-[rgba(148,163,184,0.18)] bg-[#091426]"
+                    }`}>
+                      <div className={`flex justify-between border-b pb-2 ${isLight ? "border-[#E2E8F0]" : "border-[rgba(148,163,184,0.10)]"}`}>
+                        <span className={isLight ? "text-[#64748B]" : "text-[#94A3B8]"}>اسم الطالب:</span>
+                        <strong className={`font-bold ${isLight ? "text-[#0F172A]" : "text-[#F8FAFC]"}`}>{form.name}</strong>
                       </div>
-                      <div className="flex justify-between border-b border-[rgba(148,163,184,0.10)] pb-2">
-                        <span className="text-[#94A3B8]">رقم الهاتف:</span>
-                        <strong className="text-[#F8FAFC] font-mono" dir="ltr">{form.phone}</strong>
+                      <div className={`flex justify-between border-b pb-2 ${isLight ? "border-[#E2E8F0]" : "border-[rgba(148,163,184,0.10)]"}`}>
+                        <span className={isLight ? "text-[#64748B]" : "text-[#94A3B8]"}>رقم الهاتف:</span>
+                        <strong className={`font-mono font-bold ${isLight ? "text-[#0F172A]" : "text-[#F8FAFC]"}`} dir="ltr">{form.phone}</strong>
                       </div>
                       {form.email && (
-                        <div className="flex justify-between border-b border-[rgba(148,163,184,0.10)] pb-2">
-                          <span className="text-[#94A3B8]">البريد الإلكتروني:</span>
-                          <strong className="text-[#F8FAFC] font-sans" dir="ltr">{form.email}</strong>
+                        <div className={`flex justify-between border-b pb-2 ${isLight ? "border-[#E2E8F0]" : "border-[rgba(148,163,184,0.10)]"}`}>
+                          <span className={isLight ? "text-[#64748B]" : "text-[#94A3B8]"}>البريد الإلكتروني:</span>
+                          <strong className={`font-sans font-bold ${isLight ? "text-[#0F172A]" : "text-[#F8FAFC]"}`} dir="ltr">{form.email}</strong>
                         </div>
                       )}
-                      <div className="flex justify-between border-b border-[rgba(148,163,184,0.10)] pb-2">
-                        <span className="text-[#94A3B8]">المحافظة والمدينة:</span>
-                        <strong className="text-[#F8FAFC]">{form.governorate} - {form.city}</strong>
+                      <div className={`flex justify-between border-b pb-2 ${isLight ? "border-[#E2E8F0]" : "border-[rgba(148,163,184,0.10)]"}`}>
+                        <span className={isLight ? "text-[#64748B]" : "text-[#94A3B8]"}>المحافظة والمدينة:</span>
+                        <strong className={`font-bold ${isLight ? "text-[#0F172A]" : "text-[#F8FAFC]"}`}>{form.governorate} - {form.city}</strong>
                       </div>
-                      <div className="flex justify-between border-b border-[rgba(148,163,184,0.10)] pb-2">
-                        <span className="text-[#94A3B8]">المرحلة والصف:</span>
-                        <strong className="text-[#60A5FA]">{form.grade || "غير محدد"}</strong>
+                      <div className={`flex justify-between border-b pb-2 ${isLight ? "border-[#E2E8F0]" : "border-[rgba(148,163,184,0.10)]"}`}>
+                        <span className={isLight ? "text-[#64748B]" : "text-[#94A3B8]"}>المرحلة والصف:</span>
+                        <strong className="text-[#0866D9] font-bold">{form.grade || "غير محدد"}</strong>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-[#94A3B8]">نظام الدراسة:</span>
-                        <strong className="text-[#F8FAFC]">{form.learningMode === "online" ? "أونلاين" : "أوفلاين (سنتر)"}</strong>
+                        <span className={isLight ? "text-[#64748B]" : "text-[#94A3B8]"}>نظام الدراسة:</span>
+                        <strong className={`font-bold ${isLight ? "text-[#0F172A]" : "text-[#F8FAFC]"}`}>{form.learningMode === "online" ? "أونلاين" : "أوفلاين (سنتر)"}</strong>
                       </div>
                     </div>
 
-                    <div className="rounded-[14px] border border-[rgba(59,130,246,0.20)] bg-[rgba(59,130,246,0.08)] p-3.5 text-xs text-[#CBD5E1] leading-relaxed">
-                      <ShieldCheck className="h-4 w-4 text-[#60A5FA] inline ml-1.5" />
+                    <div className={`rounded-[14px] border p-3 text-xs leading-relaxed ${
+                      isLight
+                        ? "border-blue-200 bg-[#E8F1FF] text-[#0866D9]"
+                        : "border-[rgba(59,130,246,0.20)] bg-[rgba(59,130,246,0.08)] text-[#CBD5E1]"
+                    }`}>
+                      <ShieldCheck className="h-4 w-4 inline ml-1.5 text-[#0866D9]" />
                       سيتم مراجعة الطلب بواسطة إدارة المنصة وتوليد كود دخول آمن للطالب فور الاعتماد.
                     </div>
                   </div>
@@ -1259,25 +1330,33 @@ function getOrCreateDeviceId(): string {
                   {error && (
                     <p
                       role="alert"
-                      className="rounded-[14px] border border-[#F87171]/30 bg-[#F87171]/10 p-3.5 text-xs font-semibold text-[#F87171]"
+                      className="rounded-[12px] border border-[#EF4444]/30 bg-[#EF4444]/10 p-3 text-xs font-semibold text-[#EF4444]"
                     >
                       {error}
                     </p>
                   )}
 
-                  <div className="flex items-center justify-between pt-2 gap-3">
+                  <div className="flex items-center justify-between pt-1 gap-3">
                     <Button
                       type="button"
                       onClick={() => setRegStep(2)}
-                      className="h-[56px] rounded-[14px] border border-[rgba(148,163,184,0.22)] bg-transparent text-[#CBD5E1] hover:bg-[rgba(148,163,184,0.08)] font-bold text-sm"
+                      className={`h-[56px] rounded-[12px] border px-5 font-bold text-xs sm:text-sm transition-all ${
+                        isLight
+                          ? "border-[#CBD5E1] bg-white text-[#334155] hover:bg-slate-50"
+                          : "border-[rgba(148,163,184,0.22)] bg-transparent text-[#CBD5E1] hover:bg-[rgba(148,163,184,0.08)]"
+                      }`}
                     >
                       → السابق
                     </Button>
                     <Button
                       disabled={loading || !registrationValid}
-                      className="h-[56px] min-w-[180px] rounded-[14px] bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold text-base shadow-md transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
+                      className={`h-[56px] min-w-[170px] rounded-[12px] font-bold text-sm transition-all duration-200 ${
+                        loading || !registrationValid
+                          ? "bg-[#CBD5E1] text-[#64748B] cursor-not-allowed"
+                          : "bg-[#3B82F6] hover:bg-[#2563EB] text-white shadow-md"
+                      }`}
                     >
-                      {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <UserPlus className="h-5 w-5" />}{" "}
+                      {loading ? <Loader2 className="animate-spin h-4 w-4 ml-1.5" /> : <UserPlus className="h-4.5 w-4.5 ml-1.5" />}{" "}
                       إنشاء الحساب 🚀
                     </Button>
                   </div>
