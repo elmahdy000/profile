@@ -1288,12 +1288,26 @@ router.post("/admin/notifications/broadcast", requireAdmin, async (req, res, nex
 
 router.delete("/admin/students/:id", requireAdmin, async (req, res, next) => {
   try {
+    const studentId = Number(req.params.id);
+    if (!Number.isInteger(studentId) || studentId <= 0) {
+      res.status(400).json({ error: "معرّف الطالب غير صحيح" });
+      return;
+    }
+
+    // Clean up linked session tokens and recovery requests
+    await db.delete(studentSessionsTable).where(eq(studentSessionsTable.studentId, studentId));
+    await db.delete(codeRecoveryRequestsTable).where(eq(codeRecoveryRequestsTable.studentId, studentId));
+
     const [student] = await db
       .delete(studentsTable)
-      .where(eq(studentsTable.id, Number(req.params.id)))
+      .where(eq(studentsTable.id, studentId))
       .returning();
-    if (!student) res.status(404).json({ error: "Student not found" });
-    else res.json({ success: true });
+
+    if (!student) {
+      res.status(404).json({ error: "الطالب غير موجود" });
+    } else {
+      res.json({ success: true, message: "تم حذف حساب الطالب بالكامل وتفريغ بريده وهاتفه ورقم جهازه للتسجيل مجددًا" });
+    }
   } catch (error) {
     next(error);
   }
