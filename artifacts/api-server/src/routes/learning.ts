@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 import multer from "multer";
 import mammoth from "mammoth";
-import { and, desc, eq, ilike, inArray, isNull } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, isNull, sql } from "drizzle-orm";
 import {
   codeRecoveryRequestsTable,
   coursesTable,
@@ -793,6 +793,8 @@ router.post("/student/payment-receipt", requireStudent, (req, res, next) => {
         .insert(paymentReceiptsTable)
         .values({
           studentId: student.id,
+          snapshotStudentName: student.name,
+          snapshotStudentPhone: student.phone,
           imageStorageName: req.file.filename,
           originalName: path.basename(req.file.originalname),
           mimeType: req.file.mimetype,
@@ -839,13 +841,15 @@ router.get("/admin/payment-receipts", requireAdmin, async (_req, res, next) => {
         reviewedAt: paymentReceiptsTable.reviewedAt,
         createdAt: paymentReceiptsTable.createdAt,
         originalName: paymentReceiptsTable.originalName,
-        studentId: studentsTable.id,
-        studentName: studentsTable.name,
-        studentPhone: studentsTable.phone,
-        paymentStatus: studentsTable.paymentStatus,
+        mimeType: paymentReceiptsTable.mimeType,
+        sizeBytes: paymentReceiptsTable.sizeBytes,
+        studentId: paymentReceiptsTable.studentId,
+        studentName: sql<string>`COALESCE(${studentsTable.name}, ${paymentReceiptsTable.snapshotStudentName}, 'حساب محذوف')`,
+        studentPhone: sql<string>`COALESCE(${studentsTable.phone}, ${paymentReceiptsTable.snapshotStudentPhone}, '—')`,
+        paymentStatus: sql<string>`COALESCE(${studentsTable.paymentStatus}, ${paymentReceiptsTable.status})`,
       })
       .from(paymentReceiptsTable)
-      .innerJoin(studentsTable, eq(paymentReceiptsTable.studentId, studentsTable.id))
+      .leftJoin(studentsTable, eq(paymentReceiptsTable.studentId, studentsTable.id))
       .orderBy(desc(paymentReceiptsTable.createdAt));
     res.json(rows);
   } catch (error) {
@@ -881,29 +885,33 @@ router.patch("/admin/payment-receipts/:id", requireAdmin, async (req, res, next)
       .where(eq(paymentReceiptsTable.id, receiptId))
       .returning();
     if (status === "approved") {
-      await db
-        .update(studentsTable)
-        .set({ paymentStatus: "paid", updatedAt: new Date() })
-        .where(eq(studentsTable.id, receipt.studentId));
-      await db.insert(studentNotificationsTable).values({
-        studentId: receipt.studentId,
-        type: "success",
-        title: "تم تأكيد الدفع",
-        message: "تم تأكيد إيصال الدفع بنجاح. تقدر دلوقتي تشوف كل الفيديوهات والمحتوى.",
-      });
+      if (receipt.studentId) {
+        await db
+          .update(studentsTable)
+          .set({ paymentStatus: "paid", updatedAt: new Date() })
+          .where(eq(studentsTable.id, receipt.studentId));
+        await db.insert(studentNotificationsTable).values({
+          studentId: receipt.studentId,
+          type: "success",
+          title: "تم تأكيد الدفع",
+          message: "تم تأكيد إيصال الدفع بنجاح. تقدر دلوقتي تشوف كل الفيديوهات والمحتوى.",
+        });
+      }
     } else {
-      await db
-        .update(studentsTable)
-        .set({ paymentStatus: "unpaid", updatedAt: new Date() })
-        .where(eq(studentsTable.id, receipt.studentId));
-      await db.insert(studentNotificationsTable).values({
-        studentId: receipt.studentId,
-        type: "warning",
-        title: "تم رفض إيصال الدفع",
-        message: adminNotes
-          ? `تم رفض الإيصال: ${adminNotes}. ارفع إيصال صحيح.`
-          : "تم رفض الإيصال. ارفع إيصال دفع صحيح وواضح.",
-      });
+      if (receipt.studentId) {
+        await db
+          .update(studentsTable)
+          .set({ paymentStatus: "unpaid", updatedAt: new Date() })
+          .where(eq(studentsTable.id, receipt.studentId));
+        await db.insert(studentNotificationsTable).values({
+          studentId: receipt.studentId,
+          type: "warning",
+          title: "تم رفض إيصال الدفع",
+          message: adminNotes
+            ? `تم رفض الإيصال: ${adminNotes}. ارفع إيصال صحيح.`
+            : "تم رفض الإيصال. ارفع إيصال دفع صحيح وواضح.",
+        });
+      }
     }
     res.json(updated);
   } catch (error) {

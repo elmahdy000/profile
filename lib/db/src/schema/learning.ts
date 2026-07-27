@@ -189,7 +189,9 @@ export const codeRecoveryRequestsTable = pgTable("code_recovery_requests", {
 
 export const paymentReceiptsTable = pgTable("payment_receipts", {
   id: serial("id").primaryKey(),
-  studentId: integer("student_id").notNull().references(() => studentsTable.id, { onDelete: "cascade" }),
+  studentId: integer("student_id").references(() => studentsTable.id, { onDelete: "set null" }),
+  snapshotStudentName: text("snapshot_student_name"),
+  snapshotStudentPhone: text("snapshot_student_phone"),
   imageStorageName: text("image_storage_name").notNull(),
   originalName: text("original_name").notNull(),
   mimeType: text("mime_type").notNull(),
