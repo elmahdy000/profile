@@ -133,12 +133,12 @@ export function Navbar() {
     <>
       <nav
         aria-label="التنقل الرئيسي"
-        className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+        className={`sticky top-0 z-50 w-full transition-all duration-300 h-[74px] sm:h-[78px] ${
           theme === "light"
-            ? "bg-white/95 border-b border-slate-200 text-slate-900 shadow-sm"
+            ? "bg-white/95 border-b border-slate-200 text-slate-900 shadow-xs"
             : isScrolled
-            ? "h-[74px] bg-[#07111f]/95 shadow-[0_8px_30px_rgba(0,0,0,0.25)] border-b border-[rgba(148,163,184,0.14)]"
-            : "h-[78px] md:h-[82px] bg-[#07111f]/92 shadow-[0_8px_30px_rgba(0,0,0,0.18)] border-b border-[rgba(148,163,184,0.14)]"
+            ? "bg-[#07111f]/95 shadow-[0_8px_30px_rgba(0,0,0,0.25)] border-b border-[rgba(148,163,184,0.14)]"
+            : "bg-[#07111f]/92 shadow-[0_8px_30px_rgba(0,0,0,0.18)] border-b border-[rgba(148,163,184,0.14)]"
         } backdrop-blur-[18px]`}
         dir="rtl"
       >
