@@ -2336,13 +2336,6 @@ function PaymentReceiptsPanel({ receipts: propReceipts, onRefresh }: { receipts?
   const [rejectNotes, setRejectNotes] = useState("");
   const [showRejectForm, setShowRejectForm] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (propReceipts) {
-      setReceipts(propReceipts);
-      setLoading(false);
-    }
-  }, [propReceipts]);
-
   const loadReceipts = async () => {
     setLoading(true);
     try {
@@ -2357,9 +2350,7 @@ function PaymentReceiptsPanel({ receipts: propReceipts, onRefresh }: { receipts?
   };
 
   useEffect(() => {
-    if (!propReceipts) {
-      loadReceipts();
-    }
+    void loadReceipts();
   }, []);
 
   const handleAction = async (receiptId: number, status: "approved" | "rejected", adminNotes?: string) => {
