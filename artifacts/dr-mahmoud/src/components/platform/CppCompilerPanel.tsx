@@ -825,7 +825,7 @@ export function CppCompilerPanel() {
           <Button
             onClick={() => void runCode()}
             disabled={running}
-            className="h-8 px-4 sm:px-5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg shadow-lg shadow-emerald-900/30 transition-all active:scale-95 flex items-center gap-1.5 border-0"
+            className="h-8 px-5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs rounded-lg shadow-lg shadow-blue-900/30 transition-all active:scale-95 flex items-center gap-1.5 border-0"
           >
             {running ? (
               <>
@@ -834,7 +834,7 @@ export function CppCompilerPanel() {
               </>
             ) : (
               <>
-                <PlayCircle className="h-4 w-4" />
+                <PlayCircle className="h-4 w-4 fill-white" />
                 <span>Run</span>
               </>
             )}
@@ -927,23 +927,23 @@ export function CppCompilerPanel() {
 
           {/* STDIN Input Panel */}
           {showStdin && (
-            <div className="border-t border-slate-700/60 bg-[#161b22] flex-shrink-0">
-              <div className="flex items-center justify-between px-3 py-1.5">
+            <div className="border-t border-slate-700/80 bg-[#161b22] p-3 flex-shrink-0">
+              <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-2">
-                  <Keyboard className="h-3.5 w-3.5 text-amber-400" />
-                  <span className="text-[11px] font-bold text-slate-300">Input (STDIN)</span>
-                  {hasCin && <span className="text-[9px] font-bold text-amber-400/70 bg-amber-500/10 px-1.5 py-0.5 rounded">cin detected</span>}
+                  <Keyboard className="h-3.5 w-3.5 text-blue-400" />
+                  <span className="text-xs font-bold text-slate-200">Input (STDIN for cin):</span>
+                  {hasCin && <span className="text-[10px] font-semibold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">cin detected</span>}
                 </div>
-                <button type="button" onClick={() => setShowStdin(false)} className="text-slate-500 hover:text-white transition-colors">
+                <button type="button" onClick={() => setShowStdin(false)} className="text-slate-400 hover:text-white transition-colors">
                   <X className="h-3.5 w-3.5" />
                 </button>
               </div>
               <textarea
                 value={stdinText}
                 onChange={(e) => setStdinText(e.target.value)}
-                placeholder="Enter input values here (one per line or space-separated)..."
-                rows={3}
-                className="w-full px-3 pb-2 text-xs font-mono bg-transparent text-slate-100 placeholder-slate-600 focus:outline-none resize-none"
+                placeholder="Write input for cin here (e.g. Mahmoud 22)..."
+                rows={2}
+                className="w-full px-3 py-2 text-xs font-mono rounded-lg border border-slate-700 bg-[#0d1117] text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none shadow-inner"
               />
             </div>
           )}
