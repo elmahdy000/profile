@@ -1300,7 +1300,7 @@ export function AdminLearning() {
             </div>
           )}
           {tab === "payments" && (
-            <PaymentReceiptsPanel />
+            <PaymentReceiptsPanel receipts={paymentReceipts} onRefresh={load} />
           )}
           {tab === "notifications" && (
             <div className="mx-auto max-w-2xl space-y-6">
@@ -2326,21 +2326,29 @@ type PaymentReceipt = {
   paymentStatus: string;
 };
 
-function PaymentReceiptsPanel() {
+function PaymentReceiptsPanel({ receipts: propReceipts, onRefresh }: { receipts?: PaymentReceipt[]; onRefresh?: () => void }) {
   const { toast } = useToast();
-  const [receipts, setReceipts] = useState<PaymentReceipt[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [receipts, setReceipts] = useState<PaymentReceipt[]>(propReceipts || []);
+  const [loading, setLoading] = useState(!propReceipts);
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [actionId, setActionId] = useState<number | null>(null);
   const [previewId, setPreviewId] = useState<number | null>(null);
   const [rejectNotes, setRejectNotes] = useState("");
   const [showRejectForm, setShowRejectForm] = useState<number | null>(null);
 
+  useEffect(() => {
+    if (propReceipts) {
+      setReceipts(propReceipts);
+      setLoading(false);
+    }
+  }, [propReceipts]);
+
   const loadReceipts = async () => {
     setLoading(true);
     try {
       const data = await adminApi<PaymentReceipt[]>("/api/admin/payment-receipts");
       setReceipts(data);
+      if (onRefresh) onRefresh();
     } catch (err) {
       toast({ title: "خطأ", description: (err as Error).message, variant: "destructive" });
     } finally {
@@ -2348,7 +2356,11 @@ function PaymentReceiptsPanel() {
     }
   };
 
-  useEffect(() => { loadReceipts(); }, []);
+  useEffect(() => {
+    if (!propReceipts) {
+      loadReceipts();
+    }
+  }, []);
 
   const handleAction = async (receiptId: number, status: "approved" | "rejected", adminNotes?: string) => {
     setActionId(receiptId);
