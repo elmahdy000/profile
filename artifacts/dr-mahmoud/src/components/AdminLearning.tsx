@@ -1138,25 +1138,27 @@ export function AdminLearning() {
                           </button>
                         )}
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap items-center gap-2 pt-2 xl:pt-0 border-t xl:border-t-0">
                         {s.status !== "approved" && (
                           <Button
                             onClick={() => updateStudent(s.id, "approved")}
                           >
-                            <UserCheck /> قبول وإصدار كود
+                            <UserCheck className="h-4 w-4 me-1" /> قبول وإصدار كود
                           </Button>
                         )}
                         {s.status === "approved" && (
                           <Button
                             variant="outline"
+                            className="border-amber-300 text-amber-800 hover:bg-amber-50"
                             onClick={() => updateStudent(s.id, "suspended")}
                           >
-                            <UserX className="h-4 w-4 me-1" /> إيقاف
+                            <UserX className="h-4 w-4 me-1" /> إيقاف الطالب
                           </Button>
                         )}
                         {s.status === "suspended" && (
                           <Button
                             variant="outline"
+                            className="border-emerald-300 text-emerald-800 hover:bg-emerald-50"
                             onClick={() => updateStudent(s.id, "approved")}
                           >
                             <UserCheck className="h-4 w-4 me-1" /> إعادة تفعيل
@@ -1165,7 +1167,7 @@ export function AdminLearning() {
                         <Button
                           variant="outline"
                           disabled={!s.deviceId}
-                          className={s.deviceId ? "border-amber-400 text-amber-700 hover:bg-amber-50" : "opacity-50"}
+                          className={s.deviceId ? "border-amber-500 text-amber-800 bg-amber-50/50 hover:bg-amber-100" : "opacity-50"}
                           onClick={async () => {
                             if (!s.deviceId) return;
                             try {
@@ -1181,9 +1183,10 @@ export function AdminLearning() {
                         </Button>
                         <Button
                           variant="destructive"
+                          title="حذف الطالب"
                           onClick={() => deleteStudent(s.id)}
                         >
-                          <Trash2 />
+                          <Trash2 className="h-4 w-4 me-1" /> حذف
                         </Button>
                       </div>
                     </div>
