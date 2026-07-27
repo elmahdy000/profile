@@ -485,14 +485,26 @@ function AccessScreen({ onLogin }: { onLogin: (student: Student) => void }) {
     }
   }, []);
 
+function getOrCreateDeviceId(): string {
+  const key = "dr_mahmoud_device_id";
+  let deviceId = localStorage.getItem(key);
+  if (!deviceId) {
+    const raw = `${navigator.userAgent}_${screen.width}x${screen.height}_${Math.random()}`;
+    deviceId = "dev_" + btoa(raw).replace(/[^a-zA-Z0-9]/g, "").substring(0, 32);
+    localStorage.setItem(key, deviceId);
+  }
+  return deviceId;
+}
+
   const submitLogin = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
     setError("");
     try {
+      const deviceId = getOrCreateDeviceId();
       const result = await api<{ student: Student }>("/api/student/login", {
         method: "POST",
-        body: JSON.stringify({ accessCode }),
+        body: JSON.stringify({ accessCode, deviceId }),
       });
       if (rememberCode)
         localStorage.setItem(

@@ -1110,11 +1110,9 @@ export function AdminLearning() {
                             {s.paymentStatus === "paid" ? "💳 اشتراك مدفوع" : s.paymentStatus === "pending_review" ? "⏳ إيصال قيد المراجعة" : "🆓 مشاهدة مجانية (أول 2)"}
                           </span>
                           <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-bold ${s.learningMode === "offline" ? "bg-violet-500/10 text-violet-700" : "bg-sky-500/10 text-sky-700"}`}
+                            className={`rounded-full px-2.5 py-1 text-xs font-bold ${s.deviceId ? "bg-amber-500/10 text-amber-700 border border-amber-300" : "bg-emerald-500/10 text-emerald-700"}`}
                           >
-                            {s.learningMode === "offline"
-                              ? "أوفلاين"
-                              : "أونلاين"}
+                            {s.deviceId ? "📱 جهاز مقترن" : "🔓 بدون قفل جهاز"}
                           </span>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">
@@ -1161,6 +1159,23 @@ export function AdminLearning() {
                             onClick={() => updateStudent(s.id, "approved")}
                           >
                             <UserCheck /> إعادة تفعيل
+                          </Button>
+                        )}
+                        {s.deviceId && (
+                          <Button
+                            variant="outline"
+                            className="border-amber-400 text-amber-700 hover:bg-amber-50"
+                            onClick={async () => {
+                              try {
+                                await adminApi(`/api/admin/students/${s.id}/reset-device`, { method: "POST" });
+                                toast({ title: "تم فك قفل الجهاز", description: `تمت إزالة ربط الجهاز للطالب ${s.name} بنجاح.` });
+                                setStudents((prev) => prev.map((item) => item.id === s.id ? { ...item, deviceId: null } : item));
+                              } catch (err) {
+                                toast({ variant: "destructive", description: (err as Error).message });
+                              }
+                            }}
+                          >
+                            <RefreshCw className="h-4 w-4" /> فك قفل الجهاز
                           </Button>
                         )}
                         <Button

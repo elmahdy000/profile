@@ -584,6 +584,7 @@ router.post(
 router.post("/student/login", studentLoginLimit, async (req, res, next) => {
   try {
     const accessCode = String(req.body.accessCode ?? "").trim();
+    const deviceId = String(req.body.deviceId ?? "").trim();
     if (!accessCode) {
       res.status(400).json({ error: "Access code is required" });
       return;
@@ -596,11 +597,30 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
     if (!student || student.status !== "approved") {
       res
         .status(401)
-        .json({ error: "Code is invalid or registration is not approved yet" });
+        .json({ error: "الكود غير صحيح أو أن حسابك قيد التفعيل حالياً" });
       return;
     }
+
+    // ── Device Locking Logic ──
+    if (deviceId) {
+      if (!student.deviceId) {
+        // First login: bind this device to the student account
+        await db
+          .update(studentsTable)
+          .set({ deviceId })
+          .where(eq(studentsTable.id, student.id));
+        student.deviceId = deviceId;
+      } else if (student.deviceId !== deviceId) {
+        // Different device attempting login
+        res.status(403).json({
+          error: "عذراً، هذا الحساب مرتبط بجهاز آخر محدد سابقاً. تواصل مع الدعم/الأدمن لإعادة ضبط الجهاز.",
+        });
+        return;
+      }
+    }
+
     student = await ensureAutomaticCourseAssignments(student);
-    // ── Single-device enforcement: invalidate all previous sessions ──
+    // ── Single-device session enforcement ──
     const token = randomBytes(32).toString("base64url");
     const tokenHash = createHash("sha256").update(token).digest("hex");
     const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
@@ -1027,11 +1047,53 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
         message: "تم تحديث المحتوى المتاح لك حسب نظام الدراسة الجديد.",
       });
     }
+    if (req.body.resetDevice === true) {
+      await db
+        .update(studentsTable)
+        .set({ deviceId: null })
+        .where(eq(studentsTable.id, id));
+      student.deviceId = null;
+    }
     res.json(student);
   } catch (error) {
     next(error);
   }
 });
+
+// Admin Endpoint: Directly reset student bound device lock
+router.post(
+  "/admin/students/:id/reset-device",
+  requireAdmin,
+  async (req, res, next) => {
+    try {
+      const id = Number(req.params.id);
+      if (!Number.isInteger(id) || id <= 0) {
+        res.status(400).json({ error: "معرّف الطالب غير صحيح" });
+        return;
+      }
+
+      const [updated] = await db
+        .update(studentsTable)
+        .set({ deviceId: null, updatedAt: new Date() })
+        .where(eq(studentsTable.id, id))
+        .returning();
+
+      if (!updated) {
+        res.status(404).json({ error: "الطالب غير موجود" });
+        return;
+      }
+
+      // Also clear active sessions so student has to re-login from new device
+      await db
+        .delete(studentSessionsTable)
+        .where(eq(studentSessionsTable.studentId, id));
+
+      res.json({ success: true, message: "تم فك قفل الجهاز للطالب بنجاح", student: updated });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
 
 router.get("/admin/recovery-requests", requireAdmin, async (_req, res, next) => {
   try {
@@ -2627,7 +2689,7 @@ router.post(
         // Paiza runner polling
         const runId = result.id;
         const detailsRes = await fetch(`https://api.paiza.io/runners/get_details?id=${runId}&api_key=guest`);
-        const details = await detailsRes.json();
+        const details = (await detailsRes.json()) as any;
         stdout = details.stdout ?? "";
         stderr = details.stderr || details.build_stderr || "";
         exitCode = details.build_exit_code === 0 && details.exit_code === 0 ? 0 : 1;
