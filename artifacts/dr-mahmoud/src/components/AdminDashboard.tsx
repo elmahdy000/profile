@@ -1396,7 +1396,7 @@ export default function AdminDashboard() {
           <div className="flex flex-col items-center text-center mb-8">
             <div className="relative mb-4 flex items-center justify-center">
               <img
-                src={logoUrl}
+                src="/logo.webp"
                 alt="د. محمود المهدي"
                 width={72}
                 height={72}
