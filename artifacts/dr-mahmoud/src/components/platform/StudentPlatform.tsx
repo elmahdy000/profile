@@ -2363,7 +2363,16 @@ export function StudentPlatform() {
               </div>
               <span className="hidden text-[13px] font-bold text-foreground sm:inline">{nav.find(([value]) => value === tab)?.[1]}</span>
             </div>
-            <button onClick={() => setTab("profile")} className="flex items-center gap-2.5 rounded-xl p-1.5 transition-colors hover:bg-muted"><StudentAvatar name={student.name} src={student.avatarUrl} size="sm" /><span className="hidden max-w-40 truncate text-[13px] font-bold text-foreground sm:block">{student.name}</span></button>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setTab("profile")} className="flex items-center gap-2.5 rounded-xl p-1.5 transition-colors hover:bg-muted"><StudentAvatar name={student.name} src={student.avatarUrl} size="sm" /><span className="hidden max-w-40 truncate text-[13px] font-bold text-foreground sm:block">{student.name}</span></button>
+              <button
+                onClick={logout}
+                title="تسجيل الخروج"
+                className="lg:hidden grid h-9 w-9 place-items-center rounded-lg border border-border text-muted-foreground hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
+              >
+                <LogOut className="h-[18px] w-[18px]" />
+              </button>
+            </div>
           </div>
           <div className="mx-auto max-w-[1440px] p-4 pb-8 sm:p-6 lg:p-8">{tab === "dashboard" ? (
             <DashboardPanel
@@ -2400,8 +2409,8 @@ export function StudentPlatform() {
         aria-label="التنقل الرئيسي"
         className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-sm lg:hidden"
       >
-        <div className="mx-auto grid max-w-lg grid-cols-6">
-          {nav.map(([value, label, Icon]) => (
+        <div className="mx-auto grid max-w-lg grid-cols-5">
+          {nav.filter(([value]) => value !== "compiler").map(([value, label, Icon]) => (
             <button
               key={value}
               onClick={() => setTab(value)}
