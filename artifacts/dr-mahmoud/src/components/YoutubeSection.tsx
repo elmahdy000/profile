@@ -150,9 +150,30 @@ function VideoPlayerModal({
       }
     };
 
+    const handleOrientation = () => {
+      const isLandscape = window.matchMedia("(orientation: landscape)").matches;
+      const isMobileSize = window.innerHeight < 550 || window.innerWidth < 900;
+      if (isLandscape && isMobileSize) {
+        const video = videoRef.current;
+        if (video) {
+          try {
+            if ((video as any).webkitEnterFullscreen) {
+              (video as any).webkitEnterFullscreen();
+            } else if (video.requestFullscreen && !document.fullscreenElement) {
+              void video.requestFullscreen();
+            }
+          } catch {}
+        }
+      }
+    };
+
     window.addEventListener("focus", handleFocus);
     window.addEventListener("blur", handleBlur);
     window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("orientationchange", handleOrientation);
+    const mql = window.matchMedia("(orientation: landscape)");
+    mql.addEventListener?.("change", handleOrientation);
+
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -160,6 +181,8 @@ function VideoPlayerModal({
       window.removeEventListener("focus", handleFocus);
       window.removeEventListener("blur", handleBlur);
       window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("orientationchange", handleOrientation);
+      mql.removeEventListener?.("change", handleOrientation);
       document.body.style.overflow = previousOverflow;
     };
   }, [item, onClose]);

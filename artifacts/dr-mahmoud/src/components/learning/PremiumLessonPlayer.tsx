@@ -113,9 +113,36 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
       if (event.key === "ArrowRight" && videoRef.current) videoRef.current.currentTime += 10;
       if (event.key === "ArrowLeft" && videoRef.current) videoRef.current.currentTime -= 10;
     };
+
+    const handleOrientation = () => {
+      const isLandscape = window.matchMedia("(orientation: landscape)").matches;
+      const isMobileSize = window.innerHeight < 550 || window.innerWidth < 900;
+      if (isLandscape && isMobileSize) {
+        const video = videoRef.current;
+        if (video) {
+          try {
+            if ((video as any).webkitEnterFullscreen) {
+              (video as any).webkitEnterFullscreen();
+            } else if (shellRef.current?.requestFullscreen && !document.fullscreenElement) {
+              void shellRef.current.requestFullscreen();
+            }
+          } catch {}
+        }
+      }
+    };
+
     window.addEventListener("keydown", onKey);
-    return () => { document.body.style.overflow = oldOverflow; window.removeEventListener("keydown", onKey); };
-  });
+    window.addEventListener("orientationchange", handleOrientation);
+    const mql = window.matchMedia("(orientation: landscape)");
+    mql.addEventListener?.("change", handleOrientation);
+
+    return () => {
+      document.body.style.overflow = oldOverflow;
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("orientationchange", handleOrientation);
+      mql.removeEventListener?.("change", handleOrientation);
+    };
+  }, [isProtected, onClose]);
 
   useEffect(() => {
     if (!isProtected || !item.id) return;
@@ -132,6 +159,40 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
     const video = videoRef.current;
     if (!video) return;
     if (video.paused) await video.play(); else video.pause();
+  };
+
+  const toggleFullscreen = async () => {
+    try {
+      const video = videoRef.current;
+      const target = shellRef.current || video;
+      if (!target) return;
+
+      if (!document.fullscreenElement && !(document as any).webkitFullscreenElement) {
+        if (video && (video as any).webkitEnterFullscreen) {
+          (video as any).webkitEnterFullscreen();
+        } else if (target.requestFullscreen) {
+          await target.requestFullscreen();
+        } else if ((target as any).webkitRequestFullscreen) {
+          await (target as any).webkitRequestFullscreen();
+        }
+        if (window.screen?.orientation && "lock" in window.screen.orientation) {
+          (window.screen.orientation as any).lock("landscape").catch(() => {});
+        }
+        setIsFullscreen(true);
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          await (document as any).webkitExitFullscreen();
+        }
+        if (window.screen?.orientation && "unlock" in window.screen.orientation) {
+          (window.screen.orientation as any).unlock();
+        }
+        setIsFullscreen(false);
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const refreshStreamUrl = async () => {
@@ -223,7 +284,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                 <PlayerButton label={volume ? "كتم الصوت" : "تشغيل الصوت"} onClick={() => { const nextVolume = volume ? 0 : 1; setVolume(nextVolume); if (videoRef.current) videoRef.current.volume = nextVolume; }}>{volume ? <Volume2 className="h-5 w-5"/> : <VolumeX className="h-5 w-5"/>}</PlayerButton>
                 <div className="relative hidden sm:block"><PlayerButton label="سرعة التشغيل" onClick={() => setShowSpeed(!showSpeed)}><Gauge className="h-5 w-5"/></PlayerButton>{showSpeed && <div className="absolute bottom-12 right-0 z-30 rounded-xl border border-white/10 bg-slate-900 p-1 shadow-xl">{[.75,1,1.25,1.5,2].map(value => <button key={value} onClick={() => { setSpeed(value); if(videoRef.current) videoRef.current.playbackRate=value; setShowSpeed(false); }} className={`block h-10 w-20 rounded-lg text-sm hover:bg-white/10 ${speed===value ? "text-sky-400" : "text-white"}`}>{value}×</button>)}</div>}</div>
                 <PlayerButton label="صورة داخل صورة" className="hidden sm:grid" onClick={() => void videoRef.current?.requestPictureInPicture?.()}><PictureInPicture className="h-5 w-5"/></PlayerButton>
-                <PlayerButton label={isFullscreen ? "الخروج من ملء الشاشة" : "ملء الشاشة"} onClick={async () => { if (!document.fullscreenElement) await shellRef.current?.requestFullscreen(); else await document.exitFullscreen(); setIsFullscreen(Boolean(document.fullscreenElement)); }}>{isFullscreen ? <Minimize className="h-5 w-5"/> : <Maximize className="h-5 w-5"/>}</PlayerButton>
+                <PlayerButton label={isFullscreen ? "الخروج من ملء الشاشة" : "ملء الشاشة"} onClick={() => void toggleFullscreen()}>{isFullscreen ? <Minimize className="h-5 w-5"/> : <Maximize className="h-5 w-5"/>}</PlayerButton>
               </div>}
             </section>
 
