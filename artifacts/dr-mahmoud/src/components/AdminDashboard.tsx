@@ -1560,27 +1560,30 @@ export default function AdminDashboard() {
       )}
 
       {/* Main Container */}
-      <div className="min-h-screen w-full lg:pr-[260px]">
-        {/* Navigation Sidebar */}
-        <aside className="fixed inset-y-0 right-0 z-50 hidden w-[260px] border-l border-slate-200 bg-white lg:block">
+      <div className="min-h-screen w-full bg-[#F6F8FC] text-[#0F172A] font-sans dir-rtl">
+        {/* Fixed Navigation Sidebar (Desktop 288px) */}
+        <aside className="fixed top-0 bottom-0 right-0 z-50 hidden w-[288px] border-l border-[#E4EAF2] bg-white lg:flex flex-col">
           <div className="flex h-full flex-col p-5">
-            <div className="mb-7 flex items-center gap-3 border-b border-slate-100 pb-5">
+            {/* Header / Brand */}
+            <div className="mb-6 flex items-center gap-3 border-b border-[#E4EAF2] pb-5">
               <img
                 src="/logo.webp"
                 alt="شعار المنصة"
-                className="h-12 w-12 rounded-xl border object-cover"
+                className="h-11 w-11 rounded-xl border border-[#E4EAF2] object-cover"
               />
               <div>
-                <strong className="block text-sm font-black">
+                <strong className="block text-sm font-black text-[#0F172A]">
                   أكاديمية د. محمود
                 </strong>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-xs text-[#64748B]">
                   لوحة إدارة المنصة
                 </span>
               </div>
             </div>
-            <nav className="flex-1 space-y-1.5 overflow-y-auto">
-              <span className="block px-3 pb-1 pt-1 text-[10px] font-black uppercase tracking-wider text-slate-400">الإدارة والمتابعة</span>
+
+            {/* Navigation Items - Scrollable */}
+            <nav className="flex-1 space-y-1 overflow-y-auto pr-0.5">
+              <span className="block px-3 pb-1 pt-1 text-[11px] font-bold tracking-wider text-[#64748B]">الإدارة والمتابعة</span>
               <SidebarItem
                 icon={Calendar}
                 label="الحجوزات"
@@ -1602,7 +1605,7 @@ export default function AdminDashboard() {
                 badge={coursesQuery.data?.length}
               />
 
-              <span className="block px-3 pb-1 pt-4 text-[10px] font-black uppercase tracking-wider text-slate-400">المحتوى التعليمي</span>
+              <span className="block px-3 pb-1 pt-4 text-[11px] font-bold tracking-wider text-[#64748B]">المحتوى التعليمي</span>
 
               <SidebarItem
                 icon={Mic}
@@ -1622,24 +1625,35 @@ export default function AdminDashboard() {
 
               <SidebarItem
                 icon={VideoIcon}
-                label="مكتبة الفيديوهات والقوائم"
+                label="مكتبة الفيديوهات"
                 active={activeTab === "videos"}
                 onClick={() => setActiveTab("videos")}
                 badge={videosQuery.data?.length}
               />
 
-              <SidebarItem
-                icon={Upload}
-                label="🎬 رفع فيديو جديد"
-                active={activeTab === "upload-video"}
-                onClick={() => {
-                  openVideoModal("add");
-                  setActiveTab("upload-video");
-                }}
-                variant="featured"
-              />
+              {/* Action Button separated from normal nav items */}
+              <div className="pt-2 pb-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    openVideoModal("add");
+                    setActiveTab("upload-video");
+                  }}
+                  className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                    activeTab === "upload-video"
+                      ? "bg-[#0866D9] text-white shadow-sm"
+                      : "bg-[#0866D9]/10 text-[#0866D9] hover:bg-[#0866D9]/20"
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Upload className="w-4 h-4" />
+                    <span>رفع فيديو جديد</span>
+                  </span>
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
+              </div>
 
-              <span className="block px-3 pb-1 pt-4 text-[10px] font-black uppercase tracking-wider text-slate-400">النظام</span>
+              <span className="block px-3 pb-1 pt-3 text-[11px] font-bold tracking-wider text-[#64748B]">النظام</span>
 
               <SidebarItem
                 icon={Users}
@@ -1655,41 +1669,46 @@ export default function AdminDashboard() {
                 onClick={() => setActiveTab("settings")}
               />
             </nav>
-            <div className="mt-5 border-t border-slate-100 pt-4">
-              <div className="mb-3 flex items-center gap-3 rounded-xl bg-slate-50 p-3">
-                <div className="grid h-9 w-9 place-items-center rounded-full bg-primary/10 text-primary">
-                  <Users className="h-4 w-4" />
+
+            {/* Sticky User & Logout Footer */}
+            <div className="mt-auto border-t border-[#E4EAF2] pt-4 space-y-3">
+              <div className="flex items-center gap-3 rounded-xl bg-[#F6F8FC] p-3 border border-[#E4EAF2]">
+                <div className="grid h-9 w-9 place-items-center rounded-full bg-[#0866D9]/10 text-[#0866D9] font-black text-xs">
+                  د.م
                 </div>
-                <div>
-                  <strong className="block text-xs">مدير المنصة</strong>
-                  <span className="text-[10px] text-muted-foreground">
+                <div className="min-w-0 flex-1">
+                  <strong className="block text-xs font-bold text-[#0F172A] truncate">مدير المنصة</strong>
+                  <span className="text-[11px] text-[#64748B] block truncate">
                     صلاحيات كاملة
                   </span>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center gap-2">
                 <a
                   href="/"
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center justify-center gap-1 rounded-lg border px-2 py-2 text-[11px] font-bold"
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-[#E4EAF2] bg-white px-3 py-2 text-xs font-bold text-[#0F172A] hover:bg-[#F6F8FC] transition-colors"
                 >
-                  <ExternalLink className="h-3.5 w-3.5" /> الموقع
+                  <ExternalLink className="h-3.5 w-3.5 text-[#64748B]" />
+                  <span>الموقع</span>
                 </a>
                 <button
+                  type="button"
                   onClick={handleLogout}
-                  className="flex items-center justify-center gap-1 rounded-lg bg-red-50 px-2 py-2 text-[11px] font-bold text-red-600"
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-red-50 border border-red-200/60 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-100/80 transition-colors"
                 >
-                  <LogOut className="h-3.5 w-3.5" /> خروج
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span>خروج</span>
                 </button>
               </div>
             </div>
           </div>
         </aside>
 
-        {/* Dynamic Panel Content */}
-        <main className="min-w-0 px-4 py-6 md:px-7 lg:px-9 lg:py-8">
-          <div className="mx-auto max-w-[1400px]">
+        {/* Dynamic Main Content Area - Desktop width calc(100% - 288px) with margin-right: 288px */}
+        <main className="min-h-screen w-full lg:mr-[288px] lg:w-[calc(100%-288px)] px-4 py-6 md:px-8 lg:px-10 lg:py-8">
+          <div className="w-full max-w-[1400px] mx-auto">
 
             {/* Top Desktop Executive Header */}
             <div className="hidden lg:flex items-center justify-between gap-4 mb-6 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">

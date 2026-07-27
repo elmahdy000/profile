@@ -26,16 +26,16 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
       <button
         type="button"
         onClick={onClick}
-        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-right text-xs font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B63CE] ${
+        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-right text-xs font-bold transition-all ${
           active
-            ? "bg-gradient-to-r from-[#0B63CE] to-[#0956B4] text-white shadow-md shadow-[#0B63CE]/25 border border-transparent"
-            : "bg-[#EAF3FF] hover:bg-[#0B63CE] text-[#0B63CE] hover:text-white border border-[#0B63CE]/20 group active:scale-[0.98]"
+            ? "bg-[#0866D9] text-white shadow-sm"
+            : "bg-[#0866D9]/10 hover:bg-[#0866D9]/20 text-[#0866D9] group"
         }`}
       >
         <div className="flex items-center gap-2.5">
           <Icon
             className={`w-4 h-4 shrink-0 transition-colors ${
-              active ? "text-white" : "text-[#0B63CE] group-hover:text-white"
+              active ? "text-white" : "text-[#0866D9]"
             }`}
             strokeWidth={2}
           />
@@ -46,7 +46,7 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
             className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
               active
                 ? "bg-white/20 text-white"
-                : "bg-[#0B63CE]/10 text-[#0B63CE] group-hover:bg-white/20 group-hover:text-white"
+                : "bg-[#0866D9]/20 text-[#0866D9]"
             }`}
           >
             {badge}
@@ -60,16 +60,16 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
     <button
       type="button"
       onClick={onClick}
-      className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-right text-xs font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B63CE] ${
+      className={`w-full flex items-center justify-between px-3 py-2 text-right text-xs font-semibold rounded-xl transition-all ${
         active
-          ? "bg-[#0B63CE] text-white font-bold shadow-sm shadow-[#0B63CE]/20 border border-transparent"
-          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 group active:scale-[0.98]"
+          ? "bg-[#0866D9] text-white font-bold shadow-xs"
+          : "text-[#64748B] hover:bg-[#F6F8FC] hover:text-[#0F172A] group"
       }`}
     >
       <div className="flex items-center gap-2.5">
         <Icon
           className={`w-4 h-4 shrink-0 transition-colors ${
-            active ? "text-white" : "text-slate-400 group-hover:text-[#0B63CE]"
+            active ? "text-white" : "text-[#64748B] group-hover:text-[#0866D9]"
           }`}
           strokeWidth={1.8}
         />
@@ -77,10 +77,10 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
       </div>
       {badge !== undefined && (
         <span
-          className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+          className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
             active
               ? "bg-white/20 text-white"
-              : "bg-slate-100 text-slate-600 group-hover:bg-[#0B63CE]/10 group-hover:text-[#0B63CE]"
+              : "bg-[#E4EAF2] text-[#64748B] group-hover:bg-[#0866D9]/10 group-hover:text-[#0866D9]"
           }`}
         >
           {badge}
@@ -286,71 +286,39 @@ export const KPICard: React.FC<KPICardProps> = ({
   value,
   subtitle,
   icon: Icon,
-  color = "blue",
   badge,
   onClick,
 }) => {
-  const colorMap = {
-    blue: {
-      bg: "bg-blue-50/70 hover:bg-blue-100/60 border-blue-200/70",
-      iconBg: "bg-blue-600 text-white shadow-blue-500/25",
-      text: "text-blue-900",
-    },
-    emerald: {
-      bg: "bg-emerald-50/70 hover:bg-emerald-100/60 border-emerald-200/70",
-      iconBg: "bg-emerald-600 text-white shadow-emerald-500/25",
-      text: "text-emerald-900",
-    },
-    amber: {
-      bg: "bg-amber-50/70 hover:bg-amber-100/60 border-amber-200/70",
-      iconBg: "bg-amber-600 text-white shadow-amber-500/25",
-      text: "text-amber-900",
-    },
-    indigo: {
-      bg: "bg-indigo-50/70 hover:bg-indigo-100/60 border-indigo-200/70",
-      iconBg: "bg-indigo-600 text-white shadow-indigo-500/25",
-      text: "text-indigo-900",
-    },
-    purple: {
-      bg: "bg-purple-50/70 hover:bg-purple-100/60 border-purple-200/70",
-      iconBg: "bg-purple-600 text-white shadow-purple-500/25",
-      text: "text-purple-900",
-    },
-  };
-
-  const scheme = colorMap[color];
-
   return (
     <div
       onClick={onClick}
-      className={`p-4 rounded-2xl border transition-all ${
-        onClick ? "cursor-pointer hover:shadow-md active:scale-[0.99]" : ""
-      } ${scheme.bg} backdrop-blur-sm`}
+      className={`p-4 rounded-2xl border border-[#E4EAF2] bg-white transition-all h-full flex flex-col justify-between ${
+        onClick ? "cursor-pointer hover:border-[#0866D9]/40 hover:shadow-xs" : ""
+      }`}
     >
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className={`p-2.5 rounded-xl shadow-md ${scheme.iconBg}`}>
-            <Icon className="w-5 h-5" strokeWidth={2} />
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-slate-500">{title}</p>
-            <h3 className={`text-xl font-extrabold ${scheme.text} mt-0.5`}>
-              {value}
-            </h3>
-          </div>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold text-[#64748B]">{title}</p>
+          <h3 className="text-2xl font-black text-[#0F172A] mt-1">
+            {value}
+          </h3>
         </div>
-        {badge && (
-          <span className="text-[10px] px-2.5 py-1 rounded-full font-bold bg-white/80 border border-slate-200 text-slate-700 shadow-xs">
-            {badge}
-          </span>
-        )}
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#F6F8FC] border border-[#E4EAF2] text-[#0866D9]">
+          <Icon className="w-5 h-5" strokeWidth={1.8} />
+        </div>
       </div>
-      {subtitle && (
-        <p className="text-[11px] text-slate-500 mt-2 border-t border-slate-200/40 pt-1.5">
-          {subtitle}
-        </p>
+      {(subtitle || badge) && (
+        <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#E4EAF2] pt-2.5">
+          {subtitle && (
+            <p className="text-xs text-[#64748B] truncate">{subtitle}</p>
+          )}
+          {badge && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-[#0866D9]/10 text-[#0866D9] shrink-0">
+              {badge}
+            </span>
+          )}
+        </div>
       )}
     </div>
   );
 };
-

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
   ClipboardCheck,
@@ -988,11 +988,11 @@ export function AdminLearning() {
   }, [fileSearch, fileCourseFilter, fileStageFilter, fileStatusFilter]);
   const tabs = [
     ["students", "الطلاب", GraduationCap],
-    ["payments", "إيصالات الدفع", FileCheck2],
-    ["notifications", "إرسال إشعار", MessageCircle],
     ["files", "الملفات", FileText],
     ["quizzes", "الاختبارات", ClipboardCheck],
     ["results", "النتائج", Check],
+    ["payments", "إيصالات الدفع", FileCheck2],
+    ["notifications", "إرسال إشعار", MessageCircle],
     ["reports", "التقارير", BarChart3],
   ] as const;
   const tabMeta = {
@@ -1005,21 +1005,20 @@ export function AdminLearning() {
     reports: ["التقارير والمتابعة", "راقب نشاط الطلاب والتقدم ومؤشرات الأداء التعليمية."],
   } as const;
   return (
-    <div className="admin-learning-workspace space-y-6" dir="rtl">
-      <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 md:flex-row md:items-center md:justify-between">
+    <div className="admin-learning-workspace space-y-6 text-[#0F172A]" dir="rtl">
+      {/* 1. Page Header */}
+      <div className="flex flex-col gap-4 border-b border-[#E4EAF2] pb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-[28px] font-black leading-tight text-slate-900">
+          <h1 className="text-2xl font-black text-[#0F172A]">
             إدارة المنصة التعليمية
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            إدارة الطلاب والملفات والاختبارات والنتائج
+          </h1>
+          <p className="mt-1 text-xs text-[#64748B]">
+            لوحة الإدارة الشاملة للطلاب، الملفات، الاختبارات والنتائج
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={load} className="h-11 bg-white">
-            <RefreshCw className="h-4 w-4" /> تحديث البيانات
-          </Button>
+        <div className="flex items-center gap-2.5 shrink-0">
           <Button
+            type="button"
             onClick={() => {
               setTab("files");
               setTimeout(
@@ -1030,83 +1029,102 @@ export function AdminLearning() {
                 50,
               );
             }}
-            className="h-11"
+            className="h-10 px-4 rounded-xl bg-[#0866D9] hover:bg-[#0753B3] text-white text-xs font-bold shadow-xs transition-colors"
           >
-            <Plus className="h-4 w-4" /> إضافة ملف تعليمي
+            <Plus className="h-4 w-4 ml-1" /> إضافة ملف تعليمي
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={load}
+            className="h-10 px-4 rounded-xl border-[#E4EAF2] bg-white hover:bg-[#F6F8FC] text-[#0F172A] text-xs font-bold transition-colors"
+          >
+            <RefreshCw className="h-4 w-4 ml-1 text-[#64748B]" /> تحديث البيانات
           </Button>
         </div>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+
+      {/* 2 & 4. Education Statistics Cards */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
         {[
           [
             "إجمالي الطلاب",
             students.length,
-            "طالب مسجل",
+            "طالب مسجل بالمنصة",
             GraduationCap,
-            "bg-blue-50 text-blue-700",
           ],
           [
             "الملفات التعليمية",
             files.length,
             `${files.filter((file) => file.isPublished).length} ملف منشور`,
             FileText,
-            "bg-cyan-50 text-cyan-700",
           ],
           [
             "الاختبارات المنشورة",
             quizzes.filter((quiz) => quiz.isPublished).length,
             `${quizzes.length} اختبار إجمالي`,
             ClipboardCheck,
-            "bg-amber-50 text-amber-700",
           ],
           [
             "النتائج المسجلة",
             attempts.length,
             `${attempts.filter((attempt) => attempt.passed).length} نتيجة ناجحة`,
             ListChecks,
-            "bg-emerald-50 text-emerald-700",
           ],
-        ].map(([label, value, helper, Icon, color]: any, index) => (
+        ].map(([label, value, helper, Icon]: any, index) => (
           <button
             type="button"
             key={String(label)}
             onClick={() => setTab((['students', 'files', 'quizzes', 'results'] as const)[index])}
-            className="rounded-2xl border border-slate-200 bg-white p-4 text-right shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="rounded-2xl border border-[#E4EAF2] bg-white p-4 text-right shadow-xs transition hover:border-[#0866D9]/40 flex flex-col justify-between"
           >
             <div className="flex items-start justify-between">
               <div>
-                <strong className="text-2xl font-black text-slate-900">
+                <span className="text-xs font-semibold text-[#64748B] block">
+                  {String(label)}
+                </span>
+                <strong className="mt-1 text-2xl font-black text-[#0F172A] block">
                   {String(value)}
                 </strong>
-                <p className="mt-1 text-sm font-bold text-slate-700">
-                  {String(label)}
-                </p>
               </div>
-              <div
-                className={`grid h-11 w-11 place-items-center rounded-xl ${String(color)}`}
-              >
-                <Icon className="h-5 w-5" />
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#F6F8FC] border border-[#E4EAF2] text-[#0866D9]">
+                <Icon className="h-5 w-5" strokeWidth={1.8} />
               </div>
             </div>
-            <p className="mt-3 text-xs text-slate-500">{String(helper)}</p>
+            <p className="mt-3 text-xs text-[#64748B] border-t border-[#E4EAF2] pt-2">{String(helper)}</p>
           </button>
         ))}
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
-        {tabs.map(([value, label, Icon]) => (
-          <button
-            key={value}
-            onClick={() => setTab(value)}
-            className={`flex min-h-11 items-center justify-center gap-2 rounded-xl px-2 text-xs font-bold transition sm:text-sm ${tab === value ? "bg-primary text-primary-foreground shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"}`}
-          >
-            <Icon className="h-4 w-4" />
-            {label}
-          </button>
-        ))}
+
+      {/* 5. Management Tabs Bar */}
+      <div className="w-full overflow-x-auto pb-1 no-scrollbar">
+        <div className="flex min-w-full gap-2 rounded-2xl border border-[#E4EAF2] bg-white p-1.5 shadow-xs">
+          {tabs.map(([value, label, Icon]) => (
+            <button
+              key={value}
+              onClick={() => setTab(value)}
+              className={`flex-1 min-w-[110px] flex h-11 items-center justify-center gap-2 rounded-xl px-3 text-xs font-bold transition-all whitespace-nowrap ${
+                tab === value
+                  ? "bg-[#0866D9] text-white shadow-xs"
+                  : "bg-white text-[#64748B] hover:bg-[#F6F8FC] hover:text-[#0F172A]"
+              }`}
+            >
+              <Icon className="h-4 w-4 shrink-0" strokeWidth={1.8} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
       </div>
-      <div className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <div><h3 className="text-[17px] font-black text-slate-900">{tabMeta[tab][0]}</h3><p className="mt-1 text-xs text-slate-500">{tabMeta[tab][1]}</p></div>
-        <span className="w-fit rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-600">تحديث تلقائي للبيانات</span>
+
+      {/* Active Section Info Header */}
+      <div className="flex flex-col gap-2 rounded-2xl border border-[#E4EAF2] bg-white px-5 py-4 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-base font-extrabold text-[#0F172A]">{tabMeta[tab][0]}</h3>
+          <p className="mt-0.5 text-xs text-[#64748B]">{tabMeta[tab][1]}</p>
+        </div>
+        <span className="w-fit rounded-full bg-[#F6F8FC] border border-[#E4EAF2] px-3 py-1 text-[11px] font-bold text-[#64748B]">
+          تحديث تلقائي للبيانات
+        </span>
       </div>
       {loading ? (
         <div className="grid place-items-center py-24">
@@ -2362,7 +2380,7 @@ function PaymentReceiptsPanel({ receipts: propReceipts, onRefresh }: { receipts?
       toast({ title: status === "approved" ? "تم تأكيد الدفع" : "تم رفض الإيصال" });
       setShowRejectForm(null);
       setRejectNotes("");
-      loadReceipts();
+      void loadReceipts();
     } catch (err) {
       toast({ title: "خطأ", description: (err as Error).message, variant: "destructive" });
     } finally {
@@ -2371,87 +2389,237 @@ function PaymentReceiptsPanel({ receipts: propReceipts, onRefresh }: { receipts?
   };
 
   const filtered = filter === "all" ? receipts : receipts.filter((r) => r.status === filter);
-  const pendingCount = receipts.filter((r) => r.status === "pending").length;
+
+  const counts = {
+    all: receipts.length,
+    pending: receipts.filter((r) => r.status === "pending").length,
+    approved: receipts.filter((r) => r.status === "approved").length,
+    rejected: receipts.filter((r) => r.status === "rejected").length,
+  };
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center gap-2">
-        {(["all", "pending", "approved", "rejected"] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${filter === f ? "bg-primary text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+    <div className="rounded-2xl border border-[#E4EAF2] bg-white p-5 shadow-xs space-y-5 text-[#0F172A]">
+      {/* Card Header & Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E4EAF2] pb-4">
+        <div>
+          <h3 className="text-base font-extrabold text-[#0F172A]">إدارة إيصالات الدفع</h3>
+          <p className="text-xs text-[#64748B] mt-0.5">مراجعة وتأكيد التحويلات وإيصالات الدفع المرفوعة من الطلاب</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={loadReceipts}
+            className="h-9 px-3 rounded-xl border-[#E4EAF2] bg-white hover:bg-[#F6F8FC] text-xs font-bold text-[#0F172A]"
           >
-            {f === "all" ? "الكل" : f === "pending" ? `قيد المراجعة (${pendingCount})` : f === "approved" ? "مقبول" : "مرفوض"}
-          </button>
-        ))}
-        <button onClick={loadReceipts} className="mr-auto rounded-lg bg-slate-100 p-1.5 text-slate-500 hover:bg-slate-200">
-          <RefreshCw className="h-4 w-4" />
-        </button>
+            <RefreshCw className="h-3.5 w-3.5 ml-1.5 text-[#64748B]" /> تحديث القائمة
+          </Button>
+        </div>
       </div>
 
+      {/* Filter Tabs with Counts */}
+      <div className="flex flex-wrap items-center gap-2">
+        {[
+          { key: "all", label: "الكل", count: counts.all },
+          { key: "pending", label: "قيد المراجعة", count: counts.pending },
+          { key: "approved", label: "مقبول", count: counts.approved },
+          { key: "rejected", label: "مرفوض", count: counts.rejected },
+        ].map((f) => (
+          <button
+            key={f.key}
+            type="button"
+            onClick={() => setFilter(f.key as any)}
+            className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all ${
+              filter === f.key
+                ? "bg-[#0866D9] text-white shadow-xs"
+                : "bg-[#F6F8FC] border border-[#E4EAF2] text-[#64748B] hover:text-[#0F172A] hover:bg-[#E4EAF2]/50"
+            }`}
+          >
+            <span>{f.label}</span>
+            <span
+              className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
+                filter === f.key
+                  ? "bg-white/20 text-white"
+                  : "bg-[#E4EAF2] text-[#0F172A]"
+              }`}
+            >
+              {f.count}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Main Content Area */}
       {loading ? (
-        <div className="flex items-center justify-center p-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+        <div className="flex items-center justify-center p-12">
+          <Loader2 className="h-6 w-6 animate-spin text-[#0866D9]" />
+        </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">لا توجد إيصالات {filter !== "all" && "بهذه الحالة"}</div>
+        /* Professional Empty State */
+        <div className="rounded-xl border border-dashed border-[#E4EAF2] bg-[#F6F8FC]/50 p-12 text-center">
+          <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[#0866D9]/10 text-[#0866D9] mb-3">
+            <FileCheck2 className="h-6 w-6" strokeWidth={1.8} />
+          </div>
+          <h4 className="text-sm font-extrabold text-[#0F172A]">لا توجد إيصالات دفع</h4>
+          <p className="text-xs text-[#64748B] mt-1 max-w-sm mx-auto">
+            {filter === "all"
+              ? "لم يقم أي طالب برفع إيصال دفع حتى الآن."
+              : `لا توجد إيصالات مضافة بحالة «${filter === "pending" ? "قيد المراجعة" : filter === "approved" ? "مقبول" : "مرفوض"}».`}
+          </p>
+        </div>
       ) : (
-        <div className="space-y-3">
-          {filtered.map((receipt) => (
-            <div key={receipt.id} className={`rounded-2xl border p-4 transition ${receipt.status === "pending" ? "border-amber-200 bg-amber-50/50" : receipt.status === "approved" ? "border-green-200 bg-green-50/30" : "border-red-200 bg-red-50/30"}`}>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-slate-900">{receipt.studentName}</span>
-                    <span className="text-xs text-slate-500">{receipt.studentPhone}</span>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${receipt.status === "pending" ? "bg-amber-100 text-amber-700" : receipt.status === "approved" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                      {receipt.status === "pending" ? "قيد المراجعة" : receipt.status === "approved" ? "مقبول" : "مرفوض"}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    {new Date(receipt.createdAt).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                    {receipt.adminNotes && <span className="mr-2 text-slate-400">— {receipt.adminNotes}</span>}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => setPreviewId(previewId === receipt.id ? null : receipt.id)}>
-                    <Eye className="h-3.5 w-3.5" />
-                    {previewId === receipt.id ? "إخفاء" : "عرض الصورة"}
-                  </Button>
-                  {receipt.status === "pending" && (
-                    <>
-                      <Button size="sm" className="gap-1.5 text-xs bg-green-600 hover:bg-green-700" disabled={actionId === receipt.id} onClick={() => handleAction(receipt.id, "approved")}>
-                        {actionId === receipt.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserCheck className="h-3.5 w-3.5" />}
-                        قبول
-                      </Button>
-                      <Button size="sm" variant="destructive" className="gap-1.5 text-xs" disabled={actionId === receipt.id} onClick={() => setShowRejectForm(showRejectForm === receipt.id ? null : receipt.id)}>
-                        <UserX className="h-3.5 w-3.5" />
-                        رفض
-                      </Button>
-                    </>
+        /* Responsive Table */
+        <div className="overflow-x-auto rounded-xl border border-[#E4EAF2]">
+          <table className="w-full text-right text-xs">
+            <thead className="bg-[#F6F8FC] text-[#64748B] font-bold border-b border-[#E4EAF2]">
+              <tr>
+                <th className="px-4 py-3">الطالب</th>
+                <th className="px-4 py-3">رقم الهاتف</th>
+                <th className="px-4 py-3">تاريخ الرفع</th>
+                <th className="px-4 py-3">الحالة</th>
+                <th className="px-4 py-3 text-left">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#E4EAF2] bg-white">
+              {filtered.map((receipt) => (
+                <React.Fragment key={receipt.id}>
+                  <tr className="hover:bg-[#F6F8FC]/60 transition-colors">
+                    <td className="px-4 py-3.5 font-bold text-[#0F172A]">
+                      {receipt.studentName}
+                    </td>
+                    <td className="px-4 py-3.5 text-[#64748B] dir-ltr text-right font-mono">
+                      {receipt.studentPhone}
+                    </td>
+                    <td className="px-4 py-3.5 text-[#64748B]">
+                      {new Date(receipt.createdAt).toLocaleDateString("ar-EG", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                          receipt.status === "pending"
+                            ? "bg-amber-50 text-amber-700 border border-amber-200"
+                            : receipt.status === "approved"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : "bg-rose-50 text-rose-700 border border-rose-200"
+                        }`}
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            receipt.status === "pending"
+                              ? "bg-amber-500 animate-pulse"
+                              : receipt.status === "approved"
+                              ? "bg-emerald-500"
+                              : "bg-rose-500"
+                          }`}
+                        />
+                        {receipt.status === "pending"
+                          ? "قيد المراجعة"
+                          : receipt.status === "approved"
+                          ? "مقبول"
+                          : "مرفوض"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3.5 text-left">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-2.5 text-xs font-bold border-[#E4EAF2] text-[#0F172A] hover:bg-[#F6F8FC]"
+                          onClick={() => setPreviewId(previewId === receipt.id ? null : receipt.id)}
+                        >
+                          <Eye className="h-3.5 w-3.5 ml-1 text-[#64748B]" />
+                          {previewId === receipt.id ? "إخفاء" : "عرض الصورة"}
+                        </Button>
+                        {receipt.status === "pending" && (
+                          <>
+                            <Button
+                              type="button"
+                              size="sm"
+                              disabled={actionId === receipt.id}
+                              onClick={() => handleAction(receipt.id, "approved")}
+                              className="h-8 px-3 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
+                            >
+                              {actionId === receipt.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <UserCheck className="h-3.5 w-3.5 ml-1" />
+                              )}
+                              قبول
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="destructive"
+                              disabled={actionId === receipt.id}
+                              onClick={() => setShowRejectForm(showRejectForm === receipt.id ? null : receipt.id)}
+                              className="h-8 px-3 text-xs font-bold"
+                            >
+                              <UserX className="h-3.5 w-3.5 ml-1" />
+                              رفض
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+
+                  {/* Inline Preview */}
+                  {previewId === receipt.id && (
+                    <tr className="bg-[#F6F8FC]/80">
+                      <td colSpan={5} className="p-4">
+                        <div className="overflow-hidden rounded-xl border border-[#E4EAF2] bg-white p-3 text-center">
+                          <img
+                            src={`/api/admin/payment-receipts/${receipt.id}/image`}
+                            alt="إيصال الدفع"
+                            className="mx-auto max-h-[450px] rounded-lg object-contain"
+                          />
+                        </div>
+                      </td>
+                    </tr>
                   )}
-                </div>
-              </div>
-              {previewId === receipt.id && (
-                <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-white">
-                  <img src={`/api/admin/payment-receipts/${receipt.id}/image`} alt="إيصال الدفع" className="mx-auto max-h-[500px] object-contain" />
-                </div>
-              )}
-              {showRejectForm === receipt.id && (
-                <div className="mt-3 flex items-center gap-2">
-                  <input
-                    type="text"
-                    placeholder="سبب الرفض (اختياري)..."
-                    value={rejectNotes}
-                    onChange={(e) => setRejectNotes(e.target.value)}
-                    className="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
-                  />
-                  <Button size="sm" variant="destructive" disabled={actionId === receipt.id} onClick={() => handleAction(receipt.id, "rejected", rejectNotes)}>
-                    {actionId === receipt.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "تأكيد الرفض"}
-                  </Button>
-                </div>
-              )}
-            </div>
-          ))}
+
+                  {/* Inline Reject Form */}
+                  {showRejectForm === receipt.id && (
+                    <tr className="bg-rose-50/50">
+                      <td colSpan={5} className="p-3">
+                        <div className="flex items-center gap-2 max-w-xl mr-auto">
+                          <input
+                            type="text"
+                            placeholder="سبب الرفض (اختياري)..."
+                            value={rejectNotes}
+                            onChange={(e) => setRejectNotes(e.target.value)}
+                            className="flex-1 rounded-xl border border-rose-200 bg-white px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="destructive"
+                            disabled={actionId === receipt.id}
+                            onClick={() => handleAction(receipt.id, "rejected", rejectNotes)}
+                            className="h-8 text-xs font-bold"
+                          >
+                            {actionId === receipt.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              "تأكيد الرفض"
+                            )}
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
