@@ -2413,7 +2413,7 @@ export function StudentPlatform() {
           {nav.filter(([value]) => value !== "compiler").map(([value, label, Icon]) => (
             <button
               key={value}
-              onClick={() => setTab(value)}
+              onClick={() => { setTab(value); setSidebarOpen(false); }}
               aria-current={tab === value ? "page" : undefined}
               className={`my-1 flex min-h-[56px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-bold transition-colors active:scale-[.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${tab === value ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}
             >
