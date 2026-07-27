@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Captions, Check, ChevronLeft, ChevronRight, Clock3, Download,
@@ -61,10 +61,34 @@ function PlayerButton({ label, children, ...props }: React.ButtonHTMLAttributes<
   return <button aria-label={label} title={label} {...props} className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl text-slate-100 transition hover:bg-white/10 active:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 disabled:cursor-not-allowed disabled:opacity-40 ${props.className || ""}`}>{children}</button>;
 }
 
+// ── Landscape detection hook ─────────────────────────────────────────────────
+function useIsLandscapeMobile() {
+  const [isLandscapeMobile, setIsLandscapeMobile] = useState(false);
+  useEffect(() => {
+    const check = () => {
+      const landscape = window.matchMedia("(orientation: landscape)").matches;
+      const mobile = window.innerHeight < 600;
+      setIsLandscapeMobile(landscape && mobile);
+    };
+    check();
+    window.addEventListener("resize", check);
+    window.addEventListener("orientationchange", check);
+    const mql = window.matchMedia("(orientation: landscape)");
+    mql.addEventListener?.("change", check);
+    return () => {
+      window.removeEventListener("resize", check);
+      window.removeEventListener("orientationchange", check);
+      mql.removeEventListener?.("change", check);
+    };
+  }, []);
+  return isLandscapeMobile;
+}
+
 export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], onSelectLesson, onStartQuiz, onClose }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const shellRef = useRef<HTMLDivElement>(null);
   const saveTimer = useRef<number | undefined>(undefined);
+  const controlsTimer = useRef<number | undefined>(undefined);
   const [playerReady, setPlayerReady] = useState(false);
   const [playerError, setPlayerError] = useState(false);
   const [playerErrorMessage, setPlayerErrorMessage] = useState("");
@@ -84,6 +108,50 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
   const [notes, setNotes] = useState<LessonNote[]>([]);
   const [progress, setProgress] = useState(0);
   const [saving, setSaving] = useState(false);
+
+  // ── Landscape YouTube-style controls visibility ──────────────────────────
+  const isLandscapeMobile = useIsLandscapeMobile();
+  const [controlsVisible, setControlsVisible] = useState(true);
+
+  const showControlsTemporarily = useCallback(() => {
+    setControlsVisible(true);
+    window.clearTimeout(controlsTimer.current);
+    controlsTimer.current = window.setTimeout(() => {
+      setControlsVisible(false);
+    }, 5000);
+  }, []);
+
+  const handleVideoAreaTap = useCallback(() => {
+    if (!isLandscapeMobile) return;
+    if (controlsVisible) {
+      // If controls are already visible, toggle play/pause on tap
+      // But only hide if controls were shown for >= 1s
+      setControlsVisible(false);
+      window.clearTimeout(controlsTimer.current);
+    } else {
+      showControlsTemporarily();
+    }
+  }, [isLandscapeMobile, controlsVisible, showControlsTemporarily]);
+
+  // Auto-show controls when entering landscape, auto-hide after 5s
+  useEffect(() => {
+    if (isLandscapeMobile) {
+      showControlsTemporarily();
+    } else {
+      setControlsVisible(true);
+      window.clearTimeout(controlsTimer.current);
+    }
+    return () => window.clearTimeout(controlsTimer.current);
+  }, [isLandscapeMobile]);
+
+  // Keep controls visible while paused in landscape
+  useEffect(() => {
+    if (!isLandscapeMobile) return;
+    if (!playing) {
+      setControlsVisible(true);
+      window.clearTimeout(controlsTimer.current);
+    }
+  }, [playing, isLandscapeMobile]);
 
   const isProtected = item.youtubeUrl?.startsWith("/api/videos/") || item.youtubeUrl?.startsWith("/uploads/");
   const videoId = getYouTubeVideoId(item.youtubeUrl);
@@ -113,33 +181,11 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
       if (event.key === "ArrowLeft" && videoRef.current) { event.preventDefault(); seekRelative(-10); }
     };
 
-    const handleOrientation = () => {
-      const isLandscape = window.matchMedia("(orientation: landscape)").matches;
-      const isMobileSize = window.innerHeight < 550 || window.innerWidth < 900;
-      if (isLandscape && isMobileSize) {
-        const video = videoRef.current;
-        if (video) {
-          try {
-            if ((video as any).webkitEnterFullscreen) {
-              (video as any).webkitEnterFullscreen();
-            } else if (shellRef.current?.requestFullscreen && !document.fullscreenElement) {
-              void shellRef.current.requestFullscreen();
-            }
-          } catch {}
-        }
-      }
-    };
-
     window.addEventListener("keydown", onKey);
-    window.addEventListener("orientationchange", handleOrientation);
-    const mql = window.matchMedia("(orientation: landscape)");
-    mql.addEventListener?.("change", handleOrientation);
 
     return () => {
       document.body.style.overflow = oldOverflow;
       window.removeEventListener("keydown", onKey);
-      window.removeEventListener("orientationchange", handleOrientation);
-      mql.removeEventListener?.("change", handleOrientation);
     };
   }, [isProtected, onClose]);
 
@@ -158,89 +204,60 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
 
   const seekRelative = (seconds: number) => {
     if (videoRef.current) {
-      const duration = videoRef.current.duration || 0;
-      const target = Math.max(0, Math.min(duration, videoRef.current.currentTime + seconds));
+      const dur = videoRef.current.duration || 0;
+      const target = Math.max(0, Math.min(dur, videoRef.current.currentTime + seconds));
       videoRef.current.currentTime = target;
       setCurrentTime(target);
       const label = seconds > 0 ? "+10ث" : "-10ث";
       setSeekNotice(label);
       setTimeout(() => setSeekNotice((current) => (current === label ? null : current)), 800);
     }
+    if (isLandscapeMobile) showControlsTemporarily();
   };
 
   const togglePlay = async () => {
     const video = videoRef.current;
     if (!video) return;
     if (video.paused) await video.play(); else video.pause();
+    if (isLandscapeMobile) showControlsTemporarily();
   };
 
   const toggleFullscreen = async () => {
     try {
       const video = videoRef.current;
       const target = shellRef.current || video;
-      if (!target) return;
-
-      if (!document.fullscreenElement && !(document as any).webkitFullscreenElement) {
-        if (video && (video as any).webkitEnterFullscreen) {
-          (video as any).webkitEnterFullscreen();
-        } else if (target.requestFullscreen) {
-          await target.requestFullscreen();
-        } else if ((target as any).webkitRequestFullscreen) {
-          await (target as any).webkitRequestFullscreen();
-        }
-        if (window.screen?.orientation && "lock" in window.screen.orientation) {
-          (window.screen.orientation as any).lock("landscape").catch(() => {});
-        }
-        setIsFullscreen(true);
+      if (!document.fullscreenElement) {
+        await target?.requestFullscreen?.();
       } else {
-        if (document.exitFullscreen) {
-          await document.exitFullscreen();
-        } else if ((document as any).webkitExitFullscreen) {
-          await (document as any).webkitExitFullscreen();
-        }
-        if (window.screen?.orientation && "unlock" in window.screen.orientation) {
-          (window.screen.orientation as any).unlock();
-        }
-        setIsFullscreen(false);
+        await document.exitFullscreen?.();
       }
-    } catch (err) {
-      console.error(err);
-    }
+    } catch {}
   };
 
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
   const refreshStreamUrl = async () => {
-    if (!item.id || refreshAttempted.current) {
-      setPlayerErrorMessage("تعذر الوصول لملف الفيديو. أعد تحميل الصفحة أو تواصل مع الإدارة.");
+    if (refreshAttempted.current) {
+      setPlayerErrorMessage("الفيديو مش متاح دلوقتي. حاول تاني بعد شوية.");
       setPlayerError(true);
       return;
     }
     refreshAttempted.current = true;
-    setPlayerReady(false);
     try {
-      const unlockKeys = localStorage.getItem("dr_mahmoud_unlock_keys") || "";
-      const response = await fetch("/api/videos", {
-        credentials: "include",
-        cache: "no-store",
-        headers: unlockKeys ? { "x-unlock-keys": unlockKeys } : undefined,
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const videos = await response.json() as VideoItem[];
-      const refreshed = videos.find((video) => video.id === item.id);
-      if (!refreshed || refreshed.youtubeUrl === "locked" || !refreshed.youtubeUrl.startsWith("/api/videos/")) {
-        throw new Error("STREAM_NOT_AVAILABLE");
+      const response = await fetch(`/api/videos/${item.id}/stream-url`, { credentials: "include" });
+      if (response.ok) {
+        const data = await response.json() as { url: string };
+        if (data?.url) { setStreamSrc(data.url); setPlayerError(false); return; }
       }
-      setStreamSrc(refreshed.youtubeUrl);
-      setPlayerError(false);
-      setPlayerErrorMessage("");
-    } catch (err) {
-      const msg = (err as Error)?.message || "";
-      if (msg.includes("403") || msg.includes("PAYMENT")) {
-        setPlayerErrorMessage("هذا الدرس مغلق. يُرجى رفع إيصال الدفع لفتح جميع فيديوهات المنصة.");
-      } else {
-        setPlayerErrorMessage("رابط الفيديو غير صالح أو الملف غير موجود على السيرفر.");
-      }
-      setPlayerError(true);
+      setPlayerErrorMessage("رابط الفيديو غير صالح أو الملف غير موجود على السيرفر.");
+    } catch {
+      setPlayerErrorMessage("رابط الفيديو غير صالح أو الملف غير موجود على السيرفر.");
     }
+    setPlayerError(true);
   };
 
   const markComplete = async () => {
@@ -260,6 +277,108 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
     ? `https://www.youtube-nocookie.com/embed/videoseries?list=${playlistId}&autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3`
     : videoId ? `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3` : "";
 
+  // ── Landscape fullscreen video overlay (YouTube-style) ───────────────────
+  const LandscapeControlsOverlay = (
+    <AnimatePresence>
+      {controlsVisible && (
+        <motion.div
+          key="landscape-controls"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="absolute inset-0 z-20 flex flex-col justify-between pointer-events-none"
+          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 30%, transparent 60%, rgba(0,0,0,0.7) 100%)" }}
+        >
+          {/* Top bar: title + close */}
+          <div className="flex items-center justify-between px-4 pt-3 pointer-events-auto">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[11px] font-bold text-sky-300">{item.category}</p>
+              <h2 className="truncate text-sm font-bold text-white">{item.title}</h2>
+            </div>
+            <button
+              onClick={onClose}
+              aria-label="إغلاق"
+              className="ml-3 grid h-10 w-10 place-items-center rounded-full bg-black/40 border border-white/20 text-white backdrop-blur-sm transition active:scale-95"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Center: seek + play/pause */}
+          <div className="flex items-center justify-center gap-8 pointer-events-auto">
+            <button
+              onClick={() => seekRelative(-10)}
+              className="group grid h-14 w-14 place-items-center rounded-full bg-black/40 border border-white/20 text-white backdrop-blur-sm transition active:scale-90"
+              aria-label="تأخير 10 ثواني"
+            >
+              <div className="flex flex-col items-center">
+                <RotateCcw className="h-5 w-5 transition group-active:-rotate-45" />
+                <span className="text-[9px] font-black text-sky-300 leading-none mt-0.5">10ث</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => void togglePlay()}
+              className="grid h-16 w-16 place-items-center rounded-full bg-sky-500 text-slate-950 shadow-2xl transition active:scale-90"
+              aria-label={playing ? "إيقاف مؤقت" : "تشغيل"}
+            >
+              {playing ? <Pause className="h-7 w-7 fill-current" /> : <Play className="h-7 w-7 fill-current" />}
+            </button>
+
+            <button
+              onClick={() => seekRelative(10)}
+              className="group grid h-14 w-14 place-items-center rounded-full bg-black/40 border border-white/20 text-white backdrop-blur-sm transition active:scale-90"
+              aria-label="تقديم 10 ثواني"
+            >
+              <div className="flex flex-col items-center">
+                <RotateCw className="h-5 w-5 transition group-active:rotate-45" />
+                <span className="text-[9px] font-black text-sky-300 leading-none mt-0.5">10ث</span>
+              </div>
+            </button>
+          </div>
+
+          {/* Bottom bar: time + scrubber + volume + fullscreen */}
+          <div className="flex items-center gap-2 px-3 pb-3 pointer-events-auto" dir="ltr">
+            <span className="shrink-0 min-w-[82px] text-xs tabular-nums text-slate-200 font-mono">
+              {formatTime(currentTime)} / {formatTime(duration)}
+            </span>
+            <input
+              aria-label="موضع تشغيل الفيديو"
+              type="range"
+              min={0}
+              max={duration || 0}
+              value={currentTime}
+              onChange={(event) => {
+                if (videoRef.current) videoRef.current.currentTime = Number(event.target.value);
+                showControlsTemporarily();
+              }}
+              className="h-8 min-w-0 flex-1 accent-sky-400"
+            />
+            <button
+              aria-label={volume ? "كتم الصوت" : "تشغيل الصوت"}
+              onClick={() => {
+                const nextVolume = volume ? 0 : 1;
+                setVolume(nextVolume);
+                if (videoRef.current) videoRef.current.volume = nextVolume;
+              }}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-black/40 text-white"
+            >
+              {volume ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+            </button>
+            <button
+              aria-label={isFullscreen ? "الخروج من ملء الشاشة" : "ملء الشاشة"}
+              onClick={() => void toggleFullscreen()}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-black/40 text-white"
+            >
+              {isFullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
   return <AnimatePresence>
     <motion.div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-black/85 p-0 backdrop-blur-sm sm:p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <motion.div ref={shellRef} role="dialog" aria-modal="true" aria-labelledby="lesson-player-title" dir="rtl" initial={{ opacity: 0, scale: .98, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: .98, y: 12 }} className="flex h-[100dvh] max-h-[100dvh] w-full max-w-[1280px] flex-col overflow-hidden bg-slate-950 shadow-2xl sm:h-auto sm:max-h-[92vh] sm:rounded-[20px] sm:border sm:border-white/10">
@@ -278,17 +397,40 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
 
         <div className="min-h-0 flex-1 flex flex-col overflow-hidden lg:grid lg:grid-cols-[minmax(0,1fr)_300px]">
           <main className="min-w-0 flex-1 flex flex-col overflow-hidden">
-            <section className="bg-black shrink-0 flex flex-col relative justify-center landscape:flex-1 landscape:min-h-0">
-              <div className="relative w-full aspect-video sm:aspect-auto sm:flex-1 sm:min-h-0 bg-black overflow-hidden flex items-center justify-center landscape:flex-1 landscape:min-h-0 landscape:aspect-none">
-                {/* Floating close button in mobile landscape - z-[999] for touch responsiveness */}
-                <button
-                  type="button"
-                  onClick={onClose}
-                  aria-label="إغلاق"
-                  className="absolute top-3 right-3 z-[999] hidden h-11 w-11 place-items-center rounded-full bg-slate-900/80 border border-white/20 text-white backdrop-blur-md transition hover:bg-slate-800 active:scale-95 shadow-2xl landscape:grid"
-                >
-                  <X className="h-6 w-6" />
-                </button>
+            {/* ── Video section ── */}
+            <section
+              className={`bg-black shrink-0 flex flex-col relative justify-center ${isLandscapeMobile ? "flex-1 min-h-0" : "landscape:flex-1 landscape:min-h-0"}`}
+            >
+              {/* Tap area for landscape controls toggle — covers full video */}
+              {isLandscapeMobile && (
+                <div
+                  className="absolute inset-0 z-10"
+                  onClick={handleVideoAreaTap}
+                  aria-hidden="true"
+                />
+              )}
+
+              <div className={`relative w-full bg-black overflow-hidden flex items-center justify-center ${isLandscapeMobile ? "flex-1 min-h-0 aspect-auto" : "aspect-video sm:aspect-auto sm:flex-1 sm:min-h-0 landscape:flex-1 landscape:min-h-0 landscape:aspect-none"}`}>
+
+                {/* Landscape YouTube-style overlay */}
+                {isLandscapeMobile && isProtected && LandscapeControlsOverlay}
+
+                {/* Seek notice toast */}
+                <AnimatePresence>
+                  {seekNotice && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.6 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.6 }}
+                      className="absolute inset-0 z-30 pointer-events-none grid place-items-center"
+                    >
+                      <div className="flex items-center gap-2 rounded-2xl bg-sky-500/90 border border-sky-300/40 px-5 py-3 text-lg font-black text-slate-950 shadow-2xl backdrop-blur-md">
+                        {seekNotice.startsWith("+") ? <RotateCw className="h-6 w-6" /> : <RotateCcw className="h-6 w-6" />}
+                        <span>{seekNotice}</span>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {isProtected ? <>
                   {!playerReady && !playerError && <div className="absolute inset-0 z-10 animate-pulse bg-slate-900"><div className="absolute inset-0 grid place-items-center"><Loader2 className="h-8 w-8 animate-spin text-sky-400"/></div></div>}
@@ -319,23 +461,9 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                     }}
                     onEnded={() => { void markComplete(); }}
                   />
-                  <AnimatePresence>
-                    {seekNotice && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.6 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.6 }}
-                        className="absolute inset-0 z-30 pointer-events-none grid place-items-center"
-                      >
-                        <div className="flex items-center gap-2 rounded-2xl bg-sky-500/90 border border-sky-300/40 px-5 py-3 text-lg font-black text-slate-950 shadow-2xl backdrop-blur-md">
-                          {seekNotice.startsWith("+") ? <RotateCw className="h-6 w-6" /> : <RotateCcw className="h-6 w-6" />}
-                          <span>{seekNotice}</span>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
 
-                  {playerReady && !playing && !playerError && (
+                  {/* Portrait: pause/play overlay with seek buttons */}
+                  {playerReady && !playing && !playerError && !isLandscapeMobile && (
                     <div className="absolute inset-0 z-20 flex items-center justify-center gap-5 bg-black/40 backdrop-blur-[2px] transition-all">
                       <button
                         onClick={() => seekRelative(-10)}
@@ -375,7 +503,8 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                 </> : <div className="absolute inset-0 grid place-items-center p-6 text-center text-slate-300">مصدر الفيديو غير مدعوم داخل المنصة.</div>}
               </div>
 
-              {isProtected && (
+              {/* Portrait + desktop bottom control bar (hidden in landscape mobile) */}
+              {isProtected && !isLandscapeMobile && (
                 <div className="flex h-12 shrink-0 items-center gap-1 border-t border-white/10 bg-slate-950 px-2 sm:px-4" dir="ltr">
                   <PlayerButton label="تأخير 10 ثواني" onClick={() => seekRelative(-10)}>
                     <div className="flex flex-col items-center">
@@ -468,7 +597,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
 
           <aside className="hidden min-h-0 border-r border-white/10 bg-slate-900 lg:flex lg:flex-col"><Playlist lessons={lessons} active={item} onSelect={onSelectLesson}/></aside>
         </div>
-        <div className="sticky bottom-0 z-30 flex min-h-16 items-center justify-between border-t border-white/10 bg-slate-950 px-3 lg:hidden"><button disabled={!previous} onClick={() => previous && onSelectLesson(previous)} className="h-11 rounded-xl px-3 text-sm font-bold text-white hover:bg-white/10 disabled:opacity-30">السابق</button><button onClick={() => setPlaylistOpen(true)} className="h-11 rounded-xl px-4 text-sm font-bold text-sky-400 hover:bg-white/10">قائمة الدروس</button><button disabled={!next} onClick={() => next && onSelectLesson(next)} className="h-11 rounded-xl px-3 text-sm font-bold text-white hover:bg-white/10 disabled:opacity-30">التالي</button></div>
+        <div className="sticky bottom-0 z-30 flex min-h-16 items-center justify-between border-t border-white/10 bg-slate-950 px-3 lg:hidden landscape:hidden"><button disabled={!previous} onClick={() => previous && onSelectLesson(previous)} className="h-11 rounded-xl px-3 text-sm font-bold text-white hover:bg-white/10 disabled:opacity-30">السابق</button><button onClick={() => setPlaylistOpen(true)} className="h-11 rounded-xl px-4 text-sm font-bold text-sky-400 hover:bg-white/10">قائمة الدروس</button><button disabled={!next} onClick={() => next && onSelectLesson(next)} className="h-11 rounded-xl px-3 text-sm font-bold text-white hover:bg-white/10 disabled:opacity-30">التالي</button></div>
       </motion.div>
       {playlistOpen && <motion.div className="fixed inset-0 z-[110] bg-black/60 lg:hidden" initial={{opacity:0}} animate={{opacity:1}} onClick={() => setPlaylistOpen(false)}><motion.aside dir="rtl" className="absolute inset-y-0 right-0 flex w-[min(88vw,360px)] flex-col bg-slate-900 shadow-2xl" initial={{x:'100%'}} animate={{x:0}} onClick={event => event.stopPropagation()}><div className="flex h-16 items-center justify-between border-b border-white/10 px-4"><strong className="text-white">محتوى الكورس</strong><button onClick={() => setPlaylistOpen(false)} aria-label="إغلاق قائمة الدروس" className="grid h-11 w-11 place-items-center rounded-xl text-white hover:bg-white/10"><X className="h-5 w-5"/></button></div><Playlist lessons={lessons} active={item} onSelect={(lesson) => { onSelectLesson(lesson); setPlaylistOpen(false); }}/></motion.aside></motion.div>}
     </motion.div>
