@@ -595,15 +595,15 @@ function getOrCreateDeviceId(): string {
 
   return (
     <main
-      className="relative min-h-[calc(100vh-4rem)] w-full overflow-hidden bg-[#07111F] text-[#F8FAFC] px-4 py-10 lg:py-14 dir-rtl font-sans"
+      className="relative min-h-[calc(100vh-4rem)] w-full overflow-x-hidden bg-[#07111F] text-[#F8FAFC] px-3 sm:px-6 py-6 sm:py-10 lg:py-14 dir-rtl font-sans"
       dir="rtl"
     >
       {/* Refined Layered Background System */}
-      <div className="absolute top-0 right-1/4 h-[500px] w-[500px] rounded-full bg-[#3B82F6]/10 blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-0 left-1/4 h-[500px] w-[500px] rounded-full bg-[#1E3A5F]/20 blur-[160px] pointer-events-none" />
+      <div className="absolute top-0 right-1/4 h-[300px] sm:h-[500px] w-[300px] sm:w-[500px] rounded-full bg-[#3B82F6]/10 blur-[100px] sm:blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-0 left-1/4 h-[300px] sm:h-[500px] w-[300px] sm:w-[500px] rounded-full bg-[#1E3A5F]/20 blur-[120px] sm:blur-[160px] pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(rgba(148,163,184,0.12)_1px,transparent_1px)] [background-size:24px_24px] opacity-25 pointer-events-none" />
 
-      <div className="relative mx-auto grid max-w-[1440px] items-center gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-12 xl:gap-16">
+      <div className="relative mx-auto grid max-w-[1440px] items-center gap-6 sm:gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:gap-12 xl:gap-16">
         {/* Introductory Content Column (Right in RTL) */}
         <div className="space-y-8 text-right">
           {/* Trust Badge */}
@@ -686,7 +686,7 @@ function getOrCreateDeviceId(): string {
         </div>
 
         {/* Form Column (Left in RTL) */}
-        <div className="w-full rounded-[28px] border border-[rgba(148,163,184,0.20)] bg-[#101D31] p-6 sm:p-9 shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
+        <div className="w-full rounded-[22px] sm:rounded-[28px] border border-[rgba(148,163,184,0.20)] bg-[#101D31] p-4 sm:p-9 shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
           {/* Segmented Tab Switcher */}
           <div className="grid grid-cols-2 rounded-[16px] bg-[#091426] p-[5px] mb-8 border border-[rgba(148,163,184,0.15)] h-[54px]">
             <button
