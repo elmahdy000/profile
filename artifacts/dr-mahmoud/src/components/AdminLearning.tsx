@@ -1133,7 +1133,31 @@ export function AdminLearning() {
       ) : (
         <>
           {tab === "students" && (
-            <div className="space-y-3">
+            <div className="space-y-4">
+              {/* Pending Code Recovery Requests Alert Banner */}
+              {recoveryRequests.filter((r) => r.status === "pending").length > 0 && (
+                <div className="rounded-2xl border border-amber-300 bg-amber-50/90 p-4 shadow-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-500 text-white font-black text-sm">
+                        {recoveryRequests.filter((r) => r.status === "pending").length}
+                      </span>
+                      <div>
+                        <h4 className="text-sm font-extrabold text-amber-900">طلبات استرجاع كود معلقة</h4>
+                        <p className="text-xs font-medium text-amber-700 mt-0.5">يوجد طلبات نسيان كود تحتاج لإرسال الكود للطلاب عبر الواتساب.</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setTab("reports")}
+                      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-amber-600 px-4 text-xs font-bold text-white hover:bg-amber-700 transition shadow-xs shrink-0"
+                    >
+                      <MessageCircle className="h-4 w-4" /> عرض ومعالجة الطلبات
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-4">
                 <label className="relative col-span-2 lg:col-span-1"><Search className="absolute right-3 top-3.5 h-4 w-4 text-slate-400" /><input value={studentSearch} onChange={(event) => setStudentSearch(event.target.value)} placeholder="ابحث بالاسم أو الهاتف أو الكود..." className="input-admin pr-9" /></label>
                 <select value={studentStatusFilter} onChange={(event) => setStudentStatusFilter(event.target.value)} className="input-admin"><option value="all">كل الحالات</option><option value="pending">قيد المراجعة</option><option value="approved">معتمد</option><option value="suspended">موقوف</option></select>
