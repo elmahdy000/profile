@@ -2251,6 +2251,16 @@ export function StudentPlatform() {
       // Reading notifications should never interrupt the learning experience.
     }
   };
+  const markAllNotificationsRead = async () => {
+    try {
+      await api("/api/learning/notifications/read-all", { method: "POST" });
+      setNotifications((current) =>
+        current.map((item) => ({ ...item, readAt: item.readAt || new Date().toISOString() })),
+      );
+    } catch {
+      // Reading notifications should never interrupt the learning experience.
+    }
+  };
   const unreadNotifications = notifications.filter((item) => !item.readAt).length;
   const nav = [
     ["dashboard", "الرئيسية", Home],
@@ -2360,9 +2370,20 @@ export function StudentPlatform() {
                       transition={{ duration: 0.15 }}
                       className="absolute right-0 top-11 z-50 w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-card shadow-xl"
                     >
-                      <div className="border-b border-border px-4 py-3">
-                        <strong className="text-[14px] font-bold text-foreground">الإشعارات</strong>
-                        <p className="text-[11px] text-muted-foreground">كل جديد في حسابك وكورساتك</p>
+                      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                        <div>
+                          <strong className="text-[14px] font-bold text-foreground">الإشعارات</strong>
+                          <p className="text-[11px] text-muted-foreground">كل جديد في حسابك وكورساتك</p>
+                        </div>
+                        {unreadNotifications > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => void markAllNotificationsRead()}
+                            className="rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary transition-colors hover:bg-primary/20"
+                          >
+                            تحديد الكل كمقروء
+                          </button>
+                        )}
                       </div>
                       <div className="max-h-80 overflow-y-auto p-1.5">
                         {notifications.length === 0 ? (

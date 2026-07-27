@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 import multer from "multer";
 import mammoth from "mammoth";
-import { and, desc, eq, ilike, inArray } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, isNull } from "drizzle-orm";
 import {
   codeRecoveryRequestsTable,
   coursesTable,
@@ -1212,6 +1212,64 @@ router.patch("/learning/notifications/:id/read", requireStudent, async (req, res
       return;
     }
     res.json(notification);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/learning/notifications/read-all", requireStudent, async (_req, res, next) => {
+  try {
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    await db
+      .update(studentNotificationsTable)
+      .set({ readAt: new Date() })
+      .where(and(
+        eq(studentNotificationsTable.studentId, student.id),
+        isNull(studentNotificationsTable.readAt),
+      ));
+    res.json({ success: true, message: "تم تحديد جميع الإشعارات كمقروءة" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/admin/notifications/broadcast", requireAdmin, async (req, res, next) => {
+  try {
+    const { title, message, type = "info", targetGrade } = req.body;
+    if (!title?.trim() || !message?.trim()) {
+      res.status(400).json({ error: "عنوان ونص الإشعار مطلوبان" });
+      return;
+    }
+
+    const allApproved = await db
+      .select({ id: studentsTable.id, grade: studentsTable.grade })
+      .from(studentsTable)
+      .where(eq(studentsTable.status, "approved"));
+
+    let targets = allApproved;
+    if (targetGrade && targetGrade !== "all") {
+      targets = allApproved.filter((st) => st.grade === targetGrade);
+    }
+
+    if (targets.length === 0) {
+      res.json({ success: true, count: 0, message: "لا يوجد طلاب ينطبق عليهم هذا الشرط" });
+      return;
+    }
+
+    await db.insert(studentNotificationsTable).values(
+      targets.map((st) => ({
+        studentId: st.id,
+        title: title.trim(),
+        message: message.trim(),
+        type: type || "info",
+      })),
+    );
+
+    res.json({
+      success: true,
+      count: targets.length,
+      message: `تم إرسال الإشعار بنجاح إلى ${targets.length} طالب`,
+    });
   } catch (error) {
     next(error);
   }

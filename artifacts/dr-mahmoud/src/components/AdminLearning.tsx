@@ -199,9 +199,16 @@ async function optimizeLearningImage(file: File): Promise<File> {
 
 export function AdminLearning() {
   const { toast } = useToast();
-  const [tab, setTab] = useState<"students" | "payments" | "files" | "quizzes" | "results" | "reports">(
+  const [tab, setTab] = useState<"students" | "payments" | "notifications" | "files" | "quizzes" | "results" | "reports">(
     "files",
   );
+  const [broadcastForm, setBroadcastForm] = useState({
+    title: "",
+    message: "",
+    type: "info",
+    targetGrade: "all",
+  });
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [students, setStudents] = useState<Student[]>([]),
     [files, setFiles] = useState<FileItem[]>([]),
     [quizzes, setQuizzes] = useState<Quiz[]>([]),
@@ -421,6 +428,28 @@ export function AdminLearning() {
       toast({ variant: "success", title: "تم إنهاء طلب استرجاع الكود" });
     } catch (error) {
       toast({ variant: "destructive", title: "تعذر تحديث الطلب", description: (error as Error).message });
+    }
+  };
+  const sendBroadcast = async () => {
+    if (!broadcastForm.title.trim() || !broadcastForm.message.trim()) {
+      toast({ variant: "destructive", description: "اكتب العنوان والرسالة قبل الإرسال." });
+      return;
+    }
+    setIsBroadcasting(true);
+    try {
+      const result = await adminApi<{ success: boolean; count: number; message: string }>(
+        "/api/admin/notifications/broadcast",
+        {
+          method: "POST",
+          body: JSON.stringify(broadcastForm),
+        },
+      );
+      toast({ title: "تم الإرسال", description: result.message });
+      setBroadcastForm({ title: "", message: "", type: "info", targetGrade: "all" });
+    } catch (error) {
+      toast({ variant: "destructive", title: "فشل الإرسال", description: (error as Error).message });
+    } finally {
+      setIsBroadcasting(false);
     }
   };
   useEffect(() => {
@@ -960,6 +989,7 @@ export function AdminLearning() {
   const tabs = [
     ["students", "الطلاب", GraduationCap],
     ["payments", "إيصالات الدفع", FileCheck2],
+    ["notifications", "إرسال إشعار", MessageCircle],
     ["files", "الملفات", FileText],
     ["quizzes", "الاختبارات", ClipboardCheck],
     ["results", "النتائج", Check],
@@ -968,6 +998,7 @@ export function AdminLearning() {
   const tabMeta = {
     students: ["إدارة الطلاب", "راجع التسجيلات والصلاحيات والكورسات المخصصة لكل طالب."],
     payments: ["إيصالات الدفع", "راجع إيصالات الدفع من الطلاب ووافق أو ارفض."],
+    notifications: ["إرسال إشعار للطلاب", "أرسل تنبيهًا أو إشعارًا عامًا لجميع الطلاب أو مرحلة دراسية محددة."],
     files: ["مكتبة الملفات التعليمية", "ارفع الملفات وحدد مكان ظهورها للطلاب أو داخل الدروس."],
     quizzes: ["بناء وإدارة الاختبارات", "أنشئ الاختبارات وحدد الجمهور والإعدادات والأسئلة ثم انشرها."],
     results: ["نتائج الاختبارات", "تابع محاولات الطلاب ودرجات النجاح من مكان واحد."],
@@ -1270,6 +1301,89 @@ export function AdminLearning() {
           )}
           {tab === "payments" && (
             <PaymentReceiptsPanel />
+          )}
+          {tab === "notifications" && (
+            <div className="mx-auto max-w-2xl space-y-6">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
+                <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                    <MessageCircle className="h-5 w-5 text-primary" />
+                  </span>
+                  <div>
+                    <h3 className="text-base font-black text-slate-900">إرسال إشعار للطلاب</h3>
+                    <p className="text-xs text-slate-500">الإشعار بيظهر فورًا في حساب الطالب داخل المنصة</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold text-slate-700">عنوان الإشعار *</label>
+                    <input
+                      value={broadcastForm.title}
+                      onChange={(e) => setBroadcastForm((f) => ({ ...f, title: e.target.value }))}
+                      placeholder="مثال: درس جديد اتضاف!"
+                      className="input-admin"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold text-slate-700">نص الرسالة *</label>
+                    <textarea
+                      rows={3}
+                      value={broadcastForm.message}
+                      onChange={(e) => setBroadcastForm((f) => ({ ...f, message: e.target.value }))}
+                      placeholder="اكتب تفاصيل الإشعار هنا..."
+                      className="input-admin resize-none"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="mb-1.5 block text-xs font-bold text-slate-700">نوع الإشعار</label>
+                      <select
+                        value={broadcastForm.type}
+                        onChange={(e) => setBroadcastForm((f) => ({ ...f, type: e.target.value }))}
+                        className="input-admin"
+                      >
+                        <option value="info">📘 معلومات</option>
+                        <option value="success">✅ نجاح / خبر سار</option>
+                        <option value="warning">⚠️ تنبيه</option>
+                        <option value="lesson">🎬 درس جديد</option>
+                        <option value="course">📚 كورس</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-bold text-slate-700">المرحلة المستهدفة</label>
+                      <select
+                        value={broadcastForm.targetGrade}
+                        onChange={(e) => setBroadcastForm((f) => ({ ...f, targetGrade: e.target.value }))}
+                        className="input-admin"
+                      >
+                        <option value="all">🌐 كل الطلاب المعتمدين</option>
+                        {Array.from(new Set(students.filter((s) => s.grade).map((s) => s.grade!))).map((grade) => (
+                          <option key={grade} value={grade}>{grade}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={isBroadcasting || !broadcastForm.title.trim() || !broadcastForm.message.trim()}
+                    onClick={() => void sendBroadcast()}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-black text-primary-foreground shadow transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isBroadcasting ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> جاري الإرسال...</>
+                    ) : (
+                      <><MessageCircle className="h-4 w-4" /> إرسال الإشعار</>
+                    )}
+                  </button>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-500 space-y-1">
+                <p className="font-bold text-slate-700">💡 ملاحظات هامة</p>
+                <p>• الإشعار بيتبعت فقط للطلاب اللي حالتهم "معتمد".</p>
+                <p>• الإشعار بيظهر فورًا في أيقونة الجرس في حساب الطالب.</p>
+                <p>• ممكن تختار مرحلة دراسية محددة أو تبعت للكل.</p>
+              </div>
+            </div>
           )}
           {tab === "files" && (
             <div className="space-y-6">
