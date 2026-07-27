@@ -317,9 +317,9 @@ function VideoPlayerModal({
           <div className="min-h-0 flex-1 flex flex-col overflow-hidden bg-background text-foreground lg:grid lg:grid-cols-[minmax(0,1fr)_300px]">
             <div className="flex flex-col flex-1 min-h-0 overflow-hidden lg:grid lg:grid-cols-[minmax(0,1fr)_300px]">
               {/* Player Container */}
-              <div className="bg-black flex-1 min-h-0 flex flex-col justify-center relative p-0 lg:order-2">
+              <div className="bg-black shrink-0 flex flex-col justify-center relative p-0 lg:order-2 landscape:flex-1 landscape:min-h-0">
                 <div
-                  className="relative flex-1 min-h-0 w-full flex items-center justify-center bg-black overflow-hidden sm:rounded-2xl sm:ring-2 sm:ring-primary/30"
+                  className="relative w-full aspect-video sm:aspect-auto sm:flex-1 sm:min-h-0 bg-black overflow-hidden flex items-center justify-center landscape:flex-1 landscape:min-h-0 landscape:aspect-none sm:rounded-2xl sm:ring-2 sm:ring-primary/30"
                   onContextMenu={(e) => e.preventDefault()}
                 >
                   <button

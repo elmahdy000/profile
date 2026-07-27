@@ -265,8 +265,8 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
 
         <div className="min-h-0 flex-1 flex flex-col overflow-hidden lg:grid lg:grid-cols-[minmax(0,1fr)_300px]">
           <main className="min-w-0 flex-1 flex flex-col overflow-hidden">
-            <section className="bg-black flex-1 min-h-0 flex flex-col relative justify-center">
-              <div className="relative flex-1 min-h-0 w-full flex items-center justify-center bg-black overflow-hidden">
+            <section className="bg-black shrink-0 flex flex-col relative justify-center landscape:flex-1 landscape:min-h-0">
+              <div className="relative w-full aspect-video sm:aspect-auto sm:flex-1 sm:min-h-0 bg-black overflow-hidden flex items-center justify-center landscape:flex-1 landscape:min-h-0 landscape:aspect-none">
                 {/* Floating close button in mobile landscape - z-[999] for touch responsiveness */}
                 <button
                   type="button"
