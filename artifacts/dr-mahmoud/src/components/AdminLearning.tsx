@@ -2341,7 +2341,6 @@ function PaymentReceiptsPanel({ receipts: propReceipts, onRefresh }: { receipts?
     try {
       const data = await adminApi<PaymentReceipt[]>("/api/admin/payment-receipts");
       setReceipts(data);
-      if (onRefresh) onRefresh();
     } catch (err) {
       toast({ title: "خطأ", description: (err as Error).message, variant: "destructive" });
     } finally {
