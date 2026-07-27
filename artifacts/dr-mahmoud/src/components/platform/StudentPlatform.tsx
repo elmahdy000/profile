@@ -1686,7 +1686,7 @@ function DashboardPanel({
       {student.paymentStatus !== "paid" && (
         <PaymentBanner paymentStatus={student.paymentStatus || "unpaid"} onUploaded={() => window.location.reload()} />
       )}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => <StatisticCard key={stat.label} {...stat} />)}
       </div>
       {(() => {
@@ -1741,9 +1741,9 @@ function DashboardPanel({
           </section>
         );
       })()}
-      <div className="grid gap-5 xl:grid-cols-[1.5fr_.7fr]">
+      <div className="grid gap-5 grid-cols-1 xl:grid-cols-[1.5fr_.7fr]">
         <article className="overflow-hidden rounded-2xl border border-border bg-card shadow-md">
-          <div className="grid md:grid-cols-[.9fr_1.1fr]">
+          <div className="grid grid-cols-1 sm:grid-cols-[.9fr_1.1fr]">
             <div className="relative min-h-52 bg-accent">
               <img
                 src={academicTrack?.image || "/university-cs-path.webp"}

@@ -112,9 +112,9 @@ export function StatisticCard({
   return (
     <article className="rounded-2xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:border-primary/20">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-[12px] font-bold text-muted-foreground">{label}</p>
-          <strong className="mt-1.5 block text-[26px] font-extrabold leading-tight text-foreground">
+          <strong className={`mt-1.5 block font-extrabold leading-tight text-foreground dark:text-white ${String(value).length > 8 ? 'text-[18px]' : 'text-[26px]'}`}>
             {value}
           </strong>
           {helper && (
@@ -212,9 +212,9 @@ export function StatusBadge({
   variant?: "info" | "success" | "warning";
 }) {
   const styles = {
-    info: "border-primary/15 bg-primary/10 text-primary",
-    success: "border-emerald-500/25 bg-emerald-500/12 text-emerald-500",
-    warning: "border-amber-500/25 bg-amber-500/12 text-amber-500",
+    info: "border-primary/15 bg-primary/10 text-primary dark:text-blue-300",
+    success: "border-emerald-500/25 bg-emerald-500/12 text-emerald-600 dark:text-emerald-400",
+    warning: "border-amber-500/25 bg-amber-500/12 text-amber-600 dark:text-amber-400",
   };
 
   return (
