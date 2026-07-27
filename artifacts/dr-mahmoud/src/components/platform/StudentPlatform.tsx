@@ -620,8 +620,8 @@ function getOrCreateDeviceId(): string {
       <div className="absolute inset-0 bg-[radial-gradient(rgba(148,163,184,0.12)_1px,transparent_1px)] [background-size:24px_24px] opacity-25 pointer-events-none" />
 
       <div className="relative mx-auto grid max-w-[1440px] items-start gap-5 sm:gap-8 lg:grid-cols-[1.08fr_0.92fr] lg:gap-10 xl:gap-14">
-        {/* Introductory Content Column (Right in RTL) */}
-        <div className="space-y-6 text-right">
+        {/* Introductory Content Column (Right in RTL, order-2 on mobile) */}
+        <div className="space-y-6 text-right order-2 lg:order-1">
           {/* Trust Badge */}
           <div className={`inline-flex h-[36px] items-center gap-2 rounded-full border px-3.5 text-xs font-semibold backdrop-blur-md ${
             isLight ? "border-blue-300 bg-blue-50 text-blue-800" : "border-[rgba(96,165,250,0.24)] bg-[rgba(59,130,246,0.10)] text-[#BFDBFE]"
@@ -718,8 +718,8 @@ function getOrCreateDeviceId(): string {
           </div>
         </div>
 
-        {/* Form Column (Left in RTL) */}
-        <div className={`w-full rounded-[24px] border p-4 sm:p-6 transition-all ${
+        {/* Form Column (Left in RTL, order-1 on mobile) */}
+        <div className={`w-full rounded-[24px] border p-4 sm:p-6 transition-all order-1 lg:order-2 ${
           mode === "register"
             ? "registration-light-theme border-[#E2E8F0] bg-white text-[#0F172A]"
             : isLight
