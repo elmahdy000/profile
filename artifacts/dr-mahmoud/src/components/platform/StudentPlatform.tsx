@@ -720,15 +720,13 @@ function getOrCreateDeviceId(): string {
 
         {/* Form Column (Left in RTL, order-1 on mobile) */}
         <div className={`w-full rounded-[24px] border p-4 sm:p-6 transition-all order-1 lg:order-2 ${
-          mode === "register"
-            ? "registration-light-theme border-[#E2E8F0] bg-white text-[#0F172A]"
-            : isLight
-            ? "border-[#E2E8F0] bg-white shadow-xs text-[#0F172A]"
+          isLight
+            ? "border-[#E2E8F0] bg-white shadow-md text-[#0F172A]"
             : "border-[rgba(148,163,184,0.20)] bg-[#101D31] shadow-[0_20px_60px_rgba(0,0,0,0.30)] text-[#F8FAFC]"
         }`}>
           {/* Segmented Tab Switcher */}
           <div className={`grid grid-cols-2 rounded-[14px] p-1 mb-4 border h-[46px] ${
-            mode === "register" || isLight ? "bg-[#F1F5F9] border-[#E2E8F0]" : "bg-[#091426] border-[rgba(148,163,184,0.15)]"
+            isLight ? "bg-[#F1F5F9] border-[#E2E8F0]" : "bg-[#091426] border-[rgba(148,163,184,0.15)]"
           }`}>
             <button
               type="button"
@@ -741,7 +739,7 @@ function getOrCreateDeviceId(): string {
                   ? isLight
                     ? "bg-white text-[#0866D9] shadow-xs border border-[#E2E8F0]"
                     : "bg-[rgba(59,130,246,0.20)] text-[#F8FAFC] border border-[#3B82F6]/40 shadow-xs"
-                  : mode === "register" || isLight
+                  : isLight
                   ? "text-[#475569] hover:text-[#0F172A]"
                   : "text-[#94A3B8] hover:text-[#CBD5E1]"
               }`}
@@ -756,7 +754,9 @@ function getOrCreateDeviceId(): string {
               }}
               className={`rounded-[10px] h-full font-bold text-xs sm:text-sm transition-all duration-200 ${
                 mode === "register"
-                  ? "bg-white text-[#0866D9] shadow-xs border border-[#E2E8F0]"
+                  ? isLight
+                    ? "bg-white text-[#0866D9] shadow-xs border border-[#E2E8F0]"
+                    : "bg-[rgba(59,130,246,0.20)] text-[#F8FAFC] border border-[#3B82F6]/40 shadow-xs"
                   : isLight
                   ? "text-[#475569] hover:text-[#0F172A]"
                   : "text-[#94A3B8] hover:text-[#CBD5E1]"
@@ -973,14 +973,16 @@ function getOrCreateDeviceId(): string {
           ) : (
             <form onSubmit={submitRegistration} className="space-y-5" noValidate dir="rtl">
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-[#0F172A]">تسجيل طالب جديد</h2>
-                <p className="mt-1 text-xs leading-relaxed text-[#64748B]">
+                <h2 className={`text-xl sm:text-2xl font-bold ${isLight ? "text-[#0F172A]" : "text-[#F8FAFC]"}`}>تسجيل طالب جديد</h2>
+                <p className={`mt-1 text-xs leading-relaxed ${isLight ? "text-[#64748B]" : "text-[#94A3B8]"}`}>
                   اكتب بيانات الطالب بدقة، وتأكد من موافقة ولي الأمر قبل تفعيل الحساب.
                 </p>
               </div>
 
               {/* Progress Indicator Header */}
-              <div className="rounded-[16px] border border-[#E2E8F0] bg-[#F8FAFC] p-2">
+              <div className={`rounded-[16px] border p-2 ${
+                isLight ? "border-[#E2E8F0] bg-[#F8FAFC]" : "border-[rgba(148,163,184,0.14)] bg-[#091426]"
+              }`}>
                 <div className="grid grid-cols-3 gap-1.5 text-center">
                   {[
                     [1, "البيانات الأساسية"],
@@ -1002,8 +1004,8 @@ function getOrCreateDeviceId(): string {
                           isActive
                             ? "bg-[#0866D9] text-white shadow-xs"
                             : isCompleted
-                            ? "bg-[#E8F1FF] text-[#0866D9]"
-                            : "bg-transparent text-[#64748B]"
+                            ? isLight ? "bg-[#E8F1FF] text-[#0866D9]" : "bg-[rgba(59,130,246,0.15)] text-[#60A5FA]"
+                            : isLight ? "bg-transparent text-[#64748B]" : "bg-transparent text-[#94A3B8]"
                         }`}
                       >
                         <span className={`grid h-5 w-5 place-items-center rounded-full text-[11px] font-extrabold ${
@@ -1011,7 +1013,7 @@ function getOrCreateDeviceId(): string {
                             ? "bg-white text-[#0866D9]"
                             : isCompleted
                             ? "bg-[#0866D9] text-white"
-                            : "bg-slate-200 text-[#64748B]"
+                            : isLight ? "bg-slate-200 text-[#64748B]" : "bg-slate-800 text-[#94A3B8]"
                         }`}>
                           {isCompleted ? "✓" : (stepNum as number)}
                         </span>
@@ -1025,14 +1027,18 @@ function getOrCreateDeviceId(): string {
               {/* Step 1: Basic Information */}
               {regStep === 1 && (
                 <div className="space-y-4 animate-in fade-in duration-200">
-                  <div className="rounded-[18px] border border-[#E2E8F0] bg-white p-5 space-y-4 shadow-xs">
-                    <div className="flex items-center gap-2.5 border-b border-[#E2E8F0] pb-3">
-                      <span className="grid h-[30px] w-[30px] place-items-center rounded-full text-xs font-bold bg-[#E8F1FF] text-[#0866D9]">
+                  <div className={`rounded-[18px] border p-5 space-y-4 shadow-xs ${
+                    isLight ? "border-[#E2E8F0] bg-white" : "border-[rgba(148,163,184,0.14)] bg-[#091426]/60"
+                  }`}>
+                    <div className={`flex items-center gap-2.5 border-b pb-3 ${isLight ? "border-[#E2E8F0]" : "border-[rgba(148,163,184,0.14)]"}`}>
+                      <span className={`grid h-[30px] w-[30px] place-items-center rounded-full text-xs font-bold ${
+                        isLight ? "bg-[#E8F1FF] text-[#0866D9]" : "bg-[#3B82F6]/20 text-[#60A5FA]"
+                      }`}>
                         01
                       </span>
                       <div>
-                        <h3 className="text-sm font-bold text-[#0F172A]">البيانات الأساسية</h3>
-                        <p className="text-xs text-[#64748B]">بيانات التواصل والموقع الخاصة بالطالب</p>
+                        <h3 className={`text-sm font-bold ${isLight ? "text-[#0F172A]" : "text-[#F8FAFC]"}`}>البيانات الأساسية</h3>
+                        <p className={`text-xs ${isLight ? "text-[#64748B]" : "text-[#94A3B8]"}`}>بيانات التواصل والموقع الخاصة بالطالب</p>
                       </div>
                     </div>
 
