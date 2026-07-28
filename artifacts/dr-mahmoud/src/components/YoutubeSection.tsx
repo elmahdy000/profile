@@ -838,19 +838,10 @@ export function VideoLessonsSection({
   // Categories list — only show categories from visible items
   const categories = ["all", ...Array.from(new Set(visibleItems.map((item) => item.category)))];
 
-  // Auto-select the student's matching category
+  // Auto-select "all" by default for students so all assigned courses are visible
   useEffect(() => {
     if (!student || !dbVideos) return;
-    const grade = studentGrade || "";
-    const matchedCat = visibleItems.find(
-      (item) => String(item.category).trim().toLowerCase() === grade.trim().toLowerCase()
-    )?.category;
-    if (matchedCat) {
-      setActiveCategory(matchedCat);
-    } else if (visibleItems.length > 0 && visibleItems.length < items.length) {
-      // Student has filtered content but no exact category match — show all visible
-      setActiveCategory("all");
-    }
+    setActiveCategory("all");
   }, [student, dbVideos]);
 
   // Filtering Logic
@@ -1270,7 +1261,7 @@ export function VideoLessonsSection({
           </AnimatePresence>
 
           {/* Category Tabs */}
-          {!isStudentMode && <div className="flex flex-wrap items-center justify-start gap-2 mb-8 border-b border-border pb-4">
+          {categories.length > 2 && <div className="flex flex-wrap items-center justify-start gap-2 mb-8 border-b border-border pb-4">
             {categories.map((cat) => (
               <button
                 key={cat}

@@ -1373,27 +1373,104 @@ function getOrCreateDeviceId(): string {
 function FilesPanel({ files }: { files: LearningFile[] }) {
   const standaloneFiles = files.filter((file) => file.targetType !== "videos");
   const [previewFile, setPreviewFile] = useState<LearningFile | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<string>("all");
+
+  // Group files by course/category name
+  const courses = Array.from(new Set(standaloneFiles.map((file) => file.category || "عام"))).filter(Boolean);
+
+  const filteredFiles = standaloneFiles.filter((file) => {
+    if (selectedCourse === "all") return true;
+    return (file.category || "عام") === selectedCourse;
+  });
+
   return (
     <section className="space-y-7" dir="rtl">
-      <PageHeader title="الملفات والمرفقات" description="المذكرات والأكواد والتمارين الخاصة بمرحلتك وكورساتك." action={<StatusBadge>{standaloneFiles.length} ملف</StatusBadge>} />
-      {standaloneFiles.length === 0 ? (
-        <EmptyState icon={FolderOpen} title="لا توجد ملفات مرفوعة" description="ستظهر مذكرات وأكواد الكورسات هنا فور نشرها لحسابك." />
-      ) : (
-        <div className="overflow-hidden rounded-2xl border border-border bg-card">
-          {standaloneFiles.map((file) => (
-            <article key={file.id} className="grid gap-3 border-b border-border p-4 last:border-0 sm:grid-cols-[minmax(0,1fr)_160px_100px_auto] sm:items-center">
-              <div className="flex min-w-0 items-center gap-3"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><FileText className="h-5 w-5" /></span><div className="min-w-0"><h3 className="truncate text-base font-semibold text-foreground">{file.title}</h3><p className="truncate text-[13px] text-muted-foreground">{file.originalName}</p></div></div>
-              <span className="text-sm text-muted-foreground">{getTrack(file.category)?.title || file.category}</span>
-              <span className="text-sm text-muted-foreground">{(file.sizeBytes / 1024 / 1024).toFixed(1)} MB</span>
+      <PageHeader
+        title="الملفات والمرفقات"
+        description="المذكرات والأكواد والتمارين مقسمة حسب الكورسات المتاحة لمرحلتك."
+        action={<StatusBadge>{standaloneFiles.length} ملف</StatusBadge>}
+      />
+
+      {/* Course Filter Tabs */}
+      {courses.length > 1 && (
+        <div className="flex flex-wrap gap-2 border-b border-border pb-3">
+          <button
+            type="button"
+            onClick={() => setSelectedCourse("all")}
+            className={`rounded-xl px-4 py-2 text-xs sm:text-sm font-bold transition-all ${
+              selectedCourse === "all"
+                ? "bg-primary text-white shadow-md"
+                : "bg-card text-muted-foreground hover:bg-muted border border-border"
+            }`}
+          >
+            📚 كل الكورسات ({standaloneFiles.length})
+          </button>
+          {courses.map((courseName) => {
+            const count = standaloneFiles.filter((f) => (f.category || "عام") === courseName).length;
+            const isSelected = selectedCourse === courseName;
+            return (
               <button
+                key={courseName}
                 type="button"
-                onClick={() => setPreviewFile(file)}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-primary/20 px-4 text-sm font-bold text-primary hover:bg-primary/10 transition-colors"
+                onClick={() => setSelectedCourse(courseName)}
+                className={`rounded-xl px-4 py-2 text-xs sm:text-sm font-bold transition-all ${
+                  isSelected
+                    ? "bg-primary text-white shadow-md"
+                    : "bg-card text-muted-foreground hover:bg-muted border border-border"
+                }`}
               >
-                <Eye className="h-4 w-4" /> معاينة
+                📖 {getTrack(courseName)?.title || courseName} ({count})
               </button>
-            </article>
-          ))}
+            );
+          })}
+        </div>
+      )}
+
+      {filteredFiles.length === 0 ? (
+        <EmptyState
+          icon={FolderOpen}
+          title="لا توجد ملفات مرفوعة"
+          description="ستظهر مذكرات وأكواد الكورسات هنا فور نشرها لحسابك."
+        />
+      ) : (
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
+          {filteredFiles.map((file) => {
+            const courseTitle = getTrack(file.category)?.title || file.category || "كورس عام";
+            return (
+              <article
+                key={file.id}
+                className="grid gap-3 border-b border-border p-4 last:border-0 sm:grid-cols-[minmax(0,1fr)_180px_100px_auto] sm:items-center hover:bg-muted/40 transition-colors"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                    <FileText className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="truncate text-base font-bold text-foreground">{file.title}</h3>
+                    <p className="truncate text-[13px] text-muted-foreground">{file.originalName}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
+                    📚 {courseTitle}
+                  </span>
+                </div>
+
+                <span className="text-xs font-semibold text-muted-foreground">
+                  {(file.sizeBytes / 1024 / 1024).toFixed(1)} MB
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => setPreviewFile(file)}
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 text-xs font-bold text-primary hover:bg-primary/15 transition-colors"
+                >
+                  <Eye className="h-4 w-4" /> معاينة وقراءة
+                </button>
+              </article>
+            );
+          })}
         </div>
       )}
       <AnimatePresence>
