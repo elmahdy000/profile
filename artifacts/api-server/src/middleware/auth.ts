@@ -46,7 +46,7 @@ function hasValidAdminCookie(req: Request): boolean {
 export function adminSessionCookieOptions() {
   return {
     httpOnly: true,
-    sameSite: "strict" as const,
+    sameSite: "lax" as const,
     secure: process.env.NODE_ENV === "production",
     maxAge: ADMIN_SESSION_SECONDS * 1000,
     path: "/",
