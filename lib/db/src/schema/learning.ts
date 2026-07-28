@@ -24,7 +24,9 @@ export const studentsTable = pgTable("students", {
   paymentStatus: text("payment_status").notNull().default("unpaid"),  // unpaid | pending_review | paid
   subscriptionEndDate: timestamp("subscription_end_date"),  // null = no expiry set
   subscriptionNotifiedAt: timestamp("subscription_notified_at"),  // last time we notified about expiry
-  deviceId: text("device_id"), // Unique bound device token for single-device lock
+  deviceId: text("device_id"), // Primary bound device token
+  maxDevices: integer("max_devices").notNull().default(1), // Max allowed bound devices (1 by default, 2 if approved by admin)
+  boundDevices: jsonb("bound_devices").$type<string[]>().notNull().default([]), // List of all approved bound device IDs
   approvedAt: timestamp("approved_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

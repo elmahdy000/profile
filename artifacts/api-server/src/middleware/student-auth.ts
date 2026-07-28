@@ -212,8 +212,11 @@ export async function getApprovedStudent(
     .limit(1);
   const reqDeviceId = String(req.headers["x-device-id"] ?? req.query.deviceId ?? "").trim();
   const student = row?.student ?? null;
-  if (student && student.deviceId && reqDeviceId && student.deviceId !== reqDeviceId) {
-    return null;
+  if (student && reqDeviceId) {
+    const approvedDevices = Array.isArray(student.boundDevices) ? student.boundDevices : (student.deviceId ? [student.deviceId] : []);
+    if (approvedDevices.length > 0 && !approvedDevices.includes(reqDeviceId)) {
+      return null;
+    }
   }
   return student;
 }

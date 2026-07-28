@@ -46,6 +46,8 @@ type Student = {
   learningMode?: "online" | "offline";
   paymentStatus?: string;
   deviceId?: string | null;
+  maxDevices?: number;
+  boundDevices?: string[];
   enrolledCourseIds?: number[];
   enrolledCategories?: string[];
   createdAt: string;
@@ -1204,9 +1206,19 @@ export function AdminLearning() {
                             {s.paymentStatus === "paid" ? "💳 اشتراك مدفوع" : s.paymentStatus === "pending_review" ? "⏳ إيصال قيد المراجعة" : "🆓 مشاهدة مجانية (أول 2)"}
                           </span>
                           <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-bold ${s.deviceId ? "bg-amber-500/10 text-amber-700 border border-amber-300" : "bg-emerald-500/10 text-emerald-700"}`}
+                            className={`rounded-full px-2.5 py-1 text-xs font-bold ${
+                              (s.maxDevices || 1) === 2
+                                ? "bg-purple-500/10 text-purple-700 border border-purple-300"
+                                : s.deviceId || (s.boundDevices && s.boundDevices.length > 0)
+                                ? "bg-amber-500/10 text-amber-700 border border-amber-300"
+                                : "bg-emerald-500/10 text-emerald-700"
+                            }`}
                           >
-                            {s.deviceId ? "📱 جهاز مقترن" : "🔓 بدون قفل جهاز"}
+                            {(s.maxDevices || 1) === 2
+                              ? `📱📱 مسموح جهازين (${s.boundDevices?.length || (s.deviceId ? 1 : 0)}/2)`
+                              : s.deviceId || (s.boundDevices && s.boundDevices.length > 0)
+                              ? "📱 جهاز واحد مقترن"
+                              : "🔓 بدون قفل جهاز"}
                           </span>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">
@@ -1257,22 +1269,47 @@ export function AdminLearning() {
                             <UserCheck className="h-4 w-4 me-1" /> إعادة تفعيل
                           </Button>
                         )}
+
+                        {/* Multi-Device Authorization Button */}
                         <Button
                           variant="outline"
-                          disabled={!s.deviceId}
-                          className={s.deviceId ? "border-amber-500 text-amber-800 bg-amber-50/50 hover:bg-amber-100" : "opacity-50"}
+                          className={(s.maxDevices || 1) === 2 ? "border-purple-500 text-purple-800 bg-purple-50 hover:bg-purple-100 font-bold" : "border-slate-300 text-slate-700 hover:bg-slate-50"}
                           onClick={async () => {
-                            if (!s.deviceId) return;
+                            const newMax = (s.maxDevices || 1) === 1 ? 2 : 1;
                             try {
-                              await adminApi(`/api/admin/students/${s.id}/reset-device`, { method: "POST" });
-                              toast({ title: "تم فك قفل الجهاز", description: `تمت إزالة ربط الجهاز للطالب ${s.name} بنجاح.` });
-                              setStudents((prev) => prev.map((item) => item.id === s.id ? { ...item, deviceId: null } : item));
+                              await adminApi(`/api/admin/students/${s.id}/set-max-devices`, {
+                                method: "POST",
+                                body: JSON.stringify({ maxDevices: newMax }),
+                              });
+                              toast({
+                                title: newMax === 2 ? "تمت الموافقة والسماح بجهاز ثانٍ 📱📱" : "تم إلغاء تفعيل الجهاز الثاني 📱",
+                                description: newMax === 2 ? `يمكن للطالب ${s.name} الآن تسجيل الدخول من جهازين في نفس الوقت.` : `تمت إعادة الحد الأقصى للطالب ${s.name} إلى جهاز واحد فقط.`,
+                              });
+                              setStudents((prev) => prev.map((item) => item.id === s.id ? { ...item, maxDevices: newMax } : item));
                             } catch (err) {
                               toast({ variant: "destructive", description: (err as Error).message });
                             }
                           }}
                         >
-                          <RefreshCw className="h-4 w-4 me-1" /> {s.deviceId ? "فك قفل الجهاز" : "لا يوجد جهاز مقترن"}
+                          {(s.maxDevices || 1) === 2 ? "📱📱 مسموح جهازين (إلغاء)" : "📱 السماح بجهاز ثانٍ"}
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          disabled={!s.deviceId && (!s.boundDevices || s.boundDevices.length === 0)}
+                          className={s.deviceId || (s.boundDevices && s.boundDevices.length > 0) ? "border-amber-500 text-amber-800 bg-amber-50/50 hover:bg-amber-100" : "opacity-50"}
+                          onClick={async () => {
+                            if (!s.deviceId && (!s.boundDevices || s.boundDevices.length === 0)) return;
+                            try {
+                              await adminApi(`/api/admin/students/${s.id}/reset-device`, { method: "POST" });
+                              toast({ title: "تم فك وإلغاء قفل الأجهزة", description: `تمت إزالة ربط كافة الأجهزة للطالب ${s.name} بنجاح.` });
+                              setStudents((prev) => prev.map((item) => item.id === s.id ? { ...item, deviceId: null, boundDevices: [] } : item));
+                            } catch (err) {
+                              toast({ variant: "destructive", description: (err as Error).message });
+                            }
+                          }}
+                        >
+                          <RefreshCw className="h-4 w-4 me-1" /> {s.deviceId || (s.boundDevices && s.boundDevices.length > 0) ? "فك قفل الأجهزة" : "لا يوجد أجهزة مقترنة"}
                         </Button>
                         <Button
                           variant="destructive"

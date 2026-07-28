@@ -601,21 +601,38 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
       return;
     }
 
-    // ── Device Locking Logic ──
+    // ── Multi-Device Locking & Binding Logic ──
     if (deviceId) {
-      if (!student.deviceId) {
-        // First login: bind this device to the student account
-        await db
-          .update(studentsTable)
-          .set({ deviceId })
-          .where(eq(studentsTable.id, student.id));
-        student.deviceId = deviceId;
-      } else if (student.deviceId !== deviceId) {
-        // Different device attempting login
-        res.status(403).json({
-          error: "عذراً، هذا الحساب مرتبط بجهاز آخر محدد سابقاً. تواصل مع الدعم/الأدمن لإعادة ضبط الجهاز.",
-        });
-        return;
+      const maxDevices = student.maxDevices || 1;
+      let boundDevices: string[] = Array.isArray(student.boundDevices) ? [...student.boundDevices] : [];
+      if (boundDevices.length === 0 && student.deviceId) {
+        boundDevices = [student.deviceId];
+      }
+
+      if (!boundDevices.includes(deviceId)) {
+        if (boundDevices.length < maxDevices) {
+          // Allowed to bind this additional device (e.g. maxDevices was set to 2 by admin)
+          boundDevices.push(deviceId);
+          await db
+            .update(studentsTable)
+            .set({
+              deviceId: boundDevices[0],
+              boundDevices,
+              updatedAt: new Date(),
+            })
+            .where(eq(studentsTable.id, student.id));
+          student.deviceId = boundDevices[0];
+          student.boundDevices = boundDevices;
+        } else {
+          // Limit reached (default 1 device, or already used 2 devices)
+          const isSingleDevice = maxDevices === 1;
+          res.status(403).json({
+            error: isSingleDevice
+              ? "عذراً، هذا الحساب مرتبط بجهاز آخر. يتطلب الفتح من جهاز ثانٍ تواصلك مع الأدمن للموافقة والتفعيل."
+              : `عذراً، هذا الحساب وصل للحد الأقصى المسموح للأجهزة (${maxDevices} جهاز). تواصل مع الأدمن لإدارة أجهزتك.`,
+          });
+          return;
+        }
       }
     }
 
@@ -1085,7 +1102,7 @@ router.post(
 
       const [updated] = await db
         .update(studentsTable)
-        .set({ deviceId: null, updatedAt: new Date() })
+        .set({ deviceId: null, boundDevices: [], updatedAt: new Date() })
         .where(eq(studentsTable.id, id))
         .returning();
 
@@ -1099,7 +1116,56 @@ router.post(
         .delete(studentSessionsTable)
         .where(eq(studentSessionsTable.studentId, id));
 
-      res.json({ success: true, message: "تم فك قفل الجهاز للطالب بنجاح", student: updated });
+      res.json({ success: true, message: "تم فك وإلغاء قفل الأجهزة للطالب بنجاح", student: updated });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+// Admin Endpoint: Update student maximum allowed devices limit (1 or 2)
+router.post(
+  "/admin/students/:id/set-max-devices",
+  requireAdmin,
+  async (req, res, next) => {
+    try {
+      const id = Number(req.params.id);
+      const maxDevices = Number(req.body.maxDevices);
+      if (!Number.isInteger(id) || id <= 0) {
+        res.status(400).json({ error: "معرّف الطالب غير صحيح" });
+        return;
+      }
+      if (![1, 2].includes(maxDevices)) {
+        res.status(400).json({ error: "عدد الأجهزة المسموح به يجب أن يكون 1 أو 2 فقط" });
+        return;
+      }
+
+      const [updated] = await db
+        .update(studentsTable)
+        .set({ maxDevices, updatedAt: new Date() })
+        .where(eq(studentsTable.id, id))
+        .returning();
+
+      if (!updated) {
+        res.status(404).json({ error: "الطالب غير موجود" });
+        return;
+      }
+
+      // Add notification for the student
+      await db.insert(studentNotificationsTable).values({
+        studentId: id,
+        type: "info",
+        title: maxDevices === 2 ? "تم الاعتماد: السماح بجهاز ثانٍ 📱📱" : "تحديث الأجهزة المسموحة 📱",
+        message: maxDevices === 2
+          ? "تمت موافقة الأدمن على فتح حسابك من جهاز ثانٍ. يمكنك تسجيل الدخول الآن من جهازك الثاني."
+          : "تم تعيين الحد الأقصى للأجهزة إلى جهاز واحد فقط.",
+      });
+
+      res.json({
+        success: true,
+        message: maxDevices === 2 ? "تمت الموافقة والسماح بفتح جهاز ثانٍ للطالب بنجاح" : "تم ضبط الحد الأقصى للأجهزة إلى جهاز واحد",
+        student: updated,
+      });
     } catch (error) {
       next(error);
     }
