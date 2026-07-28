@@ -1356,7 +1356,7 @@ export function AdminLearning() {
                               e.target.value as "online" | "offline",
                             )
                           }
-                          className="input-admin sm:w-44"
+                          className="input-admin text-xs font-semibold sm:w-44"
                         >
                           <option value="online">أونلاين</option>
                           <option value="offline">أوفلاين</option>
@@ -1373,7 +1373,7 @@ export function AdminLearning() {
                         <select
                           value={s.paymentStatus || "unpaid"}
                           onChange={(e) => updateStudentPaymentStatus(s, e.target.value)}
-                          className={`input-admin sm:w-48 font-bold ${s.paymentStatus === "paid" ? "border-emerald-500 bg-emerald-50 text-emerald-800" : s.paymentStatus === "pending_review" ? "border-amber-500 bg-amber-50 text-amber-800" : "border-slate-300"}`}
+                          className={`input-admin text-xs font-semibold sm:w-48 ${s.paymentStatus === "paid" ? "border-emerald-500 bg-emerald-50 text-emerald-800" : s.paymentStatus === "pending_review" ? "border-amber-500 bg-amber-50 text-amber-800" : "border-slate-300"}`}
                         >
                           <option value="unpaid">🆓 مشاهدة مجانية (أول 2)</option>
                           <option value="pending_review">⏳ إيصال قيد المراجعة</option>

@@ -21,6 +21,9 @@
   --admin-muted: #66758c;
 }
 .admin-learning-workspace .input-admin {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  padding: 0.55rem 0.75rem;
   border-color: var(--admin-border);
   border-radius: 10px;
   background: #fff;
