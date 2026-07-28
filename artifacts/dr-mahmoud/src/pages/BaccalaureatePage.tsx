@@ -230,12 +230,12 @@ export default function BaccalaureatePage() {
   const whatsapp = get(SETTINGS_KEYS.CONTACT_WHATSAPP, "201044348610");
 
   useEffect(() => {
-    document.title = "تأسيس البرمجة والـ Logic للثانوي والبكالوريا | د. محمود المهدي";
+    document.title = "تأسيس البرمجة والبكالوريا علوم الحاسب | د. محمود المهدي";
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) {
       metaDesc.setAttribute(
         "content",
-        "برنامج برمجى متكامل لتأسيس طلاب الثانوي العام وبكالوريا STEM بلغة Python والـ Logic مع د. محمود المهدي. ابدأ صح وطبق بمشاريع حقيقية."
+        "أقوى برنامج تعليمي لتأسيس البكالوريا البرمجية وطلاب STEM والثانوية العامة بلغات Python و C++ والتفكير المنطقي تحت إشراف د. محمود المهدي."
       );
     }
   }, []);
@@ -259,7 +259,7 @@ export default function BaccalaureatePage() {
     }
 
     const text = encodeURIComponent(
-      `مرحبًا د. محمود 👋\n\nأود حجز تقييم مجاني (تأسيس الثانوي والبكالوريا):\n- الاسم الكامل: ${formData.name}\n- رقم الهاتف: ${formData.phone}\n- نوع التعليم: ${formData.schoolType}\n- السنة الدراسية: ${formData.grade}\n- ملاحظات إضافية: ${formData.notes || "لا توجد"}`
+      `مرحبًا د. محمود\n\nأود حجز تقييم مجاني (تأسيس الثانوي والبكالوريا):\n- الاسم الكامل: ${formData.name}\n- رقم الهاتف: ${formData.phone}\n- نوع التعليم: ${formData.schoolType}\n- السنة الدراسية: ${formData.grade}\n- ملاحظات إضافية: ${formData.notes || "لا توجد"}`
     );
     window.open(`https://wa.me/${whatsapp}?text=${text}`, "_blank");
     
@@ -271,8 +271,46 @@ export default function BaccalaureatePage() {
     return () => clearTimeout(timer);
   };
 
+  const courseSchema = {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    "name": "تأسيس البكالوريا البرمجية وعلوم الحاسب",
+    "description": "كورس شامل لتعلم البرمجة وتأهيل طلاب البكالوريا STEM والثانوية بلغات Python و C++ والتفكير المنطقي تحت إشراف د. محمود المهدي.",
+    "provider": {
+      "@type": "Person",
+      "name": "د. محمود المهدي",
+      "sameAs": "https://drelmahdy.com"
+    },
+    "hasCourseInstance": {
+      "@type": "CourseInstance",
+      "courseMode": ["online", "onsite"],
+      "courseWorkload": "PT3H"
+    }
+  };
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map((f) => ({
+      "@type": "Question",
+      "name": f.q,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": f.a
+      }
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20" dir="rtl">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(courseSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       {/* Minimal Sticky Navbar */}
       <nav className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">

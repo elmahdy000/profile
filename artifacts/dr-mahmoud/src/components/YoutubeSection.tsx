@@ -4,7 +4,7 @@ import {
   Youtube, Play, ExternalLink, Tv, ChevronLeft, Loader2, Lock, Unlock,
   Search, SlidersHorizontal, Bookmark, Share2, Clock, BookOpen, Award, ArrowUpDown,
   FileText, ClipboardCheck, Download, X, MonitorPlay, Layers3, Signal,
-  Info, Paperclip, ShieldCheck, Eye
+  Info, Paperclip, ShieldCheck, Eye, Laptop, RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListVideos } from "@workspace/api-client-react";
@@ -877,8 +877,9 @@ export function VideoLessonsSection({
         <header className="mb-6 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs md:p-6">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-xl font-black text-slate-900 md:text-2xl">
-                دروسك وكورساتك 📚
+              <h1 className="text-xl font-black text-slate-900 md:text-2xl flex items-center gap-2">
+                <BookOpen className="h-6 w-6 text-blue-600" />
+                دروسك وكورساتك
               </h1>
               <p className="mt-1 text-xs font-semibold text-slate-500 md:text-sm">
                 كل محتواك التعليمي في مكان واحد. اختار الكورس، تابع تقدمك، وكمّل من آخر درس وصلت له.
@@ -950,7 +951,7 @@ export function VideoLessonsSection({
             >
               <div className="flex items-center justify-between">
                 <span className={`grid h-8 w-8 place-items-center rounded-lg text-sm ${activeCategory === "all" ? "bg-white/20 text-white" : "bg-blue-50 text-blue-600"}`}>
-                  📚
+                  <BookOpen className="h-4 w-4" />
                 </span>
                 <span className={`text-[11px] font-bold ${activeCategory === "all" ? "text-blue-100" : "text-slate-400"}`}>
                   {visibleItems.length} درس
@@ -986,7 +987,7 @@ export function VideoLessonsSection({
                 >
                   <div className="flex items-center justify-between">
                     <span className={`grid h-8 w-8 place-items-center rounded-lg text-sm ${isSelected ? "bg-white/20 text-white" : "bg-blue-50 text-blue-600"}`}>
-                      💻
+                      <Laptop className="h-4 w-4" />
                     </span>
                     <span className={`text-[11px] font-bold ${isSelected ? "text-blue-100" : "text-slate-400"}`}>
                       {courseItems.length} دروس
@@ -1033,9 +1034,10 @@ export function VideoLessonsSection({
                   <Button
                     type="button"
                     onClick={() => handlePlayClick(activeCourseItems.find(i => i.progress < 100) || activeCourseItems[0])}
-                    className="h-10 font-bold bg-blue-600 hover:bg-blue-700 text-white"
+                    className="h-10 font-bold bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5"
                   >
-                    استكمال الكورس 🚀
+                    <Play className="h-4 w-4 fill-white" />
+                    استكمال الكورس
                   </Button>
                 )}
               </div>
@@ -1160,8 +1162,9 @@ export function VideoLessonsSection({
                 <section key={courseName} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 md:p-6 shadow-xs">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <div>
-                      <h4 className="text-base font-black text-slate-900 dir-ltr text-right" style={{ unicodeBidi: "isolate" }}>
-                        📚 كورس {courseName}
+                      <h4 className="text-base font-black text-slate-900 dir-ltr text-right flex items-center gap-2" style={{ unicodeBidi: "isolate" }}>
+                        <BookOpen className="h-4 w-4 text-blue-600" />
+                        كورس {courseName}
                       </h4>
                       <span className="text-xs font-semibold text-slate-500">
                         {completedInCourse} من {courseRawItems.length} دروس مكتملة
@@ -1422,7 +1425,10 @@ function LessonCard({
               onClick={() => onToggleExpandAttachment(item.id || 0)}
               className="flex w-full items-center justify-between text-[11px] font-bold text-slate-600 hover:text-blue-600 py-1"
             >
-              <span>📎 المرفقات والتمارين ({attachedFiles.length + (quiz ? 1 : 0)})</span>
+              <span className="flex items-center gap-1">
+                <Paperclip className="h-3.5 w-3.5" />
+                المرفقات والتمارين ({attachedFiles.length + (quiz ? 1 : 0)})
+              </span>
               <span>{isAttachmentsExpanded ? "▲ إخفاء" : "▼ عرض"}</span>
             </button>
 
@@ -1436,7 +1442,10 @@ function LessonCard({
                     rel="noopener noreferrer"
                     className="flex items-center justify-between rounded-lg bg-white p-2 font-bold text-blue-700 border border-slate-200 hover:bg-blue-50"
                   >
-                    <span className="truncate">📄 {file.title}</span>
+                    <span className="truncate flex items-center gap-1.5">
+                      <FileText className="h-3.5 w-3.5 text-blue-600" />
+                      {file.title}
+                    </span>
                     <Eye className="h-3.5 w-3.5 shrink-0" />
                   </a>
                 ))}
@@ -1448,7 +1457,10 @@ function LessonCard({
                     onClick={() => !quiz.locked && onStartQuiz?.(quiz)}
                     className="flex w-full items-center justify-between rounded-lg bg-amber-50 p-2 font-bold text-amber-800 border border-amber-200 hover:bg-amber-100 disabled:opacity-50"
                   >
-                    <span className="truncate">✏️ {quiz.title}</span>
+                    <span className="truncate flex items-center gap-1.5">
+                      <Award className="h-3.5 w-3.5 text-amber-600" />
+                      {quiz.title}
+                    </span>
                     <Award className="h-3.5 w-3.5 shrink-0" />
                   </button>
                 )}
