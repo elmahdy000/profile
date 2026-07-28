@@ -217,29 +217,44 @@ export function AcademyHome() {
 
             <div className="grid gap-8 md:grid-cols-2">
               {/* Card 1: 1st Secondary */}
-              <div id="first-sec" className="flex flex-col justify-between rounded-3xl border-2 border-blue-100 bg-slate-50/50 p-6 md:p-8 hover:border-blue-300 transition-all">
-                <div className="space-y-4 text-right">
-                  <span className="inline-block rounded-full bg-blue-600 px-3.5 py-1 text-xs font-black text-white">
-                    الصف الأول الثانوي
-                  </span>
-                  <h3 className="text-2xl font-black text-slate-900">برمجة أولى ثانوي</h3>
-                  <p className="text-sm font-semibold leading-relaxed text-slate-600">
-                    تأسيس الطالب في التفكير البرمجي، الخوارزميات، المتغيرات، الإدخال والإخراج، العمليات، الشروط، والتطبيقات الأساسية.
-                  </p>
-                  
-                  <div className="border-t border-slate-200 pt-4 space-y-2 text-xs font-bold text-slate-700">
-                    <span className="block text-blue-700">مخرجات التعلم الرئيسية:</span>
-                    <ul className="space-y-1.5">
-                      <li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600" /> تحليل المشكلات ورسم Flowcharts</li>
-                      <li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600" /> فهم المتغيرات والأنواع والشروط برمجياً</li>
-                      <li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600" /> كتابة تطبيقات تفاعلية بسيطة بنفسه</li>
-                    </ul>
+              <div id="first-sec" className="group flex flex-col justify-between overflow-hidden rounded-3xl border-2 border-blue-100 bg-slate-50/50 hover:border-blue-300 transition-all hover:shadow-xl hover:shadow-blue-500/5">
+                <div>
+                  {/* Card Cover Image */}
+                  <div className="relative h-48 sm:h-52 w-full overflow-hidden bg-slate-950">
+                    <img 
+                      src="/baccalaureate-1st-sec.png" 
+                      alt="برمجة أولى ثانوي"
+                      className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500 opacity-90"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+                    <span className="absolute top-4 right-4 inline-block rounded-full bg-blue-600/90 backdrop-blur-md px-3.5 py-1 text-xs font-black text-white shadow-md">
+                      الصف الأول الثانوي
+                    </span>
+                    <div className="absolute bottom-4 right-4 left-4 text-right">
+                      <h3 className="text-2xl font-black text-white drop-shadow-sm">برمجة أولى ثانوي</h3>
+                      <p className="text-xs font-semibold text-blue-200">التأسيس والخوارزميات والتطبيقات الأولى</p>
+                    </div>
+                  </div>
+
+                  <div className="p-6 md:p-8 space-y-4 text-right">
+                    <p className="text-sm font-semibold leading-relaxed text-slate-600">
+                      تأسيس الطالب في التفكير البرمجي، الخوارزميات، المتغيرات، الإدخال والإخراج، العمليات، الشروط، والتطبيقات الأساسية.
+                    </p>
+                    
+                    <div className="border-t border-slate-200/80 pt-4 space-y-2 text-xs font-bold text-slate-700">
+                      <span className="block text-blue-700">مخرجات التعلم الرئيسية:</span>
+                      <ul className="space-y-1.5">
+                        <li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> تحليل المشكلات ورسم Flowcharts</li>
+                        <li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> فهم المتغيرات والأنواع والشروط برمجياً</li>
+                        <li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> كتابة تطبيقات تفاعلية بسيطة بنفسه</li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
 
-                <div className="mt-6 border-t border-slate-200 pt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="p-6 md:p-8 pt-0 border-t border-slate-200/60 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-auto">
                   <span className="text-xs font-bold text-slate-500">متاح أونلاين لكل مصر • أوفلاين بالزقازيق</span>
-                  <Button asChild className="h-11 rounded-xl bg-blue-600 font-black text-white hover:bg-blue-700">
+                  <Button asChild className="h-11 rounded-xl bg-blue-600 font-black text-white hover:bg-blue-700 shadow-md shadow-blue-600/20">
                     <a href="/baccalaureate">
                       شاهد برنامج أولى ثانوي
                       <ArrowLeft className="mr-2 h-4 w-4" />
@@ -249,29 +264,44 @@ export function AcademyHome() {
               </div>
 
               {/* Card 2: 2nd Secondary */}
-              <div id="second-sec" className="flex flex-col justify-between rounded-3xl border-2 border-indigo-100 bg-slate-50/50 p-6 md:p-8 hover:border-indigo-300 transition-all">
-                <div className="space-y-4 text-right">
-                  <span className="inline-block rounded-full bg-indigo-600 px-3.5 py-1 text-xs font-black text-white">
-                    الصف الثاني الثانوي
-                  </span>
-                  <h3 className="text-2xl font-black text-slate-900">برمجة تانية ثانوي</h3>
-                  <p className="text-sm font-semibold leading-relaxed text-slate-600">
-                    استكمال المهارات البرمجية، حل المشكلات، تتبع الأكواد، التدريب على الأسئلة، والمفاهيم المتقدمة المناسبة للمنهج.
-                  </p>
+              <div id="second-sec" className="group flex flex-col justify-between overflow-hidden rounded-3xl border-2 border-indigo-100 bg-slate-50/50 hover:border-indigo-300 transition-all hover:shadow-xl hover:shadow-indigo-500/5">
+                <div>
+                  {/* Card Cover Image */}
+                  <div className="relative h-48 sm:h-52 w-full overflow-hidden bg-slate-950">
+                    <img 
+                      src="/baccalaureate-2nd-sec.png" 
+                      alt="برمجة تانية ثانوي"
+                      className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-500 opacity-90"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+                    <span className="absolute top-4 right-4 inline-block rounded-full bg-indigo-600/90 backdrop-blur-md px-3.5 py-1 text-xs font-black text-white shadow-md">
+                      الصف الثاني الثانوي
+                    </span>
+                    <div className="absolute bottom-4 right-4 left-4 text-right">
+                      <h3 className="text-2xl font-black text-white drop-shadow-sm">برمجة تانية ثانوي</h3>
+                      <p className="text-xs font-semibold text-indigo-200">حل المشكلات المتقدمة وهياكل البيانات</p>
+                    </div>
+                  </div>
 
-                  <div className="border-t border-slate-200 pt-4 space-y-2 text-xs font-bold text-slate-700">
-                    <span className="block text-indigo-700">مخرجات التعلم الرئيسية:</span>
-                    <ul className="space-y-1.5">
-                      <li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600" /> تتبع الأكواد المعقدة واكتشاف الأخطاء</li>
-                      <li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600" /> التعامل مع القوائم والدوال وبنية البيانات</li>
-                      <li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600" /> حل نماذج اختبارات البكالوريا بثقة</li>
-                    </ul>
+                  <div className="p-6 md:p-8 space-y-4 text-right">
+                    <p className="text-sm font-semibold leading-relaxed text-slate-600">
+                      استكمال المهارات البرمجية، حل المشكلات، تتبع الأكواد، التدريب على الأسئلة، والمفاهيم المتقدمة المناسبة للمنهج.
+                    </p>
+
+                    <div className="border-t border-slate-200/80 pt-4 space-y-2 text-xs font-bold text-slate-700">
+                      <span className="block text-indigo-700">مخرجات التعلم الرئيسية:</span>
+                      <ul className="space-y-1.5">
+                        <li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> تتبع الأكواد المعقدة واكتشاف الأخطاء</li>
+                        <li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> التعامل مع القوائم والدوال وبنية البيانات</li>
+                        <li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> حل نماذج اختبارات البكالوريا بثقة</li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
 
-                <div className="mt-6 border-t border-slate-200 pt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="p-6 md:p-8 pt-0 border-t border-slate-200/60 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-auto">
                   <span className="text-xs font-bold text-slate-500">متاح أونلاين لكل مصر • أوفلاين بالزقازيق</span>
-                  <Button asChild className="h-11 rounded-xl bg-indigo-600 font-black text-white hover:bg-indigo-700">
+                  <Button asChild className="h-11 rounded-xl bg-indigo-600 font-black text-white hover:bg-indigo-700 shadow-md shadow-indigo-600/20">
                     <a href="/baccalaureate">
                       شاهد برنامج تانية ثانوي
                       <ArrowLeft className="mr-2 h-4 w-4" />
