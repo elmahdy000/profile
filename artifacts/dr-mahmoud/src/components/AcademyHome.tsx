@@ -7,61 +7,44 @@ import { FloatingButtons } from "@/components/FloatingButtons";
 import { Navbar } from "@/components/Navbar";
 import { SETTINGS_KEYS, useSiteSettings } from "@/hooks/useSiteSettings";
 import {
-  ArrowLeft, BarChart3, BookOpen, Check, CheckCircle2, ClipboardCheck,
-  Clock3, FileText, GraduationCap, Laptop2, MapPin, MessageCircle,
-  MonitorPlay, Play, Send, ShieldCheck, Star, UserCheck, Users,
+  ArrowLeft, BookOpen, Check, CheckCircle2, ClipboardCheck,
+  Clock, FileText, GraduationCap, Laptop, MapPin, MessageCircle,
+  Play, Send, ShieldCheck, Star, UserCheck, Users, Code, Award,
+  CheckCircle, ArrowRight, ExternalLink, HelpCircle, Layers
 } from "lucide-react";
 
 type BookingForm = { parentName: string; studentName: string; phone: string; grade: string; schoolType: string; mode: string; message: string };
 type Testimonial = { quote: string; author: string; role: string; stars?: number; initials?: string };
 
-const initialBooking: BookingForm = { parentName: "", studentName: "", phone: "", grade: "أولى بكالوريا", schoolType: "عربي", mode: "أونلاين", message: "" };
-
-const problems = [
-  ["الحفظ بدل الفهم", "الطالب يحفظ شكل الكود، لكن أول ما السؤال يتغير مش بيعرف يبدأ."],
-  ["البداية من مكان غلط", "يبدأ بكتابة الأكواد قبل فهم تحليل المشكلة والمتغيرات والشروط."],
-  ["شرح بدون تسلسل", "يشاهد فيديوهات منفصلة لا تبني مسارًا واضحًا من الأساس للتطبيق."],
-];
-
-const journey = ["يفهم الفكرة", "يشوف مثال واضح", "يكتب الكود بنفسه", "يحل تدريبات متدرجة", "يدخل اختبار ويعرف مستواه"];
-
-const faq = [
-  ["هل البرنامج مناسب لطالب مبتدئ تمامًا؟", "نعم، المسار يبدأ بالتفكير البرمجي والأساسيات، ثم ينتقل تدريجيًا إلى كتابة الكود وحل الأسئلة."],
-  ["هل الشرح مناسب للعربي واللغات؟", "نعم، البرنامج يخدم طلاب العربي واللغات مع الحفاظ على المصطلحات البرمجية الإنجليزية بشكل واضح."],
-  ["هل يوجد أونلاين؟", "نعم، الدراسة الأونلاين متاحة للطلاب في محافظات مصر، وتشمل شرحًا ومحتوى واختبارات ومتابعة."],
-  ["أين يوجد الأوفلاين؟", "الدراسة الحضورية متاحة في الزقازيق. تفاصيل المكان والمواعيد يتم تأكيدها عند التواصل."],
-  ["هل المحاضرات مسجلة؟", "المنصة تدعم الفيديوهات التعليمية المسجلة، مع تنظيم الدروس ومتابعة التقدم وفق المحتوى المخصص للطالب."],
-  ["كيف أتابع مستوى ابني؟", "من خلال متابعة الدروس والتقدم ونتائج الاختبارات والنشاط داخل المنصة، مع التواصل لتوضيح مستوى الطالب."],
-  ["هل يوجد اختبار تحديد مستوى؟", "يمكن إرسال طلب حجز وتقييم، وبعد التواصل يتم تحديد نقطة البداية المناسبة للطالب."],
-  ["ما الجهاز المطلوب؟", "جهاز كمبيوتر أو لابتوب مناسب للتدريب العملي، مع اتصال إنترنت مستقر للدراسة الأونلاين."],
-  ["هل البرنامج يغطي منهج البكالوريا؟", "البرنامج مخصص لأولى وتانية بكالوريا ويجمع بين التأسيس وشرح المنهج والتدريب والاختبارات حسب المرحلة."],
-  ["كيف يتم الحجز؟", "املأ طلب الحجز بالمرحلة وطريقة الدراسة، وسيتم التواصل معك لتوضيح البرنامج والمواعيد. إرسال الطلب لا يعني الدفع."],
-];
+const initialBooking: BookingForm = { parentName: "", studentName: "", phone: "", grade: "أولى ثانوي", schoolType: "عربي", mode: "أونلاين لكل مصر", message: "" };
 
 const defaultTestimonials: Testimonial[] = [
-  { quote: "الشرح بسيط جدًا وابني بدأ يحب البرمجة. الأسلوب العملي مختلف عن الحفظ.", author: "أم أحمد", role: "ولية أمر", stars: 5, initials: "أ" },
-  { quote: "طريقة الدكتور منظمة وبتخلي الطالب يطبق بنفسه من أول درس.", author: "محمد س.", role: "طالب برمجة", stars: 5, initials: "م" },
+  { quote: "الشرح مبني على الفهم مش التكرار، مروان مكنش فاهم Python في المدرسة وبقى يكتب الكود ويحل التمارين بنفسه بسهولة.", author: "أحمد الشافعي", role: "ولي أمر طالب STEM", stars: 5, initials: "أ" },
+  { quote: "الشرح الأونلاين منظم والم المنصة عليها الاختبارات والملفات والمتابعة كأننا في سنتر بالضبط.", author: "منى زهران", role: "ولية أمر طالبة لغات", stars: 5, initials: "م" },
+  { quote: "طريقة الدكتور محمود خلتني أفهم التفكير البرمجي قبل كتابة الكود وبقت المادة ممتعة وسهلة بالنسبة لي.", author: "يوسف أحمد", role: "طالب ثانية ثانوي", stars: 5, initials: "ي" },
 ];
 
-function SectionTitle({ eyebrow, title, text }: { eyebrow: string; title: string; text?: string }) {
-  return <div className="mx-auto mb-10 max-w-3xl text-center"><span className="text-sm font-bold text-primary">{eyebrow}</span><h2 className="mt-2 text-3xl font-extrabold leading-[1.45] text-[#172033] md:text-[34px]">{title}</h2>{text && <p className="mt-3 text-[15px] font-medium leading-8 text-[#667085]">{text}</p>}</div>;
-}
+const faqs = [
+  ["مين يقدر يشترك في برنامج برمجة البكالوريا؟", "البرنامج مخصص لطلاب الصف الأول الثانوي والصف الثاني الثانوي بالبكالوريا المصرية (عربي ولغات وSTEM)."],
+  ["هل البرنامج مناسب للمبتدئ تماماً؟", "نعم، المسار يبدأ من أساسيات التفكير المنطقي وتحليل المسألة قبل كتابة سطر كود واحد، ثم ينتقل تدريجياً لكتابة البرامج الأكبر."],
+  ["هل الشرح متاح أونلاين لكل المحافظات؟", "نعم، المحاضرات والمنصة التعليمية متاحة أونلاين لجميع طلاب محافظات مصر بجودة عالية ومتابعة مستمرة."],
+  ["هل محتاج لابتوب أو كمبيوتر؟", "نعم، يُفضل وجود جهاز كمبيوتر أو لابتوب للتدريب العملي وتطبيق كتابة الأكواد والتمارين بعد كل درس."],
+  ["إيه الفرق بين برنامج أولى وتانية ثانوي؟", "برنامج أولى ثانوي يركز على التأسيس والتفكير المنطقي والعمليات والشروط؛ بينما تانية ثانوي يستكمل التتبع وحل المشكلات والأكواد المتقدمة."],
+  ["هل فيه اختبارات وتدريبات على المنصة؟", "نعم، تحتوي المنصة على بنك أسئلة وتدريبات واختبارات تفاعلية بعد كل وحدة مع تقييم مستوى الطالب."],
+  ["إزاي الطالب يدخل المنصة؟", "بعد تأكيد الاشتراك، يحصل الطالب على اسم مستخدم وكود تفعيل مخصص لدخول منصته وبدء الدروس."],
+  ["هل فيه حضور مباشر في الزقازيق؟", "نعم، الحضور المباشر متاح داخل مقر الأكاديمية بالزقازيق مع متابعة مباشرة لكود الطالب."],
+  ["ولي الأمر يقدر يتابع مستوى الطالب إزاي؟", "من خلال تقارير التقدم ونسبة مشاهدة الدروس ودرجات الاختبارات المنفذة عبر المنصة وتواصل المتابعة الدوري."],
+  ["هل أقدر أشوف درس قبل الاشتراك؟", "نعم، تتيح المنصة معايانات ومحتوى تجريبي مجاني ليتعرف الطالب على طريقة الشرح والأسلوب."],
+];
 
 export function AcademyHome() {
   const { get, getJson } = useSiteSettings();
   const whatsapp = get(SETTINGS_KEYS.CONTACT_WHATSAPP, "201044348610");
-  const testimonials = getJson<Testimonial[]>(SETTINGS_KEYS.TESTIMONIALS_LIST, defaultTestimonials).slice(0, 4);
+  const testimonials = getJson<Testimonial[]>(SETTINGS_KEYS.TESTIMONIALS_LIST, defaultTestimonials).slice(0, 3);
   const { mutateAsync: createBooking, isPending } = useCreateBooking();
   const [form, setForm] = useState<BookingForm>(initialBooking);
   const [submitted, setSubmitted] = useState(false);
   const [formError, setFormError] = useState("");
-
-  useEffect(() => {
-    document.title = "د. محمود المهدي | برنامج البرمجة لطلاب البكالوريا";
-    const description = document.querySelector('meta[name="description"]');
-    description?.setAttribute("content", "برنامج تأسيس وشرح البرمجة لطلاب أولى وتانية بكالوريا مع د. محمود المهدي، أونلاين في مصر وأوفلاين في الزقازيق، مع تدريبات واختبارات ومتابعة.");
-    // JSON-LD is already in index.html — no dynamic injection needed.
-  }, []);
 
   const submitBooking = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -75,7 +58,7 @@ export function AcademyHome() {
       await createBooking({ data: { name: form.parentName, phone: form.phone, message: details } });
       
       const text = encodeURIComponent(
-        `مرحبًا د. محمود 👋\n\nأود حجز تقييم مجاني:\n- اسم ولي الأمر: ${form.parentName}\n- اسم الطالب: ${form.studentName}\n- رقم الهاتف: ${form.phone}\n- المرحلة الدراسية: ${form.grade}\n- نوع المدرسة: ${form.schoolType}\n- طريقة الدراسة: ${form.mode}\n- رسالة إضافية: ${form.message || "لا توجد"}`
+        `مرحبًا د. محمود\n\nأود استفسار وحجز برنامج برمجة البكالوريا:\n- اسم ولي الأمر: ${form.parentName}\n- اسم الطالب: ${form.studentName}\n- رقم الهاتف: ${form.phone}\n- المرحلة: ${form.grade}\n- نوع المدرسة: ${form.schoolType}\n- طريقة الدراسة: ${form.mode}`
       );
       window.open(`https://wa.me/${whatsapp}?text=${text}`, "_blank");
 
@@ -86,71 +69,609 @@ export function AcademyHome() {
     }
   };
 
-  return <div className="min-h-screen bg-[#F6F8FC] text-[#172033]" dir="rtl">
-    <Navbar />
-    <main>
-      <section id="hero" className="border-b border-[#DCE3EC] bg-[#F6F8FC]">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-12 sm:px-6 md:px-8 md:py-16 lg:grid-cols-[1.04fr_.96fr] lg:py-20">
-          <div className="order-1 text-right">
-            <span className="inline-flex rounded-full bg-[#EAF3FF] px-4 py-2 text-sm font-bold text-[#0564C9]">برمجة البكالوريا · تأسيس البرمجة · كورسات الجامعة</span>
-            <h1 className="mt-5 max-w-3xl text-[38px] font-extrabold leading-[1.35] tracking-tight md:text-[52px]">ابنك مش محتاج يحفظ الكود...<br/><span className="text-primary">محتاج يفهم إزاي يفكر ويحل بنفسه</span></h1>
-            <p className="mt-5 max-w-2xl text-base font-medium leading-8 text-[#526176]">برنامج تأسيس وشرح البرمجة لطلاب أولى وتانية بكالوريا، بتسلسل واضح يبدأ من التفكير البرمجي ويوصل لكتابة الكود وحل أسئلة المنهج والاختبارات بثقة.</p>
-            <div className="mt-5 flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-xl bg-[#EAF3FF] text-primary"><GraduationCap className="h-6 w-6"/></span><div><strong className="block">د. محمود المهدي</strong><span className="text-sm text-[#667085]">ماجستير نظم المعلومات · مدرب برمجة وعلوم حاسب</span></div></div>
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row"><Button asChild size="lg" className="min-h-12 rounded-xl px-6 font-bold shadow-lg shadow-blue-700/15"><a href="/baccalaureate">اعرف تفاصيل برنامج البكالوريا <ArrowLeft className="h-4 w-4"/></a></Button><Button asChild size="lg" variant="outline" className="min-h-12 rounded-xl border-[#DCE3EC] bg-white px-6 font-bold"><a href="#free-preview"><Play className="h-4 w-4"/> شاهد درس مجاني</a></Button></div>
-            <div className="mt-6 grid gap-2 text-sm font-semibold text-[#526176] sm:grid-cols-2">{["أونلاين لكل محافظات مصر", "أوفلاين في الزقازيق", "شرح عربي ولغات", "اختبارات ومتابعة مستوى"].map(x=><span key={x} className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#16A365]"/>{x}</span>)}</div>
+  const personSchema = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "د. محمود المهدي",
+    "alternateName": "Dr. Mahmoud Elmahdy",
+    "jobTitle": "مدرس برمجة وعلوم حاسب",
+    "description": "ماجستير نظم المعلومات ومتخصص في تدريس وتأسيس برمجة البكالوريا المصرية لطلاب أولى وتانية ثانوي أونلاين وفي الزقازيق.",
+    "url": "https://drelmahdy.com/",
+    "image": "https://drelmahdy.com/dr-mahmoud-hero-classroom.webp",
+    "sameAs": ["https://wa.me/201044348610", "https://www.youtube.com/@learntocode9453"],
+    "knowsAbout": ["برمجة البكالوريا", "Python", "C++", "علوم الحاسب", "تطوير البرمجيات", "حل المشكلات"]
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans" dir="rtl">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }} />
+      <Navbar />
+
+      <main>
+        {/* ─── 1. HERO SECTION ─── */}
+        <section id="hero" className="relative border-b border-slate-200 bg-white py-12 md:py-20 overflow-hidden">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid items-center gap-10 lg:grid-cols-12">
+              
+              {/* Right Content Column */}
+              <div className="lg:col-span-7 space-y-5 text-right">
+                <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-xs font-bold text-blue-700 border border-blue-100">
+                  <GraduationCap className="h-4 w-4 text-blue-600" />
+                  برمجة البكالوريا المصرية • أونلاين لكل محافظات مصر
+                </span>
+
+                <h1 className="text-3xl font-black leading-tight text-slate-900 sm:text-4xl md:text-5xl">
+                  اتعلم برمجة البكالوريا صح <span className="text-blue-600">من البداية</span>
+                </h1>
+
+                <p className="max-w-2xl text-base font-semibold leading-relaxed text-slate-600 md:text-lg">
+                  شرح عملي لطلاب أولى وتانية ثانوي مع د. محمود المهدي، ماجستير نظم المعلومات. هتفهم الفكرة، تطبق بنفسك، تحل تدريبات واختبارات، وتتابع مستواك خطوة بخطوة من خلال المنصة.
+                </p>
+
+                {/* Primary & Secondary Actions */}
+                <div className="flex flex-col gap-3 sm:flex-row pt-2">
+                  <Button asChild size="lg" className="h-12 rounded-xl bg-blue-600 px-6 font-black text-white hover:bg-blue-700 shadow-md">
+                    <a href="#baccalaureate">
+                      ابدأ برنامج البكالوريا
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                    </a>
+                  </Button>
+
+                  <Button asChild size="lg" variant="outline" className="h-12 rounded-xl border-slate-300 bg-white px-6 font-bold text-slate-700 hover:bg-slate-50">
+                    <a href="/platform">
+                      <Laptop className="ml-2 h-4 w-4 text-blue-600" />
+                      استكشف المنصة
+                    </a>
+                  </Button>
+                </div>
+
+                {/* Trust line */}
+                <div className="pt-2 text-xs font-bold text-slate-500 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-100 mt-4">
+                  <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> أونلاين لكل مصر</span>
+                  <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> حضور في الزقازيق</span>
+                  <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> متابعة واختبارات مستمرة</span>
+                </div>
+
+                {/* 4 Concise benefit points */}
+                <div className="grid grid-cols-2 gap-3 pt-3 sm:grid-cols-4">
+                  {[
+                    ["شرح مبسط", "تأسيس هادئ من الصفر"],
+                    ["تطبيق عملي", "تطبيق كود بعد كل درس"],
+                    ["بنك أسئلة", "تدريبات وتطبيقات متدرجة"],
+                    ["متابعة مستوى", "تقارير وتقييم مستمر"],
+                  ].map(([title, sub]) => (
+                    <div key={title} className="rounded-xl border border-slate-200 bg-slate-50/60 p-3 text-right">
+                      <strong className="block text-xs font-black text-slate-900">{title}</strong>
+                      <span className="mt-0.5 block text-[11px] font-semibold text-slate-500">{sub}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Left Photo Column */}
+              <div className="lg:col-span-5 flex justify-center">
+                <div className="relative w-full max-w-md overflow-hidden rounded-2xl border-4 border-white bg-white shadow-xl">
+                  <img
+                    src="/dr-mahmoud-hero-classroom.webp"
+                    alt="د. محمود المهدي — مدرس برمجة البكالوريا المصرية"
+                    fetchPriority="high"
+                    width={800}
+                    height={1000}
+                    className="aspect-[4/5] w-full object-cover object-[center_10%]"
+                  />
+                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-950/80 via-slate-950/40 to-transparent p-4 text-white text-right">
+                    <strong className="block text-base font-black">د. محمود المهدي</strong>
+                    <span className="text-xs text-blue-200 font-semibold">ماجستير نظم المعلومات • متخصص تدريس برمجة البكالوريا</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
           </div>
-          <div className="order-2"><div className="mx-auto max-w-lg overflow-hidden rounded-[18px] border-4 border-white bg-white shadow-[0_16px_45px_rgba(15,29,50,.14)]"><img src="/dr-mahmoud-hero-classroom.webp" alt="د. محمود المهدي يشرح البرمجة والروبوتات للطلاب" fetchPriority="high" width={800} height={1000} className="aspect-[4/5] w-full object-cover object-[center_10%]"/></div></div>
-        </div>
-      </section>
+        </section>
 
-      <section aria-label="مميزات البرنامج" className="border-b border-[#DCE3EC] bg-white"><div className="mx-auto flex max-w-7xl flex-wrap justify-center gap-x-8 gap-y-3 px-4 py-5 md:justify-between md:px-8">{["منهج مرتب","متابعة حقيقية","تطبيق عملي","عربي ولغات","أونلاين وأوفلاين","اختبارات وتقارير"].map(x=><span key={x} className="flex items-center gap-2 text-sm font-bold text-[#526176]"><Check className="h-4 w-4 text-primary"/>{x}</span>)}</div></section>
+        {/* ─── 2. IMMEDIATE PARENT REASSURANCE SECTION ─── */}
+        <section className="bg-slate-50 py-12 md:py-16 border-b border-slate-200">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-3xl text-center mb-10">
+              <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">طمأنة ولي الأمر</span>
+              <h2 className="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">
+                ابنك مش محتاج يحفظ كود… محتاج يفهمه
+              </h2>
+              <p className="mt-3 text-sm font-semibold leading-relaxed text-slate-600">
+                الهدف مش إن الطالب يحفظ خطوات جاهزة. الطالب بيتعلم يحلل السؤال، يرتب الحل، يكتب الكود، ويكتشف الخطأ بنفسه. كل جزء في البرنامج مبني بالتدريج عشان الطالب يبدأ صح من غير تشتت.
+              </p>
+            </div>
 
-      <section className="bg-white py-14 md:py-20"><div className="mx-auto max-w-7xl px-4 md:px-8"><SectionTitle eyebrow="المشكلة مش في الطالب" title="ليه طلاب كتير بيلاقوا البرمجة صعبة؟"/><div className="grid gap-5 md:grid-cols-3">{problems.map(([title,text],i)=><article key={title} className="rounded-2xl bg-[#F6F8FC] p-6"><span className="text-2xl font-black text-[#DCE3EC]">0{i+1}</span><h3 className="mt-4 text-xl font-bold">{title}</h3><p className="mt-2 font-medium leading-7 text-[#667085]">{text}</p></article>)}</div><p className="mx-auto mt-8 max-w-3xl rounded-2xl bg-[#EAF3FF] p-5 text-center text-lg font-bold leading-8 text-[#064A96]">الحل مش في عدد الفيديوهات... الحل في تسلسل يخلي الطالب يفهم ويفكر ويطبق.</p></div></section>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { title: "تأسيس حقيقي", text: "من أول معنى البرمجة لحد كتابة البرامج بنفسه.", icon: Code },
+                { title: "شرح متخصص", text: "شرح أكاديمي وعملي بعيد عن الحفظ والتلقين.", icon: GraduationCap },
+                { title: "متابعة واضحة", text: "ولي الأمر والطالب يعرفوا مستوى التقدم باستمرار.", icon: UserCheck },
+                { title: "تدريب مستمر", text: "أسئلة واختبارات وتطبيقات بعد كل جزء.", icon: ClipboardCheck },
+              ].map((card) => (
+                <div key={card.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs text-right">
+                  <div className="mb-3 grid h-10 w-10 place-items-center rounded-xl bg-blue-50 text-blue-600">
+                    <card.icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-base font-black text-slate-900">{card.title}</h3>
+                  <p className="mt-1.5 text-xs font-semibold leading-relaxed text-slate-500">{card.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
-      <section id="baccalaureate" className="border-y border-[#DCE3EC] bg-[#F6F8FC] py-14 md:py-20"><div className="mx-auto max-w-7xl px-4 md:px-8"><SectionTitle eyebrow="العرض الرئيسي" title="برنامج البرمجة لطلاب أولى وتانية بكالوريا" text="مسار تعليمي يجمع بين التأسيس، شرح المنهج، التطبيق العملي، حل الأسئلة، الاختبارات والمتابعة."/><div className="grid gap-6 md:grid-cols-2">{[
-        {title:"أولى بكالوريا",audience:"لطالب بيبدأ تأسيسه في التفكير البرمجي",outcome:"يفهم تحليل المشكلة والمتغيرات والشروط ويبدأ كتابة الحل بنفسه."},
-        {title:"تانية بكالوريا",audience:"لطالب عايز يبني على الأساس ويثبت مهارة الحل",outcome:"يتدرب على تطبيق المفاهيم وحل أسئلة المنهج والاختبارات بثقة."},
-      ].map(item=><article key={item.title} className="flex h-full flex-col rounded-2xl border border-[#B8D6F7] bg-white p-6 shadow-[0_8px_30px_rgba(15,29,50,.07)]"><span className="w-fit rounded-full bg-[#EAF3FF] px-3 py-1 text-xs font-bold text-[#0564C9]">برنامج البكالوريا</span><h3 className="mt-4 text-2xl font-extrabold">{item.title}</h3><p className="mt-2 font-bold text-[#526176]">{item.audience}</p><p className="mt-3 flex-1 leading-7 text-[#667085]">{item.outcome}</p><div className="mt-5 flex flex-wrap gap-2">{["عربي ولغات","أونلاين","أوفلاين بالزقازيق"].map(x=><span key={x} className="rounded-full bg-[#F6F8FC] px-3 py-1.5 text-xs font-bold text-[#526176]">{x}</span>)}</div><Button asChild className="mt-6 min-h-11 w-full rounded-xl bg-[#0564C9] font-bold hover:bg-[#064A96]"><a href="/baccalaureate">عرض تفاصيل البرنامج <ArrowLeft className="h-4 w-4"/></a></Button></article>)}</div></div></section>
+        {/* ─── 3. GRADE SELECTION SECTION ─── */}
+        <section id="baccalaureate" className="bg-white py-14 md:py-20 border-b border-slate-200">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-3xl text-center mb-12">
+              <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">البرنامج المخصص</span>
+              <h2 className="mt-2 text-3xl font-black text-slate-900">
+                اختار برنامجك حسب مرحلتك
+              </h2>
+              <p className="mt-2 text-sm font-semibold text-slate-500">
+                مسارات تعليمية متدرجة تضمن فهم المنهج والتدريب على الاختبارات بثقة.
+              </p>
+            </div>
 
-      <section className="bg-white py-14 md:py-20"><div className="mx-auto max-w-7xl px-4 md:px-8"><SectionTitle eyebrow="طريقة التعلم" title="الطالب هيمشي في البرنامج إزاي؟"/><ol className="grid gap-3 md:grid-cols-5">{journey.map((step,i)=><li key={step} className="relative rounded-2xl border border-[#DCE3EC] bg-white p-5 text-center"><span className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-primary font-black text-white">{i+1}</span><strong className="mt-4 block">{step}</strong>{i<4&&<ArrowLeft className="absolute -left-5 top-8 z-10 hidden h-5 w-5 text-[#A8B2C1] md:block"/>}</li>)}</ol><p className="mt-7 text-center font-bold text-[#526176]">كل درس مرتبط باللي قبله، ومفيش انتقال لجزء جديد قبل تثبيت الأساس.</p></div></section>
+            <div className="grid gap-8 md:grid-cols-2">
+              {/* Card 1: 1st Secondary */}
+              <div id="first-sec" className="flex flex-col justify-between rounded-3xl border-2 border-blue-100 bg-slate-50/50 p-6 md:p-8 hover:border-blue-300 transition-all">
+                <div className="space-y-4 text-right">
+                  <span className="inline-block rounded-full bg-blue-600 px-3.5 py-1 text-xs font-black text-white">
+                    الصف الأول الثانوي
+                  </span>
+                  <h3 className="text-2xl font-black text-slate-900">برمجة أولى ثانوي</h3>
+                  <p className="text-sm font-semibold leading-relaxed text-slate-600">
+                    تأسيس الطالب في التفكير البرمجي، الخوارزميات، المتغيرات، الإدخال والإخراج، العمليات، الشروط، والتطبيقات الأساسية.
+                  </p>
+                  
+                  <div className="border-t border-slate-200 pt-4 space-y-2 text-xs font-bold text-slate-700">
+                    <span className="block text-blue-700">مخرجات التعلم الرئيسية:</span>
+                    <ul className="space-y-1.5">
+                      <li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600" /> تحليل المشكلات ورسم Flowcharts</li>
+                      <li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600" /> فهم المتغيرات والأنواع والشروط برمجياً</li>
+                      <li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600" /> كتابة تطبيقات تفاعلية بسيطة بنفسه</li>
+                    </ul>
+                  </div>
+                </div>
 
-      <section className="bg-[#F6F8FC] py-14 md:py-20"><div className="mx-auto max-w-7xl px-4 md:px-8"><SectionTitle eyebrow="داخل البرنامج" title="كل اللي يحتاجه الطالب في مكان واحد"/><div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">{[
-        [MonitorPlay,"شرح وتعلم","فيديوهات شرح مرتبة ومحاضرات مباشرة حسب البرنامج."],
-        [FileText,"مذكرات وتدريبات","ملخصات، تدريبات بعد الدروس، وبنك أسئلة منظم."],
-        [ClipboardCheck,"اختبارات ومراجعات","اختبارات دورية ومراجعات تساعد على تثبيت الفهم."],
-        [BarChart3,"متابعة التقدم","متابعة الحضور والتقدم ونتائج الاختبارات وتقارير المستوى."],
-      ].map(([Icon,title,text]:any)=><article key={title} className="flex gap-4 rounded-2xl bg-white p-6 shadow-[0_8px_30px_rgba(15,29,50,.06)]"><span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#EAF3FF] text-primary"><Icon className="h-6 w-6"/></span><div><h3 className="text-lg font-bold">{title}</h3><p className="mt-2 text-sm font-medium leading-7 text-[#667085]">{text}</p></div></article>)}</div></div></section>
+                <div className="mt-6 border-t border-slate-200 pt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <span className="text-xs font-bold text-slate-500">متاح أونلاين لكل مصر • أوفلاين بالزقازيق</span>
+                  <Button asChild className="h-11 rounded-xl bg-blue-600 font-black text-white hover:bg-blue-700">
+                    <a href="/baccalaureate">
+                      شاهد برنامج أولى ثانوي
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                    </a>
+                  </Button>
+                </div>
+              </div>
 
-      <section id="parent-tracking" className="bg-white py-14 md:py-20"><div className="mx-auto grid max-w-7xl items-center gap-10 px-4 md:px-8 lg:grid-cols-2"><div><span className="text-sm font-bold text-primary">متابعة ولي الأمر</span><h2 className="mt-2 text-3xl font-extrabold leading-[1.45]">مش هتفضل تسأل: ابني مستواه عامل إيه؟</h2><p className="mt-4 max-w-xl font-medium leading-8 text-[#667085]">تابع الدروس المكتملة، نتائج الاختبارات، مستوى التقدم، وآخر نشاط داخل المنصة. تفاصيل المتابعة المتاحة تعتمد على بيانات الطالب وبرنامجه.</p><Button asChild variant="outline" className="mt-6 min-h-11 rounded-xl font-bold"><a href="/platform">شوف نظام المتابعة <ArrowLeft className="h-4 w-4"/></a></Button></div><div className="rounded-2xl border border-[#DCE3EC] bg-[#F6F8FC] p-5 shadow-[0_8px_30px_rgba(15,29,50,.07)]" aria-label="نموذج توضيحي للمتابعة"><div className="flex items-center justify-between"><div><strong>نموذج متابعة توضيحي</strong><p className="text-xs text-[#667085]">بيانات مجهّلة لشرح شكل المتابعة</p></div><UserCheck className="h-6 w-6 text-primary"/></div><div className="mt-5 grid grid-cols-2 gap-3">{[["التقدم العام","يظهر حسب الدروس"],["الحضور","يُتابع حسب البرنامج"],["الاختبارات","الدرجات والمحاولات"],["آخر نشاط","آخر دخول أو تعلم"]].map(([a,b])=><div key={a} className="rounded-xl bg-white p-4"><strong className="text-sm">{a}</strong><span className="mt-1 block text-xs text-[#667085]">{b}</span></div>)}</div><div className="mt-3 rounded-xl bg-white p-4"><strong className="text-sm">ملاحظة المتابعة</strong><p className="mt-1 text-xs leading-6 text-[#667085]">يتم توضيح نقاط القوة والأجزاء التي تحتاج مراجعة بناءً على نشاط الطالب الفعلي.</p></div></div></div></section>
+              {/* Card 2: 2nd Secondary */}
+              <div id="second-sec" className="flex flex-col justify-between rounded-3xl border-2 border-indigo-100 bg-slate-50/50 p-6 md:p-8 hover:border-indigo-300 transition-all">
+                <div className="space-y-4 text-right">
+                  <span className="inline-block rounded-full bg-indigo-600 px-3.5 py-1 text-xs font-black text-white">
+                    الصف الثاني الثانوي
+                  </span>
+                  <h3 className="text-2xl font-black text-slate-900">برمجة تانية ثانوي</h3>
+                  <p className="text-sm font-semibold leading-relaxed text-slate-600">
+                    استكمال المهارات البرمجية، حل المشكلات، تتبع الأكواد، التدريب على الأسئلة، والمفاهيم المتقدمة المناسبة للمنهج.
+                  </p>
 
-      <section id="about" className="bg-[#EAF3FF] py-14 md:py-20"><div className="mx-auto grid max-w-7xl items-center gap-10 px-4 md:px-8 lg:grid-cols-[.82fr_1.18fr]"><div className="overflow-hidden rounded-[18px] border-4 border-white shadow-[0_8px_30px_rgba(15,29,50,.12)]"><img src="/dr-mahmoud-hero-classroom.webp" alt="د. محمود المهدي مدرب البرمجة وعلوم الحاسب" loading="lazy" width={800} height={600} className="aspect-[4/3] w-full object-cover object-[center_12%]"/></div><div><span className="text-sm font-bold text-primary">ليه تبدأ مع د. محمود المهدي؟</span><h2 className="mt-2 text-3xl font-extrabold">خبرة أكاديمية وطريقة شرح مبنية على الفهم</h2><div className="mt-5 grid gap-3 sm:grid-cols-2">{["ماجستير نظم المعلومات","خبرة أكاديمية في البرمجة وعلوم الحاسب","شرح قائم على الفهم","تسلسل مناسب للمبتدئ","تدريبات وأسئلة متدرجة","متابعة فعلية لمستوى الطالب"].map(x=><span key={x} className="flex gap-2 font-semibold text-[#526176]"><CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-primary"/>{x}</span>)}</div><p className="mt-6 rounded-xl bg-white p-5 font-bold leading-8 text-[#064A96]">الهدف مش إن الطالب يكرر كود جاهز؛ الهدف إنه يفهم السؤال ويحدد خطوات الحل ويكتب البرنامج بنفسه.</p></div></div></section>
+                  <div className="border-t border-slate-200 pt-4 space-y-2 text-xs font-bold text-slate-700">
+                    <span className="block text-indigo-700">مخرجات التعلم الرئيسية:</span>
+                    <ul className="space-y-1.5">
+                      <li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600" /> تتبع الأكواد المعقدة واكتشاف الأخطاء</li>
+                      <li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600" /> التعامل مع القوائم والدوال وبنية البيانات</li>
+                      <li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600" /> حل نماذج اختبارات البكالوريا بثقة</li>
+                    </ul>
+                  </div>
+                </div>
 
-      <section id="free-preview" className="bg-white py-14 md:py-20"><div className="mx-auto max-w-7xl px-4 md:px-8"><SectionTitle eyebrow="جرّب قبل ما تقرر" title="شوف أسلوب الشرح قبل ما تحجز" text="معاينات من المسارات والصفحات العامة الحالية بدون فتح أي محتوى محمي."/><div className="grid gap-5 md:grid-cols-3">{[
-        [Play,"درس وتمهيد مجاني","ابدأ من صفحة برنامج البكالوريا وشوف طريقة تقديم المسار.","/baccalaureate","شاهد المعاينة"],
-        [FileText,"خريطة المناهج","استعرض تنظيم المناهج والمسارات التعليمية المتاحة.","/curriculum","استعرض المناهج"],
-        [ClipboardCheck,"نظام الاختبارات","شوف تجربة المنصة وكيف ترتبط الاختبارات بحساب الطالب.","/platform","دخول منصة الطالب"],
-      ].map(([Icon,title,text,href,cta]:any)=><article key={title} className="flex flex-col rounded-2xl border border-[#DCE3EC] p-6"><Icon className="h-7 w-7 text-primary"/><h3 className="mt-4 text-xl font-bold">{title}</h3><p className="mt-2 flex-1 text-sm font-medium leading-7 text-[#667085]">{text}</p><a href={href} className="mt-5 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#EAF3FF] px-4 font-bold text-primary hover:bg-blue-100">{cta}<ArrowLeft className="h-4 w-4"/></a></article>)}</div></div></section>
+                <div className="mt-6 border-t border-slate-200 pt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <span className="text-xs font-bold text-slate-500">متاح أونلاين لكل مصر • أوفلاين بالزقازيق</span>
+                  <Button asChild className="h-11 rounded-xl bg-indigo-600 font-black text-white hover:bg-indigo-700">
+                    <a href="/baccalaureate">
+                      شاهد برنامج تانية ثانوي
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <section id="testimonials" className="bg-[#F6F8FC] py-14 md:py-20"><div className="mx-auto max-w-7xl px-4 md:px-8"><SectionTitle eyebrow="آراء مسجلة في إعدادات الموقع" title="تجارب الطلاب وأولياء الأمور"/><div className={`grid gap-5 ${testimonials.length > 2 ? "md:grid-cols-2 lg:grid-cols-4" : "mx-auto max-w-4xl md:grid-cols-2"}`}>{testimonials.map((item,i)=><blockquote key={`${item.author}-${i}`} className="flex h-full flex-col rounded-2xl bg-white p-6 shadow-[0_8px_30px_rgba(15,29,50,.06)]"><div className="flex gap-1 text-[#0564C9]">{Array.from({length:Math.min(item.stars||0,5)}).map((_,s)=><Star key={s} className="h-4 w-4 fill-current"/>)}</div><p className="mt-4 flex-1 font-medium leading-8">“{item.quote}”</p><footer className="mt-5 flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-full bg-[#EAF3FF] font-bold text-primary">{item.initials||item.author?.[0]}</span><div><strong className="block text-sm">{item.author}</strong><span className="text-xs text-[#667085]">{item.role}</span></div></footer></blockquote>)}</div></div></section>
+        {/* ─── 4. LEARNING METHOD SECTION ─── */}
+        <section className="bg-slate-50 py-14 md:py-20 border-b border-slate-200">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-3xl text-center mb-12">
+              <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">منهجية الفهم</span>
+              <h2 className="text-3xl font-black text-slate-900">الطالب هيتعلم إزاي؟</h2>
+              <p className="mt-2 text-sm font-semibold text-slate-500">رحلة متدرجة تضمن الوصول لأعلى مستوى فهم وتطبيق.</p>
+            </div>
 
-      <section id="tracks" className="bg-white py-14 md:py-20"><div className="mx-auto max-w-7xl px-4 md:px-8"><SectionTitle eyebrow="مسارات أخرى" title="تعليم برمجة مناسب لكل مرحلة"/><div className="grid gap-5 md:grid-cols-3">{[
-        ["/university-cs-path.webp","كورسات الجامعة","لطلاب حاسبات وهندسة","فهم مواد البرمجة والتطبيق عليها","/university"],
-        ["/baccalaureate-hero.webp","تأسيس البرمجة","للمبتدئين وطلاب المدرسة","بناء التفكير البرمجي خطوة بخطوة","/curriculum"],
-        ["/web-development-path.webp","برمجة الأطفال","للأطفال والمراهقين","تعلم مناسب للسن قائم على التطبيق","/kids"],
-      ].map(([img,title,audience,outcome,href])=><article key={title} className="flex h-full flex-col overflow-hidden rounded-2xl border border-[#DCE3EC] bg-white"><img src={img} alt={`مسار ${title}`} loading="lazy" width={640} height={360} className="aspect-video w-full object-cover"/><div className="flex flex-1 flex-col p-5"><span className="text-xs font-bold text-primary">{audience}</span><h3 className="mt-2 text-xl font-bold">{title}</h3><p className="mt-2 flex-1 text-sm font-medium leading-7 text-[#667085]">{outcome}</p><div className="mt-4 flex gap-2">{["تعلم منظم","تطبيق عملي","متابعة"].map(x=><span key={x} className="rounded-full bg-[#F6F8FC] px-2 py-1 text-[11px] font-bold text-[#667085]">{x}</span>)}</div><a href={href} className="mt-5 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 font-bold text-white">عرض المسار <ArrowLeft className="h-4 w-4"/></a></div></article>)}</div></div></section>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+              {[
+                ["1. نفهم الفكرة", "شرح مبسط للمفهوم قبل كتابة أي كود."],
+                ["2. نشوف مثال", "تحويل الفكرة لبرنامج واضح خطوة بخطوة."],
+                ["3. نطبق بإيدينا", "الطالب يكتب ويجرب ويشوف النتيجة."],
+                ["4. نحل تدريبات", "أسئلة متدرجة من السهل للمستوى الأعلى."],
+                ["5. نختبر الفهم", "اختبارات قصيرة بعد كل جزء."],
+                ["6. نتابع المستوى", "تحديد نقاط القوة والأجزاء التي تحتاج مراجعة."],
+              ].map(([step, desc]) => (
+                <div key={step} className="rounded-2xl border border-slate-200 bg-white p-4 text-right shadow-xs">
+                  <strong className="block text-sm font-black text-blue-600">{step}</strong>
+                  <p className="mt-2 text-xs font-semibold leading-relaxed text-slate-500">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
-      <section className="bg-[#F6F8FC] py-14 md:py-20"><div className="mx-auto max-w-6xl px-4 md:px-8"><SectionTitle eyebrow="اختار الأنسب" title="أونلاين ولا أوفلاين؟" text="الاختيار يعتمد على مكان الطالب وطريقة التعلم المناسبة له."/><div className="grid gap-6 md:grid-cols-2">{[
-        [Laptop2,"أونلاين","متاح لكل محافظات مصر",["محاضرات ومحتوى تعليمي","اختبارات ومتابعة","الرجوع للمحتوى المسجل"]],
-        [MapPin,"أوفلاين في الزقازيق","حضور داخل الأكاديمية",["تطبيق مباشر","متابعة داخل المحاضرة","مجموعات ومواعيد يتم تأكيدها عند الحجز"]],
-      ].map(([Icon,title,lead,items]:any)=><article key={title} className="rounded-2xl border border-[#DCE3EC] bg-white p-6"><Icon className="h-8 w-8 text-primary"/><h3 className="mt-4 text-2xl font-bold">{title}</h3><p className="mt-2 font-bold text-[#526176]">{lead}</p><ul className="mt-5 space-y-3">{items.map((x:string)=><li key={x} className="flex gap-2 text-sm font-medium text-[#667085]"><Check className="h-4 w-4 text-[#16A365]"/>{x}</li>)}</ul></article>)}</div></div></section>
+        {/* ─── 5. PLATFORM SHOWCASE SECTION ─── */}
+        <section className="bg-white py-14 md:py-20 border-b border-slate-200">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-3xl text-center mb-12">
+              <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">بيئة التعلم المتكاملة</span>
+              <h2 className="text-3xl font-black text-slate-900">كل حاجة محتاجها الطالب في مكان واحد</h2>
+              <p className="mt-2 text-sm font-semibold text-slate-500">منصة تعليمية مخصصة تجمع الشرح والأكواد والاختبارات والمتابعة.</p>
+            </div>
 
-      <section id="faq" className="bg-white py-14 md:py-20"><div className="mx-auto max-w-4xl px-4 md:px-8"><SectionTitle eyebrow="قبل ما تبدأ" title="الأسئلة الشائعة"/><Accordion type="single" collapsible className="space-y-3">{faq.map(([q,a],i)=><AccordionItem key={q} value={`faq-${i}`} className="rounded-2xl border border-[#DCE3EC] px-5"><AccordionTrigger className="min-h-14 text-right font-bold hover:no-underline">{q}</AccordionTrigger><AccordionContent className="pb-5 text-sm font-medium leading-7 text-[#667085]">{a}</AccordionContent></AccordionItem>)}</Accordion></div></section>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                [BookOpen, "مشاهدة الدروس", "عرض الفيديوهات المخصصة لمرحلة الطالب بدون تشتت."],
+                [Layers, "تنظيم الكورسات", "تقسيم المواد والمحاضرات حسب المرحلة الدراسية."],
+                [FileText, "المذكرات والملفات", "تحميل الملازم وأكواد التدريب والتمارين المرفقة."],
+                [ClipboardCheck, "حل الاختبارات", "اختبارات تفاعلية تقيم فهم الطالب فوراً."],
+                [Code, "بنك الأسئلة", "تدريبات وتطبيقات شاملة متدرجة الصعوبة."],
+                [UserCheck, "متابعة التقدم", "استكمال آخر درس وتتبع نسبة الإنجاز والدرجات."],
+              ].map(([Icon, title, desc]: any) => (
+                <div key={title} className="flex gap-3.5 rounded-2xl border border-slate-200 bg-slate-50/50 p-5 text-right">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-50 text-blue-600">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900">{title}</h3>
+                    <p className="mt-1 text-xs font-semibold text-slate-500 leading-relaxed">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
 
-      <section id="booking" className="border-t border-[#DCE3EC] bg-[#F6F8FC] py-14 md:py-20"><div className="mx-auto grid max-w-7xl gap-8 px-4 md:px-8 lg:grid-cols-[.8fr_1.2fr]"><div><span className="text-sm font-bold text-primary">طلب حجز واستفسار</span><h2 className="mt-2 text-3xl font-extrabold leading-[1.45]">ابدأ بتحديد المرحلة المناسبة للطالب</h2><p className="mt-4 font-medium leading-8 text-[#667085]">اكتب البيانات الأساسية، وسيتم التواصل لتوضيح البرنامج والمواعيد المناسبة.</p><div className="mt-6 rounded-2xl bg-[#EAF3FF] p-5"><ShieldCheck className="h-6 w-6 text-primary"/><strong className="mt-3 block">إرسال الطلب لا يعني الدفع</strong><p className="mt-1 text-sm leading-6 text-[#526176]">الطلب للاستفسار وتحديد البرنامج المناسب فقط.</p></div><a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noreferrer" className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#25D366] bg-white font-bold text-[#168C45]"><MessageCircle className="h-5 w-5"/> التواصل عبر واتساب</a></div><div className="rounded-2xl border border-[#DCE3EC] bg-white p-6 shadow-[0_8px_30px_rgba(15,29,50,.07)] md:p-8">{submitted?<div role="status" className="grid min-h-80 place-items-center text-center"><div><CheckCircle2 className="mx-auto h-12 w-12 text-[#16A365]"/><h3 className="mt-4 text-2xl font-bold">تم إرسال طلب الحجز</h3><p className="mt-2 text-[#667085]">سيتم التواصل معك لتوضيح البرنامج والمواعيد المناسبة.</p><Button type="button" variant="outline" className="mt-5" onClick={()=>setSubmitted(false)}>إرسال طلب آخر</Button></div></div>:<form onSubmit={submitBooking} noValidate className="grid gap-4 sm:grid-cols-2"><Field label="اسم ولي الأمر"><input required value={form.parentName} onChange={e=>setForm({...form,parentName:e.target.value})} className="home-input"/></Field><Field label="اسم الطالب"><input required value={form.studentName} onChange={e=>setForm({...form,studentName:e.target.value})} className="home-input"/></Field><Field label="رقم الهاتف"><input required inputMode="tel" dir="ltr" placeholder="01xxxxxxxxx" value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})} className="home-input text-right"/></Field><Field label="المرحلة الدراسية"><select value={form.grade} onChange={e=>setForm({...form,grade:e.target.value})} className="home-input"><option>أولى بكالوريا</option><option>تانية بكالوريا</option><option>ثانوي عام</option><option>جامعة</option><option>أخرى</option></select></Field><Field label="نوع المدرسة"><select value={form.schoolType} onChange={e=>setForm({...form,schoolType:e.target.value})} className="home-input"><option>عربي</option><option>لغات</option><option>أخرى</option></select></Field><Field label="طريقة الدراسة"><select value={form.mode} onChange={e=>setForm({...form,mode:e.target.value})} className="home-input"><option>أونلاين</option><option>أوفلاين في الزقازيق</option><option>أحتاج مساعدة للاختيار</option></select></Field><label className="sm:col-span-2"><span className="mb-1.5 block text-sm font-bold">رسالة اختيارية</span><textarea rows={3} value={form.message} onChange={e=>setForm({...form,message:e.target.value})} className="home-input resize-none"/></label>{formError&&<p role="alert" className="sm:col-span-2 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700">{formError}</p>}<Button disabled={isPending} type="submit" className="min-h-12 rounded-xl font-bold sm:col-span-2"><Send className="h-4 w-4"/>{isPending?"جاري إرسال الطلب...":"إرسال طلب الحجز"}</Button></form>}</div></div></section>
-    </main>
-    <Footer/><FloatingButtons/>
-    <div className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-2 gap-2 border-t border-[#DCE3EC] bg-white/95 p-2 pb-[calc(.5rem+env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(15,29,50,.08)] backdrop-blur md:hidden"><a href="/baccalaureate" className="flex min-h-11 items-center justify-center rounded-xl bg-primary px-3 text-sm font-bold text-white">تفاصيل البكالوريا</a><a href={`https://wa.me/${whatsapp}`} className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#25D366] text-sm font-bold text-[#168C45]"><MessageCircle className="h-4 w-4"/> واتساب</a></div>
-  </div>;
+            <div className="mt-8 text-center flex justify-center gap-4">
+              <Button asChild className="h-11 rounded-xl bg-blue-600 font-bold text-white hover:bg-blue-700">
+                <a href="/platform">ادخل المنصة الآن</a>
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── 6. INSTRUCTOR AUTHORITY SECTION ─── */}
+        <section id="about" className="bg-slate-50 py-14 md:py-20 border-b border-slate-200">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid items-center gap-10 lg:grid-cols-12">
+              <div className="lg:col-span-5 flex justify-center">
+                <div className="overflow-hidden rounded-2xl border-4 border-white bg-white shadow-lg max-w-sm w-full">
+                  <img
+                    src="/dr-mahmoud-hero-classroom.webp"
+                    alt="د. محمود المهدي"
+                    loading="lazy"
+                    width={800}
+                    height={600}
+                    className="aspect-[4/3] w-full object-cover object-[center_12%]"
+                  />
+                </div>
+              </div>
+
+              <div className="lg:col-span-7 space-y-4 text-right">
+                <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">المحاضر والمتخصص</span>
+                <h2 className="text-3xl font-black text-slate-900">مين هو د. محمود المهدي؟</h2>
+                <p className="text-sm font-semibold leading-relaxed text-slate-600">
+                  د. محمود المهدي، ماجستير نظم المعلومات، ومتخصص في تدريس البرمجة وعلوم الحاسب لطلاب المدارس والجامعات. بيعتمد في الشرح على الفهم والتطبيق وحل المشكلات، مش حفظ الأكواد أو تقليد أمثلة جاهزة.
+                </p>
+
+                <div className="grid gap-2.5 sm:grid-cols-2 pt-2 text-xs font-bold text-slate-700">
+                  {[
+                    "ماجستير نظم المعلومات",
+                    "تدريس البرمجة وعلوم الحاسب",
+                    "خبرة مع طلاب المدارس والجامعات",
+                    "شرح أونلاين لكل مصر وحضوري بالزقازيق",
+                    "تأسيس عملي وحل مشكلات",
+                    "إنشاء محتوى تعليمي واختبارات",
+                  ].map((pt) => (
+                    <span key={pt} className="flex items-center gap-2 rounded-lg bg-white p-2.5 border border-slate-200">
+                      <CheckCircle2 className="h-4 w-4 text-blue-600 shrink-0" />
+                      {pt}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="pt-3 flex items-center gap-3">
+                  <Button asChild variant="outline" className="h-10 rounded-xl font-bold border-slate-300">
+                    <a href="/baccalaureate">اعرف أكتر عن د. المهدي</a>
+                  </Button>
+                  <Button asChild variant="ghost" className="h-10 rounded-xl font-bold text-blue-600 hover:bg-blue-50">
+                    <a href="/#free-preview">شاهد شرح مجاني ←</a>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── 7. SAMPLE EDUCATIONAL CONTENT ─── */}
+        <section id="free-preview" className="bg-white py-14 md:py-20 border-b border-slate-200">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-3xl text-center mb-12">
+              <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">المعاينة المجانية</span>
+              <h2 className="text-3xl font-black text-slate-900">ابدأ تتعلم من دلوقتي</h2>
+              <p className="mt-2 text-sm font-semibold text-slate-500">جرب أسلوب الشرح واطلع على المناهج والملفات المجانية المتاحة.</p>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-3">
+              {[
+                { title: "درس تمهيدي مجاني", tag: "درس مجاني", type: "فيديو", href: "/baccalaureate", cta: "شاهد المعاينة" },
+                { title: "خريطة المناهج والمسارات", tag: "دليل المنهج", type: "ملف PDF", href: "/curriculum", cta: "استعرض المناهج" },
+                { title: "تجربة منصة الطالب", tag: "بنك الأسئلة", type: "اختبار تجريبي", href: "/platform", cta: "دخول المنصة" },
+              ].map((item) => (
+                <div key={item.title} className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-slate-50/50 p-6 text-right">
+                  <div className="space-y-2">
+                    <span className="inline-block rounded-md bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700">
+                      {item.tag}
+                    </span>
+                    <h3 className="text-lg font-black text-slate-900">{item.title}</h3>
+                    <p className="text-xs font-semibold text-slate-500">{item.type} لتوضيح تسلسل التعلم والتطبيق.</p>
+                  </div>
+                  <Button asChild variant="outline" className="mt-5 h-10 w-full rounded-xl border-slate-300 font-bold hover:bg-blue-50 hover:text-blue-600">
+                    <a href={item.href}>{item.cta} ←</a>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── 8. RESULTS AND TESTIMONIALS ─── */}
+        <section id="testimonials" className="bg-slate-50 py-14 md:py-20 border-b border-slate-200">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-3xl text-center mb-12">
+              <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">تجارب الفهم والتطبيق</span>
+              <h2 className="text-3xl font-black text-slate-900">تجارب حقيقية من الطلاب وأولياء الأمور</h2>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-3">
+              {testimonials.map((item, i) => (
+                <blockquote key={i} className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-xs text-right">
+                  <p className="text-sm font-semibold leading-relaxed text-slate-700">"{item.quote}"</p>
+                  <footer className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-3">
+                    <span className="grid h-9 w-9 place-items-center rounded-full bg-blue-50 text-xs font-bold text-blue-700">
+                      {item.initials || item.author[0]}
+                    </span>
+                    <div>
+                      <strong className="block text-xs font-black text-slate-900">{item.author}</strong>
+                      <span className="text-[11px] font-semibold text-slate-400">{item.role}</span>
+                    </div>
+                  </footer>
+                </blockquote>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── 9. NATIONWIDE ONLINE LEARNING SECTION ─── */}
+        <section className="bg-white py-14 md:py-20 border-b border-slate-200">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+            <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">التغطية والدراسة</span>
+            <h2 className="mt-2 text-3xl font-black text-slate-900">من أي محافظة في مصر… تقدر تبدأ</h2>
+            <p className="mt-3 max-w-2xl mx-auto text-sm font-semibold text-slate-500 leading-relaxed">
+              الشرح الأونلاين متاح لطلاب البكالوريا في جميع محافظات مصر، مع الوصول للدروس والملفات والاختبارات من خلال المنصة، ومتابعة منظمة تساعد الطالب يكمل من غير تشتت.
+            </p>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 max-w-4xl mx-auto">
+              {[
+                ["أونلاين لكل مصر", "دروس واختبارات ومتابعة أونلاين"],
+                ["حضور بالزقازيق", "مباشر بمقر الأكاديمية بالشرقية"],
+                ["متاح على الموبايل والكمبيوتر", "تصفح مرن في أي وقت"],
+                ["محتوى منظم ومحدث", "تسلسل واضح يناسب المرحلة"],
+              ].map(([t, s]) => (
+                <div key={t} className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center">
+                  <strong className="block text-xs font-black text-slate-900">{t}</strong>
+                  <span className="mt-1 block text-[11px] font-semibold text-slate-500">{s}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── 10. PARENT-FOCUSED SECTION ─── */}
+        <section className="bg-slate-50 py-14 md:py-20 border-b border-slate-200">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-3xl text-center mb-12">
+              <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">إجابات أولياء الأمور</span>
+              <h2 className="text-3xl font-black text-slate-900">إيه اللي يهم ولي الأمر؟</h2>
+              <p className="mt-2 text-sm font-semibold text-slate-500">
+                المنصة والبرنامج مش مجرد فيديوهات. الطالب بيمشي في مسار واضح، يحل بعد كل جزء، ويعرف مستواه، وولي الأمر يقدر يفهم الطالب وصل لفين وإيه اللي محتاج مراجعة.
+              </p>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              {[
+                ["هل الطالب بيفهم ولا بيحفظ؟", "الشرح مبني على تحويل المشكلة لخطوات منطقية وفهم المتغيرات والشروط قبل كتابة أي كود."],
+                ["هل بيحل تدريبات بعد الدرس؟", "نعم، كل وحدة تحتوي على تمارين وأسئلة متدرجة الصعوبة واختبارات تقييم متكررة."],
+                ["هل مستواه بيتابع؟", "يتم تتبع نشاط الطالب على المنصة والدروس المكتملة ودرجات الاختبارات المنفذة."],
+                ["هل المحتوى مناسب لمرحلته؟", "المحتوى مصمم خصيصاً لمنهج أولى وتانية ثانوي بالبكالوريا المصرية لضمان التأسيس والتفوق."],
+              ].map(([q, a]) => (
+                <div key={q} className="rounded-2xl border border-slate-200 bg-white p-6 text-right">
+                  <h3 className="text-base font-black text-slate-900">{q}</h3>
+                  <p className="mt-2 text-xs font-semibold leading-relaxed text-slate-500">{a}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── 11. OTHER PROGRAMS SECTION ─── */}
+        <section id="courses-section" className="bg-white py-14 md:py-20 border-b border-slate-200">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-3xl text-center mb-12">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">مسارات إضافية</span>
+              <h2 className="text-2xl font-black text-slate-800">برامج تعليمية تانية</h2>
+              <p className="mt-1 text-xs font-semibold text-slate-500">مسارات متخصصة للجامعات والناشئين بجانب برنامج البكالوريا الرئيسي.</p>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                ["تأسيس البرمجة العامة", "للمبتدئين وطلاب الثانوي", "/curriculum"],
+                ["كورسات الجامعة", "لطلاب حاسبات وهندسة", "/university"],
+                ["برمجة الأطفال", "للأطفال والناشئين", "/kids"],
+                ["مهارات الكمبيوتر", "ICDL والمكتبية", "/curriculum"],
+              ].map(([title, sub, href]) => (
+                <a key={title} href={href} className="group rounded-2xl border border-slate-200 bg-slate-50/50 p-4 text-right hover:border-blue-400 transition-all">
+                  <strong className="block text-sm font-bold text-slate-900 group-hover:text-blue-600">{title}</strong>
+                  <span className="mt-1 block text-xs text-slate-500">{sub}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── 12. FAQ SECTION ─── */}
+        <section id="faq" className="bg-slate-50 py-14 md:py-20 border-b border-slate-200">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-3xl text-center mb-10">
+              <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">توضيحات سريعة</span>
+              <h2 className="text-3xl font-black text-slate-900">الأسئلة الشائعة</h2>
+            </div>
+
+            <Accordion type="single" collapsible className="space-y-3">
+              {faqs.map(([q, a], i) => (
+                <AccordionItem key={q} value={`faq-${i}`} className="rounded-2xl border border-slate-200 bg-white px-5">
+                  <AccordionTrigger className="min-h-14 text-right font-black text-slate-900 hover:no-underline text-sm sm:text-base">
+                    {q}
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-5 text-xs font-semibold leading-relaxed text-slate-500">
+                    {a}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </section>
+
+        {/* ─── 13. FINAL CTA & BOOKING FORM SECTION ─── */}
+        <section id="contact" className="bg-white py-14 md:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid items-start gap-10 lg:grid-cols-12">
+              <div className="lg:col-span-5 space-y-4 text-right">
+                <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">انضم للبرنامج</span>
+                <h2 className="text-3xl font-black text-slate-900">ابدأ تأسيس البرمجة صح</h2>
+                <p className="text-sm font-semibold leading-relaxed text-slate-600">
+                  اختار المرحلة المناسبة، شوف محتوى البرنامج، وابدأ التعلم بخطة واضحة بدل التشتت بين مصادر مختلفة.
+                </p>
+
+                <div className="rounded-2xl bg-blue-50 p-4 border border-blue-100 space-y-2">
+                  <div className="flex items-center gap-2 text-blue-800 font-bold text-xs">
+                    <ShieldCheck className="h-5 w-5 text-blue-600" />
+                    إرسال الطلب للاستفسار وتحديد الخطة المناسبة فقط (لا يعني الدفع)
+                  </div>
+                </div>
+
+                <div className="pt-2 flex flex-col gap-2.5">
+                  <a
+                    href={`https://wa.me/${whatsapp}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 font-bold text-white hover:bg-emerald-700"
+                  >
+                    <MessageCircle className="h-5 w-5" />
+                    التواصل المباشر عبر الواتساب
+                  </a>
+                </div>
+              </div>
+
+              <div className="lg:col-span-7 rounded-3xl border border-slate-200 bg-slate-50 p-6 md:p-8 shadow-xs">
+                {submitted ? (
+                  <div role="status" className="py-12 text-center space-y-3">
+                    <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-600" />
+                    <h3 className="text-xl font-black text-slate-900">تم إرسال طلبك بنجاح</h3>
+                    <p className="text-xs font-semibold text-slate-500">سيتم التواصل معك فوراً لتوضيح مواعيد وأسلوب الدراسة المناسب.</p>
+                    <Button type="button" variant="outline" className="mt-4 font-bold" onClick={() => setSubmitted(false)}>
+                      إرسال طلب جديد
+                    </Button>
+                  </div>
+                ) : (
+                  <form onSubmit={submitBooking} noValidate className="grid gap-4 sm:grid-cols-2 text-right">
+                    <label>
+                      <span className="mb-1.5 block text-xs font-bold text-slate-700">اسم ولي الأمر</span>
+                      <input required value={form.parentName} onChange={(e) => setForm({ ...form, parentName: e.target.value })} className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-xs font-semibold focus:border-blue-600 focus:outline-none" />
+                    </label>
+
+                    <label>
+                      <span className="mb-1.5 block text-xs font-bold text-slate-700">اسم الطالب</span>
+                      <input required value={form.studentName} onChange={(e) => setForm({ ...form, studentName: e.target.value })} className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-xs font-semibold focus:border-blue-600 focus:outline-none" />
+                    </label>
+
+                    <label>
+                      <span className="mb-1.5 block text-xs font-bold text-slate-700">رقم الهاتف</span>
+                      <input required inputMode="tel" dir="ltr" placeholder="01xxxxxxxxx" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-xs font-semibold text-right focus:border-blue-600 focus:outline-none" />
+                    </label>
+
+                    <label>
+                      <span className="mb-1.5 block text-xs font-bold text-slate-700">المرحلة الدراسية</span>
+                      <select value={form.grade} onChange={(e) => setForm({ ...form, grade: e.target.value })} className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-xs font-bold text-slate-700 focus:border-blue-600 focus:outline-none">
+                        <option>أولى ثانوي</option>
+                        <option>تانية ثانوي</option>
+                        <option>جامعة</option>
+                        <option>أخرى</option>
+                      </select>
+                    </label>
+
+                    <label>
+                      <span className="mb-1.5 block text-xs font-bold text-slate-700">نوع المدرسة</span>
+                      <select value={form.schoolType} onChange={(e) => setForm({ ...form, schoolType: e.target.value })} className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-xs font-bold text-slate-700 focus:border-blue-600 focus:outline-none">
+                        <option>عربي</option>
+                        <option>لغات</option>
+                        <option>STEM</option>
+                        <option>أخرى</option>
+                      </select>
+                    </label>
+
+                    <label>
+                      <span className="mb-1.5 block text-xs font-bold text-slate-700">طريقة الدراسة</span>
+                      <select value={form.mode} onChange={(e) => setForm({ ...form, mode: e.target.value })} className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-xs font-bold text-slate-700 focus:border-blue-600 focus:outline-none">
+                        <option>أونلاين لكل مصر</option>
+                        <option>أوفلاين بالزقازيق</option>
+                        <option>مساعدة في الاختيار</option>
+                      </select>
+                    </label>
+
+                    {formError && <p role="alert" className="sm:col-span-2 rounded-xl bg-red-50 p-3 text-xs font-bold text-red-700">{formError}</p>}
+
+                    <Button disabled={isPending} type="submit" className="sm:col-span-2 h-12 rounded-xl bg-blue-600 font-black text-white hover:bg-blue-700">
+                      <Send className="ml-2 h-4 w-4" />
+                      {isPending ? "جاري الإرسال..." : "إرسال طلب الحجز والاستفسار"}
+                    </Button>
+                  </form>
+                )}
+              </div>
+
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <Footer />
+      <FloatingButtons />
+      <div className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-2 gap-2 border-t border-slate-200 bg-white/95 p-2 pb-[calc(.5rem+env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(15,29,50,.08)] backdrop-blur md:hidden">
+        <a href="/baccalaureate" className="flex min-h-11 items-center justify-center rounded-xl bg-blue-600 px-3 text-xs font-bold text-white">تفاصيل برنامج البكالوريا</a>
+        <a href={`https://wa.me/${whatsapp}`} className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-emerald-600 text-xs font-bold text-emerald-700">
+          <MessageCircle className="h-4 w-4" /> واتساب
+        </a>
+      </div>
+    </div>
+  );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label><span className="mb-1.5 block text-sm font-bold">{label}</span>{children}</label>; }
+

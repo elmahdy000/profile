@@ -30,10 +30,10 @@ const queryClient = new QueryClient({
 
 function HomePage() {
   useEffect(() => {
-    document.title = "د. محمود المهدي | بوابتك لاحتراف البرمجة وأونلاين";
+    document.title = "د. محمود المهدي | مدرس برمجة البكالوريا المصرية أونلاين";
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) {
-      metaDesc.setAttribute('content', 'د. محمود المهدي — طريقك لاحتراف البرمجة وعلوم الحاسب وأونلاين. تأسيس عملي من الصفر للجامعات والمدارس والثانوية العامة.');
+      metaDesc.setAttribute('content', 'شرح وتأسيس البرمجة لطلاب البكالوريا المصرية أولى وتانية ثانوي مع د. محمود المهدي، ماجستير نظم المعلومات. حصص أونلاين لكل محافظات مصر، منصة تعليمية، اختبارات وتدريبات ومتابعة مستمرة.');
     }
   }, []);
 

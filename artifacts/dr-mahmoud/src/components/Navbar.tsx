@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   BookOpen,
   ChevronLeft,
+  FileText,
   GraduationCap,
   Home,
   Layers3,
@@ -20,10 +21,12 @@ type NavStudent = { name: string; status: string };
 
 const navLinks = [
   { label: "الرئيسية", href: "/#hero", id: "hero", icon: Home },
-  { label: "المسارات التعليمية", href: "/#tracks", id: "tracks", icon: Layers3 },
-  { label: "برنامج البكالوريا", href: "/#baccalaureate", id: "baccalaureate", icon: BookOpen },
-  { label: "عن الدكتور", href: "/#about", id: "about", icon: GraduationCap },
-  { label: "آراء الطلاب", href: "/#testimonials", id: "testimonials", icon: MessageSquareQuote },
+  { label: "برنامج البكالوريا", href: "/baccalaureate", id: "baccalaureate", icon: BookOpen },
+  { label: "أولى ثانوي", href: "/baccalaureate#first-sec", id: "first-sec", icon: GraduationCap },
+  { label: "تانية ثانوي", href: "/baccalaureate#second-sec", id: "second-sec", icon: GraduationCap },
+  { label: "الكورسات", href: "/#courses-section", id: "courses-section", icon: Layers3 },
+  { label: "بنك الأسئلة", href: "/platform", id: "platform", icon: FileText },
+  { label: "عن د. المهدي", href: "/#about", id: "about", icon: UserRound },
 ] as const;
 
 export function Navbar() {

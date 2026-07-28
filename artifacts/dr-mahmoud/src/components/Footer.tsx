@@ -34,20 +34,21 @@ export function Footer() {
   ];
 
   return (
-    <footer className="relative z-10 border-t border-slate-200 bg-[#0F1D32] pb-24 pt-12 text-white/75 md:pb-8">
+    <footer className="relative z-10 border-t border-slate-200 bg-[#0F1D32] pb-24 pt-12 text-white/75 md:pb-8" dir="rtl">
       <div className="container mx-auto px-4 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-8 mb-10 text-right">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8 mb-10 text-right">
           
-          <div className="md:col-span-5 flex flex-col order-1">
-            <div className="flex items-center gap-3 mb-4">
-              <img src={logoUrl} alt="Logo" width={40} height={40} className="w-10 h-10 object-cover rounded-full border border-primary/20 shrink-0" />
-              <h2 className="text-xl font-bold text-white">{siteName}</h2>
+          {/* Col 1: Dr. Mahmoud */}
+          <div className="flex flex-col">
+            <div className="flex items-center gap-3 mb-3">
+              <img src={logoUrl} alt="Logo" width={36} height={36} className="w-9 h-9 object-cover rounded-full border border-primary/20 shrink-0" />
+              <h2 className="text-base font-bold text-white">{siteName}</h2>
             </div>
-            <p className="text-sm font-semibold text-primary mb-2">{siteTagline}</p>
-            <p className="text-sm text-white/60 leading-relaxed mb-6 max-w-sm">
-              شرح برمجة عملي للمدرسة والجامعة والمبتدئين، بخطة واضحة ومتابعة خطوة بخطوة.
+            <p className="text-xs font-semibold text-primary mb-2">مدرس برمجة البكالوريا المصرية</p>
+            <p className="text-xs text-white/60 leading-relaxed mb-4">
+              ماجستير نظم المعلومات — متخصص في تأسيس وشرح البرمجة لطلاب أولى وتانية ثانوي أونلاين لكل مصر وأوفلاين بالزقازيق.
             </p>
-            <div className="flex items-center gap-3 mt-auto">
+            <div className="flex items-center gap-2">
               {socialLinks.filter((s) => s.href && s.href !== "#").map((s) => (
                 <a
                   key={s.label}
@@ -55,60 +56,78 @@ export function Footer() {
                   target="_blank"
                   rel="noreferrer"
                   aria-label={s.label}
-                  className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-300 hover:border-primary/50 text-white/60"
+                  className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center transition-all hover:border-primary/50 text-white/60"
                 >
-                  <s.icon className="w-[18px] h-[18px]" />
+                  <s.icon className="w-4 h-4" />
                 </a>
               ))}
             </div>
           </div>
 
-          <div className="md:col-span-3 flex flex-col order-3 md:order-2">
-            <h3 className="font-bold text-white mb-5 text-sm uppercase tracking-wider">روابط سريعة</h3>
-            <ul className="space-y-3">
-              {[
-                { label: "الرئيسية", href: "/" },
-                { label: "عن الدكتور", href: "/#about" },
-                { label: "المسارات", href: "/#tracks" },
-                { label: "المناهج التعليمية", href: "/curriculum" },
-                { label: "دخول المنصة", href: "/platform" },
-                { label: "كلمنا", href: `https://wa.me/${whatsapp}` },
-              ].map((link) => (
-                <li key={link.href}>
-                  <a href={link.href} className="text-sm text-white/60 hover:text-primary transition-colors flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary/50"></span>
-                    {link.label}
-                  </a>
-                </li>
-              ))}
+          {/* Col 2: Baccalaureate Programs */}
+          <div className="flex flex-col">
+            <h3 className="font-bold text-white mb-4 text-xs uppercase tracking-wider">برامج البكالوريا</h3>
+            <ul className="space-y-2.5 text-xs text-white/60">
+              <li><a href="/baccalaureate#first-sec" className="hover:text-primary transition-colors">برمجة أولى ثانوي</a></li>
+              <li><a href="/baccalaureate#second-sec" className="hover:text-primary transition-colors">برمجة تانية ثانوي</a></li>
+              <li><a href="/platform" className="hover:text-primary transition-colors">بنك الأسئلة والتمارين</a></li>
+              <li><a href="/platform" className="hover:text-primary transition-colors">اختبارات التقييم</a></li>
             </ul>
           </div>
 
-          <div className="md:col-span-4 flex flex-col order-2 md:order-3">
-            <h3 className="font-bold text-white mb-5 text-sm uppercase tracking-wider">تواصل معنا</h3>
-            <div className="space-y-4 text-sm text-white/70">
-              <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+          {/* Col 3: Platform */}
+          <div className="flex flex-col">
+            <h3 className="font-bold text-white mb-4 text-xs uppercase tracking-wider">المنصة التعليمية</h3>
+            <ul className="space-y-2.5 text-xs text-white/60">
+              <li><a href="/platform" className="hover:text-primary transition-colors">تسجيل الدخول</a></li>
+              <li><a href="/platform" className="hover:text-primary transition-colors">إنشاء حساب جديد</a></li>
+              <li><a href="/#courses-section" className="hover:text-primary transition-colors">دليل الكورسات</a></li>
+              <li><a href="/platform" className="hover:text-primary transition-colors">المذكرات والملفات</a></li>
+            </ul>
+          </div>
+
+          {/* Col 4: Educational Content */}
+          <div className="flex flex-col">
+            <h3 className="font-bold text-white mb-4 text-xs uppercase tracking-wider">محتوى تعليمي</h3>
+            <ul className="space-y-2.5 text-xs text-white/60">
+              <li><a href="/curriculum" className="hover:text-primary transition-colors">المناهج والمسارات</a></li>
+              <li><a href="/#free-preview" className="hover:text-primary transition-colors">الدروس المجانية</a></li>
+              <li><a href="/#faq" className="hover:text-primary transition-colors">الأسئلة الشائعة</a></li>
+              <li><a href="/kids" className="hover:text-primary transition-colors">برمجة الأطفال والأشبال</a></li>
+            </ul>
+          </div>
+
+          {/* Col 5: Contact */}
+          <div className="flex flex-col">
+            <h3 className="font-bold text-white mb-4 text-xs uppercase tracking-wider">التواصل والحجز</h3>
+            <div className="space-y-3 text-xs text-white/70">
+              <div className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                 <span className="leading-snug">{address}</span>
               </div>
-              <div className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-primary shrink-0" />
-                <div className="flex flex-col gap-1" dir="ltr">
-                  <a href={toTelephoneUrl(whatsapp)} className="hover:text-primary transition-colors text-right">{whatsapp}</a>
-                  <a href={toTelephoneUrl(phone1)} className="hover:text-primary transition-colors text-right">{phone1}</a>
-                  <a href={toTelephoneUrl(phone2)} className="hover:text-primary transition-colors text-right">{phone2}</a>
-                </div>
+              <div className="flex flex-col gap-1.5" dir="ltr">
+                <a href={toTelephoneUrl(whatsapp)} className="hover:text-primary transition-colors text-right flex items-center gap-1.5 justify-end">
+                  <span>{whatsapp}</span>
+                  <Phone className="w-3.5 h-3.5 text-primary shrink-0" />
+                </a>
+                <a href={toTelephoneUrl(phone1)} className="hover:text-primary transition-colors text-right flex items-center gap-1.5 justify-end">
+                  <span>{phone1}</span>
+                  <Phone className="w-3.5 h-3.5 text-primary shrink-0" />
+                </a>
               </div>
             </div>
-            
           </div>
-          
+
         </div>
 
         {/* Copyright Row */}
-        <div className="pt-6 border-t border-white/10 text-center text-sm text-white/40 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="pt-6 border-t border-white/10 text-center text-xs text-white/40 flex flex-col md:flex-row justify-between items-center gap-3">
           <p>© {currentYear} د. محمود المهدي — جميع الحقوق محفوظة.</p>
-          <p className="text-xs">منصة تعليمية للبرمجة وعلوم الحاسب</p>
+          <div className="flex items-center gap-4">
+            <a href="/#booking" className="hover:text-white/70">الشروط والأحكام</a>
+            <span>•</span>
+            <a href="/#booking" className="hover:text-white/70">سياسة الخصوصية</a>
+          </div>
         </div>
       </div>
     </footer>
