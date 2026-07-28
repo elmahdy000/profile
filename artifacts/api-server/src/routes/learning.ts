@@ -395,16 +395,15 @@ function normalizeStringList(value: unknown): string[] {
 
 async function getAutomaticCourseAssignments(stage: string) {
   const normalizedStage = stage.trim().toLocaleLowerCase("ar");
-  if (!normalizedStage) return { enrolledCourseIds: [] as number[], enrolledCategories: [] as string[] };
   const courses = await db
     .select()
     .from(coursesTable)
     .where(eq(coursesTable.isPublished, true));
-  const matching = courses.filter((course) =>
-    (course.stages ?? []).some((courseStage) =>
-      courseStage.trim().toLocaleLowerCase("ar") === normalizedStage,
-    ),
-  );
+  const matching = courses.filter((course) => {
+    const courseStages = course.stages ?? [];
+    if (courseStages.length === 0) return true; // Courses with no stage restriction are available to all students
+    return courseStages.some((cs) => cs.trim().toLocaleLowerCase("ar") === normalizedStage);
+  });
   return {
     enrolledCourseIds: matching.map((course) => course.id),
     enrolledCategories: Array.from(new Set(matching.map((course) => course.title))),
@@ -1051,6 +1050,9 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
       await db
         .delete(studentSessionsTable)
         .where(eq(studentSessionsTable.studentId, id));
+    }
+    if (student) {
+      student = await ensureAutomaticCourseAssignments(student);
     }
     if (req.body.status === "approved" && current.status !== "approved") {
       await db.insert(studentNotificationsTable).values({
