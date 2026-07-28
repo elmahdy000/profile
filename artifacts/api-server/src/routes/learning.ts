@@ -1000,7 +1000,7 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
       res.status(404).json({ error: "Student not found" });
       return;
     }
-    const [student] = await db
+    let [student] = await db
       .update(studentsTable)
       .set({
         status: req.body.status !== undefined ? status : current.status,
