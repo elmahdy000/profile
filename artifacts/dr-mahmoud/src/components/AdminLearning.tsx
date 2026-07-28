@@ -31,26 +31,14 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ExamWizard } from "./ExamWizard";
 import { ACADEMIC_TRACKS, getStagesForTrack, getTrack } from "@/data/academic";
+import type { Student as PlatformStudent } from "@/types/platform";
 
-type Student = {
-  id: number;
-  name: string;
-  phone: string;
-  email?: string | null;
-  status: string;
+type Student = PlatformStudent & {
   accessCode?: string | null;
-  governorate?: string | null;
-  city?: string | null;
-  grade?: string | null;
-  otherGradeDetail?: string | null;
-  learningMode?: "online" | "offline";
-  paymentStatus?: string;
   deviceId?: string | null;
   maxDevices?: number;
   boundDevices?: string[];
-  enrolledCourseIds?: number[];
   enrolledCategories?: string[];
-  createdAt: string;
 };
 type FileItem = {
   id: number;
@@ -1072,12 +1060,12 @@ export function AdminLearning() {
           [
             "إجمالي الطلاب",
             students.length,
-            `${students.filter((s) => new Date(s.createdAt).toDateString() === new Date().toDateString()).length} جديد اليوم (${students.filter((s) => s.paymentStatus === "pending_review").length} قيد المراجعة)`,
+            `${students.filter((s) => s.createdAt && new Date(s.createdAt).toDateString() === new Date().toDateString()).length} جديد اليوم (${students.filter((s) => s.paymentStatus === "pending_review").length} قيد المراجعة)`,
             GraduationCap,
           ],
           [
             "الطلاب الجدد اليوم",
-            students.filter((s) => new Date(s.createdAt).toDateString() === new Date().toDateString()).length,
+            students.filter((s) => s.createdAt && new Date(s.createdAt).toDateString() === new Date().toDateString()).length,
             `${students.filter((s) => s.status === "approved").length} طالب معتمد ومُفعّل`,
             UserCheck,
           ],
