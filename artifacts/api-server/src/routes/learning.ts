@@ -601,17 +601,17 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
       return;
     }
 
-    // ── Multi-Device Locking & Binding Logic ──
+    // ── Multi-Device Locking & Binding Logic (Strict Maximum: 2 Devices) ──
     if (deviceId) {
-      const maxDevices = student.maxDevices || 1;
+      const maxDevices = Math.min(2, Math.max(1, student.maxDevices || 1));
       let boundDevices: string[] = Array.isArray(student.boundDevices) ? [...student.boundDevices] : [];
       if (boundDevices.length === 0 && student.deviceId) {
         boundDevices = [student.deviceId];
       }
 
       if (!boundDevices.includes(deviceId)) {
-        if (boundDevices.length < maxDevices) {
-          // Allowed to bind this additional device (e.g. maxDevices was set to 2 by admin)
+        if (boundDevices.length < maxDevices && boundDevices.length < 2) {
+          // Allowed to bind additional device up to absolute maximum limit of 2 devices
           boundDevices.push(deviceId);
           await db
             .update(studentsTable)
@@ -624,12 +624,12 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
           student.deviceId = boundDevices[0];
           student.boundDevices = boundDevices;
         } else {
-          // Limit reached (default 1 device, or already used 2 devices)
+          // Limit reached (default 1 device, or absolute max 2 devices)
           const isSingleDevice = maxDevices === 1;
           res.status(403).json({
             error: isSingleDevice
-              ? "عذراً، هذا الحساب مرتبط بجهاز آخر. يتطلب الفتح من جهاز ثانٍ تواصلك مع الأدمن للموافقة والتفعيل."
-              : `عذراً، هذا الحساب وصل للحد الأقصى المسموح للأجهزة (${maxDevices} جهاز). تواصل مع الأدمن لإدارة أجهزتك.`,
+              ? "عذراً، هذا الحساب مرتبط بجهاز آخر. يتطلب الفتح من جهاز ثانٍ تواصلك مع الأدمن للموافقة والتفعيل (الحد الأقصى المطلق: جهازين)."
+              : "عذراً، هذا الحساب وصل للحد الأقصى المطلق المسموح للأجهزة (جهازين فقط). لا يمكن إضافة أجهزة إضافية.",
           });
           return;
         }
