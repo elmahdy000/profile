@@ -2453,6 +2453,9 @@ export function StudentPlatform() {
     );
   const logout = async () => {
     await api("/api/student/logout", { method: "POST" });
+    localStorage.removeItem("dr_mahmoud_watch_progress");
+    localStorage.removeItem("dr_mahmoud_watch_positions");
+    localStorage.removeItem("dr_mahmoud_bookmarks");
     setStudent(null);
     window.dispatchEvent(new Event("student-auth-changed"));
   };

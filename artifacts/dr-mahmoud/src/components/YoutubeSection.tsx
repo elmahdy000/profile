@@ -741,19 +741,19 @@ export function VideoLessonsSection({
     void fetch("/api/learning/progress", { credentials: "include" })
       .then((response) => (response.ok ? response.json() : []))
       .then((rows: Array<{ videoId: number; progress: number }>) => {
-        const merged = readStoredJson<Record<number, number>>("dr_mahmoud_watch_progress", {});
+        const serverMap: Record<number, number> = {};
         rows.forEach((row) => {
-          merged[row.videoId] = Math.max(merged[row.videoId] || 0, row.progress);
+          serverMap[row.videoId] = row.progress;
         });
-        localStorage.setItem("dr_mahmoud_watch_progress", JSON.stringify(merged));
-        setWatchProgress(merged);
+        localStorage.setItem("dr_mahmoud_watch_progress", JSON.stringify(serverMap));
+        setWatchProgress(serverMap);
       })
       .catch(() => undefined);
     window.addEventListener("watch_progress_updated", loadProgress);
     return () => {
       window.removeEventListener("watch_progress_updated", loadProgress);
     };
-  }, []);
+  }, [student?.id]);
 
   const toggleBookmark = (id?: number) => {
     if (!id) return;
