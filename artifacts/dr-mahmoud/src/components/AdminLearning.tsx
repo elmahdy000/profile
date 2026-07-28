@@ -1193,87 +1193,105 @@ export function AdminLearning() {
                 filteredStudents.map((s) => (
                   <article
                     key={s.id}
-                    className="rounded-2xl border bg-card p-5 space-y-4"
+                    className="rounded-2xl border bg-card p-5 sm:p-6 shadow-sm hover:shadow-md transition-all space-y-5"
                   >
-                    <div className="flex flex-col xl:flex-row gap-4 xl:items-center justify-between">
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="font-black text-lg">{s.name}</h3>
-                          <Status status={s.status} />
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-bold ${s.paymentStatus === "paid" ? "bg-emerald-500/10 text-emerald-700" : s.paymentStatus === "pending_review" ? "bg-amber-500/10 text-amber-700 border border-amber-300" : "bg-slate-100 text-slate-600"}`}
-                          >
-                            {s.paymentStatus === "paid" ? "💳 اشتراك مدفوع" : s.paymentStatus === "pending_review" ? "⏳ إيصال قيد المراجعة" : "🆓 مشاهدة مجانية (أول 2)"}
-                          </span>
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-bold ${
-                              (s.maxDevices || 1) === 2
-                                ? "bg-purple-500/10 text-purple-700 border border-purple-300"
-                                : s.deviceId || (s.boundDevices && s.boundDevices.length > 0)
-                                ? "bg-amber-500/10 text-amber-700 border border-amber-300"
-                                : "bg-emerald-500/10 text-emerald-700"
-                            }`}
-                          >
-                            {(s.maxDevices || 1) === 2
-                              ? `📱📱 مسموح جهازين (${s.boundDevices?.length || (s.deviceId ? 1 : 0)}/2)`
-                              : s.deviceId || (s.boundDevices && s.boundDevices.length > 0)
-                              ? "📱 جهاز واحد مقترن"
-                              : "🔓 بدون قفل جهاز"}
-                          </span>
+                    {/* Header Row: Avatar, Name & Info, Action Buttons */}
+                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 pb-4 border-b">
+                      {/* Left Block: Avatar & Student Details */}
+                      <div className="flex items-start gap-3.5">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary font-black text-lg shadow-xs">
+                          {s.name ? s.name.charAt(0) : "ط"}
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {s.phone}
-                          {s.email ? ` · ${s.email}` : ""}
-                          {s.governorate ? ` · المحافظة: ${s.governorate}` : ""}
-                          {s.city ? ` · المدينة: ${s.city}` : ""}
-                          {s.grade
-                            ? ` · المرحلة: ${s.grade === "أخرى" ? s.otherGradeDetail || "أخرى" : s.grade}`
-                            : ""}
-                        </p>
-                        {s.accessCode && (
-                          <button
-                            type="button"
-                            onClick={() => copyStudentCode(s)}
-                            title="اضغط لنسخ كود الطالب"
-                            className={`mt-2 inline-flex items-center gap-2 rounded-lg px-3 py-1.5 font-mono transition ${copiedStudentId === s.id ? "bg-emerald-100 text-emerald-700" : "bg-primary/10 text-primary hover:bg-primary/20"}`}
-                          >
-                            {copiedStudentId === s.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                            {s.accessCode}
-                            <span className="font-sans text-xs">{copiedStudentId === s.id ? "تم النسخ" : "نسخ"}</span>
-                          </button>
-                        )}
+                        <div className="space-y-1.5">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="font-bold text-lg text-foreground">{s.name}</h3>
+                            <Status status={s.status} />
+                            <span
+                              className={`rounded-lg px-2.5 py-0.5 text-xs font-semibold ${s.paymentStatus === "paid" ? "bg-emerald-500/10 text-emerald-700 border border-emerald-200" : s.paymentStatus === "pending_review" ? "bg-amber-500/10 text-amber-700 border border-amber-300" : "bg-slate-100 text-slate-600 border border-slate-200"}`}
+                            >
+                              {s.paymentStatus === "paid" ? "💳 اشتراك مدفوع" : s.paymentStatus === "pending_review" ? "⏳ إيصال قيد المراجعة" : "🆓 مشاهدة مجانية (أول 2)"}
+                            </span>
+                            <span
+                              className={`rounded-lg px-2.5 py-0.5 text-xs font-semibold ${
+                                (s.maxDevices || 1) === 2
+                                  ? "bg-purple-500/10 text-purple-700 border border-purple-200"
+                                  : s.deviceId || (s.boundDevices && s.boundDevices.length > 0)
+                                  ? "bg-amber-500/10 text-amber-700 border border-amber-200"
+                                  : "bg-emerald-500/10 text-emerald-700 border border-emerald-200"
+                              }`}
+                            >
+                              {(s.maxDevices || 1) === 2
+                                ? `📱📱 مسموح جهازين (${s.boundDevices?.length || (s.deviceId ? 1 : 0)}/2)`
+                                : s.deviceId || (s.boundDevices && s.boundDevices.length > 0)
+                                ? "📱 جهاز واحد مقترن"
+                                : "🔓 بدون قفل جهاز"}
+                            </span>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                            <span className="font-semibold text-foreground dir-ltr">{s.phone}</span>
+                            {s.email && <span>· {s.email}</span>}
+                            {s.governorate && <span>· المحافظة: <strong className="text-foreground">{s.governorate}</strong></span>}
+                            {s.city && <span>· المدينة: <strong className="text-foreground">{s.city}</strong></span>}
+                            {s.grade && (
+                              <span>· المرحلة: <strong className="text-foreground">{s.grade === "أخرى" ? s.otherGradeDetail || "أخرى" : s.grade}</strong></span>
+                            )}
+                          </div>
+
+                          {s.accessCode && (
+                            <div className="pt-1">
+                              <button
+                                type="button"
+                                onClick={() => copyStudentCode(s)}
+                                title="اضغط لنسخ كود الطالب"
+                                className={`inline-flex items-center gap-2 rounded-lg px-3 py-1 font-mono text-xs transition ${copiedStudentId === s.id ? "bg-emerald-100 text-emerald-800 font-bold" : "bg-muted text-foreground hover:bg-muted/80"}`}
+                              >
+                                {copiedStudentId === s.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                                <span className="tracking-widest font-black">{s.accessCode}</span>
+                                <span className="font-sans text-[11px] text-muted-foreground">{copiedStudentId === s.id ? "تم النسخ" : "نسخ الكود"}</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex flex-wrap items-center gap-2 pt-2 xl:pt-0 border-t xl:border-t-0">
+
+                      {/* Right Block: Action Buttons Grid */}
+                      <div className="flex flex-wrap items-center gap-2 shrink-0">
                         {s.status !== "approved" && (
                           <Button
+                            size="sm"
                             onClick={() => updateStudent(s.id, "approved")}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-xs"
                           >
-                            <UserCheck className="h-4 w-4 me-1" /> قبول وإصدار كود
+                            <UserCheck className="h-4 w-4 me-1.5" /> قبول وإصدار كود
                           </Button>
                         )}
                         {s.status === "approved" && (
                           <Button
+                            size="sm"
                             variant="outline"
                             className="border-amber-300 text-amber-800 hover:bg-amber-50"
                             onClick={() => updateStudent(s.id, "suspended")}
                           >
-                            <UserX className="h-4 w-4 me-1" /> إيقاف الطالب
+                            <UserX className="h-4 w-4 me-1.5" /> إيقاف الطالب
                           </Button>
                         )}
                         {s.status === "suspended" && (
                           <Button
+                            size="sm"
                             variant="outline"
                             className="border-emerald-300 text-emerald-800 hover:bg-emerald-50"
                             onClick={() => updateStudent(s.id, "approved")}
                           >
-                            <UserCheck className="h-4 w-4 me-1" /> إعادة تفعيل
+                            <UserCheck className="h-4 w-4 me-1.5" /> إعادة تفعيل
                           </Button>
                         )}
 
                         {/* Multi-Device Authorization Button */}
                         <Button
+                          size="sm"
                           variant="outline"
-                          className={(s.maxDevices || 1) === 2 ? "border-purple-500 text-purple-800 bg-purple-50 hover:bg-purple-100 font-bold" : "border-slate-300 text-slate-700 hover:bg-slate-50"}
+                          className={(s.maxDevices || 1) === 2 ? "border-purple-300 text-purple-800 bg-purple-50/80 hover:bg-purple-100 font-semibold" : "border-slate-300 text-slate-700 hover:bg-slate-50"}
                           onClick={async () => {
                             const newMax = (s.maxDevices || 1) === 1 ? 2 : 1;
                             try {
@@ -1295,9 +1313,10 @@ export function AdminLearning() {
                         </Button>
 
                         <Button
+                          size="sm"
                           variant="outline"
                           disabled={!s.deviceId && (!s.boundDevices || s.boundDevices.length === 0)}
-                          className={s.deviceId || (s.boundDevices && s.boundDevices.length > 0) ? "border-amber-500 text-amber-800 bg-amber-50/50 hover:bg-amber-100" : "opacity-50"}
+                          className={s.deviceId || (s.boundDevices && s.boundDevices.length > 0) ? "border-amber-400 text-amber-900 bg-amber-50 hover:bg-amber-100" : "opacity-50"}
                           onClick={async () => {
                             if (!s.deviceId && (!s.boundDevices || s.boundDevices.length === 0)) return;
                             try {
@@ -1309,14 +1328,15 @@ export function AdminLearning() {
                             }
                           }}
                         >
-                          <RefreshCw className="h-4 w-4 me-1" /> {s.deviceId || (s.boundDevices && s.boundDevices.length > 0) ? "فك قفل الأجهزة" : "لا يوجد أجهزة مقترنة"}
+                          <RefreshCw className="h-3.5 w-3.5 me-1.5" /> {s.deviceId || (s.boundDevices && s.boundDevices.length > 0) ? "فك قفل الأجهزة" : "بدون أجهزة"}
                         </Button>
                         <Button
+                          size="sm"
                           variant="destructive"
                           title="حذف الطالب"
                           onClick={() => deleteStudent(s.id)}
                         >
-                          <Trash2 className="h-4 w-4 me-1" /> حذف
+                          <Trash2 className="h-3.5 w-3.5 me-1" /> حذف
                         </Button>
                       </div>
                     </div>
