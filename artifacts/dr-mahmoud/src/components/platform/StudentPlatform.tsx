@@ -1419,7 +1419,7 @@ function FilesPanel({ files }: { files: LearningFile[] }) {
                     : "bg-card text-muted-foreground hover:bg-muted border border-border"
                 }`}
               >
-                📖 {getTrack(courseName)?.title || courseName} ({count})
+                📖 {courseName} ({count})
               </button>
             );
           })}
@@ -1435,7 +1435,7 @@ function FilesPanel({ files }: { files: LearningFile[] }) {
       ) : (
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
           {filteredFiles.map((file) => {
-            const courseTitle = getTrack(file.category)?.title || file.category || "كورس عام";
+            const courseTitle = file.category || "كورس عام";
             return (
               <article
                 key={file.id}
