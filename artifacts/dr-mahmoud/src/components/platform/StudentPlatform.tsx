@@ -2503,43 +2503,43 @@ export function StudentPlatform() {
         setLinkedPreviewFile(file);
       }}
     >
-      <div className="mx-auto grid max-w-[1600px] lg:grid-cols-[260px_1fr]">
-        {sidebarOpen && <button className="fixed inset-0 z-40 bg-slate-950/35 lg:hidden" aria-label="إغلاق القائمة" onClick={() => setSidebarOpen(false)} />}
-        <aside className={`fixed inset-y-0 right-0 z-50 flex w-[272px] flex-col border-l border-border bg-card transition-transform lg:sticky lg:top-0 lg:z-20 lg:min-h-screen ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}`}>
-          <button className="absolute left-3 top-3 grid h-9 w-9 place-items-center rounded-lg text-muted-foreground hover:bg-muted lg:hidden" onClick={() => setSidebarOpen(false)} aria-label="إغلاق القائمة"><X className="h-4.5 w-4.5" /></button>
-          <div className="flex items-center gap-3 border-b border-border px-5 py-5">
+      <div className="mx-auto grid max-w-[1440px] lg:grid-cols-[248px_1fr]">
+        {sidebarOpen && <button className="fixed inset-0 z-40 bg-slate-950/40 lg:hidden" aria-label="إغلاق القائمة" onClick={() => setSidebarOpen(false)} />}
+        <aside className={`fixed inset-y-0 right-0 z-50 flex w-[248px] flex-col border-l border-[#E4EAF2] bg-[#0F1B2D] text-white transition-transform lg:sticky lg:top-0 lg:z-20 lg:min-h-screen ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}`}>
+          <button className="absolute left-3 top-3 grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-800 lg:hidden" onClick={() => setSidebarOpen(false)} aria-label="إغلاق القائمة"><X className="h-4 w-4" /></button>
+          <div className="flex items-center gap-3 border-b border-slate-800/80 px-4 py-4">
             <img
               src="/logo.webp"
               alt="شعار منصة د. محمود المهدي"
-              className="h-10 w-10 rounded-[10px] object-cover ring-1 ring-primary/15"
+              className="h-8 w-8 rounded-lg object-cover ring-1 ring-white/10"
             />
-            <div><strong className="block text-[13px] font-bold text-foreground">بوابة الطالب</strong><span className="text-[11px] text-muted-foreground">د. محمود المهدي</span></div>
+            <div><strong className="block text-[13px] font-bold text-white">بوابة الطالب</strong><span className="text-[10px] text-slate-400">د. محمود المهدي</span></div>
           </div>
-          <div className="mx-4 mt-4 flex items-center gap-3 rounded-xl border border-border bg-background/40 p-3"><StudentAvatar name={student.name} src={student.avatarUrl} /><div className="min-w-0"><strong className="block truncate text-[13px] font-bold text-foreground">{student.name}</strong><span className="text-[11px] text-muted-foreground">طالب متفعّل</span></div></div>
-          <nav className="mt-5 space-y-0.5 px-3">
+          <div className="mx-3 mt-3 flex items-center gap-2.5 rounded-xl border border-slate-800 bg-slate-900/60 p-2.5"><StudentAvatar name={student.name} src={student.avatarUrl} size="sm" /><div className="min-w-0"><strong className="block truncate text-[12px] font-bold text-white">{student.name}</strong><span className="text-[10px] text-slate-400">طالب متفعّل</span></div></div>
+          <nav className="mt-4 space-y-1 px-2.5">
             {nav.map(([value, label, Icon]) => (
               <button
                 key={value}
                 onClick={() => { setTab(value); setSidebarOpen(false); }}
                 aria-current={tab === value ? "page" : undefined}
-                className={`flex min-h-[42px] w-full items-center gap-3 rounded-xl px-3 text-right text-[13px] font-bold transition-all duration-150 ${tab === value ? "bg-primary/10 text-primary shadow-[inset_-3px_0_0_hsl(var(--primary))]" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+                className={`flex min-h-[40px] w-full items-center gap-3 rounded-xl px-3 text-right text-[13px] font-bold transition-all duration-150 ${tab === value ? "bg-[#1769FF] text-white shadow-xs" : "text-slate-300 hover:bg-slate-800/60 hover:text-white"}`}
               >
-                <Icon className={`h-[18px] w-[18px] ${tab === value ? "" : "opacity-70"}`} />
+                <Icon className={`h-[18px] w-[18px] ${tab === value ? "" : "opacity-80"}`} />
                 {label}
               </button>
             ))}
           </nav>
-          <div className="mt-auto space-y-2 px-4 pb-5">
+          <div className="mt-auto space-y-2 px-3 pb-4">
             <button
               type="button"
               onClick={() => {
                 const isDark = document.documentElement.classList.toggle("dark");
                 localStorage.setItem("dr_mahmoud_theme", isDark ? "dark" : "light");
               }}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-border text-[13px] font-bold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex h-9 w-full items-center justify-center gap-2 rounded-xl border border-slate-800 text-[12px] font-bold text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
             >
-              <Moon className="h-4 w-4 hidden dark:inline" />
-              <Sun className="h-4 w-4 dark:hidden" />
+              <Moon className="h-3.5 w-3.5 hidden dark:inline" />
+              <Sun className="h-3.5 w-3.5 dark:hidden" />
               <span className="dark:hidden">الوضع الليلي</span>
               <span className="hidden dark:inline">الوضع النهاري</span>
             </button>
@@ -2549,20 +2549,20 @@ export function StudentPlatform() {
               )}`}
               target="_blank"
               rel="noreferrer"
-              className="flex h-10 items-center justify-center rounded-xl border border-border text-[13px] font-bold text-primary transition-colors hover:bg-primary/10 hover:border-primary/20"
+              className="flex h-9 items-center justify-center rounded-xl border border-[#1769FF]/40 bg-[#1769FF]/10 text-[12px] font-bold text-[#3B82F6] transition-colors hover:bg-[#1769FF]/20"
             >
               كلم الدعم / حجز كورس 💬
             </a>
             <button
               onClick={logout}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-xl text-[13px] font-bold text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30"
+              className="flex h-9 w-full items-center justify-center gap-2 rounded-xl text-[12px] font-bold text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-400"
             >
-              <LogOut className="h-4 w-4" /> تسجيل الخروج
+              <LogOut className="h-3.5 w-3.5" /> تسجيل الخروج
             </button>
           </div>
         </aside>
-        <section className="min-w-0">
-          <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-card/95 px-4 backdrop-blur-sm md:px-8 dark:bg-[#111827]/95">
+        <section className="min-w-0 bg-[#F6F8FC] dark:bg-[#0B1220] min-h-screen">
+          <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-[#E4EAF2] bg-white/95 px-4 backdrop-blur-sm md:px-6 dark:border-[#26364D] dark:bg-[#111C2E]/95">
             <div className="flex items-center gap-3">
               <button className="grid h-9 w-9 place-items-center rounded-lg border border-border text-muted-foreground lg:hidden" onClick={() => setSidebarOpen(true)} aria-label="فتح القائمة"><Menu className="h-[18px] w-[18px]" /></button>
               <div className="relative">

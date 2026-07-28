@@ -16,6 +16,13 @@ import {
   getYoutubeThumbnail,
   getVideoThumbnail,
 } from "@/lib/video";
+import {
+  CourseOverviewCard,
+  CourseSwitcher,
+  ContinueLearningCard,
+  LessonToolbar,
+  RedesignedLessonCard,
+} from "@/components/platform/CourseComponents";
 
 const PremiumLessonPlayer = lazy(() =>
   import("@/components/learning/PremiumLessonPlayer")
@@ -871,318 +878,102 @@ export function VideoLessonsSection({
   const isStudentMode = Boolean(student);
 
   return (
-    <section id="youtube-lectures" className="py-4 md:py-6 bg-slate-50/50 text-slate-800" dir="rtl">
-      <div className="mx-auto max-w-7xl px-3 sm:px-6">
-        
-        <header className="mb-6 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs md:p-6">
-          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="text-xl font-black text-slate-900 md:text-2xl flex items-center gap-2">
-                <BookOpen className="h-6 w-6 text-blue-600" />
-                دروسك وكورساتك
-              </h1>
-              <p className="mt-1 text-xs font-semibold text-slate-500 md:text-sm">
-                كل محتواك التعليمي في مكان واحد. اختار الكورس، تابع تقدمك، وكمّل من آخر درس وصلت له.
-              </p>
-            </div>
-            <span className="w-fit rounded-full bg-blue-50 px-3.5 py-1 text-xs font-black text-blue-700 border border-blue-100">
-              {studentGrade || "حساب متفعّل"}
-            </span>
-          </div>
+    <section id="youtube-lectures" className="py-2 md:py-4 bg-[#F6F8FC] dark:bg-[#0B1220] text-[#111827] dark:text-[#F8FAFC] min-h-screen" dir="rtl">
+      <div className="mx-auto max-w-[1440px] px-3 sm:px-6 space-y-6">
 
-          <div className="grid grid-cols-2 gap-3 pt-2 sm:grid-cols-4">
-            <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 text-right">
-              <span className="block text-[11px] font-bold text-slate-500">عدد الكورسات</span>
-              <strong className="mt-1 block text-base font-black text-slate-900">{totalCoursesCount} كورس</strong>
-            </div>
-            <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 text-right">
-              <span className="block text-[11px] font-bold text-slate-500">الدروس المكتملة</span>
-              <strong className="mt-1 block text-base font-black text-emerald-600">{completedLessonsCount} / {visibleItems.length}</strong>
-            </div>
-            <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 text-right">
-              <span className="block text-[11px] font-bold text-slate-500">إجمالي التعلم</span>
-              <strong className="mt-1 block text-base font-black text-slate-900">~{totalHoursCount} ساعة</strong>
-            </div>
-            <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 text-right">
-              <span className="block text-[11px] font-bold text-slate-500">نسبة الإنجاز</span>
-              <strong className="mt-1 block text-base font-black text-blue-600">{overallProgressPercentage}%</strong>
-            </div>
-          </div>
-        </header>
+        {/* 1. HERO OVERVIEW CARD */}
+        <CourseOverviewCard
+          courseName={activeCategory === "all" ? "جميع الكورسات والمسارات" : `كورس ${activeCategory}`}
+          academicLevel={studentGrade || "حساب طالب متفعّل"}
+          totalLessons={activeCategory === "all" ? visibleItems.length : activeCourseItems.length}
+          completedLessons={activeCategory === "all" ? completedLessonsCount : activeCourseCompletedCount}
+          totalWatchTimeHours={totalHoursCount}
+          overallProgress={activeCategory === "all" ? overallProgressPercentage : activeCourseProgressPct}
+          onPrimaryAction={() => {
+            const nextLesson = activeCourseItems.find((i) => i.progress < 100) || activeCourseItems[0];
+            if (nextLesson) handlePlayClick(nextLesson);
+          }}
+        />
 
-        <div className="mb-6 space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-black text-slate-900">اختر الكورس لعرض درجاته ودروسه:</h2>
-            {categories.length > 3 && (
-              <div className="hidden sm:flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => scrollCourses("right")}
-                  className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                  aria-label="السابق"
-                >
-                  →
-                </button>
-                <button
-                  type="button"
-                  onClick={() => scrollCourses("left")}
-                  className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                  aria-label="التالي"
-                >
-                  ←
-                </button>
-              </div>
-            )}
-          </div>
+        {/* 2. COURSE SWITCHER */}
+        <CourseSwitcher
+          courses={categories.map((cName) => {
+            const cItems = visibleItems.filter((i) => i.category === cName);
+            const cPct = cItems.length
+              ? Math.round(cItems.reduce((acc, curr) => acc + curr.progress, 0) / cItems.length)
+              : 0;
+            return { name: cName, lessonsCount: cItems.length, progressPct: cPct };
+          })}
+          activeCategory={activeCategory}
+          onSelectCourse={handleSelectCourse}
+          overallProgressPercentage={overallProgressPercentage}
+          totalVisibleLessons={visibleItems.length}
+        />
 
-          <div
-            ref={scrollContainerRef}
-            className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x touch-pan-x"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
-            <button
-              type="button"
-              onClick={() => handleSelectCourse("all")}
-              className={`snap-start min-w-[200px] shrink-0 rounded-2xl border p-4 text-right transition-all cursor-pointer ${
-                activeCategory === "all"
-                  ? "border-blue-600 bg-blue-600 text-white shadow-md"
-                  : "border-slate-200 bg-white text-slate-900 hover:border-slate-300"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className={`grid h-8 w-8 place-items-center rounded-lg text-sm ${activeCategory === "all" ? "bg-white/20 text-white" : "bg-blue-50 text-blue-600"}`}>
-                  <BookOpen className="h-4 w-4" />
-                </span>
-                <span className={`text-[11px] font-bold ${activeCategory === "all" ? "text-blue-100" : "text-slate-400"}`}>
-                  {visibleItems.length} درس
-                </span>
-              </div>
-              <strong className="mt-3 block text-sm font-black truncate">كل الكورسات</strong>
-              <div className="mt-2 flex items-center justify-between text-[11px] font-bold">
-                <span>إجمالي الإنجاز</span>
-                <span>{overallProgressPercentage}%</span>
-              </div>
-              <div className={`mt-1.5 h-1.5 w-full rounded-full overflow-hidden ${activeCategory === "all" ? "bg-white/20" : "bg-slate-100"}`}>
-                <div className={`h-full ${activeCategory === "all" ? "bg-white" : "bg-blue-600"}`} style={{ width: `${overallProgressPercentage}%` }} />
-              </div>
-            </button>
-
-            {categories.map((courseName) => {
-              const courseItems = visibleItems.filter((i) => i.category === courseName);
-              const courseProgressPct = courseItems.length
-                ? Math.round(courseItems.reduce((acc, curr) => acc + curr.progress, 0) / courseItems.length)
-                : 0;
-              const isSelected = activeCategory === courseName;
-
-              return (
-                <button
-                  key={courseName}
-                  type="button"
-                  onClick={() => handleSelectCourse(courseName)}
-                  className={`snap-start min-w-[220px] max-w-[260px] shrink-0 rounded-2xl border p-4 text-right transition-all cursor-pointer ${
-                    isSelected
-                      ? "border-blue-600 bg-blue-600 text-white shadow-md"
-                      : "border-slate-200 bg-white text-slate-900 hover:border-slate-300"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className={`grid h-8 w-8 place-items-center rounded-lg text-sm ${isSelected ? "bg-white/20 text-white" : "bg-blue-50 text-blue-600"}`}>
-                      <Laptop className="h-4 w-4" />
-                    </span>
-                    <span className={`text-[11px] font-bold ${isSelected ? "text-blue-100" : "text-slate-400"}`}>
-                      {courseItems.length} دروس
-                    </span>
-                  </div>
-                  <strong className="mt-3 block text-sm font-black truncate dir-ltr text-right" style={{ unicodeBidi: "isolate" }}>
-                    {courseName}
-                  </strong>
-                  <div className="mt-2 flex items-center justify-between text-[11px] font-bold">
-                    <span>التقدم</span>
-                    <span>{courseProgressPct}% مكتمل</span>
-                  </div>
-                  <div className={`mt-1.5 h-1.5 w-full rounded-full overflow-hidden ${isSelected ? "bg-white/20" : "bg-slate-100"}`}>
-                    <div className={`h-full ${isSelected ? "bg-white" : "bg-blue-600"}`} style={{ width: `${courseProgressPct}%` }} />
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {activeCategory !== "all" && (
-          <div className="mb-6 rounded-2xl border border-blue-100 bg-blue-50/40 p-4 md:p-5 shadow-xs">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-blue-600 text-white shadow-xs">
-                  <BookOpen className="h-6 w-6" />
-                </div>
-                <div>
-                  <h2 className="text-base font-black text-slate-900 dir-ltr text-right" style={{ unicodeBidi: "isolate" }}>
-                    كورس {activeCategory}
-                  </h2>
-                  <p className="mt-0.5 text-xs text-slate-500 font-semibold">
-                    المحاضر: د. محمود المهدي · {activeCourseItems.length} درس مسجل · {activeCourseCompletedCount} من {activeCourseItems.length} مكتملة
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="text-left sm:text-right">
-                  <span className="block text-[11px] font-bold text-slate-500">نسبة اكتمال الكورس</span>
-                  <strong className="text-sm font-black text-blue-700">{activeCourseProgressPct}%</strong>
-                </div>
-                {activeCourseItems[0] && (
-                  <Button
-                    type="button"
-                    onClick={() => handlePlayClick(activeCourseItems.find(i => i.progress < 100) || activeCourseItems[0])}
-                    className="h-10 font-bold bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5"
-                  >
-                    <Play className="h-4 w-4 fill-white" />
-                    استكمال الكورس
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
+        {/* 3. CONTINUE LEARNING SECTION */}
         {continueLearningItems.length > 0 && !isLoading && (
-          <div className="mb-6 space-y-3">
-            <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-blue-600" />
-              استكمال المشاهدة والتعلم
-            </h3>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {continueLearningItems.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => handlePlayClick(item)}
-                  className="group flex cursor-pointer items-center gap-3.5 rounded-2xl border border-slate-200 bg-white p-3 shadow-xs hover:border-blue-500/40 hover:shadow-md transition-all"
-                >
-                  <div className="relative h-20 w-32 shrink-0 overflow-hidden rounded-xl bg-slate-100">
-                    <img src={getVideoThumbnail(item)} alt={item.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                    <span className="absolute inset-0 grid place-items-center bg-slate-950/30 group-hover:bg-slate-950/40 transition-colors">
-                      <Play className="h-6 w-6 text-white fill-white" />
-                    </span>
-                  </div>
-                  <div className="min-w-0 flex-1 space-y-1.5 text-right">
-                    <span className="inline-block rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
-                      {item.category}
-                    </span>
-                    <h4 className="line-clamp-2 text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug dir-ltr text-right" style={{ unicodeBidi: "isolate" }}>
-                      {item.title}
-                    </h4>
-                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
-                      <span>مستوى التقدم: {item.progress}%</span>
-                      <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px] font-black text-blue-600 hover:bg-blue-50">
-                        استكمال الدرس ←
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ContinueLearningCard
+            item={continueLearningItems[0]}
+            secondaryItem={continueLearningItems[1] || null}
+            onPlayClick={handlePlayClick}
+          />
         )}
 
-        <div className="mb-5 space-y-3 border-t border-slate-200 pt-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h3 className="text-base font-black text-slate-900">
-              {activeCategory === "all" ? "جميع دروس الكورسات" : `دروس كورس ${activeCategory}`}
-            </h3>
+        {/* 4. SEARCH, FILTERS, AND SORTING TOOLBAR */}
+        <LessonToolbar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          sortBy={sortBy}
+          onSortByChange={setSortBy}
+        />
 
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="relative w-full sm:w-60">
-                <Search className="absolute right-3 top-3 h-4 w-4 text-slate-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="ابحث داخل دروسك..."
-                  className="h-10 w-full rounded-xl border border-slate-300 bg-white pr-9 pl-3 text-xs font-semibold focus:border-blue-600 focus:outline-none"
-                />
-              </div>
-
-              <div className="flex items-center rounded-xl border border-slate-300 bg-white px-3 h-10 text-xs font-bold text-slate-700">
-                <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 text-slate-400" />
-                <select
-                  value={sortBy}
-                  onChange={(e: any) => setSortBy(e.target.value)}
-                  className="bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer"
-                >
-                  <option value="order">ترتيب المنهج</option>
-                  <option value="recent">الأحدث</option>
-                  <option value="least_completed">الأقل اكتمالاً</option>
-                  <option value="completed_first">المكتمل أولاً</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2 pt-1">
-            {(
-              [
-                ["all", "الكل"],
-                ["not_started", "لم يبدأ"],
-                ["in_progress", "قيد التقدم"],
-                ["completed", "مكتمل"],
-              ] as const
-            ).map(([val, label]) => (
-              <button
-                key={val}
-                type="button"
-                onClick={() => setStatusFilter(val)}
-                className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
-                  statusFilter === val
-                    ? "bg-slate-900 text-white shadow-xs"
-                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
+        {/* 5. COURSE SECTIONS & LESSON CARDS */}
         {isLoading ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((idx) => (
-              <div key={idx} className="h-72 animate-pulse rounded-2xl bg-slate-200/70" />
+              <div key={idx} className="h-72 animate-pulse rounded-2xl bg-[#E4EAF2]/60 dark:bg-[#172337]/60" />
             ))}
           </div>
         ) : activeCategory === "all" ? (
-          <div className="space-y-8">
+          <div className="space-y-6">
             {categories.map((courseName) => {
               const courseRawItems = visibleItems.filter((i) => i.category === courseName);
               const courseFilteredItems = filterAndSortItems(courseRawItems);
               if (courseFilteredItems.length === 0) return null;
 
               const completedInCourse = courseRawItems.filter((i) => i.progress >= 95).length;
+              const coursePct = courseRawItems.length
+                ? Math.round(courseRawItems.reduce((acc, curr) => acc + curr.progress, 0) / courseRawItems.length)
+                : 0;
 
               return (
-                <section key={courseName} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 md:p-6 shadow-xs">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <div>
-                      <h4 className="text-base font-black text-slate-900 dir-ltr text-right flex items-center gap-2" style={{ unicodeBidi: "isolate" }}>
-                        <BookOpen className="h-4 w-4 text-blue-600" />
-                        كورس {courseName}
-                      </h4>
-                      <span className="text-xs font-semibold text-slate-500">
-                        {completedInCourse} من {courseRawItems.length} دروس مكتملة
-                      </span>
+                <section key={courseName} className="space-y-4 rounded-2xl border border-[#E4EAF2] bg-white p-4 md:p-5 shadow-xs dark:border-[#26364D] dark:bg-[#111C2E]">
+                  {/* Course Section Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#E4EAF2] pb-3 dark:border-[#26364D]">
+                    <div className="space-y-0.5">
+                      <h3 className="text-base font-bold text-[#111827] dark:text-[#F8FAFC] dir-ltr text-right flex items-center gap-2" style={{ unicodeBidi: "isolate" }}>
+                        <BookOpen className="h-4.5 w-4.5 text-[#1769FF]" />
+                        {courseName}
+                      </h3>
+                      <p className="text-xs font-medium text-[#667085] dark:text-[#A9B5C7]">
+                        {completedInCourse} من {courseRawItems.length} دروس مكتملة ({coursePct}%)
+                      </p>
                     </div>
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => handleSelectCourse(courseName)}
-                      className="h-9 px-3 text-xs font-bold text-blue-600 border-blue-200 hover:bg-blue-50"
+                      className="h-8 px-3 text-xs font-bold text-[#1769FF] border-[#E4EAF2] hover:bg-[#E8EEFA] self-start sm:self-auto dark:border-[#26364D] dark:text-[#3B82F6]"
                     >
-                      عرض كل دروس الكورس ←
+                      عرض هذا الكورس فقط ←
                     </Button>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {courseFilteredItems.map((item) => (
-                      <LessonCard
+                      <RedesignedLessonCard
                         key={item.id}
                         item={item}
                         files={files}
@@ -1192,7 +983,6 @@ export function VideoLessonsSection({
                         onToggleExpandAttachment={(id) => setExpandedAttachments(prev => ({ ...prev, [id]: !prev[id] }))}
                         onPlayClick={handlePlayClick}
                         onToggleBookmark={toggleBookmark}
-                        onShare={shareCourse}
                         onStartQuiz={onStartQuiz}
                       />
                     ))}
@@ -1211,9 +1001,9 @@ export function VideoLessonsSection({
             {filterAndSortItems(activeCourseItems).length === 0 ? (
               <EmptyStateMessage searchQuery={searchQuery} statusFilter={statusFilter} />
             ) : (
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {filterAndSortItems(activeCourseItems).map((item) => (
-                  <LessonCard
+                  <RedesignedLessonCard
                     key={item.id}
                     item={item}
                     files={files}
@@ -1223,7 +1013,6 @@ export function VideoLessonsSection({
                     onToggleExpandAttachment={(id) => setExpandedAttachments(prev => ({ ...prev, [id]: !prev[id] }))}
                     onPlayClick={handlePlayClick}
                     onToggleBookmark={toggleBookmark}
-                    onShare={shareCourse}
                     onStartQuiz={onStartQuiz}
                   />
                 ))}
