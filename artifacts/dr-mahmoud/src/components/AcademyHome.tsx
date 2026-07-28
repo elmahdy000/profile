@@ -10,7 +10,8 @@ import {
   ArrowLeft, BookOpen, Check, CheckCircle2, ClipboardCheck,
   Clock, FileText, GraduationCap, Laptop, MapPin, MessageCircle,
   Play, Send, ShieldCheck, Star, UserCheck, Users, Code, Award,
-  CheckCircle, ArrowRight, ExternalLink, HelpCircle, Layers
+  CheckCircle, ArrowRight, ExternalLink, HelpCircle, Layers,
+  Brain, Code2, GitFork, Lightbulb
 } from "lucide-react";
 
 type BookingForm = { parentName: string; studentName: string; phone: string; grade: string; schoolType: string; mode: string; message: string };
@@ -170,34 +171,84 @@ export function AcademyHome() {
           </div>
         </section>
 
-        {/* ─── 2. IMMEDIATE PARENT REASSURANCE SECTION ─── */}
-        <section className="bg-slate-50 py-12 md:py-16 border-b border-slate-200">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mx-auto max-w-3xl text-center mb-10">
-              <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">طمأنة ولي الأمر</span>
-              <h2 className="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">
-                ابنك مش محتاج يحفظ كود… محتاج يفهمه
+        {/* ─── 2. WHY STUDENTS FIND PROGRAMMING DIFFICULT SECTION ─── */}
+        <section aria-labelledby="problem-section-heading" className="bg-slate-50 py-12 md:py-16 border-b border-slate-200">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <header className="mx-auto max-w-3xl text-center mb-10">
+              <span className="inline-block rounded-full bg-blue-100/80 px-3.5 py-1 text-xs font-bold text-blue-700 tracking-normal">
+                المشكلة مش في قدرات الطالب
+              </span>
+              <h2 id="problem-section-heading" className="mt-3 text-2xl font-black text-slate-900 sm:text-3xl lg:text-4xl leading-tight">
+                ليه طلاب كتير بيحسّوا إن البرمجة صعبة؟
               </h2>
-              <p className="mt-3 text-sm font-semibold leading-relaxed text-slate-600">
-                الهدف مش إن الطالب يحفظ خطوات جاهزة. الطالب بيتعلم يحلل السؤال، يرتب الحل، يكتب الكود، ويكتشف الخطأ بنفسه. كل جزء في البرنامج مبني بالتدريج عشان الطالب يبدأ صح من غير تشتت.
+              <p className="mt-3 text-sm sm:text-base font-semibold leading-relaxed text-slate-600">
+                غالبًا السبب مش ضعف الطالب، لكن طريقة البداية وترتيب الشرح.
               </p>
+            </header>
+
+            {/* Problem Cards Grid */}
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                {
+                  title: "الحفظ بدل الفهم",
+                  description: "الطالب يحفظ شكل الكود، لكن أول ما السؤال يتغير مش بيعرف يحلل المطلوب أو يبدأ الحل.",
+                  icon: Brain,
+                  accentColor: "text-amber-600 bg-amber-50 border-amber-200/60"
+                },
+                {
+                  title: "البداية من الكود مباشرة",
+                  description: "بيبدأ يكتب أوامر قبل ما يفهم الفكرة، والمتغيرات، والشروط، وخطوات حل المشكلة.",
+                  icon: Code2,
+                  accentColor: "text-rose-600 bg-rose-50 border-rose-200/60"
+                },
+                {
+                  title: "شرح بدون مسار واضح",
+                  description: "فيديوهات ودروس منفصلة من غير ترتيب تدريجي يربط الفهم بالتطبيق والتدريب.",
+                  icon: GitFork,
+                  accentColor: "text-indigo-600 bg-indigo-50 border-indigo-200/60"
+                }
+              ].map((card) => (
+                <article
+                  key={card.title}
+                  className="group flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs hover:shadow-md hover:-translate-y-1 hover:border-slate-300 transition-all duration-200 text-right motion-reduce:hover:translate-y-0 motion-reduce:transition-none"
+                >
+                  <div>
+                    <div className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border ${card.accentColor}`}>
+                      <card.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                    </div>
+                    <h3 className="text-lg font-black text-slate-900 leading-snug">
+                      {card.title}
+                    </h3>
+                    <p className="mt-2.5 text-xs sm:text-sm font-semibold leading-relaxed text-slate-600">
+                      {card.description}
+                    </p>
+                  </div>
+                </article>
+              ))}
             </div>
 
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                { title: "تأسيس حقيقي", text: "من أول معنى البرمجة لحد كتابة البرامج بنفسه.", icon: Code },
-                { title: "شرح متخصص", text: "شرح أكاديمي وعملي بعيد عن الحفظ والتلقين.", icon: GraduationCap },
-                { title: "متابعة واضحة", text: "ولي الأمر والطالب يعرفوا مستوى التقدم باستمرار.", icon: UserCheck },
-                { title: "تدريب مستمر", text: "أسئلة واختبارات وتطبيقات بعد كل جزء.", icon: ClipboardCheck },
-              ].map((card) => (
-                <div key={card.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs text-right">
-                  <div className="mb-3 grid h-10 w-10 place-items-center rounded-xl bg-blue-50 text-blue-600">
-                    <card.icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="text-base font-black text-slate-900">{card.title}</h3>
-                  <p className="mt-1.5 text-xs font-semibold leading-relaxed text-slate-500">{card.text}</p>
+            {/* Conclusion & Transition Strip */}
+            <div className="mt-10 rounded-2xl border border-blue-200/80 bg-gradient-to-r from-blue-50/70 via-white to-blue-50/70 p-6 md:p-8 text-center shadow-xs">
+              <div className="mx-auto flex max-w-3xl flex-col items-center gap-3">
+                <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm">
+                  <Lightbulb className="h-5 w-5" aria-hidden="true" />
                 </div>
-              ))}
+                
+                <p className="text-base sm:text-lg font-black text-slate-900 leading-relaxed">
+                  الحل مش في فيديوهات أكتر؛ الحل في مسار يخلي الطالب يفهم، يطبّق، يحل، ويعرف سبب كل خطوة.
+                </p>
+
+                <div className="mt-2 flex flex-col items-center gap-2 sm:flex-row sm:gap-3 text-xs sm:text-sm font-bold text-slate-600">
+                  <span>وده أساس طريقة الشرح داخل برنامج د. محمود المهدي.</span>
+                  <a
+                    href="#learning-method"
+                    className="inline-flex items-center gap-1.5 font-black text-blue-600 hover:text-blue-800 hover:underline focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md px-2 py-0.5 transition-colors"
+                  >
+                    <span>شوف الطالب بيتعلم إزاي</span>
+                    <ArrowLeft className="h-4 w-4 shrink-0 transition-transform group-hover:-translate-x-1" aria-hidden="true" />
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -314,7 +365,7 @@ export function AcademyHome() {
         </section>
 
         {/* ─── 4. LEARNING METHOD SECTION ─── */}
-        <section className="bg-slate-50 py-14 md:py-20 border-b border-slate-200">
+        <section id="learning-method" className="bg-slate-50 py-14 md:py-20 border-b border-slate-200">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-3xl text-center mb-12">
               <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">منهجية الفهم</span>
