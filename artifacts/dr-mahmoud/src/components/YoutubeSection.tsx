@@ -645,33 +645,11 @@ function UnlockModal({
               )}
             </Button>
           </form>
-
-          <div className="border-t border-border pt-4 flex flex-col gap-2">
-            <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
-              لم تحصل على كود تفعيل بعد؟ لا تقلق، يمكنك التواصل مع د. محمود مباشرة للحجز والحصول على الكود فوراً.
-            </p>
-            <Button
-              asChild
-              variant="outline"
-              className="w-full border-secondary/20 hover:border-secondary/50 hover:bg-secondary/10 text-secondary font-bold h-11 rounded-xl transition-all"
-            >
-              <a
-                href={`https://wa.me/201044348610?text=${encodeURIComponent(
-                  `أهلاً دكتور محمود، أود الاشتراك في الكورس وتفعيل المحاضرة: "${item.title}"`
-                )}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                تواصل لحجز الكورس عبر واتساب
-              </a>
-            </Button>
-          </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>
   );
 }
-
 
 export function VideoLessonsSection({
   student,
@@ -685,26 +663,43 @@ export function VideoLessonsSection({
   onStartQuiz?: (quiz: any) => void;
 }) {
   const { data: dbVideos, isLoading, isError, refetch } = useListVideos();
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "not_started" | "in_progress" | "completed">("all");
   const [activePlayer, setActivePlayer] = useState<VideoItem | null>(null);
   const [unlockModalItem, setUnlockModalItem] = useState<VideoItem | null>(null);
-
-  const studentGrade = student?.grade === "أخرى" ? student?.otherGradeDetail : student?.grade;
-  const rawItems: VideoItem[] = dbVideos ? dbVideos as VideoItem[] : [];
-
-
-  // States for search, advanced filters, sorting, bookmarks, and watch progress
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
-  const [selectedType, setSelectedType] = useState<string>("all");
-  const [selectedAccess, setSelectedAccess] = useState<string>("all");
-  const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState<"order" | "title" | "recent">("order");
+  const [sortBy, setSortBy] = useState<"order" | "recent" | "least_completed" | "completed_first">("order");
   const [bookmarks, setBookmarks] = useState<number[]>([]);
   const [watchProgress, setWatchProgress] = useState<Record<number, number>>({});
+  const [expandedAttachments, setExpandedAttachments] = useState<Record<number, boolean>>({});
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // Listen for toast events dispatched from VideoPlayerModal (anti-piracy, etc.)
+  const studentGrade = student?.grade === "أخرى" ? student?.otherGradeDetail : student?.grade;
+  const rawItems: VideoItem[] = dbVideos ? (dbVideos as VideoItem[]) : [];
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseParam = urlParams.get("course");
+    if (courseParam) {
+      setActiveCategory(courseParam);
+    }
+  }, []);
+
+  const handleSelectCourse = (courseName: string) => {
+    setActiveCategory(courseName);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (courseName === "all") {
+        url.searchParams.delete("course");
+      } else {
+        url.searchParams.set("course", courseName);
+      }
+      window.history.replaceState({}, "", url.toString());
+    }
+  };
+
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
@@ -729,31 +724,24 @@ export function VideoLessonsSection({
     }
   };
 
-  // Load the local cache immediately, then merge progress saved to the account.
   useEffect(() => {
     if (typeof window === "undefined") return;
-
-    // Bookmarks
     setBookmarks(readStoredJson<number[]>("dr_mahmoud_bookmarks", []));
-
-    // Progress setup helper function — reads REAL saved progress only
     const loadProgress = () => {
       setWatchProgress(readStoredJson<Record<number, number>>("dr_mahmoud_watch_progress", {}));
     };
-
     loadProgress();
     void fetch("/api/learning/progress", { credentials: "include" })
-      .then((response) => response.ok ? response.json() : [])
+      .then((response) => (response.ok ? response.json() : []))
       .then((rows: Array<{ videoId: number; progress: number }>) => {
         const merged = readStoredJson<Record<number, number>>("dr_mahmoud_watch_progress", {});
-        rows.forEach((row) => { 
-          merged[row.videoId] = Math.max(merged[row.videoId] || 0, row.progress); 
+        rows.forEach((row) => {
+          merged[row.videoId] = Math.max(merged[row.videoId] || 0, row.progress);
         });
         localStorage.setItem("dr_mahmoud_watch_progress", JSON.stringify(merged));
         setWatchProgress(merged);
       })
       .catch(() => undefined);
-    // Listen to watch progress custom event
     window.addEventListener("watch_progress_updated", loadProgress);
     return () => {
       window.removeEventListener("watch_progress_updated", loadProgress);
@@ -765,7 +753,7 @@ export function VideoLessonsSection({
     let updated;
     if (bookmarks.includes(id)) {
       updated = bookmarks.filter((b) => b !== id);
-      toast({ description: "تمت الإزالة من قائمتك المفضلة" });
+      toast({ description: "تمت الإزالة من المفضلة" });
     } else {
       updated = [...bookmarks, id];
       toast({ description: "تمت الإضافة للمفضلة 💖" });
@@ -794,37 +782,31 @@ export function VideoLessonsSection({
     }
   };
 
-  // Do not render demo content while the real library is still loading.
-  // Enhance items with real metadata (entered by admin) + real watch progress
   const items = rawItems.map((item) => ({
     ...item,
     meta: getVideoMeta(item),
-    progress: watchProgress[item.id || 0] || 0
+    progress: watchProgress[item.id || 0] || 0,
   }));
 
-  // Helper: check if a video's stage matches the student's grade
   function studentCanSeeVideo(item: VideoItem): boolean {
-    if (!student) return true; // If no student context, show all (admin preview)
+    if (!student) return true;
     const grade = studentGrade || "";
     const stageArr: string[] = Array.isArray((item as any).stages) && (item as any).stages.length
       ? (item as any).stages
       : item.stage ? [item.stage] : [];
-    if (stageArr.length === 0) return true; // No stage set → show to all
+    if (stageArr.length === 0) return true;
     const normalize = (s: string) => String(s ?? "").trim().toLowerCase();
     return stageArr.some((s) => {
       const cn = normalize(s);
-      if (cn === "عام" || cn === "") return true; // General content
+      if (cn === "عام" || cn === "") return true;
       const sn = normalize(grade);
-      if (sn === cn) return true; // Exact match
-      // Grade 1 matching
+      if (sn === cn) return true;
       const g1s = sn.includes("أولى") || sn.includes("الأول") || sn.includes("first") || sn.includes("year_1");
       const g1c = cn.includes("أولى") || cn.includes("الأول") || cn.includes("first") || cn.includes("year_1");
       if (g1s || g1c) return g1s && g1c;
-      // Grade 2 matching
       const g2s = sn.includes("تانية") || sn.includes("الثاني") || sn.includes("second") || sn.includes("year_2");
       const g2c = cn.includes("تانية") || cn.includes("الثاني") || cn.includes("second") || cn.includes("year_2");
       if (g2s || g2c) return g2s && g2c;
-      // Grade 3 matching
       const g3s = sn.includes("ثالثة") || sn.includes("الثالث") || sn.includes("third") || sn.includes("year_3");
       const g3c = cn.includes("ثالثة") || cn.includes("الثالث") || cn.includes("third") || cn.includes("year_3");
       if (g3s || g3c) return g3s && g3c;
@@ -832,700 +814,441 @@ export function VideoLessonsSection({
     });
   }
 
-  // Filter items to only what this student's grade can access
   const visibleItems = student ? items.filter(studentCanSeeVideo) : items;
+  const categories = Array.from(new Set(visibleItems.map((item) => item.category))).filter(Boolean);
 
-  // Categories list — only show categories from visible items
-  const categories = ["all", ...Array.from(new Set(visibleItems.map((item) => item.category)))];
+  const totalCoursesCount = categories.length;
+  const completedLessonsCount = visibleItems.filter((i) => i.progress >= 95).length;
+  const totalHoursCount = Math.round(visibleItems.reduce((acc, curr) => acc + (parseInt(curr.durationText || "0") || 25), 0) / 60);
+  const overallProgressPercentage = visibleItems.length
+    ? Math.round(visibleItems.reduce((acc, curr) => acc + curr.progress, 0) / visibleItems.length)
+    : 0;
 
-  // Auto-select "all" by default for students so all assigned courses are visible
-  useEffect(() => {
-    if (!student || !dbVideos) return;
-    setActiveCategory("all");
-  }, [student, dbVideos]);
+  const activeCourseItems = activeCategory === "all"
+    ? visibleItems
+    : visibleItems.filter((i) => i.category === activeCategory);
+  
+  const activeCourseCompletedCount = activeCourseItems.filter((i) => i.progress >= 95).length;
+  const activeCourseProgressPct = activeCourseItems.length
+    ? Math.round(activeCourseItems.reduce((acc, curr) => acc + curr.progress, 0) / activeCourseItems.length)
+    : 0;
 
-  // Filtering Logic
-  const filteredItems = visibleItems
-    .filter((item) => {
-      const matchesCategory = activeCategory === "all" || item.category === activeCategory;
-      const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
-      const matchesDifficulty = selectedDifficulty === "all" || item.meta.difficulty === selectedDifficulty;
-      const matchesType = selectedType === "all" || item.type === selectedType;
-      const matchesAccess = selectedAccess === "all" || 
-        (selectedAccess === "free" && item.youtubeUrl !== "locked") ||
-        (selectedAccess === "paid" && item.youtubeUrl === "locked");
-      return matchesCategory && matchesSearch && matchesDifficulty && matchesType && matchesAccess;
-    })
-    .sort((a, b) => {
-      if (sortBy === "title") return a.title.localeCompare(b.title);
-      if (sortBy === "recent") return (b.id || 0) - (a.id || 0);
-      return a.order - b.order;
-    });
+  const continueLearningItems = activeCourseItems
+    .filter((item) => item.progress > 0 && item.progress < 100)
+    .slice(0, 2);
 
-  // Extract Featured Course (Pick the highest rated or first item)
-  const featuredCourse = items.find(item => item.youtubeUrl !== "locked") || items[0];
+  const scrollCourses = (direction: "left" | "right") => {
+    if (!scrollContainerRef.current) return;
+    const amount = direction === "left" ? -260 : 260;
+    scrollContainerRef.current.scrollBy({ left: amount, behavior: "smooth" });
+  };
 
-  // Continue Learning Items (Progress > 0 & < 100)
-  const continueLearningItems = items.filter(item => item.progress > 0 && item.progress < 100);
+  const filterAndSortItems = (list: typeof visibleItems) => {
+    return list
+      .filter((item) => {
+        const query = searchQuery.trim().toLowerCase();
+        const matchesSearch =
+          !query ||
+          item.title.toLowerCase().includes(query) ||
+          (item.description && item.description.toLowerCase().includes(query)) ||
+          item.category.toLowerCase().includes(query);
 
-  // Generate dynamic JSON-LD Schema markup for Google Rich Video results
-  const schemaMarkup = {
-    "@context": "https://schema.org",
-    "@graph": items.map((item) => {
-      const vidId = getYouTubeVideoId(item.youtubeUrl);
-      if (item.type === "video" && vidId) {
-        return {
-          "@type": "VideoObject",
-          "name": item.title,
-          "description": item.description || item.title,
-          "thumbnailUrl": [
-            `https://img.youtube.com/vi/${vidId}/maxresdefault.jpg`,
-            `https://img.youtube.com/vi/${vidId}/hqdefault.jpg`
-          ],
-          "embedUrl": `https://www.youtube.com/embed/${vidId}`,
-          "contentUrl": item.youtubeUrl,
-          "publisher": {
-            "@type": "Organization",
-            "name": "د. محمود المهدي - Learn to Code",
-            "logo": {
-              "@type": "ImageObject",
-              "url": "https://drelmahdy.com/dr-mahmoud-photo.png"
-            }
-          }
-        };
-      }
-      return null;
-    }).filter(Boolean)
+        let matchesStatus = true;
+        if (statusFilter === "not_started") matchesStatus = item.progress === 0;
+        if (statusFilter === "in_progress") matchesStatus = item.progress > 0 && item.progress < 95;
+        if (statusFilter === "completed") matchesStatus = item.progress >= 95;
+
+        return matchesSearch && matchesStatus;
+      })
+      .sort((a, b) => {
+        if (sortBy === "recent") return (b.id || 0) - (a.id || 0);
+        if (sortBy === "least_completed") return a.progress - b.progress;
+        if (sortBy === "completed_first") return b.progress - a.progress;
+        return a.order - b.order;
+      });
   };
 
   const isStudentMode = Boolean(student);
 
   return (
-    <section id="youtube-lectures" className={`${isStudentMode ? "py-8 lg:py-12" : "py-24"} bg-background relative overflow-hidden`} dir="rtl">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaMarkup) }}
-      />
+    <section id="youtube-lectures" className="py-4 md:py-6 bg-slate-50/50 text-slate-800" dir="rtl">
+      <div className="mx-auto max-w-7xl px-3 sm:px-6">
+        
+        <header className="mb-6 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs md:p-6">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-xl font-black text-slate-900 md:text-2xl">
+                دروسك وكورساتك 📚
+              </h1>
+              <p className="mt-1 text-xs font-semibold text-slate-500 md:text-sm">
+                كل محتواك التعليمي في مكان واحد. اختار الكورس، تابع تقدمك، وكمّل من آخر درس وصلت له.
+              </p>
+            </div>
+            <span className="w-fit rounded-full bg-blue-50 px-3.5 py-1 text-xs font-black text-blue-700 border border-blue-100">
+              {studentGrade || "حساب متفعّل"}
+            </span>
+          </div>
 
-      {/* Decorative Glow */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-primary/8 rounded-full blur-[120px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[150px]" />
-      </div>
+          <div className="grid grid-cols-2 gap-3 pt-2 sm:grid-cols-4">
+            <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 text-right">
+              <span className="block text-[11px] font-bold text-slate-500">عدد الكورسات</span>
+              <strong className="mt-1 block text-base font-black text-slate-900">{totalCoursesCount} كورس</strong>
+            </div>
+            <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 text-right">
+              <span className="block text-[11px] font-bold text-slate-500">الدروس المكتملة</span>
+              <strong className="mt-1 block text-base font-black text-emerald-600">{completedLessonsCount} / {visibleItems.length}</strong>
+            </div>
+            <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 text-right">
+              <span className="block text-[11px] font-bold text-slate-500">إجمالي التعلم</span>
+              <strong className="mt-1 block text-base font-black text-slate-900">~{totalHoursCount} ساعة</strong>
+            </div>
+            <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 text-right">
+              <span className="block text-[11px] font-bold text-slate-500">نسبة الإنجاز</span>
+              <strong className="mt-1 block text-base font-black text-blue-600">{overallProgressPercentage}%</strong>
+            </div>
+          </div>
+        </header>
 
-      <div className="container mx-auto px-4 lg:px-8 relative z-10">
-        {/* Title */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className={`${isStudentMode ? "mb-8 text-right" : "mb-16 text-center"} space-y-4`}
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            whileInView={{ scale: 1, opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary font-medium text-sm"
+        <div className="mb-6 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-black text-slate-900">اختر الكورس لعرض درجاته ودروسه:</h2>
+            {categories.length > 3 && (
+              <div className="hidden sm:flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => scrollCourses("right")}
+                  className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                  aria-label="السابق"
+                >
+                  →
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollCourses("left")}
+                  className="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                  aria-label="التالي"
+                >
+                  ←
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div
+            ref={scrollContainerRef}
+            className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x touch-pan-x"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            <Tv className="w-4 h-4" />
-            {isStudentMode ? "محتواك الدراسي" : "المنصة التعليمية الشاملة"}
-          </motion.div>
-          <h2 className="text-3xl md:text-5xl font-black text-foreground">
-            {isStudentMode ? "دروسك وكورساتك" : <>مكتبة <span className="text-primary">الكورسات والبرمجيات</span></>}
-          </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
-            {isStudentMode ? "كل اللي ظاهر هنا مخصص لمرحلتك والكورسات المسجّل فيها. افتح الدرس وكمل من مكان ما وقفت." : "منصة مخصصة لتأسيس الطلاب وبناء المهندسين. تعلم C++، هياكل البيانات، الخوارزميات وتطبيقات المدارس بأعلى حماية."}
-          </p>
-        </motion.div>
+            <button
+              type="button"
+              onClick={() => handleSelectCourse("all")}
+              className={`snap-start min-w-[200px] shrink-0 rounded-2xl border p-4 text-right transition-all cursor-pointer ${
+                activeCategory === "all"
+                  ? "border-blue-600 bg-blue-600 text-white shadow-md"
+                  : "border-slate-200 bg-white text-slate-900 hover:border-slate-300"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className={`grid h-8 w-8 place-items-center rounded-lg text-sm ${activeCategory === "all" ? "bg-white/20 text-white" : "bg-blue-50 text-blue-600"}`}>
+                  📚
+                </span>
+                <span className={`text-[11px] font-bold ${activeCategory === "all" ? "text-blue-100" : "text-slate-400"}`}>
+                  {visibleItems.length} درس
+                </span>
+              </div>
+              <strong className="mt-3 block text-sm font-black truncate">كل الكورسات</strong>
+              <div className="mt-2 flex items-center justify-between text-[11px] font-bold">
+                <span>إجمالي الإنجاز</span>
+                <span>{overallProgressPercentage}%</span>
+              </div>
+              <div className={`mt-1.5 h-1.5 w-full rounded-full overflow-hidden ${activeCategory === "all" ? "bg-white/20" : "bg-slate-100"}`}>
+                <div className={`h-full ${activeCategory === "all" ? "bg-white" : "bg-blue-600"}`} style={{ width: `${overallProgressPercentage}%` }} />
+              </div>
+            </button>
 
-        {isError && (
-          <div role="status" className="max-w-3xl mx-auto mb-8 rounded-2xl border border-secondary/30 bg-secondary/10 px-5 py-3 text-center text-sm text-foreground">
-            تعذر الاتصال بالمكتبة الآن. حاول إعادة تحميل الصفحة بعد لحظات.
+            {categories.map((courseName) => {
+              const courseItems = visibleItems.filter((i) => i.category === courseName);
+              const courseProgressPct = courseItems.length
+                ? Math.round(courseItems.reduce((acc, curr) => acc + curr.progress, 0) / courseItems.length)
+                : 0;
+              const isSelected = activeCategory === courseName;
+
+              return (
+                <button
+                  key={courseName}
+                  type="button"
+                  onClick={() => handleSelectCourse(courseName)}
+                  className={`snap-start min-w-[220px] max-w-[260px] shrink-0 rounded-2xl border p-4 text-right transition-all cursor-pointer ${
+                    isSelected
+                      ? "border-blue-600 bg-blue-600 text-white shadow-md"
+                      : "border-slate-200 bg-white text-slate-900 hover:border-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className={`grid h-8 w-8 place-items-center rounded-lg text-sm ${isSelected ? "bg-white/20 text-white" : "bg-blue-50 text-blue-600"}`}>
+                      💻
+                    </span>
+                    <span className={`text-[11px] font-bold ${isSelected ? "text-blue-100" : "text-slate-400"}`}>
+                      {courseItems.length} دروس
+                    </span>
+                  </div>
+                  <strong className="mt-3 block text-sm font-black truncate dir-ltr text-right" style={{ unicodeBidi: "isolate" }}>
+                    {courseName}
+                  </strong>
+                  <div className="mt-2 flex items-center justify-between text-[11px] font-bold">
+                    <span>التقدم</span>
+                    <span>{courseProgressPct}% مكتمل</span>
+                  </div>
+                  <div className={`mt-1.5 h-1.5 w-full rounded-full overflow-hidden ${isSelected ? "bg-white/20" : "bg-slate-100"}`}>
+                    <div className={`h-full ${isSelected ? "bg-white" : "bg-blue-600"}`} style={{ width: `${courseProgressPct}%` }} />
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {activeCategory !== "all" && (
+          <div className="mb-6 rounded-2xl border border-blue-100 bg-blue-50/40 p-4 md:p-5 shadow-xs">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-blue-600 text-white shadow-xs">
+                  <BookOpen className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-base font-black text-slate-900 dir-ltr text-right" style={{ unicodeBidi: "isolate" }}>
+                    كورس {activeCategory}
+                  </h2>
+                  <p className="mt-0.5 text-xs text-slate-500 font-semibold">
+                    المحاضر: د. محمود المهدي · {activeCourseItems.length} درس مسجل · {activeCourseCompletedCount} من {activeCourseItems.length} مكتملة
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="text-left sm:text-right">
+                  <span className="block text-[11px] font-bold text-slate-500">نسبة اكتمال الكورس</span>
+                  <strong className="text-sm font-black text-blue-700">{activeCourseProgressPct}%</strong>
+                </div>
+                {activeCourseItems[0] && (
+                  <Button
+                    type="button"
+                    onClick={() => handlePlayClick(activeCourseItems.find(i => i.progress < 100) || activeCourseItems[0])}
+                    className="h-10 font-bold bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    استكمال الكورس 🚀
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
-        {/* ─── 1. Featured Course Card (Coursera / Netflix Style) ─── */}
-        {featuredCourse && !isLoading && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-16 max-w-6xl mx-auto"
-          >
-            <div className="relative bg-card border border-border rounded-3xl overflow-hidden shadow-xl p-6 lg:p-10 flex flex-col lg:flex-row gap-8 items-center group hover:border-primary/30 transition-all duration-500">
-              {/* Cover Thumbnail */}
-              <div className="w-full lg:w-1/2 aspect-video rounded-2xl overflow-hidden relative shadow-lg">
-                <img
-                  src={getVideoThumbnail(featuredCourse)}
-                  alt={featuredCourse.title}
-                  className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-90 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => handlePlayClick(featuredCourse)}
-                    aria-label={`تشغيل ${featuredCourse.title}`}
-                    className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center shadow-2xl hover:scale-105 transition-transform"
-                  >
-                    <Play className="w-7 h-7 fill-current mr-1" />
-                  </button>
-                </div>
-                <span className="absolute top-4 right-4 bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-md">
-                  كورس متميز ⭐
-                </span>
-              </div>
-
-              {/* Course Info */}
-              <div className="w-full lg:w-1/2 flex flex-col justify-between h-full space-y-4 text-right">
-                <div className="space-y-3">
-                  <div className="flex flex-wrap gap-2 items-center">
-                    <span className="bg-primary/10 text-primary border border-primary/20 text-xs font-bold px-3 py-1 rounded-md">
-                      {featuredCourse.category}
-                    </span>
-                    {featuredCourse.meta.difficulty && (
-                      <span className="bg-muted text-muted-foreground text-xs px-2.5 py-1 rounded-md flex items-center gap-1">
-                        <Award className="w-3.5 h-3.5 text-secondary" />
-                        {featuredCourse.meta.difficulty}
-                      </span>
-                    )}
-                  </div>
-
-                  <h3 className="text-2xl lg:text-3xl font-black text-foreground group-hover:text-primary transition-colors">
-                    {featuredCourse.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
-                    {featuredCourse.description || "افتح الدرس وابدأ المذاكرة، وتقدمك هيتحفظ تلقائي على حسابك."}
-                  </p>
-                </div>
-
-                {/* Progress bar if watched */}
-                {featuredCourse.progress > 0 && (
-                  <div className="space-y-1.5 w-full">
-                    <div className="flex justify-between text-xs font-semibold text-muted-foreground">
-                      <span>مستوى التقدم</span>
-                      <span>{featuredCourse.progress}%</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-primary transition-all duration-500" style={{ width: `${featuredCourse.progress}%` }} />
-                    </div>
-                  </div>
-                )}
-
-                {/* Meta details & Buttons */}
-                <div className="border-t border-border pt-4 flex flex-col sm:flex-row gap-4 items-center justify-between">
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                    {featuredCourse.meta.duration && (
-                      <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {featuredCourse.meta.duration}</span>
-                    )}
-                    {featuredCourse.meta.lessonsCount != null && (
-                      <span className="flex items-center gap-1"><BookOpen className="w-3.5 h-3.5" /> {featuredCourse.meta.lessonsCount} درس</span>
-                    )}
-                    {featuredCourse.meta.difficulty && (
-                      <span className="flex items-center gap-1"><Award className="w-3.5 h-3.5" /> {featuredCourse.meta.difficulty}</span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <Button
-                      onClick={() => handlePlayClick(featuredCourse)}
-                      className="bg-primary hover:bg-primary/95 text-white font-bold px-6 py-5 rounded-xl shadow-lg w-full sm:w-auto"
-                    >
-                      {featuredCourse.progress > 0 ? "استئناف التعلم" : "ابدأ الكورس الآن"}
-                    </Button>
-                    <button
-                      onClick={() => toggleBookmark(featuredCourse.id)}
-                      aria-label={bookmarks.includes(featuredCourse.id || 0) ? "إزالة من المفضلة" : "إضافة إلى المفضلة"}
-                      className={`p-3 rounded-xl border border-border hover:bg-muted transition-all ${
-                        bookmarks.includes(featuredCourse.id || 0) ? "text-primary border-primary/20 bg-primary/5" : "text-muted-foreground"
-                      }`}
-                    >
-                      <Bookmark className="w-4 h-4 fill-current" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-
-        {/* ─── 2. Continue Learning Section (Netflix style) ─── */}
         {continueLearningItems.length > 0 && !isLoading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="mb-16 max-w-6xl mx-auto"
-          >
-            <h3 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-              <span className="w-1.5 h-6 bg-primary rounded-full"></span>
+          <div className="mb-6 space-y-3">
+            <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-blue-600" />
               استكمال المشاهدة والتعلم
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid gap-3 sm:grid-cols-2">
               {continueLearningItems.map((item) => (
                 <div
                   key={item.id}
-                  className="bg-card border border-border rounded-2xl p-4 flex gap-4 items-center relative overflow-hidden group hover:border-primary/20 transition-all shadow-sm"
+                  onClick={() => handlePlayClick(item)}
+                  className="group flex cursor-pointer items-center gap-3.5 rounded-2xl border border-slate-200 bg-white p-3 shadow-xs hover:border-blue-500/40 hover:shadow-md transition-all"
                 >
-                  <div className="w-24 aspect-video rounded-lg overflow-hidden shrink-0 relative">
-                    <img src={getVideoThumbnail(item)} alt={item.title} className="w-full h-full object-cover" />
-                    <button
-                      onClick={() => handlePlayClick(item)}
-                      aria-label={`استئناف ${item.title}`}
-                      className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Play className="w-6 h-6 fill-white text-white" />
-                    </button>
+                  <div className="relative h-20 w-32 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                    <img src={getVideoThumbnail(item)} alt={item.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <span className="absolute inset-0 grid place-items-center bg-slate-950/30 group-hover:bg-slate-950/40 transition-colors">
+                      <Play className="h-6 w-6 text-white fill-white" />
+                    </span>
                   </div>
-                  <div className="flex-1 space-y-2 text-right">
-                    <span className="text-[10px] text-primary font-bold">{item.category}</span>
-                    <h4 className="text-sm font-bold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                  <div className="min-w-0 flex-1 space-y-1.5 text-right">
+                    <span className="inline-block rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                      {item.category}
+                    </span>
+                    <h4 className="line-clamp-2 text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug dir-ltr text-right" style={{ unicodeBidi: "isolate" }}>
                       {item.title}
                     </h4>
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-[10px] text-muted-foreground">
-                        <span>{item.progress}% مكتمل</span>
-                      </div>
-                      <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-primary" style={{ width: `${item.progress}%` }} />
-                      </div>
+                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                      <span>مستوى التقدم: {item.progress}%</span>
+                      <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px] font-black text-blue-600 hover:bg-blue-50">
+                        استكمال الدرس ←
+                      </Button>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
         )}
 
-        {/* ─── 3. Learning Paths Section (SaaS Roadmap style) ─── */}
-        {!isStudentMode && <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="mb-16 max-w-6xl mx-auto"
-        >
-          <h3 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
-            <span className="w-1.5 h-6 bg-primary rounded-full"></span>
-            المسارات التعليمية الموصى بها 🚀
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                title: "تأسيس البرمجة والتفكير المنطقي",
-                desc: "مسار يبدأ من الصفر تماماً لبناء منطق برمجي قوي وحل المسائل (Problem Solving) باستخدام بايثون.",
-                badge: "4 كورسات • مبتدئ",
-                color: "from-primary/10 to-primary/5 border-primary/20 hover:border-primary/45"
-              },
-              {
-                title: "برمجة الجامعات ومطوري النظم",
-                desc: "المسار الأقوى لطلاب حاسبات ومعلومات وهندسة لتغطية C++ وهياكل البيانات والـ Algorithms بالكامل.",
-                badge: "6 كورسات • متوسط",
-                color: "from-primary/10 to-primary/5 border-primary/20 hover:border-primary/45"
-              },
-              {
-                title: "مسار بكالوريا STEM والمدارس",
-                desc: "تأسيس دراسي متين لجميع مراحل بكالوريا البرمجيات وحل امتحانات ToFAS المتقدمة.",
-                badge: "3 كورسات • متقدم",
-                color: "from-primary/10 to-secondary/5 border-primary/20 hover:border-primary/45"
-              }
-            ].map((path, idx) => (
-              <div
-                key={idx}
-                className={`bg-card border ${path.color} p-6 rounded-2xl flex flex-col justify-between space-y-4 hover:scale-[1.01] transition-transform`}
-              >
-                <div className="space-y-2 text-right">
-                  <span className="text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-md">
-                    {path.badge}
-                  </span>
-                  <h4 className="text-base font-bold text-foreground">{path.title}</h4>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{path.desc}</p>
-                </div>
-                <Button
-                  onClick={() => {
-                    const el = document.getElementById("youtube-lectures");
-                    if (el) el.scrollIntoView({ behavior: "smooth" });
-                  }}
-                  variant="link"
-                  className="text-xs text-primary font-bold p-0 self-start hover:underline flex items-center gap-1"
-                >
-                  استكشف المسار <ChevronLeft className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </motion.div>}
-
-        {/* ─── 4. Main Course Directory ─── */}
-        <div className="max-w-6xl mx-auto mb-8">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between border-b border-border pb-6 mb-8">
-            <h3 className="text-xl font-bold text-foreground flex items-center gap-2 self-start">
-              <span className="w-1.5 h-6 bg-primary rounded-full"></span>
-              {isStudentMode ? `كل دروسك (${filteredItems.length})` : `دليل جميع المسارات والكورسات (${filteredItems.length})`}
+        <div className="mb-5 space-y-3 border-t border-slate-200 pt-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h3 className="text-base font-black text-slate-900">
+              {activeCategory === "all" ? "جميع دروس الكورسات" : `دروس كورس ${activeCategory}`}
             </h3>
 
-
-            {/* Controls */}
-            {!isStudentMode && <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-              {/* Search Bar */}
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-full sm:w-60">
+                <Search className="absolute right-3 top-3 h-4 w-4 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="ابحث عن كورس أو مهارة..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-10 pr-10 pl-4 rounded-xl border border-border bg-background text-xs focus:outline-none focus:border-primary text-foreground"
+                  placeholder="ابحث داخل دروسك..."
+                  className="h-10 w-full rounded-xl border border-slate-300 bg-white pr-9 pl-3 text-xs font-semibold focus:border-blue-600 focus:outline-none"
                 />
               </div>
 
-              {/* Sort selector */}
-              <div className="flex items-center gap-2 bg-background border border-border rounded-xl px-3 h-10 text-xs">
-                <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground" />
+              <div className="flex items-center rounded-xl border border-slate-300 bg-white px-3 h-10 text-xs font-bold text-slate-700">
+                <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 text-slate-400" />
                 <select
                   value={sortBy}
                   onChange={(e: any) => setSortBy(e.target.value)}
-                  className="bg-transparent border-none focus:outline-none text-muted-foreground text-xs cursor-pointer"
+                  className="bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer"
                 >
-                  <option value="order">الترتيب الافتراضي</option>
-                  <option value="recent">المضاف حديثاً</option>
-                  <option value="title">أبجدياً (أ-ي)</option>
+                  <option value="order">ترتيب المنهج</option>
+                  <option value="recent">الأحدث</option>
+                  <option value="least_completed">الأقل اكتمالاً</option>
+                  <option value="completed_first">المكتمل أولاً</option>
                 </select>
               </div>
-
-              {/* Advanced Filter Toggle */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowFilters(!showFilters)}
-                className={`h-10 rounded-xl border-border flex items-center gap-1.5 ${
-                  showFilters ? "bg-primary/10 text-primary border-primary/20" : "text-muted-foreground"
-                }`}
-              >
-                <SlidersHorizontal className="w-3.5 h-3.5" />
-                تصفية متقدمة
-              </Button>
-            </div>}
+            </div>
           </div>
 
-          {/* Collapsible Advanced Filters Panel */}
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden bg-card border border-border rounded-2xl p-5 mb-8 grid grid-cols-1 sm:grid-cols-3 gap-6 text-right shadow-sm"
-              >
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-muted-foreground">مستوى الصعوبة</label>
-                  <select
-                    value={selectedDifficulty}
-                    onChange={(e) => setSelectedDifficulty(e.target.value)}
-                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-xs focus:outline-none focus:border-primary text-foreground"
-                  >
-                    <option value="all">الكل</option>
-                    <option value="مبتدئ">مبتدئ</option>
-                    <option value="متوسط">متوسط</option>
-                    <option value="متقدم">متقدم</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-muted-foreground">نوع الكورس</label>
-                  <select
-                    value={selectedType}
-                    onChange={(e) => setSelectedType(e.target.value)}
-                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-xs focus:outline-none focus:border-primary text-foreground"
-                  >
-                    <option value="all">الكل</option>
-                    <option value="playlist">قائمة تشغيل كاملة (كورس)</option>
-                    <option value="video">شرح منفرد / محاضرة</option>
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-muted-foreground">نوع الوصول</label>
-                  <select
-                    value={selectedAccess}
-                    onChange={(e) => setSelectedAccess(e.target.value)}
-                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-xs focus:outline-none focus:border-primary text-foreground"
-                  >
-                    <option value="all">الكل</option>
-                    <option value="free">محتوى مفتوح مجاني</option>
-                    <option value="paid">محتوى محمي / مدفوع 🔒</option>
-                  </select>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Category Tabs */}
-          {categories.length > 2 && <div className="flex flex-wrap items-center justify-start gap-2 mb-8 border-b border-border pb-4">
-            {categories.map((cat) => (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {(
+              [
+                ["all", "الكل"],
+                ["not_started", "لم يبدأ"],
+                ["in_progress", "قيد التقدم"],
+                ["completed", "مكتمل"],
+              ] as const
+            ).map(([val, label]) => (
               <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                aria-pressed={activeCategory === cat}
-                className={`px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all duration-300 ${
-                  activeCategory === cat
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/10 font-bold"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                key={val}
+                type="button"
+                onClick={() => setStatusFilter(val)}
+                className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all ${
+                  statusFilter === val
+                    ? "bg-slate-900 text-white shadow-xs"
+                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
                 }`}
               >
-                {cat === "all" ? "جميع الكورسات" : cat}
+                {label}
               </button>
             ))}
-          </div>}
-
-          {/* Grid List */}
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
-              {[1, 2, 3].map((n) => (
-                <div key={n} className="bg-card border border-border rounded-3xl p-5 space-y-4 animate-pulse">
-                  <div className="aspect-video bg-muted rounded-2xl w-full" />
-                  <div className="h-4 bg-muted/80 rounded-md w-1/3" />
-                  <div className="h-6 bg-muted/80 rounded-md w-3/4" />
-                  <div className="h-10 bg-muted/80 rounded-xl w-full" />
-                </div>
-              ))}
-            </div>
-          ) : filteredItems.length === 0 ? (
-            <div className="text-center py-20 bg-card border border-border rounded-3xl shadow-sm">
-              <p className="text-muted-foreground text-sm">لم يتم العثور على أي كورسات تطابق معايير البحث والفلترة.</p>
-            </div>
-          ) : (
-            <motion.div
-              layout
-              className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8"
-            >
-              <AnimatePresence mode="popLayout">
-                {filteredItems.map((item, idx) => (
-                  <motion.div
-                    layout
-                    key={item.id || idx}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.3 }}
-                    className="bg-card border border-border hover:border-primary/40 rounded-3xl overflow-hidden flex flex-col group transition-all duration-300 shadow-sm hover:shadow-xl relative"
-                  >
-                    {/* Thumbnail / Cover */}
-                    <div className="relative aspect-video bg-muted overflow-hidden">
-                      <img
-                        src={getVideoThumbnail(item)}
-                        alt={item.title}
-                        className="w-full h-full object-cover opacity-80 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500"
-                      />
-                      {/* Play Overlay */}
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300">
-                        <button
-                          onClick={() => handlePlayClick(item)}
-                          aria-label={item.youtubeUrl === "locked" ? `فتح نافذة تفعيل ${item.title}` : `تشغيل ${item.title}`}
-                          className="w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-2xl scale-75 group-hover:scale-100 transition-all duration-300 hover:bg-primary/95"
-                        >
-                          {item.youtubeUrl === "locked" ? (
-                            <Lock className="w-6 h-6 text-secondary" />
-                          ) : (
-                            <Play className="w-6 h-6 fill-current ms-1" />
-                          )}
-                        </button>
-                      </div>
-
-                      {/* Top Badges */}
-                      <div className="absolute top-4 right-4 flex flex-wrap items-center gap-1.5">
-                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border backdrop-blur-md ${
-                          item.type === "playlist"
-                            ? "bg-primary/10 text-primary border-primary/20"
-                            : "bg-secondary/10 text-secondary border-secondary/20"
-                        }`}>
-                          {item.type === "playlist" ? "قائمة تشغيل" : "شرح منفرد"}
-                        </span>
-                        {item.youtubeUrl === "locked" && (
-                          <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg border backdrop-blur-md bg-amber-500/10 text-amber-700 border-amber-500/20 flex items-center gap-1">
-                            <Lock className="w-3 h-3" />
-                            مغلق - محتوى مدفوع 🔒
-                          </span>
-                        )}
-                        {item.maxViews && item.maxViews > 0 && item.youtubeUrl !== "locked" && (
-                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border backdrop-blur-md flex items-center gap-1 ${
-                            (item.viewCount ?? 0) >= item.maxViews
-                              ? "bg-destructive/10 text-destructive border-destructive/20"
-                              : (item.viewCount ?? 0) >= item.maxViews - 1
-                                ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                                : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                          }`}>
-                            <Eye className="w-3 h-3" />
-                            {(item.viewCount ?? 0) >= item.maxViews
-                              ? "نفدت المشاهدات"
-                              : `باقي ${item.maxViews - (item.viewCount ?? 0)} مشاهدة`}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Top Left Quick Actions (Bookmark & Share) */}
-                      <div className="absolute top-4 left-4 flex items-center gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleBookmark(item.id);
-                          }}
-                          aria-label={bookmarks.includes(item.id || 0) ? `إزالة ${item.title} من المفضلة` : `إضافة ${item.title} إلى المفضلة`}
-                          className={`w-8 h-8 rounded-lg bg-black/60 border border-border flex items-center justify-center hover:bg-black/80 transition-colors ${
-                            bookmarks.includes(item.id || 0) ? "text-primary" : "text-white"
-                          }`}
-                        >
-                          <Bookmark className="w-3.5 h-3.5 fill-current" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            shareCourse(item);
-                          }}
-                          aria-label={`مشاركة ${item.title}`}
-                          className="w-8 h-8 rounded-lg bg-black/60 border border-border flex items-center justify-center hover:bg-black/80 text-white transition-colors"
-                        >
-                          <Share2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Body Info */}
-                    <div className="p-6 flex-1 flex flex-col justify-between gap-4 text-right">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="inline-block bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold px-2.5 py-0.5 rounded-md">
-                            {item.category}
-                          </span>
-                          {item.meta.difficulty && (
-                            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                              <Award className="w-3 h-3" /> {item.meta.difficulty}
-                            </span>
-                          )}
-                        </div>
-
-                        <h3 className="text-base font-bold text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors">
-                          {item.title}
-                        </h3>
-                        {item.description && (
-                          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
-                            {item.description}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Real meta badges (duration / lessons) — only if provided */}
-                      {(item.meta.duration || item.meta.lessonsCount != null || item.progress > 0) && (
-                        <div className="space-y-3 border-t border-border pt-4">
-                          {(item.meta.duration || item.meta.lessonsCount != null) && (
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-                              {item.meta.duration && (
-                                <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {item.meta.duration}</span>
-                              )}
-                              {item.meta.lessonsCount != null && (
-                                <span className="flex items-center gap-1"><BookOpen className="w-3.5 h-3.5" /> {item.meta.lessonsCount} درس</span>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Progress bar if progress > 0 */}
-                          {item.progress > 0 && (
-                            <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
-                              <div className="h-full bg-primary" style={{ width: `${item.progress}%` }} />
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Supplementary Materials (PDF & Exercises) */}
-                      {(getAttachedFiles(item, files).length > 0 || item.quizId) && (
-                        <div className="border-t border-border pt-4 space-y-2">
-                          <span className="text-[10px] font-bold text-muted-foreground block">الملحقات والمرفقات:</span>
-                          <div className="flex flex-col gap-2">
-                            {getAttachedFiles(item, files).map((file) => <a key={file.id} href={`/api/learning/files/${file.id}/preview`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/10 hover:border-primary/30 p-2.5 text-xs text-primary font-bold transition-all text-right w-full" onClick={(e)=>e.stopPropagation()}><FileText className="w-4 h-4 shrink-0 text-primary"/><span className="line-clamp-1 flex-1 text-right">{file.title}</span>{file.sizeBytes&&<small className="text-[9px] text-muted-foreground">{(file.sizeBytes/1024/1024).toFixed(1)} MB</small>}<Eye className="w-3.5 h-3.5 shrink-0 text-primary/70"/></a>)}
-                            {item.quizId && (
-                              (() => {
-                                const quiz = quizzes.find(q => q.id === item.quizId);
-                                if (!quiz) return null;
-                                return (
-                                  <button
-                                    disabled={quiz.locked}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (quiz.locked) return;
-                                      onStartQuiz?.(quiz);
-                                    }}
-                                    className="flex items-center gap-2 rounded-xl bg-amber-500/5 border border-amber-500/10 hover:border-amber-500/30 p-2.5 text-xs text-amber-700 font-bold transition-all text-right w-full disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-500"
-                                  >
-                                    <ClipboardCheck className="w-4 h-4 shrink-0 text-amber-600" />
-                                    <span className="line-clamp-1 flex-1 text-right">{quiz.locked ? quiz.lockedReason || "أكمل الدرس أولًا" : `${quiz.title} (تمارين)`}</span>
-                                    <Award className="w-3.5 h-3.5 shrink-0 text-amber-500" />
-                                  </button>
-                                );
-                              })()
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Actions */}
-                      <div className="flex items-center justify-between border-t border-border pt-4 mt-auto">
-                        <button
-                          onClick={() => handlePlayClick(item)}
-                          className={`text-xs font-bold hover:underline flex items-center gap-1 group/btn ${
-                            item.youtubeUrl === "locked" ? "text-secondary hover:text-secondary/80" : "text-primary"
-                          }`}
-                        >
-                          {item.youtubeUrl === "locked" ? (
-                            <>مغلق - يتطلب تفعيل الاشتراك 🔒</>
-                          ) : item.progress > 0 ? (
-                            "استئناف المشاهدة"
-                          ) : item.type === "playlist" ? (
-                            "مشاهدة المسار"
-                          ) : (
-                            "ابدأ المشاهدة"
-                          )}
-                          <ChevronLeft className="w-4 h-4 group-hover/btn:translate-x-[-2px] transition-transform" />
-                        </button>
-
-                        {item.youtubeUrl !== "locked" && getYouTubeVideoId(item.youtubeUrl) && (
-                          <a
-                            href={item.youtubeUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-muted-foreground hover:text-foreground transition-colors"
-                            title="مشاهدة على يوتيوب مباشرة"
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </motion.div>
-          )}
+          </div>
         </div>
 
+        {isLoading ? (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((idx) => (
+              <div key={idx} className="h-72 animate-pulse rounded-2xl bg-slate-200/70" />
+            ))}
+          </div>
+        ) : activeCategory === "all" ? (
+          <div className="space-y-8">
+            {categories.map((courseName) => {
+              const courseRawItems = visibleItems.filter((i) => i.category === courseName);
+              const courseFilteredItems = filterAndSortItems(courseRawItems);
+              if (courseFilteredItems.length === 0) return null;
+
+              const completedInCourse = courseRawItems.filter((i) => i.progress >= 95).length;
+
+              return (
+                <section key={courseName} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 md:p-6 shadow-xs">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                      <h4 className="text-base font-black text-slate-900 dir-ltr text-right" style={{ unicodeBidi: "isolate" }}>
+                        📚 كورس {courseName}
+                      </h4>
+                      <span className="text-xs font-semibold text-slate-500">
+                        {completedInCourse} من {courseRawItems.length} دروس مكتملة
+                      </span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => handleSelectCourse(courseName)}
+                      className="h-9 px-3 text-xs font-bold text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      عرض كل دروس الكورس ←
+                    </Button>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {courseFilteredItems.map((item) => (
+                      <LessonCard
+                        key={item.id}
+                        item={item}
+                        files={files}
+                        quizzes={quizzes}
+                        bookmarks={bookmarks}
+                        expandedAttachments={expandedAttachments}
+                        onToggleExpandAttachment={(id) => setExpandedAttachments(prev => ({ ...prev, [id]: !prev[id] }))}
+                        onPlayClick={handlePlayClick}
+                        onToggleBookmark={toggleBookmark}
+                        onShare={shareCourse}
+                        onStartQuiz={onStartQuiz}
+                      />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+
+            {categories.every((c) => filterAndSortItems(visibleItems.filter((i) => i.category === c)).length === 0) && (
+              <EmptyStateMessage searchQuery={searchQuery} statusFilter={statusFilter} />
+            )}
+          </div>
+        ) : (
+          /* SINGLE SELECTED COURSE GRID */
+          <div>
+            {filterAndSortItems(activeCourseItems).length === 0 ? (
+              <EmptyStateMessage searchQuery={searchQuery} statusFilter={statusFilter} />
+            ) : (
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {filterAndSortItems(activeCourseItems).map((item) => (
+                  <LessonCard
+                    key={item.id}
+                    item={item}
+                    files={files}
+                    quizzes={quizzes}
+                    bookmarks={bookmarks}
+                    expandedAttachments={expandedAttachments}
+                    onToggleExpandAttachment={(id) => setExpandedAttachments(prev => ({ ...prev, [id]: !prev[id] }))}
+                    onPlayClick={handlePlayClick}
+                    onToggleBookmark={toggleBookmark}
+                    onShare={shareCourse}
+                    onStartQuiz={onStartQuiz}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Footer Channel Link */}
-        {!isStudentMode && <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mt-16"
-        >
-          <Button
-            asChild
-            variant="ghost"
-            className="bg-card border border-border hover:border-red-500/30 hover:bg-red-500/10 text-foreground hover:text-red-500 font-bold px-8 py-6 rounded-full shadow-md hover:scale-[1.02] transition-all duration-300"
+        {!isStudentMode && (
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mt-16"
           >
-            <a href="https://www.youtube.com/@learntocode9453" target="_blank" rel="noopener noreferrer me">
-              <Youtube className="w-5 h-5 me-2 text-red-500" />
-              زيارة القناة على YouTube (Learn to Code)
-            </a>
-          </Button>
-        </motion.div>}
+            <Button
+              asChild
+              variant="ghost"
+              className="bg-card border border-border hover:border-red-500/30 hover:bg-red-500/10 text-foreground hover:text-red-500 font-bold px-8 py-6 rounded-full shadow-md hover:scale-[1.02] transition-all duration-300"
+            >
+              <a href="https://www.youtube.com/@learntocode9453" target="_blank" rel="noopener noreferrer me">
+                <Youtube className="w-5 h-5 me-2 text-red-500" />
+                زيارة القناة على YouTube (Learn to Code)
+              </a>
+            </Button>
+          </motion.div>
+        )}
       </div>
 
       {/* Video Overlay Player Modal */}
@@ -1542,7 +1265,7 @@ export function VideoLessonsSection({
         >
           <PremiumLessonPlayer
             item={activePlayer}
-            lessons={filteredItems}
+            lessons={visibleItems}
             files={files}
             quizzes={quizzes}
             onStartQuiz={onStartQuiz}
@@ -1565,6 +1288,208 @@ export function VideoLessonsSection({
         />
       )}
     </section>
+  );
+}
+
+// ─── 6. LESSON CARD REDESIGN COMPONENT ───
+function LessonCard({
+  item,
+  files,
+  quizzes,
+  bookmarks,
+  expandedAttachments,
+  onToggleExpandAttachment,
+  onPlayClick,
+  onToggleBookmark,
+  onShare,
+  onStartQuiz,
+}: {
+  item: any;
+  files: any[];
+  quizzes: any[];
+  bookmarks: number[];
+  expandedAttachments: Record<number, boolean>;
+  onToggleExpandAttachment: (id: number) => void;
+  onPlayClick: (item: VideoItem) => void;
+  onToggleBookmark: (id?: number) => void;
+  onShare: (item: VideoItem) => void;
+  onStartQuiz?: (quiz: any) => void;
+}) {
+  const attachedFiles = getAttachedFiles(item, files);
+  const quiz = item.quizId ? quizzes.find((q) => q.id === item.quizId) : null;
+  const isAttachmentsExpanded = expandedAttachments[item.id || 0];
+
+  const statusLabel =
+    item.progress >= 95
+      ? "مكتمل"
+      : item.progress > 0
+      ? "قيد التقدم"
+      : "لم يبدأ";
+
+  const statusBadgeStyle =
+    item.progress >= 95
+      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+      : item.progress > 0
+      ? "bg-amber-50 text-amber-700 border-amber-200"
+      : "bg-slate-100 text-slate-600 border-slate-200";
+
+  return (
+    <article className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-xs hover:border-blue-500/40 hover:shadow-md transition-all">
+      <div className="space-y-3">
+        {/* Fixed Aspect Ratio Thumbnail */}
+        <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-slate-100">
+          <img
+            src={getVideoThumbnail(item)}
+            alt={item.title}
+            className="h-full w-full object-cover"
+          />
+          <button
+            type="button"
+            onClick={() => onPlayClick(item)}
+            className="absolute inset-0 flex items-center justify-center bg-slate-950/30 hover:bg-slate-950/40 transition-colors"
+            aria-label={`شغّل ${item.title}`}
+          >
+            <span className="grid h-12 w-12 place-items-center rounded-full bg-blue-600 text-white shadow-lg">
+              {item.youtubeUrl === "locked" ? <Lock className="h-5 w-5" /> : <Play className="h-5 w-5 fill-white" />}
+            </span>
+          </button>
+
+          {/* Badges on Top */}
+          <div className="absolute top-2.5 right-2.5 flex flex-wrap gap-1.5">
+            <span className="rounded-md bg-slate-900/80 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-xs">
+              الدرس {item.order}
+            </span>
+            <span className={`rounded-md border px-2 py-0.5 text-[10px] font-bold backdrop-blur-xs ${statusBadgeStyle}`}>
+              {statusLabel}
+            </span>
+          </div>
+
+          <div className="absolute top-2.5 left-2.5 flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => onToggleBookmark(item.id)}
+              className="grid h-7 w-7 place-items-center rounded-md bg-slate-900/70 text-white hover:bg-slate-900"
+            >
+              <Bookmark className={`h-3.5 w-3.5 ${bookmarks.includes(item.id || 0) ? "fill-blue-400 text-blue-400" : ""}`} />
+            </button>
+          </div>
+        </div>
+
+        {/* Course Category & Meta */}
+        <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+          <span className="rounded-md bg-blue-50 px-2 py-0.5 text-blue-700 dir-ltr text-right" style={{ unicodeBidi: "isolate" }}>
+            {item.category}
+          </span>
+          {item.meta.duration && <span>⏱️ {item.meta.duration}</span>}
+        </div>
+
+        {/* Title with LTR Isolation for English terms */}
+        <h3
+          className="line-clamp-2 text-sm font-black text-slate-900 leading-snug text-right dir-ltr"
+          style={{ unicodeBidi: "isolate" }}
+        >
+          {item.title}
+        </h3>
+
+        {/* Short Description */}
+        {item.description && (
+          <p className="line-clamp-2 text-xs font-semibold text-slate-500 leading-relaxed">
+            {item.description}
+          </p>
+        )}
+
+        {/* Progress Bar */}
+        {item.progress > 0 && (
+          <div className="space-y-1 pt-1">
+            <div className="flex justify-between text-[10px] font-bold text-slate-500">
+              <span>تقدم المشاهدة</span>
+              <span>{item.progress}%</span>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+              <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${item.progress}%` }} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer Area: Attachments & Main Action */}
+      <div className="mt-4 border-t border-slate-100 pt-3 space-y-3">
+        {/* Compact Attachments Collapsible Area */}
+        {(attachedFiles.length > 0 || quiz) && (
+          <div>
+            <button
+              type="button"
+              onClick={() => onToggleExpandAttachment(item.id || 0)}
+              className="flex w-full items-center justify-between text-[11px] font-bold text-slate-600 hover:text-blue-600 py-1"
+            >
+              <span>📎 المرفقات والتمارين ({attachedFiles.length + (quiz ? 1 : 0)})</span>
+              <span>{isAttachmentsExpanded ? "▲ إخفاء" : "▼ عرض"}</span>
+            </button>
+
+            {isAttachmentsExpanded && (
+              <div className="mt-2 space-y-1.5 rounded-xl bg-slate-50 p-2 text-xs">
+                {attachedFiles.map((file) => (
+                  <a
+                    key={file.id}
+                    href={`/api/learning/files/${file.id}/preview`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between rounded-lg bg-white p-2 font-bold text-blue-700 border border-slate-200 hover:bg-blue-50"
+                  >
+                    <span className="truncate">📄 {file.title}</span>
+                    <Eye className="h-3.5 w-3.5 shrink-0" />
+                  </a>
+                ))}
+
+                {quiz && (
+                  <button
+                    type="button"
+                    disabled={quiz.locked}
+                    onClick={() => !quiz.locked && onStartQuiz?.(quiz)}
+                    className="flex w-full items-center justify-between rounded-lg bg-amber-50 p-2 font-bold text-amber-800 border border-amber-200 hover:bg-amber-100 disabled:opacity-50"
+                  >
+                    <span className="truncate">✏️ {quiz.title}</span>
+                    <Award className="h-3.5 w-3.5 shrink-0" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Single Main Action Button */}
+        <Button
+          type="button"
+          onClick={() => onPlayClick(item)}
+          className={`w-full font-bold h-10 ${
+            item.progress >= 95
+              ? "bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-300"
+              : item.progress > 0
+              ? "bg-blue-600 text-white hover:bg-blue-700 shadow-xs"
+              : "bg-blue-600 text-white hover:bg-blue-700 shadow-xs"
+          }`}
+        >
+          {item.progress >= 95 ? "مشاهدة مرة أخرى 🔄" : item.progress > 0 ? "استكمال الدرس ⏯️" : "ابدأ الدرس 🚀"}
+        </Button>
+      </div>
+    </article>
+  );
+}
+
+// ─── 8. EMPTY STATES COMPONENT ───
+function EmptyStateMessage({ searchQuery, statusFilter }: { searchQuery: string; statusFilter: string }) {
+  let title = "مفيش دروس مجهزة في الكورس ده دلوقتي.";
+  if (searchQuery) title = "مفيش درس مطابق لبحثك.";
+  else if (statusFilter !== "all") title = "مفيش دروس بالحالة دي داخل الكورس.";
+
+  return (
+    <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
+      <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl bg-slate-100 text-slate-400">
+        📚
+      </div>
+      <h3 className="text-sm font-black text-slate-800">{title}</h3>
+      <p className="mt-1 text-xs text-slate-500">جرب تغير فلاتر البحث أو اختار كورس تاني من فوق.</p>
+    </div>
   );
 }
 
