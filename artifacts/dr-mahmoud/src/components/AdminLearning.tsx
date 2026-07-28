@@ -1594,8 +1594,32 @@ export function AdminLearning() {
                     {fileForm.targetType === "stages" && <>
                     <div className="md:col-span-2">
                       <span className="block text-xs font-black text-primary">الخطوة 2</span>
-                      <span className="block text-base font-black text-slate-900">حدد القسم والمراحل</span>
-                      <p className="mt-1 text-xs text-slate-500">الملف سيصل للطلاب حسب مرحلتهم مباشرةً، ولا يحتاج إنشاء كورس أولًا.</p>
+                      <span className="block text-base font-black text-slate-900">حدد الكورس والقسم والمراحل</span>
+                      <p className="mt-1 text-xs text-slate-500">اختر الكورس التابع له الملف ثم حدد مراحل القسم الدراسي.</p>
+                    </div>
+                    <div className="md:col-span-2">
+                      <Field label="الكورس التابع له الملف 📚">
+                        <select
+                          value={fileForm.courseId}
+                          onChange={(e) => {
+                            const courseId = e.target.value;
+                            const course = learningCourses.find((c) => String(c.id) === courseId);
+                            setFileForm({
+                              ...fileForm,
+                              courseId,
+                              category: course?.title || fileForm.category,
+                            });
+                          }}
+                          className="input-admin min-h-12 border-slate-300 focus:border-primary font-bold text-sm"
+                        >
+                          <option value="">-- اختياري: اختر الكورس التابع له الملف --</option>
+                          {learningCourses.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              📚 {c.title}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
                     </div>
                     <div className="md:col-span-2 grid gap-2 sm:grid-cols-3">
                       {ACADEMIC_TRACKS.map((track) => {
