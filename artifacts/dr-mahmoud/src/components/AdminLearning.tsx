@@ -1602,12 +1602,9 @@ export function AdminLearning() {
                         <select
                           value={fileForm.courseId}
                           onChange={(e) => {
-                            const courseId = e.target.value;
-                            const course = learningCourses.find((c) => String(c.id) === courseId);
                             setFileForm({
                               ...fileForm,
-                              courseId,
-                              category: course?.title || fileForm.category,
+                              courseId: e.target.value,
                             });
                           }}
                           className="input-admin min-h-12 border-slate-300 focus:border-primary font-bold text-sm"
