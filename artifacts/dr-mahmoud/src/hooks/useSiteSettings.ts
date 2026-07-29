@@ -26,7 +26,7 @@ export function useSiteSettings() {
   const data = query.data;
 
   const get = useCallback(
-    (key: string, fallback = "") => data?.[key]?.value || fallback,
+    (key: string, fallback = "") => data?.[key]?.value ?? fallback,
     [data],
   );
 

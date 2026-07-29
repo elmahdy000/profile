@@ -37,7 +37,7 @@ export function Contact() {
         },
       });
     } catch (error) {
-      console.error("Failed to save booking to database:", error);
+      // booking save failed silently
     }
 
     const text = encodeURIComponent(

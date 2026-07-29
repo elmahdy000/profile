@@ -574,7 +574,6 @@ function UnlockModal({
         });
       }
     } catch (err) {
-      console.error(err);
       setErrorMsg("حدث خطأ أثناء الاتصال بالسيرفر. يرجى المحاولة لاحقاً.");
     } finally {
       setIsVerifying(false);

@@ -249,7 +249,7 @@ export function Navbar() {
                   : "border-[rgba(148,163,184,0.22)] bg-transparent text-[#CBD5E1]"
               }`}
             >
-              {theme === "dark" ? <Sun className="h-4.5 w-4.5 text-amber-400" /> : <Moon className="h-4.5 w-4.5 text-indigo-600" />}
+              {theme === "dark" ? <Moon className="h-4.5 w-4.5 text-amber-400" /> : <Sun className="h-4.5 w-4.5 text-amber-500" />}
             </button>
 
             <a
