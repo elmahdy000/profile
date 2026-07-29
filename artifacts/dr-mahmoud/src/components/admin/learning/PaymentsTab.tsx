@@ -244,7 +244,7 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh }: { receipts?: 
                       <td colSpan={5} className="bg-[#F6F8FC] p-4 border-b border-[#E4EAF2]">
                         <div className="max-w-md mx-auto rounded-xl border border-[#E4EAF2] bg-white p-3 text-center shadow-xs">
                           <img
-                            src={`/api/admin/payment-receipts/${receipt.id}/file`}
+                            src={`/api/admin/payment-receipts/${receipt.id}/image`}
                             alt={`إيصال ${receipt.studentName}`}
                             className="max-h-80 w-full object-contain rounded-lg"
                           />

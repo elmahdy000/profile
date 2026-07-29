@@ -380,7 +380,7 @@ export function StudentsTab({
                     </span>
                     <div className="flex items-center gap-2">
                       <a
-                        href={`/api/admin/payment-receipts/${receipt.id}/file`}
+                        href={`/api/admin/payment-receipts/${receipt.id}/image`}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:underline"
