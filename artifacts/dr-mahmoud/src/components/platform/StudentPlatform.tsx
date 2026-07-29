@@ -441,17 +441,17 @@ export function StudentPlatform() {
     >
       <div className="mx-auto grid max-w-[1440px] lg:grid-cols-[248px_1fr]">
         {sidebarOpen && <button className="fixed inset-0 z-40 bg-slate-950/40 lg:hidden" aria-label="إغلاق القائمة" onClick={() => setSidebarOpen(false)} />}
-        <aside className={`fixed inset-y-0 right-0 z-50 flex w-[248px] flex-col border-l border-[#E4EAF2] bg-[#0F1B2D] text-white transition-transform lg:sticky lg:top-0 lg:z-20 lg:min-h-screen ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}`}>
-          <button className="absolute left-3 top-3 grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-800 lg:hidden" onClick={() => setSidebarOpen(false)} aria-label="إغلاق القائمة"><X className="h-4 w-4" /></button>
-          <div className="flex items-center gap-3 border-b border-slate-800/80 px-4 py-4">
+        <aside className={`fixed inset-y-0 right-0 z-50 flex w-[248px] flex-col border-l border-[#E4EAF2] bg-white text-slate-900 dark:border-[#223552] dark:bg-[#0F1B2D] dark:text-white transition-transform lg:sticky lg:top-0 lg:z-20 lg:min-h-screen ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}`}>
+          <button className="absolute left-3 top-3 grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden" onClick={() => setSidebarOpen(false)} aria-label="إغلاق القائمة"><X className="h-4 w-4" /></button>
+          <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800/80 px-4 py-4">
             <img
               src="/logo.webp"
               alt="شعار منصة د. محمود المهدي"
-              className="h-8 w-8 rounded-lg object-cover ring-1 ring-white/10"
+              className="h-8 w-8 rounded-lg object-cover ring-1 ring-slate-200 dark:ring-white/10"
             />
-            <div><strong className="block text-[13px] font-bold text-white">بوابة الطالب</strong><span className="text-[10px] text-slate-400">د. محمود المهدي</span></div>
+            <div><strong className="block text-[13px] font-bold text-slate-900 dark:text-white">بوابة الطالب</strong><span className="text-[10px] text-slate-500 dark:text-slate-400">د. محمود المهدي</span></div>
           </div>
-          <div className="mx-3 mt-3 flex items-center gap-2.5 rounded-xl border border-slate-800 bg-slate-900/60 p-2.5"><StudentAvatar name={student.name} src={student.avatarUrl} size="sm" /><div className="min-w-0"><strong className="block truncate text-[12px] font-bold text-white">{student.name}</strong><span className="text-[10px] text-slate-400">طالب متفعّل</span></div></div>
+          <div className="mx-3 mt-3 flex items-center gap-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 p-2.5"><StudentAvatar name={student.name} src={student.avatarUrl} size="sm" /><div className="min-w-0"><strong className="block truncate text-[12px] font-bold text-slate-900 dark:text-white">{student.name}</strong><span className="text-[10px] text-slate-500 dark:text-slate-400">طالب متفعّل</span></div></div>
           <nav className="mt-4 space-y-1 px-2.5">
             {nav.map(([value, label, Icon]) => (
               <button
@@ -460,14 +460,14 @@ export function StudentPlatform() {
                 aria-current={tab === value ? "page" : undefined}
                 className={`relative flex min-h-[40px] w-full items-center gap-3 rounded-xl px-3 text-right text-[13px] font-bold transition-all duration-150 cursor-pointer ${
                   tab === value
-                    ? "bg-[#1769FF]/15 text-[#3B82F6] font-extrabold border border-[#1769FF]/30"
-                    : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+                    ? "bg-blue-50 text-blue-600 border border-blue-200 dark:bg-[#1769FF]/15 dark:text-[#3B82F6] dark:border-[#1769FF]/30 font-extrabold"
+                    : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
                 {tab === value && (
-                  <span className="absolute right-0 top-2 bottom-2 w-1 rounded-l-full bg-[#1769FF]" />
+                  <span className="absolute right-0 top-2 bottom-2 w-1 rounded-l-full bg-blue-600 dark:bg-[#1769FF]" />
                 )}
-                <Icon className={`h-[18px] w-[18px] ${tab === value ? "text-[#3B82F6]" : "opacity-80"}`} />
+                <Icon className={`h-[18px] w-[18px] ${tab === value ? "text-blue-600 dark:text-[#3B82F6]" : "opacity-75"}`} />
                 {label}
               </button>
             ))}
@@ -479,7 +479,7 @@ export function StudentPlatform() {
                 const isDark = document.documentElement.classList.toggle("dark");
                 localStorage.setItem("dr_mahmoud_theme", isDark ? "dark" : "light");
               }}
-              className="flex h-9 w-full items-center justify-center gap-2 rounded-xl border border-slate-800 text-[12px] font-bold text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+              className="flex h-9 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 text-[12px] font-bold text-slate-600 dark:text-slate-300 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
             >
               <Moon className="h-3.5 w-3.5 hidden dark:inline" />
               <Sun className="h-3.5 w-3.5 dark:hidden" />
@@ -492,13 +492,13 @@ export function StudentPlatform() {
               )}`}
               target="_blank"
               rel="noreferrer"
-              className="flex h-9 items-center justify-center rounded-xl border border-[#1769FF]/40 bg-[#1769FF]/10 text-[12px] font-bold text-[#3B82F6] transition-colors hover:bg-[#1769FF]/20"
+              className="flex h-9 items-center justify-center rounded-xl border border-blue-200 dark:border-[#1769FF]/40 bg-blue-50 dark:bg-[#1769FF]/10 text-[12px] font-bold text-blue-600 dark:text-[#3B82F6] transition-colors hover:bg-blue-100 dark:hover:bg-[#1769FF]/20"
             >
               كلم الدعم / حجز كورس 💬
             </a>
             <button
               onClick={logout}
-              className="flex h-9 w-full items-center justify-center gap-2 rounded-xl text-[12px] font-bold text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-400"
+              className="flex h-9 w-full items-center justify-center gap-2 rounded-xl text-[12px] font-bold text-slate-500 dark:text-slate-400 transition-colors hover:bg-red-50 dark:hover:bg-red-500/10 text-red-600 dark:hover:text-red-400"
             >
               <LogOut className="h-3.5 w-3.5" /> تسجيل الخروج
             </button>
