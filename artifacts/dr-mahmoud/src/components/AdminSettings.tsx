@@ -211,14 +211,30 @@ const defaultPortfolio = [
   },
 ];
 
-export function AdminSettings() {
+export function AdminSettings({ role = "superadmin" }: { role?: "superadmin" | "subadmin" }) {
   const { toast } = useToast();
   const { settings, isLoading } = useSiteSettings();
   const updateSettingsMutation = useUpdateSiteSettings();
 
   const [activeTab, setActiveTab] = useState<
-    "general" | "hero" | "about" | "services" | "pricing" | "testimonials" | "faq" | "contact" | "social" | "portfolio" | "eduverse" | "why-choose-me"
+    "general" | "hero" | "about" | "services" | "pricing" | "testimonials" | "faq" | "contact" | "social" | "portfolio" | "eduverse" | "why-choose-me" | "audit-logs" | "admin-accounts"
   >("general");
+
+  const [auditLogs, setAuditLogs] = useState<Array<{
+    id: number;
+    actorRole: string;
+    action: string;
+    targetType: string;
+    targetId: string | null;
+    details: string | null;
+    ipAddress: string | null;
+    createdAt: string;
+  }>>([]);
+  const [loadingAuditLogs, setLoadingAuditLogs] = useState(false);
+
+  const [superAdminPass, setSuperAdminPass] = useState("");
+  const [subAdminPass, setSubAdminPass] = useState("");
+  const [isUpdatingPasswords, setIsUpdatingPasswords] = useState(false);
 
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [isSaved, setIsSaved] = useState(false);
@@ -284,6 +300,53 @@ export function AdminSettings() {
       }
     }
   }, [settings]);
+
+  const fetchAuditLogs = async () => {
+    setLoadingAuditLogs(true);
+    try {
+      const res = await fetch("/api/admin/audit-logs", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setAuditLogs(data);
+      }
+    } catch {
+      toast({ title: "خطأ", description: "فشل تحميل سجل العمليات", variant: "destructive" });
+    } finally {
+      setLoadingAuditLogs(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "audit-logs") {
+      fetchAuditLogs();
+    }
+  }, [activeTab]);
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!superAdminPass && !subAdminPass) return;
+    setIsUpdatingPasswords(true);
+    try {
+      const res = await fetch("/api/admin/change-passwords", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          superAdminPassword: superAdminPass || undefined,
+          subAdminPassword: subAdminPass !== undefined ? subAdminPass : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "فشل تحديث كلمات المرور");
+      toast({ variant: "success", title: "تم التحديث بنجاح! 🔐", description: data.message });
+      setSuperAdminPass("");
+      setSubAdminPass("");
+    } catch (err: any) {
+      toast({ title: "خطأ في التحديث", description: err.message, variant: "destructive" });
+    } finally {
+      setIsUpdatingPasswords(false);
+    }
+  };
 
   const handleChange = (key: string, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -373,6 +436,8 @@ export function AdminSettings() {
 
   const subTabs = [
     { id: "general", label: "الإعدادات العامة" },
+    { id: "audit-logs", label: "📋 سجل العمليات (Audit Logs)" },
+    { id: "admin-accounts", label: "🔐 إدارة الحسابات والكلمات" },
     { id: "hero", label: "القسم الرئيسي (Hero)" },
     { id: "about", label: "عن الدكتور (About)" },
     { id: "services", label: "الخدمات (Services)" },
@@ -1722,6 +1787,132 @@ export function AdminSettings() {
                 />
               </div>
             </div>
+          </div>
+        )}
+
+        {/* 13. Audit Logs Tab */}
+        {activeTab === "audit-logs" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b border-border/60 pb-3">
+              <div>
+                <h3 className="text-lg font-bold text-foreground">📋 سجل عمليات وإجراءات المشرفين (Audit Logs)</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">تتبع كامل بكل الإجراءات والتعديلات والعمليات التي تمت على المنصة ومُجري كل عملية بالوقت والدقيقة.</p>
+              </div>
+              <button
+                type="button"
+                onClick={fetchAuditLogs}
+                disabled={loadingAuditLogs}
+                className="rounded-xl border border-border px-3 py-1.5 text-xs font-bold text-foreground hover:bg-muted/50 transition flex items-center gap-1.5"
+              >
+                {loadingAuditLogs ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "🔄 تحديث السجل"}
+              </button>
+            </div>
+
+            {loadingAuditLogs ? (
+              <div className="py-12 text-center text-muted-foreground flex flex-col items-center justify-center gap-2">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <span className="text-xs font-semibold">جاري جلب سجل العمليات...</span>
+              </div>
+            ) : auditLogs.length === 0 ? (
+              <div className="rounded-2xl border border-dashed p-8 text-center text-xs text-muted-foreground">
+                لا توجد عمليات مسجلة حتى الآن.
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-right text-xs">
+                    <thead className="bg-muted/50 text-muted-foreground font-bold border-b border-border">
+                      <tr>
+                        <th className="p-3">الوقت والتاريخ</th>
+                        <th className="p-3">المُنفِّذ (Role)</th>
+                        <th className="p-3">نوع الإجراء</th>
+                        <th className="p-3">التفاصيل والوصف</th>
+                        <th className="p-3 text-left">عنوان IP</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {auditLogs.map((log) => (
+                        <tr key={log.id} className="hover:bg-muted/30 transition-colors">
+                          <td className="p-3 font-semibold text-foreground whitespace-nowrap">
+                            {new Date(log.createdAt).toLocaleDateString("ar-EG")} - {new Date(log.createdAt).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}
+                          </td>
+                          <td className="p-3 whitespace-nowrap">
+                            <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-extrabold border ${
+                              log.actorRole === "superadmin"
+                                ? "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200"
+                                : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-200"
+                            }`}>
+                              {log.actorRole === "superadmin" ? "👑 Super Admin" : "🛡️ Subadmin"}
+                            </span>
+                          </td>
+                          <td className="p-3 font-bold text-foreground whitespace-nowrap dir-ltr text-right">
+                            {log.action}
+                          </td>
+                          <td className="p-3 text-muted-foreground leading-relaxed">
+                            {log.details || "—"}
+                          </td>
+                          <td className="p-3 text-left font-mono text-[11px] text-muted-foreground whitespace-nowrap dir-ltr">
+                            {log.ipAddress || "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 14. Admin Accounts & Password Management Tab */}
+        {activeTab === "admin-accounts" && (
+          <div className="space-y-6">
+            <div className="border-b border-border/60 pb-3">
+              <h3 className="text-lg font-bold text-foreground">🔐 التحكم في الحسابات وكلمات المرور والصلاحيات</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">إدارة كاملة لكلمات مرور المدير الرئيسي (Super Admin) والمشرف المساعد (Subadmin).</p>
+            </div>
+
+            {role !== "superadmin" ? (
+              <div className="rounded-2xl border border-amber-300 bg-amber-50/80 p-5 text-xs text-amber-900 font-semibold leading-relaxed">
+                ⚠️ عذرًا، تغيير كلمات المرور وإدارة الحسابات مقتصر فقط على المدير الرئيسي (Super Admin).
+              </div>
+            ) : (
+              <form onSubmit={handlePasswordChange} className="space-y-5 max-w-xl bg-card border border-border p-6 rounded-2xl shadow-2xs">
+                <div className="space-y-4">
+                  <div className="rounded-xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 p-4 space-y-2">
+                    <strong className="block text-sm font-bold text-blue-900 dark:text-blue-300">👑 كلمة مرور المدير الرئيسي (Super Admin)</strong>
+                    <p className="text-xs text-blue-700 dark:text-blue-400">تتيح الوصول لجميع الصلاحيات والإعدادات وحذف الطلاب.</p>
+                    <input
+                      type="password"
+                      value={superAdminPass}
+                      onChange={(e) => setSuperAdminPass(e.target.value)}
+                      placeholder="أدخل كلمة مرور جديدة للـ Super Admin (أو اتركها فارغة)..."
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm font-sans"
+                    />
+                  </div>
+
+                  <div className="rounded-xl bg-amber-50/60 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 p-4 space-y-2">
+                    <strong className="block text-sm font-bold text-amber-900 dark:text-amber-300">🛡️ كلمة مرور المشرف المساعد (Subadmin)</strong>
+                    <p className="text-xs text-amber-700 dark:text-amber-400">تتيح إدارة الطلاب كاملة والرد والحجوزات والإشعارات وقبول الإيصالات (بدون حذف).</p>
+                    <input
+                      type="password"
+                      value={subAdminPass}
+                      onChange={(e) => setSubAdminPass(e.target.value)}
+                      placeholder="أدخل كلمة مرور جديدة للـ Subadmin..."
+                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm font-sans"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isUpdatingPasswords || (!superAdminPass && !subAdminPass)}
+                  className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-xs shadow-sm hover:bg-primary/90 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {isUpdatingPasswords ? <Loader2 className="h-4 w-4 animate-spin" /> : "💾 حفظ وتحديث كلمات المرور فوراً"}
+                </button>
+              </form>
+            )}
           </div>
         )}
 

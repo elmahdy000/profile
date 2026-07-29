@@ -206,3 +206,18 @@ export const paymentReceiptsTable = pgTable("payment_receipts", {
   studentIndex: index("payment_receipts_student_idx").on(table.studentId),
   statusIndex: index("payment_receipts_status_idx").on(table.status),
 }));
+
+export const auditLogsTable = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  actorRole: text("actor_role").notNull(), // 'superadmin' | 'subadmin'
+  action: text("action").notNull(), // e.g. 'APPROVE_STUDENT', 'UPDATE_PAYMENT_STATUS', 'BROADCAST_NOTIFICATION', etc.
+  targetType: text("target_type").notNull(), // e.g. 'student', 'receipt', 'notification', 'password'
+  targetId: text("target_id"),
+  details: text("details"),
+  ipAddress: text("ip_address"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  actorRoleIndex: index("audit_logs_actor_role_idx").on(table.actorRole),
+  actionIndex: index("audit_logs_action_idx").on(table.action),
+  createdAtIndex: index("audit_logs_created_at_idx").on(table.createdAt),
+}));

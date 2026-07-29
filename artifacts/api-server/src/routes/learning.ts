@@ -7,6 +7,7 @@ import multer from "multer";
 import mammoth from "mammoth";
 import { and, desc, eq, ilike, inArray, isNull, sql } from "drizzle-orm";
 import {
+  auditLogsTable,
   codeRecoveryRequestsTable,
   coursesTable,
   db,
@@ -24,7 +25,30 @@ import {
   studentNotesTable,
   type QuizQuestion,
 } from "@workspace/db";
-import { isAdminRequest, requireAdmin, requireSuperAdmin } from "../middleware/auth";
+import { getAdminRole, isAdminRequest, requireAdmin, requireSuperAdmin } from "../middleware/auth";
+
+export async function logAudit(
+  req: any,
+  action: string,
+  targetType: string,
+  targetId?: string | number | null,
+  details?: string | null
+) {
+  try {
+    const role = getAdminRole(req) || "unknown";
+    const ip = req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "";
+    await db.insert(auditLogsTable).values({
+      actorRole: role,
+      action,
+      targetType,
+      targetId: targetId ? String(targetId) : null,
+      details: details || null,
+      ipAddress: Array.isArray(ip) ? ip[0] : String(ip),
+    });
+  } catch (err) {
+    console.error("Failed to log audit entry:", err);
+  }
+}
 import {
   canStudentAccessCategory,
   canStudentAccessContent,
@@ -936,6 +960,7 @@ router.patch("/admin/payment-receipts/:id", requireAdmin, async (req, res, next)
         });
       }
     }
+    await logAudit(req, `REVIEW_RECEIPT_${status.toUpperCase()}`, "receipt", receiptId, `قام بـ ${status === "approved" ? "قبول" : "رفض"} إيصال الطالب رقم ${receipt.studentId || "غير محدد"}`);
     res.json(updated);
   } catch (error) {
     next(error);
@@ -1084,6 +1109,7 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
         .where(eq(studentsTable.id, id));
       student.deviceId = null;
     }
+    await logAudit(req, "UPDATE_STUDENT", "student", id, `تعديل الطالب (${current.name}): حالة=${req.body.status ?? current.status}, دفع=${req.body.paymentStatus ?? current.paymentStatus}`);
     res.json(student);
   } catch (error) {
     next(error);

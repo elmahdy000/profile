@@ -3191,7 +3191,7 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              {activeTab === "settings" && <AdminSettings />}
+              {activeTab === "settings" && <AdminSettings role={adminRole} />}
               {activeTab === "learning" && <AdminLearning role={adminRole} />}
             </div>
           </div>
