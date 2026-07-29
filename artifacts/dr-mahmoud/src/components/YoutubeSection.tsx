@@ -1186,6 +1186,28 @@ function LessonCard({
           {item.title}
         </h3>
 
+        {/* Video Progress Bar */}
+        <div className="space-y-1 pt-1">
+          <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400">
+            <span>نسبة المشاهدة:</span>
+            <span className={item.progress >= 95 ? "text-emerald-600 dark:text-emerald-400" : item.progress > 0 ? "text-blue-600 dark:text-blue-400" : ""}>
+              {item.progress}%
+            </span>
+          </div>
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+            <div
+              className={`h-full rounded-full transition-all duration-300 ${
+                item.progress >= 95
+                  ? "bg-emerald-500"
+                  : item.progress > 0
+                  ? "bg-blue-600 dark:bg-blue-500"
+                  : "bg-transparent"
+              }`}
+              style={{ width: `${item.progress}%` }}
+            />
+          </div>
+        </div>
+
         {/* Attached PDFs / Quizzes Quick Dropdown Accordion */}
         {(attachedFiles.length > 0 || quiz) && (
           <div className="rounded-xl border border-slate-200 dark:border-[#223552] bg-slate-50/70 dark:bg-[#12233B] p-2.5 space-y-2">
