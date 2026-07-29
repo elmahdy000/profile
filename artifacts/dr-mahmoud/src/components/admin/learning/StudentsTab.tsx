@@ -100,18 +100,28 @@ export function StudentsTab({
   const [studentStatusFilter, setStudentStatusFilter] = useState("all");
   const [studentStageFilter, setStudentStageFilter] = useState("all");
   const [studentPaymentFilter, setStudentPaymentFilter] = useState("all");
+  const [studentSortBy, setStudentSortBy] = useState<"newest" | "oldest" | "name">("newest");
 
-  const filteredStudents = students.filter((s) => {
-    const matchesSearch =
-      !studentSearch ||
-      s.name.toLowerCase().includes(studentSearch.toLowerCase()) ||
-      s.phone.includes(studentSearch) ||
-      (s.accessCode && s.accessCode.toLowerCase().includes(studentSearch.toLowerCase()));
-    const matchesStatus = studentStatusFilter === "all" || s.status === studentStatusFilter;
-    const matchesStage = studentStageFilter === "all" || s.grade === studentStageFilter;
-    const matchesPayment = studentPaymentFilter === "all" || (s.paymentStatus || "unpaid") === studentPaymentFilter;
-    return matchesSearch && matchesStatus && matchesStage && matchesPayment;
-  });
+  const filteredStudents = students
+    .filter((s) => {
+      const matchesSearch =
+        !studentSearch ||
+        s.name.toLowerCase().includes(studentSearch.toLowerCase()) ||
+        s.phone.includes(studentSearch) ||
+        (s.accessCode && s.accessCode.toLowerCase().includes(studentSearch.toLowerCase()));
+      const matchesStatus = studentStatusFilter === "all" || s.status === studentStatusFilter;
+      const matchesStage = studentStageFilter === "all" || s.grade === studentStageFilter;
+      const matchesPayment = studentPaymentFilter === "all" || (s.paymentStatus || "unpaid") === studentPaymentFilter;
+      return matchesSearch && matchesStatus && matchesStage && matchesPayment;
+    })
+    .sort((a, b) => {
+      if (studentSortBy === "name") {
+        return a.name.localeCompare(b.name, "ar");
+      }
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : a.id;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : b.id;
+      return studentSortBy === "oldest" ? timeA - timeB : timeB - timeA;
+    });
 
   return (
     <div className="space-y-4">
@@ -140,8 +150,8 @@ export function StudentsTab({
       )}
 
       {/* Filter Bar */}
-      <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-4">
-        <label className="relative col-span-2 lg:col-span-1">
+      <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-5">
+        <label className="relative sm:col-span-2 lg:col-span-1">
           <Search className="absolute right-3 top-3.5 h-4 w-4 text-slate-400" />
           <input
             value={studentSearch}
@@ -167,6 +177,11 @@ export function StudentsTab({
           {studentStages.map((stage) => (
             <option key={stage} value={stage}>{stage}</option>
           ))}
+        </select>
+        <select value={studentSortBy} onChange={(e) => setStudentSortBy(e.target.value as any)} className="input-admin font-bold text-blue-700 border-blue-200 bg-blue-50/50">
+          <option value="newest">🗓️ ترتيب: الأحدث انضماماً (باليوم والساعة)</option>
+          <option value="oldest">⏳ ترتيب: الأقدم انضماماً</option>
+          <option value="name">🔤 ترتيب: أبجدي حسب الاسم</option>
         </select>
       </div>
 
@@ -246,6 +261,11 @@ export function StudentsTab({
                     {s.city && <span>· المدينة: <strong className="text-foreground">{s.city}</strong></span>}
                     {s.grade && (
                       <span>· المرحلة: <strong className="text-foreground">{s.grade === "أخرى" ? s.otherGradeDetail || "أخرى" : s.grade}</strong></span>
+                    )}
+                    {s.createdAt && (
+                      <span className="text-[#1769FF] font-bold">
+                        · الانضمام: {new Date(s.createdAt).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" })} الساعة {new Date(s.createdAt).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                      </span>
                     )}
                   </div>
 
