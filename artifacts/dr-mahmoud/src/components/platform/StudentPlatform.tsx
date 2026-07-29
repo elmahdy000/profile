@@ -458,9 +458,16 @@ export function StudentPlatform() {
                 key={value}
                 onClick={() => { setTab(value); setSidebarOpen(false); }}
                 aria-current={tab === value ? "page" : undefined}
-                className={`flex min-h-[40px] w-full items-center gap-3 rounded-xl px-3 text-right text-[13px] font-bold transition-all duration-150 ${tab === value ? "bg-[#1769FF] text-white shadow-xs" : "text-slate-300 hover:bg-slate-800/60 hover:text-white"}`}
+                className={`relative flex min-h-[40px] w-full items-center gap-3 rounded-xl px-3 text-right text-[13px] font-bold transition-all duration-150 cursor-pointer ${
+                  tab === value
+                    ? "bg-[#1769FF]/15 text-[#3B82F6] font-extrabold border border-[#1769FF]/30"
+                    : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+                }`}
               >
-                <Icon className={`h-[18px] w-[18px] ${tab === value ? "" : "opacity-80"}`} />
+                {tab === value && (
+                  <span className="absolute right-0 top-2 bottom-2 w-1 rounded-l-full bg-[#1769FF]" />
+                )}
+                <Icon className={`h-[18px] w-[18px] ${tab === value ? "text-[#3B82F6]" : "opacity-80"}`} />
                 {label}
               </button>
             ))}
