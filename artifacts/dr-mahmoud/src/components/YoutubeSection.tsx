@@ -1168,7 +1168,7 @@ function LessonCard({
 
         {/* Course Category & Meta */}
         <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400">
-          <span className="rounded-md bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 text-blue-700 dark:text-blue-300 dir-ltr text-right" style={{ unicodeBidi: "isolate" }}>
+          <span className="rounded-md bg-blue-50 dark:bg-blue-600/30 px-2.5 py-0.5 text-blue-700 dark:text-white dir-ltr text-right" style={{ unicodeBidi: "isolate" }}>
             {item.category}
           </span>
           {item.meta.duration && (

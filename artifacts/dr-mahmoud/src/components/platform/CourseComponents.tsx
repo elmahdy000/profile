@@ -184,8 +184,8 @@ export function CourseSwitcher({
         onClick={() => onSelectCourse("all")}
         className={`flex min-w-[180px] shrink-0 items-center justify-between gap-3 rounded-xl border px-4 py-2.5 text-right transition-all cursor-pointer ${
           activeCategory === "all"
-            ? "border-[#1769FF] bg-[#E8EEFA] text-[#1769FF] font-bold dark:border-[#1769FF] dark:bg-[#172337] dark:text-[#3B82F6]"
-            : "border-[#E4EAF2] bg-white text-[#667085] hover:border-[#CBD5E1] dark:border-[#26364D] dark:bg-[#111C2E] dark:text-[#A9B5C7]"
+            ? "border-[#1769FF] bg-[#E8EEFA] text-[#1769FF] font-bold dark:border-[#3B82F6] dark:bg-[#1E293B] dark:text-white"
+            : "border-[#E4EAF2] bg-white text-[#667085] hover:border-[#CBD5E1] dark:border-[#26364D] dark:bg-[#111C2E] dark:text-[#F8FAFC] dark:hover:border-[#3B82F6]"
         }`}
       >
         <div className="min-w-0">
@@ -204,8 +204,8 @@ export function CourseSwitcher({
             onClick={() => onSelectCourse(course.name)}
             className={`flex min-w-[200px] shrink-0 items-center justify-between gap-3 rounded-xl border px-4 py-2.5 text-right transition-all cursor-pointer ${
               isSelected
-                ? "border-[#1769FF] bg-[#E8EEFA] text-[#1769FF] font-bold dark:border-[#1769FF] dark:bg-[#172337] dark:text-[#3B82F6]"
-                : "border-[#E4EAF2] bg-white text-[#667085] hover:border-[#CBD5E1] dark:border-[#26364D] dark:bg-[#111C2E] dark:text-[#A9B5C7]"
+                ? "border-[#1769FF] bg-[#E8EEFA] text-[#1769FF] font-bold dark:border-[#3B82F6] dark:bg-[#1E293B] dark:text-white"
+                : "border-[#E4EAF2] bg-white text-[#667085] hover:border-[#CBD5E1] dark:border-[#26364D] dark:bg-[#111C2E] dark:text-[#F8FAFC] dark:hover:border-[#3B82F6]"
             }`}
           >
             <div className="min-w-0 text-right dir-ltr" style={{ unicodeBidi: "isolate" }}>
