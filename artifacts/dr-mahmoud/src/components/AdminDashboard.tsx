@@ -1721,13 +1721,15 @@ export default function AdminDashboard() {
             {/* Sticky User & Logout Footer */}
             <div className="mt-auto border-t border-[#E4EAF2] pt-4 space-y-3">
               <div className="flex items-center gap-3 rounded-xl bg-[#F6F8FC] p-3 border border-[#E4EAF2]">
-                <div className="grid h-9 w-9 place-items-center rounded-full bg-[#0866D9]/10 text-[#0866D9] font-black text-xs">
-                  د.م
+                <div className={`grid h-9 w-9 place-items-center rounded-full font-black text-xs ${adminRole === "subadmin" ? "bg-amber-500/10 text-amber-700" : "bg-[#0866D9]/10 text-[#0866D9]"}`}>
+                  {adminRole === "subadmin" ? "مش" : "أد"}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <strong className="block text-xs font-bold text-[#0F172A] truncate">مدير المنصة</strong>
+                  <strong className="block text-xs font-bold text-[#0F172A] truncate">
+                    {adminRole === "subadmin" ? "مشرف مساعد (Subadmin)" : "مدير المنصة (Super Admin)"}
+                  </strong>
                   <span className="text-[11px] text-[#64748B] block truncate">
-                    صلاحيات كاملة
+                    {adminRole === "subadmin" ? "إدارة وتواصل بدون حذف" : "صلاحيات كاملة"}
                   </span>
                 </div>
               </div>
