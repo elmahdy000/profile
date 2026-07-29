@@ -16,7 +16,7 @@ export function QuizzesTab({
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
         {quizzes.map((quiz) => (
           <article key={quiz.id} className="rounded-2xl border border-border bg-card p-6 shadow-sm transition-all duration-200 hover:shadow-md hover:border-primary/20">
-            <span className="text-[12px] font-bold text-primary">
+            <span className="rounded-md bg-blue-600/25 px-2.5 py-0.5 text-[12px] font-bold text-white border border-blue-500/30">
               {quiz.category}
             </span>
             {quiz.stage && (
@@ -32,8 +32,8 @@ export function QuizzesTab({
               {quiz.durationMinutes && (
                 <>
                   <span>·</span>
-                  <span className="flex items-center gap-1 font-bold text-primary">
-                    <Clock className="h-3.5 w-3.5" /> {quiz.durationMinutes} دقيقة
+                  <span className="flex items-center gap-1 font-bold text-white">
+                    <Clock className="h-3.5 w-3.5 text-blue-400" /> {quiz.durationMinutes} دقيقة
                   </span>
                 </>
               )}

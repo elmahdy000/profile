@@ -92,9 +92,9 @@ export function FilesTab({ files }: { files: LearningFile[] }) {
                 <button
                   type="button"
                   onClick={() => setPreviewFile(file)}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 text-xs font-bold text-primary hover:bg-primary/15 transition-colors"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-blue-500/30 bg-blue-600/20 px-4 text-xs font-bold text-white hover:bg-blue-600/35 transition-colors"
                 >
-                  <Eye className="h-4 w-4" /> معاينة وقراءة
+                  <Eye className="h-4 w-4 text-blue-400" /> معاينة وقراءة
                 </button>
               </article>
             );
