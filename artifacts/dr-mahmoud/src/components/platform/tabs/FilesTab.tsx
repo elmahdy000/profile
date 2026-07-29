@@ -80,8 +80,8 @@ export function FilesTab({ files }: { files: LearningFile[] }) {
                 </div>
 
                 <div className="flex items-center gap-1.5">
-                  <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
-                    <BookOpen className="h-3.5 w-3.5" /> {courseTitle}
+                  <span className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600/25 px-2.5 py-1 text-xs font-bold text-white border border-blue-500/30">
+                    <BookOpen className="h-3.5 w-3.5 text-blue-400" /> {courseTitle}
                   </span>
                 </div>
 
