@@ -7,7 +7,6 @@ import {
   BookOpen,
   Layers,
   FileCode,
-  FileSpreadsheet,
   FileArchive,
   Download
 } from "lucide-react";
@@ -52,24 +51,24 @@ function getFileTypeDetails(mimeType?: string | null, originalName: string = "")
 // 1. Files Page Header
 export function FilesPageHeader({ totalCount }: { totalCount: number }) {
   return (
-    <header className="flex flex-col gap-1 text-right border-b border-slate-200 dark:border-[#223552] pb-3" dir="rtl">
+    <header className="flex flex-col gap-1 text-right border-b border-slate-200 dark:border-[#283A54] pb-3" dir="rtl">
       <div className="flex items-center gap-2.5">
-        <h1 className="text-lg md:text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+        <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-[#F8FAFC] tracking-tight">
           مكتبة الملفات والملازم
         </h1>
-        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-800/60 px-2.5 py-0.5 text-xs font-bold text-blue-700 dark:text-blue-300">
+        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 dark:bg-[#172A46] border border-blue-200 dark:border-[#283A54] px-2.5 py-0.5 text-xs font-bold text-[#247CF0] dark:text-[#247CF0]">
           <FolderOpen className="h-3.5 w-3.5" />
           {totalCount} ملفات
         </span>
       </div>
-      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+      <p className="text-xs md:text-sm font-medium text-slate-500 dark:text-[#AFC0D6]">
         حمّل واطّلع على المذكرات والأكواد المخصصة لمرحلتك الدراسية.
       </p>
     </header>
   );
 }
 
-// 2. Course Filter Tabs
+// 2. Compact Course Filter Tabs
 export function CourseFilterTabs({
   categories,
   selectedCategory,
@@ -82,19 +81,19 @@ export function CourseFilterTabs({
   files: LearningFile[];
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-3 shadow-2xs" dir="rtl">
+    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none rounded-xl border border-slate-200 dark:border-[#283A54] bg-white dark:bg-[#101E32] p-2 shadow-2xs" dir="rtl">
       <button
         type="button"
         onClick={() => onSelectCategory("all")}
-        className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer ${
+        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer shrink-0 ${
           selectedCategory === "all"
-            ? "bg-[#0F1B2D] dark:bg-blue-600 text-white shadow-2xs"
-            : "bg-slate-50 dark:bg-[#12233B] text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1A3050] border border-slate-200 dark:border-[#223552]"
+            ? "bg-[#247CF0] text-white shadow-2xs"
+            : "bg-slate-50 dark:bg-[#172A46] text-slate-700 dark:text-[#AFC0D6] hover:bg-slate-100 dark:hover:bg-[#1D3252] border border-slate-200 dark:border-[#283A54]"
         }`}
       >
         <Layers className="h-3.5 w-3.5" />
         <span>كل الكورسات</span>
-        <span className="text-[10px] opacity-75 font-normal">({files.length})</span>
+        <span className="text-[10px] opacity-80 font-semibold">({files.length})</span>
       </button>
 
       {categories.map((courseName) => {
@@ -106,16 +105,16 @@ export function CourseFilterTabs({
             type="button"
             onClick={() => onSelectCategory(courseName)}
             dir="ltr"
-            className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer text-right ${
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer text-right shrink-0 ${
               isSelected
-                ? "bg-[#0F1B2D] dark:bg-blue-600 text-white shadow-2xs"
-                : "bg-slate-50 dark:bg-[#12233B] text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1A3050] border border-slate-200 dark:border-[#223552]"
+                ? "bg-[#247CF0] text-white shadow-2xs"
+                : "bg-slate-50 dark:bg-[#172A46] text-slate-700 dark:text-[#AFC0D6] hover:bg-slate-100 dark:hover:bg-[#1D3252] border border-slate-200 dark:border-[#283A54]"
             }`}
             style={{ unicodeBidi: "isolate" }}
           >
             <BookOpen className="h-3.5 w-3.5 shrink-0" />
             <span>{courseName}</span>
-            <span className="text-[10px] opacity-75 font-normal">({count})</span>
+            <span className="text-[10px] opacity-80 font-semibold">({count})</span>
           </button>
         );
       })}
@@ -123,7 +122,7 @@ export function CourseFilterTabs({
   );
 }
 
-// 3. File Card Component
+// 3. Rebuilt File Card Component (Tight hierarchy, 44px button, LTR bidi isolation)
 export function FileCard({
   file,
   onPreview,
@@ -137,62 +136,77 @@ export function FileCard({
   const fileSizeMb = (file.sizeBytes / 1024 / 1024).toFixed(1);
 
   return (
-    <article className="group relative flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-5 shadow-2xs hover:border-blue-500/50 hover:-translate-y-0.5 transition-all duration-200 w-full" dir="rtl">
+    <article className="group relative flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-[#283A54] bg-white dark:bg-[#101E32] p-5 shadow-2xs hover:border-[#247CF0]/60 hover:-translate-y-0.5 transition-all duration-200 w-full" dir="rtl">
       <div className="space-y-3">
-        {/* Top Row: Type Icon & Type Badge */}
-        <div className="flex items-center justify-between gap-2">
-          <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border ${typeDetails.bgClass}`}>
-            <IconComponent className={`h-5 w-5 ${typeDetails.iconColorClass}`} />
-          </span>
+        {/* Top Header Area: File Icon + Title + Badge */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3 min-w-0 flex-1">
+            <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border ${typeDetails.bgClass}`}>
+              <IconComponent className={`h-5 w-5 ${typeDetails.iconColorClass}`} />
+            </span>
 
-          <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold border ${typeDetails.bgClass}`}>
+            <div className="min-w-0 space-y-0.5 flex-1">
+              <h3 className="text-base font-black text-slate-900 dark:text-[#F8FAFC] leading-snug line-clamp-2">
+                {file.title}
+              </h3>
+              <p
+                dir="ltr"
+                className="text-xs font-semibold text-slate-500 dark:text-[#8092AA] truncate text-right"
+                style={{ unicodeBidi: "isolate" }}
+              >
+                {file.originalName}
+              </p>
+            </div>
+          </div>
+
+          <span className={`rounded-md px-2 py-0.5 text-[10px] font-extrabold border shrink-0 ${typeDetails.bgClass}`}>
             {typeDetails.badgeText}
           </span>
         </div>
 
-        {/* Main Info: Title */}
-        <h3 className="text-base font-black text-slate-900 dark:text-slate-100 leading-snug line-clamp-2">
-          {file.title}
-        </h3>
+        <div className="border-t border-slate-100 dark:border-[#283A54]/60 my-2" />
 
-        {/* Original File Name (Isolated LTR) */}
-        <p
-          dir="ltr"
-          className="text-xs font-semibold text-slate-500 dark:text-slate-400 truncate text-right"
-          style={{ unicodeBidi: "isolate" }}
-        >
-          {file.originalName}
-        </p>
-
-        <div className="border-t border-slate-100 dark:border-[#1F314A] my-2" />
-
-        {/* Metadata: Course Name & Size */}
-        <div className="flex items-center justify-between gap-2 text-xs font-bold text-slate-600 dark:text-slate-300">
+        {/* Compact Metadata Row: Course on Right, File Size on Left */}
+        <div className="flex items-center justify-between gap-2 text-xs font-bold text-slate-600 dark:text-[#AFC0D6]">
           <span
             dir="ltr"
-            className="inline-flex items-center gap-1.5 rounded-md bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-800/60 px-2.5 py-0.5 text-xs text-blue-700 dark:text-blue-300 text-right truncate"
+            className="inline-flex items-center gap-1.5 rounded-md bg-blue-50 dark:bg-[#172A46] border border-blue-200 dark:border-[#283A54] px-2.5 py-1 text-xs text-[#247CF0] dark:text-[#247CF0] text-right truncate max-w-[70%]"
             style={{ unicodeBidi: "isolate" }}
           >
-            <BookOpen className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+            <BookOpen className="h-3.5 w-3.5 text-[#247CF0] shrink-0" />
             {courseTitle}
           </span>
 
-          <span className="text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
+          <span
+            dir="ltr"
+            className="text-xs font-bold text-slate-500 dark:text-[#8092AA] shrink-0"
+            style={{ unicodeBidi: "isolate" }}
+          >
             {fileSizeMb} MB
           </span>
         </div>
       </div>
 
-      {/* Action Button: Solid High-Contrast Blue */}
-      <div className="pt-4 mt-2">
+      {/* Action Area: 44px High-Contrast Button & Optional Download Icon Button */}
+      <div className="pt-3 mt-2 flex items-center gap-2">
         <button
           type="button"
           onClick={() => onPreview(file)}
-          className="w-full h-10 rounded-xl bg-[#1769E0] hover:bg-[#1258BE] text-white text-xs font-bold shadow-2xs transition-colors flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+          className="flex-1 h-11 rounded-xl bg-[#247CF0] hover:bg-[#1C68CC] text-white text-xs font-bold shadow-2xs transition-colors flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
         >
           <Eye className="h-4 w-4" />
-          <span>معاينة وقراءة الملف</span>
+          <span>معاينة الملف</span>
         </button>
+
+        <a
+          href={`/api/learning/files/${file.id}/download`}
+          target="_blank"
+          rel="noreferrer"
+          title="تحميل الملف"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-200 dark:border-[#283A54] bg-slate-50 dark:bg-[#172A46] text-slate-600 dark:text-[#AFC0D6] hover:bg-slate-100 dark:hover:bg-[#1D3252] transition-colors"
+        >
+          <Download className="h-4 w-4" />
+        </a>
       </div>
     </article>
   );
@@ -201,14 +215,14 @@ export function FileCard({
 // 4. Empty State
 export function EmptyFilesState({ hasCategoryFilter }: { hasCategoryFilter: boolean }) {
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-10 text-center space-y-3" dir="rtl">
-      <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40">
+    <div className="rounded-2xl border border-slate-200 dark:border-[#283A54] bg-white dark:bg-[#101E32] p-10 text-center space-y-3" dir="rtl">
+      <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-blue-50 dark:bg-[#172A46] text-[#247CF0] border border-blue-100 dark:border-[#283A54]">
         <FolderOpen className="h-6 w-6" />
       </div>
-      <h3 className="text-base font-bold text-slate-900 dark:text-white">
+      <h3 className="text-base font-bold text-slate-900 dark:text-[#F8FAFC]">
         {hasCategoryFilter ? "لا توجد ملفات بهذا الكورس" : "لا توجد ملفات مرفوعة حالياً"}
       </h3>
-      <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+      <p className="text-xs text-slate-500 dark:text-[#AFC0D6] max-w-sm mx-auto leading-relaxed">
         ستظهر مذكرات وأكواد الكورسات المخصصة لمرحلتك هنا فور نشرها لحسابك.
       </p>
     </div>
@@ -240,9 +254,9 @@ export function FilesTab({ files }: { files: LearningFile[] }) {
         />
       )}
 
-      {/* 3. Responsive File Card Grid */}
+      {/* 3. True Responsive 3-Column CSS Grid (Starts from Right in RTL) */}
       {filteredFiles.length > 0 ? (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(300px,380px))] justify-start gap-4 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 justify-start gap-5 w-full items-stretch" dir="rtl">
           {filteredFiles.map((file) => (
             <FileCard key={file.id} file={file} onPreview={setPreviewFile} />
           ))}
@@ -268,33 +282,33 @@ export function FilesTab({ files }: { files: LearningFile[] }) {
               role="dialog"
               aria-modal="true"
               aria-label={`معاينة ${previewFile.title}`}
-              className="flex h-[min(90vh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white dark:bg-[#0D1B2E] border border-slate-200 dark:border-[#223552] shadow-2xl"
+              className="flex h-[min(90vh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white dark:bg-[#101E32] border border-slate-200 dark:border-[#283A54] shadow-2xl"
             >
-              <header className="flex items-center justify-between gap-3 border-b border-slate-200 dark:border-[#223552] px-4 py-3 bg-slate-50 dark:bg-[#12233B]">
+              <header className="flex items-center justify-between gap-3 border-b border-slate-200 dark:border-[#283A54] px-4 py-3 bg-slate-50 dark:bg-[#172A46]">
                 <div className="min-w-0">
                   <strong className="block truncate text-slate-900 dark:text-white font-bold">{previewFile.title}</strong>
-                  <span dir="ltr" className="block truncate text-xs text-slate-500 dark:text-slate-400 text-right" style={{ unicodeBidi: "isolate" }}>{previewFile.originalName}</span>
+                  <span dir="ltr" className="block truncate text-xs text-slate-500 dark:text-[#AFC0D6] text-right" style={{ unicodeBidi: "isolate" }}>{previewFile.originalName}</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setPreviewFile(null)}
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-xl hover:bg-slate-200 dark:hover:bg-[#1C2C42] text-slate-600 dark:text-slate-300 transition-colors"
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-xl hover:bg-slate-200 dark:hover:bg-[#1D3252] text-slate-600 dark:text-slate-300 transition-colors"
                   aria-label="إغلاق المعاينة"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </header>
-              <div className="min-h-0 flex-1 bg-slate-100 dark:bg-[#080E1A] p-2 sm:p-4">
+              <div className="min-h-0 flex-1 bg-slate-100 dark:bg-[#08111F] p-2 sm:p-4">
                 {previewFile.mimeType?.startsWith("image/") ? (
                   <img src={`/api/learning/files/${previewFile.id}/preview`} alt={previewFile.title} className="h-full w-full object-contain select-none" onContextMenu={(e) => e.preventDefault()} />
                 ) : previewFile.mimeType === "application/pdf" || previewFile.mimeType?.startsWith("text/") ? (
-                  <iframe src={`/api/learning/files/${previewFile.id}/preview#toolbar=0&navpanes=0&scrollbar=1`} title={previewFile.title} className="h-full w-full rounded-xl border border-slate-200 dark:border-[#223552] bg-white dark:bg-[#0D1B2E]" />
+                  <iframe src={`/api/learning/files/${previewFile.id}/preview#toolbar=0&navpanes=0&scrollbar=1`} title={previewFile.title} className="h-full w-full rounded-xl border border-slate-200 dark:border-[#283A54] bg-white dark:bg-[#101E32]" />
                 ) : (
-                  <div className="grid h-full place-items-center rounded-xl border border-slate-200 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-8 text-center">
+                  <div className="grid h-full place-items-center rounded-xl border border-slate-200 dark:border-[#283A54] bg-white dark:bg-[#101E32] p-8 text-center">
                     <div>
-                      <FileText className="mx-auto h-12 w-12 text-blue-600 dark:text-blue-400" />
+                      <FileText className="mx-auto h-12 w-12 text-[#247CF0]" />
                       <strong className="mt-4 block text-slate-900 dark:text-white">لا يمكن عرض هذا النوع داخل المتصفح</strong>
-                      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">ارفع نسخة PDF من الملف لمعاينتها بأمان داخل المنصة.</p>
+                      <p className="mt-2 text-sm text-slate-500 dark:text-[#AFC0D6]">ارفع نسخة PDF من الملف لمعاينتها بأمان داخل المنصة.</p>
                     </div>
                   </div>
                 )}
