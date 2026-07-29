@@ -1122,13 +1122,13 @@ function LessonCard({
       ? "bg-emerald-50 text-emerald-700 border-emerald-200"
       : item.progress > 0
       ? "bg-amber-50 text-amber-700 border-amber-200"
-      : "bg-slate-100 text-slate-600 border-slate-200";
+      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700";
 
   return (
-    <article className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-xs hover:border-blue-500/40 hover:shadow-md transition-all">
+    <article className="flex flex-col justify-between rounded-2xl border border-[#E4EAF2] dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-4 shadow-xs hover:border-blue-500/40 hover:shadow-md transition-all">
       <div className="space-y-3">
         {/* Fixed Aspect Ratio Thumbnail */}
-        <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-slate-100">
+        <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-[#162942]">
           <img
             src={getVideoThumbnail(item)}
             alt={item.title}
@@ -1167,92 +1167,76 @@ function LessonCard({
         </div>
 
         {/* Course Category & Meta */}
-        <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
-          <span className="rounded-md bg-blue-50 px-2 py-0.5 text-blue-700 dir-ltr text-right" style={{ unicodeBidi: "isolate" }}>
+        <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400">
+          <span className="rounded-md bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 text-blue-700 dark:text-blue-300 dir-ltr text-right" style={{ unicodeBidi: "isolate" }}>
             {item.category}
           </span>
-          {item.meta.duration && <span>⏱️ {item.meta.duration}</span>}
+          {item.meta.duration && (
+            <span className="flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5" /> {item.meta.duration}
+            </span>
+          )}
         </div>
 
         {/* Title with LTR Isolation for English terms */}
         <h3
-          className="line-clamp-2 text-sm font-black text-slate-900 leading-snug text-right dir-ltr"
+          className="line-clamp-2 text-sm font-black text-slate-900 dark:text-slate-100 leading-snug text-right dir-ltr"
           style={{ unicodeBidi: "isolate" }}
         >
           {item.title}
         </h3>
 
-        {/* Short Description */}
-        {item.description && (
-          <p className="line-clamp-2 text-xs font-semibold text-slate-500 leading-relaxed">
-            {item.description}
-          </p>
-        )}
-
-        {/* Progress Bar */}
-        {item.progress > 0 && (
-          <div className="space-y-1 pt-1">
-            <div className="flex justify-between text-[10px] font-bold text-slate-500">
-              <span>تقدم المشاهدة</span>
-              <span>{item.progress}%</span>
-            </div>
-            <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
-              <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${item.progress}%` }} />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Footer Area: Attachments & Main Action */}
-      <div className="mt-4 border-t border-slate-100 pt-3 space-y-3">
-        {/* Compact Attachments Collapsible Area */}
+        {/* Attached PDFs / Quizzes Quick Dropdown Accordion */}
         {(attachedFiles.length > 0 || quiz) && (
-          <div>
-            <button
-              type="button"
-              onClick={() => onToggleExpandAttachment(item.id || 0)}
-              className="flex w-full items-center justify-between text-[11px] font-bold text-slate-600 hover:text-blue-600 py-1"
-            >
-              <span className="flex items-center gap-1">
-                <Paperclip className="h-3.5 w-3.5" />
-                المرفقات والتمارين ({attachedFiles.length + (quiz ? 1 : 0)})
+          <div className="rounded-xl border border-slate-200 dark:border-[#223552] bg-slate-50/70 dark:bg-[#12233B] p-2.5 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Paperclip className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" /> ملحقات الدرس ({attachedFiles.length + (quiz ? 1 : 0)})
               </span>
-              <span>{isAttachmentsExpanded ? "▲ إخفاء" : "▼ عرض"}</span>
-            </button>
+              {attachedFiles.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => onToggleExpandAttachment(item.id || 0)}
+                  className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5"
+                >
+                  {isAttachmentsExpanded ? "طي" : "عرض الكل"}
+                </button>
+              )}
+            </div>
 
-            {isAttachmentsExpanded && (
-              <div className="mt-2 space-y-1.5 rounded-xl bg-slate-50 p-2 text-xs">
-                {attachedFiles.map((file) => (
+            {/* Always show the first attachment / PDF */}
+            {attachedFiles.length > 0 && (
+              <div className="space-y-1.5">
+                {(isAttachmentsExpanded ? attachedFiles : attachedFiles.slice(0, 1)).map((file: any) => (
                   <a
                     key={file.id}
-                    href={`/api/learning/files/${file.id}/preview`}
+                    href={`/api/learning/files/${file.id}/download`}
                     target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between rounded-lg bg-white p-2 font-bold text-blue-700 border border-slate-200 hover:bg-blue-50"
+                    rel="noreferrer"
+                    className="flex items-center justify-between rounded-lg border border-slate-200 dark:border-[#223552] bg-white dark:bg-[#0A1628] p-2 text-xs hover:border-blue-500/40 transition-colors"
                   >
-                    <span className="truncate flex items-center gap-1.5">
-                      <FileText className="h-3.5 w-3.5 text-blue-600" />
-                      {file.title}
-                    </span>
-                    <Eye className="h-3.5 w-3.5 shrink-0" />
+                    <div className="flex items-center gap-2 min-w-0">
+                      <FileText className="h-4 w-4 shrink-0 text-rose-500" />
+                      <span className="truncate font-semibold text-slate-800 dark:text-slate-200">{file.title || file.originalName}</span>
+                    </div>
+                    <Download className="h-3.5 w-3.5 shrink-0 text-slate-400" />
                   </a>
                 ))}
-
-                {quiz && (
-                  <button
-                    type="button"
-                    disabled={quiz.locked}
-                    onClick={() => !quiz.locked && onStartQuiz?.(quiz)}
-                    className="flex w-full items-center justify-between rounded-lg bg-amber-50 p-2 font-bold text-amber-800 border border-amber-200 hover:bg-amber-100 disabled:opacity-50"
-                  >
-                    <span className="truncate flex items-center gap-1.5">
-                      <Award className="h-3.5 w-3.5 text-amber-600" />
-                      {quiz.title}
-                    </span>
-                    <Award className="h-3.5 w-3.5 shrink-0" />
-                  </button>
-                )}
               </div>
+            )}
+            {/* Quiz Attachment Button */}
+            {quiz && (
+              <button
+                type="button"
+                onClick={() => onStartQuiz && onStartQuiz(quiz)}
+                className="flex w-full items-center justify-between rounded-lg border border-purple-200 dark:border-purple-900/60 bg-purple-50/80 dark:bg-purple-950/40 p-2 text-xs font-bold text-purple-900 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/60 transition-colors"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <ClipboardCheck className="h-4 w-4 shrink-0 text-purple-600 dark:text-purple-400" />
+                  <span className="truncate">اختبار: {quiz.title}</span>
+                </div>
+                <Award className="h-3.5 w-3.5 shrink-0" />
+              </button>
             )}
           </div>
         )}
@@ -1263,13 +1247,25 @@ function LessonCard({
           onClick={() => onPlayClick(item)}
           className={`w-full font-bold h-10 ${
             item.progress >= 95
-              ? "bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-300"
+              ? "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700"
               : item.progress > 0
               ? "bg-blue-600 text-white hover:bg-blue-700 shadow-xs"
               : "bg-blue-600 text-white hover:bg-blue-700 shadow-xs"
           }`}
         >
-          {item.progress >= 95 ? "مشاهدة مرة أخرى 🔄" : item.progress > 0 ? "استكمال الدرس ⏯️" : "ابدأ الدرس 🚀"}
+          {item.progress >= 95 ? (
+            <span className="flex items-center justify-center gap-2">
+              <RefreshCw className="h-4 w-4" /> مشاهدة مرة أخرى
+            </span>
+          ) : item.progress > 0 ? (
+            <span className="flex items-center justify-center gap-2">
+              <Play className="h-4 w-4 fill-current" /> استكمال الدرس
+            </span>
+          ) : (
+            <span className="flex items-center justify-center gap-2">
+              <Play className="h-4 w-4 fill-current" /> ابدأ الدرس
+            </span>
+          )}
         </Button>
       </div>
     </article>
@@ -1283,12 +1279,12 @@ function EmptyStateMessage({ searchQuery, statusFilter }: { searchQuery: string;
   else if (statusFilter !== "all") title = "مفيش دروس بالحالة دي داخل الكورس.";
 
   return (
-    <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
-      <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-xl bg-slate-100 text-slate-400">
-        📚
+    <div className="rounded-2xl border border-dashed border-[#223552] dark:border-[#223552] light:border-slate-300 bg-[#0D1B2E] dark:bg-[#0D1B2E] light:bg-white p-8 text-center shadow-sm">
+      <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-blue-500/10 text-blue-500">
+        <BookOpen className="h-6 w-6" />
       </div>
-      <h3 className="text-sm font-black text-slate-800">{title}</h3>
-      <p className="mt-1 text-xs text-slate-500">جرب تغير فلاتر البحث أو اختار كورس تاني من فوق.</p>
+      <h3 className="text-sm font-extrabold text-white dark:text-white light:text-slate-800">{title}</h3>
+      <p className="mt-1 text-xs text-slate-400 dark:text-slate-400 light:text-slate-500">جرب تغير فلاتر البحث أو اختار كورس تاني من فوق.</p>
     </div>
   );
 }

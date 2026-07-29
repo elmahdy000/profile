@@ -393,7 +393,7 @@ export function AccessScreen({
                 }}
                 className="mt-4 h-[48px] w-full rounded-[12px] bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold text-sm shadow-md transition-all duration-200"
               >
-                الدخول للمنصة بالكود الآن 🚀
+                الدخول للمنصة بالكود الآن
               </Button>
               <a
                 href="https://wa.me/201044348610"
@@ -897,7 +897,7 @@ export function AccessScreen({
                       }`}
                     >
                       {loading ? <Loader2 className="animate-spin h-4 w-4 ml-1.5" /> : <UserPlus className="h-4.5 w-4.5 ml-1.5" />}{" "}
-                      إنشاء الحساب 🚀
+                      إنشاء الحساب
                     </Button>
                   </div>
                 </div>

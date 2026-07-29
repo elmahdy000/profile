@@ -88,7 +88,7 @@ export function PaymentBanner({ paymentStatus, onUploaded }: { paymentStatus: st
                 ✨ أول فيديوهين مفتوحين مجاناً
               </span>
               <h3 className="mt-1 text-lg font-black text-foreground">
-                تأكيد الحجز وفتح باقي المحتوى 🚀
+                تأكيد الحجز وفتح باقي المحتوى
               </h3>
             </div>
           </div>
