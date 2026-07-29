@@ -383,7 +383,7 @@ export default function AdminDashboard() {
         if (Array.isArray(filesRes)) setLearningFiles(filesRes);
         if (Array.isArray(quizzesRes)) setLearningQuizzes(quizzesRes);
       } catch (err) {
-        console.error("Error loading resources for linking", err);
+        // silently fail — resources will load on next tab switch
       }
     };
     fetchLinkedResources();
@@ -534,7 +534,7 @@ export default function AdminDashboard() {
       });
     }
     setSelectedVideoFile(null);
-    setIsVideoModalOpen(false);
+    setIsVideoModalOpen(true);
     setActiveTab("upload-video");
   };
 
@@ -757,8 +757,6 @@ export default function AdminDashboard() {
       .filter(Boolean);
 
     const payload = {
-      courseId: curriculumForm.courseId ? Number(curriculumForm.courseId) : null,
-      stage: curriculumForm.stage || null,
       title: courseForm.title,
       age: courseForm.age,
       duration: courseForm.duration,
@@ -931,7 +929,6 @@ export default function AdminDashboard() {
         });
       }
     } catch (err) {
-      console.error(err);
       toast({
         title: "خطأ",
         description: `حدث خطأ أثناء تحميل الصورة ${file.name}`,
@@ -1101,7 +1098,6 @@ export default function AdminDashboard() {
       }
       return null;
     } catch (err) {
-      console.error(err);
       toast({
         title: "تعذر رفع الفيديو",
         description: err instanceof Error ? err.message : `حدث خطأ أثناء تحميل الفيديو ${file.name}`,
@@ -3504,20 +3500,6 @@ export default function AdminDashboard() {
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground mb-1">الكورس المرتبط</label>
-                  <select required value={curriculumForm.courseId} onChange={(event) => setCurriculumForm({ ...curriculumForm, courseId: event.target.value, stage: "" })} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground text-sm">
-                    <option value="">اختر الكورس</option>
-                    {coursesQuery.data?.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground mb-1">المرحلة</label>
-                  <select required value={curriculumForm.stage} onChange={(event) => setCurriculumForm({ ...curriculumForm, stage: event.target.value })} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground text-sm">
-                    <option value="">اختر المرحلة</option>
-                    {(coursesQuery.data?.find((course) => String(course.id) === curriculumForm.courseId)?.stages || []).map((stage) => <option key={stage} value={stage}>{stage}</option>)}
-                  </select>
-                </div>
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground mb-1">
                     مدة الحلقة (دقيقة:ثانية)

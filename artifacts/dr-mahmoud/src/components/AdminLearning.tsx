@@ -32,6 +32,9 @@ import { useToast } from "@/hooks/use-toast";
 import { ExamWizard } from "./ExamWizard";
 import { ACADEMIC_TRACKS, getStagesForTrack, getTrack } from "@/data/academic";
 import type { Student as PlatformStudent } from "@/types/platform";
+import { StudentsTab } from "./admin/learning/StudentsTab";
+import { PaymentsTab } from "./admin/learning/PaymentsTab";
+import { NotificationsTab } from "./admin/learning/NotificationsTab";
 
 type Student = PlatformStudent & {
   accessCode?: string | null;
@@ -491,7 +494,7 @@ export function AdminLearning() {
         method: "PATCH",
         body: JSON.stringify({ status }),
       });
-      setStudents(students.map((s) => (s.id === id ? updated : s)));
+      setStudents(prev => prev.map((s) => (s.id === id ? updated : s)));
       toast({
         title:
           status === "approved"
@@ -517,7 +520,7 @@ export function AdminLearning() {
           body: JSON.stringify({ enrolledCourseIds, enrolledCategories }),
         },
       );
-      setStudents(students.map((s) => (s.id === student.id ? updated : s)));
+      setStudents(prev => prev.map((s) => (s.id === student.id ? updated : s)));
       toast({ title: "تم تحديث كورسات الطالب" });
     } catch (e) {
       toast({ variant: "destructive", description: (e as Error).message });
@@ -532,7 +535,7 @@ export function AdminLearning() {
         `/api/admin/students/${student.id}`,
         { method: "PATCH", body: JSON.stringify({ learningMode }) },
       );
-      setStudents(students.map((s) => (s.id === student.id ? updated : s)));
+      setStudents(prev => prev.map((s) => (s.id === student.id ? updated : s)));
       toast({
         title: `تم تحويل الطالب لنظام ${learningMode === "online" ? "أونلاين" : "أوفلاين"}`,
       });
@@ -549,7 +552,7 @@ export function AdminLearning() {
         `/api/admin/students/${student.id}`,
         { method: "PATCH", body: JSON.stringify({ paymentStatus }) },
       );
-      setStudents(students.map((s) => (s.id === student.id ? updated : s)));
+      setStudents(prev => prev.map((s) => (s.id === student.id ? updated : s)));
       toast({
         title: paymentStatus === "paid" ? "تم تفعيل الاشتراك المدفوع للطالب 💳" : paymentStatus === "pending_review" ? "حالة الإيصال قيد المراجعة ⏳" : "تم إلغاء تفعيل الاشتراك (مجاني)",
       });
@@ -559,8 +562,12 @@ export function AdminLearning() {
   };
   const deleteStudent = async (id: number) => {
     if (!confirm("حذف الطالب وكل محاولاته؟")) return;
-    await adminApi(`/api/admin/students/${id}`, { method: "DELETE" });
-    setStudents(students.filter((s) => s.id !== id));
+    try {
+      await adminApi(`/api/admin/students/${id}`, { method: "DELETE" });
+      setStudents(prev => prev.filter((s) => s.id !== id));
+    } catch {
+      toast({ title: "خطأ في حذف الطالب", variant: "destructive" });
+    }
   };
   const selectLearningFile = async (file: File | null) => {
     setIsFileDragging(false);
@@ -712,8 +719,12 @@ export function AdminLearning() {
   };
   const deleteFile = async (id: number) => {
     if (!confirm("متأكد إنك عايز تحذف الملف نهائيًا؟")) return;
-    await adminApi(`/api/admin/learning/files/${id}`, { method: "DELETE" });
-    setFiles(files.filter((f) => f.id !== id));
+    try {
+      await adminApi(`/api/admin/learning/files/${id}`, { method: "DELETE" });
+      setFiles(prev => prev.filter((f) => f.id !== id));
+    } catch {
+      toast({ title: "خطأ في حذف الملف", variant: "destructive" });
+    }
   };
   const toggleFile = async (file: FileItem) => {
     const updated = await adminApi<FileItem>(
@@ -723,7 +734,7 @@ export function AdminLearning() {
         body: JSON.stringify({ isPublished: !file.isPublished }),
       },
     );
-    setFiles(files.map((f) => (f.id === file.id ? updated : f)));
+    setFiles(prev => prev.map((f) => (f.id === file.id ? updated : f)));
   };
   const editFile = async (file: FileItem) => {
     const linkedCourse = learningCourses.find((course) => course.id === file.courseId);
@@ -765,7 +776,7 @@ export function AdminLearning() {
         videoIds: editingFile.videoIds || [],
       }) },
     );
-    setFiles(files.map((item) => (item.id === editingFile.id ? { ...updated, videoIds: editingFile.videoIds } : item)));
+    setFiles(prev => prev.map((item) => (item.id === editingFile.id ? { ...updated, videoIds: editingFile.videoIds } : item)));
     setEditingFile(null);
     toast({ title: "تم تحديث مكان ظهور الملف" });
   };
@@ -796,7 +807,7 @@ export function AdminLearning() {
         method: editingQuizId ? "PATCH" : "POST",
         body: JSON.stringify(payload),
       });
-      setQuizzes(editingQuizId ? quizzes.map((quiz) => quiz.id === editingQuizId ? created : quiz) : [created, ...quizzes]);
+      setQuizzes(prev => editingQuizId ? prev.map((quiz) => quiz.id === editingQuizId ? created : quiz) : [created, ...prev]);
       resetQuizForm();
       toast({ title: wasEditing ? "تم تحديث الاختبار بنجاح" : "تم إنشاء الاختبار بنجاح" });
     } catch (e) {
@@ -831,35 +842,46 @@ export function AdminLearning() {
     });
   };
   const deleteQuiz = async (id: number) => {
-    await adminApi(`/api/admin/learning/quizzes/${id}`, { method: "DELETE" });
-    setQuizzes(quizzes.filter((q) => q.id !== id));
+    if (!confirm("متأكد إنك عايز تحذف الاختبار نهائيًا؟")) return;
+    try {
+      await adminApi(`/api/admin/learning/quizzes/${id}`, { method: "DELETE" });
+      setQuizzes(prev => prev.filter((q) => q.id !== id));
+    } catch {
+      toast({ title: "خطأ في حذف الاختبار", variant: "destructive" });
+    }
   };
   const toggleQuiz = async (quiz: Quiz) => {
-    const updated = await adminApi<Quiz>(
-      `/api/admin/learning/quizzes/${quiz.id}`,
-      {
-        method: "PATCH",
-        body: JSON.stringify({ isPublished: !quiz.isPublished }),
-      },
-    );
-    setQuizzes(quizzes.map((q) => (q.id === quiz.id ? updated : q)));
+    try {
+      const updated = await adminApi<Quiz>(
+        `/api/admin/learning/quizzes/${quiz.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ isPublished: !quiz.isPublished }),
+        },
+      );
+      setQuizzes(prev => prev.map((q) => (q.id === quiz.id ? updated : q)));
+    } catch {
+      toast({ title: "خطأ في تحديث الاختبار", variant: "destructive" });
+    }
   };
   const setQuestion = (index: number, patch: Partial<Question>) =>
-    setQuizForm({
-      ...quizForm,
-      questions: quizForm.questions.map((q, i) =>
+    setQuizForm(prev => ({
+      ...prev,
+      questions: prev.questions.map((q, i) =>
         i === index ? { ...q, ...patch } : q,
       ),
-    });
+    }));
   const duplicateQuestion = (index: number) => {
-    const question = quizForm.questions[index];
-    setQuizForm({
-      ...quizForm,
-      questions: [
-        ...quizForm.questions.slice(0, index + 1),
-        { ...question, options: [...question.options] },
-        ...quizForm.questions.slice(index + 1),
-      ],
+    setQuizForm(prev => {
+      const question = prev.questions[index];
+      return {
+        ...prev,
+        questions: [
+          ...prev.questions.slice(0, index + 1),
+          { ...question, options: [...question.options] },
+          ...prev.questions.slice(index + 1),
+        ],
+      };
     });
     setCollapsedQuestions(new Set());
   };
@@ -1143,354 +1165,79 @@ export function AdminLearning() {
       ) : (
         <>
           {tab === "students" && (
-            <div className="space-y-4">
-              {/* Pending Code Recovery Requests Alert Banner */}
-              {recoveryRequests.filter((r) => r.status === "pending").length > 0 && (
-                <div className="rounded-2xl border border-amber-300 bg-amber-50/90 p-4 shadow-xs">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-500 text-white font-black text-sm">
-                        {recoveryRequests.filter((r) => r.status === "pending").length}
-                      </span>
-                      <div>
-                        <h4 className="text-sm font-extrabold text-amber-900">طلبات استرجاع كود معلقة</h4>
-                        <p className="text-xs font-medium text-amber-700 mt-0.5">يوجد طلبات نسيان كود تحتاج لإرسال الكود للطلاب عبر الواتساب.</p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setTab("reports")}
-                      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-amber-600 px-4 text-xs font-bold text-white hover:bg-amber-700 transition shadow-xs shrink-0"
-                    >
-                      <MessageCircle className="h-4 w-4" /> عرض ومعالجة الطلبات
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-4">
-                <label className="relative col-span-2 lg:col-span-1"><Search className="absolute right-3 top-3.5 h-4 w-4 text-slate-400" /><input value={studentSearch} onChange={(event) => setStudentSearch(event.target.value)} placeholder="ابحث بالاسم أو الهاتف أو الكود..." className="input-admin pr-9" /></label>
-                <select value={studentStatusFilter} onChange={(event) => setStudentStatusFilter(event.target.value)} className="input-admin"><option value="all">كل الحالات</option><option value="pending">قيد المراجعة</option><option value="approved">معتمد</option><option value="suspended">موقوف</option></select>
-                <select value={studentPaymentFilter} onChange={(event) => setStudentPaymentFilter(event.target.value)} className="input-admin"><option value="all">كل حالات الدفع</option><option value="paid">دفع مكتمل</option><option value="pending_review">دفع قيد المراجعة</option><option value="unpaid">لم يدفع</option></select>
-                <select value={studentStageFilter} onChange={(event) => setStudentStageFilter(event.target.value)} className="input-admin"><option value="all">كل المراحل</option>{studentStages.map((stage) => <option key={stage} value={stage}>{stage}</option>)}</select>
-              </div>
-              <div className="flex items-center justify-between px-1 text-xs text-slate-500"><span>عرض {filteredStudents.length} من {students.length} طالب</span>{(studentSearch || studentStatusFilter !== "all" || studentStageFilter !== "all" || studentPaymentFilter !== "all") && <button type="button" className="font-bold text-primary" onClick={() => { setStudentSearch(""); setStudentStatusFilter("all"); setStudentStageFilter("all"); setStudentPaymentFilter("all"); }}>مسح الفلاتر</button>}</div>
-              {filteredStudents.length === 0 ? (
-                <Empty text={students.length ? "لا توجد نتائج مطابقة للفلاتر" : "لا توجد طلبات تسجيل بعد"} />
-              ) : (
-                filteredStudents.map((s) => (
-                  <article
-                    key={s.id}
-                    className="rounded-2xl border bg-card p-5 sm:p-6 shadow-sm hover:shadow-md transition-all space-y-5"
-                  >
-                    {/* Header Row: Avatar, Name & Info, Action Buttons */}
-                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 pb-4 border-b">
-                      {/* Left Block: Avatar & Student Details */}
-                      <div className="flex items-start gap-3.5">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary font-black text-lg shadow-xs">
-                          {s.name ? s.name.charAt(0) : "ط"}
-                        </div>
-                        <div className="space-y-1.5">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="font-bold text-lg text-foreground">{s.name}</h3>
-                            <Status status={s.status} />
-                            <span
-                              className={`rounded-lg px-2.5 py-0.5 text-xs font-semibold ${s.paymentStatus === "paid" ? "bg-emerald-500/10 text-emerald-700 border border-emerald-200" : s.paymentStatus === "pending_review" ? "bg-amber-500/10 text-amber-700 border border-amber-300" : "bg-slate-100 text-slate-600 border border-slate-200"}`}
-                            >
-                              {s.paymentStatus === "paid" ? "💳 اشتراك مدفوع" : s.paymentStatus === "pending_review" ? "⏳ إيصال قيد المراجعة" : "🆓 مشاهدة مجانية (أول 2)"}
-                            </span>
-                            <span
-                              className={`rounded-lg px-2.5 py-0.5 text-xs font-semibold ${
-                                (s.maxDevices || 1) === 2
-                                  ? "bg-purple-500/10 text-purple-700 border border-purple-200"
-                                  : s.deviceId || (s.boundDevices && s.boundDevices.length > 0)
-                                  ? "bg-amber-500/10 text-amber-700 border border-amber-200"
-                                  : "bg-emerald-500/10 text-emerald-700 border border-emerald-200"
-                              }`}
-                            >
-                              {(s.maxDevices || 1) === 2
-                                ? `📱📱 مسموح جهازين (${s.boundDevices?.length || (s.deviceId ? 1 : 0)}/2)`
-                                : s.deviceId || (s.boundDevices && s.boundDevices.length > 0)
-                                ? "📱 جهاز واحد مقترن"
-                                : "🔓 بدون قفل جهاز"}
-                            </span>
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                            <span className="font-semibold text-foreground dir-ltr">{s.phone}</span>
-                            {s.email && <span>· {s.email}</span>}
-                            {s.governorate && <span>· المحافظة: <strong className="text-foreground">{s.governorate}</strong></span>}
-                            {s.city && <span>· المدينة: <strong className="text-foreground">{s.city}</strong></span>}
-                            {s.grade && (
-                              <span>· المرحلة: <strong className="text-foreground">{s.grade === "أخرى" ? s.otherGradeDetail || "أخرى" : s.grade}</strong></span>
-                            )}
-                          </div>
-
-                          {s.accessCode && (
-                            <div className="pt-1">
-                              <button
-                                type="button"
-                                onClick={() => copyStudentCode(s)}
-                                title="اضغط لنسخ كود الطالب"
-                                className={`inline-flex items-center gap-2 rounded-lg px-3 py-1 font-mono text-xs transition ${copiedStudentId === s.id ? "bg-emerald-100 text-emerald-800 font-bold" : "bg-muted text-foreground hover:bg-muted/80"}`}
-                              >
-                                {copiedStudentId === s.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                                <span className="tracking-widest font-black">{s.accessCode}</span>
-                                <span className="font-sans text-[11px] text-muted-foreground">{copiedStudentId === s.id ? "تم النسخ" : "نسخ الكود"}</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Right Block: Action Buttons Grid */}
-                      <div className="flex flex-wrap items-center gap-2 shrink-0">
-                        {s.status !== "approved" && (
-                          <Button
-                            size="sm"
-                            onClick={() => updateStudent(s.id, "approved")}
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-xs"
-                          >
-                            <UserCheck className="h-4 w-4 me-1.5" /> قبول وإصدار كود
-                          </Button>
-                        )}
-                        {s.status === "approved" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-amber-300 text-amber-800 hover:bg-amber-50"
-                            onClick={() => updateStudent(s.id, "suspended")}
-                          >
-                            <UserX className="h-4 w-4 me-1.5" /> إيقاف الطالب
-                          </Button>
-                        )}
-                        {s.status === "suspended" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-emerald-300 text-emerald-800 hover:bg-emerald-50"
-                            onClick={() => updateStudent(s.id, "approved")}
-                          >
-                            <UserCheck className="h-4 w-4 me-1.5" /> إعادة تفعيل
-                          </Button>
-                        )}
-
-                        {/* Multi-Device Authorization Button */}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className={(s.maxDevices || 1) === 2 ? "border-purple-300 text-purple-800 bg-purple-50/80 hover:bg-purple-100 font-semibold" : "border-slate-300 text-slate-700 hover:bg-slate-50"}
-                          onClick={async () => {
-                            const newMax = (s.maxDevices || 1) === 1 ? 2 : 1;
-                            try {
-                              await adminApi(`/api/admin/students/${s.id}/set-max-devices`, {
-                                method: "POST",
-                                body: JSON.stringify({ maxDevices: newMax }),
-                              });
-                              toast({
-                                title: newMax === 2 ? "تمت الموافقة والسماح بجهاز ثانٍ 📱📱" : "تم إلغاء تفعيل الجهاز الثاني 📱",
-                                description: newMax === 2 ? `يمكن للطالب ${s.name} الآن تسجيل الدخول من جهازين في نفس الوقت.` : `تمت إعادة الحد الأقصى للطالب ${s.name} إلى جهاز واحد فقط.`,
-                              });
-                              setStudents((prev) => prev.map((item) => item.id === s.id ? { ...item, maxDevices: newMax } : item));
-                            } catch (err) {
-                              toast({ variant: "destructive", description: (err as Error).message });
-                            }
-                          }}
-                        >
-                          {(s.maxDevices || 1) === 2 ? "📱📱 مسموح جهازين (إلغاء)" : "📱 السماح بجهاز ثانٍ"}
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={!s.deviceId && (!s.boundDevices || s.boundDevices.length === 0)}
-                          className={s.deviceId || (s.boundDevices && s.boundDevices.length > 0) ? "border-amber-400 text-amber-900 bg-amber-50 hover:bg-amber-100" : "opacity-50"}
-                          onClick={async () => {
-                            if (!s.deviceId && (!s.boundDevices || s.boundDevices.length === 0)) return;
-                            try {
-                              await adminApi(`/api/admin/students/${s.id}/reset-device`, { method: "POST" });
-                              toast({ title: "تم فك وإلغاء قفل الأجهزة", description: `تمت إزالة ربط كافة الأجهزة للطالب ${s.name} بنجاح.` });
-                              setStudents((prev) => prev.map((item) => item.id === s.id ? { ...item, deviceId: null, boundDevices: [] } : item));
-                            } catch (err) {
-                              toast({ variant: "destructive", description: (err as Error).message });
-                            }
-                          }}
-                        >
-                          <RefreshCw className="h-3.5 w-3.5 me-1.5" /> {s.deviceId || (s.boundDevices && s.boundDevices.length > 0) ? "فك قفل الأجهزة" : "بدون أجهزة"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          title="حذف الطالب"
-                          onClick={() => deleteStudent(s.id)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5 me-1" /> حذف
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="flex flex-col gap-2 rounded-xl border bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                          <strong className="text-sm">نظام حضور الطالب</strong>
-                          <p className="text-xs text-muted-foreground">
-                            الطالب هيشوف فيديوهات النظام المحدد بس.
-                          </p>
-                        </div>
-                        <select
-                          value={s.learningMode || "online"}
-                          onChange={(e) =>
-                            updateStudentMode(
-                              s,
-                              e.target.value as "online" | "offline",
-                            )
-                          }
-                          className="input-admin text-xs font-semibold sm:w-44"
-                        >
-                          <option value="online">أونلاين</option>
-                          <option value="offline">أوفلاين</option>
-                        </select>
-                      </div>
-
-                      <div className="flex flex-col gap-2 rounded-xl border bg-muted/30 p-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                          <strong className="text-sm">حالة الاشتراك والدفع 💳</strong>
-                          <p className="text-xs text-muted-foreground">
-                            تحويل الطالب لمشترك مدفوع لفتح جميع الفيديوهات.
-                          </p>
-                        </div>
-                        <select
-                          value={s.paymentStatus || "unpaid"}
-                          onChange={(e) => updateStudentPaymentStatus(s, e.target.value)}
-                          className={`input-admin text-xs font-semibold sm:w-48 ${s.paymentStatus === "paid" ? "border-emerald-500 bg-emerald-50 text-emerald-800" : s.paymentStatus === "pending_review" ? "border-amber-500 bg-amber-50 text-amber-800" : "border-slate-300"}`}
-                        >
-                          <option value="unpaid">🆓 مشاهدة مجانية (أول 2)</option>
-                          <option value="pending_review">⏳ إيصال قيد المراجعة</option>
-                          <option value="paid">💳 اشتراك مدفوع (فتح الكل)</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Receipt Image Display under Student if available */}
-                    {(() => {
-                      const receipt = paymentReceipts.find((r) => r.studentId === s.id);
-                      if (!receipt) return null;
-                      return (
-                        <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-3 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-amber-800 flex items-center gap-1">
-                              🧾 إيصال الدفع المرفوع بواسطة الطالب ({new Date(receipt.createdAt).toLocaleDateString("ar-EG")})
-                            </span>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${receipt.status === "approved" ? "bg-emerald-100 text-emerald-700" : receipt.status === "rejected" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-800"}`}>
-                              {receipt.status === "approved" ? "مقبول" : receipt.status === "rejected" ? "مرفوض" : "قيد المراجعة"}
-                            </span>
-                          </div>
-                          <div className="overflow-hidden rounded-lg border bg-white p-2 text-center">
-                            <img
-                              src={`/api/admin/payment-receipts/${receipt.id}/image`}
-                              alt={`إيصال ${s.name}`}
-                              className="mx-auto max-h-64 object-contain rounded-md shadow-xs"
-                            />
-                          </div>
-                        </div>
-                      );
-                    })()}
-                    <CourseAccess
-                      student={s}
-                      courses={learningCourses}
-                      onChange={(courseIds) =>
-                        updateStudentCourses(s, courseIds)
-                      }
-                    />
-                  </article>
-                ))
-              )}
-            </div>
+            <StudentsTab
+              students={students}
+              recoveryRequests={recoveryRequests}
+              paymentReceipts={paymentReceipts}
+              studentStages={studentStages}
+              learningCourses={learningCourses}
+              onUpdateStatus={async (id, status) => { await updateStudent(id, status); }}
+              onUpdateMode={async (student, mode) => { await updateStudentMode(student, mode); }}
+              onUpdatePaymentStatus={async (student, status) => { await updateStudentPaymentStatus(student, status); }}
+              onDeleteStudent={async (id) => { await deleteStudent(id); }}
+              onSetMaxDevices={async (s) => {
+                const newMax = (s.maxDevices || 1) === 1 ? 2 : 1;
+                try {
+                  await adminApi(`/api/admin/students/${s.id}/set-max-devices`, {
+                    method: "POST",
+                    body: JSON.stringify({ maxDevices: newMax }),
+                  });
+                  toast({
+                    title: newMax === 2 ? "تمت الموافقة والسماح بجهاز ثانٍ 📱📱" : "تم إلغاء تفعيل الجهاز الثاني 📱",
+                    description: newMax === 2 ? `يمكن للطالب ${s.name} الآن تسجيل الدخول من جهازين في نفس الوقت.` : `تمت إعادة الحد الأقصى للطالب ${s.name} إلى جهاز واحد فقط.`,
+                  });
+                  setStudents((prev) => prev.map((item) => item.id === s.id ? { ...item, maxDevices: newMax } : item));
+                } catch (err) {
+                  toast({ variant: "destructive", description: (err as Error).message });
+                }
+              }}
+              onResetDevice={async (s) => {
+                if (!s.deviceId && (!s.boundDevices || s.boundDevices.length === 0)) return;
+                try {
+                  await adminApi(`/api/admin/students/${s.id}/reset-device`, { method: "POST" });
+                  toast({ title: "تم فك وإلغاء قفل الأجهزة", description: `تمت إزالة ربط كافة الأجهزة للطالب ${s.name} بنجاح.` });
+                  setStudents((prev) => prev.map((item) => item.id === s.id ? { ...item, deviceId: null, boundDevices: [] } : item));
+                } catch (err) {
+                  toast({ variant: "destructive", description: (err as Error).message });
+                }
+              }}
+              onCopyStudentCode={(s) => copyStudentCode(s)}
+              copiedStudentId={copiedStudentId}
+              onNavigateToReports={() => setTab("reports")}
+              onApproveReceipt={async (receiptId) => {
+                try {
+                  await adminApi(`/api/admin/payment-receipts/${receiptId}`, {
+                    method: "PATCH",
+                    body: JSON.stringify({ status: "approved" }),
+                  });
+                  toast({ title: "تم تأكيد الدفع وتفعيل الكورس للطالب 💳" });
+                  void load();
+                } catch (err) {
+                  toast({ variant: "destructive", description: (err as Error).message });
+                }
+              }}
+            />
           )}
           {tab === "payments" && (
-            <PaymentReceiptsPanel receipts={paymentReceipts} onRefresh={load} />
+            <PaymentsTab receipts={paymentReceipts} onRefresh={load} />
           )}
           {tab === "notifications" && (
-            <div className="mx-auto max-w-2xl space-y-6">
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
-                <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                    <MessageCircle className="h-5 w-5 text-primary" />
-                  </span>
-                  <div>
-                    <h3 className="text-base font-black text-slate-900">إرسال إشعار للطلاب</h3>
-                    <p className="text-xs text-slate-500">الإشعار بيظهر فورًا في حساب الطالب داخل المنصة</p>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold text-slate-700">عنوان الإشعار *</label>
-                    <input
-                      value={broadcastForm.title}
-                      onChange={(e) => setBroadcastForm((f) => ({ ...f, title: e.target.value }))}
-                      placeholder="مثال: درس جديد اتضاف!"
-                      className="input-admin"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold text-slate-700">نص الرسالة *</label>
-                    <textarea
-                      rows={3}
-                      value={broadcastForm.message}
-                      onChange={(e) => setBroadcastForm((f) => ({ ...f, message: e.target.value }))}
-                      placeholder="اكتب تفاصيل الإشعار هنا..."
-                      className="input-admin resize-none"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="mb-1.5 block text-xs font-bold text-slate-700">نوع الإشعار</label>
-                      <select
-                        value={broadcastForm.type}
-                        onChange={(e) => setBroadcastForm((f) => ({ ...f, type: e.target.value }))}
-                        className="input-admin"
-                      >
-                        <option value="info">📘 معلومات</option>
-                        <option value="success">✅ نجاح / خبر سار</option>
-                        <option value="warning">⚠️ تنبيه</option>
-                        <option value="lesson">🎬 درس جديد</option>
-                        <option value="course">📚 كورس</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="mb-1.5 block text-xs font-bold text-slate-700">المرحلة المستهدفة</label>
-                      <select
-                        value={broadcastForm.targetGrade}
-                        onChange={(e) => setBroadcastForm((f) => ({ ...f, targetGrade: e.target.value }))}
-                        className="input-admin"
-                      >
-                        <option value="all">🌐 كل الطلاب المعتمدين</option>
-                        {Array.from(new Set(students.filter((s) => s.grade).map((s) => s.grade!))).map((grade) => (
-                          <option key={grade} value={grade}>{grade}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={isBroadcasting || !broadcastForm.title.trim() || !broadcastForm.message.trim()}
-                    onClick={() => void sendBroadcast()}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-black text-primary-foreground shadow transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {isBroadcasting ? (
-                      <><Loader2 className="h-4 w-4 animate-spin" /> جاري الإرسال...</>
-                    ) : (
-                      <><MessageCircle className="h-4 w-4" /> إرسال الإشعار</>
-                    )}
-                  </button>
-                </div>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-500 space-y-1">
-                <p className="font-bold text-slate-700">💡 ملاحظات هامة</p>
-                <p>• الإشعار بيتبعت فقط للطلاب اللي حالتهم "معتمد".</p>
-                <p>• الإشعار بيظهر فورًا في أيقونة الجرس في حساب الطالب.</p>
-                <p>• ممكن تختار مرحلة دراسية محددة أو تبعت للكل.</p>
-              </div>
-            </div>
+            <NotificationsTab
+              students={students}
+              onSend={async (form) => {
+                try {
+                  const result = await adminApi<{ count: number }>("/api/admin/broadcast-notification", {
+                    method: "POST",
+                    body: JSON.stringify(form),
+                  });
+                  toast({
+                    title: `تم إرسال الإشعار بنجاح لـ ${result.count} طالب 🎉`,
+                  });
+                } catch (e) {
+                  toast({ variant: "destructive", description: (e as Error).message });
+                }
+              }}
+            />
           )}
           {tab === "files" && (
             <div className="space-y-6">
