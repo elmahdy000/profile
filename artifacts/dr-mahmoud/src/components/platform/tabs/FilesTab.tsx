@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, FolderOpen, Eye, X } from "lucide-react";
+import { FileText, FolderOpen, Eye, X, BookOpen, Layers } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LearningFile } from "@/types/platform";
 import { PageHeader, StatusBadge, EmptyState } from "../StudentDashboardUI";
@@ -26,13 +26,13 @@ export function FilesTab({ files }: { files: LearningFile[] }) {
           <button
             type="button"
             onClick={() => setSelectedCategory("all")}
-            className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
+            className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
               selectedCategory === "all"
                 ? "bg-primary text-white shadow-md"
                 : "bg-card text-muted-foreground hover:bg-muted border border-border"
             }`}
           >
-            🌟 كل الكورسات ({files.length})
+            <Layers className="h-3.5 w-3.5" /> كل الكورسات ({files.length})
           </button>
           {categories.map((courseName) => {
             const count = files.filter((f) => (f.category || "كورس عام") === courseName).length;
@@ -41,13 +41,13 @@ export function FilesTab({ files }: { files: LearningFile[] }) {
                 key={courseName}
                 type="button"
                 onClick={() => setSelectedCategory(courseName)}
-                className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
+                className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
                   selectedCategory === courseName
                     ? "bg-primary text-white shadow-md"
                     : "bg-card text-muted-foreground hover:bg-muted border border-border"
                 }`}
               >
-                📖 {courseName} ({count})
+                <BookOpen className="h-3.5 w-3.5" /> {courseName} ({count})
               </button>
             );
           })}
@@ -80,8 +80,8 @@ export function FilesTab({ files }: { files: LearningFile[] }) {
                 </div>
 
                 <div className="flex items-center gap-1.5">
-                  <span className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
-                    📚 {courseTitle}
+                  <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
+                    <BookOpen className="h-3.5 w-3.5" /> {courseTitle}
                   </span>
                 </div>
 
