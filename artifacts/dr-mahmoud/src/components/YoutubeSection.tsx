@@ -1186,15 +1186,18 @@ function LessonCard({
           {item.title}
         </h3>
 
-        {/* Video Progress Bar */}
-        <div className="space-y-1 pt-1">
-          <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400">
-            <span>نسبة المشاهدة:</span>
-            <span className={item.progress >= 95 ? "text-emerald-600 dark:text-emerald-400" : item.progress > 0 ? "text-blue-600 dark:text-blue-400" : ""}>
-              {item.progress}%
+        {/* Video Progress Bar & Watched Duration */}
+        <div className="space-y-1.5 pt-1">
+          <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 dark:text-slate-300">
+            <span className="flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+              <span>نسبة الإنجاز:</span>
+            </span>
+            <span className={`font-black ${item.progress >= 95 ? "text-emerald-600 dark:text-emerald-400" : item.progress > 0 ? "text-blue-600 dark:text-blue-400" : "text-slate-500"}`}>
+              {item.progress}% {item.progress >= 95 ? "(مكتمل)" : ""}
             </span>
           </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-[#12233B] border border-slate-200/60 dark:border-slate-800">
             <div
               className={`h-full rounded-full transition-all duration-300 ${
                 item.progress >= 95
@@ -1203,7 +1206,7 @@ function LessonCard({
                   ? "bg-blue-600 dark:bg-blue-500"
                   : "bg-transparent"
               }`}
-              style={{ width: `${item.progress}%` }}
+              style={{ width: `${Math.max(item.progress > 0 ? 3 : 0, item.progress)}%` }}
             />
           </div>
         </div>
