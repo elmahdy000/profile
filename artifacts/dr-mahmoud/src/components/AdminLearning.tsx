@@ -200,7 +200,7 @@ async function optimizeLearningImage(file: File): Promise<File> {
   });
 }
 
-export function AdminLearning() {
+export function AdminLearning({ role = "superadmin" }: { role?: "superadmin" | "subadmin" }) {
   const { toast } = useToast();
   const [tab, setTab] = useState<"students" | "payments" | "notifications" | "files" | "quizzes" | "results" | "reports">(
     "students",
@@ -1166,6 +1166,7 @@ export function AdminLearning() {
         <>
           {tab === "students" && (
             <StudentsTab
+              role={role}
               students={students}
               recoveryRequests={recoveryRequests}
               paymentReceipts={paymentReceipts}

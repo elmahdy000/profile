@@ -24,7 +24,7 @@ import {
   studentNotesTable,
   type QuizQuestion,
 } from "@workspace/db";
-import { isAdminRequest, requireAdmin } from "../middleware/auth";
+import { isAdminRequest, requireAdmin, requireSuperAdmin } from "../middleware/auth";
 import {
   canStudentAccessCategory,
   canStudentAccessContent,
@@ -1354,7 +1354,7 @@ router.post("/admin/notifications/broadcast", requireAdmin, async (req, res, nex
   }
 });
 
-router.delete("/admin/students/:id", requireAdmin, async (req, res, next) => {
+router.delete("/admin/students/:id", requireSuperAdmin, async (req, res, next) => {
   try {
     const studentId = Number(req.params.id);
     if (!Number.isInteger(studentId) || studentId <= 0) {

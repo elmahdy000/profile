@@ -3,6 +3,7 @@ import {
   ADMIN_COOKIE,
   adminSessionCookieOptions,
   createAdminSessionToken,
+  getAdminRole,
   isAdminRequest,
   verifyAdminPassword,
 } from "../middleware/auth";
@@ -13,20 +14,22 @@ const adminLoginLimit = fixedWindowRateLimit({ name: "admin-login", limit: 8, wi
 
 router.post("/admin/login", adminLoginLimit, (req, res) => {
   const password = String(req.body.password ?? "");
-  if (!verifyAdminPassword(password)) {
+  const role = verifyAdminPassword(password);
+  if (!role) {
     res.status(401).json({ error: "كلمة المرور غير صحيحة" });
     return;
   }
-  res.cookie(ADMIN_COOKIE, createAdminSessionToken(), adminSessionCookieOptions());
-  res.json({ success: true });
+  res.cookie(ADMIN_COOKIE, createAdminSessionToken(role), adminSessionCookieOptions());
+  res.json({ success: true, role });
 });
 
 router.get("/admin/me", (req, res) => {
-  if (!isAdminRequest(req)) {
+  const role = getAdminRole(req);
+  if (!role) {
     res.status(401).json({ authenticated: false });
     return;
   }
-  res.json({ authenticated: true });
+  res.json({ authenticated: true, role });
 });
 
 router.post("/admin/logout", (_req, res) => {

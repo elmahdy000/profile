@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 import type { Request, Response, NextFunction } from "express";
 
 const adminPassword = process.env.ADMIN_PASSWORD ?? "";
+const subAdminPassword = process.env.SUBADMIN_PASSWORD ?? "";
 
 if (!adminPassword) {
   throw new Error(
@@ -10,6 +11,7 @@ if (!adminPassword) {
 }
 
 const expectedHeader = `Bearer ${adminPassword}`;
+const expectedSubHeader = subAdminPassword ? `Bearer ${subAdminPassword}` : "";
 export const ADMIN_COOKIE = "admin_session";
 const ADMIN_SESSION_SECONDS = 60 * 60 * 12;
 
@@ -23,24 +25,50 @@ function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(bufA, bufB);
 }
 
-export function verifyAdminPassword(password: string): boolean {
-  return safeEqual(password, adminPassword);
+export function verifyAdminPassword(password: string): "superadmin" | "subadmin" | null {
+  if (safeEqual(password, adminPassword)) return "superadmin";
+  if (subAdminPassword && safeEqual(password, subAdminPassword)) return "subadmin";
+  return null;
 }
 
-export function createAdminSessionToken(): string {
+export function createAdminSessionToken(role: "superadmin" | "subadmin" = "superadmin"): string {
   const expiresAt = Math.floor(Date.now() / 1000) + ADMIN_SESSION_SECONDS;
-  const signature = createHmac("sha256", adminPassword).update(String(expiresAt)).digest("base64url");
-  return `${expiresAt}.${signature}`;
+  const secret = role === "subadmin" ? (subAdminPassword || adminPassword) : adminPassword;
+  const signature = createHmac("sha256", secret).update(`${role}.${expiresAt}`).digest("base64url");
+  return `${role}.${expiresAt}.${signature}`;
 }
 
-function hasValidAdminCookie(req: Request): boolean {
+export function getAdminRole(req: Request): "superadmin" | "subadmin" | null {
+  const authHeader = req.headers.authorization;
+  if (authHeader && safeEqual(authHeader, expectedHeader)) return "superadmin";
+  if (expectedSubHeader && authHeader && safeEqual(authHeader, expectedSubHeader)) return "subadmin";
+
   const token = req.cookies?.[ADMIN_COOKIE];
-  if (typeof token !== "string") return false;
-  const [expiresRaw, suppliedSignature] = token.split(".");
-  const expiresAt = Number(expiresRaw);
-  if (!Number.isSafeInteger(expiresAt) || expiresAt <= Math.floor(Date.now() / 1000) || !suppliedSignature) return false;
-  const expectedSignature = createHmac("sha256", adminPassword).update(expiresRaw).digest("base64url");
-  return safeEqual(suppliedSignature, expectedSignature);
+  if (typeof token !== "string") return null;
+
+  const parts = token.split(".");
+  if (parts.length === 2) {
+    // Legacy superadmin token format: [expiresAt, signature]
+    const [expiresRaw, suppliedSignature] = parts;
+    const expiresAt = Number(expiresRaw);
+    if (!Number.isSafeInteger(expiresAt) || expiresAt <= Math.floor(Date.now() / 1000) || !suppliedSignature) return null;
+    const expectedSignature = createHmac("sha256", adminPassword).update(expiresRaw).digest("base64url");
+    return safeEqual(suppliedSignature, expectedSignature) ? "superadmin" : null;
+  }
+
+  if (parts.length === 3) {
+    // New role-aware token format: [role, expiresAt, signature]
+    const [role, expiresRaw, suppliedSignature] = parts;
+    const expiresAt = Number(expiresRaw);
+    if ((role !== "superadmin" && role !== "subadmin") || !Number.isSafeInteger(expiresAt) || expiresAt <= Math.floor(Date.now() / 1000) || !suppliedSignature) {
+      return null;
+    }
+    const secret = role === "subadmin" ? (subAdminPassword || adminPassword) : adminPassword;
+    const expectedSignature = createHmac("sha256", secret).update(`${role}.${expiresRaw}`).digest("base64url");
+    return safeEqual(suppliedSignature, expectedSignature) ? role : null;
+  }
+
+  return null;
 }
 
 export function adminSessionCookieOptions() {
@@ -54,13 +82,22 @@ export function adminSessionCookieOptions() {
 }
 
 export function isAdminRequest(req: Request): boolean {
-  const authHeader = req.headers.authorization;
-  return hasValidAdminCookie(req) || !!(authHeader && safeEqual(authHeader, expectedHeader));
+  return getAdminRole(req) !== null;
 }
 
 export function requireAdmin(req: Request, res: Response, next: NextFunction) {
   if (!isAdminRequest(req)) {
     res.status(401).json({ error: "Unauthorized: Invalid admin password" });
+    return;
+  }
+
+  next();
+}
+
+export function requireSuperAdmin(req: Request, res: Response, next: NextFunction) {
+  const role = getAdminRole(req);
+  if (role !== "superadmin") {
+    res.status(403).json({ error: "Forbidden: Superadmin privilege required" });
     return;
   }
 

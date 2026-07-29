@@ -153,6 +153,7 @@ export default function AdminDashboard() {
   const [isThumbnailUploading, setIsThumbnailUploading] = useState(false);
   const [selectedVideoPreviewUrl, setSelectedVideoPreviewUrl] = useState("");
   const [isInitializing, setIsInitializing] = useState(true);
+  const [adminRole, setAdminRole] = useState<"superadmin" | "subadmin">("superadmin");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -172,7 +173,15 @@ export default function AdminDashboard() {
   useEffect(() => {
     localStorage.removeItem("dr_mahmoud_admin_pwd");
     fetch("/api/admin/me", { credentials: "include" })
-      .then((response) => setIsAuthenticated(response.ok))
+      .then(async (response) => {
+        if (!response.ok) {
+          setIsAuthenticated(false);
+          return;
+        }
+        const data = await response.json();
+        setIsAuthenticated(true);
+        if (data.role) setAdminRole(data.role);
+      })
       .catch(() => setIsAuthenticated(false))
       .finally(() => setIsInitializing(false));
   }, []);
@@ -240,6 +249,8 @@ export default function AdminDashboard() {
         body: JSON.stringify({ password: passwordInput }),
       });
       if (!response.ok) throw new Error("invalid password");
+      const data = await response.json();
+      if (data.role) setAdminRole(data.role);
       setAuthTokenGetter(null);
       setIsAuthenticated(true);
       setPasswordInput("");
@@ -3179,7 +3190,7 @@ export default function AdminDashboard() {
               )}
 
               {activeTab === "settings" && <AdminSettings />}
-              {activeTab === "learning" && <AdminLearning />}
+              {activeTab === "learning" && <AdminLearning role={adminRole} />}
             </div>
           </div>
         </main>

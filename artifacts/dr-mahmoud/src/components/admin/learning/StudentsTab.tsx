@@ -45,6 +45,7 @@ export type RecoveryRequest = {
 };
 
 type Props = {
+  role?: "superadmin" | "subadmin";
   students: Student[];
   recoveryRequests: RecoveryRequest[];
   paymentReceipts: PaymentReceipt[];
@@ -81,6 +82,7 @@ function Empty({ text }: { text: string }) {
 }
 
 export function StudentsTab({
+  role = "superadmin",
   students,
   recoveryRequests,
   paymentReceipts,
@@ -338,14 +340,16 @@ export function StudentsTab({
                 >
                   <RefreshCw className="h-3.5 w-3.5 me-1.5" /> {s.deviceId || (s.boundDevices && s.boundDevices.length > 0) ? "فك قفل الأجهزة" : "بدون أجهزة"}
                 </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  title="حذف الطالب"
-                  onClick={() => onDeleteStudent(s.id)}
-                >
-                  <Trash2 className="h-3.5 w-3.5 me-1" /> حذف
-                </Button>
+                {role === "superadmin" && (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    title="حذف الطالب"
+                    onClick={() => onDeleteStudent(s.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5 me-1" /> حذف
+                  </Button>
+                )}
               </div>
             </div>
 
