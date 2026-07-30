@@ -9,7 +9,10 @@
   border-radius: 0.75rem;
   border: 1px solid hsl(var(--border));
   background: hsl(var(--background));
-  padding: 0.7rem 0.85rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  min-height: 2.5rem;
   outline: none;
 }
 
@@ -21,12 +24,15 @@
   --admin-muted: #66758c;
 }
 .admin-learning-workspace .input-admin {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   line-height: 1.25rem;
-  padding: 0.55rem 0.75rem;
+  padding: 0.45rem 0.75rem;
+  height: 2.5rem;
   border-color: var(--admin-border);
   border-radius: 10px;
   background: #fff;
+  color: #0f172a;
+  font-weight: 600;
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 .admin-learning-workspace .input-admin:focus {

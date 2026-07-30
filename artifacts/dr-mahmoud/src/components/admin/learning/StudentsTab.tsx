@@ -152,9 +152,9 @@ export function StudentsTab({
       )}
 
       {/* Filter Bar */}
-      <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-5">
-        <label className="relative sm:col-span-2 lg:col-span-1">
-          <Search className="absolute right-3 top-3.5 h-4 w-4 text-slate-400" />
+      <div className="grid gap-2.5 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm sm:grid-cols-2 lg:grid-cols-5 items-center">
+        <label className="relative sm:col-span-2 lg:col-span-1 flex items-center">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
           <input
             value={studentSearch}
             onChange={(e) => setStudentSearch(e.target.value)}
@@ -181,9 +181,9 @@ export function StudentsTab({
           ))}
         </select>
         <select value={studentSortBy} onChange={(e) => setStudentSortBy(e.target.value as any)} className="input-admin font-bold text-blue-700 border-blue-200 bg-blue-50/50">
-          <option value="newest">🗓️ ترتيب: الأحدث انضماماً (باليوم والساعة)</option>
-          <option value="oldest">⏳ ترتيب: الأقدم انضماماً</option>
-          <option value="name">🔤 ترتيب: أبجدي حسب الاسم</option>
+          <option value="newest">ترتيب: الأحدث انضماماً</option>
+          <option value="oldest">ترتيب: الأقدم انضماماً</option>
+          <option value="name">ترتيب: أبجدي حسب الاسم</option>
         </select>
       </div>
 
