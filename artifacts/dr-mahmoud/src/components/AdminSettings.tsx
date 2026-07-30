@@ -436,8 +436,8 @@ export function AdminSettings({ role = "superadmin" }: { role?: "superadmin" | "
 
   const subTabs = [
     { id: "general", label: "الإعدادات العامة" },
-    { id: "audit-logs", label: "📋 سجل العمليات (Audit Logs)" },
-    { id: "admin-accounts", label: "🔐 إدارة الحسابات والكلمات" },
+    { id: "audit-logs", label: "سجل العمليات (Audit Logs)" },
+    { id: "admin-accounts", label: "إدارة الحسابات والكلمات" },
     { id: "hero", label: "القسم الرئيسي (Hero)" },
     { id: "about", label: "عن الدكتور (About)" },
     { id: "services", label: "الخدمات (Services)" },
@@ -1842,7 +1842,7 @@ export function AdminSettings({ role = "superadmin" }: { role?: "superadmin" | "
                                 ? "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200"
                                 : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-200"
                             }`}>
-                              {log.actorRole === "superadmin" ? "👑 Super Admin" : "🛡️ Subadmin"}
+                              {log.actorRole === "superadmin" ? "Super Admin" : "Subadmin"}
                             </span>
                           </td>
                           <td className="p-3 font-bold text-foreground whitespace-nowrap dir-ltr text-right">
@@ -1868,19 +1868,19 @@ export function AdminSettings({ role = "superadmin" }: { role?: "superadmin" | "
         {activeTab === "admin-accounts" && (
           <div className="space-y-6">
             <div className="border-b border-border/60 pb-3">
-              <h3 className="text-lg font-bold text-foreground">🔐 التحكم في الحسابات وكلمات المرور والصلاحيات</h3>
+              <h3 className="text-lg font-bold text-foreground">التحكم في الحسابات وكلمات المرور والصلاحيات</h3>
               <p className="text-xs text-muted-foreground mt-0.5">إدارة كاملة لكلمات مرور المدير الرئيسي (Super Admin) والمشرف المساعد (Subadmin).</p>
             </div>
 
             {role !== "superadmin" ? (
               <div className="rounded-2xl border border-amber-300 bg-amber-50/80 p-5 text-xs text-amber-900 font-semibold leading-relaxed">
-                ⚠️ عذرًا، تغيير كلمات المرور وإدارة الحسابات مقتصر فقط على المدير الرئيسي (Super Admin).
+                عذرًا، تغيير كلمات المرور وإدارة الحسابات مقتصر فقط على المدير الرئيسي (Super Admin).
               </div>
             ) : (
               <form onSubmit={handlePasswordChange} className="space-y-5 max-w-xl bg-card border border-border p-6 rounded-2xl shadow-2xs">
                 <div className="space-y-4">
                   <div className="rounded-xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 p-4 space-y-2">
-                    <strong className="block text-sm font-bold text-blue-900 dark:text-blue-300">👑 كلمة مرور المدير الرئيسي (Super Admin)</strong>
+                    <strong className="block text-sm font-bold text-blue-900 dark:text-blue-300">كلمة مرور المدير الرئيسي (Super Admin)</strong>
                     <p className="text-xs text-blue-700 dark:text-blue-400">تتيح الوصول لجميع الصلاحيات والإعدادات وحذف الطلاب.</p>
                     <input
                       type="password"
@@ -1892,7 +1892,7 @@ export function AdminSettings({ role = "superadmin" }: { role?: "superadmin" | "
                   </div>
 
                   <div className="rounded-xl bg-amber-50/60 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 p-4 space-y-2">
-                    <strong className="block text-sm font-bold text-amber-900 dark:text-amber-300">🛡️ كلمة مرور المشرف المساعد (Subadmin)</strong>
+                    <strong className="block text-sm font-bold text-amber-900 dark:text-amber-300">كلمة مرور المشرف المساعد (Subadmin)</strong>
                     <p className="text-xs text-amber-700 dark:text-amber-400">تتيح إدارة الطلاب كاملة والرد والحجوزات والإشعارات وقبول الإيصالات (بدون حذف).</p>
                     <input
                       type="password"
@@ -1909,7 +1909,7 @@ export function AdminSettings({ role = "superadmin" }: { role?: "superadmin" | "
                   disabled={isUpdatingPasswords || (!superAdminPass && !subAdminPass)}
                   className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-xs shadow-sm hover:bg-primary/90 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  {isUpdatingPasswords ? <Loader2 className="h-4 w-4 animate-spin" /> : "💾 حفظ وتحديث كلمات المرور فوراً"}
+                  {isUpdatingPasswords ? <Loader2 className="h-4 w-4 animate-spin" /> : "حفظ وتحديث كلمات المرور فوراً"}
                 </button>
               </form>
             )}

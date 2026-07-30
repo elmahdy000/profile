@@ -385,9 +385,9 @@ export function StudentsTab({
                       : "border-slate-300"
                   }`}
                 >
-                  <option value="unpaid">🆓 مشاهدة مجانية (أول 2)</option>
-                  <option value="pending_review">⏳ إيصال قيد المراجعة</option>
-                  <option value="paid">💳 اشتراك مدفوع (فتح الكل)</option>
+                  <option value="unpaid">مشاهدة مجانية (أول 2)</option>
+                  <option value="pending_review">إيصال قيد المراجعة</option>
+                  <option value="paid">اشتراك مدفوع (فتح الكل)</option>
                 </select>
               </div>
             </div>
@@ -400,7 +400,7 @@ export function StudentsTab({
                 <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-3 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-amber-800 flex items-center gap-1">
-                      🧾 إيصال الدفع المرفوع بواسطة الطالب ({new Date(receipt.createdAt).toLocaleDateString("ar-EG")})
+                      إيصال الدفع المرفوع بواسطة الطالب ({new Date(receipt.createdAt).toLocaleDateString("ar-EG")})
                     </span>
                     <div className="flex items-center gap-2">
                       <a
@@ -417,7 +417,7 @@ export function StudentsTab({
                           onClick={() => onApproveReceipt(receipt.id)}
                           className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-7 text-xs"
                         >
-                          تأكيد وتفعيل الاشتراك 💳
+                          تأكيد وتفعيل الاشتراك
                         </Button>
                       )}
                     </div>

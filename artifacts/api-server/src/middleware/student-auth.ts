@@ -35,10 +35,60 @@ export function canStudentAccessCategory(
   category: string,
 ): boolean {
   const normalized = normalizeCategory(category);
-  return getStudentAllowedCategories(student).some(
-    (value) => normalizeCategory(value) === normalized,
+  const allowed = getStudentAllowedCategories(student);
+  if (allowed.some((value) => normalizeCategory(value) === normalized)) {
+    return true;
+  }
+  const studentStage = normalizeCategory(
+    student.grade === "أخرى" ? student.otherGradeDetail : student.grade
   );
+
+  // Baccalaureate / Secondary track title aliases
+  if (
+    normalized.includes("بكالوريا") ||
+    normalized.includes("ثانوي") ||
+    normalized.includes("baccalaureate")
+  ) {
+    if (
+      studentStage.includes("بكالوريا") ||
+      studentStage.includes("ثانوي") ||
+      studentStage.includes("baccalaureate")
+    ) {
+      return true;
+    }
+  }
+
+  // Computer Science / University track title aliases
+  if (
+    normalized.includes("حاسبات") ||
+    normalized.includes("computer") ||
+    normalized.includes("cs")
+  ) {
+    if (
+      studentStage.includes("حاسبات") ||
+      studentStage.includes("computer") ||
+      studentStage.includes("cs")
+    ) {
+      return true;
+    }
+  }
+
+  // Engineering track title aliases
+  if (
+    normalized.includes("هندسة") ||
+    normalized.includes("engineering")
+  ) {
+    if (
+      studentStage.includes("هندسة") ||
+      studentStage.includes("engineering")
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 }
+
 
 function isGradeMatch(
   studentStage: string | null | undefined,
@@ -168,9 +218,9 @@ export function canStudentAccessContent(
   // the entitlement for stage-targeted content until an admin assigns courses.
   if (hasExplicitCourseAssignments && !courseMatches) return false;
   if (isGeneralContent || hasCategoryGeneralStage) {
-    return hasExplicitCourseAssignments ? courseMatches : categoryMatches;
+    return hasExplicitCourseAssignments ? courseMatches : (categoryMatches || stageMatches);
   }
-  return stageMatches;
+  return stageMatches || categoryMatches;
 }
 
 export function canStudentAccessLearningMode(
