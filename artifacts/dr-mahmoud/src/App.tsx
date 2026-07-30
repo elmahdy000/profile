@@ -10,6 +10,7 @@ const ScrollProgress = lazy(() => import("@/components/ScrollProgress").then(m =
 const AcademyHome = lazy(() => import("@/components/AcademyHome").then(m => ({ default: m.AcademyHome })));
 
 const AdminDashboard = lazy(() => import("@/components/AdminDashboard"));
+const SubAdminDashboard = lazy(() => import("@/components/SubAdminDashboard").then(m => ({ default: m.SubAdminDashboard })));
 const BaccalaureatePage = lazy(() => import("@/pages/BaccalaureatePage"));
 const KidsPage = lazy(() => import("@/pages/KidsPage"));
 const UniversityPage = lazy(() => import("@/pages/UniversityPage"));
@@ -59,6 +60,7 @@ function App() {
             <Suspense fallback={<PageLoader />}>
               <Switch>
                 <Route path="/admin" component={AdminDashboard} />
+                <Route path="/subadmin" component={SubAdminDashboard} />
                 <Route path="/baccalaureate" component={BaccalaureatePage} />
                 <Route path="/kids" component={KidsPage} />
                 <Route path="/university" component={UniversityPage} />
