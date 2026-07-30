@@ -153,15 +153,16 @@ export function StudentsTab({
 
       {/* Filter Bar */}
       <div className="grid gap-2.5 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm sm:grid-cols-2 lg:grid-cols-5 items-center">
-        <label className="relative sm:col-span-2 lg:col-span-1 flex items-center">
+        <div className="relative sm:col-span-2 lg:col-span-1 flex items-center">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none z-10" />
           <input
             value={studentSearch}
             onChange={(e) => setStudentSearch(e.target.value)}
             placeholder="ابحث بالاسم أو الهاتف أو الكود..."
-            className="input-admin !pr-10"
+            className="input-admin"
+            style={{ paddingRight: "2.5rem" }}
           />
-        </label>
+        </div>
         <select value={studentStatusFilter} onChange={(e) => setStudentStatusFilter(e.target.value)} className="input-admin">
           <option value="all">كل الحالات</option>
           <option value="pending">قيد المراجعة</option>
