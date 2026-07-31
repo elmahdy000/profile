@@ -192,7 +192,7 @@ export default function UniversityPage() {
             asChild
             className="bg-[#0866D9] hover:bg-[#0755b7] text-white font-bold rounded-xl px-5 h-9 text-xs shadow-md shadow-blue-600/20"
           >
-            <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
+            <a href="https://wa.me/201066711545" target="_blank" rel="noreferrer">
               <MessageCircle className="w-4 h-4 me-2" />
               تواصل عبر الواتساب
             </a>
@@ -445,7 +445,7 @@ export default function UniversityPage() {
                 size="lg"
                 className="bg-[#0866D9] hover:bg-[#0755b7] text-white font-black rounded-2xl px-10 py-6 text-sm shadow-xl shadow-blue-600/30 hover:scale-[1.02] transition-all"
               >
-                <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
+                <a href="https://wa.me/201066711545" target="_blank" rel="noreferrer">
                   <MessageCircle className="w-5 h-5 me-2" />
                   احجز مراجعة أو حصة تجريبية على واتساب
                 </a>

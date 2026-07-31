@@ -455,7 +455,7 @@ export function Podcast() {
                 asChild
                 className="bg-transparent border border-primary/30 hover:border-primary/60 text-foreground/75 hover:text-foreground transition-all font-medium"
               >
-                <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
+                <a href="https://wa.me/201066711545" target="_blank" rel="noreferrer">
                   <ExternalLink className="w-4 h-4 me-2" />
                   اقترح موضوع
                 </a>

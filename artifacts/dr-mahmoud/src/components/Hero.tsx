@@ -15,7 +15,7 @@ export function Hero() {
   const desc = get(SETTINGS_KEYS.HERO_DESC, "تأسيس من الصفر ومقدمة فى البرمجة لطلاب الجامعة، وشرح منهج برمجة ثانوية عامة وبكالوريا برمجة أونلاين لكل مصر وحضوري بالزقازيق.");
   const badge = get(SETTINGS_KEYS.HERO_BADGE, "برمجة | AI | Eduverse الزقازيق");
   const photo = get(SETTINGS_KEYS.HERO_PHOTO_URL, drMahmoudPhotoDefault);
-  const whatsapp = get(SETTINGS_KEYS.CONTACT_WHATSAPP, "201044348610");
+  const whatsapp = get(SETTINGS_KEYS.CONTACT_WHATSAPP, "201066711545");
   const container: Variants = {
     hidden: { opacity: 0 },
     show: {

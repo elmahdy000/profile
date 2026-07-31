@@ -5,9 +5,9 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
   const { get } = useSiteSettings();
 
-  const whatsapp = get(SETTINGS_KEYS.CONTACT_WHATSAPP, "201044348610");
+  const whatsapp = get(SETTINGS_KEYS.CONTACT_WHATSAPP, "01066711545");
   const phone1 = get(SETTINGS_KEYS.CONTACT_PHONE1, "01066711545");
-  const phone2 = get(SETTINGS_KEYS.CONTACT_PHONE2, "01272047933");
+  const phone2 = get(SETTINGS_KEYS.CONTACT_PHONE2, "01025131212");
   const address = get(SETTINGS_KEYS.CONTACT_ADDRESS, "Eduverse، فلل الجامعة، الزقازيق");
   
   const facebook = get(SETTINGS_KEYS.SOCIAL_FACEBOOK, "#");

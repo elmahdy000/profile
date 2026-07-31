@@ -154,7 +154,7 @@ const defaultFaqs = [
   },
   {
     q: "كيف أتواصل مع د. محمود المهدي لحجز كورس برمجة؟",
-    a: "يمكنك التواصل مباشرة على واتساب 01044348610 لحجز أول سيشن مجانًا. الموقع في Eduverse، فلل الجامعة، الزقازيق."
+    a: "يمكنك التواصل مباشرة على واتساب 01066711545 لحجز أول سيشن مجانًا. الموقع في Eduverse، فلل الجامعة، الزقازيق."
   }
 ];
 
@@ -1695,14 +1695,14 @@ export function AdminSettings({ role = "superadmin" }: { role?: "superadmin" | "
             
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">رقم الواتساب الرئيسي (مع كود الدولة، مثال: 201044348610)</label>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">رقم الواتساب الرئيسي (مع كود الدولة، مثال: 201066711545)</label>
                 <input
                   type="text"
                   value={formData[SETTINGS_KEYS.CONTACT_WHATSAPP] || ""}
                   onChange={(e) => handleChange(SETTINGS_KEYS.CONTACT_WHATSAPP, e.target.value)}
                   className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-left font-sans"
                   dir="ltr"
-                  placeholder="201044348610"
+                  placeholder="201066711545"
                 />
               </div>
               <div>

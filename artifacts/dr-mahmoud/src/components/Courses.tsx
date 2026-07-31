@@ -262,7 +262,7 @@ export function Courses() {
                         variant="outline"
                         className="flex-1 border-primary/30 text-primary hover:bg-primary/5 transition-all duration-300 font-bold text-xs py-5"
                       >
-                        <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
+                        <a href="https://wa.me/201066711545" target="_blank" rel="noreferrer">
                           <MessageCircle className="w-3.5 h-3.5 me-1.5 shrink-0" />
                           احجز الآن
                         </a>
@@ -273,7 +273,7 @@ export function Courses() {
                       asChild
                       className="w-full bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 font-bold mt-auto"
                     >
-                      <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
+                      <a href="https://wa.me/201066711545" target="_blank" rel="noreferrer">
                         <MessageCircle className="w-4 h-4 me-2" />
                         استفسر وسجّل
                       </a>

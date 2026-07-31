@@ -51,7 +51,7 @@ export function Services() {
         "التوجيه المهني وبناء السيرة الذاتية البرمجية"
       ],
       ctaText: "تواصل واستفسر الآن",
-      ctaLink: "https://wa.me/201044348610",
+      ctaLink: "https://wa.me/201066711545",
       external: true,
       color: "border-primary/30 hover:border-primary/60",
       iconBg: "bg-primary/10 text-primary",

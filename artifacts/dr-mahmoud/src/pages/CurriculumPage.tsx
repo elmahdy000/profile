@@ -165,7 +165,7 @@ export default function CurriculumPage() {
             <span className="font-bold text-lg text-primary">{siteName}</span>
           </a>
           <Button asChild className="bg-primary text-primary-foreground font-bold rounded-full px-5 h-9 text-sm shadow-md hover:scale-[1.03] transition-all">
-            <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
+            <a href="https://wa.me/201066711545" target="_blank" rel="noreferrer">
               <MessageCircle className="w-4 h-4 me-2" />
               احجز تقييم مجاني
             </a>

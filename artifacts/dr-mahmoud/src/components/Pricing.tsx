@@ -186,7 +186,7 @@ export function Pricing() {
                     : "bg-transparent text-primary border border-primary/30 hover:border-primary/60 hover:bg-primary/6"
                 }`}
               >
-                <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
+                <a href="https://wa.me/201066711545" target="_blank" rel="noreferrer">
                   <MessageCircle className="w-4 h-4 me-2" />
                   احجز تقييم مجاني
                 </a>

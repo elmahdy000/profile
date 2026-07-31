@@ -33,7 +33,7 @@ export function FloatingButtons() {
       </AnimatePresence>
 
       <motion.a
-        href="https://wa.me/201044348610"
+        href="https://wa.me/201066711545"
         target="_blank"
         rel="noreferrer"
         aria-label="تواصل على واتساب"

@@ -13,7 +13,7 @@ const defaultWorkshops = [
     duration: "ساعتان",
     audience: "المبتدئون وطلاب الثانوي والجامعة",
     ctaText: "احجز مقعدك المجاني (واتساب)",
-    ctaLink: "https://wa.me/201044348610?text=أريد%20التسجيل%20في%20ورشة%20الـ%20Python%20المجانية",
+    ctaLink: "https://wa.me/201066711545?text=أريد%20التسجيل%20في%20ورشة%20الـ%20Python%20المجانية",
     img: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=500&q=80"
   },
   {

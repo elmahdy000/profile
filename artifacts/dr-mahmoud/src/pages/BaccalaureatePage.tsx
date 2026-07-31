@@ -227,7 +227,7 @@ export default function BaccalaureatePage() {
   const { mutateAsync: createBooking, isPending } = useCreateBooking();
   const { get } = useSiteSettings();
 
-  const whatsapp = get(SETTINGS_KEYS.CONTACT_WHATSAPP, "201044348610");
+  const whatsapp = get(SETTINGS_KEYS.CONTACT_WHATSAPP, "201066711545");
 
   useEffect(() => {
     document.title = "تأسيس البرمجة والبكالوريا علوم الحاسب | د. محمود المهدي";
@@ -989,7 +989,7 @@ export default function BaccalaureatePage() {
                       required
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="مثال: 01044348610"
+                      placeholder="مثال: 01066711545"
                       className="w-full h-11 px-4 rounded-xl border border-border bg-background focus:outline-none focus:border-primary text-sm transition-all text-right"
                     />
                   </div>

@@ -40,7 +40,7 @@ const faqs = [
 
 export function AcademyHome() {
   const { get, getJson } = useSiteSettings();
-  const whatsapp = get(SETTINGS_KEYS.CONTACT_WHATSAPP, "201044348610");
+  const whatsapp = get(SETTINGS_KEYS.CONTACT_WHATSAPP, "201066711545");
   const testimonials = getJson<Testimonial[]>(SETTINGS_KEYS.TESTIMONIALS_LIST, defaultTestimonials).slice(0, 3);
   const { mutateAsync: createBooking, isPending } = useCreateBooking();
   const [form, setForm] = useState<BookingForm>(initialBooking);
@@ -79,7 +79,7 @@ export function AcademyHome() {
     "description": "ماجستير نظم المعلومات ومتخصص في تدريس وتأسيس برمجة البكالوريا المصرية لطلاب أولى وتانية ثانوي أونلاين وفي الزقازيق.",
     "url": "https://drelmahdy.com/",
     "image": "https://drelmahdy.com/dr-mahmoud-hero-classroom.webp",
-    "sameAs": ["https://wa.me/201044348610", "https://www.youtube.com/@learntocode9453"],
+    "sameAs": ["https://wa.me/201066711545", "https://www.youtube.com/@learntocode9453"],
     "knowsAbout": ["برمجة البكالوريا", "Python", "C++", "علوم الحاسب", "تطوير البرمجيات", "حل المشكلات"]
   };
 

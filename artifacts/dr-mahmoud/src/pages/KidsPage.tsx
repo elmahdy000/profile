@@ -51,7 +51,7 @@ export default function KidsPage() {
             <span className="font-bold text-lg text-primary">د. محمود المهدي</span>
           </a>
           <Button asChild className="bg-primary text-primary-foreground font-bold rounded-full px-5 h-9 text-sm shadow-md hover:scale-[1.03] transition-all">
-            <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
+            <a href="https://wa.me/201066711545" target="_blank" rel="noreferrer">
               <MessageCircle className="w-4 h-4 me-2" />
               احجز تقييم مجاني
             </a>
@@ -96,7 +96,7 @@ export default function KidsPage() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-full px-8 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all">
-                <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
+                <a href="https://wa.me/201066711545" target="_blank" rel="noreferrer">
                   <MessageCircle className="w-5 h-5 me-2" />
                   احجز أول سيشن مجانًا
                 </a>
@@ -183,7 +183,7 @@ export default function KidsPage() {
               <p className="text-foreground/35 text-xs mb-6">يُحدد حسب سن الطفل والمستوى</p>
 
               <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01]">
-                <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
+                <a href="https://wa.me/201066711545" target="_blank" rel="noreferrer">
                   <MessageCircle className="w-4 h-4 me-2" />
                   احجز تقييم مجاني
                 </a>
@@ -222,7 +222,7 @@ export default function KidsPage() {
           <h2 className="text-2xl font-bold text-foreground mb-3">ابنك جاهز يبدأ؟</h2>
           <p className="text-foreground/45 mb-8 text-sm">احجز أول سيشن تقييم مجاني — هنحدد المستوى المناسب لسنه</p>
           <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-full px-10 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all">
-            <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
+            <a href="https://wa.me/201066711545" target="_blank" rel="noreferrer">
               <MessageCircle className="w-5 h-5 me-2" />
               تواصل على واتساب
             </a>

@@ -402,7 +402,7 @@ export function AccessScreen({
                 الدخول للمنصة بالكود الآن
               </Button>
               <a
-                href="https://wa.me/201044348610"
+                href="https://wa.me/201066711545"
                 className="mt-2 inline-flex h-10 w-full items-center justify-center rounded-[12px] border border-[#CBD5E1] font-bold text-xs text-[#0866D9] hover:bg-blue-50 transition-colors"
               >
                 محتاج مساعدة؟ كلمنا واتساب

@@ -154,7 +154,7 @@ export function UnlockModal({
               className="w-full border-secondary/20 hover:border-secondary/50 hover:bg-secondary/10 text-secondary font-bold h-11 rounded-xl transition-all"
             >
               <a
-                href={`https://wa.me/201044348610?text=${encodeURIComponent(
+                href={`https://wa.me/201066711545?text=${encodeURIComponent(
                   `أهلاً دكتور محمود، أود الاشتراك في الكورس وتفعيل المحاضرة: "${item.title}"`
                 )}`}
                 target="_blank"

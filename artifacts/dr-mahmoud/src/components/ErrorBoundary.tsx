@@ -36,7 +36,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 إعادة التحميل
               </Button>
               <Button asChild variant="outline" className="border-white/20 hover:border-primary/40">
-                <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
+                <a href="https://wa.me/201066711545" target="_blank" rel="noreferrer">
                   تواصل معنا
                 </a>
               </Button>

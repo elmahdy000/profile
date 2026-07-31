@@ -215,7 +215,7 @@ export function Navbar() {
             </button>
 
             <a
-              href="https://wa.me/201044348610"
+              href="https://wa.me/201066711545"
               target="_blank"
               rel="noreferrer"
               aria-label="تواصل عبر الواتساب"
@@ -400,7 +400,7 @@ export function Navbar() {
 
               <div className="mt-4 pt-3 border-t border-[rgba(148,163,184,0.12)] flex flex-col gap-2">
                 <a
-                  href="https://wa.me/201044348610"
+                  href="https://wa.me/201066711545"
                   target="_blank"
                   rel="noreferrer"
                   onClick={closeMenu}

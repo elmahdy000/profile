@@ -487,7 +487,7 @@ export function StudentPlatform() {
               <span className="hidden dark:inline">الوضع النهاري</span>
             </button>
             <a
-              href={`https://wa.me/201044348610?text=${encodeURIComponent(
+              href={`https://wa.me/201066711545?text=${encodeURIComponent(
                 `مرحباً د. محمود 👋\n\nأود الاستفسار وحجز الكورس من داخل حسابي بالمنصة:\n- الاسم: ${student.name}\n- رقم الهاتف: ${student.phone}\n- المرحلة الدراسية: ${student.grade || "غير محدد"}\n- نظام التعليم: ${student.educationSystem || "غير محدد"}\n- المحافظة/المدينة: ${student.governorate || "غير محدد"} - ${student.city || ""}\n- وضع التعلم: ${student.learningMode === "offline" ? "أوفلاين بالزقازيق" : "أونلاين"}`
               )}`}
               target="_blank"

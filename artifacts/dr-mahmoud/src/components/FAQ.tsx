@@ -15,7 +15,7 @@ const defaultFaqs = [
   },
   {
     q: "كيف أتواصل مع د. محمود المهدي لحجز كورس برمجة؟",
-    a: "يمكنك التواصل مباشرة على واتساب 01044348610 لحجز أول سيشن مجانًا. الموقع في Eduverse، فلل الجامعة، الزقازيق."
+    a: "يمكنك التواصل مباشرة على واتساب 01066711545 لحجز أول سيشن مجانًا. الموقع في Eduverse، فلل الجامعة، الزقازيق."
   },
   {
     q: "الكورسات بتتعمل أونلاين ولا حضوري في الزقازيق؟",
@@ -130,7 +130,7 @@ export function FAQ() {
         >
           <p className="text-foreground/45 mb-4">عندك سؤال تاني؟</p>
           <Button asChild size="lg" className="bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-full px-8">
-            <a href="https://wa.me/201044348610" target="_blank" rel="noreferrer">
+            <a href="https://wa.me/201066711545" target="_blank" rel="noreferrer">
               <MessageCircle className="w-5 h-5 me-2" />
               اسأل على واتساب
             </a>
