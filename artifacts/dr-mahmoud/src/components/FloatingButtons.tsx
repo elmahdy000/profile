@@ -32,20 +32,39 @@ export function FloatingButtons() {
         )}
       </AnimatePresence>
 
-      <motion.a
-        href="https://wa.me/201066711545"
-        target="_blank"
-        rel="noreferrer"
-        aria-label="تواصل على واتساب"
-        initial={{ opacity: 0, scale: 0.5 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 22 }}
-        whileHover={{ scale: 1.08 }}
-        whileTap={{ scale: 0.95 }}
-        className="flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-xl shadow-[#25D366]/20 transition-colors hover:bg-[#20bd5a] sm:h-14 sm:w-14"
-      >
-        <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7 fill-white" />
-      </motion.a>
+      <div className="flex items-center gap-2">
+        <motion.a
+          href="https://wa.me/201025131212"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="تواصل على واتساب 2"
+          title="واتساب 01025131212"
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2, type: "spring", stiffness: 300, damping: 22 }}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.95 }}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white shadow-xl shadow-blue-600/20 transition-colors hover:bg-blue-700 sm:h-12 sm:w-12"
+        >
+          <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 fill-white" />
+        </motion.a>
+
+        <motion.a
+          href="https://wa.me/201066711545"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="تواصل على واتساب 1"
+          title="واتساب 01066711545"
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 22 }}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.95 }}
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-xl shadow-[#25D366]/20 transition-colors hover:bg-[#20bd5a] sm:h-14 sm:w-14"
+        >
+          <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7 fill-white" />
+        </motion.a>
+      </div>
     </div>
   );
 }
