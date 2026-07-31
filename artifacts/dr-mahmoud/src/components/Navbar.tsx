@@ -265,8 +265,21 @@ export function Navbar() {
             </button>
 
             <a
+              href="/parent"
+              aria-label="بوابة ولي الأمر"
+              title="دخول ولي الأمر"
+              className={`flex h-[40px] w-[40px] items-center justify-center rounded-[10px] border transition-all ${
+                theme === "light"
+                  ? "border-slate-300 bg-slate-100 text-[#3B82F6]"
+                  : "border-[rgba(148,163,184,0.22)] bg-transparent text-[#60A5FA]"
+              }`}
+            >
+              <Users className="h-4.5 w-4.5" />
+            </a>
+
+            <a
               href="/platform"
-              className="flex h-[40px] items-center justify-center rounded-[10px] bg-[#3B82F6] px-3.5 text-[13px] font-bold text-white shadow-md transition hover:bg-[#2563EB]"
+              className="flex h-[40px] items-center justify-center rounded-[10px] bg-[#3B82F6] px-3 text-[12.5px] font-bold text-white shadow-md transition hover:bg-[#2563EB]"
             >
               {student ? "متابعة" : "دخول المنصة"}
             </a>
@@ -399,6 +412,15 @@ export function Navbar() {
               </nav>
 
               <div className="mt-4 pt-3 border-t border-[rgba(148,163,184,0.12)] flex flex-col gap-2">
+                <a
+                  href="/parent"
+                  onClick={closeMenu}
+                  className="flex h-[48px] items-center justify-center gap-2 rounded-[12px] border border-[#3B82F6]/30 bg-[#3B82F6]/10 px-4 text-[14px] font-bold text-[#60A5FA] transition hover:bg-[#3B82F6]/20"
+                >
+                  <Users className="h-5 w-5 text-[#60A5FA]" />
+                  <span>دخول ولي الأمر</span>
+                </a>
+
                 <a
                   href="https://wa.me/201066711545"
                   target="_blank"
