@@ -372,14 +372,18 @@ export function AccessScreen({
                 </div>
               )}
 
-              <div className="mt-4 rounded-[16px] border border-[#E2E8F0] bg-[#F8FAFC] p-3 text-right text-xs space-y-1.5 leading-relaxed">
+              <div className="mt-4 rounded-[16px] border border-[#E2E8F0] bg-[#F8FAFC] p-3 text-right text-xs space-y-2 leading-relaxed">
                 <div className="flex items-start gap-2 text-[#16A34A] font-bold">
                   <span className="shrink-0 font-bold">1.</span>
                   <span><strong>أول فيديوهين مجانًا:</strong> يمكنك الدخول فوراً بالكود ومشاهدة أول درسين في كورساتك.</span>
                 </div>
                 <div className="flex items-start gap-2 text-[#0866D9] font-bold">
                   <span className="shrink-0 font-black">2.</span>
-                  <span><strong>تأكيد الحجز:</strong> لفتح باقي فيديوهات المنصة والاختبارات، يرجى رفع إيصال الدفع من داخل حسابك، وسيقوم الأدمن بمراجعته وتأكيد الحجز لك.</span>
+                  <span>
+                    <strong>طريقة تحويل الاشتراك:</strong> يمكنك التحويل عبر فودافون كاش أو إنستا باي على أحد الأرقام:
+                    <strong className="block text-[#0B63CE] font-mono text-xs dir-ltr font-black mt-1">01025131212  -  01066711545</strong>
+                    ثم رفع صورة إيصال التحويل من داخل حسابك بالمنصة ليفعّله الأدمن فوريًا.
+                  </span>
                 </div>
               </div>
 
