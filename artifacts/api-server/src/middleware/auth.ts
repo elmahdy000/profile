@@ -36,7 +36,7 @@ export type AdminAuthResult = {
   username: string;
 };
 
-export function verifyAdminCredentials(passwordInput: string, usernameInput?: string): AdminAuthResult | null {
+export async function verifyAdminCredentialsAsync(passwordInput: string, usernameInput?: string): Promise<AdminAuthResult | null> {
   const pass = passwordInput.trim();
   const user = (usernameInput || "").trim().toLowerCase();
 
@@ -50,17 +50,30 @@ export function verifyAdminCredentials(passwordInput: string, usernameInput?: st
     return { role: "subadmin", username: "مشرف مساعد" };
   }
 
-  // 3. فحص الحسابات المسماة (ahmed / assistant)
+  // 3. فحص الحسابات المسماة الثابتة (ahmed / assistant)
   if (user && SUBADMIN_ACCOUNTS[user] && safeEqual(pass, SUBADMIN_ACCOUNTS[user].pass)) {
     return { role: "subadmin", username: SUBADMIN_ACCOUNTS[user].name };
   }
-
-  // 4. فحص بالباسورد فقط في حال ادخال كلمة السر الخاصة بأي من المشرفين
   for (const accountKey of Object.keys(SUBADMIN_ACCOUNTS)) {
     const acc = SUBADMIN_ACCOUNTS[accountKey];
     if (safeEqual(pass, acc.pass)) {
       return { role: "subadmin", username: acc.name };
     }
+  }
+
+  // 4. فحص الحسابات الديناميكية المحفوظة في قاعدة البيانات (subadmin_accounts)
+  try {
+    const dbRows = await db.select().from(subadminAccountsTable).where(eq(subadminAccountsTable.isActive, true));
+    for (const acc of dbRows) {
+      if (user && user === acc.username.toLowerCase() && safeEqual(pass, acc.passwordHash)) {
+        return { role: "subadmin", username: `${acc.displayName} (@${acc.username})` };
+      }
+      if (!user && safeEqual(pass, acc.passwordHash)) {
+        return { role: "subadmin", username: `${acc.displayName} (@${acc.username})` };
+      }
+    }
+  } catch (e) {
+    // DB fallback
   }
 
   return null;

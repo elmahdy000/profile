@@ -223,3 +223,16 @@ export const auditLogsTable = pgTable("audit_logs", {
   actionIndex: index("audit_logs_action_idx").on(table.action),
   createdAtIndex: index("audit_logs_created_at_idx").on(table.createdAt),
 }));
+
+export const subadminAccountsTable = pgTable("subadmin_accounts", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  passwordHash: text("password_hash").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  usernameIndex: index("subadmin_accounts_username_idx").on(table.username),
+}));
+

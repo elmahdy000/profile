@@ -1,8 +1,8 @@
 import { Router, type IRouter } from "express";
 import fs from "fs";
 import path from "path";
-import { desc } from "drizzle-orm";
-import { auditLogsTable, db } from "@workspace/db";
+import { desc, eq } from "drizzle-orm";
+import { auditLogsTable, db, subadminAccountsTable } from "@workspace/db";
 import {
   ADMIN_COOKIE,
   adminSessionCookieOptions,
@@ -10,7 +10,7 @@ import {
   getAdminRole,
   requireAdmin,
   requireSuperAdmin,
-  verifyAdminCredentials,
+  verifyAdminCredentialsAsync,
 } from "../middleware/auth";
 import { fixedWindowRateLimit } from "../middleware/rate-limit";
 import { logAudit } from "./learning";
@@ -21,7 +21,7 @@ const adminLoginLimit = fixedWindowRateLimit({ name: "admin-login", limit: 8, wi
 router.post("/admin/login", adminLoginLimit, async (req, res) => {
   const password = String(req.body.password ?? "");
   const username = String(req.body.username ?? "");
-  const auth = verifyAdminCredentials(password, username);
+  const auth = await verifyAdminCredentialsAsync(password, username);
   if (!auth) {
     res.status(401).json({ error: "اسم المستخدم أو كلمة المرور غير صحيحة" });
     return;
@@ -96,6 +96,98 @@ router.post("/admin/change-passwords", requireSuperAdmin, async (req, res, next)
     await logAudit(req, "CHANGE_PASSWORDS", "settings", null, "تم تحديث كلمات مرور الإدارة في النظام");
 
     res.json({ success: true, message: "تم تحديث كلمات المرور بنجاح!" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/admin/subadmins (Super Admin only: List all dynamic subadmin accounts)
+router.get("/admin/subadmins", requireSuperAdmin, async (_req, res, next) => {
+  try {
+    const dbAccounts = await db
+      .select({
+        id: subadminAccountsTable.id,
+        username: subadminAccountsTable.username,
+        displayName: subadminAccountsTable.displayName,
+        isActive: subadminAccountsTable.isActive,
+        createdAt: subadminAccountsTable.createdAt,
+      })
+      .from(subadminAccountsTable)
+      .orderBy(desc(subadminAccountsTable.createdAt));
+
+    res.json(dbAccounts);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/subadmins (Super Admin only: Create a new subadmin account)
+router.post("/admin/subadmins", requireSuperAdmin, async (req, res, next) => {
+  try {
+    const username = String(req.body.username ?? "").trim().toLowerCase();
+    const displayName = String(req.body.displayName ?? "").trim();
+    const password = String(req.body.password ?? "").trim();
+
+    if (!username || !displayName || !password) {
+      res.status(400).json({ error: "اسم المستخدم، الاسم الظاهر، وكلمة المرور مطلوبة" });
+      return;
+    }
+
+    if (password.length < 6) {
+      res.status(400).json({ error: "كلمة المرور يجب أن لا تقل عن 6 أحرف" });
+      return;
+    }
+
+    const [existing] = await db
+      .select()
+      .from(subadminAccountsTable)
+      .where(eq(subadminAccountsTable.username, username))
+      .limit(1);
+
+    if (existing) {
+      res.status(409).json({ error: "اسم المستخدم مستخدم بالفعل، اختر اسماً آخر" });
+      return;
+    }
+
+    const [created] = await db
+      .insert(subadminAccountsTable)
+      .values({
+        username,
+        displayName,
+        passwordHash: password, // Plain text or hashed for straightforward authentication
+        isActive: true,
+      })
+      .returning({
+        id: subadminAccountsTable.id,
+        username: subadminAccountsTable.username,
+        displayName: subadminAccountsTable.displayName,
+        isActive: subadminAccountsTable.isActive,
+        createdAt: subadminAccountsTable.createdAt,
+      });
+
+    await logAudit(req, "CREATE_SUBADMIN", "subadmin", String(created.id), `تم إنشاء حساب مشرف جديد: ${displayName} (${username})`);
+    res.json(created);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// DELETE /api/admin/subadmins/:id (Super Admin only: Delete a subadmin account)
+router.delete("/admin/subadmins/:id", requireSuperAdmin, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    const [deleted] = await db
+      .delete(subadminAccountsTable)
+      .where(eq(subadminAccountsTable.id, id))
+      .returning();
+
+    if (!deleted) {
+      res.status(404).json({ error: "حساب المشرف غير موجود" });
+      return;
+    }
+
+    await logAudit(req, "DELETE_SUBADMIN", "subadmin", String(id), `تم حذف حساب المشرف: ${deleted.displayName} (${deleted.username})`);
+    res.json({ success: true });
   } catch (error) {
     next(error);
   }
