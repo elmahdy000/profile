@@ -53,7 +53,7 @@ router.post("/parent/register", parentRegisterLimit, async (req, res, next) => {
       .where(
         and(
           eq(studentsTable.status, "approved"),
-          sql`(${studentsTable.phone} = ${studentQuery} OR REPLACE(${studentsTable.phone}, ' ', '') LIKE ${`%${cleanStudentPhone.slice(-8)}%`} OR UPPER(${studentsTable.accessCode}) = UPPER(${studentQuery}))`
+          sql`(${studentsTable.phone} = ${studentQuery} OR REPLACE(${studentsTable.phone}, ' ', '') = ${cleanStudentPhone} OR UPPER(${studentsTable.accessCode}) = UPPER(${studentQuery}))`
         )
       )
       .limit(1);
