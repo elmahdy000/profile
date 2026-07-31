@@ -16,6 +16,7 @@ const KidsPage = lazy(() => import("@/pages/KidsPage"));
 const UniversityPage = lazy(() => import("@/pages/UniversityPage"));
 const CurriculumPage = lazy(() => import("@/pages/CurriculumPage"));
 const PlatformPage = lazy(() => import("@/pages/PlatformPage"));
+const ParentPortalPage = lazy(() => import("@/pages/ParentPortalPage"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 const queryClient = new QueryClient({
@@ -66,6 +67,7 @@ function App() {
                 <Route path="/university" component={UniversityPage} />
                 <Route path="/curriculum" component={CurriculumPage} />
                 <Route path="/platform" component={PlatformPage} />
+                <Route path="/parent" component={ParentPortalPage} />
                 <Route path="/" component={HomePage} />
                 <Route component={NotFound} />
               </Switch>

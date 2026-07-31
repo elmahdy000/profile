@@ -238,3 +238,28 @@ export const subadminAccountsTable = pgTable("subadmin_accounts", {
   usernameIndex: index("subadmin_accounts_username_idx").on(table.username),
 }));
 
+export const parentsTable = pgTable("parents", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  phone: text("phone").notNull(),
+  studentId: integer("student_id").notNull().references(() => studentsTable.id, { onDelete: "cascade" }),
+  parentCode: text("parent_code").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  phoneIndex: index("parents_phone_idx").on(table.phone),
+  parentCodeUnique: uniqueIndex("parents_code_unique").on(table.parentCode),
+  studentIndex: index("parents_student_idx").on(table.studentId),
+}));
+
+export const parentSessionsTable = pgTable("parent_sessions", {
+  id: serial("id").primaryKey(),
+  parentId: integer("parent_id").notNull().references(() => parentsTable.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  tokenUnique: uniqueIndex("parent_sessions_token_unique").on(table.tokenHash),
+  parentIndex: index("parent_sessions_parent_idx").on(table.parentId),
+}));
+

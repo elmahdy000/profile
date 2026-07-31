@@ -12,6 +12,7 @@ import {
   Moon,
   Sun,
   UserRound,
+  Users,
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -228,6 +229,19 @@ export function Navbar() {
             >
               <MessageCircle className="h-[18px] w-[18px] text-[#25D366]" />
               <span>واتساب</span>
+            </a>
+
+            <a
+              href="/parent"
+              aria-label="بوابة ولي الأمر"
+              className={`flex h-[44px] items-center gap-2 rounded-[12px] border px-4 text-[14px] font-semibold transition-all duration-200 ${
+                theme === "light"
+                  ? "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                  : "border-[rgba(148,163,184,0.22)] bg-transparent text-[#CBD5E1] hover:bg-[rgba(148,163,184,0.08)] hover:text-[#F8FAFC]"
+              }`}
+            >
+              <Users className="h-[18px] w-[18px] text-[#3B82F6]" />
+              <span>دخول ولي الأمر</span>
             </a>
 
             <a

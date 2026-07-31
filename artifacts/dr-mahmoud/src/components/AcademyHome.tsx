@@ -121,7 +121,14 @@ export function AcademyHome() {
                   <Button asChild size="lg" variant="outline" className="h-12 rounded-xl border-slate-300 bg-white px-6 font-bold text-slate-700 hover:bg-slate-50">
                     <a href="/platform">
                       <Laptop className="ml-2 h-4 w-4 text-blue-600" />
-                      استكشف المنصة
+                      دخول الطالب
+                    </a>
+                  </Button>
+
+                  <Button asChild size="lg" variant="outline" className="h-12 rounded-xl border-blue-200 bg-blue-50/70 px-6 font-bold text-blue-800 hover:bg-blue-100">
+                    <a href="/parent">
+                      <Users className="ml-2 h-4 w-4 text-blue-700" />
+                      بوابة ولي الأمر
                     </a>
                   </Button>
                 </div>
