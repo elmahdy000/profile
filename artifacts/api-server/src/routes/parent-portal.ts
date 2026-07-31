@@ -111,6 +111,62 @@ router.post("/parent/register", parentRegisterLimit, async (req, res, next) => {
   }
 });
 
+// POST /api/parent/recover-code
+router.post("/parent/recover-code", parentLoginLimit, async (req, res, next) => {
+  try {
+    const parentPhone = String(req.body.parentPhone ?? "").replace(/\s+/g, "");
+    const studentQuery = String(req.body.studentPhone ?? "").replace(/\s+/g, "");
+
+    if (!parentPhone || !studentQuery) {
+      res.status(400).json({ error: "رقم هاتف ولي الأمر ورقم هاتف/كود الطالب مطلوبان لاسترداد الكود" });
+      return;
+    }
+
+    const cleanStudentPhone = studentQuery.replace(/[^\d]/g, "");
+    const [student] = await db
+      .select()
+      .from(studentsTable)
+      .where(
+        and(
+          eq(studentsTable.status, "approved"),
+          sql`(${studentsTable.phone} = ${studentQuery} OR REPLACE(${studentsTable.phone}, ' ', '') = ${cleanStudentPhone} OR UPPER(${studentsTable.accessCode}) = UPPER(${studentQuery}))`
+        )
+      )
+      .limit(1);
+
+    if (!student) {
+      res.status(404).json({ error: "لم نتمكن من العثور على طالب معتمد بهذا الرقم أو الكود." });
+      return;
+    }
+
+    const cleanParentPhone = parentPhone.replace(/[^\d]/g, "");
+    const [parent] = await db
+      .select()
+      .from(parentsTable)
+      .where(
+        and(
+          eq(parentsTable.studentId, student.id),
+          sql`REPLACE(${parentsTable.phone}, ' ', '') = ${cleanParentPhone}`
+        )
+      )
+      .limit(1);
+
+    if (!parent) {
+      res.status(404).json({ error: "لم نجد حساب ولي أمر مسجل برقم الهاتف هذا ومقترن بهذا الطالب." });
+      return;
+    }
+
+    res.json({
+      success: true,
+      parentCode: parent.parentCode,
+      parentName: parent.name,
+      message: `تم العثور على حسابك! كود التتبع الخاص بك هو: ${parent.parentCode}`,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // POST /api/parent/login
 router.post("/parent/login", parentLoginLimit, async (req, res, next) => {
   try {

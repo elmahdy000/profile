@@ -106,7 +106,7 @@ function formatDate(dateString?: string | null): string {
 
 export function ParentPortal() {
   const { toast } = useToast();
-  const [activeMode, setActiveMode] = useState<"login" | "register" | "report">("login");
+  const [activeMode, setActiveMode] = useState<"login" | "register" | "recover" | "report">("login");
   const [isLoading, setIsLoading] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const prevNotificationCountRef = useRef<number | null>(null);
@@ -115,6 +115,11 @@ export function ParentPortal() {
   const [regName, setRegName] = useState("");
   const [regPhone, setRegPhone] = useState("");
   const [regStudentQuery, setRegStudentQuery] = useState("");
+
+  // Recover form state
+  const [recoverPhone, setRecoverPhone] = useState("");
+  const [recoverStudentQuery, setRecoverStudentQuery] = useState("");
+  const [recoveredCode, setRecoveredCode] = useState<string | null>(null);
 
   // Login form state
   const [loginPhone, setLoginPhone] = useState("");
@@ -230,7 +235,42 @@ export function ParentPortal() {
       toast({ title: "مرحباً بك", description: `أهلاً بك يا ${data.parentName}` });
       fetchReport();
     } catch (err: any) {
-      toast({ title: "خطأ في الدخول", description: err.message, variant: "destructive" });
+      toast({ title: "فشل الدخول", description: err.message || "كود ولي الأمر أو رقم الهاتف غير صحيح", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRecoverCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!recoverPhone.trim() || !recoverStudentQuery.trim()) {
+      toast({ title: "بيانات غير مكتملة", description: "يرجى كتابة رقم هاتفك ورقم هاتف الطالب/كوده", variant: "destructive" });
+      return;
+    }
+
+    setIsLoading(true);
+    setRecoveredCode(null);
+    try {
+      const res = await fetch("/api/parent/recover-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parentPhone: recoverPhone,
+          studentPhone: recoverStudentQuery,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "فشل استرداد الكود");
+
+      setRecoveredCode(data.parentCode);
+      setLoginCode(data.parentCode);
+      setLoginPhone(recoverPhone);
+      toast({
+        title: "تم استرداد الكود بنجاح! 🎉",
+        description: `كود تتبع ولي الأمر الخاص بك هو: ${data.parentCode}`,
+      });
+    } catch (err: any) {
+      toast({ title: "تعذر الاسترداد", description: err.message || "لم نجد حساب ولي أمر بهذه البيانات", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -466,28 +506,37 @@ export function ParentPortal() {
 
           </div>
         ) : (
-          /* Login / Register Toggle Card */
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm max-w-lg mx-auto space-y-6">
+          /* Login / Register / Recover Toggle Card */
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md max-w-lg mx-auto space-y-6">
             
             {/* Form Mode Selector */}
             <div className="flex items-center bg-slate-100 p-1 rounded-2xl">
               <button
                 type="button"
-                onClick={() => setActiveMode("login")}
+                onClick={() => { setActiveMode("login"); setRecoveredCode(null); }}
                 className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
                   activeMode === "login" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-900"
                 }`}
               >
-                تسجيل الدخول بكود ولي الأمر
+                تسجيل الدخول
               </button>
               <button
                 type="button"
-                onClick={() => setActiveMode("register")}
+                onClick={() => { setActiveMode("register"); setRecoveredCode(null); }}
                 className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
                   activeMode === "register" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-900"
                 }`}
               >
-                تسجيل جديد وإصدار كود
+                تسجيل جديد
+              </button>
+              <button
+                type="button"
+                onClick={() => { setActiveMode("recover"); setRecoveredCode(null); }}
+                className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  activeMode === "recover" ? "bg-white text-amber-900 font-black shadow-xs" : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                نسيت الكود؟
               </button>
             </div>
 
@@ -509,7 +558,16 @@ export function ParentPortal() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-slate-800">كود ولي الأمر (Parent Code):</label>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-slate-800">كود ولي الأمر (Parent Code):</label>
+                    <button
+                      type="button"
+                      onClick={() => setActiveMode("recover")}
+                      className="text-[11px] text-[#0B63CE] hover:underline font-bold"
+                    >
+                      نسيت كودك؟
+                    </button>
+                  </div>
                   <div className="relative">
                     <KeyRound className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
                     <input
@@ -530,6 +588,71 @@ export function ParentPortal() {
                 >
                   {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <span>الدخول لبوابة المتابعة</span>}
                 </button>
+              </form>
+            ) : activeMode === "recover" ? (
+              <form onSubmit={handleRecoverCode} className="space-y-4">
+                <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-900 space-y-1">
+                  <strong className="font-bold block">استرداد كود ولي الأمر المفقود:</strong>
+                  <p className="text-[11px] text-amber-800 leading-relaxed">
+                    اكتب رقم هاتفك ورقم هاتف ابنك المسجل في المنصة وسيقوم النظام باستعادة الكود لك فوراً.
+                  </p>
+                </div>
+
+                {recoveredCode ? (
+                  <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-2xl text-center space-y-2">
+                    <span className="text-xs font-bold text-emerald-800 block">تم استرداد الكود الخاص بك بنجاح:</span>
+                    <strong className="font-mono text-xl text-slate-900 bg-white border border-emerald-300 px-4 py-1.5 rounded-xl inline-block shadow-2xs font-extrabold text-amber-600">
+                      {recoveredCode}
+                    </strong>
+                    <button
+                      type="button"
+                      onClick={() => setActiveMode("login")}
+                      className="w-full py-2.5 mt-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-2xs block"
+                    >
+                      الانتقال والدخول للبوابة الآن ✓
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold text-slate-800">رقم هاتف ولي الأمر:</label>
+                      <div className="relative">
+                        <Phone className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          required
+                          placeholder="أدخل رقم هاتفك..."
+                          value={recoverPhone}
+                          onChange={(e) => setRecoverPhone(e.target.value)}
+                          className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold text-slate-800">رقم هاتف الطالب أو كود الطالب المسجل:</label>
+                      <div className="relative">
+                        <Users className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          required
+                          placeholder="أدخل رقم هاتف الطالب..."
+                          value={recoverStudentQuery}
+                          onChange={(e) => setRecoverStudentQuery(e.target.value)}
+                          className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full py-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black transition-all shadow-md flex items-center justify-center gap-2"
+                    >
+                      {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <span>استرداد الكود الخاص بي 🔑</span>}
+                    </button>
+                  </>
+                )}
               </form>
             ) : (
               <form onSubmit={handleRegister} className="space-y-4">
