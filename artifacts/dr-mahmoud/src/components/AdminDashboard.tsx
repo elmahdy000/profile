@@ -68,9 +68,11 @@ import {
   GraduationCap,
   Phone,
   MessageCircle,
+  BarChart3,
 } from "lucide-react";
 import { AdminSettings } from "./AdminSettings";
 import { AdminLearning } from "./AdminLearning";
+import { StudentAnalyticsTab } from "./admin/learning/StudentAnalyticsTab";
 import { useToast } from "@/hooks/use-toast";
 import {
   SidebarItem,
@@ -135,6 +137,7 @@ export default function AdminDashboard() {
     | "videos"
     | "upload-video"
     | "learning"
+    | "student-analytics"
     | "settings"
   >("learning");
   const [selectedSubjectFilter, setSelectedSubjectFilter] =
@@ -1712,6 +1715,13 @@ export default function AdminDashboard() {
               />
 
               <SidebarItem
+                icon={BarChart3}
+                label="تقرير نشاط الطلاب (Realtime)"
+                active={activeTab === "student-analytics"}
+                onClick={() => setActiveTab("student-analytics")}
+              />
+
+              <SidebarItem
                 icon={Settings}
                 label="إعدادات الموقع"
                 active={activeTab === "settings"}
@@ -3194,6 +3204,7 @@ export default function AdminDashboard() {
 
               {activeTab === "settings" && <AdminSettings role={adminRole} />}
               {activeTab === "learning" && <AdminLearning role={adminRole} />}
+              {activeTab === "student-analytics" && <StudentAnalyticsTab />}
             </div>
           </div>
         </main>

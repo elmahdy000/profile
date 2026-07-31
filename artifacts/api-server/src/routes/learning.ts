@@ -664,6 +664,7 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
     const token = randomBytes(32).toString("base64url");
     const tokenHash = createHash("sha256").update(token).digest("hex");
     const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
+    const now = new Date();
     await db.transaction(async (tx) => {
       await tx
         .delete(studentSessionsTable)
@@ -671,6 +672,10 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
       await tx
         .insert(studentSessionsTable)
         .values({ studentId: student.id, tokenHash, expiresAt });
+      await tx
+        .update(studentsTable)
+        .set({ lastLoginAt: now, lastActiveAt: now, updatedAt: now })
+        .where(eq(studentsTable.id, student.id));
     });
     res.cookie(STUDENT_COOKIE, token, {
       httpOnly: true,
@@ -1035,6 +1040,78 @@ router.get("/admin/students", requireAdmin, async (_req, res, next) => {
       .from(studentsTable)
       .orderBy(desc(studentsTable.createdAt));
     res.json(students);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/admin/students/analytics (Detailed student activity & watch history report)
+router.get("/admin/students/analytics", requireAdmin, async (_req, res, next) => {
+  try {
+    const [students, progressRecords, videos, attempts] = await Promise.all([
+      db.select().from(studentsTable).orderBy(desc(studentsTable.createdAt)),
+      db.select().from(videoProgressTable),
+      db.select({ id: videosTable.id, title: videosTable.title, category: videosTable.category, stage: videosTable.stage, durationText: videosTable.durationText }).from(videosTable),
+      db.select().from(quizAttemptsTable),
+    ]);
+
+    const videoMap = new Map(videos.map((v) => [v.id, v]));
+
+    const report = students.map((st) => {
+      const stProgress = progressRecords.filter((p) => p.studentId === st.id);
+      const stAttempts = attempts.filter((a) => a.studentId === st.id);
+
+      const watchDetails = stProgress.map((p) => {
+        const vid = videoMap.get(p.videoId);
+        return {
+          videoId: p.videoId,
+          videoTitle: vid?.title || `فيديو #${p.videoId}`,
+          category: vid?.category || "عام",
+          stage: vid?.stage || "عام",
+          progress: p.progress,
+          currentTimeSeconds: p.currentTimeSeconds,
+          durationSeconds: p.durationSeconds,
+          completed: p.completed,
+          updatedAt: p.updatedAt,
+        };
+      }).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+      const now = new Date();
+      const lastActive = st.lastActiveAt ? new Date(st.lastActiveAt) : (st.lastLoginAt ? new Date(st.lastLoginAt) : new Date(st.createdAt));
+      const daysInactive = Math.floor((now.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24));
+
+      return {
+        id: st.id,
+        name: st.name,
+        phone: st.phone,
+        email: st.email,
+        accessCode: st.accessCode,
+        status: st.status,
+        grade: st.grade,
+        learningMode: st.learningMode,
+        paymentStatus: st.paymentStatus,
+        lastLoginAt: st.lastLoginAt,
+        lastActiveAt: st.lastActiveAt,
+        createdAt: st.createdAt,
+        daysInactive,
+        isInactive: daysInactive >= 3,
+        watchedVideosCount: watchDetails.length,
+        completedVideosCount: watchDetails.filter((w) => w.completed).length,
+        quizzesCount: stAttempts.length,
+        passedQuizzesCount: stAttempts.filter((a) => a.passed).length,
+        watchDetails,
+        quizDetails: stAttempts.map((a) => ({
+          id: a.id,
+          quizId: a.quizId,
+          score: a.score,
+          passed: a.passed,
+          timeSpentSeconds: a.timeSpentSeconds,
+          createdAt: a.createdAt,
+        })),
+      };
+    });
+
+    res.json(report);
   } catch (error) {
     next(error);
   }
@@ -2043,6 +2120,13 @@ router.put(
           },
         })
         .returning();
+
+      const now = new Date();
+      await db
+        .update(studentsTable)
+        .set({ lastActiveAt: now, updatedAt: now })
+        .where(eq(studentsTable.id, student.id));
+
       res.json({
         videoId: saved.videoId,
         progress: saved.progress,

@@ -28,6 +28,8 @@ export const studentsTable = pgTable("students", {
   maxDevices: integer("max_devices").notNull().default(1), // Max allowed bound devices (1 by default, 2 if approved by admin)
   boundDevices: jsonb("bound_devices").$type<string[]>().notNull().default([]), // List of all approved bound device IDs
   approvedAt: timestamp("approved_at"),
+  lastLoginAt: timestamp("last_login_at"),
+  lastActiveAt: timestamp("last_active_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => ({
