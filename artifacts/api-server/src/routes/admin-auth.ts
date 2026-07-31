@@ -16,7 +16,7 @@ import { fixedWindowRateLimit } from "../middleware/rate-limit";
 import { logAudit } from "./learning";
 
 const router: IRouter = Router();
-const adminLoginLimit = fixedWindowRateLimit({ name: "admin-login", limit: 8, windowMs: 15 * 60 * 1000 });
+const adminLoginLimit = fixedWindowRateLimit({ name: "admin-login", limit: 25, windowMs: 15 * 60 * 1000 });
 
 router.post("/admin/login", adminLoginLimit, async (req, res) => {
   const password = String(req.body.password ?? "");
