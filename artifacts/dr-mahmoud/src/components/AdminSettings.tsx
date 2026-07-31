@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSiteSettings, useUpdateSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
-import { Loader2, Save, CheckCircle2, UploadCloud, Plus, Trash2, ArrowUp, ArrowDown, HelpCircle } from "lucide-react";
+import { Loader2, Save, CheckCircle2, UploadCloud, Plus, Trash2, ArrowUp, ArrowDown, HelpCircle, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // Default Fallbacks

@@ -1,8 +1,10 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import type { Request, Response, NextFunction } from "express";
+import { db, subadminAccountsTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 
-const adminPassword = process.env.ADMIN_PASSWORD ?? "prof1234";
-const subAdminPassword = process.env.SUBADMIN_PASSWORD ?? "";
+const getAdminPassword = () => process.env.ADMIN_PASSWORD ?? "prof1234";
+const getSubAdminPassword = () => process.env.SUBADMIN_PASSWORD ?? "";
 
 // قائمة المشرفين المساعدين المعتمدين بالأسماء والباسوردات الخاص بهم
 export const SUBADMIN_ACCOUNTS: Record<string, { name: string; pass: string }> = {
@@ -10,14 +12,12 @@ export const SUBADMIN_ACCOUNTS: Record<string, { name: string; pass: string }> =
   assistant: { name: "مساعد الإدارة 2", pass: process.env.SUBADMIN_ASSISTANT_PASS ?? "sub1234" },
 };
 
-if (!adminPassword) {
+if (!getAdminPassword()) {
   throw new Error(
     "ADMIN_PASSWORD environment variable is required but was not provided.",
   );
 }
 
-const expectedHeader = `Bearer ${adminPassword}`;
-const expectedSubHeader = subAdminPassword ? `Bearer ${subAdminPassword}` : "";
 export const ADMIN_COOKIE = "admin_session";
 const ADMIN_SESSION_SECONDS = 60 * 60 * 12;
 
@@ -39,6 +39,9 @@ export type AdminAuthResult = {
 export async function verifyAdminCredentialsAsync(passwordInput: string, usernameInput?: string): Promise<AdminAuthResult | null> {
   const pass = passwordInput.trim();
   const user = (usernameInput || "").trim().toLowerCase();
+
+  const adminPassword = getAdminPassword();
+  const subAdminPassword = getSubAdminPassword();
 
   // 1. فحص المدير الرئيسي
   if (safeEqual(pass, adminPassword)) {
@@ -80,11 +83,17 @@ export async function verifyAdminCredentialsAsync(passwordInput: string, usernam
 }
 
 export function verifyAdminPassword(password: string): "superadmin" | "subadmin" | null {
-  const result = verifyAdminCredentials(password);
-  return result ? result.role : null;
+  const adminPassword = getAdminPassword();
+  const subAdminPassword = getSubAdminPassword();
+  const pass = password.trim();
+  if (safeEqual(pass, adminPassword)) return "superadmin";
+  if (subAdminPassword && safeEqual(pass, subAdminPassword)) return "subadmin";
+  return null;
 }
 
 export function createAdminSessionToken(role: "superadmin" | "subadmin" = "superadmin", username?: string): string {
+  const adminPassword = getAdminPassword();
+  const subAdminPassword = getSubAdminPassword();
   const expiresAt = Math.floor(Date.now() / 1000) + ADMIN_SESSION_SECONDS;
   const name = username || (role === "superadmin" ? "المدير الرئيسي" : "مشرف مساعد");
   const secret = role === "subadmin" ? (subAdminPassword || adminPassword) : adminPassword;
@@ -94,6 +103,11 @@ export function createAdminSessionToken(role: "superadmin" | "subadmin" = "super
 }
 
 export function getAdminIdentity(req: Request): { role: "superadmin" | "subadmin"; username: string } | null {
+  const adminPassword = getAdminPassword();
+  const subAdminPassword = getSubAdminPassword();
+  const expectedHeader = `Bearer ${adminPassword}`;
+  const expectedSubHeader = subAdminPassword ? `Bearer ${subAdminPassword}` : "";
+
   const authHeader = req.headers.authorization;
   if (authHeader && safeEqual(authHeader, expectedHeader)) return { role: "superadmin", username: "د. محمود المهدي (المدير الرئيسي)" };
   if (expectedSubHeader && authHeader && safeEqual(authHeader, expectedSubHeader)) return { role: "subadmin", username: "مشرف مساعد" };
