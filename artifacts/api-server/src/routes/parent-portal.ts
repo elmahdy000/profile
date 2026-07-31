@@ -267,6 +267,67 @@ router.get("/parent/report", async (req, res, next) => {
   }
 });
 
+// GET /api/admin/parents  (admin-only – lists all registered parents)
+router.get("/admin/parents", async (req, res, next) => {
+  try {
+    // Fetch all parents with their linked student
+    const rows = await db
+      .select({
+        parentId: parentsTable.id,
+        parentName: parentsTable.name,
+        parentPhone: parentsTable.phone,
+        parentCode: parentsTable.parentCode,
+        createdAt: parentsTable.createdAt,
+        studentId: studentsTable.id,
+        studentName: studentsTable.name,
+        studentPhone: studentsTable.phone,
+        studentGrade: studentsTable.grade,
+        studentStatus: studentsTable.status,
+      })
+      .from(parentsTable)
+      .leftJoin(studentsTable, eq(parentsTable.studentId, studentsTable.id))
+      .orderBy(desc(parentsTable.createdAt));
+
+    // Fetch last session per parent in one query
+    const sessions = await db
+      .select({
+        parentId: parentSessionsTable.parentId,
+        expiresAt: parentSessionsTable.expiresAt,
+      })
+      .from(parentSessionsTable);
+
+    const sessionMap = new Map<number, string>();
+    for (const s of sessions) {
+      const existing = sessionMap.get(s.parentId);
+      if (!existing || new Date(s.expiresAt) > new Date(existing)) {
+        sessionMap.set(s.parentId, s.expiresAt as unknown as string);
+      }
+    }
+
+    const result = rows.map((r) => ({
+      id: r.parentId,
+      name: r.parentName,
+      phone: r.parentPhone,
+      parentCode: r.parentCode,
+      createdAt: r.createdAt,
+      lastSessionExpiresAt: sessionMap.get(r.parentId) ?? null,
+      student: r.studentId
+        ? {
+            id: r.studentId,
+            name: r.studentName,
+            phone: r.studentPhone,
+            grade: r.studentGrade,
+            status: r.studentStatus,
+          }
+        : null,
+    }));
+
+    res.json({ parents: result, total: result.length });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // POST /api/parent/logout
 router.post("/parent/logout", (_req, res) => {
   res.clearCookie(PARENT_COOKIE, { path: "/" });
