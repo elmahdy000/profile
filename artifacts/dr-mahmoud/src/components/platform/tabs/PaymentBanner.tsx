@@ -109,14 +109,14 @@ export function PaymentBanner({ paymentStatus, onUploaded }: { paymentStatus: st
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 flex items-center justify-between">
               <div>
-                <span className="block font-bold text-slate-700 dark:text-slate-300">الرقم الأول للتحويل:</span>
+                <span className="block font-bold text-slate-700 dark:text-slate-300">فودافون كاش / إنستا باي:</span>
                 <strong className="font-mono text-sm font-black text-[#0B63CE] dir-ltr inline-block tracking-wider">01025131212</strong>
               </div>
               <button
                 type="button"
                 onClick={() => {
                   navigator.clipboard.writeText("01025131212");
-                  toast({ title: "تم نسخ الرقم الأول 01025131212" });
+                  toast({ title: "تم نسخ الرقم 01025131212" });
                 }}
                 className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 text-[11px] font-bold hover:bg-blue-100 transition-all"
               >
@@ -126,16 +126,16 @@ export function PaymentBanner({ paymentStatus, onUploaded }: { paymentStatus: st
 
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 flex items-center justify-between">
               <div>
-                <span className="block font-bold text-slate-700 dark:text-slate-300">الرقم الثاني للتحويل:</span>
-                <strong className="font-mono text-sm font-black text-[#0B63CE] dir-ltr inline-block tracking-wider">01066711545</strong>
+                <span className="block font-bold text-slate-700 dark:text-slate-300">فودافون كاش فقط:</span>
+                <strong className="font-mono text-sm font-black text-rose-600 dark:text-rose-400 dir-ltr inline-block tracking-wider">01066711545</strong>
               </div>
               <button
                 type="button"
                 onClick={() => {
                   navigator.clipboard.writeText("01066711545");
-                  toast({ title: "تم نسخ الرقم الثاني 01066711545" });
+                  toast({ title: "تم نسخ رقم فودافون كاش 01066711545" });
                 }}
-                className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 text-[11px] font-bold hover:bg-blue-100 transition-all"
+                className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 text-[11px] font-bold hover:bg-rose-100 transition-all"
               >
                 نسخ الرقم
               </button>

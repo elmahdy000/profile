@@ -380,9 +380,11 @@ export function AccessScreen({
                 <div className="flex items-start gap-2 text-[#0866D9] font-bold">
                   <span className="shrink-0 font-black">2.</span>
                   <span>
-                    <strong>طريقة تحويل الاشتراك:</strong> يمكنك التحويل عبر فودافون كاش أو إنستا باي على أحد الأرقام:
-                    <strong className="block text-[#0B63CE] font-mono text-xs dir-ltr font-black mt-1">01025131212  -  01066711545</strong>
-                    ثم رفع صورة إيصال التحويل من داخل حسابك بالمنصة ليفعّله الأدمن فوريًا.
+                    <strong>طريقة تحويل الاشتراك:</strong> يمكنك التحويل عبر فودافون كاش أو إنستا باي على الرقم:
+                    <strong className="inline-block text-[#0B63CE] font-mono text-xs dir-ltr font-black mx-1">01025131212</strong>
+                    أو عبر <strong>فودافون كاش فقط</strong> على الرقم:
+                    <strong className="inline-block text-rose-600 font-mono text-xs dir-ltr font-black mx-1">01066711545</strong>،
+                    ثم رفع صورة الإيصال ليفعّله الأدمن فوريًا.
                   </span>
                 </div>
               </div>
