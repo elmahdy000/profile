@@ -156,13 +156,17 @@ export function ParentPortal() {
     }
   };
 
-  // Poll parent report every 8 seconds for realtime sound notifications
+  // On mount: check if already logged in (silent - don't touch login/register tab)
   useEffect(() => {
     fetchReport(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Poll every 8 seconds ONLY while on report screen
+  useEffect(() => {
+    if (activeMode !== "report") return;
     const interval = setInterval(() => {
-      if (activeMode === "report") {
-        fetchReport(true);
-      }
+      fetchReport(true);
     }, 8000);
     return () => clearInterval(interval);
   }, [activeMode, soundEnabled]);
