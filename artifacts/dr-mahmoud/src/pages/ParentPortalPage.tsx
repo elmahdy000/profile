@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Users, Phone, KeyRound, ArrowRight, ShieldCheck, CheckCircle2, Video, Award, Clock, LogOut, RefreshCw, AlertCircle, FileText } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Users, Phone, KeyRound, ArrowRight, ShieldCheck, CheckCircle2, Video, Award, Clock, LogOut, RefreshCw, AlertCircle, FileText, Bell, BellRing, Volume2, Smartphone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 type ParentReportData = {
@@ -44,7 +44,44 @@ type ParentReportData = {
     timeSpentSeconds: number;
     createdAt: string;
   }>;
+  notifications: Array<{
+    id: number;
+    title: string;
+    message: string;
+    type: string;
+    read: boolean;
+    createdAt: string;
+  }>;
 };
+
+// Web Audio API synthesized chime for crisp audio alert without external assets
+function playNotificationChime() {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    if (ctx.state === "suspended") {
+      ctx.resume();
+    }
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5 note
+    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15); // A5 note
+
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.5);
+  } catch (err) {
+    console.error("Audio playback error:", err);
+  }
+}
 
 function formatSeconds(seconds: number): string {
   if (!seconds || isNaN(seconds)) return "00:00";
@@ -71,6 +108,8 @@ export function ParentPortal() {
   const { toast } = useToast();
   const [activeMode, setActiveMode] = useState<"login" | "register" | "report">("login");
   const [isLoading, setIsLoading] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const prevNotificationCountRef = useRef<number | null>(null);
 
   // Register form state
   const [regName, setRegName] = useState("");
@@ -84,27 +123,49 @@ export function ParentPortal() {
   // Report state
   const [reportData, setReportData] = useState<ParentReportData | null>(null);
 
-  const fetchReport = async () => {
-    setIsLoading(true);
+  const fetchReport = async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
       const res = await fetch("/api/parent/report", { credentials: "include" });
       if (res.ok) {
-        const json = await res.json();
+        const json: ParentReportData = await res.json();
+
+        // Detect new admin notifications & trigger sound chime + toast
+        if (json.notifications && json.notifications.length > 0) {
+          const currentCount = json.notifications.length;
+          if (prevNotificationCountRef.current !== null && currentCount > prevNotificationCountRef.current) {
+            const latest = json.notifications[0];
+            if (soundEnabled) playNotificationChime();
+            toast({
+              title: `تنبيه جديد من الإدارة: ${latest.title}`,
+              description: latest.message,
+            });
+          }
+          prevNotificationCountRef.current = currentCount;
+        }
+
         setReportData(json);
         setActiveMode("report");
       } else {
-        setActiveMode("login");
+        if (!silent) setActiveMode("login");
       }
     } catch {
-      setActiveMode("login");
+      if (!silent) setActiveMode("login");
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
+  // Poll parent report every 8 seconds for realtime sound notifications
   useEffect(() => {
-    fetchReport();
-  }, []);
+    fetchReport(false);
+    const interval = setInterval(() => {
+      if (activeMode === "report") {
+        fetchReport(true);
+      }
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [activeMode, soundEnabled]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -184,13 +245,19 @@ export function ParentPortal() {
         
         {/* Portal Header */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-[#0B63CE] text-xs font-bold">
-            <ShieldCheck className="w-4 h-4" />
-            <span>بوابة ولي الأمر الرسمية لمتابعة الطالب</span>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-[#0B63CE] text-xs font-bold">
+              <ShieldCheck className="w-4 h-4" />
+              <span>بوابة ولي الأمر الرسمية لمتابعة الطالب</span>
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold">
+              <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
+              <span>تطبيق PWA مثبت وجاهز للموبايل</span>
+            </div>
           </div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">أكاديمية د. محمود المهدي للبرمجة</h1>
           <p className="text-sm text-slate-500 max-w-lg mx-auto">
-            متابعة دقيقة ومستمرة لنسبة إنجاز ابنك، الدروس المسموعة بالدقيقة والتاريخ، ونتائج الاختبارات أولاً بأول.
+            متابعة دقيقة ومستمرة لنسبة إنجاز ابنك، الدروس المسموعة بالدقيقة والتاريخ، وتنبيهات صوتية فورية للإدارة.
           </p>
         </div>
 
@@ -215,13 +282,33 @@ export function ParentPortal() {
                   </div>
                 </div>
 
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-2 self-start sm:self-auto"
-                >
-                  <LogOut className="w-4 h-4 text-slate-500" />
-                  <span>تسجيل الخروج</span>
-                </button>
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = !soundEnabled;
+                      setSoundEnabled(next);
+                      if (next) playNotificationChime();
+                      toast({ title: next ? "تم تفعيل التنبيهات الصوتية 🔔" : "تم كتم التنبيهات الصوتية 🔕" });
+                    }}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${
+                      soundEnabled
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : "bg-slate-100 text-slate-500 border-slate-200"
+                    }`}
+                  >
+                    {soundEnabled ? <BellRing className="w-3.5 h-3.5 text-emerald-600 animate-pulse" /> : <Bell className="w-3.5 h-3.5" />}
+                    <span>{soundEnabled ? "التنبيهات الصوتية مفعّلة" : "التنبيهات الصوتية مكتومة"}</span>
+                  </button>
+
+                  <button
+                    onClick={handleLogout}
+                    className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4 text-slate-500" />
+                    <span>تسجيل الخروج</span>
+                  </button>
+                </div>
               </div>
 
               {/* Status Banner */}
@@ -261,6 +348,33 @@ export function ParentPortal() {
                 </div>
               </div>
             </div>
+
+            {/* Admin Notifications Alert Box */}
+            {reportData.notifications && reportData.notifications.length > 0 && (
+              <div className="bg-[#0B63CE]/5 border border-[#0B63CE]/20 rounded-3xl p-6 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                    <Bell className="w-4 h-4 text-[#0B63CE]" />
+                    <span>تنبيهات وإشعارات الإدارة الموجهة للطالب ({reportData.notifications.length})</span>
+                  </h3>
+                  <span className="text-[11px] font-bold text-[#0B63CE] bg-[#0B63CE]/10 px-2.5 py-0.5 rounded-full">
+                    مصحوبة بتنبيه صوتي 🔔
+                  </span>
+                </div>
+
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {reportData.notifications.map((notif) => (
+                    <div key={notif.id} className="p-3.5 bg-white rounded-2xl border border-slate-200/80 space-y-1 text-xs">
+                      <div className="flex items-center justify-between">
+                        <strong className="font-bold text-slate-900">{notif.title}</strong>
+                        <span className="text-[10px] text-slate-400 font-mono">{formatDate(notif.createdAt)}</span>
+                      </div>
+                      <p className="text-slate-600 text-xs leading-relaxed">{notif.message}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Watch History */}
             <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">

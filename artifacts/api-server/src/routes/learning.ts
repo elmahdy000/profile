@@ -3266,10 +3266,11 @@ router.get("/api/parent/report", async (req, res, next) => {
       return;
     }
 
-    const [progressRecords, videos, attempts] = await Promise.all([
+    const [progressRecords, videos, attempts, notifications] = await Promise.all([
       db.select().from(videoProgressTable).where(eq(videoProgressTable.studentId, student.id)),
       db.select({ id: videosTable.id, title: videosTable.title, category: videosTable.category, stage: videosTable.stage }).from(videosTable),
       db.select().from(quizAttemptsTable).where(eq(quizAttemptsTable.studentId, student.id)),
+      db.select().from(studentNotificationsTable).where(eq(studentNotificationsTable.studentId, student.id)).orderBy(desc(studentNotificationsTable.createdAt)),
     ]);
 
     const videoMap = new Map(videos.map((v) => [v.id, v]));
@@ -3324,6 +3325,14 @@ router.get("/api/parent/report", async (req, res, next) => {
         passed: a.passed,
         timeSpentSeconds: a.timeSpentSeconds,
         createdAt: a.createdAt,
+      })),
+      notifications: notifications.map((n) => ({
+        id: n.id,
+        title: n.title,
+        message: n.message,
+        type: n.type,
+        readAt: n.readAt,
+        createdAt: n.createdAt,
       })),
     });
   } catch (error) {
