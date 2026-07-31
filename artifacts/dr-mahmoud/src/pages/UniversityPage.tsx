@@ -202,76 +202,102 @@ export default function UniversityPage() {
 
       <main>
         {/* Hero Section */}
-        <section className="py-16 lg:py-24 relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800/80">
+        <section className="py-12 lg:py-20 relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800/80">
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-blue-600/10 rounded-full blur-[140px]" />
           </div>
 
           <div className="container mx-auto px-4 lg:px-8 relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="max-w-4xl mx-auto text-center space-y-6"
-            >
-              <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
-                <a href="/" className="hover:text-blue-400 transition-colors">
-                  الرئيسية
-                </a>
-                <ArrowRight className="w-3.5 h-3.5 rotate-180" />
-                <span className="text-blue-400 font-bold">مواد كليات الحاسبات والهندسة</span>
-              </div>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center max-w-6xl mx-auto">
+              
+              {/* Text Side */}
+              <motion.div
+                initial={{ opacity: 0, x: 24 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+                className="lg:col-span-7 space-y-6 text-right"
+              >
+                <div className="flex items-center gap-2 text-xs text-slate-400">
+                  <a href="/" className="hover:text-blue-400 transition-colors">
+                    الرئيسية
+                  </a>
+                  <ArrowRight className="w-3.5 h-3.5 rotate-180" />
+                  <span className="text-blue-400 font-bold">مواد كليات الحاسبات والهندسة</span>
+                </div>
 
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-bold rounded-full">
-                <GraduationCap className="w-4 h-4" />
-                <span>دعم وتأسيس طلاب الفرقة الأولى والثانية</span>
-              </div>
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-bold rounded-full">
+                  <GraduationCap className="w-4 h-4" />
+                  <span>دعم وتأسيس طلاب الفرقة الأولى والثانية</span>
+                </div>
 
-              <h1 className="text-3xl md:text-5xl font-black text-white leading-tight">
-                شرح وتبسيط{" "}
-                <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                  مواد حاسبات ومعلومات
-                </span>
-              </h1>
+                <h1 className="text-3xl md:text-5xl font-black text-white leading-tight">
+                  شرح وتبسيط{" "}
+                  <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                    مواد حاسبات ومعلومات
+                  </span>
+                </h1>
 
-              <p className="text-slate-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-                تغطية شاملة وتدريب عملي على امتحانات الفرقة الأولى والثانية — من الأساسيات حتى احتراف البرمجة وهياكل البيانات والذكاء الاصطناعي.
-              </p>
+                <p className="text-slate-300 text-base leading-relaxed">
+                  تغطية شاملة وتدريب عملي على امتحانات الفرقة الأولى والثانية — من الأساسيات حتى احتراف البرمجة وهياكل البيانات والذكاء الاصطناعي مع تطبيق زوم تفاعلي وكتابة الكود خطوة بخطوة.
+                </p>
 
-              {/* Filter buttons */}
-              <div className="flex flex-wrap justify-center gap-3 pt-4">
-                <button
-                  onClick={() => setActiveYear("all")}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                    activeYear === "all"
-                      ? "bg-[#0866D9] text-white shadow-lg shadow-blue-500/25"
-                      : "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
-                  }`}
-                >
-                  جميع المواد (13 مادة)
-                </button>
-                <button
-                  onClick={() => setActiveYear("year1")}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                    activeYear === "year1"
-                      ? "bg-[#0866D9] text-white shadow-lg shadow-blue-500/25"
-                      : "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
-                  }`}
-                >
-                  مواد الفرقة الأولى (9 مواد)
-                </button>
-                <button
-                  onClick={() => setActiveYear("year2")}
-                  className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                    activeYear === "year2"
-                      ? "bg-[#0866D9] text-white shadow-lg shadow-blue-500/25"
-                      : "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
-                  }`}
-                >
-                  مواد الفرقة الثانية (4 مواد رئيسية)
-                </button>
-              </div>
-            </motion.div>
+                {/* Filter buttons */}
+                <div className="flex flex-wrap gap-2.5 pt-2">
+                  <button
+                    onClick={() => setActiveYear("all")}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                      activeYear === "all"
+                        ? "bg-[#0866D9] text-white shadow-lg shadow-blue-500/25"
+                        : "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    جميع المواد (13 مادة)
+                  </button>
+                  <button
+                    onClick={() => setActiveYear("year1")}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                      activeYear === "year1"
+                        ? "bg-[#0866D9] text-white shadow-lg shadow-blue-500/25"
+                        : "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    مواد الفرقة الأولى (9 مواد)
+                  </button>
+                  <button
+                    onClick={() => setActiveYear("year2")}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                      activeYear === "year2"
+                        ? "bg-[#0866D9] text-white shadow-lg shadow-blue-500/25"
+                        : "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    مواد الفرقة الثانية (4 مواد)
+                  </button>
+                </div>
+              </motion.div>
+
+              {/* Image Side */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="lg:col-span-5 relative"
+              >
+                <div className="relative rounded-3xl overflow-hidden border border-blue-500/30 shadow-2xl shadow-blue-600/15 group">
+                  <img
+                    src="/university_hero.jpg"
+                    alt="طلاب حاسبات ومعلومات يتعلمون البرمجة مع د. محمود المهدي"
+                    className="w-full h-[320px] sm:h-[380px] object-cover object-left transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent opacity-80" />
+                  <div className="absolute bottom-4 right-4 left-4 p-3 rounded-2xl bg-slate-950/80 backdrop-blur-md border border-slate-800 text-right">
+                    <span className="text-xs font-bold text-white block">مجموعات وحصص أونلاين تفاعلية</span>
+                    <span className="text-[11px] text-blue-400">تطبيقات برمجية ومراجعات امتحانات الميدتيرم والفاينل</span>
+                  </div>
+                </div>
+              </motion.div>
+
+            </div>
           </div>
         </section>
 
