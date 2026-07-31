@@ -1601,6 +1601,7 @@ export default function AdminDashboard() {
               <SidebarItem icon={Upload} label="🎬 رفع فيديو جديد" active={activeTab === "upload-video"} onClick={() => openVideoModal("add")} variant="featured" />
               <span className="block px-3 pb-1 pt-4 text-[10px] font-black uppercase tracking-wider text-slate-400">النظام</span>
               <SidebarItem icon={Users} label="إدارة المنصة والطلاب" active={activeTab === "learning"} onClick={() => setActiveTab("learning")} />
+              <SidebarItem icon={BarChart3} label="تقرير نشاط الطلاب (Realtime)" active={activeTab === "student-analytics"} onClick={() => setActiveTab("student-analytics")} />
               <SidebarItem icon={Settings} label="إعدادات الموقع" active={activeTab === "settings"} onClick={() => setActiveTab("settings")} />
             </nav>
             <div className="mt-4 grid grid-cols-2 gap-2 border-t border-slate-100 pt-4">
