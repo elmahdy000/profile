@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Users, Phone, KeyRound, ArrowRight, ShieldCheck, CheckCircle2, Video, Award, Clock, LogOut, RefreshCw, AlertCircle, FileText, Bell, BellRing, Volume2, Smartphone } from "lucide-react";
+import { Users, Phone, KeyRound, ArrowRight, ShieldCheck, CheckCircle2, Video, Award, Clock, LogOut, RefreshCw, AlertCircle, FileText, Bell, BellRing, Volume2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 type ParentReportData = {
@@ -253,10 +253,6 @@ export function ParentPortal() {
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-[#0B63CE] text-xs font-bold">
               <ShieldCheck className="w-4 h-4" />
               <span>بوابة ولي الأمر الرسمية لمتابعة الطالب</span>
-            </div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold">
-              <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
-              <span>تطبيق PWA مثبت وجاهز للموبايل</span>
             </div>
           </div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">أكاديمية د. محمود المهدي للبرمجة</h1>
