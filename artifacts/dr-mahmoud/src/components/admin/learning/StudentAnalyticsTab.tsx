@@ -94,8 +94,10 @@ export function StudentAnalyticsTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState<"all" | "active" | "inactive" | "paid">("all");
+  const [filterType, setFilterType] = useState<"all" | "active" | "inactive" | "no_achievement" | "paid">("all");
   const [selectedStudent, setSelectedStudent] = useState<StudentAnalyticsItem | null>(null);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [motivationTemplate, setMotivationTemplate] = useState("reminder");
 
   const fetchAnalytics = async (showRefreshSpinner = false) => {
     if (showRefreshSpinner) setIsRefreshing(true);
@@ -137,6 +139,7 @@ export function StudentAnalyticsTab() {
 
       if (filterType === "active") return !item.isInactive;
       if (filterType === "inactive") return item.isInactive;
+      if (filterType === "no_achievement") return item.completedVideosCount === 0 && item.passedQuizzesCount === 0;
       if (filterType === "paid") return item.paymentStatus === "paid";
 
       return true;
@@ -147,8 +150,9 @@ export function StudentAnalyticsTab() {
     const total = data.length;
     const active = data.filter((d) => !d.isInactive).length;
     const inactive = data.filter((d) => d.isInactive).length;
+    const noAchievement = data.filter((d) => d.completedVideosCount === 0 && d.passedQuizzesCount === 0).length;
     const totalWatched = data.reduce((acc, d) => acc + d.watchedVideosCount, 0);
-    return { total, active, inactive, totalWatched };
+    return { total, active, inactive, noAchievement, totalWatched };
   }, [data]);
 
   return (
@@ -178,44 +182,54 @@ export function StudentAnalyticsTab() {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#0B63CE] flex items-center justify-center font-bold">
-            <Users className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#0B63CE] flex items-center justify-center font-bold">
+            <Users className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[11px] font-bold text-slate-500 block">إجمالي الطلاب</span>
-            <span className="text-xl font-black text-slate-900">{stats.total} طالب</span>
+            <span className="text-[10px] font-bold text-slate-500 block">إجمالي الطلاب</span>
+            <span className="text-lg font-black text-slate-900">{stats.total} طالب</span>
           </div>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-            <UserCheck className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+            <UserCheck className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[11px] font-bold text-slate-500 block">طلاب نشطون مؤخراً</span>
-            <span className="text-xl font-black text-emerald-600">{stats.active} طالب</span>
+            <span className="text-[10px] font-bold text-slate-500 block">طلاب نشطون مؤخراً</span>
+            <span className="text-lg font-black text-emerald-600">{stats.active} طالب</span>
           </div>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
-            <UserX className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+            <Award className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[11px] font-bold text-slate-500 block">طلاب منقطعون (+3 أيام)</span>
-            <span className="text-xl font-black text-rose-600">{stats.inactive} طالب</span>
+            <span className="text-[10px] font-bold text-slate-500 block">بدون إنجاز تذكر</span>
+            <span className="text-lg font-black text-amber-600">{stats.noAchievement} طالب</span>
           </div>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
-            <Video className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+            <UserX className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[11px] font-bold text-slate-500 block">مشاهدات الدروس الكلية</span>
-            <span className="text-xl font-black text-purple-600">{stats.totalWatched} درساً</span>
+            <span className="text-[10px] font-bold text-slate-500 block">طلاب منقطعون (+3 أيام)</span>
+            <span className="text-lg font-black text-rose-600">{stats.inactive} طالب</span>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+            <Video className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[10px] font-bold text-slate-500 block">إجمالي مشاهدات الدروس</span>
+            <span className="text-lg font-black text-purple-600">{stats.totalWatched} درساً</span>
           </div>
         </div>
       </div>
@@ -243,6 +257,15 @@ export function StudentAnalyticsTab() {
             الكل ({data.length})
           </button>
           <button
+            onClick={() => setFilterType("no_achievement")}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+              filterType === "no_achievement" ? "bg-amber-600 text-white" : "bg-amber-50 text-amber-700 hover:bg-amber-100"
+            }`}
+          >
+            <Award className="w-3.5 h-3.5" />
+            بدون إنجاز ({stats.noAchievement})
+          </button>
+          <button
             onClick={() => setFilterType("inactive")}
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
               filterType === "inactive" ? "bg-rose-600 text-white" : "bg-rose-50 text-rose-700 hover:bg-rose-100"
@@ -252,12 +275,11 @@ export function StudentAnalyticsTab() {
             المنقطعون فقط ({stats.inactive})
           </button>
           <button
-            onClick={() => setFilterType("active")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-              filterType === "active" ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-            }`}
+            onClick={() => setIsBulkModalOpen(true)}
+            className="px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
           >
-            النشطون فقط ({stats.active})
+            <MessageCircle className="w-3.5 h-3.5" />
+            رسالة تحفيز جماعية عبر الواتساب 🚀
           </button>
           <button
             onClick={() => setFilterType("paid")}
@@ -526,6 +548,130 @@ export function StudentAnalyticsTab() {
                 <MessageCircle className="w-4 h-4" />
                 <span>تواصل مع الطالب عبر الواتساب</span>
               </a>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Bulk WhatsApp Motivation Modal */}
+      {isBulkModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" onClick={() => setIsBulkModalOpen(false)} />
+          <div className="bg-white border border-slate-200 w-full max-w-2xl rounded-3xl p-6 relative z-10 max-h-[90vh] overflow-y-auto shadow-2xl space-y-6 text-right">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                  <MessageCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">إرسال وتجهيز رسائل التحفيز عبر الواتساب 🚀</h3>
+                  <p className="text-xs text-slate-500">تجميع الطلاب وتجهيز رسالة المراسلة الفردية بنقرة زر واحدة لكل طالب</p>
+                </div>
+              </div>
+
+              <button onClick={() => setIsBulkModalOpen(false)} className="p-2 rounded-xl text-slate-400 hover:bg-slate-100">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Template Selector */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-800">اختر قالب الرسالة التحفيزية:</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMotivationTemplate("no_achievement")}
+                  className={`p-3 rounded-xl border text-right transition-all ${
+                    motivationTemplate === "no_achievement" ? "border-amber-500 bg-amber-50/50 text-amber-900 font-bold" : "border-slate-200 hover:bg-slate-50 text-slate-700 text-xs"
+                  }`}
+                >
+                  <span className="block font-bold text-xs">🎯 للطلاب بدون إنجاز</span>
+                  <span className="text-[10px] text-slate-500 block mt-1">تذكير الطالب بالبدء وتشجيعه على استغلال الوقت.</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setMotivationTemplate("inactive")}
+                  className={`p-3 rounded-xl border text-right transition-all ${
+                    motivationTemplate === "inactive" ? "border-rose-500 bg-rose-50/50 text-rose-900 font-bold" : "border-slate-200 hover:bg-slate-50 text-slate-700 text-xs"
+                  }`}
+                >
+                  <span className="block font-bold text-xs">⚠️ للطلاب المنقطعين</span>
+                  <span className="text-[10px] text-slate-500 block mt-1">رسالة تنبيهية بالدخول للدروس الجديدة والمتابعة.</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setMotivationTemplate("reminder")}
+                  className={`p-3 rounded-xl border text-right transition-all ${
+                    motivationTemplate === "reminder" ? "border-blue-500 bg-blue-50/50 text-blue-900 font-bold" : "border-slate-200 hover:bg-slate-50 text-slate-700 text-xs"
+                  }`}
+                >
+                  <span className="block font-bold text-xs">⭐ تحفيز عام</span>
+                  <span className="text-[10px] text-slate-500 block mt-1">رسالة تشجيعية عامة للتقدم في المحتوى.</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Targeted Students List */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-800">
+                  قائمة الطلاب المستهدفين (
+                  {motivationTemplate === "no_achievement"
+                    ? data.filter((d) => d.completedVideosCount === 0 && d.passedQuizzesCount === 0).length
+                    : motivationTemplate === "inactive"
+                    ? data.filter((d) => d.isInactive).length
+                    : data.length}
+                  )
+                </span>
+                <span className="text-[11px] text-slate-500">اضغط على زر الواتساب بجانب الطالب لمراسلته مباشرة:</span>
+              </div>
+
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                {(motivationTemplate === "no_achievement"
+                  ? data.filter((d) => d.completedVideosCount === 0 && d.passedQuizzesCount === 0)
+                  : motivationTemplate === "inactive"
+                  ? data.filter((d) => d.isInactive)
+                  : data
+                ).map((st) => {
+                  const messageText =
+                    motivationTemplate === "no_achievement"
+                      ? `أهلاً بك يا ${st.name} 👋، لاحظنا أنك لم تستكمل مشاهدة أية دروس أو اختبارات بعد في منصة د. محمود المهدي. البداية دائماً هي أهم خطوة، نحن هنا لمساعدتك والتأكد من وصولك للقمة 🚀!`
+                      : motivationTemplate === "inactive"
+                      ? `أهلاً بك يا ${st.name} 👋، افتقدناك في المنصة طوال الفترة الماضية! هناك محتوى جديد وتحديثات هامة بانتظارك، نتمنى لك كل التوفيق والعودة بقوة 💪.`
+                      : `أهلاً بك يا ${st.name} ⭐، نود تشجيعك على الاستمرار والتفوق في منصة د. محمود المهدي البرمجية. واصل الاجتهاد!`;
+
+                  return (
+                    <div key={st.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between text-xs">
+                      <div>
+                        <strong className="block font-bold text-slate-900">{st.name}</strong>
+                        <span className="text-[10px] text-slate-500">{st.phone} • الكود: {st.accessCode || "بدون كود"}</span>
+                      </div>
+
+                      <a
+                        href={`https://wa.me/2${st.phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(messageText)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-all flex items-center gap-1.5 shadow-xs"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        <span>مراسلة الآن</span>
+                      </a>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Footer Close */}
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-end">
+              <button onClick={() => setIsBulkModalOpen(false)} className="px-5 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200">
+                إغلاق
+              </button>
             </div>
 
           </div>
