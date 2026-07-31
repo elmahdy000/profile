@@ -2766,6 +2766,8 @@ router.post(
           res.status(403).json({ error: `أكمل ${quiz.requiredProgress}% من الدرس قبل بدء الاختبار` }); return;
         }
       }
+      // Only consider the questions that were actually shown to the student.
+      // If questionsToShow is set, slice to that count; otherwise use all questions.
       const effectiveTotal =
         quiz.questionsToShow && quiz.questionsToShow > 0 && quiz.questionsToShow < quiz.questions.length
           ? quiz.questionsToShow
@@ -2776,7 +2778,12 @@ router.post(
         return;
       }
 
-      const correct = quiz.questions.reduce(
+      // ⚠️ IMPORTANT: Only score the first `effectiveTotal` questions.
+      // The frontend maps answers back using _originalIndex so answers[] aligns with
+      // the full quiz.questions array, but we must only evaluate the effective subset.
+      const effectiveQuestions = quiz.questions.slice(0, effectiveTotal);
+
+      const correct = effectiveQuestions.reduce(
         (count, question, index) =>
           count + (answers[index] !== undefined && answers[index] >= 0 && answers[index] === question.correctIndex ? 1 : 0),
         0,
@@ -2785,9 +2792,10 @@ router.post(
       const score = Math.min(100, Math.round((correct / effectiveTotal) * 100));
       const passed = score >= quiz.passingScore;
       const timeSpentSeconds = Math.max(0, Math.round(Number(req.body.timeSpentSeconds ?? 0))) || 0;
-      const details = quiz.questions.map((question, index) => ({
+      // Details only for the effective questions shown
+      const details = effectiveQuestions.map((question, index) => ({
         questionIndex: index,
-        selectedOption: answers[index],
+        selectedOption: answers[index] ?? -1,
         correctOption: question.correctIndex,
         isCorrect: answers[index] === question.correctIndex,
       }));

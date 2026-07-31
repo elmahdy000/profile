@@ -6,6 +6,7 @@ import {
   parentsTable,
   parentSessionsTable,
   quizAttemptsTable,
+  quizzesTable,
   studentNotificationsTable,
   studentsTable,
   videoProgressTable,
@@ -249,14 +250,16 @@ router.get("/parent/report", async (req, res, next) => {
       return;
     }
 
-    const [progressRecords, videos, attempts, notifications] = await Promise.all([
+    const [progressRecords, videos, attempts, quizRows, notifications] = await Promise.all([
       db.select().from(videoProgressTable).where(eq(videoProgressTable.studentId, student.id)),
       db.select({ id: videosTable.id, title: videosTable.title, category: videosTable.category, stage: videosTable.stage }).from(videosTable),
-      db.select().from(quizAttemptsTable).where(eq(quizAttemptsTable.studentId, student.id)),
+      db.select().from(quizAttemptsTable).where(eq(quizAttemptsTable.studentId, student.id)).orderBy(desc(quizAttemptsTable.createdAt)),
+      db.select({ id: quizzesTable.id, title: quizzesTable.title }).from(quizzesTable),
       db.select().from(studentNotificationsTable).where(eq(studentNotificationsTable.studentId, student.id)).orderBy(desc(studentNotificationsTable.createdAt)),
     ]);
 
     const videoMap = new Map(videos.map((v) => [v.id, v]));
+    const quizTitleMap = new Map(quizRows.map((q) => [q.id, q.title]));
 
     const watchHistory = progressRecords.map((p) => {
       const vid = videoMap.get(p.videoId);
@@ -276,6 +279,10 @@ router.get("/parent/report", async (req, res, next) => {
     const now = new Date();
     const lastActive = student.lastActiveAt ? new Date(student.lastActiveAt) : (student.lastLoginAt ? new Date(student.lastLoginAt) : new Date(student.createdAt));
     const daysInactive = Math.floor((now.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24));
+
+    // Deduplicate passed quizzes count by unique quizId (student passed the quiz at least once)
+    const passedQuizIds = new Set(attempts.filter((a) => a.passed).map((a) => a.quizId));
+    const attemptedQuizIds = new Set(attempts.map((a) => a.quizId));
 
     res.json({
       parent: {
@@ -297,13 +304,15 @@ router.get("/parent/report", async (req, res, next) => {
         isInactive: daysInactive >= 3,
         watchedCount: watchHistory.length,
         completedCount: watchHistory.filter((w) => w.completed).length,
-        quizzesCount: attempts.length,
-        passedQuizzesCount: attempts.filter((a) => a.passed).length,
+        quizzesCount: attemptedQuizIds.size,
+        passedQuizzesCount: passedQuizIds.size,
+        attemptsCount: attempts.length,
       },
       watchHistory,
       quizHistory: attempts.map((a) => ({
         id: a.id,
         quizId: a.quizId,
+        quizTitle: quizTitleMap.get(a.quizId) || `اختبار #${a.quizId}`,
         score: a.score,
         passed: a.passed,
         timeSpentSeconds: a.timeSpentSeconds,

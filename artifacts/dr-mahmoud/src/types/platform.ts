@@ -59,6 +59,7 @@ export type Quiz = {
   questionsToShow?: number | null;
   showExplanations?: boolean;
   attemptsUsed?: number;
+  bestScore?: number | null;
   locked?: boolean;
   lockedReason?: string | null;
   questions: QuizQuestion[];

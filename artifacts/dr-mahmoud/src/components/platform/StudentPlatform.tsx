@@ -228,14 +228,21 @@ export function StudentPlatform() {
     setQuizSubmitting(true);
     const timeSpentSeconds = Math.round((Date.now() - quizStartTime) / 1000);
 
-    // Map answers back using full quiz original questions length
-    const totalOriginalQuestions = activeQuiz.questions ? activeQuiz.questions.length : 0;
-    const originalAnswers = Array(totalOriginalQuestions).fill(-1);
-    
+    // The displayed questions may be shuffled and/or sliced.
+    // We need to send answers indexed by their ORIGINAL position in the quiz
+    // so the backend can compare answers[i] with quiz.questions[i].correctIndex.
+    //
+    // effectiveTotal = number of questions actually shown to the student.
+    // We build an array of size effectiveTotal, where each slot corresponds
+    // to the question's _originalIndex (clamped to effectiveTotal - 1).
+    const effectiveTotal = activeQuiz.questions.length; // already sliced in startQuiz
+    const answersToSend = Array<number>(effectiveTotal).fill(-1);
+
     activeQuiz.questions.forEach((q: any, i: number) => {
-      const targetIdx = q._originalIndex !== undefined ? q._originalIndex : i;
-      if (targetIdx >= 0 && targetIdx < totalOriginalQuestions) {
-        originalAnswers[targetIdx] = quizAnswers[i];
+      const originalIdx = q._originalIndex !== undefined ? q._originalIndex : i;
+      // Only fill slots within the effective range shown to this student
+      if (originalIdx >= 0 && originalIdx < effectiveTotal) {
+        answersToSend[originalIdx] = quizAnswers[i] ?? -1;
       }
     });
 
@@ -252,7 +259,7 @@ export function StudentPlatform() {
         `/api/learning/quizzes/${activeQuiz.id}/submit`,
         {
           method: "POST",
-          body: JSON.stringify({ answers: originalAnswers, timeSpentSeconds }),
+          body: JSON.stringify({ answers: answersToSend, timeSpentSeconds }),
         },
       );
       setQuizResult(res);
