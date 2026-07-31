@@ -37,24 +37,29 @@ function getParentSession(req: any): string | null {
 // POST /api/parent/register
 router.post("/parent/register", parentRegisterLimit, async (req, res, next) => {
   try {
-    const parentName = String(req.body.parentName ?? "").trim();
-    const parentPhone = String(req.body.parentPhone ?? "").replace(/\s+/g, "");
-    const studentPhone = String(req.body.studentPhone ?? "").replace(/\s+/g, "");
+    const parentName = String(req.body.parentName ?? req.body.name ?? "").trim();
+    const parentPhone = String(req.body.parentPhone ?? req.body.phone ?? "").replace(/\s+/g, "");
+    const studentQuery = String(req.body.studentPhone ?? req.body.studentIdentifier ?? "").replace(/\s+/g, "");
 
-    if (!parentName || !parentPhone || !studentPhone) {
-      res.status(400).json({ error: "جميع البيانات مطلوبة" });
+    if (!parentName || !parentPhone || !studentQuery) {
+      res.status(400).json({ error: "اسم ولي الأمر، رقم الهاتف، ورقم هاتف/كود الطالب جميعها مطلوبة" });
       return;
     }
 
-    const cleanStudentPhone = studentPhone.replace(/[^\d]/g, "");
+    const cleanStudentPhone = studentQuery.replace(/[^\d]/g, "");
     const [student] = await db
       .select()
       .from(studentsTable)
-      .where(sql`REPLACE(${studentsTable.phone}, ' ', '') LIKE ${`%${cleanStudentPhone.slice(-8)}%`}`)
+      .where(
+        and(
+          eq(studentsTable.status, "approved"),
+          sql`(${studentsTable.phone} = ${studentQuery} OR REPLACE(${studentsTable.phone}, ' ', '') LIKE ${`%${cleanStudentPhone.slice(-8)}%`} OR UPPER(${studentsTable.accessCode}) = UPPER(${studentQuery}))`
+        )
+      )
       .limit(1);
 
     if (!student) {
-      res.status(404).json({ error: "رقم الطالب غير مسجل على المنصة. تأكد من قيام الطالب بإنشاء حساب أولاً" });
+      res.status(404).json({ error: "لم نتمكن من العثور على طالب معتمد بهذا الرقم أو الكود. يُرجى التأكد من إنشاء الطالب لحسابه أولاً." });
       return;
     }
 
@@ -109,20 +114,26 @@ router.post("/parent/register", parentRegisterLimit, async (req, res, next) => {
 // POST /api/parent/login
 router.post("/parent/login", parentLoginLimit, async (req, res, next) => {
   try {
+    const pPhone = String(req.body.phone ?? "").trim();
     const parentCode = String(req.body.parentCode ?? "").trim().toUpperCase();
     if (!parentCode) {
       res.status(400).json({ error: "برجاء كتابة كود ولي الأمر" });
       return;
     }
 
+    const conditions = [sql`UPPER(${parentsTable.parentCode}) = ${parentCode}`];
+    if (pPhone) {
+      conditions.push(sql`REPLACE(${parentsTable.phone}, ' ', '') LIKE ${`%${pPhone.replace(/[^\d]/g, "").slice(-8)}%`}`);
+    }
+
     const [parent] = await db
       .select()
       .from(parentsTable)
-      .where(eq(parentsTable.parentCode, parentCode))
+      .where(and(...conditions))
       .limit(1);
 
     if (!parent) {
-      res.status(404).json({ error: "كود ولي الأمر غير صحيح" });
+      res.status(404).json({ error: "كود ولي الأمر أو رقم الهاتف غير صحيح" });
       return;
     }
 
