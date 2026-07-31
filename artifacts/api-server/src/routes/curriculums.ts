@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
 import { db, curriculumsTable } from "@workspace/db";
 import { CreateCurriculumBody, UpdateCurriculumBody } from "@workspace/api-zod";
-import { requireAdmin } from "../middleware/auth";
+import { requireAdmin, requireSuperAdmin } from "../middleware/auth";
+import { logAudit } from "./learning";
 import { eq, asc } from "drizzle-orm";
 
 const router: IRouter = Router();
@@ -73,8 +74,8 @@ router.put("/curriculums/:id", requireAdmin, async (req, res, next) => {
   }
 });
 
-// Delete curriculum (Admin only)
-router.delete("/curriculums/:id", requireAdmin, async (req, res, next) => {
+// Delete curriculum (Super Admin only)
+router.delete("/curriculums/:id", requireSuperAdmin, async (req, res, next) => {
   try {
     const id = parseInt(req.params.id as string, 10);
     const [deleted] = await db
@@ -83,9 +84,11 @@ router.delete("/curriculums/:id", requireAdmin, async (req, res, next) => {
       .returning();
 
     if (!deleted) {
-      res.status(404).json({ error: "Curriculum item not found" });
+      res.status(404).json({ error: "المنهج غير موجود" });
       return;
     }
+
+    await logAudit(req, "DELETE_CURRICULUM", "curriculum", String(id), `حذف درس من المنهج: ${deleted.title} (${deleted.subject})`);
 
     res.json({ success: true });
   } catch (error) {

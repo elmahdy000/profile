@@ -1197,6 +1197,8 @@ router.post(
         .delete(studentSessionsTable)
         .where(eq(studentSessionsTable.studentId, id));
 
+      await logAudit(req, "RESET_DEVICE", "student", String(id), `إلغاء وفك قفل أجهزة الطالب: ${updated.name}`);
+
       res.json({ success: true, message: "تم فك وإلغاء قفل الأجهزة للطالب بنجاح", student: updated });
     } catch (error) {
       next(error);
@@ -1801,7 +1803,7 @@ router.patch(
 
 router.delete(
   "/admin/learning/files/:id",
-  requireAdmin,
+  requireSuperAdmin,
   async (req, res, next) => {
     try {
       const [file] = await db
@@ -1809,12 +1811,15 @@ router.delete(
         .where(eq(learningFilesTable.id, Number(req.params.id)))
         .returning();
       if (!file) {
-        res.status(404).json({ error: "File not found" });
+        res.status(404).json({ error: "الملف غير موجود" });
         return;
       }
       fs.rmSync(path.join(privateUploadDir, path.basename(file.storageName)), {
         force: true,
       });
+
+      await logAudit(req, "DELETE_FILE", "learning_file", String(file.id), `حذف ملف تعليمي: ${file.originalName}`);
+
       res.json({ success: true });
     } catch (error) {
       next(error);
@@ -2486,15 +2491,19 @@ router.patch(
 
 router.delete(
   "/admin/learning/quizzes/:id",
-  requireAdmin,
+  requireSuperAdmin,
   async (req, res, next) => {
     try {
       const [quiz] = await db
         .delete(quizzesTable)
         .where(eq(quizzesTable.id, Number(req.params.id)))
         .returning();
-      if (!quiz) res.status(404).json({ error: "Quiz not found" });
-      else res.json({ success: true });
+      if (!quiz) {
+        res.status(404).json({ error: "الاختبار غير موجود" });
+        return;
+      }
+      await logAudit(req, "DELETE_QUIZ", "quiz", String(quiz.id), `حذف اختبار: ${quiz.title}`);
+      res.json({ success: true });
     } catch (error) {
       next(error);
     }
@@ -2592,7 +2601,7 @@ router.post("/admin/learning/question-bank/batch-import", requireAdmin, async (r
   }
 });
 
-router.delete("/admin/learning/question-bank/:id", requireAdmin, async (req, res, next) => {
+router.delete("/admin/learning/question-bank/:id", requireSuperAdmin, async (req, res, next) => {
   try {
     const [deleted] = await db
       .delete(questionBankTable)
@@ -2602,6 +2611,7 @@ router.delete("/admin/learning/question-bank/:id", requireAdmin, async (req, res
       res.status(404).json({ error: "السؤال غير موجود في البنك" });
       return;
     }
+    await logAudit(req, "DELETE_QUESTION", "question_bank", String(deleted.id), `حذف سؤال من بنك الأسئلة: ${(deleted.question as any)?.questionText || "سؤال"}`);
     res.json({ success: true });
   } catch (error) {
     next(error);

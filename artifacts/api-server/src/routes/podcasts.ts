@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
 import { db, podcastsTable } from "@workspace/db";
 import { CreatePodcastBody, UpdatePodcastBody } from "@workspace/api-zod";
-import { requireAdmin } from "../middleware/auth";
+import { requireAdmin, requireSuperAdmin } from "../middleware/auth";
+import { logAudit } from "./learning";
 import { eq } from "drizzle-orm";
 
 const router: IRouter = Router();
@@ -91,8 +92,8 @@ router.put("/podcasts/:id", requireAdmin, async (req, res, next) => {
   }
 });
 
-// Delete podcast (Admin only)
-router.delete("/podcasts/:id", requireAdmin, async (req, res, next) => {
+// Delete podcast (Super Admin only)
+router.delete("/podcasts/:id", requireSuperAdmin, async (req, res, next) => {
   try {
     const id = parseInt(req.params.id as string, 10);
     const [deleted] = await db
@@ -101,9 +102,11 @@ router.delete("/podcasts/:id", requireAdmin, async (req, res, next) => {
       .returning();
 
     if (!deleted) {
-      res.status(404).json({ error: "Podcast episode not found" });
+      res.status(404).json({ error: "البودكاست غير موجود" });
       return;
     }
+
+    await logAudit(req, "DELETE_PODCAST", "podcast", String(id), `حذف حلقة بودكاست: ${deleted.title}`);
 
     res.json({ success: true });
   } catch (error) {

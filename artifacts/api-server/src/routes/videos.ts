@@ -10,7 +10,8 @@ import {
   videosTable,
 } from "@workspace/db";
 import { CreateVideoBody, UpdateVideoBody } from "@workspace/api-zod";
-import { requireAdmin, isAdminRequest } from "../middleware/auth";
+import { requireAdmin, requireSuperAdmin, isAdminRequest } from "../middleware/auth";
+import { logAudit } from "./learning";
 import { eq, asc, and, inArray } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
@@ -552,8 +553,8 @@ router.put("/videos/:id", requireAdmin, async (req, res, next) => {
   }
 });
 
-// Delete video (Admin only)
-router.delete("/videos/:id", requireAdmin, async (req, res, next) => {
+// Delete video (Super Admin only)
+router.delete("/videos/:id", requireSuperAdmin, async (req, res, next) => {
   try {
     const id = parseInt(req.params.id as string, 10);
     const [deleted] = await db
@@ -562,9 +563,11 @@ router.delete("/videos/:id", requireAdmin, async (req, res, next) => {
       .returning();
 
     if (!deleted) {
-      res.status(404).json({ error: "Video entry not found" });
+      res.status(404).json({ error: "الفيديو غير موجود" });
       return;
     }
+
+    await logAudit(req, "DELETE_VIDEO", "video", String(id), `حذف فيديو / درس: ${deleted.title}`);
 
     res.json({ success: true });
   } catch (error) {

@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
 import { db, bookingsTable } from "@workspace/db";
 import { CreateBookingBody } from "@workspace/api-zod";
-import { requireAdmin } from "../middleware/auth";
+import { requireAdmin, requireSuperAdmin } from "../middleware/auth";
+import { logAudit } from "./learning";
 import { fixedWindowRateLimit } from "../middleware/rate-limit";
 import { eq } from "drizzle-orm";
 
@@ -93,12 +94,12 @@ router.put("/bookings/:id", requireAdmin, async (req, res, next) => {
   }
 });
 
-// Delete booking (Admin only)
-router.delete("/bookings/:id", requireAdmin, async (req, res, next) => {
+// Delete booking (Super Admin only)
+router.delete("/bookings/:id", requireSuperAdmin, async (req, res, next) => {
   try {
     const id = parseInt(req.params.id as string, 10);
     if (!Number.isInteger(id) || id <= 0) {
-      res.status(400).json({ error: "Invalid booking id" });
+      res.status(400).json({ error: "رقم الحجز غير صحيح" });
       return;
     }
     const [deleted] = await db
@@ -107,9 +108,11 @@ router.delete("/bookings/:id", requireAdmin, async (req, res, next) => {
       .returning();
 
     if (!deleted) {
-      res.status(404).json({ error: "Booking not found" });
+      res.status(404).json({ error: "الحجز غير موجود" });
       return;
     }
+
+    await logAudit(req, "DELETE_BOOKING", "booking", String(id), `حذف طلب حجز باسم: ${deleted.name} (${deleted.phone})`);
 
     res.json({ success: true });
   } catch (error) {

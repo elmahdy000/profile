@@ -1,8 +1,8 @@
 import { Router, type IRouter } from "express";
 import { db, coursesTable, curriculumsTable, videosTable } from "@workspace/db";
 import { CreateCourseBody, UpdateCourseBody } from "@workspace/api-zod";
-import { requireAdmin } from "../middleware/auth";
-import { isAdminRequest } from "../middleware/auth";
+import { requireAdmin, requireSuperAdmin, isAdminRequest } from "../middleware/auth";
+import { logAudit } from "./learning";
 import { eq } from "drizzle-orm";
 
 const router: IRouter = Router();
@@ -150,8 +150,8 @@ router.put("/courses/:id", requireAdmin, async (req, res, next) => {
   }
 });
 
-// Delete course (Admin only)
-router.delete("/courses/:id", requireAdmin, async (req, res, next) => {
+// Delete course (Super Admin only)
+router.delete("/courses/:id", requireSuperAdmin, async (req, res, next) => {
   try {
     const id = parseInt(req.params.id as string, 10);
     const [linkedVideo] = await db
@@ -171,11 +171,13 @@ router.delete("/courses/:id", requireAdmin, async (req, res, next) => {
       .returning();
 
     if (!deleted) {
-      res.status(404).json({ error: "Course not found" });
+      res.status(404).json({ error: "الكورس غير موجود" });
       return;
     }
 
-    res.json({ success: true });
+    await logAudit(req, "DELETE_COURSE", "course", String(id), `حذف الكورس: ${deleted.title}`);
+
+    res.status(204).end();
   } catch (error) {
     next(error);
   }
