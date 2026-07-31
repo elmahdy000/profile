@@ -203,8 +203,9 @@ export function StudentPlatform() {
       });
       return;
     }
-    // Map questions with their original index before shuffling
-    let mappedQuestions = quiz.questions.map((q, idx) => ({ ...q, _originalIndex: idx }));
+    // Tag each question with its original DB index BEFORE shuffling
+    const originalTotal = quiz.questions.length;
+    let mappedQuestions = quiz.questions.map((q, idx) => ({ ...q, _originalIndex: idx, _originalTotal: originalTotal }));
     if (quiz.shuffleQuestions) {
       for (let i = mappedQuestions.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -214,6 +215,7 @@ export function StudentPlatform() {
     if (quiz.questionsToShow && quiz.questionsToShow > 0 && quiz.questionsToShow < mappedQuestions.length) {
       mappedQuestions = mappedQuestions.slice(0, quiz.questionsToShow);
     }
+    // _originalTotal is carried on every question so submitQuiz can build the right-sized array
     setActiveQuiz({ ...quiz, questions: mappedQuestions });
     setQuizAnswers(Array(mappedQuestions.length).fill(-1));
     setQuizResult(null);
@@ -229,19 +231,19 @@ export function StudentPlatform() {
     const timeSpentSeconds = Math.round((Date.now() - quizStartTime) / 1000);
 
     // The displayed questions may be shuffled and/or sliced.
-    // We need to send answers indexed by their ORIGINAL position in the quiz
-    // so the backend can compare answers[i] with quiz.questions[i].correctIndex.
+    // We MUST send answers indexed by their ORIGINAL DB position so the backend
+    // can match answers[i] with quiz.questions[i].correctIndex.
     //
-    // effectiveTotal = number of questions actually shown to the student.
-    // We build an array of size effectiveTotal, where each slot corresponds
-    // to the question's _originalIndex (clamped to effectiveTotal - 1).
-    const effectiveTotal = activeQuiz.questions.length; // already sliced in startQuiz
-    const answersToSend = Array<number>(effectiveTotal).fill(-1);
+    // Key insight: _originalTotal is the full DB question count (stored in startQuiz).
+    // We build a full-length array and place each answer at its _originalIndex.
+    // Slots for questions NOT shown to the student remain -1 (unanswered).
+    const firstQ: any = activeQuiz.questions[0];
+    const originalTotal: number = firstQ?._originalTotal ?? activeQuiz.questions.length;
+    const answersToSend = Array<number>(originalTotal).fill(-1);
 
     activeQuiz.questions.forEach((q: any, i: number) => {
-      const originalIdx = q._originalIndex !== undefined ? q._originalIndex : i;
-      // Only fill slots within the effective range shown to this student
-      if (originalIdx >= 0 && originalIdx < effectiveTotal) {
+      const originalIdx: number = q._originalIndex !== undefined ? q._originalIndex : i;
+      if (originalIdx >= 0 && originalIdx < originalTotal) {
         answersToSend[originalIdx] = quizAnswers[i] ?? -1;
       }
     });

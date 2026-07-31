@@ -1965,12 +1965,16 @@ router.get("/learning/quizzes", requireStudent, async (_req, res, next) => {
     const student = res.locals.student as typeof studentsTable.$inferSelect;
     const [quizzes, attempts, progress] = await Promise.all([
       db.select().from(quizzesTable).where(eq(quizzesTable.isPublished, true)).orderBy(desc(quizzesTable.createdAt)),
-      db.select({ id: quizAttemptsTable.id, quizId: quizAttemptsTable.quizId }).from(quizAttemptsTable).where(eq(quizAttemptsTable.studentId, student.id)),
+      db.select({ id: quizAttemptsTable.id, quizId: quizAttemptsTable.quizId, score: quizAttemptsTable.score }).from(quizAttemptsTable).where(eq(quizAttemptsTable.studentId, student.id)),
       db.select({ videoId: videoProgressTable.videoId, progress: videoProgressTable.progress }).from(videoProgressTable).where(eq(videoProgressTable.studentId, student.id)),
     ]);
-    const attemptsByQuiz = new Map<number, number>();
+    const attemptsByQuiz = new Map<number, { count: number; bestScore: number }>();
     for (const attempt of attempts) {
-      attemptsByQuiz.set(attempt.quizId, (attemptsByQuiz.get(attempt.quizId) ?? 0) + 1);
+      const current = attemptsByQuiz.get(attempt.quizId) ?? { count: 0, bestScore: 0 };
+      attemptsByQuiz.set(attempt.quizId, {
+        count: current.count + 1,
+        bestScore: Math.max(current.bestScore, attempt.score ?? 0),
+      });
     }
     const progressByVideo = new Map(progress.map((row) => [row.videoId, row.progress]));
     res.json(
@@ -1979,13 +1983,16 @@ router.get("/learning/quizzes", requireStudent, async (_req, res, next) => {
           canStudentAccessContent(student, quiz.category, quiz.stage, quiz.stages, quiz.courseId),
         )
         .map((quiz) => {
-          const attemptsUsed = attemptsByQuiz.get(quiz.id) ?? 0;
+          const quizAttempts = attemptsByQuiz.get(quiz.id);
+          const attemptsUsed = quizAttempts?.count ?? 0;
+          const bestScore = quizAttempts?.bestScore ?? null;
           const progressLocked = quiz.scope === "lesson" && quiz.videoId !== null &&
             (progressByVideo.get(quiz.videoId) ?? 0) < quiz.requiredProgress;
           const attemptsLocked = attemptsUsed >= quiz.maxAttempts;
           return {
             ...quiz,
             attemptsUsed,
+            bestScore,
             locked: progressLocked || attemptsLocked,
             lockedReason: attemptsLocked
               ? "استخدمت كل المحاولات المتاحة"
@@ -2766,8 +2773,10 @@ router.post(
           res.status(403).json({ error: `أكمل ${quiz.requiredProgress}% من الدرس قبل بدء الاختبار` }); return;
         }
       }
-      // Only consider the questions that were actually shown to the student.
-      // If questionsToShow is set, slice to that count; otherwise use all questions.
+      // effectiveTotal = how many questions the student actually saw.
+      // Frontend sends answers as a FULL-LENGTH array (quiz.questions.length),
+      // with -1 for any questions not shown (shuffle+questionsToShow case).
+      // We score by iterating ALL questions and only counting non-(-1) answers.
       const effectiveTotal =
         quiz.questionsToShow && quiz.questionsToShow > 0 && quiz.questionsToShow < quiz.questions.length
           ? quiz.questionsToShow
@@ -2778,12 +2787,9 @@ router.post(
         return;
       }
 
-      // ⚠️ IMPORTANT: Only score the first `effectiveTotal` questions.
-      // The frontend maps answers back using _originalIndex so answers[] aligns with
-      // the full quiz.questions array, but we must only evaluate the effective subset.
-      const effectiveQuestions = quiz.questions.slice(0, effectiveTotal);
-
-      const correct = effectiveQuestions.reduce(
+      // Iterate ALL original questions — answers[i] maps to quiz.questions[i].
+      // Questions NOT shown to the student have answers[i] === -1, so they won't match.
+      const correct = quiz.questions.reduce(
         (count, question, index) =>
           count + (answers[index] !== undefined && answers[index] >= 0 && answers[index] === question.correctIndex ? 1 : 0),
         0,
@@ -2792,12 +2798,12 @@ router.post(
       const score = Math.min(100, Math.round((correct / effectiveTotal) * 100));
       const passed = score >= quiz.passingScore;
       const timeSpentSeconds = Math.max(0, Math.round(Number(req.body.timeSpentSeconds ?? 0))) || 0;
-      // Details only for the effective questions shown
-      const details = effectiveQuestions.map((question, index) => ({
+      // Build details for ALL original questions so the frontend can review answers
+      const details = quiz.questions.map((question, index) => ({
         questionIndex: index,
         selectedOption: answers[index] ?? -1,
         correctOption: question.correctIndex,
-        isCorrect: answers[index] === question.correctIndex,
+        isCorrect: answers[index] !== undefined && answers[index] >= 0 && answers[index] === question.correctIndex,
       }));
 
       // Wrap check + insert in transaction to prevent race condition

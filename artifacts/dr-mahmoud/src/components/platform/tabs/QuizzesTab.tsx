@@ -84,7 +84,14 @@ export function ExamStatistics({
         <div className="min-w-0 text-right">
           <span className="block text-[13px] font-bold text-slate-500 dark:text-slate-400 truncate">متوسط النتيجة</span>
           <strong className="text-[22px] font-black text-slate-900 dark:text-white leading-none mt-0.5 block">
-            {completedCount > 0 ? "85%" : "—"}
+            {(() => {
+              const scores = quizzes
+                .map((q) => q.bestScore)
+                .filter((s): s is number => typeof s === "number" && !isNaN(s));
+              if (scores.length === 0) return "—";
+              const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+              return `${avg}%`;
+            })()}
           </strong>
         </div>
       </div>
