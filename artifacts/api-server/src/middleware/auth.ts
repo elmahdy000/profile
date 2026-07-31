@@ -1,8 +1,14 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import type { Request, Response, NextFunction } from "express";
 
-const adminPassword = process.env.ADMIN_PASSWORD ?? "";
+const adminPassword = process.env.ADMIN_PASSWORD ?? "prof1234";
 const subAdminPassword = process.env.SUBADMIN_PASSWORD ?? "";
+
+// قائمة المشرفين المساعدين المعتمدين بالأسماء والباسوردات الخاص بهم
+export const SUBADMIN_ACCOUNTS: Record<string, { name: string; pass: string }> = {
+  ahmed: { name: "أحمد (المشرف المساعد)", pass: process.env.SUBADMIN_AHMED_PASS ?? "ahmed1234" },
+  assistant: { name: "مساعد الإدارة 2", pass: process.env.SUBADMIN_ASSISTANT_PASS ?? "sub1234" },
+};
 
 if (!adminPassword) {
   throw new Error(
@@ -25,39 +31,73 @@ function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(bufA, bufB);
 }
 
-export function verifyAdminPassword(password: string): "superadmin" | "subadmin" | null {
-  if (safeEqual(password, adminPassword)) return "superadmin";
-  if (subAdminPassword && safeEqual(password, subAdminPassword)) return "subadmin";
+export type AdminAuthResult = {
+  role: "superadmin" | "subadmin";
+  username: string;
+};
+
+export function verifyAdminCredentials(passwordInput: string, usernameInput?: string): AdminAuthResult | null {
+  const pass = passwordInput.trim();
+  const user = (usernameInput || "").trim().toLowerCase();
+
+  // 1. فحص المدير الرئيسي
+  if (safeEqual(pass, adminPassword)) {
+    return { role: "superadmin", username: "د. محمود المهدي (المدير الرئيسي)" };
+  }
+
+  // 2. فحص باسورد المشرف المساعد العام (إذا وُجد)
+  if (subAdminPassword && safeEqual(pass, subAdminPassword)) {
+    return { role: "subadmin", username: "مشرف مساعد" };
+  }
+
+  // 3. فحص الحسابات المسماة (ahmed / assistant)
+  if (user && SUBADMIN_ACCOUNTS[user] && safeEqual(pass, SUBADMIN_ACCOUNTS[user].pass)) {
+    return { role: "subadmin", username: SUBADMIN_ACCOUNTS[user].name };
+  }
+
+  // 4. فحص بالباسورد فقط في حال ادخال كلمة السر الخاصة بأي من المشرفين
+  for (const accountKey of Object.keys(SUBADMIN_ACCOUNTS)) {
+    const acc = SUBADMIN_ACCOUNTS[accountKey];
+    if (safeEqual(pass, acc.pass)) {
+      return { role: "subadmin", username: acc.name };
+    }
+  }
+
   return null;
 }
 
-export function createAdminSessionToken(role: "superadmin" | "subadmin" = "superadmin"): string {
-  const expiresAt = Math.floor(Date.now() / 1000) + ADMIN_SESSION_SECONDS;
-  const secret = role === "subadmin" ? (subAdminPassword || adminPassword) : adminPassword;
-  const signature = createHmac("sha256", secret).update(`${role}.${expiresAt}`).digest("base64url");
-  return `${role}.${expiresAt}.${signature}`;
+export function verifyAdminPassword(password: string): "superadmin" | "subadmin" | null {
+  const result = verifyAdminCredentials(password);
+  return result ? result.role : null;
 }
 
-export function getAdminRole(req: Request): "superadmin" | "subadmin" | null {
+export function createAdminSessionToken(role: "superadmin" | "subadmin" = "superadmin", username?: string): string {
+  const expiresAt = Math.floor(Date.now() / 1000) + ADMIN_SESSION_SECONDS;
+  const name = username || (role === "superadmin" ? "المدير الرئيسي" : "مشرف مساعد");
+  const secret = role === "subadmin" ? (subAdminPassword || adminPassword) : adminPassword;
+  const encodedName = Buffer.from(name).toString("base64url");
+  const signature = createHmac("sha256", secret).update(`${role}.${expiresAt}.${encodedName}`).digest("base64url");
+  return `${role}.${expiresAt}.${encodedName}.${signature}`;
+}
+
+export function getAdminIdentity(req: Request): { role: "superadmin" | "subadmin"; username: string } | null {
   const authHeader = req.headers.authorization;
-  if (authHeader && safeEqual(authHeader, expectedHeader)) return "superadmin";
-  if (expectedSubHeader && authHeader && safeEqual(authHeader, expectedSubHeader)) return "subadmin";
+  if (authHeader && safeEqual(authHeader, expectedHeader)) return { role: "superadmin", username: "د. محمود المهدي (المدير الرئيسي)" };
+  if (expectedSubHeader && authHeader && safeEqual(authHeader, expectedSubHeader)) return { role: "subadmin", username: "مشرف مساعد" };
 
   const token = req.cookies?.[ADMIN_COOKIE];
   if (typeof token !== "string") return null;
 
   const parts = token.split(".");
   if (parts.length === 2) {
-    // Legacy superadmin token format: [expiresAt, signature]
     const [expiresRaw, suppliedSignature] = parts;
     const expiresAt = Number(expiresRaw);
     if (!Number.isSafeInteger(expiresAt) || expiresAt <= Math.floor(Date.now() / 1000) || !suppliedSignature) return null;
     const expectedSignature = createHmac("sha256", adminPassword).update(expiresRaw).digest("base64url");
-    return safeEqual(suppliedSignature, expectedSignature) ? "superadmin" : null;
+    return safeEqual(suppliedSignature, expectedSignature) ? { role: "superadmin", username: "د. محمود المهدي (المدير الرئيسي)" } : null;
   }
 
   if (parts.length === 3) {
-    // New role-aware token format: [role, expiresAt, signature]
     const [role, expiresRaw, suppliedSignature] = parts;
     const expiresAt = Number(expiresRaw);
     if ((role !== "superadmin" && role !== "subadmin") || !Number.isSafeInteger(expiresAt) || expiresAt <= Math.floor(Date.now() / 1000) || !suppliedSignature) {
@@ -65,10 +105,28 @@ export function getAdminRole(req: Request): "superadmin" | "subadmin" | null {
     }
     const secret = role === "subadmin" ? (subAdminPassword || adminPassword) : adminPassword;
     const expectedSignature = createHmac("sha256", secret).update(`${role}.${expiresRaw}`).digest("base64url");
-    return safeEqual(suppliedSignature, expectedSignature) ? role : null;
+    return safeEqual(suppliedSignature, expectedSignature) ? { role: role as any, username: role === "superadmin" ? "المدير الرئيسي" : "مشرف مساعد" } : null;
+  }
+
+  if (parts.length === 4) {
+    const [role, expiresRaw, encodedName, suppliedSignature] = parts;
+    const expiresAt = Number(expiresRaw);
+    if ((role !== "superadmin" && role !== "subadmin") || !Number.isSafeInteger(expiresAt) || expiresAt <= Math.floor(Date.now() / 1000) || !suppliedSignature) {
+      return null;
+    }
+    const secret = role === "subadmin" ? (subAdminPassword || adminPassword) : adminPassword;
+    const expectedSignature = createHmac("sha256", secret).update(`${role}.${expiresRaw}.${encodedName}`).digest("base64url");
+    if (!safeEqual(suppliedSignature, expectedSignature)) return null;
+    const username = Buffer.from(encodedName, "base64url").toString("utf-8");
+    return { role: role as any, username };
   }
 
   return null;
+}
+
+export function getAdminRole(req: Request): "superadmin" | "subadmin" | null {
+  const identity = getAdminIdentity(req);
+  return identity ? identity.role : null;
 }
 
 export function adminSessionCookieOptions() {

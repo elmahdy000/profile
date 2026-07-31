@@ -468,7 +468,7 @@ function VideoPlayerModal({
                   {attachedFiles.map((file) => (
                     <a
                       key={file.id}
-                      href={`/api/learning/files/${file.id}/download`}
+                      href={`/api/learning/files/${file.id}/preview`}
                       className="group flex min-h-14 items-center gap-3 rounded-xl border border-border bg-muted/25 p-3 text-right transition-colors hover:border-primary/30 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -477,10 +477,10 @@ function VideoPlayerModal({
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-xs font-bold text-foreground">{file.title}</span>
                         <span className="text-[10px] text-muted-foreground">
-                          {file.sizeBytes ? `${(file.sizeBytes / 1024 / 1024).toFixed(1)} MB` : "ملف مرفق"}
+                          معاينة الملف
                         </span>
                       </span>
-                      <Download className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
+                      <Eye className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
                     </a>
                   ))}
                   {linkedQuiz && (
@@ -1235,7 +1235,7 @@ function LessonCard({
                 {(isAttachmentsExpanded ? attachedFiles : attachedFiles.slice(0, 1)).map((file: any) => (
                   <a
                     key={file.id}
-                    href={`/api/learning/files/${file.id}/download`}
+                    href={`/api/learning/files/${file.id}/preview`}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center justify-between rounded-lg border border-slate-200 dark:border-[#223552] bg-white dark:bg-[#0A1628] p-2 text-xs hover:border-blue-500/40 transition-colors"
@@ -1244,7 +1244,7 @@ function LessonCard({
                       <FileText className="h-4 w-4 shrink-0 text-rose-500" />
                       <span className="truncate font-semibold text-slate-800 dark:text-slate-200">{file.title || file.originalName}</span>
                     </div>
-                    <Download className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                    <Eye className="h-3.5 w-3.5 shrink-0 text-slate-400" />
                   </a>
                 ))}
               </div>

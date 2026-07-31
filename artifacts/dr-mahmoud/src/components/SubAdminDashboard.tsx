@@ -153,6 +153,7 @@ export function SubAdminDashboard() {
 }
 
 function SubAdminLogin({ onSuccess }: { onSuccess: () => void }) {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -168,11 +169,11 @@ function SubAdminLogin({ onSuccess }: { onSuccess: () => void }) {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ username, password }),
       });
 
       if (!res.ok) {
-        throw new Error("كلمة المرور غير صحيحة");
+        throw new Error("بيانات الدخول أو كلمة المرور غير صحيحة");
       }
 
       const data = await res.json();
@@ -197,7 +198,7 @@ function SubAdminLogin({ onSuccess }: { onSuccess: () => void }) {
             🛡️
           </div>
           <h1 className="text-xl font-black text-[#0F172A]">بوابة المشرف المساعد</h1>
-          <p className="text-xs text-[#64748B]">سجل الدخول باستخدام كلمة مرور المشرف الخاصة بك</p>
+          <p className="text-xs text-[#64748B]">سجل الدخول بحساب المشرف أو كلمة المرور المخصصة لك</p>
         </div>
 
         {error && (
@@ -208,13 +209,23 @@ function SubAdminLogin({ onSuccess }: { onSuccess: () => void }) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
+            <label className="block text-xs font-bold text-[#0F172A] mb-1.5">اسم المشرف (اختياري / مثل: ahmed)</label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="مثال: ahmed"
+              className="w-full bg-[#F6F8FC] border border-[#E4EAF2] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0866D9]"
+            />
+          </div>
+          <div>
             <label className="block text-xs font-bold text-[#0F172A] mb-1.5">كلمة مرور المشرف</label>
             <input
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="أدخل كلمة مرور المشرف..."
+              placeholder="أدخل كلمة المرور..."
               className="w-full bg-[#F6F8FC] border border-[#E4EAF2] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0866D9]"
             />
           </div>

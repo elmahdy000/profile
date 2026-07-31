@@ -25,7 +25,7 @@ import {
   studentNotesTable,
   type QuizQuestion,
 } from "@workspace/db";
-import { getAdminRole, isAdminRequest, requireAdmin, requireSuperAdmin } from "../middleware/auth";
+import { getAdminIdentity, getAdminRole, isAdminRequest, requireAdmin, requireSuperAdmin } from "../middleware/auth";
 
 export async function logAudit(
   req: any,
@@ -885,6 +885,8 @@ router.get("/admin/payment-receipts", requireAdmin, async (_req, res, next) => {
         id: paymentReceiptsTable.id,
         status: paymentReceiptsTable.status,
         adminNotes: paymentReceiptsTable.adminNotes,
+        reviewedByRole: paymentReceiptsTable.reviewedByRole,
+        reviewedByName: paymentReceiptsTable.reviewedByName,
         reviewedAt: paymentReceiptsTable.reviewedAt,
         createdAt: paymentReceiptsTable.createdAt,
         originalName: paymentReceiptsTable.originalName,
@@ -909,6 +911,10 @@ router.patch("/admin/payment-receipts/:id", requireAdmin, async (req, res, next)
     const receiptId = Number(req.params.id);
     const status = String(req.body.status ?? "");
     const adminNotes = String(req.body.adminNotes ?? "").trim() || null;
+    const identity = getAdminIdentity(req);
+    const role = identity?.role || getAdminRole(req);
+    const reviewerName = identity?.username || (role === "superadmin" ? "المدير الرئيسي" : "المشرف المساعد");
+
     if (!["approved", "rejected"].includes(status)) {
       res.status(400).json({ error: "الحالة لازم تكون approved أو rejected" });
       return;
@@ -926,22 +932,46 @@ router.patch("/admin/payment-receipts/:id", requireAdmin, async (req, res, next)
       res.status(409).json({ error: "الإيصال تمت مراجعته بالفعل" });
       return;
     }
+
     const [updated] = await db
       .update(paymentReceiptsTable)
-      .set({ status, adminNotes, reviewedAt: new Date() })
+      .set({
+        status,
+        adminNotes,
+        reviewedByRole: role,
+        reviewedByName: reviewerName,
+        reviewedAt: new Date(),
+      })
       .where(eq(paymentReceiptsTable.id, receiptId))
       .returning();
+
     if (status === "approved") {
       if (receipt.studentId) {
-        await db
-          .update(studentsTable)
-          .set({ paymentStatus: "paid", updatedAt: new Date() })
-          .where(eq(studentsTable.id, receipt.studentId));
+        const [student] = await db
+          .select()
+          .from(studentsTable)
+          .where(eq(studentsTable.id, receipt.studentId))
+          .limit(1);
+
+        if (student) {
+          const code = student.accessCode || (await generateAccessCode());
+          await db
+            .update(studentsTable)
+            .set({
+              status: "approved",
+              paymentStatus: "paid",
+              accessCode: code,
+              approvedAt: student.approvedAt || new Date(),
+              updatedAt: new Date(),
+            })
+            .where(eq(studentsTable.id, receipt.studentId));
+        }
+
         await db.insert(studentNotificationsTable).values({
           studentId: receipt.studentId,
           type: "success",
-          title: "تم تأكيد الدفع",
-          message: "تم تأكيد إيصال الدفع بنجاح. تقدر دلوقتي تشوف كل الفيديوهات والمحتوى.",
+          title: "تم تأكيد الدفع وتفعيل الحساب",
+          message: "تم تأكيد إيصال الدفع وتفعيل حسابك بنجاح. تقدر دلوقتي تشوف كل الدروس والمحتوى.",
         });
       }
     } else {
@@ -960,7 +990,13 @@ router.patch("/admin/payment-receipts/:id", requireAdmin, async (req, res, next)
         });
       }
     }
-    await logAudit(req, `REVIEW_RECEIPT_${status.toUpperCase()}`, "receipt", receiptId, `قام بـ ${status === "approved" ? "قبول" : "رفض"} إيصال الطالب رقم ${receipt.studentId || "غير محدد"}`);
+    await logAudit(
+      req,
+      `REVIEW_RECEIPT_${status.toUpperCase()}`,
+      "receipt",
+      receiptId,
+      `قام (${reviewerName}) بـ ${status === "approved" ? "قبول وتفعيل" : "رفض"} إيصال الطالب رقم ${receipt.studentId || "غير محدد"}`
+    );
     res.json(updated);
   } catch (error) {
     next(error);
@@ -1021,9 +1057,26 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
       .from(studentsTable)
       .where(eq(studentsTable.id, id))
       .limit(1);
-    if (!current) {
-      res.status(404).json({ error: "Student not found" });
-      return;
+    const role = getAdminRole(req);
+
+    if (req.body.status === "approved" && current.status !== "approved" && role !== "superadmin") {
+      const [approvedReceipt] = await db
+        .select()
+        .from(paymentReceiptsTable)
+        .where(
+          and(
+            eq(paymentReceiptsTable.studentId, id),
+            eq(paymentReceiptsTable.status, "approved")
+          )
+        )
+        .limit(1);
+
+      if (!approvedReceipt) {
+        res.status(403).json({
+          error: "عفواً: لا يمكن للمشرف المساعد تفعيل الطالب إلا بعد رفع ومراجعة إيصال التحويل بنجاح في تبويب إدارة المدفوعات.",
+        });
+        return;
+      }
     }
     let [student] = await db
       .update(studentsTable)
@@ -1824,7 +1877,7 @@ router.get(["/learning/files/:id/preview", "/learning/files/:id/download"], asyn
     );
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("X-Frame-Options", "SAMEORIGIN");
-    res.setHeader("Content-Security-Policy", "default-src 'self'; frame-ancestors 'self'; sandbox allow-scripts allow-same-origin");
+    res.setHeader("Content-Security-Policy", "default-src 'self' blob: data:; frame-ancestors 'self';");
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
     fs.createReadStream(filePath).pipe(res);
   } catch (error) {

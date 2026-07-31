@@ -200,6 +200,8 @@ export const paymentReceiptsTable = pgTable("payment_receipts", {
   sizeBytes: integer("size_bytes").notNull(),
   status: text("status").notNull().default("pending"),  // pending | approved | rejected
   adminNotes: text("admin_notes"),
+  reviewedByRole: text("reviewed_by_role"), // superadmin | subadmin
+  reviewedByName: text("reviewed_by_name"),
   reviewedAt: timestamp("reviewed_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({

@@ -8,10 +8,9 @@ import {
   adminSessionCookieOptions,
   createAdminSessionToken,
   getAdminRole,
-  isAdminRequest,
   requireAdmin,
   requireSuperAdmin,
-  verifyAdminPassword,
+  verifyAdminCredentials,
 } from "../middleware/auth";
 import { fixedWindowRateLimit } from "../middleware/rate-limit";
 import { logAudit } from "./learning";
@@ -21,14 +20,15 @@ const adminLoginLimit = fixedWindowRateLimit({ name: "admin-login", limit: 8, wi
 
 router.post("/admin/login", adminLoginLimit, async (req, res) => {
   const password = String(req.body.password ?? "");
-  const role = verifyAdminPassword(password);
-  if (!role) {
-    res.status(401).json({ error: "كلمة المرور غير صحيحة" });
+  const username = String(req.body.username ?? "");
+  const auth = verifyAdminCredentials(password, username);
+  if (!auth) {
+    res.status(401).json({ error: "اسم المستخدم أو كلمة المرور غير صحيحة" });
     return;
   }
-  res.cookie(ADMIN_COOKIE, createAdminSessionToken(role), adminSessionCookieOptions());
-  await logAudit(req, "LOGIN", "session", null, `تسجيل دخول ناجح بصلاحية ${role === "superadmin" ? "مدير رئيسي" : "مشرف مساعد"}`);
-  res.json({ success: true, role });
+  res.cookie(ADMIN_COOKIE, createAdminSessionToken(auth.role, auth.username), adminSessionCookieOptions());
+  await logAudit(req, "LOGIN", "session", null, `تسجيل دخول ناجح للمستخدم (${auth.username}) بصلاحية ${auth.role === "superadmin" ? "مدير رئيسي" : "مشرف مساعد"}`);
+  res.json({ success: true, role: auth.role, username: auth.username });
 });
 
 router.get("/admin/me", (req, res) => {

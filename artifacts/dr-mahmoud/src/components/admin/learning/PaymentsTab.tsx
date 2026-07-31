@@ -7,6 +7,8 @@ export type PaymentReceipt = {
   id: number;
   status: string;
   adminNotes?: string | null;
+  reviewedByRole?: string | null;
+  reviewedByName?: string | null;
   reviewedAt?: string | null;
   createdAt: string;
   originalName: string;
@@ -64,12 +66,12 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh }: { receipts?: 
         method: "PATCH",
         body: JSON.stringify({ status, adminNotes: adminNotes || undefined }),
       });
-      toast({ title: status === "approved" ? "تم تأكيد الدفع وتفعيل الاشتراك 💳" : "تم رفض الإيصال" });
+      toast({ title: status === "approved" ? "تم تأكيد الدفع وتفعيل حساب الطالب بنجاح 💳" : "تم رفض الإيصال" });
       setShowRejectForm(null);
       setRejectNotes("");
       void loadReceipts();
     } catch (err) {
-      toast({ title: "خطأ", description: (err as Error).message, variant: "destructive" });
+      toast({ title: "خطأ في التفعيل", description: (err as Error).message, variant: "destructive" });
     } finally {
       setActionId(null);
     }
@@ -89,8 +91,8 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh }: { receipts?: 
       {/* Card Header & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E4EAF2] pb-4">
         <div>
-          <h3 className="text-base font-extrabold text-[#0F172A]">إدارة إيصالات الدفع</h3>
-          <p className="text-xs text-[#64748B] mt-0.5">مراجعة وتأكيد التحويلات وإيصالات الدفع المرفوعة من الطلاب</p>
+          <h3 className="text-base font-extrabold text-[#0F172A]">إدارة ومتابعة إيصالات الدفع والتفعيل</h3>
+          <p className="text-xs text-[#64748B] mt-0.5">مراجعة التحويلات، توثيق المشرف المفعل بالاسم والتاريخ، وتأكيد اشتراكات الطلاب</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -110,7 +112,7 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh }: { receipts?: 
         {[
           { key: "all", label: "الكل", count: counts.all },
           { key: "pending", label: "قيد المراجعة", count: counts.pending },
-          { key: "approved", label: "مقبول", count: counts.approved },
+          { key: "approved", label: "مقبول ومُفعّل", count: counts.approved },
           { key: "rejected", label: "مرفوض", count: counts.rejected },
         ].map((f) => (
           <button
@@ -160,6 +162,7 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh }: { receipts?: 
                 <th className="px-4 py-3">الطالب</th>
                 <th className="px-4 py-3">رقم الهاتف</th>
                 <th className="px-4 py-3">تاريخ الرفع</th>
+                <th className="px-4 py-3">المشرف المسؤول والتاريخ</th>
                 <th className="px-4 py-3">الحالة</th>
                 <th className="px-4 py-3 text-left">الإجراءات</th>
               </tr>
@@ -178,6 +181,22 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh }: { receipts?: 
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
+                    </td>
+                    <td className="px-4 py-3.5">
+                      {receipt.reviewedByName ? (
+                        <div className="space-y-0.5">
+                          <span className="inline-block rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200">
+                            👤 {receipt.reviewedByName}
+                          </span>
+                          {receipt.reviewedAt && (
+                            <span className="block text-[10px] text-slate-500 font-mono">
+                              ⏱️ {new Date(receipt.reviewedAt).toLocaleString("ar-EG", { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 font-bold">بانتظار المراجعة</span>
+                      )}
                     </td>
                     <td className="px-4 py-3.5">
                       <span

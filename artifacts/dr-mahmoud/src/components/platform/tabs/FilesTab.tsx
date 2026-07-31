@@ -192,21 +192,11 @@ export function FileCard({
         <button
           type="button"
           onClick={() => onPreview(file)}
-          className="flex-1 h-11 rounded-xl bg-[#247CF0] hover:bg-[#1C68CC] text-white text-xs font-bold shadow-2xs transition-colors flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+          className="w-full h-11 rounded-xl bg-[#247CF0] hover:bg-[#1C68CC] text-white text-xs font-bold shadow-2xs transition-colors flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
         >
           <Eye className="h-4 w-4" />
           <span>معاينة الملف</span>
         </button>
-
-        <a
-          href={`/api/learning/files/${file.id}/download`}
-          target="_blank"
-          rel="noreferrer"
-          title="تحميل الملف"
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-200 dark:border-[#283A54] bg-slate-50 dark:bg-[#172A46] text-slate-600 dark:text-[#AFC0D6] hover:bg-slate-100 dark:hover:bg-[#1D3252] transition-colors"
-        >
-          <Download className="h-4 w-4" />
-        </a>
       </div>
     </article>
   );

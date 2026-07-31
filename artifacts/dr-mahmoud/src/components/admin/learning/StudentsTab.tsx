@@ -294,13 +294,24 @@ export function StudentsTab({
               {/* Right Block: Action Buttons Grid */}
               <div className="flex flex-wrap items-center gap-2 shrink-0">
                 {s.status !== "approved" && (
-                  <Button
-                    size="sm"
-                    onClick={() => onUpdateStatus(s.id, "approved")}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-xs"
-                  >
-                    <UserCheck className="h-4 w-4 me-1.5" /> قبول وإصدار كود
-                  </Button>
+                  role === "subadmin" ? (
+                    <Button
+                      size="sm"
+                      title="المشرف المساعد يفعل الحسابات عبر تبويب إيصالات الدفع فقط"
+                      onClick={() => onUpdateStatus(s.id, "approved")}
+                      className="bg-emerald-600/90 hover:bg-emerald-700 text-white font-medium shadow-xs"
+                    >
+                      <UserCheck className="h-4 w-4 me-1.5" /> تفعيل عبر الإيصال 💳
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      onClick={() => onUpdateStatus(s.id, "approved")}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-xs"
+                    >
+                      <UserCheck className="h-4 w-4 me-1.5" /> قبول وإصدار كود
+                    </Button>
+                  )
                 )}
                 {s.status === "approved" && (
                   <Button
