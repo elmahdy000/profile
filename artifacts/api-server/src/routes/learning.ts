@@ -25,6 +25,7 @@ import {
   studentNotesTable,
   parentsTable,
   parentSessionsTable,
+  bookingsTable,
   type QuizQuestion,
 } from "@workspace/db";
 import { getAdminIdentity, getAdminRole, isAdminRequest, requireAdmin, requireSuperAdmin } from "../middleware/auth";
@@ -595,6 +596,16 @@ router.post(
           ...(await getAutomaticCourseAssignments(grade === "أخرى" ? otherGradeDetail || grade : grade)),
         })
         .returning();
+
+      // Automatically update matching booking status to confirmed
+      const cleanRegPhone = phone.replace(/[^\d]/g, "");
+      if (cleanRegPhone) {
+        await db
+          .update(bookingsTable)
+          .set({ status: "confirmed" })
+          .where(sql`REPLACE(${bookingsTable.phone}, ' ', '') LIKE ${`%${cleanRegPhone.slice(-8)}%`}`);
+      }
+
       res.status(201).json({
         status: student.status,
         accessCode: student.accessCode,

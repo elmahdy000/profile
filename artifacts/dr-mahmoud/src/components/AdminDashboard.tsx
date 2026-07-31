@@ -140,6 +140,7 @@ export default function AdminDashboard() {
     | "student-analytics"
     | "settings"
   >("learning");
+  const [bookingFilter, setBookingFilter] = useState<"pending" | "confirmed" | "completed" | "all">("pending");
   const [selectedSubjectFilter, setSelectedSubjectFilter] =
     useState<string>("all");
   const [selectedVideoCategoryFilter, setSelectedVideoCategoryFilter] =
@@ -1894,11 +1895,72 @@ export default function AdminDashboard() {
                     )}
                   </div>
 
+                  {/* Filter Bar */}
+                  <div className="flex items-center justify-between bg-card p-3 rounded-2xl border border-border">
+                    <div className="flex items-center gap-2 overflow-x-auto">
+                      <button
+                        type="button"
+                        onClick={() => setBookingFilter("pending")}
+                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                          bookingFilter === "pending"
+                            ? "bg-amber-500 text-white shadow-xs"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        <Clock className="w-3.5 h-3.5" />
+                        حجوزات قيد الانتظار ({bookingsQuery.data?.filter((b) => b.status === "pending").length || 0})
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setBookingFilter("confirmed")}
+                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                          bookingFilter === "confirmed"
+                            ? "bg-emerald-600 text-white shadow-xs"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        حجوزات مسجلة ومؤكدة ({bookingsQuery.data?.filter((b) => b.status === "confirmed").length || 0})
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setBookingFilter("completed")}
+                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                          bookingFilter === "completed"
+                            ? "bg-blue-600 text-white shadow-xs"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        <GraduationCap className="w-3.5 h-3.5" />
+                        مكتملة ({bookingsQuery.data?.filter((b) => b.status === "completed").length || 0})
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setBookingFilter("all")}
+                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                          bookingFilter === "all"
+                            ? "bg-primary text-primary-foreground shadow-xs"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        عرض الكل ({bookingsQuery.data?.length || 0})
+                      </button>
+                    </div>
+                  </div>
+
                   {!bookingsQuery.isLoading &&
                     bookingsQuery.data &&
                     bookingsQuery.data.length > 0 && (
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-gradient-to-br from-card to-card/60 border border-border/70 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
+                        <div
+                          onClick={() => setBookingFilter("all")}
+                          className={`cursor-pointer transition-all bg-gradient-to-br from-card to-card/60 border rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden ${
+                            bookingFilter === "all" ? "border-primary ring-2 ring-primary/20" : "border-border/70"
+                          }`}
+                        >
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-semibold text-muted-foreground">إجمالي الحجوزات</span>
                             <span className="p-1.5 rounded-lg bg-primary/10 text-primary"><Calendar className="w-4 h-4" /></span>
@@ -1907,25 +1969,40 @@ export default function AdminDashboard() {
                             {bookingsQuery.data.length}
                           </span>
                         </div>
-                        <div className="bg-gradient-to-br from-amber-500/5 to-card border border-amber-500/20 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
+                        <div
+                          onClick={() => setBookingFilter("pending")}
+                          className={`cursor-pointer transition-all bg-gradient-to-br from-amber-500/5 to-card border rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden ${
+                            bookingFilter === "pending" ? "border-amber-500 ring-2 ring-amber-500/20" : "border-amber-500/20"
+                          }`}
+                        >
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-amber-500">قيد الانتظار</span>
+                            <span className="text-xs font-semibold text-amber-500">قيد الانتظار (جديد)</span>
                             <span className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500"><Clock className="w-4 h-4" /></span>
                           </div>
                           <span className="text-3xl font-extrabold text-amber-500 mt-3">
                             {bookingsQuery.data.filter((b) => b.status === "pending").length}
                           </span>
                         </div>
-                        <div className="bg-gradient-to-br from-emerald-500/5 to-card border border-emerald-500/20 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
+                        <div
+                          onClick={() => setBookingFilter("confirmed")}
+                          className={`cursor-pointer transition-all bg-gradient-to-br from-emerald-500/5 to-card border rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden ${
+                            bookingFilter === "confirmed" ? "border-emerald-500 ring-2 ring-emerald-500/20" : "border-emerald-500/20"
+                          }`}
+                        >
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-emerald-500">حجوزات مؤكدة</span>
+                            <span className="text-xs font-semibold text-emerald-500">حجوزات مسجلة ومؤكدة</span>
                             <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500"><CheckCircle2 className="w-4 h-4" /></span>
                           </div>
                           <span className="text-3xl font-extrabold text-emerald-500 mt-3">
                             {bookingsQuery.data.filter((b) => b.status === "confirmed").length}
                           </span>
                         </div>
-                        <div className="bg-gradient-to-br from-blue-500/5 to-card border border-blue-500/20 rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
+                        <div
+                          onClick={() => setBookingFilter("completed")}
+                          className={`cursor-pointer transition-all bg-gradient-to-br from-blue-500/5 to-card border rounded-2xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden ${
+                            bookingFilter === "completed" ? "border-blue-500 ring-2 ring-blue-500/20" : "border-blue-500/20"
+                          }`}
+                        >
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-semibold text-blue-400">حجوزات مكتملة</span>
                             <span className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400"><GraduationCap className="w-4 h-4" /></span>
@@ -1962,21 +2039,21 @@ export default function AdminDashboard() {
                         </div>
                       ))}
                     </div>
-                  ) : bookingsQuery.data?.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-24 bg-gradient-to-b from-card/40 to-card/10 border border-border/80 rounded-3xl text-center px-4 shadow-inner">
-                      <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mb-4 border border-primary/20 shadow-lg shadow-primary/5">
-                        <Calendar className="w-10 h-10 text-primary" />
+                  ) : bookingsQuery.data?.filter((b) => bookingFilter === "all" || b.status === bookingFilter).length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 bg-gradient-to-b from-card/40 to-card/10 border border-border/80 rounded-3xl text-center px-4 shadow-inner">
+                      <div className="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center mb-4 border border-primary/20 shadow-lg shadow-primary/5">
+                        <Calendar className="w-8 h-8 text-primary" />
                       </div>
-                      <p className="text-foreground font-extrabold text-xl">
-                        لا توجد حجوزات مسجلة حتى الآن
+                      <p className="text-foreground font-extrabold text-lg">
+                        لا توجد حجوزات في هذا التبويب
                       </p>
-                      <p className="text-muted-foreground text-sm mt-1.5 max-w-sm leading-relaxed">
-                        عند قيام الطلاب أو أولياء الأمور بحجز استفسار من الموقع الرئيسي ستظهر طلباتهم هنا مباشرة
+                      <p className="text-muted-foreground text-xs mt-1.5 max-w-sm leading-relaxed">
+                        عند تسجيل الطلاب بالمنصة ينتقل الحجز تلقائياً من شاشة الانتظار إلى شاشة الحجوزات المؤكدة
                       </p>
                     </div>
                   ) : (
                     <div className="grid gap-4">
-                      {bookingsQuery.data?.map((booking) => {
+                      {bookingsQuery.data?.filter((b) => bookingFilter === "all" || b.status === bookingFilter).map((booking) => {
                         const cleanPhone = booking.phone.replace(/[^\d+]/g, "");
                         const formattedPhone = cleanPhone.startsWith("0") ? `2${cleanPhone}` : cleanPhone;
                         const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(`مرحباً ${booking.name} 👋، تواصل من منصة د. محمود المهدي بشأن طلب الحجز الخاص بك.`)}`;
