@@ -1158,7 +1158,7 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
       .limit(1);
     const role = getAdminRole(req);
 
-    if (req.body.status === "approved" && current.status !== "approved" && role !== "superadmin") {
+    if (req.body.status === "approved" && current.status !== "approved") {
       const [approvedReceipt] = await db
         .select()
         .from(paymentReceiptsTable)
@@ -1172,7 +1172,7 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
 
       if (!approvedReceipt) {
         res.status(403).json({
-          error: "عفواً: لا يمكن للمشرف المساعد تفعيل الطالب إلا بعد رفع ومراجعة إيصال التحويل بنجاح في تبويب إدارة المدفوعات.",
+          error: "عفواً: لا يمكن تفعيل الطالب يدويًا إلا بعد قيام الطالب برفع إيصال التحويل ومراجعته بنجاح في تبويب إدارة المدفوعات.",
         });
         return;
       }
