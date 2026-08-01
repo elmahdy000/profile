@@ -131,12 +131,7 @@ export function AccessScreen({
         method: "POST",
         body: JSON.stringify(form),
       });
-      if (result.accessCode) {
-        setRegisteredCode(result.accessCode);
-        setMessage("✅ تم تفعيل حسابك!");
-      } else {
-        setMessage(result.message);
-      }
+      setMessage(result.message || "تم إنشاء حسابك بنجاح! ارفع إيصال الدفع فوراً لتأكيد التفعيل بواسطة الأدمن.");
       setForm({
         name: "",
         phone: "",
@@ -147,6 +142,7 @@ export function AccessScreen({
         otherGradeDetail: "",
         learningMode: "online",
       });
+      setRegStep(1);
     } catch (err) {
       setError((err as Error).message);
     } finally {
