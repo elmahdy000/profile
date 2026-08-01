@@ -733,7 +733,36 @@ router.get("/student/me", async (req, res, next) => {
     }
     student = await ensureAutomaticCourseAssignments(student);
     const streak = await calculateStreak(student.id);
-    res.json({ student: publicStudent(student), streak });
+
+    // Calculate progress & motivation message
+    const allowed = getStudentAllowedCategories(student);
+    let overallProgress = 0;
+    if (allowed.length > 0) {
+      const [rows, accessibleVideos] = await Promise.all([
+        db
+          .select({ progress: videoProgressTable.progress, videoId: videoProgressTable.videoId })
+          .from(videoProgressTable)
+          .innerJoin(videosTable, eq(videoProgressTable.videoId, videosTable.id))
+          .where(and(eq(videoProgressTable.studentId, student.id), inArray(videosTable.category, allowed))),
+        db
+          .select({ id: videosTable.id, category: videosTable.category, stage: videosTable.stage, stages: videosTable.stages, courseId: videosTable.courseId })
+          .from(videosTable)
+          .where(inArray(videosTable.category, allowed)),
+      ]);
+
+      const studentAccessibleVideos = accessibleVideos.filter((v) =>
+        canStudentAccessContent(student, v.category, v.stage, v.stages, v.courseId),
+      );
+      if (studentAccessibleVideos.length > 0) {
+        const accessibleIds = new Set(studentAccessibleVideos.map((v) => v.id));
+        const filteredRows = rows.filter((r) => accessibleIds.has(r.videoId));
+        const totalProgressSum = filteredRows.reduce((acc, curr) => acc + (curr.progress || 0), 0);
+        overallProgress = Math.round(totalProgressSum / studentAccessibleVideos.length);
+      }
+    }
+    const motivation = generateStudentMotivationMessage(student.name, overallProgress);
+
+    res.json({ student: publicStudent(student), streak, overallProgress, motivation });
   } catch (error) {
     next(error);
   }
@@ -2012,32 +2041,94 @@ router.get("/learning/quizzes", requireStudent, async (_req, res, next) => {
   }
 });
 
+export function generateStudentMotivationMessage(studentName: string, progressPercentage: number): { status: "excellent" | "good" | "needs_push"; message: string } {
+  const firstName = studentName ? studentName.trim().split(" ")[0] : "يا بطل";
+  const progress = Math.min(100, Math.max(0, Math.round(progressPercentage)));
+
+  if (progress >= 70) {
+    return {
+      status: "excellent",
+      message: `الله ينور يا ${firstName}! 🔥 انت عامل شغل عالي جداً وماشي بانتظام على المنصة، نسبة إنجازك وصلت ${progress}%! عاش يا بطل، كمل بنفس الحماس وربنا يوفقك 💪✨`,
+    };
+  } else if (progress >= 40) {
+    return {
+      status: "good",
+      message: `عاش يا ${firstName}، انت انجزت ${progress}% لحد دلوقتي 👍 بس تقدر تعمل أفضل من كده بكثير! شد حيلك شويه وركز الأيام دي عشان تخلص باقي الدروس 🚀`,
+    };
+  } else {
+    return {
+      status: "needs_push",
+      message: `أهلاً يا ${firstName} 👋، لاحظنا إن نسبة إنجازك ${progress}% بس، وده أقل من طاقتك بكثير! افتكر إن الطريق بيتحسب بالخطوات، قوم يلا ابدأ درس واحد النهاردة واستعين بالله 💪🌟`,
+    };
+  }
+}
+
 router.get("/learning/progress", requireStudent, async (_req, res, next) => {
   try {
     const student = res.locals.student as typeof studentsTable.$inferSelect;
     const allowed = getStudentAllowedCategories(student);
     if (allowed.length === 0) {
-      res.json([]);
+      const motivation = generateStudentMotivationMessage(student.name, 0);
+      res.json({
+        items: [],
+        overallProgress: 0,
+        completedVideosCount: 0,
+        totalAccessibleVideosCount: 0,
+        motivation,
+      });
       return;
     }
-    const rows = await db
-      .select({
-        videoId: videoProgressTable.videoId,
-        progress: videoProgressTable.progress,
-        currentTimeSeconds: videoProgressTable.currentTimeSeconds,
-        durationSeconds: videoProgressTable.durationSeconds,
-        completed: videoProgressTable.completed,
-        updatedAt: videoProgressTable.updatedAt,
-      })
-      .from(videoProgressTable)
-      .innerJoin(videosTable, eq(videoProgressTable.videoId, videosTable.id))
-      .where(
-        and(
-          eq(videoProgressTable.studentId, student.id),
-          inArray(videosTable.category, allowed),
+
+    const [rows, accessibleVideos] = await Promise.all([
+      db
+        .select({
+          videoId: videoProgressTable.videoId,
+          progress: videoProgressTable.progress,
+          currentTimeSeconds: videoProgressTable.currentTimeSeconds,
+          durationSeconds: videoProgressTable.durationSeconds,
+          completed: videoProgressTable.completed,
+          updatedAt: videoProgressTable.updatedAt,
+        })
+        .from(videoProgressTable)
+        .innerJoin(videosTable, eq(videoProgressTable.videoId, videosTable.id))
+        .where(
+          and(
+            eq(videoProgressTable.studentId, student.id),
+            inArray(videosTable.category, allowed),
+          ),
         ),
-      );
-    res.json(rows);
+      db
+        .select({ id: videosTable.id, category: videosTable.category, stage: videosTable.stage, stages: videosTable.stages, courseId: videosTable.courseId })
+        .from(videosTable)
+        .where(inArray(videosTable.category, allowed)),
+    ]);
+
+    const studentAccessibleVideos = accessibleVideos.filter((v) =>
+      canStudentAccessContent(student, v.category, v.stage, v.stages, v.courseId),
+    );
+    const totalAccessibleCount = studentAccessibleVideos.length;
+
+    let overallProgress = 0;
+    let completedCount = 0;
+
+    if (totalAccessibleCount > 0) {
+      const accessibleIds = new Set(studentAccessibleVideos.map((v) => v.id));
+      const filteredRows = rows.filter((r) => accessibleIds.has(r.videoId));
+      
+      const totalProgressSum = filteredRows.reduce((acc, curr) => acc + (curr.progress || 0), 0);
+      completedCount = filteredRows.filter((r) => r.completed || (r.progress || 0) >= 90).length;
+      overallProgress = Math.round(totalProgressSum / totalAccessibleCount);
+    }
+
+    const motivation = generateStudentMotivationMessage(student.name, overallProgress);
+
+    res.json({
+      items: rows,
+      overallProgress,
+      completedVideosCount: completedCount,
+      totalAccessibleVideosCount: totalAccessibleCount,
+      motivation,
+    });
   } catch (error) {
     next(error);
   }
