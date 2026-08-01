@@ -341,12 +341,12 @@ export function AccessScreen({
 
           {mode === "register" && (registeredCode || message) ? (
             <div className="py-2 text-center" role="status">
-              <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#22C55E]/15 text-[#22C55E]">
+              <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#3B82F6]/15 text-[#3B82F6]">
                 <CheckCircle2 className="h-8 w-8" />
               </div>
-              <h2 className="mt-3 text-xl font-bold text-[#0F172A]">تم إنشاء حسابك وتفعيله فوراً 🎉</h2>
+              <h2 className="mt-3 text-xl font-bold text-[#0F172A]">تم تسجيل بيانات حسابك بنجاح 📋</h2>
               <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-[#64748B]">
-                كود الدخول الخاص بك جاهز. احفظه جيداً واستخدمه للدخول إلى المنصة.
+                {message || "حسابك الآن بانتظام مراجعة إيصال الدفع وتأكيد التفعيل بواسطة الأدمن."}
               </p>
 
               {registeredCode && (
