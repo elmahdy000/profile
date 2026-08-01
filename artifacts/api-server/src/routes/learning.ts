@@ -2068,14 +2068,7 @@ router.get("/learning/progress", requireStudent, async (_req, res, next) => {
     const student = res.locals.student as typeof studentsTable.$inferSelect;
     const allowed = getStudentAllowedCategories(student);
     if (allowed.length === 0) {
-      const motivation = generateStudentMotivationMessage(student.name, 0);
-      res.json({
-        items: [],
-        overallProgress: 0,
-        completedVideosCount: 0,
-        totalAccessibleVideosCount: 0,
-        motivation,
-      });
+      res.json([]);
       return;
     }
 
@@ -2122,13 +2115,7 @@ router.get("/learning/progress", requireStudent, async (_req, res, next) => {
 
     const motivation = generateStudentMotivationMessage(student.name, overallProgress);
 
-    res.json({
-      items: rows,
-      overallProgress,
-      completedVideosCount: completedCount,
-      totalAccessibleVideosCount: totalAccessibleCount,
-      motivation,
-    });
+    res.json(rows);
   } catch (error) {
     next(error);
   }
