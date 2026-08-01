@@ -827,7 +827,7 @@ export function AdminLearning({ role = "superadmin" }: { role?: "superadmin" | "
       description: quiz.description || "",
       durationMinutes: quiz.durationMinutes ? String(quiz.durationMinutes) : "",
       passingScore: quiz.passingScore,
-      maxAttempts: quiz.maxAttempts || 3,
+      maxAttempts: quiz.maxAttempts ?? 3,
       requiredProgress: quiz.requiredProgress ?? 80,
       questionsToShow: quiz.questionsToShow ?? null,
       shuffleQuestions: quiz.shuffleQuestions ?? false,

@@ -54,7 +54,7 @@ export type Quiz = {
   stage?: string | null;
   durationMinutes?: number | null;
   passingScore: number;
-  maxAttempts?: number;
+  maxAttempts?: number | null;
   shuffleQuestions?: boolean;
   questionsToShow?: number | null;
   showExplanations?: boolean;

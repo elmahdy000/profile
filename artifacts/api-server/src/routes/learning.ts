@@ -1988,9 +1988,11 @@ router.get("/learning/quizzes", requireStudent, async (_req, res, next) => {
           const bestScore = quizAttempts?.bestScore ?? null;
           const progressLocked = quiz.scope === "lesson" && quiz.videoId !== null &&
             (progressByVideo.get(quiz.videoId) ?? 0) < quiz.requiredProgress;
-          const attemptsLocked = attemptsUsed >= quiz.maxAttempts;
+          const unlimitedAttempts = !quiz.maxAttempts || quiz.maxAttempts <= 0;
+          const attemptsLocked = !unlimitedAttempts && attemptsUsed >= quiz.maxAttempts;
           return {
             ...quiz,
+            maxAttempts: unlimitedAttempts ? null : quiz.maxAttempts,
             attemptsUsed,
             bestScore,
             locked: progressLocked || attemptsLocked,
@@ -2442,7 +2444,8 @@ router.post("/admin/learning/quizzes", requireAdmin, async (req, res, next) => {
         questionsToShow: req.body.questionsToShow ? Number(req.body.questionsToShow) : null,
         shuffleQuestions: Boolean(req.body.shuffleQuestions),
         showExplanations: req.body.showExplanations !== false,
-        maxAttempts: Math.max(1, Math.min(20, Number(req.body.maxAttempts ?? 3))),
+        // maxAttempts: 0 = unlimited; otherwise clamp to 1..20
+        maxAttempts: Math.max(0, Math.min(20, Number(req.body.maxAttempts ?? 3))),
         requiredProgress: scope === "lesson" ? Math.max(0, Math.min(100, Number(req.body.requiredProgress ?? 80))) : 0,
         questions,
         isPublished: req.body.isPublished === true,
@@ -2543,7 +2546,7 @@ router.patch(
             isPublished: Boolean(req.body.isPublished),
           }),
           ...(questions !== undefined && { questions }),
-          ...(req.body.maxAttempts !== undefined && { maxAttempts: Math.max(1, Math.min(20, Number(req.body.maxAttempts))) }),
+          ...(req.body.maxAttempts !== undefined && { maxAttempts: Math.max(0, Math.min(20, Number(req.body.maxAttempts))) }),
           requiredProgress: scope === "lesson" ? Math.max(0, Math.min(100, Number(req.body.requiredProgress ?? current.requiredProgress))) : 0,
           updatedAt: new Date(),
         })
@@ -2763,8 +2766,10 @@ router.post(
         res.status(403).json({ error: "الاختبار مش ضمن الكورس المسجل ليك" });
         return;
       }
+      // maxAttempts <= 0 means unlimited attempts
+      const unlimitedAttempts = !quiz.maxAttempts || quiz.maxAttempts <= 0;
       const previousAttempts = await db.select({ id: quizAttemptsTable.id }).from(quizAttemptsTable).where(and(eq(quizAttemptsTable.quizId, quiz.id), eq(quizAttemptsTable.studentId, student.id)));
-      if (previousAttempts.length >= quiz.maxAttempts) {
+      if (!unlimitedAttempts && previousAttempts.length >= quiz.maxAttempts) {
         res.status(409).json({ error: "استخدمت كل المحاولات المتاحة لهذا الاختبار" }); return;
       }
       if (quiz.scope === "lesson" && quiz.videoId) {
@@ -2809,7 +2814,7 @@ router.post(
       // Wrap check + insert in transaction to prevent race condition
       const result = await db.transaction(async (tx) => {
         const prevAttempts = await tx.select({ id: quizAttemptsTable.id }).from(quizAttemptsTable).where(and(eq(quizAttemptsTable.quizId, quiz.id), eq(quizAttemptsTable.studentId, student.id)));
-        if (prevAttempts.length >= quiz.maxAttempts) {
+        if (!unlimitedAttempts && prevAttempts.length >= quiz.maxAttempts) {
           return null; // exceeded
         }
         const [attempt] = await tx
@@ -2841,7 +2846,7 @@ router.post(
         correct,
         total: effectiveTotal,
         attemptsUsed: result.attemptsUsed,
-        attemptsRemaining: Math.max(0, quiz.maxAttempts - result.attemptsUsed),
+        attemptsRemaining: unlimitedAttempts ? null : Math.max(0, quiz.maxAttempts - result.attemptsUsed),
         details,
         ...(showExplanations && {
           explanations: quiz.questions.map((q) => q.explanation ?? null),

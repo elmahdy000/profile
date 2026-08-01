@@ -140,13 +140,16 @@ export function StudentPlatform() {
     correct: number;
     total: number;
     attemptsUsed: number;
-    attemptsRemaining: number;
+    attemptsRemaining: number | null;
   } | null>(null);
   const [quizSubmitting, setQuizSubmitting] = useState(false);
   const [quizElapsedSeconds, setQuizElapsedSeconds] = useState(0);
   const [quizTabSwitchCount, setQuizTabSwitchCount] = useState(0);
   const MAX_TAB_SWITCHES = 3;
   const submitQuizRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  // Synchronous re-entrancy guard: setState is async, so a second trigger in the
+  // same tick could slip past the state-based checks. This ref blocks that.
+  const quizSubmitInFlightRef = useRef(false);
 
   // Anti-cheat: detect tab/window switching during active quiz
   useEffect(() => {
@@ -180,22 +183,24 @@ export function StudentPlatform() {
   // Exam Countdown Timer Effect
   useEffect(() => {
     if (!activeQuiz || quizResult) return;
-    if (quizTimeRemaining !== null && quizTimeRemaining <= 0) {
-      toast({ title: "انتهى وقت الاختبار", description: "جاري تسليم إجاباتك تلقائياً..." });
-      void submitQuizRef.current();
-      return;
-    }
     const timer = setInterval(() => {
-      if (quizTimeRemaining !== null) {
-        setQuizTimeRemaining((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
-      }
       setQuizElapsedSeconds((prev) => prev + 1);
+      setQuizTimeRemaining((prev) => {
+        if (prev === null) return null;
+        if (prev <= 1) {
+          toast({ title: "انتهى وقت الاختبار", description: "جاري تسليم إجاباتك تلقائياً..." });
+          void submitQuizRef.current();
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
     return () => clearInterval(timer);
-  }, [activeQuiz, quizResult, quizTimeRemaining]);
+  }, [activeQuiz, quizResult]);
 
   const startQuiz = (quiz: Quiz) => {
-    if (quiz.locked || (quiz.maxAttempts !== undefined && (quiz.attemptsUsed || 0) >= quiz.maxAttempts)) {
+    const hasAttemptLimit = quiz.maxAttempts !== undefined && quiz.maxAttempts !== null && quiz.maxAttempts > 0;
+    if (quiz.locked || (hasAttemptLimit && (quiz.attemptsUsed || 0) >= (quiz.maxAttempts as number))) {
       toast({
         variant: "destructive",
         title: "الاختبار غير متاح الآن",
@@ -219,6 +224,7 @@ export function StudentPlatform() {
     setActiveQuiz({ ...quiz, questions: mappedQuestions });
     setQuizAnswers(Array(mappedQuestions.length).fill(-1));
     setQuizResult(null);
+    quizSubmitInFlightRef.current = false;
     setQuizTabSwitchCount(0);
     setQuizStartTime(Date.now());
     setQuizElapsedSeconds(0);
@@ -226,7 +232,10 @@ export function StudentPlatform() {
   };
 
   const submitQuiz = async () => {
-    if (!activeQuiz) return;
+    // Guard against double/late submission: timer expiry, anti-cheat auto-submit,
+    // and the manual button can all fire close together. Only submit once.
+    if (!activeQuiz || quizResult || quizSubmitting || quizSubmitInFlightRef.current) return;
+    quizSubmitInFlightRef.current = true;
     setQuizSubmitting(true);
     const timeSpentSeconds = Math.round((Date.now() - quizStartTime) / 1000);
 
@@ -255,7 +264,7 @@ export function StudentPlatform() {
         correct: number;
         total: number;
         attemptsUsed: number;
-        attemptsRemaining: number;
+        attemptsRemaining: number | null;
         details?: Array<{ questionIndex: number; selectedOption: number; correctOption: number; isCorrect: boolean }>;
       }>(
         `/api/learning/quizzes/${activeQuiz.id}/submit`,
@@ -279,6 +288,8 @@ export function StudentPlatform() {
         ),
       );
     } catch (err) {
+      // Allow retry after a failed submission (network error, etc.)
+      quizSubmitInFlightRef.current = false;
       toast({ variant: "destructive", title: "خطأ في الاختبار", description: (err as Error).message });
     } finally {
       setQuizSubmitting(false);
@@ -736,7 +747,10 @@ export function StudentPlatform() {
                         </span>
                         {quizTimeRemaining !== null && (
                           <span className="text-[10px] font-bold opacity-70">
-                            / {Math.floor((activeQuiz.durationMinutes ?? 0) * 60 / 60)}:{String((activeQuiz.durationMinutes ?? 0) * 60 % 60).padStart(2, "0")}
+                            {(() => {
+                              const totalSeconds = Math.round((activeQuiz.durationMinutes ?? 0) * 60);
+                              return `/ ${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, "0")}`;
+                            })()}
                           </span>
                         )}
                       </div>
@@ -936,7 +950,7 @@ export function StudentPlatform() {
                     <div className="rounded-xl bg-background/60 p-2.5 text-center shadow-2xs">
                       <span className="block text-[10px] font-bold text-muted-foreground">المحاولات المتبقية</span>
                       <strong className="block text-base font-black text-amber-600 dark:text-amber-400">
-                        {quizResult.attemptsRemaining}
+                        {quizResult.attemptsRemaining === null ? "بلا حدود" : quizResult.attemptsRemaining}
                       </strong>
                     </div>
                   </div>
