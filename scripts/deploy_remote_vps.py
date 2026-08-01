@@ -25,7 +25,7 @@ def main():
             "cd /var/www/profile",
             "git fetch origin",
             "git reset --hard origin/main",
-            "git clean -fd",
+            "git clean -fd -e .env",
             "pnpm install --frozen-lockfile",
             "DATABASE_URL=$(grep DATABASE_URL .env | head -1 | cut -d= -f2-) && psql \"$DATABASE_URL\" -f lib/db/migrations/0002_complete_learning_platform.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0003_learning_file_targets.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0004_course_content_model.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0005_unified_learning_content.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0006_video_views_and_notes.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0007_enhanced_quiz_system.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0008_question_bank.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0009_questions_to_show.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0010_payment_receipts.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0011_unique_student_email.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0012_preserve_payment_receipts.sql && psql \"$DATABASE_URL\" -f lib/db/migrations/0013_audit_logs.sql",
             "pnpm run build",
