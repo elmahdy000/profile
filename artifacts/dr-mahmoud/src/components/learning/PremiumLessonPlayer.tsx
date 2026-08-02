@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Captions, Check, ChevronLeft, ChevronRight, Clock3, Download, Eye,
-  FileText, Gauge, ListVideo, Loader2, Maximize, MessageCircle,
+  FileText, Gauge, ListVideo, Loader2, Lock, Maximize, MessageCircle,
   Minimize, Pause, PictureInPicture, Play, RefreshCw, RotateCcw, RotateCw, StickyNote,
   Volume2, VolumeX, X,
 } from "lucide-react";
@@ -500,7 +500,23 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                   )}
                 </> : youtubeUrl ? <>
                   {!youtubeStarted ? <button onClick={() => setYoutubeStarted(true)} className="absolute inset-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-400" aria-label="تشغيل الفيديو"><img src={poster} alt="" className="h-full w-full object-cover"/><span className="absolute inset-0 bg-black/35"/><span className="absolute inset-0 grid place-items-center"><span className="grid h-16 w-16 place-items-center rounded-full bg-sky-500 text-slate-950 shadow-xl transition group-hover:scale-105 sm:h-20 sm:w-20"><Play className="h-8 w-8 fill-current"/></span></span></button> : <iframe className="absolute inset-0 h-full w-full border-0 object-contain" src={youtubeUrl} title={item.title} loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin"/>}
-                </> : <div className="absolute inset-0 grid place-items-center p-6 text-center text-slate-300">مصدر الفيديو غير مدعوم داخل المنصة.</div>}
+                </> : <div className="absolute inset-0 grid place-items-center p-6 text-center text-slate-200 bg-slate-950/90">
+                    <div className="max-w-md space-y-4">
+                      <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                        <Lock className="h-7 w-7" />
+                      </div>
+                      <h3 className="text-base font-bold text-white">يلزم سداد الاشتراك لمشاهدة هذا الفيديو 💳</h3>
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        هذا المحتوى غير متاح حالياً. يرجى دفع قيمة الكورس ورفع صورة إيصال التحويل من الشاشة الرئيسية ليقوم الأدمن بتفعيل حسابك وفك تشغيل الفيديوهات فوراً.
+                      </p>
+                      <button
+                        onClick={onClose}
+                        className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-5 py-2.5 text-xs font-bold text-slate-950 transition hover:bg-sky-400 active:scale-95 shadow-lg"
+                      >
+                        الذهاب لرفع الإيصال 📤
+                      </button>
+                    </div>
+                  </div>}
               </div>
 
               {/* Portrait + desktop bottom control bar (hidden in landscape mobile) */}

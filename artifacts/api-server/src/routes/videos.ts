@@ -351,19 +351,24 @@ router.post("/videos", requireAdmin, async (req, res, next) => {
 
     const [selectedCourse] = validated.courseId
       ? await db
-          .select()
-          .from(coursesTable)
-          .where(eq(coursesTable.id, validated.courseId))
-          .limit(1)
+        .select()
+        .from(coursesTable)
+        .where(eq(coursesTable.id, validated.courseId))
+        .limit(1)
       : [];
     if (validated.courseId && !selectedCourse) {
       res.status(400).json({ error: "الكورس المختار غير موجود" });
       return;
     }
 
-    // Auto-fallback: if course exists, use course's stages if video stages are empty
-    if (selectedCourse?.stages?.length && stages.length === 0) {
-      stages = selectedCourse.stages;
+    // Auto-fallback: if course exists, use course's stages if video stages are empty or mismatch
+    if (selectedCourse) {
+      const courseStages = selectedCourse.stages?.length
+        ? selectedCourse.stages
+        : [];
+      if (stages.length === 0 && courseStages.length > 0) {
+        stages = courseStages;
+      }
     }
 
     if (stages.length === 0) {
@@ -447,12 +452,12 @@ router.put("/videos/:id", requireAdmin, async (req, res, next) => {
     const stages =
       validated.stages !== undefined
         ? Array.from(
-            new Set(
-              validated.stages
-                .map((value) => String(value).trim())
-                .filter((value) => isAcceptedAcademicStage(value)),
-            ),
-          ).slice(0, 10)
+          new Set(
+            validated.stages
+              .map((value) => String(value).trim())
+              .filter((value) => isAcceptedAcademicStage(value)),
+          ),
+        ).slice(0, 10)
         : undefined;
     if (stages !== undefined && stages.length === 0) {
       res.status(400).json({ error: "اختار مرحلة دراسية واحدة على الأقل" });
@@ -460,10 +465,10 @@ router.put("/videos/:id", requireAdmin, async (req, res, next) => {
     }
     const [selectedCourse] = validated.courseId
       ? await db
-          .select()
-          .from(coursesTable)
-          .where(eq(coursesTable.id, validated.courseId))
-          .limit(1)
+        .select()
+        .from(coursesTable)
+        .where(eq(coursesTable.id, validated.courseId))
+        .limit(1)
       : [];
     if (validated.courseId && !selectedCourse) {
       res.status(400).json({ error: "الكورس المختار غير موجود" });
