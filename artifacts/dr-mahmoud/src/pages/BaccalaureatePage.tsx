@@ -243,12 +243,6 @@ function HonorWallRealtimeSection() {
         ) : (
           <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 max-w-6xl mx-auto">
             {students.map((hero: any, idx) => {
-              const isFemale = hero.name.includes("سارة") || hero.name.includes("منى") || hero.name.includes("فاطمة") || hero.name.includes("نور") || hero.name.includes("مريم") || hero.name.includes("أبرار") || hero.name.includes("ملك") || hero.name.includes("جودي") || hero.name.includes("سلوي") || hero.name.includes("فرح") || hero.name.includes("دنيا");
-              
-              // Professional CS 3D avatars
-              const csAvatarMale = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80";
-              const csAvatarFemale = "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&q=80";
-
               const calcPercent = hero.totalVideos > 0 ? Math.min(100, Math.round((hero.completedVideos / hero.totalVideos) * 100)) : 100;
               const displayPercent = calcPercent >= 100 ? 100 : calcPercent >= 83 ? 90 : 80;
 
@@ -274,11 +268,17 @@ function HonorWallRealtimeSection() {
 
                   <div className="flex items-center gap-3">
                     <div className="relative shrink-0">
-                      <img
-                        src={hero.avatarUrl || (isFemale ? csAvatarFemale : csAvatarMale)}
-                        alt={hero.name}
-                        className="w-11 h-11 rounded-lg object-cover border border-border shadow-2xs"
-                      />
+                      {hero.avatarUrl ? (
+                        <img
+                          src={hero.avatarUrl}
+                          alt={hero.name}
+                          className="w-11 h-11 rounded-lg object-cover border border-border shadow-2xs"
+                        />
+                      ) : (
+                        <div className="w-11 h-11 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-base shadow-2xs">
+                          <Code2 className="w-5 h-5 text-primary" />
+                        </div>
+                      )}
                     </div>
 
                     <div className="min-w-0 flex-1">
