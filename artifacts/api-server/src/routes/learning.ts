@@ -187,6 +187,24 @@ async function generateAccessCode() {
   throw new Error("تعذر إنشاء كود دخول فريد");
 }
 
+// Confirm any pending bookings that belong to a given phone number.
+// Called only after a payment receipt is approved by an admin/subadmin — a
+// booking now represents a verified, paid reservation (not a mere signup).
+async function confirmPendingBookingsForPhone(phone: string): Promise<void> {
+  const normalized = String(phone ?? "").replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString());
+  const cleanPhone = normalized.replace(/[^\d]/g, "");
+  if (!cleanPhone || cleanPhone.length < 8) return;
+  await db
+    .update(bookingsTable)
+    .set({ status: "confirmed" })
+    .where(
+      and(
+        eq(bookingsTable.status, "pending"),
+        sql`REGEXP_REPLACE(TRANSLATE(${bookingsTable.phone}, '٠١٢٣٤٥٦٧٨٩', '0123456789'), '[^0-9]', '', 'g') LIKE ${`%${cleanPhone.slice(-8)}%`}`,
+      ),
+    );
+}
+
 function validateQuestions(value: unknown): QuizQuestion[] | null {
   if (!Array.isArray(value) || value.length === 0) return null;
   const questions = value as QuizQuestion[];
@@ -576,18 +594,6 @@ router.post(
           ...(await getAutomaticCourseAssignments(grade === "أخرى" ? otherGradeDetail || grade : grade)),
         })
         .returning();
-
-      // Automatically update matching booking status to confirmed
-      const normalizedPhoneStr = phone.replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString());
-      const cleanRegPhone = normalizedPhoneStr.replace(/[^\d]/g, "");
-      if (cleanRegPhone && cleanRegPhone.length >= 8) {
-        await db
-          .update(bookingsTable)
-          .set({ status: "confirmed" })
-          .where(
-            sql`REGEXP_REPLACE(TRANSLATE(${bookingsTable.phone}, '٠١٢٣٤٥٦٧٨٩', '0123456789'), '[^0-9]', '', 'g') LIKE ${`%${cleanRegPhone.slice(-8)}%`}`
-          );
-      }
 
       res.status(201).json({
         status: student.status,
@@ -997,6 +1003,9 @@ router.patch("/admin/payment-receipts/:id", requireAdmin, async (req, res, next)
               updatedAt: new Date(),
             })
             .where(eq(studentsTable.id, receipt.studentId));
+
+          // A verified payment confirms any matching pending booking.
+          await confirmPendingBookingsForPhone(student.phone);
         }
 
         await db.insert(studentNotificationsTable).values({

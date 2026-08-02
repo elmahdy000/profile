@@ -225,8 +225,11 @@ router.get("/videos", async (req, res, next) => {
       }
     }
 
-    // 2b. Build free preview set: first 2 videos per course for unpaid students
+    // 2b. Build free preview set for unpaid students.
+    // University students get 1 free preview video per course; baccalaureate/other get 2.
+    // This must match the streaming gate in the video-stream endpoint below.
     const isUnpaidStudent = approvedStudent.paymentStatus !== "paid";
+    const maxAllowedFreeVideos = approvedStudent.educationSystem === "university" ? 1 : 2;
     const freePreviewIds = new Set<number>();
     if (isUnpaidStudent) {
       const videosByCourse: Record<string, typeof videos> = {};
@@ -241,7 +244,7 @@ router.get("/videos", async (req, res, next) => {
           if (a.order !== b.order) return a.order - b.order;
           return a.id - b.id;
         });
-        for (let i = 0; i < Math.min(2, list.length); i++) {
+        for (let i = 0; i < Math.min(maxAllowedFreeVideos, list.length); i++) {
           freePreviewIds.add(list[i].id);
         }
       }

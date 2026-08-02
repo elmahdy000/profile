@@ -132,6 +132,7 @@ export function AccessScreen({
         body: JSON.stringify(form),
       });
       setMessage(result.message || "تم تسجيل بيانات حسابك بنجاح! يلزم رفع صورة إيصال الدفع وتأكيد التفعيل من الإدارة أولاً.");
+      if (result.accessCode) setRegisteredCode(result.accessCode);
       setForm({
         name: "",
         phone: "",
@@ -144,6 +145,31 @@ export function AccessScreen({
       });
       setRegStep(1);
     } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const enterWithCode = async (code: string) => {
+    setLoading(true);
+    setError("");
+    try {
+      const deviceId = getOrCreateDeviceId();
+      const result = await api<{ student: Student }>("/api/student/login", {
+        method: "POST",
+        body: JSON.stringify({ accessCode: code.trim(), deviceId }),
+      });
+      setMessage("");
+      setRegisteredCode("");
+      onLogin(result.student);
+    } catch (err) {
+      // Fall back to the login screen with the code pre-filled so the student
+      // can retry manually (e.g. account still pending admin confirmation).
+      setAccessCode(code.trim().toUpperCase());
+      setMode("login");
+      setMessage("");
+      setRegisteredCode("");
       setError((err as Error).message);
     } finally {
       setLoading(false);
@@ -383,15 +409,13 @@ export function AccessScreen({
 
               <Button
                 type="button"
+                disabled={loading || !registeredCode}
                 onClick={() => {
-                  if (registeredCode) setAccessCode(registeredCode);
-                  setMode("login");
-                  setMessage("");
-                  setRegisteredCode("");
+                  if (registeredCode) void enterWithCode(registeredCode);
                 }}
-                className="mt-4 h-[48px] w-full rounded-[12px] bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold text-sm shadow-md transition-all duration-200"
+                className="mt-4 h-[48px] w-full rounded-[12px] bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold text-sm shadow-md transition-all duration-200 disabled:opacity-60"
               >
-                الدخول للمنصة بالكود الآن
+                {loading ? "جارٍ الدخول..." : "الدخول للمنصة بالكود الآن"}
               </Button>
               <a
                 href="https://wa.me/201066711545"
