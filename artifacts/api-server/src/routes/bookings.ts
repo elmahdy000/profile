@@ -18,10 +18,32 @@ const BOOKING_STATUSES = new Set(["pending", "confirmed", "completed"]);
 router.post("/bookings", createBookingLimit, async (req, res, next) => {
   try {
     const validated = CreateBookingBody.parse(req.body);
+
+    // Bound and sanitize free-text fields. The generated zod schema only checks
+    // that these are strings; enforce sane lengths/format here so the DB isn't
+    // filled with empty, oversized, or non-numeric junk. See audit fix (MEDIUM).
+    const name = validated.name.trim();
+    const phone = validated.phone.trim();
+    const message = validated.message.trim();
+    const digits = phone.replace(/[^\d]/g, "");
+
+    if (name.length < 2 || name.length > 100) {
+      res.status(400).json({ error: "الاسم يجب أن يكون بين حرفين و100 حرف" });
+      return;
+    }
+    if (digits.length < 8 || digits.length > 15) {
+      res.status(400).json({ error: "رقم الهاتف غير صحيح" });
+      return;
+    }
+    if (message.length > 1000) {
+      res.status(400).json({ error: "الرسالة طويلة جداً" });
+      return;
+    }
+
     const [inserted] = await db.insert(bookingsTable).values({
-      name: validated.name,
-      phone: validated.phone,
-      message: validated.message,
+      name,
+      phone,
+      message,
     }).returning();
 
     res.status(201).json({

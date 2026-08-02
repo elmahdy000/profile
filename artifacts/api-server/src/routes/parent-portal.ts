@@ -37,6 +37,19 @@ function getParentSession(req: any): string | null {
   return token;
 }
 
+// Cryptographically-strong parent login code. Uses an unambiguous alphabet
+// (no 0/O/1/I) and ~41 bits of entropy so codes cannot be predicted or
+// feasibly brute-forced. See audit fix #6.
+const PARENT_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // 32 chars
+function generateParentCode(prefix = "P"): string {
+  const bytes = randomBytes(8);
+  let code = "";
+  for (let i = 0; i < 8; i++) {
+    code += PARENT_CODE_ALPHABET[bytes[i] % PARENT_CODE_ALPHABET.length];
+  }
+  return `${prefix}-${code}`;
+}
+
 // POST /api/parent/register
 router.post("/parent/register", parentRegisterLimit, async (req, res, next) => {
   try {
@@ -74,7 +87,7 @@ router.post("/parent/register", parentRegisterLimit, async (req, res, next) => {
 
     let parentRecord = existingParent;
     if (!parentRecord) {
-      const parentCode = `PAR-${randomBytes(3).toString("hex").toUpperCase()}`;
+      const parentCode = generateParentCode("PAR");
       const [inserted] = await db
         .insert(parentsTable)
         .values({
@@ -335,7 +348,7 @@ router.get("/parent/report", async (req, res, next) => {
 });
 
 // GET /api/admin/parents  (admin-only – lists all registered parents)
-router.get("/admin/parents", async (req, res, next) => {
+router.get("/admin/parents", requireAdmin, async (req, res, next) => {
   try {
     // Fetch all parents with their linked student
     const rows = await db
@@ -416,8 +429,8 @@ router.post("/admin/parents", requireAdmin, async (req, res, next) => {
       return;
     }
 
-    // Generate unique parent code (e.g. P-XXXXXX)
-    const parentCode = `P-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    // Generate unique parent code (crypto-strong)
+    const parentCode = generateParentCode("P");
 
     const [parent] = await db
       .insert(parentsTable)
@@ -445,6 +458,10 @@ router.post("/admin/parents", requireAdmin, async (req, res, next) => {
 router.patch("/admin/parents/:id", requireAdmin, async (req, res, next) => {
   try {
     const parentId = Number(req.params.id);
+    if (!Number.isInteger(parentId) || parentId <= 0) {
+      res.status(400).json({ error: "معرّف ولي الأمر غير صحيح" });
+      return;
+    }
     const { name, phone, studentId } = req.body;
 
     const [existing] = await db.select().from(parentsTable).where(eq(parentsTable.id, parentId)).limit(1);
@@ -487,13 +504,17 @@ router.patch("/admin/parents/:id", requireAdmin, async (req, res, next) => {
 router.post("/admin/parents/:id/regenerate-code", requireAdmin, async (req, res, next) => {
   try {
     const parentId = Number(req.params.id);
+    if (!Number.isInteger(parentId) || parentId <= 0) {
+      res.status(400).json({ error: "معرّف ولي الأمر غير صحيح" });
+      return;
+    }
     const [existing] = await db.select().from(parentsTable).where(eq(parentsTable.id, parentId)).limit(1);
     if (!existing) {
       res.status(404).json({ error: "حساب ولي الأمر غير موجود" });
       return;
     }
 
-    const newCode = `P-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const newCode = generateParentCode("P");
 
     const [updated] = await db
       .update(parentsTable)
@@ -513,6 +534,10 @@ router.post("/admin/parents/:id/regenerate-code", requireAdmin, async (req, res,
 router.delete("/admin/parents/:id", requireSuperAdmin, async (req, res, next) => {
   try {
     const parentId = Number(req.params.id);
+    if (!Number.isInteger(parentId) || parentId <= 0) {
+      res.status(400).json({ error: "معرّف ولي الأمر غير صحيح" });
+      return;
+    }
     const [existing] = await db.select().from(parentsTable).where(eq(parentsTable.id, parentId)).limit(1);
     if (!existing) {
       res.status(404).json({ error: "حساب ولي الأمر غير موجود" });

@@ -63,16 +63,23 @@
 
 ## 3. 🗄️ قاعدة البيانات والتعديلات (Drizzle ORM & PostgreSQL)
 
-عند إضافة أو تعديل أعمدة/جداول في schema الخاص بـ Drizzle ORM:
+> ⚠️ **تحذير أمني مهم:** لا تُشغّل `drizzle-kit push` تلقائياً أثناء الـ deploy أبداً.
+> الأمر `push` يقارن قاعدة البيانات الحيّة بالـ schema ويطبّق التغييرات (بما فيها
+> حذف/تعديل الأعمدة) بدون مراجعة، وهذا سبق أن أعاد ضبط حالة الدفع للطلاب
+> (`payment_status`) في كل deploy. تغييرات الـ schema يجب أن تكون خطوة يدوية
+> مقصودة ومراجَعة. راجع audit fix #2.
+
+عند إضافة أو تعديل أعمدة/جداول في schema الخاص بـ Drizzle ORM (خطوة **يدوية** منفصلة عن الـ deploy العادي):
 1. قراءة `DATABASE_URL` من ملف البيئة `.env`:
    ```bash
    export DATABASE_URL=$(grep DATABASE_URL /var/www/project-name/.env | cut -d '=' -f2-)
    ```
-2. تطبيق التعديلات فوراً على قاعدة البيانات من داخل مجلد `lib/db`:
+2. **راجع** الفرق أولاً قبل التطبيق، ثم — وفقط عند الحاجة الفعلية لتغيير schema — طبّق التعديلات يدوياً من داخل مجلد `lib/db`:
    ```bash
    cd /var/www/project-name/lib/db
    npx drizzle-kit push --config ./drizzle.config.ts
    ```
+   لا تُدرج هذا الأمر ضمن أي سكربت deploy آلي.
 
 ---
 
@@ -156,11 +163,9 @@ server {
    رفع محتويات `api-server/dist/` إلى `/var/www/project-name/api-server/dist/`.
 3. **رفع قواعد البيانات والتغييرات (Database Schema):**
    رفع محتويات `lib/db/src/schema/` إلى `/var/www/project-name/lib/db/src/schema/`.
-4. **تحديث قاعدة البيانات (Remote Migration Push):**
-   تشغيل الأمر بعيداً عبر SSH:
-   ```bash
-   export DATABASE_URL=$(grep DATABASE_URL /var/www/project-name/.env | cut -d '=' -f2-) && cd /var/www/project-name/lib/db && npx drizzle-kit push --config ./drizzle.config.ts
-   ```
+4. **تحديث قاعدة البيانات — ⚠️ لا يتم آلياً:**
+   لا تُشغّل `drizzle-kit push` كجزء من سكربت النشر الآلي. إذا كان هناك تغيير schema
+   مطلوب فعلاً، نفّذه كخطوة يدوية منفصلة **بعد مراجعة الفرق** (راجع القسم 3 و audit fix #2).
 5. **إعادة تشغيل وتنشيط الخدمات:**
    ```bash
    sudo systemctl reload nginx

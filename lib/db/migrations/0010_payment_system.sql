@@ -1,8 +1,24 @@
 -- Add payment_status to students (unpaid = free preview, pending_review = receipt uploaded, paid = full access)
-ALTER TABLE "students" ADD COLUMN IF NOT EXISTS "payment_status" text NOT NULL DEFAULT 'unpaid';
+-- IMPORTANT: The one-time backfill below MUST only run when the column is first
+-- created. Running it unconditionally on every deploy overwrites admin decisions
+-- (e.g. a lapsed/refunded student reset back to 'paid'). See audit fix #2.
+DO $$
+DECLARE
+  column_existed boolean;
+BEGIN
+  SELECT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'students' AND column_name = 'payment_status'
+  ) INTO column_existed;
 
--- Existing approved students should be treated as paid
-UPDATE "students" SET "payment_status" = 'paid' WHERE "status" = 'approved';
+  ALTER TABLE "students" ADD COLUMN IF NOT EXISTS "payment_status" text NOT NULL DEFAULT 'unpaid';
+
+  -- Only backfill on the very first creation of the column. Never touch existing
+  -- payment_status values on re-run — they are authoritative admin state.
+  IF NOT column_existed THEN
+    UPDATE "students" SET "payment_status" = 'paid' WHERE "status" = 'approved';
+  END IF;
+END $$;
 
 -- Payment receipts table for uploaded payment proof images
 CREATE TABLE IF NOT EXISTS "payment_receipts" (

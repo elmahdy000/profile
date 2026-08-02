@@ -80,8 +80,18 @@ def main():
         
         sftp.close()
         
-        # 4. Run remote migrations and reload Nginx and PM2
-        run_cmd(client, "export DATABASE_URL=$(grep DATABASE_URL /var/www/profile/.env | cut -d '=' -f2-) && cd /var/www/profile/lib/db && npx drizzle-kit push --config ./drizzle.config.ts")
+        # 4. Reload Nginx and PM2.
+        #
+        # NOTE: We intentionally DO NOT run `drizzle-kit push` here. `push` diffs
+        # the live DB against the schema and applies changes non-interactively,
+        # including DROP/ALTER that can destroy data (this previously reset
+        # student payment statuses on every deploy). Schema changes must be a
+        # deliberate, reviewed manual step — run migrations by hand from the
+        # server after reviewing the diff. See audit fix #2 and
+        # SERVER_DEPLOYMENT_INSTRUCTIONS.md.
+        print("\nSkipping automatic DB schema push (unsafe on deploy).")
+        print("If a schema change IS required, review it, then run manually on the server:")
+        print("  cd /var/www/profile/lib/db && npx drizzle-kit push --config ./drizzle.config.ts")
         run_cmd(client, "sudo systemctl reload nginx")
         run_cmd(client, "pm2 restart drelmahdy-backend")
         print("\nDeployment completed successfully!")

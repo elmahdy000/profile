@@ -25,9 +25,21 @@ import { isAcceptedAcademicStage } from "../lib/academic-stages";
 
 const router: IRouter = Router();
 
-const streamTokenSecret =
-  process.env.STREAM_TOKEN_SECRET || process.env.ADMIN_PASSWORD!;
-const STREAM_TOKEN_TTL_SECONDS = 60 * 10;
+// Stream token secret. Prefer a dedicated secret; fall back to ADMIN_PASSWORD
+// only as a last resort and never allow the well-known default to sign tokens
+// (otherwise anyone could forge a stream token). See audit fix #4.
+const streamTokenSecret = (() => {
+  const explicit = process.env.STREAM_TOKEN_SECRET?.trim();
+  if (explicit) return explicit;
+  const adminPass = process.env.ADMIN_PASSWORD?.trim();
+  if (adminPass && adminPass !== "prof1234") return adminPass;
+  throw new Error(
+    "STREAM_TOKEN_SECRET is required (or a non-default ADMIN_PASSWORD) to sign video stream tokens.",
+  );
+})();
+// Short TTL: long enough to begin playback, short enough to limit the window in
+// which a leaked/shared stream URL is usable.
+const STREAM_TOKEN_TTL_SECONDS = 60 * 3;
 const VIDEO_CONTENT_TYPES: Record<string, string> = {
   ".mp4": "video/mp4",
   ".webm": "video/webm",
