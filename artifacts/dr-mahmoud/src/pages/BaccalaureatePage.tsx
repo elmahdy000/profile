@@ -15,7 +15,10 @@ import {
   Cpu,
   Database,
   LineChart,
-  Layers
+  Layers,
+  Crown,
+  PlayCircle,
+  Trophy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCreateBooking } from "@workspace/api-client-react";
@@ -166,6 +169,43 @@ const studentProjects = [
     desc: "فكرة يختارها الطالب بنفسه وينفذها بالكامل بمساعدة وتوجيه من الدكتور لتجهيزه للمستقبل.",
     tech: ["Full Python Program", "Creative Coding"],
     difficulty: "متقدم"
+  }
+];
+
+// Baccalaureate High Achievers Honor Wall Data
+const baccalaureateHonorWall = [
+  {
+    name: "مروان أحمد الشافعي",
+    school: "مدرسة STEM الزقازيق",
+    achievement: "إكمال 100% من جميع محاضرات Python والتفكير المنطقي",
+    videosWatched: "32/32 فيديو",
+    hoursCount: "48 ساعة عملي",
+    project: "نظام تحليل البيانات الذكي",
+    avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&q=80",
+    rank: "المركز الأول 🥇",
+    badgeColor: "from-amber-500/20 to-yellow-500/10 border-amber-500/30 text-amber-500"
+  },
+  {
+    name: "سارة محمود زهران",
+    school: "ثانوية عامة لغات",
+    achievement: "ختام جميع فيديوهات وهياكل البيانات بلغة Python",
+    videosWatched: "28/28 فيديو",
+    hoursCount: "42 ساعة عملي",
+    project: "لعبة خوارزمية تفاعلية متطورة",
+    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80",
+    rank: "المركز الثاني 🥈",
+    badgeColor: "from-blue-500/20 to-cyan-500/10 border-blue-500/30 text-blue-400"
+  },
+  {
+    name: "يوسف أحمد عبدالحميد",
+    school: "الصف الثاني الثانوي",
+    achievement: "مشاهدة وإنهاء كافة المسائل البرمجية والدوال",
+    videosWatched: "24/24 فيديو",
+    hoursCount: "38 ساعة عملي",
+    project: "مشروع آلة حاسبة علمية خوارزمية",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80",
+    rank: "المركز الثالث 🥉",
+    badgeColor: "from-purple-500/20 to-indigo-500/10 border-purple-500/30 text-purple-400"
   }
 ];
 
@@ -895,6 +935,106 @@ export default function BaccalaureatePage() {
                   ))}
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── NEW: Honor Wall of Baccalaureate High Achievers ─── */}
+      <section id="honor-wall" className="py-20 bg-card/60 border-y border-border/80 relative overflow-hidden">
+        {/* Glow Effects */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-amber-500/10 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute top-0 right-10 w-72 h-72 bg-primary/10 rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="container mx-auto px-4 lg:px-8 relative z-10">
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs font-black rounded-full mb-3 shadow-xs">
+              <Crown className="w-4 h-4 text-amber-500" />
+              لوحة شرف أبطال البكالوريا
+            </span>
+            <h2 className="text-3xl md:text-5xl font-black text-foreground leading-tight flex items-center justify-center gap-3">
+              <span>طلاب حققوا إنجاز 100% في المشاهدة والتطبيق</span>
+            </h2>
+            <p className="text-sm md:text-base text-muted-foreground mt-3 max-w-2xl mx-auto leading-relaxed">
+              تكريم خاص للأبطال الذين أتموا مشاهدة كافة المحاضرات البرمجية وحلوا التحديات العملية وبنوا مشاريعهم المتكاملة بنجاح!
+            </p>
+            <div className="w-20 h-1 bg-gradient-to-r from-amber-500 to-yellow-400 mx-auto rounded-full mt-4" />
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
+            {baccalaureateHonorWall.map((hero, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: idx * 0.1 }}
+                className="bg-card border border-border/80 hover:border-amber-500/40 rounded-[2.5rem] p-7 shadow-lg hover:shadow-2xl transition-all duration-300 flex flex-col justify-between relative overflow-hidden group"
+              >
+                {/* Crown Glow Overlay */}
+                <div className={`absolute top-0 right-0 left-0 h-2 bg-gradient-to-r ${idx === 0 ? "from-amber-500 via-yellow-400 to-amber-600" : idx === 1 ? "from-blue-500 via-cyan-400 to-blue-600" : "from-purple-500 via-pink-400 to-purple-600"}`} />
+                
+                <div>
+                  {/* Rank Header */}
+                  <div className="flex items-center justify-between gap-2 mb-6">
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-gradient-to-r ${hero.badgeColor} border`}>
+                      <Trophy className="w-3.5 h-3.5" />
+                      {hero.rank}
+                    </span>
+                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> 100% مكتمل
+                    </span>
+                  </div>
+
+                  {/* Avatar & Student Name */}
+                  <div className="flex items-center gap-4 mb-5">
+                    <div className="relative shrink-0">
+                      <img
+                        src={hero.avatar}
+                        alt={hero.name}
+                        className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-500/40 shadow-md group-hover:scale-105 transition-transform"
+                      />
+                      <div className="absolute -top-2 -right-2 bg-amber-500 text-slate-950 rounded-full p-1 shadow-md">
+                        <Crown className="w-3.5 h-3.5 fill-current" />
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-base font-extrabold text-foreground leading-snug">{hero.name}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5 font-medium">{hero.school}</p>
+                    </div>
+                  </div>
+
+                  {/* Achievement Description */}
+                  <div className="p-3.5 bg-muted/40 rounded-2xl border border-border/60 mb-5 space-y-1">
+                    <span className="block text-[11px] text-muted-foreground font-bold">الإنجاز البرمجي:</span>
+                    <p className="text-xs font-bold text-foreground leading-normal">{hero.achievement}</p>
+                  </div>
+
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-2 gap-3 mb-5 text-xs font-semibold">
+                    <div className="p-3 bg-background border border-border/70 rounded-xl">
+                      <span className="block text-[10px] text-muted-foreground mb-0.5 flex items-center gap-1">
+                        <PlayCircle className="w-3 h-3 text-primary" /> الفيديوهات
+                      </span>
+                      <span className="font-extrabold text-foreground dir-ltr text-right block">{hero.videosWatched}</span>
+                    </div>
+                    <div className="p-3 bg-background border border-border/70 rounded-xl">
+                      <span className="block text-[10px] text-muted-foreground mb-0.5 flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-amber-500" /> التطبيق العملي
+                      </span>
+                      <span className="font-extrabold text-foreground dir-ltr text-right block">{hero.hoursCount}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Project Badge Footer */}
+                <div className="pt-4 border-t border-border/60 flex items-center justify-between text-xs">
+                  <span className="text-[11px] text-muted-foreground font-bold">مشروع التخرج:</span>
+                  <span className="font-extrabold text-primary bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20">
+                    {hero.project}
+                  </span>
+                </div>
+              </motion.div>
             ))}
           </div>
         </div>
