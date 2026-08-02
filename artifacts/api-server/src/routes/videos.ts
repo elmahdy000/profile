@@ -341,17 +341,14 @@ router.post("/videos", requireAdmin, async (req, res, next) => {
       res.status(400).json({ error: "اختيار الكورس مطلوب" });
       return;
     }
-    const stages = Array.from(
+    let stages = Array.from(
       new Set(
         (validated.stages ?? (validated.stage ? [validated.stage] : []))
           .map((value) => String(value).trim())
           .filter((value) => isAcceptedAcademicStage(value)),
       ),
     ).slice(0, 10);
-    if (stages.length === 0) {
-      res.status(400).json({ error: "اختار مرحلة دراسية واحدة على الأقل" });
-      return;
-    }
+
     const [selectedCourse] = validated.courseId
       ? await db
           .select()
@@ -363,8 +360,21 @@ router.post("/videos", requireAdmin, async (req, res, next) => {
       res.status(400).json({ error: "الكورس المختار غير موجود" });
       return;
     }
-    if (selectedCourse?.stages?.length && stages.some((stage) => !selectedCourse.stages.includes(stage))) {
-      res.status(400).json({ error: "إحدى المراحل المختارة غير متاحة داخل هذا الكورس" });
+
+    // Auto-fallback: if course exists, use course's stages if video stages are empty or mismatch
+    if (selectedCourse) {
+      const courseStages = selectedCourse.stages?.length
+        ? selectedCourse.stages
+        : selectedCourse.stage
+        ? [selectedCourse.stage]
+        : [];
+      if (stages.length === 0 && courseStages.length > 0) {
+        stages = courseStages;
+      }
+    }
+
+    if (stages.length === 0) {
+      res.status(400).json({ error: "اختار مرحلة دراسية واحدة على الأقل" });
       return;
     }
     const [inserted] = await db
@@ -464,10 +474,6 @@ router.put("/videos/:id", requireAdmin, async (req, res, next) => {
       : [];
     if (validated.courseId && !selectedCourse) {
       res.status(400).json({ error: "الكورس المختار غير موجود" });
-      return;
-    }
-    if (selectedCourse?.stages?.length && stages?.some((stage) => !selectedCourse.stages.includes(stage))) {
-      res.status(400).json({ error: "إحدى المراحل المختارة غير متاحة داخل هذا الكورس" });
       return;
     }
     if (validated.courseId && !selectedCourse) {
