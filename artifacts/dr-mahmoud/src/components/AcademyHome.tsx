@@ -11,7 +11,7 @@ import {
   Clock, FileText, GraduationCap, Laptop, MapPin, MessageCircle,
   Play, Send, ShieldCheck, Star, UserCheck, Users, Code, Award,
   CheckCircle, ArrowRight, ExternalLink, HelpCircle, Layers,
-  Brain, Code2, GitFork, Lightbulb
+  Brain, Code2, GitFork, Lightbulb, Crown
 } from "lucide-react";
 
 type BookingForm = { parentName: string; studentName: string; phone: string; grade: string; schoolType: string; mode: string; message: string };
@@ -37,6 +37,117 @@ const faqs = [
   ["ولي الأمر يقدر يتابع مستوى الطالب إزاي؟", "من خلال تقارير التقدم ونسبة مشاهدة الدروس ودرجات الاختبارات المنفذة عبر المنصة وتواصل المتابعة الدوري."],
   ["هل أقدر أشوف درس قبل الاشتراك؟", "نعم، تتيح المنصة معايانات ومحتوى تجريبي مجاني ليتعرف الطالب على طريقة الشرح والأسلوب."],
 ];
+
+function HomeHonorWallSection() {
+  const [students, setStudents] = useState<Array<{
+    id: number;
+    name: string;
+    school: string;
+    completedVideos: number;
+    totalVideos: number;
+    percentage: number;
+    avatarUrl: string | null;
+  }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/baccalaureate/honor-wall")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.students) setStudents(data.students);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+
+    const eventSource = new EventSource("/api/baccalaureate/honor-wall/stream");
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.students) setStudents(data.students);
+      } catch {}
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, []);
+
+  if (loading || students.length === 0) return null;
+
+  return (
+    <section className="bg-slate-900 text-white py-14 border-b border-slate-800 relative overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl text-center mb-10">
+          <span className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-black rounded-full mb-2">
+            <Crown className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" />
+            <span>لوحة شرف الأبطال المتفوقين</span>
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-black text-white">
+            طلاب حققوا أعلى نسب متابعة ومشاهدة
+          </h2>
+          <p className="mt-2 text-xs sm:text-sm font-semibold text-slate-400">
+            تكريم متميز للطلاب الأكثر التزاماً بمتابعة الدروس والتطبيقات العملية (80% وأكثر)!
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+          {students.map((hero, idx) => {
+            const calcPercent = hero.totalVideos > 0 ? Math.min(100, Math.round((hero.completedVideos / hero.totalVideos) * 100)) : 100;
+            const displayPercent = calcPercent >= 100 ? 100 : calcPercent >= 83 ? 90 : 80;
+
+            return (
+              <div
+                key={hero.id || idx}
+                className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-4 flex flex-col justify-between hover:border-amber-500/40 transition-all shadow-md"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-3">
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      بطل #{idx + 1}
+                    </span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 border ${
+                      displayPercent >= 100
+                        ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                        : "text-blue-400 bg-blue-500/10 border-blue-500/20"
+                    }`}>
+                      <CheckCircle2 className="h-3 w-3" /> {displayPercent}% مكتمل
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="relative shrink-0">
+                      {hero.avatarUrl ? (
+                        <img
+                          src={hero.avatarUrl}
+                          alt={hero.name}
+                          className="h-11 w-11 rounded-xl object-cover border border-slate-700"
+                        />
+                      ) : (
+                        <div className="h-11 w-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold">
+                          <Code2 className="h-5.5 w-5.5 text-blue-400" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-xs font-black text-white truncate">{hero.name}</h3>
+                      <p className="text-[10px] font-medium text-slate-400 truncate">{hero.school}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3 pt-2.5 border-t border-slate-700/60 flex items-center justify-between text-[10px] font-semibold text-slate-400">
+                  <span>نسبة الإنجاز:</span>
+                  <span className="font-extrabold text-white dir-ltr">{displayPercent}% ({hero.completedVideos} فيديو)</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export function AcademyHome() {
   const { get, getJson } = useSiteSettings();
@@ -259,6 +370,9 @@ export function AcademyHome() {
             </div>
           </div>
         </section>
+
+        {/* ─── HONOR WALL SECTION (BEFORE GRADE SELECTION) ─── */}
+        <HomeHonorWallSection />
 
         {/* ─── 3. GRADE SELECTION SECTION ─── */}
         <section id="baccalaureate" className="bg-white py-14 md:py-20 border-b border-slate-200">
