@@ -1,6 +1,6 @@
 import { createHash } from "crypto";
 import type { Request, Response, NextFunction } from "express";
-import { and, eq, gt } from "drizzle-orm";
+import { and, eq, gt, ne } from "drizzle-orm";
 import { db, studentSessionsTable, studentsTable } from "@workspace/db";
 import { getAcademicStageDimensions } from "../lib/academic-stages";
 
@@ -257,7 +257,7 @@ export async function getApprovedStudent(
       and(
         eq(studentSessionsTable.tokenHash, tokenHash),
         gt(studentSessionsTable.expiresAt, new Date()),
-        eq(studentsTable.status, "approved"),
+        ne(studentsTable.status, "suspended"),
       ),
     )
     .limit(1);

@@ -625,10 +625,10 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
       .from(studentsTable)
       .where(ilike(studentsTable.accessCode, accessCode))
       .limit(1);
-    if (!student || student.status !== "approved") {
+    if (!student || student.status === "suspended") {
       res
         .status(401)
-        .json({ error: "الكود غير صحيح أو أن حسابك قيد التفعيل حالياً" });
+        .json({ error: "الكود غير صحيح أو أن حسابك معطل حالياً" });
       return;
     }
 
