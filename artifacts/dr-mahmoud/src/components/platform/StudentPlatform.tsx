@@ -352,6 +352,14 @@ export function StudentPlatform() {
     const poll = async () => {
       if (document.visibilityState !== "visible") return;
       try {
+        // Also check if student approval status or data updated from admin side
+        const meRes = await api<{ student: Student | null }>("/api/student/me").catch(() => null);
+        if (meRes?.student && (meRes.student.status !== student.status || meRes.student.paymentStatus !== student.paymentStatus)) {
+          setStudent(meRes.student);
+          void loadLearningData();
+          toast({ title: "🎉 تم تحديث حسابك!", description: "تم تفعيل الاشتراك وفك تشغيل باقي الدروس والاختبارات بنجاح." });
+        }
+
         const rows = await api<StudentNotification[]>("/api/learning/notifications");
         const latestId = Math.max(0, ...rows.map((item) => item.id));
         if (latestNotificationIdRef.current > 0 && latestId > latestNotificationIdRef.current) {
@@ -368,9 +376,9 @@ export function StudentPlatform() {
         // SSE keeps retrying; the next poll provides an independent fallback.
       }
     };
-    const timer = window.setInterval(poll, 12000);
+    const timer = window.setInterval(poll, 4000);
     return () => window.clearInterval(timer);
-  }, [student?.id]);
+  }, [student?.id, student?.status, student?.paymentStatus]);
   useEffect(() => {
     if (!student) return;
     let lastRefresh = 0;
