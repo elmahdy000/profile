@@ -569,9 +569,9 @@ router.post(
           academicTrack,
           otherGradeDetail,
           learningMode,
-          status: "pending",
+          status: educationSystem === "university" ? "approved" : "pending",
           accessCode,
-          approvedAt: null,
+          approvedAt: educationSystem === "university" ? new Date() : null,
           paymentStatus: "unpaid",
           ...(await getAutomaticCourseAssignments(grade === "أخرى" ? otherGradeDetail || grade : grade)),
         })
@@ -592,7 +592,9 @@ router.post(
       res.status(201).json({
         status: student.status,
         accessCode: student.accessCode,
-        message: "تم تسجيل بيانات حسابك بنجاح! يلزم رفع صورة إيصال الدفع وموافقة الإدارة لتفعيل الحساب بالكامل.",
+        message: educationSystem === "university"
+          ? "تم إنشاء حسابك بنجاح! احفظ كود الدخول وادخل فوراً لمشاهدة فيديو مجاني واحد من كل مادة. ارفع الإيصال لفتح باقي المحتوى."
+          : "تم تسجيل بيانات حسابك بنجاح! يلزم رفع صورة إيصال الدفع وموافقة الإدارة لتفعيل الحساب بالكامل.",
       });
     } catch (error) {
       next(error);

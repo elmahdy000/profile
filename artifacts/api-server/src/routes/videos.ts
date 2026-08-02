@@ -664,6 +664,8 @@ router.get("/videos/:id/stream", async (req, res, next) => {
     // If student is logged in via session cookie and not paid, check preview limit.
     // Short-lived signed stream tokens (hasValidToken) are pre-validated for authorized/paid users.
     if (approvedStudent && !hasValidToken && approvedStudent.paymentStatus !== "paid") {
+      const isUniv = approvedStudent.educationSystem === "university";
+      const maxAllowedFreeVideos = isUniv ? 1 : 2;
       const courseKey = video.courseId ? eq(videosTable.courseId, video.courseId) : eq(videosTable.category, video.category);
       const courseVideos = await db
         .select({ id: videosTable.id, order: videosTable.order })
@@ -671,8 +673,13 @@ router.get("/videos/:id/stream", async (req, res, next) => {
         .where(and(courseKey, eq(videosTable.isPublished, true)))
         .orderBy(asc(videosTable.order), asc(videosTable.id));
       const videoIndex = courseVideos.findIndex((v) => v.id === video.id);
-      if (videoIndex === -1 || videoIndex >= 2) {
-        res.status(403).json({ error: "ادفع واستلم كل الفيديوهات. أول فيديوهين بس مجانية.", code: "PAYMENT_REQUIRED" });
+      if (videoIndex === -1 || videoIndex >= maxAllowedFreeVideos) {
+        res.status(403).json({
+          error: isUniv
+            ? "ادفع رسوم الاشتراك لمشاهدة باقي المحاضرات. يُسمح بفيديو معاينة واحد فقط مجاناً لكل مادة."
+            : "ادفع واستلم كل الفيديوهات. أول فيديوهين بس مجانية.",
+          code: "PAYMENT_REQUIRED",
+        });
         return;
       }
     }
