@@ -489,6 +489,11 @@ export function AdminLearning({ role = "superadmin" }: { role?: "superadmin" | "
     };
   }, []);
   const updateStudent = async (id: number, status: string) => {
+    const studentObj = students.find((s) => s.id === id);
+    const studentName = studentObj ? studentObj.name : `طالب #${id}`;
+    const actionText = status === "approved" ? "تفعيل وتأكيد حساب" : "إيقاف / تعليق حساب";
+    if (!confirm(`هل أنت متأكد من ${actionText} الطالب (${studentName})؟`)) return;
+
     try {
       const updated = await adminApi<Student>(`/api/admin/students/${id}`, {
         method: "PATCH",
@@ -509,6 +514,7 @@ export function AdminLearning({ role = "superadmin" }: { role?: "superadmin" | "
     student: Student,
     enrolledCourseIds: number[],
   ) => {
+    if (!confirm(`هل أنت متأكد من تعديل المواد والكورسات المسجلة للطالب (${student.name})؟`)) return;
     try {
       const enrolledCategories = learningCourses
         .filter((course) => enrolledCourseIds.includes(course.id))
@@ -530,6 +536,8 @@ export function AdminLearning({ role = "superadmin" }: { role?: "superadmin" | "
     student: Student,
     learningMode: "online" | "offline",
   ) => {
+    const modeLabel = learningMode === "online" ? "أونلاين" : "أوفلاين (سنتر)";
+    if (!confirm(`هل أنت متأكد من تغيير نظام دراسة الطالب (${student.name}) إلى [${modeLabel}]؟`)) return;
     try {
       const updated = await adminApi<Student>(
         `/api/admin/students/${student.id}`,
@@ -547,6 +555,8 @@ export function AdminLearning({ role = "superadmin" }: { role?: "superadmin" | "
     student: Student,
     paymentStatus: string,
   ) => {
+    const statusLabel = paymentStatus === "paid" ? "مدفوع ومفعّل" : paymentStatus === "pending_review" ? "قيد المراجعة" : "غير مدفوع";
+    if (!confirm(`هل أنت متأكد من تغيير حالة الاشتراك والدفع للطالب (${student.name}) إلى [${statusLabel}]؟`)) return;
     try {
       const updated = await adminApi<Student>(
         `/api/admin/students/${student.id}`,
@@ -2490,7 +2500,11 @@ function PaymentReceiptsPanel({ receipts: propReceipts, onRefresh }: { receipts?
                               type="button"
                               size="sm"
                               disabled={actionId === receipt.id}
-                              onClick={() => handleAction(receipt.id, "approved")}
+                              onClick={() => {
+                                if (confirm(`هل أنت متأكد من قبول الإيصال وتفعيل الطالب (${receipt.studentName})؟`)) {
+                                  handleAction(receipt.id, "approved");
+                                }
+                              }}
                               className="h-8 px-3 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
                             >
                               {actionId === receipt.id ? (
