@@ -579,7 +579,12 @@ export function DashboardTab({
 
       {/* Payment Warning */}
       {student.paymentStatus !== "paid" && (
-        <PaymentBanner paymentStatus={student.paymentStatus || "unpaid"} onUploaded={() => window.location.reload()} />
+        <PaymentBanner
+          paymentStatus={student.paymentStatus || "unpaid"}
+          onUploaded={() => {
+            void onRetry();
+          }}
+        />
       )}
 
       {/* 2. Meaningful Statistics Cards */}

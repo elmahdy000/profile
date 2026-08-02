@@ -26,9 +26,13 @@ export function PaymentBanner({ paymentStatus, onUploaded }: { paymentStatus: st
     try {
       const formData = new FormData();
       formData.append("receipt", selectedFile);
+      const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
       const res = await fetch("/api/student/payment-receipt", {
         method: "POST",
         credentials: "include",
+        headers: {
+          ...(deviceId ? { "X-Device-Id": deviceId } : {}),
+        },
         body: formData,
       });
       const data = await res.json();
