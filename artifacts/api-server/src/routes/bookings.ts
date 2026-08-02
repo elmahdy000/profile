@@ -4,7 +4,7 @@ import { CreateBookingBody } from "@workspace/api-zod";
 import { requireAdmin, requireSuperAdmin } from "../middleware/auth";
 import { logAudit } from "./learning";
 import { fixedWindowRateLimit } from "../middleware/rate-limit";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 const router: IRouter = Router();
 const createBookingLimit = fixedWindowRateLimit({
@@ -62,7 +62,11 @@ router.post("/bookings", createBookingLimit, async (req, res, next) => {
 // List bookings (requires admin authorization header to view bookings list)
 router.get("/bookings", requireAdmin, async (_req, res, next) => {
   try {
-    const bookings = await db.select().from(bookingsTable);
+    const bookings = await db
+      .select()
+      .from(bookingsTable)
+      .orderBy(desc(bookingsTable.createdAt));
+
     const formatted = bookings.map(b => ({
       id: b.id,
       name: b.name,

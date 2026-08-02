@@ -2063,129 +2063,140 @@ export default function AdminDashboard() {
                       </p>
                     </div>
                   ) : (
-                    <div className="grid gap-4">
-                      {bookingsQuery.data?.filter((b) => bookingFilter === "all" || b.status === bookingFilter).map((booking) => {
-                        const cleanPhone = booking.phone.replace(/[^\d+]/g, "");
-                        const formattedPhone = cleanPhone.startsWith("0") ? `2${cleanPhone}` : cleanPhone;
-                        const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(`مرحباً ${booking.name} 👋، تواصل من منصة د. محمود المهدي بشأن طلب الحجز الخاص بك.`)}`;
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5" dir="rtl">
+                      {bookingsQuery.data
+                        ?.filter((b) => bookingFilter === "all" || b.status === bookingFilter)
+                        .slice()
+                        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                        .map((booking) => {
+                          const cleanPhone = booking.phone.replace(/[^\d+]/g, "");
+                          const formattedPhone = cleanPhone.startsWith("0") ? `2${cleanPhone}` : cleanPhone;
+                          const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(`مرحباً ${booking.name} 👋، تواصل من منصة د. محمود المهدي بشأن طلب الحجز الخاص بك.`)}`;
 
-                        return (
-                          <div
-                            key={booking.id}
-                            className={`bg-card border transition-all duration-200 rounded-2xl p-5 md:p-6 shadow-md relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-5 ${
-                              booking.status === "pending"
-                                ? "border-amber-500/30 bg-gradient-to-r from-amber-500/[0.03] to-card"
-                                : booking.status === "confirmed"
-                                ? "border-emerald-500/30 bg-gradient-to-r from-emerald-500/[0.03] to-card"
-                                : "border-border hover:border-border/80"
-                            }`}
-                          >
-                            {/* Left side details */}
-                            <div className="space-y-2.5 flex-1 w-full">
-                              <div className="flex flex-wrap items-center gap-3">
-                                <span className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-sm border border-primary/20 shrink-0">
-                                  {booking.name.slice(0, 1) || "ط"}
-                                </span>
-                                <div>
-                                  <h3 className="font-extrabold text-foreground text-lg leading-tight">
-                                    {booking.name}
-                                  </h3>
-                                  <span className="text-muted-foreground text-[11px] block mt-0.5">
-                                    {new Date(booking.createdAt).toLocaleString("ar-EG", {
-                                      dateStyle: "medium",
-                                      timeStyle: "short",
-                                    })}
+                          const d = new Date(booking.createdAt);
+                          const dateStr = d.toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" });
+                          const timeStr = d.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit", hour12: true });
+
+                          return (
+                            <div
+                              key={booking.id}
+                              className={`bg-card border transition-all duration-200 rounded-xl p-3.5 shadow-sm hover:shadow-md flex flex-col justify-between gap-3 text-right ${
+                                booking.status === "pending"
+                                  ? "border-amber-500/40 bg-gradient-to-br from-amber-500/[0.04] to-card"
+                                  : booking.status === "confirmed"
+                                  ? "border-emerald-500/40 bg-gradient-to-br from-emerald-500/[0.04] to-card"
+                                  : "border-border/80 hover:border-border"
+                              }`}
+                            >
+                              {/* Header: Name + Status Badge */}
+                              <div className="space-y-2">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <span className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-black text-xs border border-primary/20 shrink-0">
+                                      {booking.name.slice(0, 1) || "ط"}
+                                    </span>
+                                    <div className="min-w-0">
+                                      <h3 className="font-black text-foreground text-sm leading-tight truncate">
+                                        {booking.name}
+                                      </h3>
+                                      <span className="text-muted-foreground text-[11px] font-mono flex items-center gap-1 mt-0.5" dir="ltr">
+                                        <Clock className="w-3 h-3 text-primary shrink-0" />
+                                        <span>{dateStr} • {timeStr}</span>
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <span
+                                    className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold shrink-0 inline-flex items-center gap-1 ${
+                                      booking.status === "confirmed"
+                                        ? "bg-emerald-500/15 text-emerald-500 dark:text-emerald-400 border border-emerald-500/30"
+                                        : booking.status === "completed"
+                                        ? "bg-blue-500/15 text-blue-500 dark:text-blue-400 border border-blue-500/30"
+                                        : "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 animate-pulse"
+                                    }`}
+                                  >
+                                    <span className={`w-1.5 h-1.5 rounded-full ${
+                                      booking.status === "confirmed" ? "bg-emerald-500" : booking.status === "completed" ? "bg-blue-500" : "bg-amber-500"
+                                    }`} />
+                                    {booking.status === "confirmed"
+                                      ? "مؤكد"
+                                      : booking.status === "completed"
+                                      ? "مكتمل"
+                                      : "جديد"}
                                   </span>
                                 </div>
-                                <span
-                                  className={`px-3 py-1 rounded-full text-xs font-bold mr-auto md:mr-0 inline-flex items-center gap-1.5 ${
-                                    booking.status === "confirmed"
-                                      ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                                      : booking.status === "completed"
-                                      ? "bg-blue-500/15 text-blue-400 border border-blue-500/30"
-                                      : "bg-amber-500/15 text-amber-400 border border-amber-500/30 animate-pulse"
-                                  }`}
-                                >
-                                  <span className={`w-1.5 h-1.5 rounded-full ${
-                                    booking.status === "confirmed" ? "bg-emerald-400" : booking.status === "completed" ? "bg-blue-400" : "bg-amber-400"
-                                  }`} />
-                                  {booking.status === "confirmed"
-                                    ? "مؤكد"
-                                    : booking.status === "completed"
-                                    ? "مكتمل"
-                                    : "جديد - قيد الانتظار"}
-                                </span>
-                              </div>
 
-                              <div className="flex items-center gap-3 pt-1">
-                                <a
-                                  href={`tel:${booking.phone}`}
-                                  className="text-foreground/90 font-mono text-sm font-semibold hover:text-primary transition-colors dir-ltr inline-flex items-center gap-1.5"
-                                >
-                                  <Phone className="w-3.5 h-3.5 text-muted-foreground" />
-                                  {booking.phone}
-                                </a>
-                                <a
-                                  href={whatsappUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-xs font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-2.5 py-1 rounded-lg border border-emerald-500/20 transition-all"
-                                >
-                                  <MessageCircle className="w-3.5 h-3.5" />
-                                  مراسلة واتساب
-                                </a>
-                              </div>
-
-                              {booking.message && (
-                                <div className="text-foreground/80 text-sm bg-muted/30 rounded-xl p-3.5 border border-border/50 whitespace-pre-wrap leading-relaxed">
-                                  {booking.message}
+                                {/* Phone & Whatsapp Action */}
+                                <div className="flex items-center justify-between gap-2 bg-muted/30 p-2 rounded-lg border border-border/40 text-xs">
+                                  <a
+                                    href={`tel:${booking.phone}`}
+                                    className="text-foreground/90 font-mono font-bold hover:text-primary transition-colors dir-ltr inline-flex items-center gap-1.5"
+                                  >
+                                    <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+                                    {booking.phone}
+                                  </a>
+                                  <a
+                                    href={whatsappUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-[11px] font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-md border border-emerald-500/20 transition-all shrink-0"
+                                  >
+                                    <MessageCircle className="w-3 h-3" />
+                                    واتساب
+                                  </a>
                                 </div>
-                              )}
-                            </div>
 
-                            {/* Quick Action controls */}
-                            <div className="flex items-center gap-2 flex-shrink-0 self-stretch md:self-auto justify-end border-t md:border-t-0 border-border/60 pt-3 md:pt-0">
-                              {booking.status === "pending" && (
+                                {/* Booking Message if present */}
+                                {booking.message && (
+                                  <div className="text-foreground/80 text-xs bg-card/80 rounded-lg p-2 border border-border/50 max-h-20 overflow-y-auto leading-relaxed">
+                                    {booking.message}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Footer Action Buttons */}
+                              <div className="flex items-center justify-end gap-1.5 border-t border-border/50 pt-2 mt-1">
+                                {booking.status === "pending" && (
+                                  <button
+                                    onClick={() =>
+                                      handleBookingStatusUpdate(
+                                        booking.id,
+                                        "confirmed",
+                                      )
+                                    }
+                                    className="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-bold rounded-lg text-xs transition-all flex items-center gap-1"
+                                    title="تأكيد الحجز"
+                                  >
+                                    <Check className="w-3.5 h-3.5" />
+                                    تأكيد
+                                  </button>
+                                )}
+                                {booking.status === "confirmed" && (
+                                  <button
+                                    onClick={() =>
+                                      handleBookingStatusUpdate(
+                                        booking.id,
+                                        "completed",
+                                      )
+                                    }
+                                    className="px-2.5 py-1 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-600 dark:text-blue-400 font-bold rounded-lg text-xs transition-all flex items-center gap-1"
+                                    title="وضع علامة مكتمل"
+                                  >
+                                    <Check className="w-3.5 h-3.5" />
+                                    إكتمال
+                                  </button>
+                                )}
                                 <button
-                                  onClick={() =>
-                                    handleBookingStatusUpdate(
-                                      booking.id,
-                                      "confirmed",
-                                    )
-                                  }
-                                  className="px-3.5 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm"
-                                  title="تأكيد الحجز"
+                                  onClick={() => handleBookingDelete(booking.id)}
+                                  className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-500 dark:text-red-400 rounded-lg transition-all"
+                                  title="حذف طلب الحجز"
                                 >
-                                  <Check className="w-4 h-4" />
-                                  تأكيد الحجز
+                                  <Trash2 className="w-3.5 h-3.5" />
                                 </button>
-                              )}
-                              {booking.status === "confirmed" && (
-                                <button
-                                  onClick={() =>
-                                    handleBookingStatusUpdate(
-                                      booking.id,
-                                      "completed",
-                                    )
-                                  }
-                                  className="px-3.5 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm"
-                                  title="وضع علامة مكتمل"
-                                >
-                                  <Check className="w-4 h-4" />
-                                  إكتمال
-                                </button>
-                              )}
-                              <button
-                                onClick={() => handleBookingDelete(booking.id)}
-                                className="p-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-xl transition-all"
-                                title="حذف الحجز"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
                     </div>
                   )}
                 </div>
