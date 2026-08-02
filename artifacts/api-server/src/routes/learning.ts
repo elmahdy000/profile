@@ -578,12 +578,15 @@ router.post(
         .returning();
 
       // Automatically update matching booking status to confirmed
-      const cleanRegPhone = phone.replace(/[^\d]/g, "");
-      if (cleanRegPhone) {
+      const normalizedPhoneStr = phone.replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString());
+      const cleanRegPhone = normalizedPhoneStr.replace(/[^\d]/g, "");
+      if (cleanRegPhone && cleanRegPhone.length >= 8) {
         await db
           .update(bookingsTable)
           .set({ status: "confirmed" })
-          .where(sql`REPLACE(${bookingsTable.phone}, ' ', '') LIKE ${`%${cleanRegPhone.slice(-8)}%`}`);
+          .where(
+            sql`REGEXP_REPLACE(TRANSLATE(${bookingsTable.phone}, '٠١٢٣٤٥٦٧٨٩', '0123456789'), '[^0-9]', '', 'g') LIKE ${`%${cleanRegPhone.slice(-8)}%`}`
+          );
       }
 
       res.status(201).json({
