@@ -989,11 +989,24 @@ export default function BaccalaureatePage() {
                   {/* Avatar & Student Name */}
                   <div className="flex items-center gap-4 mb-5">
                     <div className="relative shrink-0">
-                      <img
-                        src={hero.avatar}
-                        alt={hero.name}
-                        className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-500/40 shadow-md group-hover:scale-105 transition-transform"
-                      />
+                      {hero.avatar ? (
+                        <img
+                          src={hero.avatar}
+                          alt={hero.name}
+                          onError={(e) => {
+                            // Fallback if image fails to load
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = hero.name.includes("سارة") || hero.name.includes("نور")
+                              ? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80"
+                              : "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&q=80";
+                          }}
+                          className="w-16 h-16 rounded-2xl object-cover border-2 border-amber-500/40 shadow-md group-hover:scale-105 transition-transform"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 via-primary/20 to-secondary/20 border-2 border-amber-500/40 flex items-center justify-center font-black text-xl text-amber-500 shadow-md group-hover:scale-105 transition-transform">
+                          {hero.name.substring(0, 2)}
+                        </div>
+                      )}
                       <div className="absolute -top-2 -right-2 bg-amber-500 text-slate-950 rounded-full p-1 shadow-md">
                         <Crown className="w-3.5 h-3.5 fill-current" />
                       </div>
