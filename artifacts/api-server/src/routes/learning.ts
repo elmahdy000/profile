@@ -1442,18 +1442,16 @@ router.get("/baccalaureate/honor-wall", async (_req, res, next) => {
       })
       .from(videoProgressTable);
 
-    const baccVideos = await db
+    const allVideos = await db
       .select({ id: videosTable.id })
-      .from(videosTable)
-      .where(eq(videosTable.category, "baccalaureate"));
+      .from(videosTable);
 
-    const totalBaccVideosCount = baccVideos.length || 6;
-    const baccVideoIds = new Set(baccVideos.map((v) => v.id));
+    const totalVideosCount = allVideos.length || 6;
 
     // Calculate completed count per student
     const studentCompletedMap = new Map<number, number>();
     for (const p of progressRows) {
-      if (baccVideoIds.has(p.videoId) && (p.completed || (p.progress || 0) >= 90)) {
+      if (p.completed || (p.progress || 0) >= 90) {
         const current = studentCompletedMap.get(p.studentId) || 0;
         studentCompletedMap.set(p.studentId, current + 1);
       }
@@ -1462,11 +1460,11 @@ router.get("/baccalaureate/honor-wall", async (_req, res, next) => {
     const honorList = students
       .map((s) => {
         const completedVideos = studentCompletedMap.get(s.id) || 0;
-        const total = totalBaccVideosCount;
+        const total = totalVideosCount;
         return {
           id: s.id,
           name: s.name,
-          school: s.school || s.educationSystem || "مرحلة البكالوريا",
+          school: s.school || s.educationSystem || "طالب متميز",
           completedVideos,
           totalVideos: total,
           isFullAchiever: completedVideos >= total && total > 0,
@@ -1477,7 +1475,7 @@ router.get("/baccalaureate/honor-wall", async (_req, res, next) => {
       .sort((a, b) => b.completedVideos - a.completedVideos);
 
     res.json({
-      totalBaccVideos: totalBaccVideosCount,
+      totalBaccVideos: totalVideosCount,
       students: honorList,
     });
   } catch (error) {
@@ -1514,17 +1512,15 @@ router.get("/baccalaureate/honor-wall/stream", async (req, res, next) => {
         })
         .from(videoProgressTable);
 
-      const baccVideos = await db
+      const allVideos = await db
         .select({ id: videosTable.id })
-        .from(videosTable)
-        .where(eq(videosTable.category, "baccalaureate"));
+        .from(videosTable);
 
-      const totalBaccVideosCount = baccVideos.length || 6;
-      const baccVideoIds = new Set(baccVideos.map((v) => v.id));
+      const totalVideosCount = allVideos.length || 6;
 
       const studentCompletedMap = new Map<number, number>();
       for (const p of progressRows) {
-        if (baccVideoIds.has(p.videoId) && (p.completed || (p.progress || 0) >= 90)) {
+        if (p.completed || (p.progress || 0) >= 90) {
           const current = studentCompletedMap.get(p.studentId) || 0;
           studentCompletedMap.set(p.studentId, current + 1);
         }
@@ -1536,17 +1532,17 @@ router.get("/baccalaureate/honor-wall/stream", async (req, res, next) => {
           return {
             id: s.id,
             name: s.name,
-            school: s.school || "مرحلة البكالوريا",
+            school: s.school || "طالب متميز",
             completedVideos,
-            totalVideos: totalBaccVideosCount,
-            isFullAchiever: completedVideos >= totalBaccVideosCount && totalBaccVideosCount > 0,
+            totalVideos: totalVideosCount,
+            isFullAchiever: completedVideos >= totalVideosCount && totalVideosCount > 0,
             avatarUrl: s.avatarUrl || null,
           };
         })
         .filter((s) => s.completedVideos > 0)
         .sort((a, b) => b.completedVideos - a.completedVideos);
 
-      res.write(`data: ${JSON.stringify({ students: honorList, totalBaccVideos: totalBaccVideosCount })}\n\n`);
+      res.write(`data: ${JSON.stringify({ students: honorList, totalBaccVideos: totalVideosCount })}\n\n`);
     };
 
     await sendUpdate();
