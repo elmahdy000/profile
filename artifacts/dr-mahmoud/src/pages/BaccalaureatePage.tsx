@@ -177,33 +177,30 @@ const baccalaureateHonorWall = [
   {
     name: "مروان أحمد الشافعي",
     school: "مدرسة STEM الزقازيق",
-    achievement: "إكمال 100% من جميع محاضرات Python والتفكير المنطقي",
-    videosWatched: "32/32 فيديو",
-    hoursCount: "48 ساعة عملي",
-    project: "نظام تحليل البيانات الذكي",
-    avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&q=80",
+    achievement: "إكمال 100% ومشاهدة الـ 6 فيديوهات بالكامل والتطبيق العملي",
+    videosWatched: "6/6 فيديو",
+    hoursCount: "مكتمل 100%",
+    avatar: null,
     rank: "المركز الأول 🥇",
     badgeColor: "from-amber-500/20 to-yellow-500/10 border-amber-500/30 text-amber-500"
   },
   {
     name: "سارة محمود زهران",
     school: "ثانوية عامة لغات",
-    achievement: "ختام جميع فيديوهات وهياكل البيانات بلغة Python",
-    videosWatched: "28/28 فيديو",
-    hoursCount: "42 ساعة عملي",
-    project: "لعبة خوارزمية تفاعلية متطورة",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80",
+    achievement: "إكمال 100% ومشاهدة الـ 6 فيديوهات بالكامل والتطبيق العملي",
+    videosWatched: "6/6 فيديو",
+    hoursCount: "مكتمل 100%",
+    avatar: null,
     rank: "المركز الثاني 🥈",
     badgeColor: "from-blue-500/20 to-cyan-500/10 border-blue-500/30 text-blue-400"
   },
   {
     name: "يوسف أحمد عبدالحميد",
     school: "الصف الثاني الثانوي",
-    achievement: "مشاهدة وإنهاء كافة المسائل البرمجية والدوال",
-    videosWatched: "24/24 فيديو",
-    hoursCount: "38 ساعة عملي",
-    project: "مشروع آلة حاسبة علمية خوارزمية",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80",
+    achievement: "إكمال 100% ومشاهدة الـ 6 فيديوهات بالكامل والتطبيق العملي",
+    videosWatched: "6/6 فيديو",
+    hoursCount: "مكتمل 100%",
+    avatar: null,
     rank: "المركز الثالث 🥉",
     badgeColor: "from-purple-500/20 to-indigo-500/10 border-purple-500/30 text-purple-400"
   }
@@ -1038,14 +1035,6 @@ export default function BaccalaureatePage() {
                       <span className="font-extrabold text-foreground dir-ltr text-right block">{hero.hoursCount}</span>
                     </div>
                   </div>
-                </div>
-
-                {/* Project Badge Footer */}
-                <div className="pt-4 border-t border-border/60 flex items-center justify-between text-xs">
-                  <span className="text-[11px] text-muted-foreground font-bold">مشروع التخرج:</span>
-                  <span className="font-extrabold text-primary bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20">
-                    {hero.project}
-                  </span>
                 </div>
               </motion.div>
             ))}
