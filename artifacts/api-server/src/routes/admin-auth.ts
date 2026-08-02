@@ -2,10 +2,11 @@ import { Router, type IRouter } from "express";
 import fs from "fs";
 import path from "path";
 import { desc, eq } from "drizzle-orm";
-import { auditLogsTable, db, subadminAccountsTable } from "@workspace/db";
+import { auditLogsTable, db, subadminAccountsTable, siteSettingsTable } from "@workspace/db";
 import {
   ADMIN_COOKIE,
   adminSessionCookieOptions,
+  clearAdminPassCache,
   createAdminSessionToken,
   getAdminRole,
   requireAdmin,
@@ -80,6 +81,14 @@ router.post("/admin/change-passwords", requireSuperAdmin, async (req, res, next)
         envContent += `\nADMIN_PASSWORD=${newPass}`;
       }
       process.env.ADMIN_PASSWORD = newPass;
+
+      await db
+        .insert(siteSettingsTable)
+        .values({ key: "admin_password_hash", value: newPass, type: "text" })
+        .onConflictDoUpdate({
+          target: siteSettingsTable.key,
+          set: { value: newPass, updatedAt: new Date() },
+        });
     }
 
     if (subAdminPassword !== undefined) {
@@ -90,10 +99,19 @@ router.post("/admin/change-passwords", requireSuperAdmin, async (req, res, next)
         envContent += `\nSUBADMIN_PASSWORD=${newSubPass}`;
       }
       process.env.SUBADMIN_PASSWORD = newSubPass;
+
+      await db
+        .insert(siteSettingsTable)
+        .values({ key: "subadmin_password_hash", value: newSubPass, type: "text" })
+        .onConflictDoUpdate({
+          target: siteSettingsTable.key,
+          set: { value: newSubPass, updatedAt: new Date() },
+        });
     }
 
+    clearAdminPassCache();
     fs.writeFileSync(envPath, envContent, "utf-8");
-    await logAudit(req, "CHANGE_PASSWORDS", "settings", null, "تم تحديث كلمات مرور الإدارة في النظام");
+    await logAudit(req, "CHANGE_PASSWORDS", "settings", null, "تم تحديث كلمات مرور الإدارة في النظام وتخزينها دائماً في قاعدة البيانات");
 
     res.json({ success: true, message: "تم تحديث كلمات المرور بنجاح!" });
   } catch (error) {

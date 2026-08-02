@@ -1,10 +1,60 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import type { Request, Response, NextFunction } from "express";
-import { db, subadminAccountsTable } from "@workspace/db";
+import { db, subadminAccountsTable, siteSettingsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
-const getAdminPassword = () => process.env.ADMIN_PASSWORD ?? "prof1234";
-const getSubAdminPassword = () => process.env.SUBADMIN_PASSWORD ?? "";
+let cachedAdminPass: string | null = null;
+let cachedSubAdminPass: string | null = null;
+let lastPassFetch = 0;
+
+export async function getDynamicAdminPassword(): Promise<string> {
+  const now = Date.now();
+  if (cachedAdminPass && now - lastPassFetch < 5000) {
+    return cachedAdminPass;
+  }
+  try {
+    const [row] = await db
+      .select({ value: siteSettingsTable.value })
+      .from(siteSettingsTable)
+      .where(eq(siteSettingsTable.key, "admin_password_hash"))
+      .limit(1);
+    if (row?.value) {
+      cachedAdminPass = row.value;
+      lastPassFetch = now;
+      return row.value;
+    }
+  } catch (e) {
+    // DB fallback
+  }
+  cachedAdminPass = process.env.ADMIN_PASSWORD ?? "prof1234";
+  lastPassFetch = now;
+  return cachedAdminPass;
+}
+
+export async function getDynamicSubAdminPassword(): Promise<string> {
+  try {
+    const [row] = await db
+      .select({ value: siteSettingsTable.value })
+      .from(siteSettingsTable)
+      .where(eq(siteSettingsTable.key, "subadmin_password_hash"))
+      .limit(1);
+    if (row?.value) {
+      return row.value;
+    }
+  } catch (e) {
+    // DB fallback
+  }
+  return process.env.SUBADMIN_PASSWORD ?? "";
+}
+
+export function clearAdminPassCache() {
+  cachedAdminPass = null;
+  cachedSubAdminPass = null;
+  lastPassFetch = 0;
+}
+
+const getAdminPassword = () => cachedAdminPass ?? process.env.ADMIN_PASSWORD ?? "prof1234";
+const getSubAdminPassword = () => cachedSubAdminPass ?? process.env.SUBADMIN_PASSWORD ?? "";
 
 // قائمة المشرفين المساعدين المعتمدين بالأسماء والباسوردات الخاص بهم
 export const SUBADMIN_ACCOUNTS: Record<string, { name: string; pass: string }> = {
@@ -40,8 +90,8 @@ export async function verifyAdminCredentialsAsync(passwordInput: string, usernam
   const pass = passwordInput.trim();
   const user = (usernameInput || "").trim().toLowerCase();
 
-  const adminPassword = getAdminPassword();
-  const subAdminPassword = getSubAdminPassword();
+  const adminPassword = await getDynamicAdminPassword();
+  const subAdminPassword = await getDynamicSubAdminPassword();
 
   // 1. فحص المدير الرئيسي
   if (safeEqual(pass, adminPassword)) {
