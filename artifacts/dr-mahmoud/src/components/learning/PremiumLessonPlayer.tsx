@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { getYouTubePlaylistId, getYouTubeVideoId, getYoutubeThumbnail, type VideoItem } from "@/lib/video";
 
+import Hls from "hls.js";
+
 type LessonFile = { id: number; title: string; sizeBytes?: number | null };
 type LessonNote = { id: number; at: number; text: string };
 
@@ -86,6 +88,7 @@ function useIsLandscapeMobile() {
 
 export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], onSelectLesson, onStartQuiz, onClose }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const hlsRef = useRef<Hls | null>(null);
   const shellRef = useRef<HTMLDivElement>(null);
   const saveTimer = useRef<number | undefined>(undefined);
   const controlsTimer = useRef<number | undefined>(undefined);
@@ -108,6 +111,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
   const [notes, setNotes] = useState<LessonNote[]>([]);
   const [progress, setProgress] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [studentInfo, setStudentInfo] = useState<{ name: string; phone: string } | null>(null);
 
   // ── Landscape YouTube-style controls visibility ──────────────────────────
   const isLandscapeMobile = useIsLandscapeMobile();
@@ -124,8 +128,6 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
   const handleVideoAreaTap = useCallback(() => {
     if (!isLandscapeMobile) return;
     if (controlsVisible) {
-      // If controls are already visible, toggle play/pause on tap
-      // But only hide if controls were shown for >= 1s
       setControlsVisible(false);
       window.clearTimeout(controlsTimer.current);
     } else {
@@ -133,7 +135,6 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
     }
   }, [isLandscapeMobile, controlsVisible, showControlsTemporarily]);
 
-  // Auto-show controls when entering landscape, auto-hide after 5s
   useEffect(() => {
     if (isLandscapeMobile) {
       showControlsTemporarily();
@@ -144,7 +145,6 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
     return () => window.clearTimeout(controlsTimer.current);
   }, [isLandscapeMobile]);
 
-  // Keep controls visible while paused in landscape
   useEffect(() => {
     if (!isLandscapeMobile) return;
     if (!playing) {
@@ -153,7 +153,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
     }
   }, [playing, isLandscapeMobile]);
 
-  const isProtected = item.youtubeUrl?.startsWith("/api/videos/") || item.youtubeUrl?.startsWith("/uploads/");
+  const isProtected = item.youtubeUrl?.startsWith("/api/videos/") || item.youtubeUrl?.startsWith("/uploads/") || item.youtubeUrl?.includes(".m3u8");
   const videoId = getYouTubeVideoId(item.youtubeUrl);
   const playlistId = getYouTubePlaylistId(item.youtubeUrl);
   const currentIndex = Math.max(0, lessons.findIndex((lesson) => lesson.id === item.id));
@@ -163,6 +163,65 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
   const quiz = item.quizId ? quizzes.find((entry) => entry.id === item.quizId) : null;
   const noteKey = `dr_mahmoud_lesson_notes_${item.id || item.title}`;
   const poster = item.thumbnailUrl || getYoutubeThumbnail(item.youtubeUrl);
+
+  // Fetch current student info for dynamic anti-piracy watermark
+  useEffect(() => {
+    fetch("/api/student/me", { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.student) {
+          setStudentInfo({ name: data.student.name || "", phone: data.student.phone || "" });
+        }
+      })
+      .catch(() => undefined);
+  }, []);
+
+  // HLS stream handler
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!isProtected || !video || !streamSrc) return;
+
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+
+    const isHlsSource = streamSrc.includes(".m3u8");
+
+    if (isHlsSource) {
+      if (Hls.isSupported()) {
+        const hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: true,
+          backBufferLength: 90,
+        });
+        hlsRef.current = hls;
+        hls.loadSource(streamSrc);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          setPlayerReady(true);
+          setPlayerError(false);
+        });
+        hls.on(Hls.Events.ERROR, (_, data) => {
+          if (data.fatal) {
+            void refreshStreamUrl();
+          }
+        });
+      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        // Native HLS support (Safari iOS / Mac)
+        video.src = streamSrc;
+      }
+    } else {
+      video.src = streamSrc;
+    }
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [streamSrc, isProtected]);
 
   useEffect(() => {
     setPlayerReady(false); setPlayerError(false); setPlayerErrorMessage(""); setStreamSrc(item.youtubeUrl); refreshAttempted.current = false; setYoutubeStarted(false); setCurrentTime(0); setDuration(0); setPlaying(false);
@@ -437,11 +496,14 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                   {playerError ? <div className="absolute inset-0 z-20 grid place-items-center bg-slate-950 p-6 text-center"><div><p className="font-bold text-white">تعذر تشغيل الدرس</p><p className="mt-2 text-sm text-slate-400">{playerErrorMessage}</p><button onClick={() => { refreshAttempted.current = false; setPlayerError(false); void refreshStreamUrl(); }} className="mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-sky-500 px-5 font-bold text-slate-950 hover:bg-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><RefreshCw className="h-4 w-4"/>تحديث رابط الفيديو</button></div></div> : null}
                   <video
                     ref={videoRef}
-                    className="h-full w-full object-contain max-h-full max-w-full"
+                    className="h-full w-full object-contain max-h-full max-w-full select-none pointer-events-auto"
                     src={streamSrc}
                     poster={poster || undefined}
                     preload="metadata"
                     playsInline
+                    controlsList="nodownload noremoteplayback"
+                    disablePictureInPicture
+                    onContextMenu={(e) => e.preventDefault()}
                     onLoadedMetadata={(event) => {
                       const video = event.currentTarget;
                       setDuration(video.duration);
@@ -461,6 +523,13 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                     }}
                     onEnded={() => { void markComplete(); }}
                   />
+
+                  {/* Dynamic Watermark for Anti-Screen Recording & Piracy Tracking */}
+                  {studentInfo && (
+                    <div className="absolute top-4 right-4 z-10 pointer-events-none select-none opacity-30 text-[10px] font-mono text-white/80 bg-black/40 backdrop-blur-xs px-2.5 py-1 rounded-full border border-white/10 shadow-sm dir-ltr">
+                      {studentInfo.name} • {studentInfo.phone}
+                    </div>
+                  )}
 
                   {/* Portrait: pause/play overlay with seek buttons */}
                   {playerReady && !playing && !playerError && !isLandscapeMobile && (

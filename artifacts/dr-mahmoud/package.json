@@ -74,5 +74,7 @@
     "wouter": "^3.3.5",
     "zod": "catalog:"
   },
-  "dependencies": {}
+  "dependencies": {
+    "hls.js": "^1.6.16"
+  }
 }
