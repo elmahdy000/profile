@@ -64,3 +64,6 @@ stitch_..zip
 stitch_/
 report_render/
 artifacts/dr-mahmoud/admin_open.py
+
+# Local operational scripts (contain server/DB credentials — never commit)
+scripts/*.py

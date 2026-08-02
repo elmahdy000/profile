@@ -587,9 +587,13 @@ router.post(
           academicTrack,
           otherGradeDetail,
           learningMode,
-          status: educationSystem === "university" ? "approved" : "pending",
+          // Both baccalaureate and university students are approved on signup so
+          // they can log in with their access code and watch the free preview
+          // videos immediately. Full content stays gated behind paymentStatus
+          // until an admin/subadmin approves their payment receipt.
+          status: "approved",
           accessCode,
-          approvedAt: educationSystem === "university" ? new Date() : null,
+          approvedAt: new Date(),
           paymentStatus: "unpaid",
           ...(await getAutomaticCourseAssignments(grade === "أخرى" ? otherGradeDetail || grade : grade)),
         })
@@ -600,7 +604,7 @@ router.post(
         accessCode: student.accessCode,
         message: educationSystem === "university"
           ? "تم إنشاء حسابك بنجاح! احفظ كود الدخول وادخل فوراً لمشاهدة فيديو مجاني واحد من كل مادة. ارفع الإيصال لفتح باقي المحتوى."
-          : "تم تسجيل بيانات حسابك بنجاح! يلزم رفع صورة إيصال الدفع وموافقة الإدارة لتفعيل الحساب بالكامل.",
+          : "تم إنشاء حسابك بنجاح! احفظ كود الدخول وادخل فوراً لمعاينة أول فيديوهين من كل مادة مجاناً. ارفع الإيصال لفتح باقي المحتوى بعد موافقة الإدارة.",
       });
     } catch (error) {
       next(error);
