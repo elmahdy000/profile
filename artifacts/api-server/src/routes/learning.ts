@@ -1259,14 +1259,30 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
         message: "تم تحديث المحتوى المتاح لك حسب نظام الدراسة الجديد.",
       });
     }
+    const changes: string[] = [];
+    if (req.body.status !== undefined && req.body.status !== current.status) {
+      changes.push(`الحالة: من [${current.status}] إلى [${req.body.status}]`);
+    }
+    if (req.body.paymentStatus !== undefined && req.body.paymentStatus !== current.paymentStatus) {
+      changes.push(`الدفع: من [${current.paymentStatus}] إلى [${req.body.paymentStatus}]`);
+    }
+    if (req.body.learningMode !== undefined && req.body.learningMode !== current.learningMode) {
+      changes.push(`نظام الدراسة: من [${current.learningMode}] إلى [${req.body.learningMode}]`);
+    }
+    if (req.body.enrolledCourseIds !== undefined) {
+      changes.push(`المواد المسجلة: ${student.enrolledCourseIds.length} كورس (IDs: ${student.enrolledCourseIds.join(",")})`);
+    }
     if (req.body.resetDevice === true) {
       await db
         .update(studentsTable)
         .set({ deviceId: null })
         .where(eq(studentsTable.id, id));
       student.deviceId = null;
+      changes.push(`إعادة تعيين الجهاز الفعلي المقترن`);
     }
-    await logAudit(req, "UPDATE_STUDENT", "student", id, `تعديل الطالب (${current.name}): حالة=${req.body.status ?? current.status}, دفع=${req.body.paymentStatus ?? current.paymentStatus}`);
+
+    const changeSummary = changes.length > 0 ? changes.join(" | ") : "تحديث بيانات أخرى";
+    await logAudit(req, "UPDATE_STUDENT", "student", id, `تعديل الطالب (${current.name}): ${changeSummary}`);
     res.json(student);
   } catch (error) {
     next(error);
