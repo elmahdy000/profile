@@ -1461,17 +1461,19 @@ router.get("/baccalaureate/honor-wall", async (_req, res, next) => {
       .map((s) => {
         const completedVideos = studentCompletedMap.get(s.id) || 0;
         const total = totalVideosCount;
+        const percentage = total > 0 ? Math.round((completedVideos / total) * 100) : 0;
         return {
           id: s.id,
           name: s.name,
           school: s.school || s.educationSystem || "طالب متميز",
           completedVideos,
           totalVideos: total,
-          isFullAchiever: completedVideos >= total && total > 0,
+          percentage,
+          isFullAchiever: percentage >= 80,
           avatarUrl: s.avatarUrl || null,
         };
       })
-      .filter((s) => s.isFullAchiever)
+      .filter((s) => s.percentage >= 80)
       .sort((a, b) => b.completedVideos - a.completedVideos);
 
     res.json({
@@ -1529,17 +1531,19 @@ router.get("/baccalaureate/honor-wall/stream", async (req, res, next) => {
       const honorList = students
         .map((s) => {
           const completedVideos = studentCompletedMap.get(s.id) || 0;
+          const percentage = totalVideosCount > 0 ? Math.round((completedVideos / totalVideosCount) * 100) : 0;
           return {
             id: s.id,
             name: s.name,
             school: s.school || "طالب متميز",
             completedVideos,
             totalVideos: totalVideosCount,
-            isFullAchiever: completedVideos >= totalVideosCount && totalVideosCount > 0,
+            percentage,
+            isFullAchiever: percentage >= 80,
             avatarUrl: s.avatarUrl || null,
           };
         })
-        .filter((s) => s.isFullAchiever)
+        .filter((s) => s.percentage >= 80)
         .sort((a, b) => b.completedVideos - a.completedVideos);
 
       res.write(`data: ${JSON.stringify({ students: honorList, totalBaccVideos: totalVideosCount })}\n\n`);

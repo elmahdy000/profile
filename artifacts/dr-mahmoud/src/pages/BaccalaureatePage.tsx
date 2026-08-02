@@ -222,13 +222,13 @@ function HonorWallRealtimeSection() {
         <div className="max-w-3xl mx-auto text-center mb-10">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-black rounded-full mb-2">
             <Crown className="w-3.5 h-3.5" />
-            لوحة شرف أبطال 100% (تحديث تلقائي ممر)
+            لوحة شرف المتفوقين الأبطال
           </span>
           <h2 className="text-2xl md:text-3xl font-black text-foreground">
-            الطلاب الأبطال مكتملي مشاهدة جميع الفيديوهات
+            الطلاب المتميزين في متابعة ومشاهدة المحاضرات
           </h2>
           <p className="text-xs md:text-sm text-muted-foreground mt-1.5">
-            يتم إضافة أي طالب يُكمل 100% من مشاهدة الفيديوهات والتطبيقات العملية تلقائياً في التو واللحظة!
+            تضم الطلاب الذين حققوا أعلى نسب مشاهدة وتطبيقات عملية (80% وأكثر)!
           </p>
         </div>
 
@@ -238,16 +238,19 @@ function HonorWallRealtimeSection() {
           </div>
         ) : students.length === 0 ? (
           <div className="max-w-md mx-auto text-center p-8 bg-card border border-dashed border-border rounded-2xl text-xs text-muted-foreground">
-            لا يوجد طلاب أتموا 100% حتى الآن. ابدأ بمشاهدة الفيديوهات لتظهر تلقائياً هنا! 🚀
+            لا يوجد طلاب حققوا 80% وأكثر حتى الآن. ابدأ بمشاهدة الفيديوهات لتظهر تلقائياً هنا! 🚀
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 max-w-6xl mx-auto">
-            {students.map((hero, idx) => {
+            {students.map((hero: any, idx) => {
               const isFemale = hero.name.includes("سارة") || hero.name.includes("منى") || hero.name.includes("فاطمة") || hero.name.includes("نور") || hero.name.includes("مريم") || hero.name.includes("أبرار") || hero.name.includes("ملك") || hero.name.includes("جودي") || hero.name.includes("سلوي") || hero.name.includes("فرح") || hero.name.includes("دنيا");
               
               // Professional CS 3D avatars
               const csAvatarMale = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80";
               const csAvatarFemale = "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&q=80";
+
+              const calcPercent = hero.totalVideos > 0 ? Math.min(100, Math.round((hero.completedVideos / hero.totalVideos) * 100)) : 100;
+              const displayPercent = calcPercent >= 100 ? 100 : calcPercent >= 83 ? 90 : 80;
 
               return (
                 <motion.div
@@ -260,8 +263,12 @@ function HonorWallRealtimeSection() {
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                       بطل #{idx + 1}
                     </span>
-                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md flex items-center gap-1">
-                      <CheckCircle2 className="w-2.5 h-2.5" /> 100% مكتمل
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1 border ${
+                      displayPercent >= 100
+                        ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                        : "text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20"
+                    }`}>
+                      <CheckCircle2 className="w-2.5 h-2.5" /> {displayPercent}% مكتمل
                     </span>
                   </div>
 
@@ -282,7 +289,7 @@ function HonorWallRealtimeSection() {
 
                   <div className="mt-3 pt-2.5 border-t border-border/60 flex items-center justify-between text-[10px] text-muted-foreground font-semibold">
                     <span>نسبة المشاهدة:</span>
-                    <span className="font-extrabold text-foreground dir-ltr">100% (جميع الفيديوهات)</span>
+                    <span className="font-extrabold text-foreground dir-ltr">{displayPercent}% ({hero.completedVideos} فيديو)</span>
                   </div>
                 </motion.div>
               );
