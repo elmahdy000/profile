@@ -13,6 +13,8 @@ import {
   videosTable,
 } from "@workspace/db";
 import { fixedWindowRateLimit } from "../middleware/rate-limit";
+import { requireAdmin, requireSuperAdmin } from "../middleware/auth";
+import { logAudit } from "./learning";
 
 const router: IRouter = Router();
 const PARENT_COOKIE = "parent_session";
@@ -388,6 +390,139 @@ router.get("/admin/parents", async (req, res, next) => {
     }));
 
     res.json({ parents: result, total: result.length });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/parents (Create parent)
+router.post("/admin/parents", requireAdmin, async (req, res, next) => {
+  try {
+    const { name, phone, studentId } = req.body;
+    if (!name || !phone || !studentId) {
+      res.status(400).json({ error: "اسم ولي الأمر ورقم هاتفه ومعرّف الطالب مطلوبين" });
+      return;
+    }
+
+    const [student] = await db.select().from(studentsTable).where(eq(studentsTable.id, Number(studentId))).limit(1);
+    if (!student) {
+      res.status(404).json({ error: "الطالب المختار غير موجود بالنظام" });
+      return;
+    }
+
+    const cleanPhone = String(phone).replace(/[^\d]/g, "");
+    if (!cleanPhone || cleanPhone.length < 8) {
+      res.status(400).json({ error: "رقم هاتف ولي الأمر غير صحيح" });
+      return;
+    }
+
+    // Generate unique parent code (e.g. P-XXXXXX)
+    const parentCode = `P-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
+    const [parent] = await db
+      .insert(parentsTable)
+      .values({
+        name: String(name).trim(),
+        phone: cleanPhone,
+        studentId: Number(studentId),
+        parentCode,
+      })
+      .returning();
+
+    await logAudit(req, "CREATE_PARENT", "parent", String(parent.id), `تم إنشاء حساب ولي أمر جديد: ${parent.name} للطالب: ${student.name}`);
+
+    res.status(201).json({
+      success: true,
+      message: "تم إنشاء حساب ولي الأمر بنجاح!",
+      parent,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PATCH /api/admin/parents/:id (Update parent)
+router.patch("/admin/parents/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const parentId = Number(req.params.id);
+    const { name, phone, studentId } = req.body;
+
+    const [existing] = await db.select().from(parentsTable).where(eq(parentsTable.id, parentId)).limit(1);
+    if (!existing) {
+      res.status(404).json({ error: "حساب ولي الأمر غير موجود" });
+      return;
+    }
+
+    const updateData: Record<string, any> = { updatedAt: new Date() };
+
+    if (name) updateData.name = String(name).trim();
+    if (phone) {
+      const cleanPhone = String(phone).replace(/[^\d]/g, "");
+      if (cleanPhone.length >= 8) updateData.phone = cleanPhone;
+    }
+    if (studentId) {
+      const [student] = await db.select().from(studentsTable).where(eq(studentsTable.id, Number(studentId))).limit(1);
+      if (!student) {
+        res.status(404).json({ error: "الطالب المختار غير موجود بالنظام" });
+        return;
+      }
+      updateData.studentId = Number(studentId);
+    }
+
+    const [updated] = await db
+      .update(parentsTable)
+      .set(updateData)
+      .where(eq(parentsTable.id, parentId))
+      .returning();
+
+    await logAudit(req, "UPDATE_PARENT", "parent", String(parentId), `تم تحديث بيانات ولي الأمر: ${updated.name}`);
+
+    res.json({ success: true, message: "تم تعديل بيانات ولي الأمر بنجاح!", parent: updated });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/parents/:id/regenerate-code (Regenerate parent code)
+router.post("/admin/parents/:id/regenerate-code", requireAdmin, async (req, res, next) => {
+  try {
+    const parentId = Number(req.params.id);
+    const [existing] = await db.select().from(parentsTable).where(eq(parentsTable.id, parentId)).limit(1);
+    if (!existing) {
+      res.status(404).json({ error: "حساب ولي الأمر غير موجود" });
+      return;
+    }
+
+    const newCode = `P-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
+    const [updated] = await db
+      .update(parentsTable)
+      .set({ parentCode: newCode, updatedAt: new Date() })
+      .where(eq(parentsTable.id, parentId))
+      .returning();
+
+    await logAudit(req, "REGENERATE_PARENT_CODE", "parent", String(parentId), `تم إعادة توليد كود دخول ولي الأمر: ${updated.name} الكود الجديد: ${newCode}`);
+
+    res.json({ success: true, message: "تم إسناد كود دخول جديد لولي الأمر بنجاح!", parentCode: newCode });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// DELETE /api/admin/parents/:id (Delete parent - Superadmin only)
+router.delete("/admin/parents/:id", requireSuperAdmin, async (req, res, next) => {
+  try {
+    const parentId = Number(req.params.id);
+    const [existing] = await db.select().from(parentsTable).where(eq(parentsTable.id, parentId)).limit(1);
+    if (!existing) {
+      res.status(404).json({ error: "حساب ولي الأمر غير موجود" });
+      return;
+    }
+
+    await db.delete(parentsTable).where(eq(parentsTable.id, parentId));
+    await logAudit(req, "DELETE_PARENT", "parent", String(parentId), `تم حذف حساب ولي الأمر: ${existing.name}`);
+
+    res.json({ success: true, message: "تم حذف حساب ولي الأمر بنجاح" });
   } catch (error) {
     next(error);
   }
