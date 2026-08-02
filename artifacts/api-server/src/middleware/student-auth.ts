@@ -213,12 +213,13 @@ export function canStudentAccessContent(
     return stageMatches;
   }
 
-  // New accounts with explicit course assignments must match the course.
-  // Legacy approved accounts predate course IDs, so their existing stage is
-  // the entitlement for stage-targeted content until an admin assigns courses.
-  if (hasExplicitCourseAssignments && !courseMatches) return false;
+  // Accounts with explicit course assignments MUST match their assigned course.
+  if (hasExplicitCourseAssignments) {
+    return courseMatches;
+  }
+
   if (isGeneralContent || hasCategoryGeneralStage) {
-    return hasExplicitCourseAssignments ? courseMatches : (categoryMatches || stageMatches);
+    return categoryMatches || stageMatches;
   }
   return stageMatches || categoryMatches;
 }

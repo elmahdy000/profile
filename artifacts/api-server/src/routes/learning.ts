@@ -1228,12 +1228,12 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
       })
       .where(eq(studentsTable.id, id))
       .returning();
-    if (req.body.status === "suspended") {
+    if (req.body.status !== undefined && req.body.status !== "approved") {
       await db
         .delete(studentSessionsTable)
         .where(eq(studentSessionsTable.studentId, id));
     }
-    if (student) {
+    if (student && student.status === "approved") {
       student = await ensureAutomaticCourseAssignments(student);
     }
     if (req.body.status === "approved" && current.status !== "approved") {
