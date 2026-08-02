@@ -164,7 +164,7 @@ export function PaymentBanner({ paymentStatus, onUploaded }: { paymentStatus: st
           <input
             ref={fileRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/*"
             className="hidden"
             onChange={(e) => {
               if (e.target.files?.[0]) handleFileSelect(e.target.files[0]);
@@ -221,16 +221,31 @@ export function PaymentBanner({ paymentStatus, onUploaded }: { paymentStatus: st
               </div>
             </div>
           ) : (
-            <div className="py-2 space-y-2">
+            <div className="py-2 space-y-3">
               <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary">
                 <Camera className="h-6 w-6" />
               </div>
               <strong className="block text-sm font-black text-foreground">
-                اسحب صورة الإيصال هنا أو اضغط للاختيار
+                اختر صورة الإيصال من المعرض (Gallery) أو التقاط بالكاميرا 📷
               </strong>
               <p className="text-xs text-muted-foreground">
-                يدعم صيغ JPG ، PNG ، WEBP (صورة واضحة للإيصال)
+                اضغط لاختيار الصورة أو التقاط صورة واضحة للإيصال فوراً من الموبايل
               </p>
+              
+              <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fileRef.current?.click();
+                  }}
+                  className="h-9 px-4 rounded-xl text-xs font-bold gap-1.5 shadow-sm"
+                >
+                  <Camera className="w-4 h-4" />
+                  اختر من المعرض / الكاميرا
+                </Button>
+              </div>
             </div>
           )}
         </div>
