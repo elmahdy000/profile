@@ -217,95 +217,72 @@ function HonorWallRealtimeSection() {
   }, []);
 
   return (
-    <section id="honor-wall" className="py-16 bg-card/40 border-y border-border/80 relative overflow-hidden">
-      {/* Glow Backgrounds */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-amber-500/10 rounded-full blur-[120px] pointer-events-none" />
-
-      <div className="container mx-auto px-4 lg:px-8 relative z-10">
-        <div className="max-w-3xl mx-auto text-center mb-12">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs font-black rounded-full mb-2.5 shadow-xs">
-            <Crown className="w-4 h-4 text-amber-500" />
-            لوحة شرف أبطال البكالوريا (تحديث مباشر 🟢 Realtime)
+    <section id="honor-wall" className="py-14 bg-card/50 border-y border-border/80 relative">
+      <div className="container mx-auto px-4 lg:px-8">
+        <div className="max-w-3xl mx-auto text-center mb-10">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-black rounded-full mb-2">
+            <Crown className="w-3.5 h-3.5" />
+            لوحة شرف أبطال 100% (تحديث تلقائي ممر)
           </span>
-          <h2 className="text-2xl md:text-4xl font-black text-foreground leading-tight flex items-center justify-center gap-2">
-            <span>لوحة التفوق والإنجاز للطلاب</span>
+          <h2 className="text-2xl md:text-3xl font-black text-foreground">
+            الطلاب الأبطال مكتملي مشاهدة جميع الفيديوهات
           </h2>
-          <p className="text-xs md:text-sm text-muted-foreground mt-2 max-w-xl mx-auto">
-            تحديث لحظي ومباشر لأي طالب يقوم بإكمال مشاهدة الفيديوهات والتطبيقات العملية!
+          <p className="text-xs md:text-sm text-muted-foreground mt-1.5">
+            يتم إضافة أي طالب يُكمل 100% من مشاهدة الفيديوهات والتطبيقات العملية تلقائياً في التو واللحظة!
           </p>
-          <div className="w-16 h-1 bg-amber-500 mx-auto rounded-full mt-3" />
         </div>
 
         {loading ? (
-          <div className="py-12 text-center text-muted-foreground text-xs font-bold animate-pulse">
-            جاري تحميل لوحة الشرف المباشرة...
+          <div className="py-8 text-center text-muted-foreground text-xs font-bold animate-pulse">
+            جاري تحميل الأبطال...
           </div>
         ) : students.length === 0 ? (
-          <div className="max-w-md mx-auto text-center p-8 bg-card border border-dashed rounded-3xl text-xs text-muted-foreground">
-            لا يوجد طلاب مكتملين حتى الآن. ابدأ في مشاهدة الفيديوهات لتظهر اسمك هنا أولاً! 🚀
+          <div className="max-w-md mx-auto text-center p-8 bg-card border border-dashed border-border rounded-2xl text-xs text-muted-foreground">
+            لا يوجد طلاب أتموا 100% حتى الآن. ابدأ بمشاهدة الفيديوهات لتظهر تلقائياً هنا! 🚀
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-6xl mx-auto items-stretch">
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 max-w-6xl mx-auto">
             {students.map((hero, idx) => {
-              const isFemale = hero.name.includes("سارة") || hero.name.includes("منى") || hero.name.includes("فاطمة") || hero.name.includes("نور") || hero.name.includes("مريم") || hero.name.includes("أبرار") || hero.name.includes("ملك");
-              const isFull = hero.completedVideos >= hero.totalVideos && hero.totalVideos > 0;
-              const rankText = idx === 0 ? "المركز الأول 🥇" : idx === 1 ? "المركز الثاني 🥈" : idx === 2 ? "المركز الثالث 🥉" : `بطل رقم #${idx + 1}`;
+              const isFemale = hero.name.includes("سارة") || hero.name.includes("منى") || hero.name.includes("فاطمة") || hero.name.includes("نور") || hero.name.includes("مريم") || hero.name.includes("أبرار") || hero.name.includes("ملك") || hero.name.includes("جودي") || hero.name.includes("سلوي") || hero.name.includes("فرح") || hero.name.includes("دنيا");
+              
+              // Professional CS 3D avatars
+              const csAvatarMale = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80";
+              const csAvatarFemale = "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&q=80";
 
               return (
                 <motion.div
                   key={hero.id || idx}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="bg-card border border-border/80 hover:border-amber-500/40 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between relative overflow-hidden group"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-card border border-border rounded-xl p-3.5 shadow-xs hover:border-amber-500/50 transition-all flex flex-col justify-between"
                 >
-                  <div className={`absolute top-0 right-0 left-0 h-1 bg-gradient-to-r ${idx === 0 ? "from-amber-500 to-yellow-400" : idx === 1 ? "from-blue-500 to-cyan-400" : "from-purple-500 to-pink-400"}`} />
+                  <div className="flex items-center justify-between gap-1 mb-2.5">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                      بطل #{idx + 1}
+                    </span>
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md flex items-center gap-1">
+                      <CheckCircle2 className="w-2.5 h-2.5" /> 100% مكتمل
+                    </span>
+                  </div>
 
-                  <div>
-                    <div className="flex items-center justify-between gap-1 mb-3">
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                        {rankText}
-                      </span>
-                      {isFull && (
-                        <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
-                          <CheckCircle2 className="w-2.5 h-2.5" /> 100% مكتمل
-                        </span>
-                      )}
+                  <div className="flex items-center gap-3">
+                    <div className="relative shrink-0">
+                      <img
+                        src={hero.avatarUrl || (isFemale ? csAvatarFemale : csAvatarMale)}
+                        alt={hero.name}
+                        className="w-11 h-11 rounded-lg object-cover border border-border shadow-2xs"
+                      />
                     </div>
 
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="relative shrink-0">
-                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-gradient-to-br from-amber-500/20 via-primary/10 to-secondary/20 border border-amber-500/30 flex items-center justify-center font-black text-amber-500 text-sm shadow-xs">
-                          {hero.avatarUrl ? (
-                            <img src={hero.avatarUrl} alt={hero.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center font-extrabold text-xs text-primary bg-primary/10">
-                              {isFemale ? "👩‍💻" : "👨‍💻"}
-                            </div>
-                          )}
-                        </div>
-                        <div className="absolute -top-1.5 -right-1.5 bg-amber-500 text-slate-950 rounded-full p-0.5 shadow-xs">
-                          <Crown className="w-3 h-3 fill-current" />
-                        </div>
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <h3 className="text-xs font-extrabold text-foreground truncate">{hero.name}</h3>
-                        <p className="text-[10px] text-muted-foreground truncate">{hero.school}</p>
-                      </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-xs font-bold text-foreground truncate">{hero.name}</h3>
+                      <p className="text-[10px] text-muted-foreground truncate">{hero.school}</p>
                     </div>
+                  </div>
 
-                    <div className="p-2.5 bg-muted/40 rounded-xl border border-border/50 text-[11px] font-semibold space-y-1">
-                      <div className="flex justify-between items-center text-muted-foreground text-[10px]">
-                        <span>الفيديوهات المكتملة:</span>
-                        <span className="font-extrabold text-foreground dir-ltr">{hero.completedVideos} / {hero.totalVideos || 6} فيديو</span>
-                      </div>
-                      <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-amber-500 to-emerald-500 transition-all duration-500"
-                          style={{ width: `${Math.min(100, Math.round((hero.completedVideos / (hero.totalVideos || 6)) * 100))}%` }}
-                        />
-                      </div>
-                    </div>
+                  <div className="mt-3 pt-2.5 border-t border-border/60 flex items-center justify-between text-[10px] text-muted-foreground font-semibold">
+                    <span>نسبة المشاهدة:</span>
+                    <span className="font-extrabold text-foreground dir-ltr">100% (جميع الفيديوهات)</span>
                   </div>
                 </motion.div>
               );

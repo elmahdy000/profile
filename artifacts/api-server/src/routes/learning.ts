@@ -1471,7 +1471,7 @@ router.get("/baccalaureate/honor-wall", async (_req, res, next) => {
           avatarUrl: s.avatarUrl || null,
         };
       })
-      .filter((s) => s.completedVideos > 0)
+      .filter((s) => s.isFullAchiever)
       .sort((a, b) => b.completedVideos - a.completedVideos);
 
     res.json({
@@ -1539,7 +1539,7 @@ router.get("/baccalaureate/honor-wall/stream", async (req, res, next) => {
             avatarUrl: s.avatarUrl || null,
           };
         })
-        .filter((s) => s.completedVideos > 0)
+        .filter((s) => s.isFullAchiever)
         .sort((a, b) => b.completedVideos - a.completedVideos);
 
       res.write(`data: ${JSON.stringify({ students: honorList, totalBaccVideos: totalVideosCount })}\n\n`);
