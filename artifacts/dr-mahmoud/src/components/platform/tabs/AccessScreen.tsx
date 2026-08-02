@@ -131,10 +131,7 @@ export function AccessScreen({
         method: "POST",
         body: JSON.stringify(form),
       });
-      if (result.accessCode) {
-        setRegisteredCode(result.accessCode);
-      }
-      setMessage(result.message || "تم إنشاء حسابك بنجاح! احفظ الكود لمشاهدة المعاينة المجانية ورفع إيصال الدفع لفتح كامل المحتوى.");
+      setMessage(result.message || "تم تسجيل بيانات حسابك بنجاح! يلزم رفع صورة إيصال الدفع وتأكيد التفعيل من الإدارة أولاً.");
       setForm({
         name: "",
         phone: "",
@@ -344,17 +341,17 @@ export function AccessScreen({
 
           {mode === "register" && (registeredCode || message) ? (
             <div className="py-2 text-center" role="status">
-              <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#22C55E]/15 text-[#22C55E]">
+              <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#3B82F6]/15 text-[#3B82F6]">
                 <CheckCircle2 className="h-8 w-8" />
               </div>
-              <h2 className="mt-3 text-xl font-bold text-[#0F172A]">تم إنشاء حسابك واستخراج كود الدخول 🎉</h2>
+              <h2 className="mt-3 text-xl font-bold text-[#0F172A]">تم تسجيل بياناتك بانتظار الإيصال 📋</h2>
               <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-[#64748B]">
                 {message}
               </p>
 
               {registeredCode && (
                 <div className="mt-4 rounded-[16px] border border-[#3B82F6]/40 bg-[#F8FAFC] p-4 text-center shadow-xs">
-                  <span className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider block">كود الدخول الخاص بك</span>
+                  <span className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider block">كود الدخول المخصص لحسابك</span>
                   <strong className="mt-1.5 block font-mono text-2xl font-bold text-[#0866D9] tracking-widest dir-ltr select-all">
                     {registeredCode}
                   </strong>
@@ -371,19 +368,15 @@ export function AccessScreen({
                 </div>
               )}
 
-              <div className="mt-4 rounded-[16px] border border-[#E2E8F0] bg-[#F8FAFC] p-3 text-right text-xs space-y-2 leading-relaxed">
-                <div className="flex items-start gap-2 text-[#16A34A] font-bold">
-                  <span className="shrink-0 font-bold">1.</span>
-                  <span><strong>أول فيديوهين مجانًا:</strong> يمكنك الدخول فوراً بالكود ومشاهدة أول درسين في كورساتك.</span>
-                </div>
+              <div className="mt-4 rounded-[16px] border border-[#E2E8F0] bg-[#F8FAFC] p-3.5 text-right text-xs space-y-2.5 leading-relaxed">
                 <div className="flex items-start gap-2 text-[#0866D9] font-bold">
-                  <span className="shrink-0 font-black">2.</span>
+                  <span className="shrink-0 font-bold">📌</span>
                   <span>
-                    <strong>طريقة تحويل الاشتراك:</strong> يمكنك التحويل عبر فودافون كاش أو إنستا باي على الرقم:
+                    <strong>طريقة تفعيل الحساب:</strong> قم بتحويل رسوم الاشتراك عبر فودافون كاش أو إنستا باي على الرقم:
                     <strong className="inline-block text-[#0B63CE] font-mono text-xs dir-ltr font-black mx-1">01025131212</strong>
                     أو عبر <strong>فودافون كاش فقط</strong> على الرقم:
                     <strong className="inline-block text-rose-600 font-mono text-xs dir-ltr font-black mx-1">01066711545</strong>،
-                    ثم رفع صورة الإيصال ليفعّله الأدمن فوريًا.
+                    ثم قم برفع صورة الإيصال ليراجعها الأدمن ويفعل حسابك فوراً.
                   </span>
                 </div>
               </div>

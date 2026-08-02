@@ -569,9 +569,9 @@ router.post(
           academicTrack,
           otherGradeDetail,
           learningMode,
-          status: "approved",
+          status: "pending",
           accessCode,
-          approvedAt: new Date(),
+          approvedAt: null,
           paymentStatus: "unpaid",
           ...(await getAutomaticCourseAssignments(grade === "أخرى" ? otherGradeDetail || grade : grade)),
         })
@@ -592,7 +592,7 @@ router.post(
       res.status(201).json({
         status: student.status,
         accessCode: student.accessCode,
-        message: "تم إنشاء حسابك بنجاح! استخدم كود الدخول لدخول المنصة ومشاهدة أول درسين مجاناً. ارفع إيصال الدفع لفتح كامل المحتوى.",
+        message: "تم تسجيل بيانات حسابك بنجاح! يلزم رفع صورة إيصال الدفع وموافقة الإدارة لتفعيل الحساب بالكامل.",
       });
     } catch (error) {
       next(error);
