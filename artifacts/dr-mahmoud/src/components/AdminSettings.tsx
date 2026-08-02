@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSiteSettings, useUpdateSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
-import { Loader2, Save, CheckCircle2, UploadCloud, Plus, Trash2, ArrowUp, ArrowDown, HelpCircle, X } from "lucide-react";
+import { Loader2, Save, CheckCircle2, UploadCloud, Plus, Trash2, ArrowUp, ArrowDown, HelpCircle, X, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // Default Fallbacks
@@ -234,6 +234,9 @@ export function AdminSettings({ role = "superadmin" }: { role?: "superadmin" | "
 
   const [superAdminPass, setSuperAdminPass] = useState("");
   const [subAdminPass, setSubAdminPass] = useState("");
+  const [showSuperAdminPass, setShowSuperAdminPass] = useState(false);
+  const [showSubAdminPass, setShowSubAdminPass] = useState(false);
+  const [lastUpdatedInfo, setLastUpdatedInfo] = useState<{ pass?: string; subPass?: string; time: string } | null>(null);
   const [isUpdatingPasswords, setIsUpdatingPasswords] = useState(false);
 
   // Subadmin accounts management state
@@ -360,12 +363,19 @@ export function AdminSettings({ role = "superadmin" }: { role?: "superadmin" | "
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           superAdminPassword: superAdminPass || undefined,
-          subAdminPassword: subAdminPass !== undefined ? subAdminPass : undefined,
+          subAdminPassword: subAdminPass !== undefined && subAdminPass !== "" ? subAdminPass : undefined,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "فشل تحديث كلمات المرور");
-      toast({ variant: "success", title: "تم التحديث بنجاح! 🔐", description: data.message });
+      
+      setLastUpdatedInfo({
+        ...(superAdminPass ? { pass: superAdminPass } : {}),
+        ...(subAdminPass ? { subPass: subAdminPass } : {}),
+        time: new Date().toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+      });
+
+      toast({ variant: "success", title: "تم حفظ وتثبيت كلمة المرور في قاعدة البيانات 🔐", description: data.message });
       setSuperAdminPass("");
       setSubAdminPass("");
     } catch (err: any) {
@@ -1905,29 +1915,71 @@ export function AdminSettings({ role = "superadmin" }: { role?: "superadmin" | "
               </div>
             ) : (
               <form onSubmit={handlePasswordChange} className="space-y-5 max-w-xl bg-card border border-border p-6 rounded-2xl shadow-2xs">
+                {lastUpdatedInfo && (
+                  <div className="rounded-2xl border border-emerald-300 bg-emerald-50/90 dark:bg-emerald-950/50 p-4 space-y-2 text-emerald-950 dark:text-emerald-200 text-xs font-semibold">
+                    <div className="flex items-center gap-2 font-extrabold text-sm text-emerald-800 dark:text-emerald-300">
+                      <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                      <span>تم حفظ وتأكيد كلمة المرور بنجاح في قاعدة البيانات!</span>
+                    </div>
+                    {lastUpdatedInfo.pass && (
+                      <p className="dir-rtl">
+                        • كلمة مرور المدير الرئيسي الجديدة: <code className="bg-emerald-200/60 dark:bg-emerald-900/60 px-2 py-0.5 rounded-md font-mono text-emerald-950 dark:text-emerald-100 font-bold">{lastUpdatedInfo.pass}</code>
+                      </p>
+                    )}
+                    {lastUpdatedInfo.subPass && (
+                      <p className="dir-rtl">
+                        • كلمة مرور المشرف المساعد الجديدة: <code className="bg-emerald-200/60 dark:bg-emerald-900/60 px-2 py-0.5 rounded-md font-mono text-emerald-950 dark:text-emerald-100 font-bold">{lastUpdatedInfo.subPass}</code>
+                      </p>
+                    )}
+                    <span className="block text-[11px] text-emerald-700/80 dark:text-emerald-400/80 mt-1">
+                      وقت التحديث: {lastUpdatedInfo.time} — كلمة المرور الآن نشطة ومحفوظة بصفة دائمة ولن تتأثر بفرق التحديثات مستقبلاً.
+                    </span>
+                  </div>
+                )}
+
                 <div className="space-y-4">
                   <div className="rounded-xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 p-4 space-y-2">
                     <strong className="block text-sm font-bold text-blue-900 dark:text-blue-300">كلمة مرور المدير الرئيسي (Super Admin)</strong>
                     <p className="text-xs text-blue-700 dark:text-blue-400">تتيح الوصول لجميع الصلاحيات والإعدادات وحذف الطلاب.</p>
-                    <input
-                      type="password"
-                      value={superAdminPass}
-                      onChange={(e) => setSuperAdminPass(e.target.value)}
-                      placeholder="أدخل كلمة مرور جديدة للـ Super Admin (أو اتركها فارغة)..."
-                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm font-sans"
-                    />
+                    <div className="relative flex items-center">
+                      <input
+                        type={showSuperAdminPass ? "text" : "password"}
+                        value={superAdminPass}
+                        onChange={(e) => setSuperAdminPass(e.target.value)}
+                        placeholder="أدخل كلمة مرور جديدة للـ Super Admin (أو اتركها فارغة)..."
+                        className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm font-sans"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowSuperAdminPass(!showSuperAdminPass)}
+                        className="absolute left-3 text-muted-foreground hover:text-foreground transition-colors p-1"
+                        title={showSuperAdminPass ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                      >
+                        {showSuperAdminPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="rounded-xl bg-amber-50/60 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 p-4 space-y-2">
                     <strong className="block text-sm font-bold text-amber-900 dark:text-amber-300">كلمة مرور المشرف المساعد (Subadmin)</strong>
                     <p className="text-xs text-amber-700 dark:text-amber-400">تتيح إدارة الطلاب كاملة والرد والحجوزات والإشعارات وقبول الإيصالات (بدون حذف).</p>
-                    <input
-                      type="password"
-                      value={subAdminPass}
-                      onChange={(e) => setSubAdminPass(e.target.value)}
-                      placeholder="أدخل كلمة مرور جديدة للـ Subadmin..."
-                      className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm font-sans"
-                    />
+                    <div className="relative flex items-center">
+                      <input
+                        type={showSubAdminPass ? "text" : "password"}
+                        value={subAdminPass}
+                        onChange={(e) => setSubAdminPass(e.target.value)}
+                        placeholder="أدخل كلمة مرور جديدة للـ Subadmin..."
+                        className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm font-sans"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowSubAdminPass(!showSubAdminPass)}
+                        className="absolute left-3 text-muted-foreground hover:text-foreground transition-colors p-1"
+                        title={showSubAdminPass ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                      >
+                        {showSubAdminPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -1936,7 +1988,7 @@ export function AdminSettings({ role = "superadmin" }: { role?: "superadmin" | "
                   disabled={isUpdatingPasswords || (!superAdminPass && !subAdminPass)}
                   className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-xs shadow-sm hover:bg-primary/90 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  {isUpdatingPasswords ? <Loader2 className="h-4 w-4 animate-spin" /> : "حفظ وتحديث كلمات المرور فوراً"}
+                  {isUpdatingPasswords ? <Loader2 className="h-4 w-4 animate-spin" /> : "حفظ وتأكيد كلمات المرور في قاعدة البيانات"}
                 </button>
               </form>
             )}
