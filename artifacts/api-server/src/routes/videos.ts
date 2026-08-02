@@ -361,16 +361,9 @@ router.post("/videos", requireAdmin, async (req, res, next) => {
       return;
     }
 
-    // Auto-fallback: if course exists, use course's stages if video stages are empty or mismatch
-    if (selectedCourse) {
-      const courseStages = selectedCourse.stages?.length
-        ? selectedCourse.stages
-        : selectedCourse.stage
-        ? [selectedCourse.stage]
-        : [];
-      if (stages.length === 0 && courseStages.length > 0) {
-        stages = courseStages;
-      }
+    // Auto-fallback: if course exists, use course's stages if video stages are empty
+    if (selectedCourse?.stages?.length && stages.length === 0) {
+      stages = selectedCourse.stages;
     }
 
     if (stages.length === 0) {
