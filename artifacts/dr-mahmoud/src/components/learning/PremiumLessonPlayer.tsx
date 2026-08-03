@@ -112,6 +112,25 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
   const [progress, setProgress] = useState(0);
   const [saving, setSaving] = useState(false);
   const [studentInfo, setStudentInfo] = useState<{ name: string; phone: string } | null>(null);
+  const [wmPosition, setWmPosition] = useState<{ top: string; left: string }>({ top: "10%", left: "15%" });
+
+  // Floating watermark: jumps to a random non-obstructive location every 7s
+  useEffect(() => {
+    if (!playing) return;
+    const interval = setInterval(() => {
+      const positions = [
+        { top: "12%", left: "12%" },
+        { top: "12%", left: "65%" },
+        { top: "45%", left: "20%" },
+        { top: "45%", left: "60%" },
+        { top: "75%", left: "25%" },
+        { top: "75%", left: "70%" },
+      ];
+      const nextPos = positions[Math.floor(Math.random() * positions.length)];
+      setWmPosition(nextPos);
+    }, 7000);
+    return () => clearInterval(interval);
+  }, [playing]);
 
   // ── Landscape YouTube-style controls visibility ──────────────────────────
   const isLandscapeMobile = useIsLandscapeMobile();
@@ -526,7 +545,10 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
 
                   {/* Dynamic Watermark for Anti-Screen Recording & Piracy Tracking */}
                   {studentInfo && (
-                    <div className="absolute top-4 right-4 z-10 pointer-events-none select-none opacity-30 text-[10px] font-mono text-white/80 bg-black/40 backdrop-blur-xs px-2.5 py-1 rounded-full border border-white/10 shadow-sm dir-ltr">
+                    <div
+                      style={{ top: wmPosition.top, left: wmPosition.left }}
+                      className="absolute z-10 pointer-events-none select-none opacity-25 text-[10px] font-mono text-white/70 bg-black/30 backdrop-blur-[1px] px-2.5 py-0.5 rounded-full border border-white/10 shadow-2xs transition-all duration-1000 ease-in-out dir-ltr"
+                    >
                       {studentInfo.name} • {studentInfo.phone}
                     </div>
                   )}
