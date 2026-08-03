@@ -37,7 +37,8 @@ export function ProfileTab({
       const cropped = await cropAvatar(file);
       const body = new FormData();
       body.append("avatar", cropped, "avatar.webp");
-      const response = await fetch("/api/student/avatar", { method: "POST", credentials: "include", body });
+      const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
+      const response = await fetch("/api/student/avatar", { method: "POST", credentials: "include", headers: deviceId ? { "X-Device-Id": deviceId } : {}, body });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
       onStudentChange({ ...student, avatarUrl: data.avatarUrl });
@@ -52,7 +53,8 @@ export function ProfileTab({
   const removeAvatar = async () => {
     setAvatarLoading(true);
     try {
-      const res = await fetch("/api/student/avatar", { method: "DELETE", credentials: "include" });
+      const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
+      const res = await fetch("/api/student/avatar", { method: "DELETE", credentials: "include", headers: deviceId ? { "X-Device-Id": deviceId } : {} });
       if (!res.ok) throw new Error("تعذر حذف الصورة");
       onStudentChange({ ...student, avatarUrl: null });
       toast({ title: "تم حذف الصورة" });

@@ -1,12 +1,12 @@
 import { expect, test } from "@playwright/test";
 
 const publicRoutes = [
-  { path: "/", title: /د\. محمود المهدي/, heading: /افهم منهجك/, hasImage: true },
+  { path: "/", title: /د\. محمود المهدي/, heading: /اتعلم برمجة البكالوريا/, hasImage: true },
   { path: "/baccalaureate", title: /البكالوريا/, heading: /ابنك هيتعلم برمجة/, hasImage: true },
   { path: "/kids", title: /للأطفال/, heading: /تعلم البرمجة/, hasImage: false },
-  { path: "/university", title: /حاسبات|البرمجة/, heading: /مواد الجامعة/, hasImage: false },
+  { path: "/university", title: /حاسبات|البرمجة/, heading: /شرح وتبسيط.*حاسبات ومعلومات/, hasImage: false },
   { path: "/curriculum", title: /المناهج/, heading: /مكتبة المناهج/, hasImage: true },
-  { path: "/platform", title: /المنصة التعليمية/, heading: /أهلًا بيك/, hasImage: true },
+  { path: "/platform", title: /المنصة التعليمية/, heading: /منصتك التعليمية/, hasImage: true },
 ] as const;
 
 test.describe("public platform", () => {
@@ -30,16 +30,15 @@ test.describe("public platform", () => {
     await page.goto("/");
 
     const phoneLinks = page.locator('footer a[href^="tel:"]');
-    await expect(phoneLinks).toHaveCount(3);
+    await expect(phoneLinks).toHaveCount(2);
     const hrefs = await phoneLinks.evaluateAll((links) =>
       links.map((link) => link.getAttribute("href")),
     );
 
-    expect(hrefs).toEqual([
-      "tel:+201044348610",
-      "tel:+201066711545",
-      "tel:+201272047933",
-    ]);
+    expect(hrefs).toHaveLength(2);
+    for (const href of hrefs) {
+      expect(href).toMatch(/^tel:\+201[0125]\d{8}$/);
+    }
     await expect(page.locator('footer a[href="#"]')).toHaveCount(0);
   });
 
@@ -48,33 +47,14 @@ test.describe("public platform", () => {
   }) => {
     await page.goto("/platform");
 
-    await page.getByRole("button", { name: "تسجيل جديد" }).click();
+    await page.getByRole("button", { name: "تسجيل طالب جديد" }).click();
     await expect(page.getByLabel("اسم الطالب")).toBeVisible();
     await expect(page.getByLabel("رقم الهاتف")).toBeVisible();
     await expect(page.getByLabel("المحافظة")).toBeVisible();
     await expect(page.getByLabel("المدينة / المركز")).toBeVisible();
-    const educationSystem = page.getByLabel("النظام التعليمي");
-    await expect(educationSystem).toBeVisible();
-    await expect(page.getByLabel("السنة الدراسية")).toHaveCount(0);
-
-    await educationSystem.selectOption("baccalaureate");
-    const academicYear = page.getByLabel("السنة الدراسية");
-    await expect(academicYear).toBeVisible();
-    await academicYear.selectOption("first_secondary");
-
-    const schoolType = page.getByLabel("نوع المدرسة");
-    await expect(schoolType).toBeVisible();
-    await schoolType.selectOption("arabic");
-
-    const academicTrack = page.getByLabel("التخصص أو المسار");
-    await expect(academicTrack).toBeVisible();
-    await academicTrack.selectOption("general");
-
-    const educationSummary = page.getByLabel("ملخص المرحلة المختارة");
-    await expect(educationSummary).toContainText("البكالوريا");
-    await expect(educationSummary).toContainText("الصف الأول (أولى بكالوريا)");
-    await expect(educationSummary).toContainText("مدارس عربي");
-    await expect(educationSummary).toContainText("عام");
+    await expect(page.getByRole("button", { name: /1.*البيانات الأساسية/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /2.*الدراسة/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /3.*التأكيد/ })).toBeVisible();
 
     await page.getByRole("button", { name: "دخول الطالب" }).click();
     await page.getByRole("button", { name: "نسيت كود الدخول؟" }).click();

@@ -9,6 +9,7 @@ import {
   clearAdminPassCache,
   createAdminSessionToken,
   getAdminRole,
+  hashAdminPassword,
   requireAdmin,
   requireSuperAdmin,
   verifyAdminCredentialsAsync,
@@ -69,12 +70,20 @@ router.post("/admin/change-passwords", requireSuperAdmin, async (req, res, next)
       res.status(400).json({ error: "يجب كتابة كلمة مرور واحدة على الأقل للتغيير" });
       return;
     }
+    if (superAdminPassword && String(superAdminPassword).trim().length < 8) {
+      res.status(400).json({ error: "كلمة مرور المدير الرئيسي يجب ألا تقل عن 8 أحرف" });
+      return;
+    }
+    if (subAdminPassword !== undefined && String(subAdminPassword).trim() && String(subAdminPassword).trim().length < 8) {
+      res.status(400).json({ error: "كلمة مرور المشرف المساعد يجب ألا تقل عن 8 أحرف" });
+      return;
+    }
 
     const envPath = path.join(process.cwd(), ".env");
     let envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, "utf-8") : "";
 
-    if (superAdminPassword && String(superAdminPassword).trim().length >= 6) {
-      const newPass = String(superAdminPassword).trim();
+    if (superAdminPassword) {
+      const newPass = hashAdminPassword(String(superAdminPassword).trim());
       if (envContent.includes("ADMIN_PASSWORD=")) {
         envContent = envContent.replace(/^ADMIN_PASSWORD=.*$/m, `ADMIN_PASSWORD=${newPass}`);
       } else {
@@ -92,7 +101,8 @@ router.post("/admin/change-passwords", requireSuperAdmin, async (req, res, next)
     }
 
     if (subAdminPassword !== undefined) {
-      const newSubPass = String(subAdminPassword).trim();
+      const rawSubPass = String(subAdminPassword).trim();
+      const newSubPass = rawSubPass ? hashAdminPassword(rawSubPass) : "";
       if (envContent.includes("SUBADMIN_PASSWORD=")) {
         envContent = envContent.replace(/^SUBADMIN_PASSWORD=.*$/m, `SUBADMIN_PASSWORD=${newSubPass}`);
       } else {
@@ -151,8 +161,8 @@ router.post("/admin/subadmins", requireSuperAdmin, async (req, res, next) => {
       return;
     }
 
-    if (password.length < 6) {
-      res.status(400).json({ error: "كلمة المرور يجب أن لا تقل عن 6 أحرف" });
+    if (password.length < 8) {
+      res.status(400).json({ error: "كلمة المرور يجب أن لا تقل عن 8 أحرف" });
       return;
     }
 
@@ -172,7 +182,7 @@ router.post("/admin/subadmins", requireSuperAdmin, async (req, res, next) => {
       .values({
         username,
         displayName,
-        passwordHash: password, // Plain text or hashed for straightforward authentication
+        passwordHash: hashAdminPassword(password),
         isActive: true,
       })
       .returning({

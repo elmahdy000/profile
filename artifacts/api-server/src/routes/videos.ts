@@ -333,6 +333,74 @@ router.get("/videos", async (req, res, next) => {
   }
 });
 
+// Refresh an expiring local-video URL after re-checking the current account,
+// course, payment and unlock entitlements. The signed URL itself remains short-lived.
+router.get("/videos/:id/stream-url", async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: "Invalid video id" });
+      return;
+    }
+    const [video] = await db.select().from(videosTable).where(eq(videosTable.id, id)).limit(1);
+    if (!video || !video.youtubeUrl.startsWith("/uploads/")) {
+      res.status(404).json({ error: "Video entry not found" });
+      return;
+    }
+
+    if (!isAdminRequest(req)) {
+      const student = await getApprovedStudent(req);
+      if (!student) {
+        res.status(401).json({ error: "Student approval and login are required" });
+        return;
+      }
+      if (!video.isPublished ||
+          !canStudentAccessContent(student, video.category, video.stage, video.stages, video.courseId) ||
+          !canStudentAccessLearningMode(student, video.learningMode)) {
+        res.status(403).json({ error: "الفيديو مش ضمن الكورس المسجل ليك" });
+        return;
+      }
+      if (video.courseId) {
+        const [course] = await db.select({ isPublished: coursesTable.isPublished })
+          .from(coursesTable).where(eq(coursesTable.id, video.courseId)).limit(1);
+        if (!course?.isPublished) {
+          res.status(403).json({ error: "الكورس غير منشور حاليًا" });
+          return;
+        }
+      }
+
+      const firstVideo = await db.select({ id: videosTable.id }).from(videosTable)
+        .where(video.courseId ? eq(videosTable.courseId, video.courseId) : eq(videosTable.category, video.category))
+        .orderBy(asc(videosTable.order), asc(videosTable.id)).limit(1).then((rows) => rows[0]);
+      const suppliedKeys = String(req.headers["x-unlock-keys"] ?? "").toLowerCase()
+        .split(/[\s,]+/).map((key) => key.trim()).filter(Boolean);
+      const unlocked = !video.isProtected || firstVideo?.id === video.id ||
+        Boolean(video.accessKey && suppliedKeys.includes(video.accessKey.toLowerCase().trim()));
+      if (!unlocked) {
+        res.status(403).json({ error: "This content is protected and locked." });
+        return;
+      }
+
+      if (student.paymentStatus !== "paid") {
+        const maxFree = student.educationSystem === "university" ? 1 : 2;
+        const courseKey = video.courseId ? eq(videosTable.courseId, video.courseId) : eq(videosTable.category, video.category);
+        const courseVideos = await db.select({ id: videosTable.id }).from(videosTable)
+          .where(and(courseKey, eq(videosTable.isPublished, true)))
+          .orderBy(asc(videosTable.order), asc(videosTable.id));
+        if (courseVideos.findIndex((entry) => entry.id === video.id) >= maxFree) {
+          res.status(403).json({ error: "يلزم تأكيد الدفع لفتح هذا الفيديو", code: "PAYMENT_REQUIRED" });
+          return;
+        }
+      }
+    }
+
+    res.setHeader("Cache-Control", "no-store");
+    res.json({ url: getProtectedStreamUrl(video.id) });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Create video (Admin only)
 router.post("/videos", requireAdmin, async (req, res, next) => {
   try {

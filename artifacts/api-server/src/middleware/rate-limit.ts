@@ -2,10 +2,20 @@ import type { Request, Response, NextFunction } from "express";
 
 type Entry = { count: number; resetAt: number };
 const buckets = new Map<string, Entry>();
+let lastCleanupAt = 0;
+
+function cleanupExpiredBuckets(now: number) {
+  if (now - lastCleanupAt < 60_000) return;
+  lastCleanupAt = now;
+  for (const [key, entry] of buckets) {
+    if (entry.resetAt <= now) buckets.delete(key);
+  }
+}
 
 export function fixedWindowRateLimit(options: { name: string; limit: number; windowMs: number }) {
   return (req: Request, res: Response, next: NextFunction) => {
     const now = Date.now();
+    cleanupExpiredBuckets(now);
     const key = `${options.name}:${req.ip || req.socket.remoteAddress || "unknown"}`;
     const current = buckets.get(key);
     const entry = !current || current.resetAt <= now

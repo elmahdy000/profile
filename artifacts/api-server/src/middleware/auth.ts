@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from "crypto";
+import { createHmac, randomBytes, scryptSync, timingSafeEqual } from "crypto";
 import type { Request, Response, NextFunction } from "express";
 import { db, subadminAccountsTable, siteSettingsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
@@ -26,7 +26,7 @@ export async function getDynamicAdminPassword(): Promise<string> {
   } catch (e) {
     // DB fallback
   }
-  cachedAdminPass = process.env.ADMIN_PASSWORD ?? "prof1234";
+  cachedAdminPass = process.env.ADMIN_PASSWORD ?? "";
   lastPassFetch = now;
   return cachedAdminPass;
 }
@@ -53,14 +53,17 @@ export function clearAdminPassCache() {
   lastPassFetch = 0;
 }
 
-const getAdminPassword = () => cachedAdminPass ?? process.env.ADMIN_PASSWORD ?? "prof1234";
+const getAdminPassword = () => cachedAdminPass ?? process.env.ADMIN_PASSWORD ?? "";
 const getSubAdminPassword = () => cachedSubAdminPass ?? process.env.SUBADMIN_PASSWORD ?? "";
 
 // قائمة المشرفين المساعدين المعتمدين بالأسماء والباسوردات الخاص بهم
-export const SUBADMIN_ACCOUNTS: Record<string, { name: string; pass: string }> = {
-  ahmed: { name: "أحمد (المشرف المساعد)", pass: process.env.SUBADMIN_AHMED_PASS ?? "ahmed1234" },
-  assistant: { name: "مساعد الإدارة 2", pass: process.env.SUBADMIN_ASSISTANT_PASS ?? "sub1234" },
-};
+export const SUBADMIN_ACCOUNTS: Record<string, { name: string; pass: string }> = {};
+if (process.env.SUBADMIN_AHMED_PASS) {
+  SUBADMIN_ACCOUNTS.ahmed = { name: "أحمد (المشرف المساعد)", pass: process.env.SUBADMIN_AHMED_PASS };
+}
+if (process.env.SUBADMIN_ASSISTANT_PASS) {
+  SUBADMIN_ACCOUNTS.assistant = { name: "مساعد الإدارة 2", pass: process.env.SUBADMIN_ASSISTANT_PASS };
+}
 
 if (!getAdminPassword()) {
   throw new Error(
@@ -81,6 +84,22 @@ function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(bufA, bufB);
 }
 
+const PASSWORD_PREFIX = "scrypt";
+
+export function hashAdminPassword(password: string): string {
+  const salt = randomBytes(16).toString("base64url");
+  const derived = scryptSync(password, salt, 64).toString("base64url");
+  return `${PASSWORD_PREFIX}$${salt}$${derived}`;
+}
+
+function verifyStoredPassword(input: string, stored: string): boolean {
+  if (!stored.startsWith(`${PASSWORD_PREFIX}$`)) return safeEqual(input, stored);
+  const [, salt, expected] = stored.split("$");
+  if (!salt || !expected) return false;
+  const actual = scryptSync(input, salt, 64).toString("base64url");
+  return safeEqual(actual, expected);
+}
+
 export type AdminAuthResult = {
   role: "superadmin" | "subadmin";
   username: string;
@@ -94,22 +113,22 @@ export async function verifyAdminCredentialsAsync(passwordInput: string, usernam
   const subAdminPassword = await getDynamicSubAdminPassword();
 
   // 1. فحص المدير الرئيسي
-  if (safeEqual(pass, adminPassword)) {
+  if (verifyStoredPassword(pass, adminPassword)) {
     return { role: "superadmin", username: "د. محمود المهدي (المدير الرئيسي)" };
   }
 
   // 2. فحص باسورد المشرف المساعد العام (إذا وُجد)
-  if (subAdminPassword && safeEqual(pass, subAdminPassword)) {
+  if (subAdminPassword && verifyStoredPassword(pass, subAdminPassword)) {
     return { role: "subadmin", username: "مشرف مساعد" };
   }
 
   // 3. فحص الحسابات المسماة الثابتة (ahmed / assistant)
-  if (user && SUBADMIN_ACCOUNTS[user] && safeEqual(pass, SUBADMIN_ACCOUNTS[user].pass)) {
+  if (user && SUBADMIN_ACCOUNTS[user] && verifyStoredPassword(pass, SUBADMIN_ACCOUNTS[user].pass)) {
     return { role: "subadmin", username: SUBADMIN_ACCOUNTS[user].name };
   }
   for (const accountKey of Object.keys(SUBADMIN_ACCOUNTS)) {
     const acc = SUBADMIN_ACCOUNTS[accountKey];
-    if (safeEqual(pass, acc.pass)) {
+    if (verifyStoredPassword(pass, acc.pass)) {
       return { role: "subadmin", username: acc.name };
     }
   }
@@ -118,10 +137,10 @@ export async function verifyAdminCredentialsAsync(passwordInput: string, usernam
   try {
     const dbRows = await db.select().from(subadminAccountsTable).where(eq(subadminAccountsTable.isActive, true));
     for (const acc of dbRows) {
-      if (user && user === acc.username.toLowerCase() && safeEqual(pass, acc.passwordHash)) {
+      if (user && user === acc.username.toLowerCase() && verifyStoredPassword(pass, acc.passwordHash)) {
         return { role: "subadmin", username: `${acc.displayName} (@${acc.username})` };
       }
-      if (!user && safeEqual(pass, acc.passwordHash)) {
+      if (!user && verifyStoredPassword(pass, acc.passwordHash)) {
         return { role: "subadmin", username: `${acc.displayName} (@${acc.username})` };
       }
     }
@@ -136,8 +155,8 @@ export function verifyAdminPassword(password: string): "superadmin" | "subadmin"
   const adminPassword = getAdminPassword();
   const subAdminPassword = getSubAdminPassword();
   const pass = password.trim();
-  if (safeEqual(pass, adminPassword)) return "superadmin";
-  if (subAdminPassword && safeEqual(pass, subAdminPassword)) return "subadmin";
+  if (verifyStoredPassword(pass, adminPassword)) return "superadmin";
+  if (subAdminPassword && verifyStoredPassword(pass, subAdminPassword)) return "subadmin";
   return null;
 }
 
@@ -155,13 +174,16 @@ export function createAdminSessionToken(role: "superadmin" | "subadmin" = "super
 export function getAdminIdentity(req: Request): { role: "superadmin" | "subadmin"; username: string } | null {
   const adminPassword = getAdminPassword();
   const subAdminPassword = getSubAdminPassword();
-  const expectedHeader = `Bearer ${adminPassword}`;
-  const expectedSubHeader = subAdminPassword ? `Bearer ${subAdminPassword}` : "";
-
   const authHeader = req.headers.authorization;
-  if (authHeader && safeEqual(authHeader, expectedHeader)) return { role: "superadmin", username: "د. محمود المهدي (المدير الرئيسي)" };
-  if (expectedSubHeader && authHeader && safeEqual(authHeader, expectedSubHeader)) return { role: "subadmin", username: "مشرف مساعد" };
-
+  if (authHeader?.startsWith("Bearer ")) {
+    const supplied = authHeader.slice("Bearer ".length);
+    if (verifyStoredPassword(supplied, adminPassword)) {
+      return { role: "superadmin", username: "د. محمود المهدي (المدير الرئيسي)" };
+    }
+    if (subAdminPassword && verifyStoredPassword(supplied, subAdminPassword)) {
+      return { role: "subadmin", username: "مشرف مساعد" };
+    }
+  }
   const token = req.cookies?.[ADMIN_COOKIE];
   if (typeof token !== "string") return null;
 

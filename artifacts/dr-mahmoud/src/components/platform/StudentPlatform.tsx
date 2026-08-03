@@ -75,7 +75,8 @@ async function api<T>(url: string, options?: RequestInit): Promise<T> {
 }
 function AppFilePreviewModal({ file, onClose }: { file: LearningFile | null; onClose: () => void }) {
   if (!file) return null;
-  const previewUrl = `/api/learning/files/${file.id}/preview#toolbar=0&navpanes=0&scrollbar=1`;
+  const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
+  const previewUrl = `/api/learning/files/${file.id}/preview${deviceId ? `?deviceId=${encodeURIComponent(deviceId)}` : ""}#toolbar=0&navpanes=0&scrollbar=1`;
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[110] grid place-items-center bg-black/70 backdrop-blur-sm p-3 sm:p-6" onMouseDown={(event) => { if (event.currentTarget === event.target) onClose(); }}>
       <motion.section initial={{ scale: 0.98, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.98, y: 12 }} role="dialog" aria-modal="true" aria-label={`معاينة ${file.title}`} className="flex h-[min(90vh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-card border border-border shadow-2xl">
@@ -333,7 +334,8 @@ export function StudentPlatform() {
   const playNotificationSound = useNotificationSound();
   useEffect(() => {
     if (!student) return;
-    const stream = new EventSource("/api/learning/notifications/stream", { withCredentials: true });
+    const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
+    const stream = new EventSource(`/api/learning/notifications/stream${deviceId ? `?deviceId=${encodeURIComponent(deviceId)}` : ""}`, { withCredentials: true });
     const refresh = (event: Event) => {
       const latestId = Number(JSON.parse((event as MessageEvent).data || "{}").latestId || 0);
       if (latestId) latestNotificationIdRef.current = latestId;

@@ -290,9 +290,9 @@ export function FilesTab({ files }: { files: LearningFile[] }) {
               </header>
               <div className="min-h-0 flex-1 bg-slate-100 dark:bg-[#08111F] p-2 sm:p-4">
                 {previewFile.mimeType?.startsWith("image/") ? (
-                  <img src={`/api/learning/files/${previewFile.id}/preview`} alt={previewFile.title} className="h-full w-full object-contain select-none" onContextMenu={(e) => e.preventDefault()} />
+                  <img src={`/api/learning/files/${previewFile.id}/preview?deviceId=${encodeURIComponent(localStorage.getItem("dr_mahmoud_device_id") || "")}`} alt={previewFile.title} className="h-full w-full object-contain select-none" onContextMenu={(e) => e.preventDefault()} />
                 ) : previewFile.mimeType === "application/pdf" || previewFile.mimeType?.startsWith("text/") ? (
-                  <iframe src={`/api/learning/files/${previewFile.id}/preview#toolbar=0&navpanes=0&scrollbar=1`} title={previewFile.title} className="h-full w-full rounded-xl border border-slate-200 dark:border-[#283A54] bg-white dark:bg-[#101E32]" />
+                  <iframe src={`/api/learning/files/${previewFile.id}/preview?deviceId=${encodeURIComponent(localStorage.getItem("dr_mahmoud_device_id") || "")}#toolbar=0&navpanes=0&scrollbar=1`} title={previewFile.title} className="h-full w-full rounded-xl border border-slate-200 dark:border-[#283A54] bg-white dark:bg-[#101E32]" />
                 ) : (
                   <div className="grid h-full place-items-center rounded-xl border border-slate-200 dark:border-[#283A54] bg-white dark:bg-[#101E32] p-8 text-center">
                     <div>
