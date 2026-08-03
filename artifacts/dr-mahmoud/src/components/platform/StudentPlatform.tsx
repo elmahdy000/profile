@@ -352,12 +352,30 @@ export function StudentPlatform() {
     const poll = async () => {
       if (document.visibilityState !== "visible") return;
       try {
-        // Also check if student approval status or data updated from admin side
+        // Also check if student approval status, payment status, or enrolled courses updated from admin side
         const meRes = await api<{ student: Student | null }>("/api/student/me").catch(() => null);
-        if (meRes?.student && (meRes.student.status !== student.status || meRes.student.paymentStatus !== student.paymentStatus)) {
-          setStudent(meRes.student);
-          void loadLearningData();
-          toast({ title: "🎉 تم تحديث حسابك!", description: "تم تفعيل الاشتراك وفك تشغيل باقي الدروس والاختبارات بنجاح." });
+        if (meRes?.student) {
+          const statusChanged = meRes.student.status !== student.status || meRes.student.paymentStatus !== student.paymentStatus;
+          const oldCourses = (student.enrolledCourseIds ?? []).sort().join(",");
+          const newCourses = (meRes.student.enrolledCourseIds ?? []).sort().join(",");
+          const coursesChanged = oldCourses !== newCourses;
+
+          if (statusChanged || coursesChanged) {
+            setStudent(meRes.student);
+            void loadLearningData();
+            playNotificationSound();
+            if (coursesChanged) {
+              toast({
+                title: "📚 تم تفعيل المواد الدراسية الخاصة بك!",
+                description: "قام الأدمن بتحديث وتحديد الكورسات المتاحة لك، تم فتح المحتوى بنجاح 🎉",
+              });
+            } else if (statusChanged) {
+              toast({
+                title: "🎉 تم تحديث حسابك!",
+                description: "تم تفعيل الاشتراك وفك تشغيل باقي الدروس والاختبارات بنجاح.",
+              });
+            }
+          }
         }
 
         const rows = await api<StudentNotification[]>("/api/learning/notifications");
@@ -376,9 +394,9 @@ export function StudentPlatform() {
         // SSE keeps retrying; the next poll provides an independent fallback.
       }
     };
-    const timer = window.setInterval(poll, 4000);
+    const timer = window.setInterval(poll, 3000);
     return () => window.clearInterval(timer);
-  }, [student?.id, student?.status, student?.paymentStatus]);
+  }, [student?.id, student?.status, student?.paymentStatus, JSON.stringify(student?.enrolledCourseIds)]);
   useEffect(() => {
     if (!student) return;
     let lastRefresh = 0;
