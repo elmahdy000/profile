@@ -1838,48 +1838,39 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* KPI Metrics Quick Bar */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 mb-7">
+            {/* KPI Metrics Quick Bar - Student Stages Breakdown */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3.5 mb-7">
               <KPICard
-                title="إجمالي الحجوزات"
-                value={bookingsQuery.data?.length || 0}
-                subtitle={`${bookingsQuery.data?.filter(b => b.status === "pending").length || 0} طلب قيد الانتظار`}
-                icon={Calendar}
-                color="blue"
-                badge={bookingsQuery.data?.filter(b => b.status === "pending").length ? "جديد" : undefined}
-                onClick={() => setActiveTab("bookings")}
-              />
-              <KPICard
-                title="الكورسات"
-                value={coursesQuery.data?.length || 0}
-                subtitle={`${coursesQuery.data?.filter(c => c.isPublished).length || 0} كورس منشور`}
-                icon={BookOpen}
+                title="تانية بكالوريا"
+                value="82 طالب"
+                subtitle="61 عربي · 21 لغات"
+                icon={GraduationCap}
                 color="emerald"
-                onClick={() => setActiveTab("courses")}
+                onClick={() => setActiveTab("learning")}
               />
               <KPICard
-                title="مكتبة الفيديوهات"
-                value={videosQuery.data?.length || 0}
-                subtitle="فيديوهات وقوائم تشغيل"
-                icon={VideoIcon}
-                color="indigo"
-                onClick={() => setActiveTab("videos")}
-              />
-              <KPICard
-                title="حلقات البودكاست"
-                value={podcastsQuery.data?.length || 0}
-                subtitle="لقاءات وملفات صوتية"
-                icon={Mic}
-                color="purple"
-                onClick={() => setActiveTab("podcasts")}
-              />
-              <KPICard
-                title="المناهج المتاحة"
-                value={curriculumsQuery.data?.length || 0}
-                subtitle="المراحل والشروحات"
-                icon={Library}
+                title="أولى بكالوريا"
+                value="17 طالب"
+                subtitle="10 عربي · 7 لغات (مفعلين 100%)"
+                icon={CheckCircle2}
                 color="amber"
-                onClick={() => setActiveTab("curriculums")}
+                onClick={() => setActiveTab("learning")}
+              />
+              <KPICard
+                title="طلاب الجامعة"
+                value="4 طلاب"
+                subtitle="حاسبات (إعدادي وفرقة ثانية)"
+                icon={Users}
+                color="purple"
+                onClick={() => setActiveTab("learning")}
+              />
+              <KPICard
+                title="إجمالي الطلاب"
+                value="104 طالب"
+                subtitle="78 طالب اشتراك مفعّل"
+                icon={ShieldCheck}
+                color="blue"
+                onClick={() => setActiveTab("learning")}
               />
             </div>
 
