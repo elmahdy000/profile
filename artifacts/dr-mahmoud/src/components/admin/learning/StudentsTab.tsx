@@ -128,8 +128,117 @@ export function StudentsTab({
       return studentSortBy === "oldest" ? timeA - timeB : timeB - timeA;
     });
 
+  // Calculate Stage & Grade KPI Breakdown
+  const bac1Count = students.filter((s) => s.grade && s.grade.includes("الأول (أولى بكالوريا)")).length;
+  const bac1Paid = students.filter((s) => s.grade && s.grade.includes("الأول (أولى بكالوريا)") && s.paymentStatus === "paid").length;
+
+  const bac2Count = students.filter((s) => s.grade && s.grade.includes("الثاني (تانية بكالوريا)")).length;
+  const bac2Paid = students.filter((s) => s.grade && s.grade.includes("الثاني (تانية بكالوريا)") && s.paymentStatus === "paid").length;
+
+  const uniCount = students.filter((s) => s.grade && s.grade.includes("المرحلة الجامعية")).length;
+  const uniPaid = students.filter((s) => s.grade && s.grade.includes("المرحلة الجامعية") && s.paymentStatus === "paid").length;
+
+  const totalPaid = students.filter((s) => s.paymentStatus === "paid").length;
+
   return (
     <div className="space-y-4">
+      {/* ── KPI Stage Breakdown Cards ── */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Total Students KPI */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-500">إجمالي طلاب المنصة</span>
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-blue-50 text-blue-600 font-bold text-xs">
+              👥
+            </span>
+          </div>
+          <div className="mt-2 flex items-baseline justify-between">
+            <strong className="text-2xl font-black text-slate-900">{students.length}</strong>
+            <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+              {totalPaid} مفعل
+            </span>
+          </div>
+        </div>
+
+        {/* 1st Baccalaureate KPI */}
+        <button
+          type="button"
+          onClick={() => {
+            setStudentStageFilter(studentStageFilter.includes("أولى بكالوريا") ? "all" : studentStages.find((st) => st.includes("أولى بكالوريا")) || "all");
+          }}
+          className={`rounded-2xl border p-4 text-right shadow-xs transition cursor-pointer flex flex-col justify-between ${
+            studentStageFilter.includes("أولى بكالوريا")
+              ? "border-blue-500 bg-blue-50/60 ring-2 ring-blue-500/20"
+              : "border-slate-200 bg-white hover:border-blue-300"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-600">أولى بكالوريا</span>
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-amber-50 text-amber-600 font-bold text-xs">
+              1️⃣
+            </span>
+          </div>
+          <div className="mt-2 flex items-baseline justify-between">
+            <strong className="text-2xl font-black text-slate-900">{bac1Count}</strong>
+            <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">
+              {bac1Paid} مفعل
+            </span>
+          </div>
+        </button>
+
+        {/* 2nd Baccalaureate KPI */}
+        <button
+          type="button"
+          onClick={() => {
+            setStudentStageFilter(studentStageFilter.includes("تانية بكالوريا") ? "all" : studentStages.find((st) => st.includes("تانية بكالوريا")) || "all");
+          }}
+          className={`rounded-2xl border p-4 text-right shadow-xs transition cursor-pointer flex flex-col justify-between ${
+            studentStageFilter.includes("تانية بكالوريا")
+              ? "border-blue-500 bg-blue-50/60 ring-2 ring-blue-500/20"
+              : "border-slate-200 bg-white hover:border-blue-300"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-600">تانية بكالوريا</span>
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-emerald-50 text-emerald-600 font-bold text-xs">
+              2️⃣
+            </span>
+          </div>
+          <div className="mt-2 flex items-baseline justify-between">
+            <strong className="text-2xl font-black text-slate-900">{bac2Count}</strong>
+            <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+              {bac2Paid} مفعل
+            </span>
+          </div>
+        </button>
+
+        {/* University KPI */}
+        <button
+          type="button"
+          onClick={() => {
+            setStudentStageFilter(studentStageFilter.includes("المرحلة الجامعية") ? "all" : studentStages.find((st) => st.includes("المرحلة الجامعية")) || "all");
+          }}
+          className={`rounded-2xl border p-4 text-right shadow-xs transition cursor-pointer flex flex-col justify-between ${
+            studentStageFilter.includes("المرحلة الجامعية")
+              ? "border-blue-500 bg-blue-50/60 ring-2 ring-blue-500/20"
+              : "border-slate-200 bg-white hover:border-blue-300"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-600">طلاب الجامعة (حاسبات)</span>
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-purple-50 text-purple-600 font-bold text-xs">
+              🎓
+            </span>
+          </div>
+          <div className="mt-2 flex items-baseline justify-between">
+            <strong className="text-2xl font-black text-slate-900">{uniCount}</strong>
+            <span className="text-[11px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md">
+              {uniPaid} مفعل
+            </span>
+          </div>
+        </button>
+      </div>
+
       {/* Pending Code Recovery Requests Alert Banner */}
       {recoveryRequests.filter((r) => r.status === "pending").length > 0 && (
         <div className="rounded-2xl border border-amber-300 bg-amber-50/90 p-4 shadow-xs">
