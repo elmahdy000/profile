@@ -3277,21 +3277,50 @@ router.post(
         return;
       }
 
-      let response: Response;
+      let stdout = "";
+      let stderr = "";
+      let exitCode = 0;
+
+      // ── Primary: Wandbox (synchronous). Falls back to Paiza on failure. ──
+      let wandboxOk = false;
       try {
-        response = await fetch("https://wandbox.org/api/compile.json", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            compiler: "gcc-head",
-            code,
-            stdin,
-            options: "warning,c++20",
-          }),
-        });
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        let response: Response;
+        try {
+          response = await fetch("https://wandbox.org/api/compile.json", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              compiler: "gcc-head",
+              code,
+              stdin,
+              options: "warning,c++20",
+            }),
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timeout);
+        }
+
+        if (response.ok) {
+          const result = (await response.json()) as any;
+          stdout = result.program_output ?? "";
+          stderr =
+            result.program_error ||
+            result.compiler_error ||
+            result.compiler_output ||
+            "";
+          exitCode = result.status === "0" ? 0 : Number(result.status ?? 1);
+          wandboxOk = true;
+        }
       } catch {
-        // Fallback to Paiza.IO C++ runner if Wandbox times out or is unreachable
-        response = await fetch("https://api.paiza.io/runners/create", {
+        // network error / abort → fall through to Paiza fallback below
+      }
+
+      // ── Fallback: Paiza.IO async runner (create + poll for completion) ──
+      if (!wandboxOk) {
+        const createRes = await fetch("https://api.paiza.io/runners/create", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -3301,37 +3330,42 @@ router.post(
             api_key: "guest",
           }),
         });
+        if (!createRes.ok) {
+          throw new Error(`Compiler API error: ${createRes.status}`);
+        }
+        const created = (await createRes.json()) as any;
+        const runId = created.id;
+        if (!runId) {
+          throw new Error("Compiler API error: no run id");
+        }
+
+        // Poll get_details until the job finishes (bounded hard cap so the
+        // request can never hang indefinitely).
+        let details: any = null;
+        for (let attempt = 0; attempt < 15; attempt++) {
+          const detailsRes = await fetch(
+            `https://api.paiza.io/runners/get_details?id=${runId}&api_key=guest`,
+          );
+          details = (await detailsRes.json()) as any;
+          if (details.status !== "running") break;
+          await new Promise((r) => setTimeout(r, 500));
+        }
+
+        stdout = details?.stdout ?? "";
+        stderr = details?.stderr || details?.build_stderr || "";
+        exitCode =
+          details?.build_exit_code === 0 && details?.exit_code === 0 ? 0 : 1;
       }
 
-      if (!response.ok) {
-        throw new Error(`Compiler API error: ${response.status}`);
-      }
-
-      const result = (await response.json()) as any;
-
-      let stdout = "";
-      let stderr = "";
-      let exitCode = 0;
-
-      if ("program_output" in result || "compiler_error" in result) {
-        stdout = result.program_output ?? "";
-        stderr = result.program_error || result.compiler_error || result.compiler_output || "";
-        exitCode = result.status === "0" ? 0 : Number(result.status ?? 1);
-      } else if (result.id) {
-        // Paiza runner polling
-        const runId = result.id;
-        const detailsRes = await fetch(`https://api.paiza.io/runners/get_details?id=${runId}&api_key=guest`);
-        const details = (await detailsRes.json()) as any;
-        stdout = details.stdout ?? "";
-        stderr = details.stderr || details.build_stderr || "";
-        exitCode = details.build_exit_code === 0 && details.exit_code === 0 ? 0 : 1;
-      }
+      // A clean run (exit 0) stays a success even when stderr carries compiler
+      // warnings; only genuine errors (nonzero exit) count as failure.
+      const success = exitCode === 0;
 
       res.json({
         output: stdout,
         error: stderr,
         exitCode,
-        success: exitCode === 0 && !stderr.includes("error:"),
+        success,
       });
     } catch (error) {
       res.status(500).json({

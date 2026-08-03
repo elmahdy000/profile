@@ -475,15 +475,41 @@ const FONT_SIZES = [
   { key: "md", label: "كبير", size: "text-sm sm:text-base", lineH: "leading-relaxed" },
 ] as const;
 
+// ─── Persistence ────────────────────────────────────────────────────────────────
+const STORAGE_KEYS = {
+  code: "cpp-compiler:code",
+  stdin: "cpp-compiler:stdin",
+  template: "cpp-compiler:template",
+} as const;
+
+function loadStored(key: string): string | null {
+  try {
+    return typeof window !== "undefined" ? window.localStorage.getItem(key) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveStored(key: string, value: string): void {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    /* storage unavailable / quota — non-fatal */
+  }
+}
+
 // ─── Component ──────────────────────────────────────────────────────────────────
 export function CppCompilerPanel() {
-  const [code, setCode] = useState(CPP_TEMPLATES.hello.code);
-  const [stdinText, setStdinText] = useState("");
+  const [code, setCode] = useState(() => loadStored(STORAGE_KEYS.code) ?? CPP_TEMPLATES.hello.code);
+  const [stdinText, setStdinText] = useState(() => loadStored(STORAGE_KEYS.stdin) ?? "");
   const [outputContent, setOutputContent] = useState("");
   const [errorOutput, setErrorOutput] = useState("");
   const [running, setRunning] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState("hello");
+  const [selectedTemplate, setSelectedTemplate] = useState(() => {
+    const stored = loadStored(STORAGE_KEYS.template);
+    return stored && CPP_TEMPLATES[stored] ? stored : "hello";
+  });
   const [showTemplates, setShowTemplates] = useState(false);
   const [showStdin, setShowStdin] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -535,6 +561,10 @@ export function CppCompilerPanel() {
 
   // ─── Run Code ─────────────────────────────────────────────────────────────
   const runCode = useCallback(async () => {
+    if (!code.trim()) {
+      toast({ title: "⚠️ Empty code", description: "Write some C++ code before running." });
+      return;
+    }
     setRunning(true);
     setErrorOutput("");
     setOutputContent("");
@@ -556,7 +586,21 @@ export function CppCompilerPanel() {
       setExecutionTime(Math.round(performance.now() - start));
       setExitCode(res.exitCode);
       setOutputContent(res.output || "");
-      if (res.error) setErrorOutput(res.error);
+      if (res.error) {
+        setErrorOutput(res.error);
+        // Scroll the editor to the first reported error line.
+        const errLines = parseErrorLines(res.error);
+        const first = errLines.size ? Math.min(...errLines) : 0;
+        if (first > 0) {
+          requestAnimationFrame(() => {
+            const ta = textareaRef.current;
+            if (!ta) return;
+            const lineHeight = ta.scrollHeight / Math.max(1, code.split("\n").length);
+            ta.scrollTop = Math.max(0, (first - 3) * lineHeight);
+            syncScroll();
+          });
+        }
+      }
     } catch (err) {
       setExecutionTime(Math.round(performance.now() - start));
       setErrorOutput((err as Error).message || "Execution error.");
@@ -564,7 +608,36 @@ export function CppCompilerPanel() {
       setRunning(false);
       setTimeout(() => consoleBottomRef.current?.scrollIntoView({ behavior: "smooth" }), 60);
     }
-  }, [code, stdinText]);
+  }, [code, stdinText, syncScroll]);
+
+  // ─── Undo-safe insert ─────────────────────────────────────────────────────
+  // Uses execCommand("insertText") so edits stay on the textarea's native undo
+  // stack (Ctrl+Z / Ctrl+Y keep working) and fire onChange to sync React state.
+  // Falls back to setCode when the command is unsupported. `select` optionally
+  // re-selects the inserted range; `cursorOffset` places the caret instead.
+  const insertText = useCallback(
+    (text: string, cursorOffset?: number, select?: { start: number; end: number }) => {
+      const ta = textareaRef.current;
+      if (!ta) return;
+      const start = ta.selectionStart;
+      const ok = document.execCommand("insertText", false, text);
+      if (!ok) {
+        const end = ta.selectionEnd;
+        setCode(ta.value.substring(0, start) + text + ta.value.substring(end));
+      }
+      requestAnimationFrame(() => {
+        const el = textareaRef.current;
+        if (!el) return;
+        if (select) {
+          el.selectionStart = start + select.start;
+          el.selectionEnd = start + select.end;
+        } else if (cursorOffset !== undefined) {
+          el.selectionStart = el.selectionEnd = start + cursorOffset;
+        }
+      });
+    },
+    [],
+  );
 
   // ─── Keyboard Shortcuts ───────────────────────────────────────────────────
   const handleKeyDown = useCallback(
@@ -583,13 +656,7 @@ export function CppCompilerPanel() {
       // Tab → 4 spaces
       if (e.key === "Tab" && !e.shiftKey) {
         e.preventDefault();
-        const newCode = code.substring(0, start) + "    " + code.substring(end);
-        setCode(newCode);
-        requestAnimationFrame(() => {
-          if (textareaRef.current) {
-            textareaRef.current.selectionStart = textareaRef.current.selectionEnd = start + 4;
-          }
-        });
+        insertText("    ", 4);
         return;
       }
 
@@ -603,29 +670,27 @@ export function CppCompilerPanel() {
         const extraIndent = charBefore === "{" ? "    " : "";
         const closingNewline = charBefore === "{" && charAfter === "}" ? "\n" + indent : "";
         const insertion = "\n" + indent + extraIndent + closingNewline;
-        const newCode = code.substring(0, start) + insertion + code.substring(end);
-        const cursorPos = start + 1 + indent.length + extraIndent.length;
-        setCode(newCode);
-        requestAnimationFrame(() => {
-          if (textareaRef.current) {
-            textareaRef.current.selectionStart = textareaRef.current.selectionEnd = cursorPos;
-          }
-        });
+        const cursorOffset = 1 + indent.length + extraIndent.length;
+        insertText(insertion, cursorOffset);
         return;
       }
 
-      // Auto-close brackets
+      // Bracket / quote keys
       const pairs: Record<string, string> = { "(": ")", "[": "]", "{": "}", '"': '"', "'": "'" };
-      if (pairs[e.key] && start === end) {
+      if (pairs[e.key]) {
+        // Wrap current selection: open + selected + close, keep selection.
+        if (start !== end) {
+          e.preventDefault();
+          const selected = code.substring(start, end);
+          insertText(e.key + selected + pairs[e.key], undefined, {
+            start: 1,
+            end: 1 + selected.length,
+          });
+          return;
+        }
+        // Auto-close on empty selection.
         e.preventDefault();
-        const insertion = e.key + pairs[e.key];
-        const newCode = code.substring(0, start) + insertion + code.substring(end);
-        setCode(newCode);
-        requestAnimationFrame(() => {
-          if (textareaRef.current) {
-            textareaRef.current.selectionStart = textareaRef.current.selectionEnd = start + 1;
-          }
-        });
+        insertText(e.key + pairs[e.key], 1);
         return;
       }
 
@@ -635,17 +700,20 @@ export function CppCompilerPanel() {
         const after = code[start];
         if (pairs[before] && pairs[before] === after) {
           e.preventDefault();
-          const newCode = code.substring(0, start - 1) + code.substring(start + 1);
-          setCode(newCode);
-          requestAnimationFrame(() => {
-            if (textareaRef.current) {
-              textareaRef.current.selectionStart = textareaRef.current.selectionEnd = start - 1;
-            }
-          });
+          ta.selectionStart = start - 1;
+          ta.selectionEnd = start + 1;
+          if (!document.execCommand("delete", false)) {
+            setCode(code.substring(0, start - 1) + code.substring(start + 1));
+            requestAnimationFrame(() => {
+              if (textareaRef.current) {
+                textareaRef.current.selectionStart = textareaRef.current.selectionEnd = start - 1;
+              }
+            });
+          }
         }
       }
     },
-    [code, runCode],
+    [code, runCode, insertText],
   );
 
   // ─── Template Change ──────────────────────────────────────────────────────
@@ -664,11 +732,24 @@ export function CppCompilerPanel() {
     if (tmpl.stdin) setShowStdin(true);
   }, []);
 
+  // ─── Reset editor to the current template's original code ──────────────────
+  const resetToTemplate = useCallback(() => {
+    handleTemplateChange(selectedTemplate);
+    toast({ title: "↺ Reset", description: "Editor restored to template code" });
+  }, [handleTemplateChange, selectedTemplate]);
+
   // ─── Copy / Download ──────────────────────────────────────────────────────
   const copyCode = useCallback(() => {
     navigator.clipboard.writeText(code);
     toast({ title: "✅ Copied!", description: "Code copied to clipboard" });
   }, [code]);
+
+  const copyOutput = useCallback(() => {
+    const text = [outputContent, errorOutput].filter(Boolean).join("\n").trim();
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    toast({ title: "✅ Copied!", description: "Output copied to clipboard" });
+  }, [outputContent, errorOutput]);
 
   const downloadCode = useCallback(() => {
     const blob = new Blob([code], { type: "text/x-c++src" });
@@ -705,6 +786,17 @@ export function CppCompilerPanel() {
   useEffect(() => {
     if (hasCin && !showStdin) setShowStdin(true);
   }, [hasCin]);
+
+  // ─── Persist code / stdin / template to localStorage ──────────────────────
+  useEffect(() => {
+    saveStored(STORAGE_KEYS.code, code);
+  }, [code]);
+  useEffect(() => {
+    saveStored(STORAGE_KEYS.stdin, stdinText);
+  }, [stdinText]);
+  useEffect(() => {
+    saveStored(STORAGE_KEYS.template, selectedTemplate);
+  }, [selectedTemplate]);
 
   // ─── Fullscreen Escape ────────────────────────────────────────────────────
   useEffect(() => {
@@ -797,6 +889,16 @@ export function CppCompilerPanel() {
             title="Download .cpp"
           >
             <Download className="h-3.5 w-3.5" />
+          </button>
+
+          {/* Reset to template */}
+          <button
+            type="button"
+            onClick={resetToTemplate}
+            className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/60 transition-colors"
+            title="Reset to template code"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
           </button>
 
           {/* Fullscreen */}
@@ -956,7 +1058,7 @@ export function CppCompilerPanel() {
               <span>UTF-8</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-slate-600">C++17</span>
+              <span className="text-slate-600">C++20</span>
               <span className="text-blue-400/60 font-bold">⌘↵ Run</span>
             </div>
           </div>
@@ -1005,6 +1107,17 @@ export function CppCompilerPanel() {
                   <Clock className="h-2.5 w-2.5" />
                   {executionTime}ms
                 </span>
+              )}
+              {hasStarted && (outputContent || errorOutput) && (
+                <button
+                  type="button"
+                  onClick={copyOutput}
+                  className="flex items-center gap-1 text-[10px] font-mono font-bold text-slate-500 hover:text-white px-2 py-1 rounded-md border border-slate-700/50 bg-slate-800/40 hover:bg-slate-700/60 transition-colors"
+                  title="Copy output"
+                >
+                  <Copy className="h-2.5 w-2.5" />
+                  Copy
+                </button>
               )}
               <button
                 type="button"
