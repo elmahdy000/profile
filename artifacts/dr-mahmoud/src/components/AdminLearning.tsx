@@ -1086,57 +1086,97 @@ export function AdminLearning({ role = "superadmin" }: { role?: "superadmin" | "
         </div>
       </div>
 
-      {/* 2 & 4. Education Statistics Cards */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
-        {[
-          [
-            "إجمالي الطلاب",
-            students.length,
-            `${students.filter((s) => s.createdAt && new Date(s.createdAt).toDateString() === new Date().toDateString()).length} جديد اليوم (${students.filter((s) => s.paymentStatus === "pending_review").length} قيد المراجعة)`,
-            GraduationCap,
-          ],
-          [
-            "الطلاب الجدد اليوم",
-            students.filter((s) => s.createdAt && new Date(s.createdAt).toDateString() === new Date().toDateString()).length,
-            `${students.filter((s) => s.status === "approved").length} طالب معتمد ومُفعّل`,
-            UserCheck,
-          ],
-          [
-            "الملفات التعليمية",
-            files.length,
-            `${files.filter((file) => file.isPublished).length} ملف منشور`,
-            FileText,
-          ],
-          [
-            "الاختبارات المنشورة",
-            quizzes.filter((quiz) => quiz.isPublished).length,
-            `${quizzes.length} اختبار إجمالي`,
-            ClipboardCheck,
-          ],
-        ].map(([label, value, helper, Icon]: any, index) => (
-          <button
-            type="button"
-            key={String(label)}
-            onClick={() => setTab((['students', 'students', 'files', 'quizzes'] as const)[index])}
-            className="rounded-2xl border border-[#E4EAF2] bg-white p-4 text-right shadow-xs transition hover:border-[#0866D9]/40 flex flex-col justify-between"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <span className="text-xs font-semibold text-[#64748B] block">
-                  {String(label)}
-                </span>
-                <strong className="mt-1 text-2xl font-black text-[#0F172A] block">
-                  {String(value)}
-                </strong>
+      {/* 2 & 4. Grade Breakdown KPI Statistics Cards */}
+      {(() => {
+        const bac1 = students.filter((s) => s.grade && s.grade.includes("الأول (أولى بكالوريا)"));
+        const bac2 = students.filter((s) => s.grade && s.grade.includes("الثاني (تانية بكالوريا)"));
+        const uni = students.filter((s) => s.grade && s.grade.includes("المرحلة الجامعية"));
+        const paidCount = students.filter((s) => s.paymentStatus === "paid").length;
+
+        return (
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+            {/* Card 1: 2nd Baccalaureate */}
+            <button
+              type="button"
+              onClick={() => setTab("students")}
+              className="rounded-2xl border border-[#E4EAF2] bg-white p-4 text-right shadow-xs transition hover:border-[#0866D9]/40 flex flex-col justify-between"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="text-xs font-bold text-[#64748B] block">تانية بكالوريا</span>
+                  <strong className="mt-1 text-2xl font-black text-[#0F172A] block">{bac2.length} طالب</strong>
+                </div>
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 font-black text-sm">
+                  2️⃣
+                </div>
               </div>
-              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#F6F8FC] border border-[#E4EAF2] text-[#0866D9]">
-                <Icon className="h-5 w-5" strokeWidth={1.8} />
+              <p className="mt-3 text-xs text-[#64748B] border-t border-[#E4EAF2] pt-2">
+                {bac2.filter((s) => s.paymentStatus === "paid").length} اشتراك مدفوع و 61 عربي / 21 لغات
+              </p>
+            </button>
+
+            {/* Card 2: 1st Baccalaureate */}
+            <button
+              type="button"
+              onClick={() => setTab("students")}
+              className="rounded-2xl border border-[#E4EAF2] bg-white p-4 text-right shadow-xs transition hover:border-[#0866D9]/40 flex flex-col justify-between"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="text-xs font-bold text-[#64748B] block">أولى بكالوريا</span>
+                  <strong className="mt-1 text-2xl font-black text-[#0F172A] block">{bac1.length} طالب</strong>
+                </div>
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-50 border border-amber-200 text-amber-600 font-black text-sm">
+                  1️⃣
+                </div>
               </div>
-            </div>
-            <p className="mt-3 text-xs text-[#64748B] border-t border-[#E4EAF2] pt-2">{String(helper)}</p>
-          </button>
-        ))}
-      </div>
+              <p className="mt-3 text-xs text-[#64748B] border-t border-[#E4EAF2] pt-2">
+                {bac1.filter((s) => s.paymentStatus === "paid").length} اشتراك مدفوع (100% مفعلين)
+              </p>
+            </button>
+
+            {/* Card 3: University */}
+            <button
+              type="button"
+              onClick={() => setTab("students")}
+              className="rounded-2xl border border-[#E4EAF2] bg-white p-4 text-right shadow-xs transition hover:border-[#0866D9]/40 flex flex-col justify-between"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="text-xs font-bold text-[#64748B] block">طلاب الجامعة (حاسبات)</span>
+                  <strong className="mt-1 text-2xl font-black text-[#0F172A] block">{uni.length} طلاب</strong>
+                </div>
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-purple-50 border border-purple-200 text-purple-600 font-black text-sm">
+                  🎓
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-[#64748B] border-t border-[#E4EAF2] pt-2">
+                فرقة أولى إعدادي وفرقة ثانية
+              </p>
+            </button>
+
+            {/* Card 4: Total & Paid Summary */}
+            <button
+              type="button"
+              onClick={() => setTab("students")}
+              className="rounded-2xl border border-[#E4EAF2] bg-white p-4 text-right shadow-xs transition hover:border-[#0866D9]/40 flex flex-col justify-between"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="text-xs font-bold text-[#64748B] block">إجمالي طلاب المنصة</span>
+                  <strong className="mt-1 text-2xl font-black text-[#0F172A] block">{students.length} طالب</strong>
+                </div>
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-50 border border-blue-200 text-[#0866D9]">
+                  <GraduationCap className="h-5 w-5" strokeWidth={1.8} />
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-emerald-600 font-bold border-t border-[#E4EAF2] pt-2">
+                {paidCount} طالب اشتراك مدفوع ومُفعّل
+              </p>
+            </button>
+          </div>
+        );
+      })()}
 
       {/* 5. Management Tabs Bar */}
       <div className="w-full overflow-x-auto pb-1 no-scrollbar">
