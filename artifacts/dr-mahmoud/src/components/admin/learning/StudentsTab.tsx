@@ -61,6 +61,7 @@ type Props = {
   copiedStudentId: number | null;
   onNavigateToReports: () => void;
   onApproveReceipt: (receiptId: number) => Promise<void>;
+  onUpdateStudentCourses?: (student: Student, courseIds: number[]) => Promise<void>;
 };
 
 function Status({ status }: { status: string }) {
@@ -87,6 +88,7 @@ export function StudentsTab({
   recoveryRequests,
   paymentReceipts,
   studentStages,
+  learningCourses,
   onUpdateStatus,
   onUpdateMode,
   onUpdatePaymentStatus,
@@ -97,6 +99,7 @@ export function StudentsTab({
   copiedStudentId,
   onNavigateToReports,
   onApproveReceipt,
+  onUpdateStudentCourses,
 }: Props) {
   const [studentSearch, setStudentSearch] = useState("");
   const [studentStatusFilter, setStudentStatusFilter] = useState("all");
@@ -403,6 +406,54 @@ export function StudentsTab({
                 </select>
               </div>
             </div>
+
+            {/* Course Access Control (حدد الكورسات المسموح بها للطالب) */}
+            {learningCourses && learningCourses.length > 0 && (
+              <div className="rounded-xl border border-blue-200 dark:border-blue-900/50 bg-blue-50/40 dark:bg-blue-950/20 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <strong className="text-sm font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
+                      📚 الكورسات المتاحة للطالب (التحكم الخاص)
+                    </strong>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                      حدد الكورسات والمواد التي يستطيع هذا الطالب مشاهدتها بالظبط.
+                    </p>
+                  </div>
+                  <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300">
+                    {(s.enrolledCourseIds?.length ?? 0) === 0 ? "كل كورسات المرحلة تلقائياً" : `${s.enrolledCourseIds?.length} كورس محدد`}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {learningCourses.map((c) => {
+                    const isSelected = (s.enrolledCourseIds ?? []).includes(c.id);
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => {
+                          const current = s.enrolledCourseIds ?? [];
+                          const updated = isSelected
+                            ? current.filter((id) => id !== c.id)
+                            : [...current, c.id];
+                          onUpdateStudentCourses?.(s, updated);
+                        }}
+                        className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all border ${
+                          isSelected
+                            ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
+                            : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-blue-400"
+                        }`}
+                      >
+                        <span className={`h-3.5 w-3.5 rounded-sm flex items-center justify-center border ${isSelected ? "border-white bg-white/20" : "border-slate-400"}`}>
+                          {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
+                        </span>
+                        {c.title}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Receipt Image Display under Student if available */}
             {(() => {

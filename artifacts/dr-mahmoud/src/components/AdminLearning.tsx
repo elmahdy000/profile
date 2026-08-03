@@ -1185,6 +1185,7 @@ export function AdminLearning({ role = "superadmin" }: { role?: "superadmin" | "
               onUpdateStatus={async (id, status) => { await updateStudent(id, status); }}
               onUpdateMode={async (student, mode) => { await updateStudentMode(student, mode); }}
               onUpdatePaymentStatus={async (student, status) => { await updateStudentPaymentStatus(student, status); }}
+              onUpdateStudentCourses={async (student, courseIds) => { await updateStudentCourses(student, courseIds); }}
               onDeleteStudent={async (id) => { await deleteStudent(id); }}
               onSetMaxDevices={async (s) => {
                 const newMax = (s.maxDevices || 1) === 1 ? 2 : 1;
