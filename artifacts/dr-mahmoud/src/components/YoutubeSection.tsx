@@ -718,8 +718,9 @@ export function VideoLessonsSection({
   const handlePlayClick = (item: VideoItem) => {
     if (item.paymentLocked) {
       toast({
-        title: "🔒 محتوى خاص بالمشتركين المدفوعين",
-        description: "أول فيديوهين فقط مجانيين كمعاينة. لباقي دروس الكورس، يرجى سداد الاشتراك واختيار الإيصال من القائمة الرئيسية ليفعّله الأدمن فوريًا.",
+        variant: "destructive",
+        title: "🔒 يلزم سداد اشتراك الكورس أولاً",
+        description: `عذراً، هذا الدرس من محتوى "${item.category}" المخصص للمشتركين المدفوعين. لفتح باقي الكورس، يرجى تحويل قيمة الاشتراك ورفع صورة الإيصال ليتم التفعيل فوريًا.`,
       });
       return;
     }

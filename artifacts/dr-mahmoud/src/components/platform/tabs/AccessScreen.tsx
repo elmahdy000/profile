@@ -131,7 +131,7 @@ export function AccessScreen({
         method: "POST",
         body: JSON.stringify(form),
       });
-      setMessage(result.message || "تم تسجيل بيانات حسابك بنجاح! يلزم رفع صورة إيصال الدفع وتأكيد التفعيل من الإدارة أولاً.");
+      setMessage(result.message || "تم تسجيل حسابك بنجاح! احتفظ بكود الدخول أدناه واستخدمه فوراً لدخول المنصة ومتابعة المحتوى.");
       if (result.accessCode) setRegisteredCode(result.accessCode);
       setForm({
         name: "",
