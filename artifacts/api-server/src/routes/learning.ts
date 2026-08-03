@@ -38,6 +38,7 @@ import {
   canStudentAccessLearningMode,
   getApprovedStudent,
   getStudentAllowedCategories,
+  isGradeMatch,
   requireStudent,
   STUDENT_COOKIE,
 } from "../middleware/student-auth";
@@ -426,8 +427,11 @@ async function getAutomaticCourseAssignments(stage: string) {
     .where(eq(coursesTable.isPublished, true));
   const matching = courses.filter((course) => {
     const courseStages = course.stages ?? [];
-    if (courseStages.length === 0) return true; // Courses with no stage restriction are available to all students
-    return courseStages.some((cs) => cs.trim().toLocaleLowerCase("ar") === normalizedStage);
+    if (courseStages.length === 0) return false;
+    return courseStages.some((cs) => {
+      const cNorm = cs.trim().toLocaleLowerCase("ar");
+      return cNorm === normalizedStage || isGradeMatch(stage, cs);
+    });
   });
   return {
     enrolledCourseIds: matching.map((course) => course.id),

@@ -1,6 +1,6 @@
 import { createHash } from "crypto";
 import type { Request, Response, NextFunction } from "express";
-import { and, eq, gt, ne } from "drizzle-orm";
+import { and, eq, gt } from "drizzle-orm";
 import { db, studentSessionsTable, studentsTable } from "@workspace/db";
 import { getAcademicStageDimensions } from "../lib/academic-stages";
 
@@ -43,44 +43,47 @@ export function canStudentAccessCategory(
     student.grade === "أخرى" ? student.otherGradeDetail : student.grade
   );
 
-  // Baccalaureate / Secondary track title aliases
+  // Baccalaureate / Secondary track title aliases - MUST match specific grade
   if (
     normalized.includes("بكالوريا") ||
     normalized.includes("ثانوي") ||
     normalized.includes("baccalaureate")
   ) {
     if (
-      studentStage.includes("بكالوريا") ||
-      studentStage.includes("ثانوي") ||
-      studentStage.includes("baccalaureate")
+      (studentStage.includes("بكالوريا") ||
+        studentStage.includes("ثانوي") ||
+        studentStage.includes("baccalaureate")) &&
+      isGradeMatch(studentStage, category)
     ) {
       return true;
     }
   }
 
-  // Computer Science / University track title aliases
+  // Computer Science / University track title aliases - MUST match specific grade
   if (
     normalized.includes("حاسبات") ||
     normalized.includes("computer") ||
     normalized.includes("cs")
   ) {
     if (
-      studentStage.includes("حاسبات") ||
-      studentStage.includes("computer") ||
-      studentStage.includes("cs")
+      (studentStage.includes("حاسبات") ||
+        studentStage.includes("computer") ||
+        studentStage.includes("cs")) &&
+      isGradeMatch(studentStage, category)
     ) {
       return true;
     }
   }
 
-  // Engineering track title aliases
+  // Engineering track title aliases - MUST match specific grade
   if (
     normalized.includes("هندسة") ||
     normalized.includes("engineering")
   ) {
     if (
-      studentStage.includes("هندسة") ||
-      studentStage.includes("engineering")
+      (studentStage.includes("هندسة") ||
+        studentStage.includes("engineering")) &&
+      isGradeMatch(studentStage, category)
     ) {
       return true;
     }
@@ -90,7 +93,7 @@ export function canStudentAccessCategory(
 }
 
 
-function isGradeMatch(
+export function isGradeMatch(
   studentStage: string | null | undefined,
   contentStage: string | null | undefined,
 ): boolean {
@@ -257,15 +260,15 @@ export async function getApprovedStudent(
       and(
         eq(studentSessionsTable.tokenHash, tokenHash),
         gt(studentSessionsTable.expiresAt, new Date()),
-        ne(studentsTable.status, "suspended"),
+        eq(studentsTable.status, "approved"),
       ),
     )
     .limit(1);
   const reqDeviceId = String(req.headers["x-device-id"] ?? req.query.deviceId ?? "").trim();
   const student = row?.student ?? null;
-  if (student && reqDeviceId) {
+  if (student) {
     const approvedDevices = Array.isArray(student.boundDevices) ? student.boundDevices : (student.deviceId ? [student.deviceId] : []);
-    if (approvedDevices.length > 0 && !approvedDevices.includes(reqDeviceId)) {
+    if (approvedDevices.length > 0 && (!reqDeviceId || !approvedDevices.includes(reqDeviceId))) {
       return null;
     }
   }
