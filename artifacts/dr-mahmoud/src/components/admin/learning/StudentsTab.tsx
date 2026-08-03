@@ -413,7 +413,7 @@ export function StudentsTab({
                 <div className="flex items-center justify-between">
                   <div>
                     <strong className="text-sm font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
-                      📚 الكورسات المتاحة للطالب (التحكم الخاص)
+                      الكورسات المتاحة للطالب (التحكم الخاص)
                     </strong>
                     <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                       حدد الكورسات والمواد التي يستطيع هذا الطالب مشاهدتها بالظبط.

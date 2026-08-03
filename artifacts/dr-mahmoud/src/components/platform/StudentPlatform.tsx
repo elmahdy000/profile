@@ -366,12 +366,12 @@ export function StudentPlatform() {
             playNotificationSound();
             if (coursesChanged) {
               toast({
-                title: "📚 تم تفعيل المواد الدراسية الخاصة بك!",
-                description: "قام الأدمن بتحديث وتحديد الكورسات المتاحة لك، تم فتح المحتوى بنجاح 🎉",
+                title: "تم تفعيل المواد الدراسية الخاصة بك",
+                description: "قام الأدمن بتحديث وتحديد الكورسات المتاحة لك، تم فتح المحتوى بنجاح.",
               });
             } else if (statusChanged) {
               toast({
-                title: "🎉 تم تحديث حسابك!",
+                title: "تم تحديث حسابك",
                 description: "تم تفعيل الاشتراك وفك تشغيل باقي الدروس والاختبارات بنجاح.",
               });
             }
