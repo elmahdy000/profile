@@ -210,10 +210,9 @@ export function canStudentAccessContent(
     ? assignedCourseId || categoryMatches
     : categoryMatches;
 
-  // Files published directly to educational stages are independent from a
-  // course enrollment. Their audience is the student's registered stage.
-  if (!courseId && !isGeneralContent && !hasCategoryGeneralStage) {
-    return stageMatches;
+  // Content with specific target stages MUST match the student's registered stage
+  if (!isGeneralContent && !hasCategoryGeneralStage) {
+    if (!stageMatches) return false;
   }
 
   // Accounts with explicit course assignments MUST match their assigned course.
@@ -224,7 +223,7 @@ export function canStudentAccessContent(
   if (isGeneralContent || hasCategoryGeneralStage) {
     return categoryMatches || stageMatches;
   }
-  return stageMatches || categoryMatches;
+  return stageMatches && categoryMatches;
 }
 
 export function canStudentAccessLearningMode(
