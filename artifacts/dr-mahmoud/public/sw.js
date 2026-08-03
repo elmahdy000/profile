@@ -1,6 +1,6 @@
 // Service Worker for Dr. Mahmoud Elmahdy PWA
 // Version — bump this to force cache refresh
-const CACHE_VERSION = "drelmahdy-v1";
+const CACHE_VERSION = "drelmahdy-v2-stage-kpis";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
