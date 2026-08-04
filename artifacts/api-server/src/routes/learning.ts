@@ -2300,7 +2300,13 @@ router.get("/learning/progress", requireStudent, async (_req, res, next) => {
 
     const motivation = generateStudentMotivationMessage(student.name, overallProgress);
 
-    res.json(rows);
+    res.json({
+      rows,
+      overallProgress,
+      completedCount,
+      totalCount: totalAccessibleCount,
+      motivation,
+    });
   } catch (error) {
     next(error);
   }

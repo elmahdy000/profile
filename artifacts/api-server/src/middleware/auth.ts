@@ -165,7 +165,6 @@ export function getAdminIdentity(req: Request): { role: "superadmin" | "subadmin
           process.env.SUBADMIN_PASSWORD,
           process.env.SUBADMIN_AHMED_PASS,
           process.env.SUBADMIN_ASSISTANT_PASS,
-          "prof1234",
         ].filter((s): s is string => Boolean(s) && typeof s === "string"),
       ),
     );
