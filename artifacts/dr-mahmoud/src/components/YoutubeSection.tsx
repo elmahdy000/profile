@@ -803,13 +803,25 @@ export function VideoLessonsSection({
 
   function studentCanSeeVideo(item: VideoItem): boolean {
     if (!student) return true;
+
+    // Explicitly enrolled courses or categories by admin MUST be visible immediately
+    const enrolledIds = (student as any).enrolledCourseIds ?? [];
+    const enrolledCats = (student as any).enrolledCategories ?? [];
+    const norm = (s: string) => String(s ?? "").trim().toLowerCase();
+
+    if (item.courseId && enrolledIds.includes(Number(item.courseId))) {
+      return true;
+    }
+    if (item.category && enrolledCats.some((cat: string) => norm(cat) === norm(item.category))) {
+      return true;
+    }
+
     const grade = studentGrade || "";
     const stageArr: string[] = Array.isArray((item as any).stages) && (item as any).stages.length
       ? (item as any).stages
       : item.stage ? [item.stage] : [];
     if (stageArr.length === 0) return true;
-    const normalize = (s: string) => String(s ?? "").trim().toLowerCase();
-    const sn = normalize(grade);
+    const sn = norm(grade);
 
     const getSystem = (val: string) => {
       if (val.includes("بكالوريا") || val.includes("baccalaureate")) return "baccalaureate";
@@ -820,7 +832,7 @@ export function VideoLessonsSection({
     const studentSys = getSystem(sn);
 
     return stageArr.some((s) => {
-      const cn = normalize(s);
+      const cn = norm(s);
       if (cn === "عام" || cn === "") return true;
 
       const contentSys = getSystem(cn);
