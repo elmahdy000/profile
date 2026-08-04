@@ -419,20 +419,14 @@ function normalizeStringList(value: unknown): string[] {
   );
 }
 
-async function getAutomaticCourseAssignments(stage: string) {
-  const normalizedStage = stage.trim().toLocaleLowerCase("ar");
+async function getAutomaticCourseAssignments(student: typeof studentsTable.$inferSelect) {
   const courses = await db
     .select()
     .from(coursesTable)
     .where(eq(coursesTable.isPublished, true));
-  const matching = courses.filter((course) => {
-    const courseStages = course.stages ?? [];
-    if (courseStages.length === 0) return false;
-    return courseStages.some((cs) => {
-      const cNorm = cs.trim().toLocaleLowerCase("ar");
-      return cNorm === normalizedStage || isGradeMatch(stage, cs);
-    });
-  });
+  const matching = courses.filter((course) =>
+    canStudentAccessContent(student, course.category, null, course.stages, course.id)
+  );
   return {
     enrolledCourseIds: matching.map((course) => course.id),
     enrolledCategories: Array.from(new Set(matching.map((course) => course.title))),
@@ -441,8 +435,7 @@ async function getAutomaticCourseAssignments(stage: string) {
 
 async function ensureAutomaticCourseAssignments(student: typeof studentsTable.$inferSelect) {
   if ((student.enrolledCourseIds ?? []).length || (student.enrolledCategories ?? []).length) return student;
-  const stage = student.grade === "أخرى" ? student.otherGradeDetail || student.grade : student.grade;
-  const automaticAssignments = await getAutomaticCourseAssignments(stage || "");
+  const automaticAssignments = await getAutomaticCourseAssignments(student);
   if (!automaticAssignments.enrolledCourseIds.length) return student;
   const [updated] = await db
     .update(studentsTable)
@@ -604,7 +597,16 @@ router.post(
           accessCode,
           approvedAt: new Date(),
           paymentStatus: "unpaid",
-          ...(await getAutomaticCourseAssignments(grade === "أخرى" ? otherGradeDetail || grade : grade)),
+          ...(await getAutomaticCourseAssignments({
+            grade,
+            otherGradeDetail,
+            educationSystem,
+            educationGrade,
+            schoolType,
+            academicTrack,
+            enrolledCategories: [],
+            enrolledCourseIds: [],
+          } as any)),
         })
         .returning();
 
