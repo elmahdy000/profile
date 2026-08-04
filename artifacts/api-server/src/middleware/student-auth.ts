@@ -236,7 +236,8 @@ export function canStudentAccessContent(
   }
 
   if (isGeneralContent || hasCategoryGeneralStage) {
-    return categoryMatches || stageMatches;
+    // General content still requires matching category unless the student stage explicitly matches
+    return categoryMatches || (stageMatches && canStudentAccessCategory(student, category));
   }
   return stageMatches && categoryMatches;
 }
