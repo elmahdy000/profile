@@ -71,6 +71,8 @@ import {
   Phone,
   MessageCircle,
   BarChart3,
+  ClipboardCheck,
+  FileCheck2,
 } from "lucide-react";
 import { AdminSettings } from "./AdminSettings";
 import { AdminLearning } from "./AdminLearning";
