@@ -1605,15 +1605,15 @@ export default function AdminDashboard() {
               <SidebarItem icon={Mic} label="البودكاست" active={activeTab === "podcasts"} onClick={() => setActiveTab("podcasts")} />
               <SidebarItem icon={Library} label="المناهج التعليمية" active={activeTab === "curriculums"} onClick={() => setActiveTab("curriculums")} />
               <SidebarItem icon={VideoIcon} label="مكتبة الفيديوهات والقوائم" active={activeTab === "videos"} onClick={() => setActiveTab("videos")} />
-              <SidebarItem icon={Upload} label="🎬 رفع فيديو جديد" active={activeTab === "upload-video"} onClick={() => openVideoModal("add")} variant="featured" />
+              <SidebarItem icon={Upload} label="رفع فيديو جديد" active={activeTab === "upload-video"} onClick={() => openVideoModal("add")} variant="featured" />
               <span className="block px-3 pb-1 pt-4 text-[10px] font-black uppercase tracking-wider text-slate-400">إدارة الطلاب والاشتراكات</span>
-              <SidebarItem icon={Users} label="🎓 الطلاب والتفعيل" active={activeTab === "learning" && learningSubTab === "students"} onClick={() => { setActiveTab("learning"); setLearningSubTab("students"); }} />
-              <SidebarItem icon={FileCheck2} label="💳 إيصالات الدفع" active={activeTab === "learning" && learningSubTab === "payments"} onClick={() => { setActiveTab("learning"); setLearningSubTab("payments"); }} />
-              <SidebarItem icon={MessageCircle} label="🔔 إرسال إشعارات" active={activeTab === "learning" && learningSubTab === "notifications"} onClick={() => { setActiveTab("learning"); setLearningSubTab("notifications"); }} />
-              <SidebarItem icon={FileText} label="📑 المذكرات والملفات" active={activeTab === "learning" && learningSubTab === "files"} onClick={() => { setActiveTab("learning"); setLearningSubTab("files"); }} />
-              <SidebarItem icon={ClipboardCheck} label="📝 الاختبارات" active={activeTab === "learning" && learningSubTab === "quizzes"} onClick={() => { setActiveTab("learning"); setLearningSubTab("quizzes"); }} />
-              <SidebarItem icon={CheckCircle2} label="📊 نتائج الامتحانات" active={activeTab === "learning" && learningSubTab === "results"} onClick={() => { setActiveTab("learning"); setLearningSubTab("results"); }} />
-              <SidebarItem icon={BarChart3} label="📈 التقارير" active={activeTab === "learning" && learningSubTab === "reports"} onClick={() => { setActiveTab("learning"); setLearningSubTab("reports"); }} />
+              <SidebarItem icon={Users} label="الطلاب والتفعيل" active={activeTab === "learning" && learningSubTab === "students"} onClick={() => { setActiveTab("learning"); setLearningSubTab("students"); }} />
+              <SidebarItem icon={FileCheck2} label="إيصالات الدفع" active={activeTab === "learning" && learningSubTab === "payments"} onClick={() => { setActiveTab("learning"); setLearningSubTab("payments"); }} />
+              <SidebarItem icon={MessageCircle} label="إرسال إشعارات" active={activeTab === "learning" && learningSubTab === "notifications"} onClick={() => { setActiveTab("learning"); setLearningSubTab("notifications"); }} />
+              <SidebarItem icon={FileText} label="المذكرات والملفات" active={activeTab === "learning" && learningSubTab === "files"} onClick={() => { setActiveTab("learning"); setLearningSubTab("files"); }} />
+              <SidebarItem icon={ClipboardCheck} label="الاختبارات" active={activeTab === "learning" && learningSubTab === "quizzes"} onClick={() => { setActiveTab("learning"); setLearningSubTab("quizzes"); }} />
+              <SidebarItem icon={CheckCircle2} label="نتائج الامتحانات" active={activeTab === "learning" && learningSubTab === "results"} onClick={() => { setActiveTab("learning"); setLearningSubTab("results"); }} />
+              <SidebarItem icon={BarChart3} label="التقارير" active={activeTab === "learning" && learningSubTab === "reports"} onClick={() => { setActiveTab("learning"); setLearningSubTab("reports"); }} />
 
               <span className="block px-3 pb-1 pt-4 text-[10px] font-black uppercase tracking-wider text-slate-400">النظام</span>
               <SidebarItem icon={BarChart3} label="تقرير نشاط الطلاب (Realtime)" active={activeTab === "student-analytics"} onClick={() => setActiveTab("student-analytics")} />
@@ -1726,49 +1726,49 @@ export default function AdminDashboard() {
 
               <SidebarItem
                 icon={Users}
-                label="🎓 قائمة الطلاب والتفعيل"
+                label="قائمة الطلاب والتفعيل"
                 active={activeTab === "learning" && learningSubTab === "students"}
                 onClick={() => { setActiveTab("learning"); setLearningSubTab("students"); }}
               />
 
               <SidebarItem
                 icon={FileCheck2}
-                label="💳 إيصالات الدفع والاشتراكات"
+                label="إيصالات الدفع والاشتراكات"
                 active={activeTab === "learning" && learningSubTab === "payments"}
                 onClick={() => { setActiveTab("learning"); setLearningSubTab("payments"); }}
               />
 
               <SidebarItem
                 icon={MessageCircle}
-                label="🔔 إرسال إشعارات للطلاب"
+                label="إرسال إشعارات للطلاب"
                 active={activeTab === "learning" && learningSubTab === "notifications"}
                 onClick={() => { setActiveTab("learning"); setLearningSubTab("notifications"); }}
               />
 
               <SidebarItem
                 icon={FileText}
-                label="📑 المذكرات والملفات (PDF)"
+                label="المذكرات والملفات (PDF)"
                 active={activeTab === "learning" && learningSubTab === "files"}
                 onClick={() => { setActiveTab("learning"); setLearningSubTab("files"); }}
               />
 
               <SidebarItem
                 icon={ClipboardCheck}
-                label="📝 بنك الاختبارات والكويزات"
+                label="بنك الاختبارات والكويزات"
                 active={activeTab === "learning" && learningSubTab === "quizzes"}
                 onClick={() => { setActiveTab("learning"); setLearningSubTab("quizzes"); }}
               />
 
               <SidebarItem
                 icon={CheckCircle2}
-                label="📊 نتائج امتحانات الطلاب"
+                label="نتائج امتحانات الطلاب"
                 active={activeTab === "learning" && learningSubTab === "results"}
                 onClick={() => { setActiveTab("learning"); setLearningSubTab("results"); }}
               />
 
               <SidebarItem
                 icon={BarChart3}
-                label="📈 تقارير وأرقام الطلاب"
+                label="تقارير وأرقام الطلاب"
                 active={activeTab === "learning" && learningSubTab === "reports"}
                 onClick={() => { setActiveTab("learning"); setLearningSubTab("reports"); }}
               />
