@@ -115,21 +115,19 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
   const [studentInfo, setStudentInfo] = useState<{ name: string; phone: string } | null>(null);
   const [wmPosition, setWmPosition] = useState<{ top: string; left: string }>({ top: "10%", left: "15%" });
 
-  // Floating watermark: jumps to a random non-obstructive location every 7s
+  // Non-obstructive corner watermark: alternates quietly between top corners every 12s
   useEffect(() => {
     if (!playing) return;
     const interval = setInterval(() => {
       const positions = [
-        { top: "12%", left: "12%" },
-        { top: "12%", left: "65%" },
-        { top: "45%", left: "20%" },
-        { top: "45%", left: "60%" },
-        { top: "75%", left: "25%" },
-        { top: "75%", left: "70%" },
+        { top: "6%", left: "4%" },
+        { top: "6%", left: "72%" },
+        { top: "8%", left: "6%" },
+        { top: "8%", left: "70%" },
       ];
       const nextPos = positions[Math.floor(Math.random() * positions.length)];
       setWmPosition(nextPos);
-    }, 7000);
+    }, 12000);
     return () => clearInterval(interval);
   }, [playing]);
 
@@ -557,7 +555,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                   {studentInfo && (
                     <div
                       style={{ top: wmPosition.top, left: wmPosition.left }}
-                      className="absolute z-10 pointer-events-none select-none opacity-25 text-[10px] font-mono text-white/70 bg-black/30 backdrop-blur-[1px] px-2.5 py-0.5 rounded-full border border-white/10 shadow-2xs transition-all duration-1000 ease-in-out dir-ltr"
+                      className="absolute z-10 pointer-events-none select-none opacity-20 text-[9px] font-mono text-white/80 bg-black/40 px-2 py-0.5 rounded-md border border-white/10 transition-all duration-1000 ease-in-out dir-ltr"
                     >
                       {studentInfo.name} • {studentInfo.phone}
                     </div>
