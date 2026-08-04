@@ -555,6 +555,11 @@ export function DashboardTab({
     );
   }
 
+  const attemptedQuizzes = quizzes.filter((q) => (q.bestScore !== undefined && q.bestScore !== null));
+  const realAverageResult = attemptedQuizzes.length
+    ? Math.round(attemptedQuizzes.reduce((acc, curr) => acc + (curr.bestScore || 0), 0) / attemptedQuizzes.length)
+    : 0;
+
   return (
     <section className="space-y-4 text-right max-w-[1400px] w-full" dir="rtl">
       {/* 1. Header */}
@@ -592,8 +597,8 @@ export function DashboardTab({
         completedLessonsCount={completedLessonsCount}
         availableQuizzesCount={availableQuizzesCount}
         newFilesCount={files.length}
-        hasQuizResults={completedQuizzesCount > 0}
-        averageResult={85}
+        hasQuizResults={attemptedQuizzes.length > 0}
+        averageResult={realAverageResult}
       />
 
       {/* 3. Overall Progress Summary */}
