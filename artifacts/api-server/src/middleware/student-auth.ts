@@ -122,6 +122,11 @@ export function isGradeMatch(
 
   const studentSystem = getSystem(sNorm);
   const contentSystem = getSystem(cNorm);
+  // If the student belongs to a known system (baccalaureate/university/secondary)
+  // and the content has NO recognizable system marker, deny access by default.
+  // This prevents a baccalaureate "سنة ثانية" student from matching a university
+  // course whose stage is ambiguously labelled (e.g. "سنة ثانية" without "حاسبات").
+  if (studentSystem && !contentSystem) return false;
   if (studentSystem && contentSystem && studentSystem !== contentSystem) return false;
 
   const studentTrack = getUniversityTrack(sNorm);
