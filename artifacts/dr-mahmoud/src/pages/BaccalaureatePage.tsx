@@ -362,14 +362,32 @@ export default function BaccalaureatePage() {
   const whatsapp = get(SETTINGS_KEYS.CONTACT_WHATSAPP, "201066711545");
 
   useEffect(() => {
-    document.title = "تأسيس البرمجة والبكالوريا علوم الحاسب | د. محمود المهدي";
+    document.title = "برمجة البكالوريا المصرية أونلاين | د. محمود المهدي";
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) {
       metaDesc.setAttribute(
         "content",
-        "أقوى برنامج تعليمي لتأسيس البكالوريا البرمجية وطلاب STEM والثانوية العامة بلغات Python و C++ والتفكير المنطقي تحت إشراف د. محمود المهدي."
+        "شرح منهج برمجة البكالوريا المصرية لأولى وثانية ثانوي أونلاين: Python والتفكير المنطقي والمشروعات والاختبارات مع د. محمود المهدي. احجز تقييمًا مجانيًا."
       );
     }
+
+    const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    canonical?.setAttribute("href", "https://drelmahdy.com/baccalaureate");
+
+    const socialMeta: Record<string, string> = {
+      'meta[property="og:type"]': "website",
+      'meta[property="og:url"]': "https://drelmahdy.com/baccalaureate",
+      'meta[property="og:title"]': "برمجة البكالوريا المصرية أونلاين | د. محمود المهدي",
+      'meta[property="og:description"]': "شرح وتأسيس منهج برمجة البكالوريا المصرية لأولى وثانية ثانوي مع تدريبات واختبارات ومتابعة أونلاين.",
+      'meta[property="og:image"]': "https://drelmahdy.com/opengraph-baccalaureate-2026.png",
+      'meta[name="twitter:title"]': "برمجة البكالوريا المصرية أونلاين | د. محمود المهدي",
+      'meta[name="twitter:description"]': "شرح منهج برمجة البكالوريا المصرية لأولى وثانية ثانوي أونلاين، من الصفر وحتى المشروعات والاختبارات.",
+      'meta[name="twitter:image"]': "https://drelmahdy.com/opengraph-baccalaureate-2026.png"
+    };
+
+    Object.entries(socialMeta).forEach(([selector, content]) => {
+      document.querySelector<HTMLMetaElement>(selector)?.setAttribute("content", content);
+    });
   }, []);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -433,6 +451,25 @@ export default function BaccalaureatePage() {
     }))
   };
 
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "الرئيسية",
+        "item": "https://drelmahdy.com/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "برمجة البكالوريا المصرية",
+        "item": "https://drelmahdy.com/baccalaureate"
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/20" dir="rtl">
       <script
@@ -442,6 +479,10 @@ export default function BaccalaureatePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       {/* Minimal Sticky Navbar */}
       <nav className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-border">
@@ -496,15 +537,15 @@ export default function BaccalaureatePage() {
 
               {/* Main Title */}
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-foreground mb-6 leading-tight tracking-tight">
-                ابنك هيتعلم برمجة بجد..<br />
+                شرح برمجة البكالوريا المصرية<br />
                 <span className="text-primary">
-                  مش بس عشان ينجح في الامتحان
+                  من الصفر وحتى الامتحان والمشروع
                 </span>
               </h1>
 
               {/* Description */}
               <p className="text-foreground/70 text-base md:text-lg lg:text-xl leading-relaxed mb-10 max-w-2xl">
-                منهج تفاعلي لطلاب الثانوي العام وبكالوريا الـ STEM. بنأسس التفكير المنطقي والـ Problem Solving بلغة Python وبمشاريع حقيقية تخليهم جاهزين للمستقبل.
+                كورس أونلاين لطلاب أولى وثانية ثانوي في نظام البكالوريا المصرية. نشرح منهج البرمجة وعلوم الحاسب خطوة بخطوة، من التفكير المنطقي وPython إلى حل الأسئلة وتنفيذ مشروعات عملية.
               </p>
 
               {/* Hero CTAs */}

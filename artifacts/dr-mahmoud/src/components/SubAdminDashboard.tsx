@@ -55,7 +55,7 @@ export function SubAdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#F6F8FC] text-[#0F172A] font-sans dir-rtl">
+    <div className="admin-dashboard-shell min-h-screen w-full bg-[#F6F8FC] text-[#0F172A] font-sans dir-rtl">
       {/* Mobile Drawer Trigger */}
       <div className="lg:hidden flex items-center justify-between p-4 bg-white border-b border-border sticky top-0 z-40">
         <div className="flex items-center gap-2">
@@ -160,7 +160,7 @@ function SubAdminLogin({ onSuccess }: { onSuccess: () => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password) return;
+    if (!username.trim() || !password) return;
     setIsLoading(true);
     setError("");
 
@@ -209,12 +209,13 @@ function SubAdminLogin({ onSuccess }: { onSuccess: () => void }) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-[#0F172A] mb-1.5">اسم المشرف (اختياري / مثل: ahmed)</label>
+            <label className="block text-xs font-bold text-[#0F172A] mb-1.5">اسم المستخدم (مطلوب)</label>
             <input
               type="text"
+              required
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="مثال: ahmed"
+              placeholder="ahmed"
               className="w-full bg-[#F6F8FC] border border-[#E4EAF2] rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0866D9]"
             />
           </div>

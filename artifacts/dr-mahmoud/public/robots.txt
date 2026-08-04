@@ -3,14 +3,4 @@ Allow: /
 Disallow: /admin
 Disallow: /api/
 
-# Google
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 1
-
-# Bing
-User-agent: bingbot
-Allow: /
-Crawl-delay: 2
-
 Sitemap: https://drelmahdy.com/sitemap.xml

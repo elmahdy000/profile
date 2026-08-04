@@ -10,8 +10,8 @@ export interface VideoItem {
   title: string;
   description?: string | null;
   youtubeUrl: string;
-  type: "video" | "playlist";
-  order: number;
+  type?: "video" | "playlist";
+  order?: number;
   isProtected?: boolean;
   isPublished?: boolean;
   thumbnailUrl?: string | null;

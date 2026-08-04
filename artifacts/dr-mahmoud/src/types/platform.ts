@@ -74,10 +74,22 @@ export type VideoSummary = {
   stages?: string[];
   subject?: string | null;
   learningMode?: "online" | "offline" | "both";
+  tags?: string[];
   youtubeUrl: string;
+  type?: "video" | "playlist";
   order?: number;
   description?: string | null;
   durationText?: string | null;
+  isProtected?: boolean;
+  isPublished?: boolean;
+  thumbnailUrl?: string | null;
+  lessonsCount?: number | null;
+  level?: string | null;
+  pdfFileId?: number | null;
+  attachments?: any[];
+  quizId?: number | null;
+  maxViews?: number | null;
+  viewCount?: number;
   paymentLocked?: boolean;
 };
 

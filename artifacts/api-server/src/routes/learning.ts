@@ -514,6 +514,11 @@ router.post(
         String(req.body.otherGradeDetail ?? "").trim() || null;
       const learningMode = String(req.body.learningMode ?? "online").trim();
 
+      if (hasStructuredStage && educationSystem === "general_secondary") {
+        res.status(400).json({ error: "التسجيل متاح لطلاب البكالوريا والجامعة فقط" });
+        return;
+      }
+
       if (name.length < 2 || !/^(?:01[0125]\d{8}|\+?\d{10,15})$/.test(phone)) {
         res.status(400).json({ error: "الاسم ورقم الهاتف مطلوبان بشكل صحيح" });
         return;
@@ -963,6 +968,10 @@ router.patch("/admin/payment-receipts/:id", requireAdmin, async (req, res, next)
 
     if (!["approved", "rejected"].includes(status)) {
       res.status(400).json({ error: "الحالة لازم تكون approved أو rejected" });
+      return;
+    }
+    if (status === "rejected" && role !== "superadmin") {
+      res.status(403).json({ error: "رفض إيصالات الدفع متاح للمدير الرئيسي فقط" });
       return;
     }
     const [receipt] = await db

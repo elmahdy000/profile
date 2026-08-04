@@ -195,7 +195,7 @@ export function AcademyHome() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans" dir="rtl">
+    <div className="theme-adaptive min-h-screen bg-slate-50 text-slate-900 font-sans" dir="rtl">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }} />
       <Navbar />
 
@@ -207,7 +207,7 @@ export function AcademyHome() {
               
               {/* Right Content Column */}
               <div className="lg:col-span-7 space-y-5 text-right">
-                <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-xs font-bold text-blue-700 border border-blue-100">
+                <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-xs font-bold text-blue-700 border border-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-400/35">
                   <GraduationCap className="h-4 w-4 text-blue-600" />
                   برمجة البكالوريا المصرية • أونلاين لكل محافظات مصر
                 </span>
@@ -229,14 +229,14 @@ export function AcademyHome() {
                     </a>
                   </Button>
 
-                  <Button asChild size="lg" variant="outline" className="h-12 rounded-xl border-slate-300 bg-white px-6 font-bold text-slate-700 hover:bg-slate-50">
+                  <Button asChild size="lg" variant="outline" className="h-12 rounded-xl border-slate-300 bg-white px-6 font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100 dark:hover:bg-slate-800">
                     <a href="/platform">
                       <Laptop className="ml-2 h-4 w-4 text-blue-600" />
                       دخول الطالب
                     </a>
                   </Button>
 
-                  <Button asChild size="lg" variant="outline" className="h-12 rounded-xl border-blue-200 bg-blue-50/70 px-6 font-bold text-blue-800 hover:bg-blue-100">
+                  <Button asChild size="lg" variant="outline" className="h-12 rounded-xl border-blue-200 bg-blue-50/70 px-6 font-bold text-blue-800 hover:bg-blue-100 dark:border-blue-400/30 dark:bg-blue-500/10 dark:text-blue-200 dark:hover:bg-blue-500/20">
                     <a href="/parent">
                       <Users className="ml-2 h-4 w-4 text-blue-700" />
                       بوابة ولي الأمر
@@ -259,7 +259,7 @@ export function AcademyHome() {
                     ["بنك أسئلة", "تدريبات وتطبيقات متدرجة"],
                     ["متابعة مستوى", "تقارير وتقييم مستمر"],
                   ].map(([title, sub]) => (
-                    <div key={title} className="rounded-xl border border-slate-200 bg-slate-50/60 p-3 text-right">
+                    <div key={title} className="rounded-xl border border-slate-200 bg-slate-50/60 p-3 text-right dark:border-slate-700 dark:bg-slate-900/45">
                       <strong className="block text-xs font-black text-slate-900">{title}</strong>
                       <span className="mt-0.5 block text-[11px] font-semibold text-slate-500">{sub}</span>
                     </div>
@@ -293,7 +293,7 @@ export function AcademyHome() {
         <section aria-labelledby="problem-section-heading" className="bg-slate-50 py-12 md:py-16 border-b border-slate-200">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <header className="mx-auto max-w-3xl text-center mb-10">
-              <span className="inline-block rounded-full bg-blue-100/80 px-3.5 py-1 text-xs font-bold text-blue-700 tracking-normal">
+              <span className="inline-block rounded-full bg-blue-100/80 px-3.5 py-1 text-xs font-bold text-blue-700 tracking-normal dark:bg-blue-500/12 dark:text-blue-300 dark:border dark:border-blue-400/25">
                 المشكلة مش في قدرات الطالب
               </span>
               <h2 id="problem-section-heading" className="mt-3 text-2xl font-black text-slate-900 sm:text-3xl lg:text-4xl leading-tight">
@@ -311,24 +311,24 @@ export function AcademyHome() {
                   title: "الحفظ بدل الفهم",
                   description: "الطالب يحفظ شكل الكود، لكن أول ما السؤال يتغير مش بيعرف يحلل المطلوب أو يبدأ الحل.",
                   icon: Brain,
-                  accentColor: "text-amber-600 bg-amber-50 border-amber-200/60"
+                  accentColor: "text-amber-600 bg-amber-50 border-amber-200/60 dark:text-amber-300 dark:bg-amber-500/10 dark:border-amber-400/25"
                 },
                 {
                   title: "البداية من الكود مباشرة",
                   description: "بيبدأ يكتب أوامر قبل ما يفهم الفكرة، والمتغيرات، والشروط، وخطوات حل المشكلة.",
                   icon: Code2,
-                  accentColor: "text-rose-600 bg-rose-50 border-rose-200/60"
+                  accentColor: "text-rose-600 bg-rose-50 border-rose-200/60 dark:text-rose-300 dark:bg-rose-500/10 dark:border-rose-400/25"
                 },
                 {
                   title: "شرح بدون مسار واضح",
                   description: "فيديوهات ودروس منفصلة من غير ترتيب تدريجي يربط الفهم بالتطبيق والتدريب.",
                   icon: GitFork,
-                  accentColor: "text-indigo-600 bg-indigo-50 border-indigo-200/60"
+                  accentColor: "text-indigo-600 bg-indigo-50 border-indigo-200/60 dark:text-indigo-300 dark:bg-indigo-500/10 dark:border-indigo-400/25"
                 }
               ].map((card) => (
                 <article
                   key={card.title}
-                  className="group flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs hover:shadow-md hover:-translate-y-1 hover:border-slate-300 transition-all duration-200 text-right motion-reduce:hover:translate-y-0 motion-reduce:transition-none"
+                  className="group flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs hover:shadow-md hover:-translate-y-1 hover:border-slate-300 transition-all duration-200 text-right motion-reduce:hover:translate-y-0 motion-reduce:transition-none dark:border-slate-700 dark:bg-slate-900/45 dark:hover:border-slate-600"
                 >
                   <div>
                     <div className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border ${card.accentColor}`}>
@@ -346,7 +346,7 @@ export function AcademyHome() {
             </div>
 
             {/* Conclusion & Transition Strip */}
-            <div className="mt-10 rounded-2xl border border-blue-200/80 bg-gradient-to-r from-blue-50/70 via-white to-blue-50/70 p-6 md:p-8 text-center shadow-xs">
+            <div className="mt-10 rounded-2xl border border-blue-200/80 bg-gradient-to-r from-blue-50/70 via-white to-blue-50/70 p-6 md:p-8 text-center shadow-xs dark:border-blue-400/25 dark:from-blue-500/10 dark:via-slate-900/80 dark:to-blue-500/10">
               <div className="mx-auto flex max-w-3xl flex-col items-center gap-3">
                 <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm">
                   <Lightbulb className="h-5 w-5" aria-hidden="true" />

@@ -1,6 +1,5 @@
 import { X } from "lucide-react";
 import {
-  EDUCATION_SYSTEMS,
   SCHOOL_TYPES,
   SYSTEM_GRADES,
   TRACKS,
@@ -27,6 +26,11 @@ type Props = {
 
 const fieldClass =
   "h-[56px] w-full rounded-[12px] border border-[#CBD5E1] bg-[#F8FAFC] px-4 text-sm font-medium text-[#0F172A] placeholder-[#94A3B8] outline-none transition focus:border-[#3B82F6] focus:bg-white focus:ring-4 focus:ring-[#3B82F6]/12 shadow-xs";
+
+const REGISTRATION_SYSTEMS = [
+  { id: "baccalaureate" as const, label: "البكالوريا", description: "أولى أو تانية أو تالتة بكالوريا" },
+  { id: "university" as const, label: "الجامعة", description: "حاسبات ومعلومات أو هندسة" },
+];
 
 export function createDefaultRegistrationStage(): RegistrationStageSelection {
   return {
@@ -72,7 +76,7 @@ function completeSelection(
 export function RegistrationStageSelector({ value, onChange }: Props) {
   const system = value.educationSystem;
   const isUniversity = system === "university";
-  const systemLabel = EDUCATION_SYSTEMS.find((item) => item.id === system)?.label;
+  const systemLabel = REGISTRATION_SYSTEMS.find((item) => item.id === system)?.label;
   const gradeLabel = system
     ? SYSTEM_GRADES[system].find((item) => item.id === value.educationGrade)?.label
     : undefined;
@@ -96,37 +100,37 @@ export function RegistrationStageSelector({ value, onChange }: Props) {
   };
 
   return (
-    <fieldset className="space-y-4 rounded-[18px] border border-[#E2E8F0] bg-white p-4 sm:p-5">
-      <legend className="px-2 text-xs font-bold uppercase text-[#0866D9] tracking-wide">
-        1. النظام والمرحلة الدراسية
+    <fieldset className="space-y-4">
+      <legend className="sr-only">
+        النظام والمرحلة الدراسية
       </legend>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <label className="flex flex-col text-sm font-semibold text-[#334155]">
-          <span className="mb-2">النظام التعليمي <span className="text-[#EF4444]">*</span></span>
-          <select
-            id="education-system"
-            aria-label="النظام التعليمي"
-            value={system}
-            onChange={(event) =>
-              onChange(
-                completeSelection(
-                  event.target.value as EducationSystem,
-                  "",
-                  event.target.value === "university" ? "none" : "",
-                  "",
-                ),
-              )
-            }
-            required
-            className={fieldClass}
-          >
-            <option value="">اختر النظام</option>
-            {EDUCATION_SYSTEMS.map((item) => (
-              <option key={item.id} value={item.id}>{item.label}</option>
-            ))}
-          </select>
-        </label>
+      <div>
+        <span className="mb-2 block text-sm font-bold text-[#334155]">أنت في أي مرحلة؟ <span className="text-[#EF4444]">*</span></span>
+        <div className="grid grid-cols-2 gap-2.5">
+          {REGISTRATION_SYSTEMS.map((item) => {
+            const selected = system === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => onChange(completeSelection(item.id, "", item.id === "university" ? "none" : "", ""))}
+                className={`rounded-[14px] border p-3.5 text-right transition-all duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#3B82F6]/15 ${
+                  selected
+                    ? "border-[#3B82F6] bg-[#E8F1FF] text-[#0866D9] shadow-sm"
+                    : "border-[#CBD5E1] bg-white text-[#334155] hover:border-[#3B82F6]/50 hover:bg-blue-50/40"
+                }`}
+              >
+                <strong className="block text-sm font-black">{item.label}</strong>
+                <span className="mt-1 block text-[11px] leading-4 text-[#64748B]">{item.description}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
 
         {system && (
           <label className="flex flex-col text-xs font-bold text-foreground/80">
@@ -216,9 +220,9 @@ export function RegistrationStageSelector({ value, onChange }: Props) {
         )}
       </div>
 
-      {chips.length > 0 && (
-        <div aria-label="ملخص المرحلة المختارة" className="flex flex-wrap items-center gap-2 border-t border-border/50 pt-3 mt-3">
-          <span className="text-xs font-bold text-muted-foreground ml-1">المحدد:</span>
+      {value.grade && chips.length > 0 && (
+        <div aria-label="ملخص المرحلة المختارة" className="flex flex-wrap items-center gap-2 rounded-xl border border-blue-100 bg-blue-50/60 p-2.5">
+          <span className="text-xs font-bold text-[#64748B] ml-1">اختيارك:</span>
           {chips.map((chip) => (
             <span key={chip.key} className="inline-flex h-8 items-center gap-2 rounded-lg border border-primary/25 bg-primary/10 px-3 text-xs font-bold text-primary shadow-xs">
               {chip.label}

@@ -32,7 +32,7 @@ async function adminApi<T>(url: string, options: RequestInit = {}): Promise<T> {
   return data;
 }
 
-export function PaymentsTab({ receipts: propReceipts, onRefresh }: { receipts?: PaymentReceipt[]; onRefresh?: () => void }) {
+export function PaymentsTab({ receipts: propReceipts, onRefresh, role = "superadmin" }: { receipts?: PaymentReceipt[]; onRefresh?: () => void; role?: "superadmin" | "subadmin" }) {
   const { toast } = useToast();
   const [receipts, setReceipts] = useState<PaymentReceipt[]>(propReceipts || []);
   const [loading, setLoading] = useState(!propReceipts);
@@ -231,7 +231,7 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh }: { receipts?: 
                         >
                           <Eye className="h-3.5 w-3.5 ml-1" /> {previewId === receipt.id ? "إخفاء" : "معاينة الإيصال"}
                         </Button>
-                        {receipt.status !== "approved" && (
+                        {receipt.status === "pending" && (
                           <Button
                             type="button"
                             size="sm"
@@ -242,7 +242,7 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh }: { receipts?: 
                             <Check className="h-3.5 w-3.5 ml-1" /> قبول وتفعيل 💳
                           </Button>
                         )}
-                        {receipt.status !== "rejected" && (
+                        {role === "superadmin" && receipt.status === "pending" && (
                           <Button
                             type="button"
                             variant="outline"
@@ -273,7 +273,7 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh }: { receipts?: 
                   )}
 
                   {/* Reject Reason Form */}
-                  {showRejectForm === receipt.id && (
+                  {role === "superadmin" && showRejectForm === receipt.id && (
                     <tr>
                       <td colSpan={5} className="bg-rose-50/50 p-4 border-b border-rose-200">
                         <div className="max-w-md mx-auto space-y-2">

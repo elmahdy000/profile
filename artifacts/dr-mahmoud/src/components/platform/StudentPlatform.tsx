@@ -24,8 +24,6 @@ import {
   Trash2,
   Eye,
   EyeOff,
-  Moon,
-  Sun,
   Copy,
   Sparkles,
   AlertCircle,
@@ -47,6 +45,7 @@ import { FilesTab } from "./tabs/FilesTab";
 import { QuizzesTab } from "./tabs/QuizzesTab";
 import { DashboardTab } from "./tabs/DashboardTab";
 import { AccessScreen } from "./tabs/AccessScreen";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 import type {
   Student,
@@ -122,13 +121,6 @@ export function StudentPlatform() {
   const [dataLoading, setDataLoading] = useState(false);
   const [dataError, setDataError] = useState("");
   const latestNotificationIdRef = useRef(0);
-
-  // Restore saved theme on mount
-  useEffect(() => {
-    const saved = localStorage.getItem("dr_mahmoud_theme");
-    if (saved === "dark") document.documentElement.classList.add("dark");
-    else if (saved === "light") document.documentElement.classList.remove("dark");
-  }, []);
 
   // Quiz active states & Timer
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
@@ -521,19 +513,7 @@ export function StudentPlatform() {
             ))}
           </nav>
           <div className="mt-auto space-y-2 px-3 pb-4 border-t border-slate-800/60 pt-3">
-            <button
-              type="button"
-              onClick={() => {
-                const isDark = document.documentElement.classList.toggle("dark");
-                localStorage.setItem("dr_mahmoud_theme", isDark ? "dark" : "light");
-              }}
-              className="flex h-9 w-full items-center justify-center gap-2 rounded-xl border border-slate-800 text-[12px] font-bold text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
-            >
-              <Moon className="h-3.5 w-3.5 hidden dark:inline" />
-              <Sun className="h-3.5 w-3.5 dark:hidden" />
-              <span className="dark:hidden">الوضع الليلي</span>
-              <span className="hidden dark:inline">الوضع النهاري</span>
-            </button>
+            <ThemeToggle className="h-9 w-full text-slate-300 shadow-none dark:border-slate-800 dark:bg-transparent" />
             <a
               href={`https://wa.me/201066711545?text=${encodeURIComponent(
                 `مرحباً د. محمود 👋\n\nأود الاستفسار وحجز الكورس من داخل حسابي بالمنصة:\n- الاسم: ${student.name}\n- رقم الهاتف: ${student.phone}\n- المرحلة الدراسية: ${student.grade || "غير محدد"}\n- نظام التعليم: ${student.educationSystem || "غير محدد"}\n- المحافظة/المدينة: ${student.governorate || "غير محدد"} - ${student.city || ""}\n- وضع التعلم: ${student.learningMode === "offline" ? "أوفلاين بالزقازيق" : "أونلاين"}`
@@ -654,6 +634,7 @@ export function StudentPlatform() {
           ) : tab === "lessons" ? (
             <VideoLessonsSection
               student={student}
+              videos={videos}
               files={files}
               quizzes={quizzes}
               onStartQuiz={startQuiz}

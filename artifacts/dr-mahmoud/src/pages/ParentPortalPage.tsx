@@ -284,7 +284,7 @@ export function ParentPortal() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 py-12 px-4 sm:px-6 lg:px-8 font-sans text-right" dir="rtl">
+    <div className="theme-adaptive min-h-screen bg-slate-50/50 py-12 px-4 sm:px-6 lg:px-8 font-sans text-right" dir="rtl">
       <div className="max-w-4xl mx-auto space-y-8">
         
         {/* Portal Header */}

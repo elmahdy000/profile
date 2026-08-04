@@ -210,14 +210,24 @@ export function canStudentAccessContent(
     ? assignedCourseId || categoryMatches
     : categoryMatches;
 
-  // Content with specific target stages MUST match the student's registered stage
+  // Content with specific target stages MUST match the student's registered stage,
+  // UNLESS the student was explicitly enrolled in this specific course or category by an admin.
   if (!isGeneralContent && !hasCategoryGeneralStage) {
-    if (!stageMatches) return false;
+    if (!stageMatches && !assignedCourseId && !assignedCourse) return false;
   }
 
-  // Accounts with explicit course assignments MUST match their assigned course.
+  // Accounts with explicit course assignments MUST match their assigned course or category ONLY.
   if (hasExplicitCourseAssignments) {
-    return courseMatches;
+    const hasEnrolledCourses = (student.enrolledCourseIds ?? []).length > 0;
+    const hasEnrolledCategories = (student.enrolledCategories ?? []).length > 0;
+
+    if (courseId && hasEnrolledCourses) {
+      return assignedCourseId || assignedCourse;
+    }
+    if (hasEnrolledCategories) {
+      return assignedCourse || assignedCourseId;
+    }
+    return assignedCourseId;
   }
 
   if (isGeneralContent || hasCategoryGeneralStage) {

@@ -254,7 +254,7 @@ export default function AdminDashboard() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: passwordInput }),
+        body: JSON.stringify({ username: "mahmoud", password: passwordInput }),
       });
       if (!response.ok) throw new Error("invalid password");
       const data = await response.json();
@@ -1525,7 +1525,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F9FC] text-foreground dir-rtl">
+    <div className="admin-dashboard-shell min-h-screen bg-[#F7F9FC] text-foreground dir-rtl">
       {/* Top Admin Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-white px-4 py-3 shadow-sm lg:hidden">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
@@ -1618,7 +1618,7 @@ export default function AdminDashboard() {
       )}
 
       {/* Main Container */}
-      <div className="min-h-screen w-full bg-[#F6F8FC] text-[#0F172A] font-sans dir-rtl">
+      <div className="admin-dashboard-shell min-h-screen w-full bg-[#F6F8FC] text-[#0F172A] font-sans dir-rtl">
         {/* Fixed Navigation Sidebar (Desktop 288px) */}
         <aside className="fixed top-0 bottom-0 right-0 z-50 hidden w-[288px] border-l border-[#E4EAF2] bg-white lg:flex flex-col">
           <div className="flex h-full flex-col p-5">

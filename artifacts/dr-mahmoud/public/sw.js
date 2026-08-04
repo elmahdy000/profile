@@ -1,6 +1,6 @@
 // Service Worker for Dr. Mahmoud Elmahdy PWA
 // Version — bump this to force cache refresh
-const CACHE_VERSION = "drelmahdy-v2-stage-kpis";
+const CACHE_VERSION = "drelmahdy-v5-safe-refresh";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
@@ -52,24 +52,23 @@ self.addEventListener("fetch", (event) => {
   // API calls: network only (never cache)
   if (url.pathname.startsWith("/api/")) return;
 
-  // Static assets (JS/CSS/fonts/images): cache-first, fallback to network
+  // Built assets are hashed. Prefer the network so a stale worker can never
+  // pin an old application shell; use cache only when the network is offline.
   if (
     url.pathname.startsWith("/assets/") ||
     url.pathname.startsWith("/fonts/") ||
     /\.(png|jpg|jpeg|webp|svg|ico|woff2?|ttf|mp3|wav)$/.test(url.pathname)
   ) {
     event.respondWith(
-      caches.match(request).then(
-        (cached) =>
-          cached ||
-          fetch(request).then((response) => {
-            if (response.ok) {
-              const cloned = response.clone();
-              caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, cloned));
-            }
-            return response;
-          }),
-      ),
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const cloned = response.clone();
+            caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, cloned));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request).then((cached) => cached || Response.error())),
     );
     return;
   }

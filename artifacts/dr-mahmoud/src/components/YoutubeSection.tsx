@@ -659,11 +659,13 @@ function UnlockModal({
 
 export function VideoLessonsSection({
   student,
+  videos,
   files = [],
   quizzes = [],
   onStartQuiz,
 }: {
   student?: any;
+  videos?: VideoItem[];
   files?: any[];
   quizzes?: any[];
   onStartQuiz?: (quiz: any) => void;
@@ -682,7 +684,11 @@ export function VideoLessonsSection({
   const { toast } = useToast();
 
   const studentGrade = student?.grade === "أخرى" ? student?.otherGradeDetail : student?.grade;
-  const rawItems: VideoItem[] = dbVideos ? (dbVideos as VideoItem[]) : [];
+  // The authenticated student workspace already loads videos with the bound
+  // device header. Reuse that response instead of hiding lessons when this
+  // generic query (which is also used by non-student pages) is rejected.
+  const rawItems: VideoItem[] = videos ?? (dbVideos ? (dbVideos as VideoItem[]) : []);
+  const videosLoading = videos === undefined && isLoading;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -807,21 +813,27 @@ export function VideoLessonsSection({
       const cn = normalize(s);
       if (cn === "عام" || cn === "") return true;
       const sn = normalize(grade);
-      if (sn === cn) return true;
+      if (sn === cn || sn.includes(cn) || cn.includes(sn)) return true;
       const g1s = sn.includes("أولى") || sn.includes("الأول") || sn.includes("first") || sn.includes("year_1");
       const g1c = cn.includes("أولى") || cn.includes("الأول") || cn.includes("first") || cn.includes("year_1");
-      if (g1s || g1c) return g1s && g1c;
+      if (g1s && g1c) return true;
       const g2s = sn.includes("تانية") || sn.includes("الثاني") || sn.includes("second") || sn.includes("year_2");
       const g2c = cn.includes("تانية") || cn.includes("الثاني") || cn.includes("second") || cn.includes("year_2");
-      if (g2s || g2c) return g2s && g2c;
+      if (g2s && g2c) return true;
       const g3s = sn.includes("ثالثة") || sn.includes("الثالث") || sn.includes("third") || sn.includes("year_3");
       const g3c = cn.includes("ثالثة") || cn.includes("الثالث") || cn.includes("third") || cn.includes("year_3");
-      if (g3s || g3c) return g3s && g3c;
+      if (g3s && g3c) return true;
+      const g4s = sn.includes("رابعة") || sn.includes("الرابع") || sn.includes("fourth") || sn.includes("year_4");
+      const g4c = cn.includes("رابعة") || cn.includes("الرابع") || cn.includes("fourth") || cn.includes("year_4");
+      if (g4s && g4c) return true;
       return false;
     });
   }
 
-  const visibleItems = student ? items.filter(studentCanSeeVideo) : items;
+  // When videos prop is passed in the student platform, the server has already applied full
+  // access authorization (canStudentAccessContent). Re-filtering on the client is unnecessary.
+  const isStudentPlatform = videos !== undefined;
+  const visibleItems = (student && !isStudentPlatform) ? items.filter(studentCanSeeVideo) : items;
   const categories = Array.from(new Set(visibleItems.map((item) => item.category))).filter(Boolean);
 
   const totalCoursesCount = categories.length;
@@ -871,7 +883,7 @@ export function VideoLessonsSection({
         if (sortBy === "recent") return (b.id || 0) - (a.id || 0);
         if (sortBy === "least_completed") return a.progress - b.progress;
         if (sortBy === "completed_first") return b.progress - a.progress;
-        return a.order - b.order;
+        return (a.order ?? 0) - (b.order ?? 0);
       });
   };
 
@@ -911,7 +923,7 @@ export function VideoLessonsSection({
         />
 
         {/* 3. CONTINUE LEARNING SECTION */}
-        {continueLearningItems.length > 0 && !isLoading && (
+        {continueLearningItems.length > 0 && !videosLoading && (
           <ContinueLearningCard
             item={continueLearningItems[0]}
             secondaryItem={continueLearningItems[1] || null}
@@ -930,7 +942,7 @@ export function VideoLessonsSection({
         />
 
         {/* 5. COURSE SECTIONS & LESSON CARDS */}
-        {isLoading ? (
+        {videosLoading ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((idx) => (
               <div key={idx} className="h-72 animate-pulse rounded-2xl bg-[#E4EAF2]/60 dark:bg-[#172337]/60" />

@@ -173,7 +173,7 @@ export default function UniversityPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans" dir="rtl">
+    <div className="university-theme min-h-screen bg-background text-foreground font-sans" dir="rtl">
       {/* Navbar */}
       <nav className="sticky top-0 z-50 w-full bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80">
         <div className="container mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Check,
   ClipboardCheck,
@@ -290,6 +291,33 @@ export function AdminLearning({ role = "superadmin" }: { role?: "superadmin" | "
   const [quizStageSearch, setQuizStageSearch] = useState("");
   const [collapsedQuestions, setCollapsedQuestions] = useState<Set<number>>(new Set());
   const quizImportInputRef = useRef<HTMLInputElement>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    variant?: "default" | "destructive" | "warning";
+    onConfirm: () => Promise<void> | void;
+  } | null>(null);
+
+  const confirmAction = (opts: {
+    title: string;
+    message: string;
+    confirmText?: string;
+    variant?: "default" | "destructive" | "warning";
+    onConfirm: () => Promise<void> | void;
+  }) => {
+    setConfirmModal({
+      isOpen: true,
+      title: opts.title,
+      message: opts.message,
+      confirmText: opts.confirmText || "تأكيد",
+      cancelText: "إلغاء",
+      variant: opts.variant || "default",
+      onConfirm: opts.onConfirm,
+    });
+  };
 
   const resetQuizForm = () => {
     setEditingQuizId(null);
@@ -488,96 +516,126 @@ export function AdminLearning({ role = "superadmin" }: { role?: "superadmin" | "
       window.removeEventListener("focus", handleVisibility);
     };
   }, []);
-  const updateStudent = async (id: number, status: string) => {
+  const updateStudent = (id: number, status: string) => {
     const studentObj = students.find((s) => s.id === id);
     const studentName = studentObj ? studentObj.name : `طالب #${id}`;
     const actionText = status === "approved" ? "تفعيل وتأكيد حساب" : "إيقاف / تعليق حساب";
-    if (!confirm(`هل أنت متأكد من ${actionText} الطالب (${studentName})؟`)) return;
-
-    try {
-      const updated = await adminApi<Student>(`/api/admin/students/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ status }),
-      });
-      setStudents(prev => prev.map((s) => (s.id === id ? updated : s)));
-      toast({
-        title:
-          status === "approved"
-            ? "تم قبول الطالب وإصدار الكود"
-            : "تم تحديث حالة الطالب",
-      });
-    } catch (e) {
-      toast({ variant: "destructive", description: (e as Error).message });
-    }
+    confirmAction({
+      title: status === "approved" ? "قبول وتأكيد الطالب 🟢" : "تعليق حساب الطالب ⚠️",
+      message: `هل أنت متأكد من ${actionText} الطالب (${studentName})؟`,
+      confirmText: status === "approved" ? "تأكيد القبول" : "تعليق الحساب",
+      variant: status === "approved" ? "default" : "warning",
+      onConfirm: async () => {
+        try {
+          const updated = await adminApi<Student>(`/api/admin/students/${id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ status }),
+          });
+          setStudents(prev => prev.map((s) => (s.id === id ? updated : s)));
+          toast({
+            title: status === "approved" ? "تم قبول الطالب وإصدار الكود" : "تم تحديث حالة الطالب",
+          });
+        } catch (e) {
+          toast({ variant: "destructive", description: (e as Error).message });
+        }
+      },
+    });
   };
-  const updateStudentCourses = async (
+  const updateStudentCourses = (
     student: Student,
     enrolledCourseIds: number[],
   ) => {
-    if (!confirm(`هل أنت متأكد من تعديل المواد والكورسات المسجلة للطالب (${student.name})؟`)) return;
-    try {
-      const enrolledCategories = learningCourses
-        .filter((course) => enrolledCourseIds.includes(course.id))
-        .map((course) => course.title);
-      const updated = await adminApi<Student>(
-        `/api/admin/students/${student.id}`,
-        {
-          method: "PATCH",
-          body: JSON.stringify({ enrolledCourseIds, enrolledCategories }),
-        },
-      );
-      setStudents(prev => prev.map((s) => (s.id === student.id ? updated : s)));
-      toast({ title: "تم تحديث كورسات الطالب" });
-    } catch (e) {
-      toast({ variant: "destructive", description: (e as Error).message });
-    }
+    confirmAction({
+      title: "تعديل مواد وكورسات الطالب 📚",
+      message: `هل أنت متأكد من تعديل المواد والكورسات المسجلة للطالب (${student.name})؟`,
+      confirmText: "حفظ التغييرات",
+      onConfirm: async () => {
+        try {
+          const enrolledCategories = learningCourses
+            .filter((course) => enrolledCourseIds.includes(course.id))
+            .map((course) => course.title);
+          const updated = await adminApi<Student>(
+            `/api/admin/students/${student.id}`,
+            {
+              method: "PATCH",
+              body: JSON.stringify({ enrolledCourseIds, enrolledCategories }),
+            },
+          );
+          setStudents(prev => prev.map((s) => (s.id === student.id ? updated : s)));
+          toast({ title: "تم تحديث كورسات الطالب" });
+        } catch (e) {
+          toast({ variant: "destructive", description: (e as Error).message });
+        }
+      },
+    });
   };
-  const updateStudentMode = async (
+  const updateStudentMode = (
     student: Student,
     learningMode: "online" | "offline",
   ) => {
     const modeLabel = learningMode === "online" ? "أونلاين" : "أوفلاين (سنتر)";
-    if (!confirm(`هل أنت متأكد من تغيير نظام دراسة الطالب (${student.name}) إلى [${modeLabel}]؟`)) return;
-    try {
-      const updated = await adminApi<Student>(
-        `/api/admin/students/${student.id}`,
-        { method: "PATCH", body: JSON.stringify({ learningMode }) },
-      );
-      setStudents(prev => prev.map((s) => (s.id === student.id ? updated : s)));
-      toast({
-        title: `تم تحويل الطالب لنظام ${learningMode === "online" ? "أونلاين" : "أوفلاين"}`,
-      });
-    } catch (e) {
-      toast({ variant: "destructive", description: (e as Error).message });
-    }
+    confirmAction({
+      title: "تغيير نظام الدراسة 💻",
+      message: `هل أنت متأكد من تغيير نظام دراسة الطالب (${student.name}) إلى [${modeLabel}]؟`,
+      confirmText: "تأكيد التغيير",
+      onConfirm: async () => {
+        try {
+          const updated = await adminApi<Student>(
+            `/api/admin/students/${student.id}`,
+            { method: "PATCH", body: JSON.stringify({ learningMode }) },
+          );
+          setStudents(prev => prev.map((s) => (s.id === student.id ? updated : s)));
+          toast({
+            title: `تم تحويل الطالب لنظام ${learningMode === "online" ? "أونلاين" : "أوفلاين"}`,
+          });
+        } catch (e) {
+          toast({ variant: "destructive", description: (e as Error).message });
+        }
+      },
+    });
   };
-  const updateStudentPaymentStatus = async (
+  const updateStudentPaymentStatus = (
     student: Student,
     paymentStatus: string,
   ) => {
     const statusLabel = paymentStatus === "paid" ? "مدفوع ومفعّل" : paymentStatus === "pending_review" ? "قيد المراجعة" : "غير مدفوع";
-    if (!confirm(`هل أنت متأكد من تغيير حالة الاشتراك والدفع للطالب (${student.name}) إلى [${statusLabel}]؟`)) return;
-    try {
-      const updated = await adminApi<Student>(
-        `/api/admin/students/${student.id}`,
-        { method: "PATCH", body: JSON.stringify({ paymentStatus }) },
-      );
-      setStudents(prev => prev.map((s) => (s.id === student.id ? updated : s)));
-      toast({
-        title: paymentStatus === "paid" ? "تم تفعيل الاشتراك المدفوع للطالب 💳" : paymentStatus === "pending_review" ? "حالة الإيصال قيد المراجعة ⏳" : "تم إلغاء تفعيل الاشتراك (مجاني)",
-      });
-    } catch (e) {
-      toast({ variant: "destructive", description: (e as Error).message });
-    }
+    confirmAction({
+      title: "تحديث حالة الاشتراك والدفع 💳",
+      message: `هل أنت متأكد من تغيير حالة الاشتراك والدفع للطالب (${student.name}) إلى [${statusLabel}]؟`,
+      confirmText: "تحديث الاشتراك",
+      onConfirm: async () => {
+        try {
+          const updated = await adminApi<Student>(
+            `/api/admin/students/${student.id}`,
+            { method: "PATCH", body: JSON.stringify({ paymentStatus }) },
+          );
+          setStudents(prev => prev.map((s) => (s.id === student.id ? updated : s)));
+          toast({
+            title: paymentStatus === "paid" ? "تم تفعيل الاشتراك المدفوع للطالب 💳" : paymentStatus === "pending_review" ? "حالة الإيصال قيد المراجعة ⏳" : "تم إلغاء تفعيل الاشتراك (مجاني)",
+          });
+        } catch (e) {
+          toast({ variant: "destructive", description: (e as Error).message });
+        }
+      },
+    });
   };
-  const deleteStudent = async (id: number) => {
-    if (!confirm("حذف الطالب وكل محاولاته؟")) return;
-    try {
-      await adminApi(`/api/admin/students/${id}`, { method: "DELETE" });
-      setStudents(prev => prev.filter((s) => s.id !== id));
-    } catch {
-      toast({ title: "خطأ في حذف الطالب", variant: "destructive" });
-    }
+  const deleteStudent = (id: number) => {
+    const removedStudent = students.find((student) => student.id === id);
+    confirmAction({
+      title: "حذف حساب الطالب نهائيًا 🚨",
+      message: `هل أنت متأكد من حذف حساب الطالب (${removedStudent?.name || "هذا الطالب"}) وكل محاولاته وبياناته نهائيًا؟`,
+      confirmText: "نعم، حذف الحساب",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          await adminApi(`/api/admin/students/${id}`, { method: "DELETE" });
+          setStudents(prev => prev.filter((s) => s.id !== id));
+          toast({ title: "تم حذف حساب الطالب بنجاح" });
+        } catch {
+          toast({ title: "خطأ في حذف الطالب", variant: "destructive" });
+        }
+      },
+    });
   };
   const selectLearningFile = async (file: File | null) => {
     setIsFileDragging(false);
@@ -2355,6 +2413,71 @@ export function AdminLearning({ role = "superadmin" }: { role?: "superadmin" | "
           )}
         </>
       )}
+
+      <AnimatePresence>
+        {confirmModal?.isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] grid place-items-center bg-black/60 backdrop-blur-sm p-4"
+            onClick={() => setConfirmModal(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.94, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.94, opacity: 0 }}
+              className="w-full max-w-md overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-[#111C2E]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start gap-4">
+                <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl ${
+                  confirmModal.variant === "destructive"
+                    ? "bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400"
+                    : confirmModal.variant === "warning"
+                    ? "bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400"
+                    : "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400"
+                }`}>
+                  <AlertCircle className="h-6 w-6" />
+                </div>
+                <div className="space-y-1 text-right">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-slate-100">
+                    {confirmModal.title}
+                  </h3>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                    {confirmModal.message}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setConfirmModal(null)}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-transparent dark:text-slate-300 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  {confirmModal.cancelText || "إلغاء"}
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const action = confirmModal.onConfirm;
+                    setConfirmModal(null);
+                    await action();
+                  }}
+                  className={`rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-md transition cursor-pointer ${
+                    confirmModal.variant === "destructive"
+                      ? "bg-red-600 hover:bg-red-700"
+                      : "bg-[#2583F7] hover:bg-[#1470DB]"
+                  }`}
+                >
+                  {confirmModal.confirmText || "تأكيد"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

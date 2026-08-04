@@ -9,14 +9,14 @@ import {
   Menu,
   MessageCircle,
   MessageSquareQuote,
-  Moon,
-  Sun,
   UserRound,
   Users,
   X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { useAppTheme } from "@/lib/theme";
 
 type NavStudent = { name: string; status: string };
 
@@ -33,32 +33,10 @@ export function Navbar() {
   const [activeSection, setActiveSection] = useState("hero");
   const [student, setStudent] = useState<NavStudent | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [theme, setTheme] = useState<"dark" | "light">(() => {
-    return (localStorage.getItem("app-theme") as "dark" | "light") || "dark";
-  });
+  const theme = useAppTheme();
   const studentCacheRef = useRef<{ data: NavStudent | null; ts: number } | null>(null);
   const { get } = useSiteSettings();
   const logoUrl = get(SETTINGS_KEYS.SITE_LOGO_URL, "/logo.webp");
-
-  const toggleTheme = () => {
-    const nextTheme = theme === "dark" ? "light" : "dark";
-    setTheme(nextTheme);
-    localStorage.setItem("app-theme", nextTheme);
-    if (nextTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-    window.dispatchEvent(new CustomEvent("app-theme-changed", { detail: nextTheme }));
-  };
-
-  useEffect(() => {
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [theme]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -201,18 +179,7 @@ export function Navbar() {
           {/* Actions (Left) */}
           <div className="hidden items-center gap-2 sm:flex">
             {/* Theme Toggle Button */}
-            <button
-              type="button"
-              onClick={toggleTheme}
-              title={theme === "dark" ? "التحويل للوضع الفاتح (Light Mode)" : "التحويل للوضع الداكن (Dark Mode)"}
-              className={`flex h-[40px] w-[40px] items-center justify-center rounded-xl border transition-all ${
-                theme === "light"
-                  ? "border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  : "border-[rgba(148,163,184,0.18)] bg-[rgba(255,255,255,0.04)] text-[#CBD5E1] hover:bg-[rgba(148,163,184,0.12)] hover:text-[#F8FAFC]"
-              }`}
-            >
-              {theme === "dark" ? <Moon className="h-4.5 w-4.5 text-amber-400" /> : <Sun className="h-4.5 w-4.5 text-amber-500" />}
-            </button>
+            <ThemeToggle className="h-[40px] w-[40px] shadow-none" />
 
             <a
               href="https://wa.me/201066711545"
@@ -252,17 +219,7 @@ export function Navbar() {
 
           {/* Mobile Actions & Toggle */}
           <div className="flex items-center gap-2 sm:hidden">
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className={`flex h-[40px] w-[40px] items-center justify-center rounded-[10px] border transition-all ${
-                theme === "light"
-                  ? "border-slate-300 bg-slate-100 text-slate-700"
-                  : "border-[rgba(148,163,184,0.22)] bg-transparent text-[#CBD5E1]"
-              }`}
-            >
-              {theme === "dark" ? <Moon className="h-4.5 w-4.5 text-amber-400" /> : <Sun className="h-4.5 w-4.5 text-amber-500" />}
-            </button>
+            <ThemeToggle className="h-[40px] w-[40px] rounded-[10px] shadow-none" />
 
             <a
               href="/parent"

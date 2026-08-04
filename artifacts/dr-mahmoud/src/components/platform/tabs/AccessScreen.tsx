@@ -76,7 +76,7 @@ export function AccessScreen({
     governorate: "",
     city: "",
     ...createDefaultRegistrationStage(),
-    ...(shouldStartRegistration && {
+    ...(shouldStartRegistration && requestedTrack && {
       educationSystem: "university" as const,
       schoolType: "none" as const,
       academicTrack: requestedTrack === "engineering" ? "engineering" as const : "computer_science" as const,
@@ -233,9 +233,13 @@ export function AccessScreen({
       <div className={`absolute bottom-0 left-1/4 h-[300px] sm:h-[500px] w-[300px] sm:w-[500px] rounded-full blur-[120px] sm:blur-[160px] pointer-events-none ${isLight ? "bg-sky-200/40" : "bg-[#1E3A5F]/20"}`} />
       <div className="absolute inset-0 bg-[radial-gradient(rgba(148,163,184,0.12)_1px,transparent_1px)] [background-size:24px_24px] opacity-25 pointer-events-none" />
 
-      <div className="relative mx-auto grid max-w-[1440px] items-start gap-5 sm:gap-8 lg:grid-cols-[1.08fr_0.92fr] lg:gap-10 xl:gap-14">
+      <div className={`relative mx-auto grid items-start gap-5 sm:gap-8 transition-[max-width] duration-300 ${
+        mode === "register"
+          ? "max-w-[980px] grid-cols-1"
+          : "max-w-[1440px] lg:grid-cols-[1.08fr_0.92fr] lg:gap-10 xl:gap-14"
+      }`}>
         {/* Introductory Content Column */}
-        <div className="space-y-6 text-right order-2 lg:order-1">
+        <div className={`${mode === "register" ? "hidden" : "space-y-6 text-right order-2 lg:order-1"}`}>
           <div className={`inline-flex h-[36px] items-center gap-2 rounded-full border px-3.5 text-xs font-semibold backdrop-blur-md ${
             isLight ? "border-blue-300 bg-blue-50 text-blue-800" : "border-[rgba(96,165,250,0.24)] bg-[rgba(59,130,246,0.10)] text-[#BFDBFE]"
           }`}>
@@ -325,7 +329,9 @@ export function AccessScreen({
         </div>
 
         {/* Form Column */}
-        <div className={`w-full rounded-[24px] border p-4 sm:p-6 transition-all order-1 lg:order-2 ${
+        <div className={`w-full rounded-[24px] border p-4 sm:p-6 transition-all duration-300 order-1 lg:order-2 ${
+          mode === "register" ? "mx-auto sm:p-7 lg:p-8" : ""
+        } ${
           isLight
             ? "border-[#E2E8F0] bg-white shadow-md text-[#0F172A]"
             : "border-[rgba(148,163,184,0.20)] bg-[#101D31] shadow-[0_20px_60px_rgba(0,0,0,0.30)] text-[#F8FAFC]"
@@ -558,21 +564,31 @@ export function AccessScreen({
             </form>
           ) : (
             <form onSubmit={submitRegistration} className="space-y-5" noValidate dir="rtl">
-              <div>
-                <h2 className={`text-xl sm:text-2xl font-bold ${isLight ? "text-[#0F172A]" : "text-[#F8FAFC]"}`}>تسجيل طالب جديد</h2>
-                <p className={`mt-1 text-xs leading-relaxed ${isLight ? "text-[#64748B]" : "text-[#94A3B8]"}`}>
-                  اكتب بيانات الطالب بدقة، وتأكد من موافقة ولي الأمر قبل تفعيل الحساب.
-                </p>
+              <div className={`relative overflow-hidden rounded-[20px] border p-4 sm:p-5 ${
+                isLight ? "border-blue-100 bg-gradient-to-l from-[#EEF6FF] to-white" : "border-blue-400/15 bg-gradient-to-l from-[#132847] to-[#101D31]"
+              }`}>
+                <div className="absolute -left-8 -top-10 h-28 w-28 rounded-full bg-blue-500/10 blur-2xl" />
+                <div className="relative flex items-center gap-3">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#0866D9] text-white shadow-lg shadow-blue-500/20">
+                    <UserPlus className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <h2 className={`text-xl sm:text-2xl font-black ${isLight ? "text-[#0F172A]" : "text-[#F8FAFC]"}`}>أنشئ حساب الطالب</h2>
+                    <p className={`mt-1 text-xs leading-relaxed ${isLight ? "text-[#64748B]" : "text-[#94A3B8]"}`}>
+                      3 خطوات قصيرة فقط — بياناتك، مرحلتك، ثم مراجعة سريعة.
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div className={`rounded-[16px] border p-2 ${
+              <div className={`rounded-[18px] border p-2.5 ${
                 isLight ? "border-[#E2E8F0] bg-[#F8FAFC]" : "border-[rgba(148,163,184,0.14)] bg-[#091426]"
               }`}>
                 <div className="grid grid-cols-3 gap-1.5 text-center">
                   {[
-                    [1, "البيانات الأساسية"],
-                    [2, "الدراسة"],
-                    [3, "التأكيد"],
+                    [1, "بيانات الطالب"],
+                    [2, "المرحلة"],
+                    [3, "مراجعة"],
                   ].map(([stepNum, stepTitle]) => {
                     const isActive = regStep === stepNum;
                     const isCompleted = regStep > (stepNum as number);
@@ -585,7 +601,7 @@ export function AccessScreen({
                             setRegStep(stepNum as number);
                           }
                         }}
-                        className={`flex items-center justify-center gap-1.5 rounded-[12px] py-2 px-2 transition-all duration-200 text-xs font-bold ${
+                        className={`relative flex items-center justify-center gap-1.5 rounded-[12px] py-2.5 px-2 transition-all duration-200 text-xs font-bold ${
                           isActive
                             ? "bg-[#0866D9] text-white shadow-xs"
                             : isCompleted
@@ -611,7 +627,7 @@ export function AccessScreen({
 
               {regStep === 1 && (
                 <div className="space-y-4 animate-in fade-in duration-200">
-                  <div className={`rounded-[18px] border p-5 space-y-4 shadow-xs ${
+                  <div className={`rounded-[20px] border p-4 sm:p-6 space-y-5 shadow-xs ${
                     isLight ? "border-[#E2E8F0] bg-white" : "border-[rgba(148,163,184,0.14)] bg-[#091426]/60"
                   }`}>
                     <div className={`flex items-center gap-2.5 border-b pb-3 ${isLight ? "border-[#E2E8F0]" : "border-[rgba(148,163,184,0.14)]"}`}>
@@ -626,7 +642,7 @@ export function AccessScreen({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div className="flex flex-col text-xs font-semibold">
                         <label htmlFor="student-name" className={`mb-1.5 block text-xs font-semibold ${isLight ? "text-[#334155]" : "text-[#E2E8F0]"}`}>
                           اسم الطالب <span className="text-[#EF4444]">*</span>
@@ -695,7 +711,7 @@ export function AccessScreen({
                       {!emailValid && <p className="mt-1 text-xs text-[#EF4444]">صيغة البريد الإلكتروني غير صحيحة.</p>}
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <SearchableCombobox
                         id="student-governorate"
                         label="المحافظة"

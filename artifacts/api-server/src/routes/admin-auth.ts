@@ -22,14 +22,23 @@ const adminLoginLimit = fixedWindowRateLimit({ name: "admin-login", limit: 25, w
 
 router.post("/admin/login", adminLoginLimit, async (req, res) => {
   const password = String(req.body.password ?? "");
-  const username = String(req.body.username ?? "");
+  // The main admin page intentionally has a password-only form; an omitted
+  // username is therefore the fixed Mahmoud account, never a wildcard.
+  const username = String(req.body.username ?? "").trim() || "mahmoud";
   const auth = await verifyAdminCredentialsAsync(password, username);
   if (!auth) {
     res.status(401).json({ error: "اسم المستخدم أو كلمة المرور غير صحيحة" });
     return;
   }
   res.cookie(ADMIN_COOKIE, createAdminSessionToken(auth.role, auth.username), adminSessionCookieOptions());
-  await logAudit(req, "LOGIN", "session", null, `تسجيل دخول ناجح للمستخدم (${auth.username}) بصلاحية ${auth.role === "superadmin" ? "مدير رئيسي" : "مشرف مساعد"}`);
+  await logAudit(
+    req,
+    "LOGIN",
+    "session",
+    null,
+    `تسجيل دخول ناجح بصلاحية ${auth.role === "superadmin" ? "مدير رئيسي" : "مشرف مساعد"}`,
+    auth,
+  );
   res.json({ success: true, role: auth.role, username: auth.username });
 });
 
@@ -151,6 +160,8 @@ router.get("/admin/subadmins", requireSuperAdmin, async (_req, res, next) => {
 
 // POST /api/admin/subadmins (Super Admin only: Create a new subadmin account)
 router.post("/admin/subadmins", requireSuperAdmin, async (req, res, next) => {
+  res.status(403).json({ error: "إنشاء حسابات إدارة إضافية معطل. الحسابات المسموحة: محمود وأحمد فقط." });
+  return;
   try {
     const username = String(req.body.username ?? "").trim().toLowerCase();
     const displayName = String(req.body.displayName ?? "").trim();
@@ -202,6 +213,8 @@ router.post("/admin/subadmins", requireSuperAdmin, async (req, res, next) => {
 
 // DELETE /api/admin/subadmins/:id (Super Admin only: Delete a subadmin account)
 router.delete("/admin/subadmins/:id", requireSuperAdmin, async (req, res, next) => {
+  res.status(403).json({ error: "حذف وإدارة الحسابات الإضافية معطل. الحسابات المسموحة: محمود وأحمد فقط." });
+  return;
   try {
     const id = Number(req.params.id);
     const [deleted] = await db

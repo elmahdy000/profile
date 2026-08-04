@@ -2,9 +2,10 @@ import { lazy, Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const ScrollProgress = lazy(() => import("@/components/ScrollProgress").then(m => ({ default: m.ScrollProgress })));
 const AcademyHome = lazy(() => import("@/components/AcademyHome").then(m => ({ default: m.AcademyHome })));
@@ -53,6 +54,9 @@ function PageLoader() {
 }
 
 function App() {
+  const [location] = useLocation();
+  const pageAlreadyHasThemeToggle = location === "/" || location === "/platform";
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
@@ -73,6 +77,9 @@ function App() {
               </Switch>
             </Suspense>
           </div>
+          {!pageAlreadyHasThemeToggle && (
+            <ThemeToggle className="fixed bottom-4 left-4 z-[70] sm:bottom-6 sm:left-6" />
+          )}
           <Toaster />
         </TooltipProvider>
       </QueryClientProvider>
