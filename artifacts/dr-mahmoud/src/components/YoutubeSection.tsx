@@ -847,10 +847,7 @@ export function VideoLessonsSection({
     });
   }
 
-  // When videos prop is passed in the student platform, the server has already applied full
-  // access authorization (canStudentAccessContent). Re-filtering on the client is unnecessary.
-  const isStudentPlatform = videos !== undefined;
-  const visibleItems = (student && !isStudentPlatform) ? items.filter(studentCanSeeVideo) : items;
+  const visibleItems = student ? items.filter(studentCanSeeVideo) : items;
   const categories = Array.from(new Set(visibleItems.map((item) => item.category))).filter(Boolean);
 
   const totalCoursesCount = categories.length;
