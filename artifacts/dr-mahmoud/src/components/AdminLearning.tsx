@@ -201,11 +201,23 @@ async function optimizeLearningImage(file: File): Promise<File> {
   });
 }
 
-export function AdminLearning({ role = "superadmin" }: { role?: "superadmin" | "subadmin" }) {
+export function AdminLearning({
+  role = "superadmin",
+  initialTab = "students",
+}: {
+  role?: "superadmin" | "subadmin";
+  initialTab?: "students" | "payments" | "notifications" | "files" | "quizzes" | "results" | "reports";
+}) {
   const { toast } = useToast();
   const [tab, setTab] = useState<"students" | "payments" | "notifications" | "files" | "quizzes" | "results" | "reports">(
-    "students",
+    initialTab,
   );
+
+  useEffect(() => {
+    if (initialTab) {
+      setTab(initialTab);
+    }
+  }, [initialTab]);
   const [broadcastForm, setBroadcastForm] = useState({
     title: "",
     message: "",
