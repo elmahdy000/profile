@@ -809,10 +809,27 @@ export function VideoLessonsSection({
       : item.stage ? [item.stage] : [];
     if (stageArr.length === 0) return true;
     const normalize = (s: string) => String(s ?? "").trim().toLowerCase();
+    const sn = normalize(grade);
+
+    const getSystem = (val: string) => {
+      if (val.includes("بكالوريا") || val.includes("baccalaureate")) return "baccalaureate";
+      if (val.includes("جامع") || val.includes("كلية") || val.includes("حاسبات") || val.includes("هندسة") || val.includes("university")) return "university";
+      if (val.includes("ثانوي") || val.includes("secondary")) return "secondary";
+      return null;
+    };
+    const studentSys = getSystem(sn);
+
     return stageArr.some((s) => {
       const cn = normalize(s);
       if (cn === "عام" || cn === "") return true;
-      const sn = normalize(grade);
+
+      const contentSys = getSystem(cn);
+      // Enforce strict education system isolation: if student belongs to a known system
+      // and content has a different system OR no system marker at all, deny access!
+      if (studentSys && (!contentSys || studentSys !== contentSys)) {
+        return false;
+      }
+
       if (sn === cn || sn.includes(cn) || cn.includes(sn)) return true;
       const g1s = sn.includes("أولى") || sn.includes("الأول") || sn.includes("first") || sn.includes("year_1");
       const g1c = cn.includes("أولى") || cn.includes("الأول") || cn.includes("first") || cn.includes("year_1");
