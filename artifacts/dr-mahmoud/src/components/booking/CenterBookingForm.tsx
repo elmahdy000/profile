@@ -626,10 +626,10 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
               {/* Success Message Header */}
               <div className="space-y-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-3 py-1 text-xs font-black text-emerald-300">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400" /> تم تسجيل الحجز بنجاح
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400" /> تم الحجز واشترك في المنصة لمتابعة الدروس 📚
                 </span>
-                <h3 className="text-2xl font-black text-white">تم الحجز بنجاح! 🎉</h3>
-                <p className="text-base font-black text-amber-300 bg-amber-500/15 border border-amber-500/30 p-3 rounded-2xl">
+                <h3 className="text-xl sm:text-2xl font-black text-white">تم الحجز واشترك في المنصة لمتابعة الدروس! 🎉</h3>
+                <p className="text-sm sm:text-base font-black text-amber-300 bg-amber-500/15 border border-amber-500/30 p-3 rounded-2xl">
                   والدفع أول يوم في السنتر بإذن الله ... 500 جنيه
                 </p>
               </div>
@@ -665,7 +665,7 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
               {/* Student Access Code Card */}
               {bookingSuccessData.accessCode && (
                 <div className="rounded-2xl border border-[#1677FF]/40 bg-[#1677FF]/15 p-4 space-y-2">
-                  <span className="text-[11px] font-extrabold text-[#69A5FF]">كود الدخول الخاص بالطالب للمنصة:</span>
+                  <span className="text-[11px] font-extrabold text-[#69A5FF]">كود الدخول الخاص بالطالب لمتابعة الدروس على المنصة:</span>
                   <div className="flex items-center justify-between gap-3 bg-[#0B1424] p-3 rounded-xl border border-[#1677FF]/30">
                     <span className="font-mono text-lg font-black text-[#4096FF] dir-ltr">
                       {bookingSuccessData.accessCode}
@@ -683,13 +683,16 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
               )}
 
               {/* Actions */}
-              <div className="flex items-center gap-3 pt-2">
+              <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
                 <Button
                   type="button"
-                  onClick={() => setBookingSuccessData(null)}
-                  className="w-full h-12 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm shadow-lg shadow-emerald-600/30"
+                  onClick={() => {
+                    setBookingSuccessData(null);
+                    window.location.href = "/";
+                  }}
+                  className="w-full h-12 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2"
                 >
-                  موافق واغلاق النافذة
+                  تم الحجز واشترك في المنصة - العودة للرئيسية 🏠
                 </Button>
               </div>
             </motion.div>

@@ -13,6 +13,7 @@ const AcademyHome = lazy(() => import("@/components/AcademyHome").then(m => ({ d
 const AdminDashboard = lazy(() => import("@/components/AdminDashboard"));
 const SubAdminDashboard = lazy(() => import("@/components/SubAdminDashboard").then(m => ({ default: m.SubAdminDashboard })));
 const BaccalaureatePage = lazy(() => import("@/pages/BaccalaureatePage"));
+const CenterBookingPage = lazy(() => import("@/pages/CenterBookingPage"));
 const UniversityPage = lazy(() => import("@/pages/UniversityPage"));
 const CurriculumPage = lazy(() => import("@/pages/CurriculumPage"));
 const PlatformPage = lazy(() => import("@/pages/PlatformPage"));
@@ -66,6 +67,8 @@ function App() {
                 <Route path="/admin" component={AdminDashboard} />
                 <Route path="/subadmin" component={SubAdminDashboard} />
                 <Route path="/baccalaureate" component={BaccalaureatePage} />
+                <Route path="/booking" component={CenterBookingPage} />
+                <Route path="/center-booking" component={CenterBookingPage} />
                 <Route path="/kids">
                   <Redirect to="/platform?action=register" />
                 </Route>

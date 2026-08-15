@@ -24,8 +24,8 @@ type NavStudent = { name: string; status: string };
 const navLinks = [
   { label: "الرئيسية", href: "/#hero", id: "hero", icon: Home },
   { label: "برنامج البكالوريا", href: "/baccalaureate", id: "baccalaureate", icon: BookOpen },
+  { label: "حجز السناتر 📍", href: "/booking", id: "booking", icon: MapPin },
   { label: "مواد حاسبات ومعلومات", href: "/university", id: "university", icon: GraduationCap },
-  { label: "مواعيد السناتر", href: "/#offline-centers", id: "offline-centers", icon: MapPin },
   { label: "الكورسات", href: "/#courses-section", id: "courses-section", icon: Layers3 },
   { label: "عن د. المهدي", href: "/#about", id: "about", icon: UserRound },
 ] as const;

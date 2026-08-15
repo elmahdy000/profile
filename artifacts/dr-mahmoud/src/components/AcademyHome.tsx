@@ -283,7 +283,7 @@ export function AcademyHome() {
                     <span><strong>تم فتح باب حجز السناتر رسمياً الآن!</strong> (أولى وتانية بكالوريا 2026 - الزقازيق)</span>
                   </div>
                   <a
-                    href="/baccalaureate#booking-form"
+                    href="/booking"
                     className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white hover:bg-emerald-700 transition-all shrink-0 shadow-sm"
                   >
                     احجز مكانك بالسنتر الآن 🚀
@@ -325,7 +325,7 @@ export function AcademyHome() {
                 {/* Prominent Offline Center Booking CTA Button */}
                 <div className="pt-1">
                   <Button asChild size="lg" className="h-12 w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm shadow-lg shadow-emerald-600/20 border border-emerald-500/30 justify-center">
-                    <a href="#offline-centers" className="flex items-center justify-center gap-2">
+                    <a href="/booking" className="flex items-center justify-center gap-2">
                       <MapPin className="h-5 w-5 text-emerald-200 animate-pulse" />
                       <span>📍 حجز سناتر الزقازيق (أوفلاين)</span>
                       <ArrowLeft className="mr-1 h-4 w-4" />
