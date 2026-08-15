@@ -2,7 +2,7 @@ import React from "react";
 
 export function TableSkeletonRow() {
   return (
-    <tr className="animate-pulse border-b border-border/60 bg-card/40">
+    <tr className="animate-pulse border-b border-slate-800/60 bg-[#131E31]/40">
       <td className="p-4">
         <div className="h-4 w-4 rounded bg-slate-800" />
       </td>
@@ -39,7 +39,7 @@ export function TableSkeletonRow() {
 
 export function KpiCardSkeleton() {
   return (
-    <div className="animate-pulse rounded-2xl border border-border/80 bg-card p-4 space-y-3">
+    <div className="animate-pulse rounded-2xl border border-slate-800/80 bg-[#131E31] p-4 space-y-3">
       <div className="flex items-center justify-between">
         <div className="h-3 w-24 rounded bg-slate-800" />
         <div className="h-9 w-9 rounded-xl bg-slate-800" />
@@ -52,9 +52,9 @@ export function KpiCardSkeleton() {
 
 export function TableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border/80 bg-card">
+    <div className="overflow-hidden rounded-2xl border border-slate-800/80 bg-[#131E31]">
       <table className="w-full text-right">
-        <thead className="bg-slate-900/60 border-b border-border">
+        <thead className="bg-slate-900/60 border-b border-slate-800">
           <tr>
             <th className="p-4"><div className="h-4 w-4 rounded bg-slate-800" /></th>
             <th className="p-4"><div className="h-3 w-20 rounded bg-slate-800" /></th>

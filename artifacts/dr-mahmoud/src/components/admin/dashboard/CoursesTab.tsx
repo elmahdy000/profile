@@ -100,7 +100,7 @@ export const CoursesTab: React.FC<CoursesTabProps> = ({
                   className={`absolute top-3 left-3 rounded-full border px-3 py-1 text-xs font-bold backdrop-blur-md ${
                     course.isPublished
                       ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-700"
-                      : "border-slate-400/30 bg-muted0/20 text-muted-foreground"
+                      : "border-slate-400/30 bg-slate-500/20 text-slate-600"
                   }`}
                 >
                   {course.isPublished ? "منشور" : "مسودة"}

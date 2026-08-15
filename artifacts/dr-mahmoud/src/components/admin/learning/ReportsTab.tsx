@@ -51,7 +51,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
         <a
           href="/api/admin/learning/analytics/export"
           download
-          className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm hover:bg-muted transition-colors"
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
         >
           <Download className="h-4 w-4" /> تصدير بيانات الطلاب CSV
         </a>
@@ -85,12 +85,12 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
         ].map(([label, value, Icon, color]: any) => (
           <article
             key={String(label)}
-            className="rounded-2xl border border-border bg-white p-4 shadow-sm"
+            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
           >
             <div className="flex items-center justify-between gap-3">
               <div>
                 <strong className="text-2xl font-black">{String(value)}</strong>
-                <p className="mt-1 text-xs font-bold text-muted-foreground">
+                <p className="mt-1 text-xs font-bold text-slate-600">
                   {String(label)}
                 </p>
               </div>
@@ -106,17 +106,17 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
         ))}
       </div>
 
-      <section className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-4">
           <h3 className="text-lg font-black">طلبات استرجاع الكود</h3>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-slate-500">
             راجع بيانات الطالب وابعتله الكود على رقم واتساب المسجل.
           </p>
         </div>
         <div className="space-y-2">
           {recoveryRequests.filter((request) => request.status === "pending")
             .length === 0 ? (
-            <p className="rounded-xl bg-muted p-5 text-center text-sm text-muted-foreground">
+            <p className="rounded-xl bg-slate-50 p-5 text-center text-sm text-slate-500">
               مفيش طلبات استرجاع معلقة
             </p>
           ) : (
@@ -133,7 +133,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({
                   >
                     <div>
                       <strong>{request.studentName}</strong>
-                      <p className="text-xs text-muted-foreground" dir="ltr">
+                      <p className="text-xs text-slate-500" dir="ltr">
                         {request.phone}
                       </p>
                       <span className="mt-1 block font-mono text-xs font-bold text-primary">

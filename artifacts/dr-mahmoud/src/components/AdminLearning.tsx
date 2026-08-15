@@ -1148,7 +1148,7 @@ export function AdminLearning({
     ["overview", "اللوحة التشغيلية 📊", LayoutDashboard],
     ["center-bookings", "حجوزات السناتر 📍", MapPin],
     ["students", "الطلاب 🎓", GraduationCap],
-    ["payments", "إيصالات الدفع", FileCheck2],
+    ["payments", "إيصالات الدفع 💳", FileCheck2],
     ["files", "الملفات 📁", FileText],
     ["quizzes", "الاختبارات 📝", ClipboardCheck],
     ["results", "النتائج 🏆", Check],
@@ -1157,24 +1157,24 @@ export function AdminLearning({
   ] as const;
   const tabMeta = {
     overview: ["اللوحة التشغيلية وإحصائيات المنصة 📊", "نظرة عامة على أعداد الطلاب، المشتركين، والتوزيع حسب المراحل والكورسات."],
-    students: ["إدارة جميع الطلاب", "راجع التسجيلات والصلاحيات والكورسات المخصصة لكل طالب."],
-    "center-bookings": ["كشف وإدارة حجوزات السناتر", "جدول تفصيلي مخصص لمتابعة جميع الطلاب المسجلين بالسناتر والمواعيد الحضورية المحددة."],
-    payments: ["إيصالات الدفع", "راجع إيصالات الدفع من الطلاب ووافق أو ارفض."],
-    notifications: ["إرسال إشعار للطلاب", "أرسل تنبيهًا أو إشعارًا عامًا لجميع الطلاب أو مرحلة دراسية محددة."],
-    files: ["مكتبة الملفات التعليمية", "ارفع الملفات وحدد مكان ظهورها للطلاب أو داخل الدروس."],
-    quizzes: ["بناء وإدارة الاختبارات", "أنشئ الاختبارات وحدد الجمهور والإعدادات والأسئلة ثم انشرها."],
-    results: ["نتائج الاختبارات", "تابع محاولات الطلاب ودرجات النجاح من مكان واحد."],
-    reports: ["التقارير والمتابعة", "راقب نشاط الطلاب والتقدم ومؤشرات الأداء التعليمية."],
+    students: ["إدارة جميع الطلاب 🎓", "راجع التسجيلات والصلاحيات والكورسات المخصصة لكل طالب."],
+    "center-bookings": ["كشف وإدارة حجوزات السناتر 📍", "جدول تفصيلي مخصص لمتابعة جميع الطلاب المسجلين بالسناتر والمواعيد الحضورية المحددة."],
+    payments: ["إيصالات الدفع 💳", "راجع إيصالات الدفع من الطلاب ووافق أو ارفض."],
+    notifications: ["إرسال إشعار للطلاب 🔔", "أرسل تنبيهًا أو إشعارًا عامًا لجميع الطلاب أو مرحلة دراسية محددة."],
+    files: ["مكتبة الملفات التعليمية 📁", "ارفع الملفات وحدد مكان ظهورها للطلاب أو داخل الدروس."],
+    quizzes: ["بناء وإدارة الاختبارات 📝", "أنشئ الاختبارات وحدد الجمهور والإعدادات والأسئلة ثم انشرها."],
+    results: ["نتائج الاختبارات 🏆", "تابع محاولات الطلاب ودرجات النجاح من مكان واحد."],
+    reports: ["التقارير والمتابعة 📈", "راقب نشاط الطلاب والتقدم ومؤشرات الأداء التعليمية."],
   } as const;
   return (
-    <div className="admin-learning-workspace space-y-6 text-foreground" dir="rtl">
+    <div className="admin-learning-workspace space-y-6 text-[#0F172A]" dir="rtl">
       {/* 1. Page Header */}
-      <div className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 border-b border-[#E4EAF2] pb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-black text-foreground">
+          <h1 className="text-2xl font-black text-[#0F172A]">
             إدارة المنصة التعليمية
           </h1>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-xs text-[#64748B]">
             لوحة الإدارة الشاملة للطلاب، الملفات، الاختبارات والنتائج
           </p>
         </div>
@@ -1191,7 +1191,7 @@ export function AdminLearning({
                 50,
               );
             }}
-            className="h-10 px-4 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold shadow-xs transition-colors"
+            className="h-10 px-4 rounded-xl bg-[#0866D9] hover:bg-[#0753B3] text-white text-xs font-bold shadow-xs transition-colors"
           >
             <Plus className="h-4 w-4 ml-1" /> إضافة ملف تعليمي
           </Button>
@@ -1200,9 +1200,9 @@ export function AdminLearning({
             variant="outline"
             disabled={isRefreshingData}
             onClick={load}
-            className="h-10 px-4 rounded-xl border-border bg-white hover:bg-muted text-foreground text-xs font-bold transition-all disabled:opacity-75"
+            className="h-10 px-4 rounded-xl border-[#E4EAF2] bg-white hover:bg-[#F6F8FC] text-[#0F172A] text-xs font-bold transition-all disabled:opacity-75"
           >
-            <RefreshCw className={`h-4 w-4 ml-1 text-muted-foreground ${isRefreshingData ? "animate-spin text-primary" : ""}`} />
+            <RefreshCw className={`h-4 w-4 ml-1 text-[#64748B] ${isRefreshingData ? "animate-spin text-[#0866D9]" : ""}`} />
             {isRefreshingData ? "جاري التحديث..." : "تحديث البيانات"}
           </Button>
         </div>
@@ -1210,15 +1210,15 @@ export function AdminLearning({
 
       {/* 5. Management Tabs Bar */}
       <div className="w-full overflow-x-auto pb-1 no-scrollbar">
-        <div className="flex min-w-full gap-2 rounded-2xl border border-border bg-white p-1.5 shadow-xs">
+        <div className="flex min-w-full gap-2 rounded-2xl border border-[#E4EAF2] bg-white p-1.5 shadow-xs">
           {tabs.map(([value, label, Icon]) => (
             <button
               key={value}
               onClick={() => setTab(value)}
               className={`flex-1 min-w-[110px] flex h-11 items-center justify-center gap-2 rounded-xl px-3 text-xs font-bold transition-all whitespace-nowrap ${
                 tab === value
-                  ? "bg-primary text-white shadow-xs"
-                  : "bg-white text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-[#0866D9] text-white shadow-xs"
+                  : "bg-white text-[#64748B] hover:bg-[#F6F8FC] hover:text-[#0F172A]"
               }`}
             >
               <Icon className="h-4 w-4 shrink-0" strokeWidth={1.8} />
@@ -1244,12 +1244,12 @@ export function AdminLearning({
           : tabMeta[tab][1];
 
         return (
-          <div className="flex flex-col gap-2 rounded-2xl border border-border bg-white px-5 py-4 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 rounded-2xl border border-[#E4EAF2] bg-white px-5 py-4 shadow-xs sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-base font-extrabold text-foreground">{activeTitle}</h3>
-              <p className="mt-0.5 text-xs text-muted-foreground">{activeSub}</p>
+              <h3 className="text-base font-extrabold text-[#0F172A]">{activeTitle}</h3>
+              <p className="mt-0.5 text-xs text-[#64748B]">{activeSub}</p>
             </div>
-            <span className="w-fit rounded-full bg-muted border border-border px-3 py-1 text-[11px] font-bold text-muted-foreground">
+            <span className="w-fit rounded-full bg-[#F6F8FC] border border-[#E4EAF2] px-3 py-1 text-[11px] font-bold text-[#64748B]">
               تحديث تلقائي للبيانات
             </span>
           </div>
@@ -1408,21 +1408,21 @@ export function AdminLearning({
                     event.preventDefault();
                     void uploadFile(true);
                   }}
-                  className="rounded-2xl border border-border bg-white p-5 shadow-sm md:p-7"
+                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-7"
                 >
                   <div className="mb-6 border-b border-slate-100 pb-5">
-                    <h3 className="text-xl font-black text-foreground">
+                    <h3 className="text-xl font-black text-slate-900">
                       رفع ملف تعليمي جديد
                     </h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <p className="mt-1 text-sm text-slate-500">
                       حدد مكان الظهور، اختر الطلاب أو الدروس، ثم أضف الملف وانشره.
                     </p>
                   </div>
 
                   <div className="grid gap-5 md:grid-cols-2">
-                    <div className="md:col-span-2 rounded-2xl border border-border bg-muted p-4 md:p-5">
+                    <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:p-5">
                       <span className="mb-1 block text-xs font-black text-primary">الخطوة 1</span>
-                      <span className="mb-3 block text-base font-black text-foreground">أين سيظهر الملف؟</span>
+                      <span className="mb-3 block text-base font-black text-slate-900">أين سيظهر الملف؟</span>
                       <div className="grid gap-2 sm:grid-cols-2">
                         {([['stages', 'لطلاب كورس ومراحل', 'يظهر في مكتبة الملفات للطلاب المحددين'], ['videos', 'مرفق داخل درس', 'يظهر مع الفيديو داخل صفحة الدرس']] as const).map(([value, label, description]) => (
                           <button key={value} type="button" onClick={() => setFileForm({
@@ -1433,16 +1433,16 @@ export function AdminLearning({
                             videoIds: [],
                             ...(value === "videos" ? { category: "", courseId: "" } : {}),
                           })}
-                            className={`rounded-xl border p-4 text-right transition ${fileForm.targetType === value ? 'border-primary bg-white text-primary ring-2 ring-primary/10' : 'border-border bg-white text-muted-foreground hover:border-border'}`}>
+                            className={`rounded-xl border p-4 text-right transition ${fileForm.targetType === value ? 'border-primary bg-white text-primary ring-2 ring-primary/10' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'}`}>
                             <strong className="block text-sm">{label}</strong>
-                            <span className="mt-1 block text-xs font-normal text-muted-foreground">{description}</span>
+                            <span className="mt-1 block text-xs font-normal text-slate-500">{description}</span>
                           </button>
                         ))}
                       </div>
                     </div>
                     {fileForm.targetType === "videos" && <div className="md:col-span-2">
                       <span className="mb-1 block text-xs font-black text-primary">الخطوة 2</span>
-                      <span className="mb-3 block text-base font-black text-foreground">اختر الدروس المرتبطة</span>
+                      <span className="mb-3 block text-base font-black text-slate-900">اختر الدروس المرتبطة</span>
                       <div className="mb-3 grid gap-2 sm:grid-cols-3">
                         <select
                           value={lessonCourseFilter}
@@ -1469,28 +1469,28 @@ export function AdminLearning({
                           <input value={lessonSearch} onChange={(event) => setLessonSearch(event.target.value)} placeholder="ابحث عن درس..." className="input-admin min-h-11 pr-9" />
                         </label>
                       </div>
-                      <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border border-border p-3">
+                      <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border border-slate-200 p-3">
                         {filteredLessonOptions.map((video) => {
                           const id = String(video.id);
                           const checked = fileForm.videoIds.includes(id);
-                          return <label key={video.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-100 p-3 hover:bg-muted">
+                          return <label key={video.id} className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-100 p-3 hover:bg-slate-50">
                             <input className="mt-1" type="checkbox" checked={checked} onChange={() => {
                               const videoIds = checked ? fileForm.videoIds.filter((item) => item !== id) : [...fileForm.videoIds, id];
                               const firstVideo = videoOptions.find((item) => videoIds.includes(String(item.id)));
                               setFileForm({ ...fileForm, videoIds, category: firstVideo?.category || "" });
                             }} />
-                            <span className="min-w-0"><strong className="block truncate text-sm">{video.title}</strong><small className="text-muted-foreground">{video.category}{video.stage ? ` · ${video.stage}` : ""}</small></span>
+                            <span className="min-w-0"><strong className="block truncate text-sm">{video.title}</strong><small className="text-slate-500">{video.category}{video.stage ? ` · ${video.stage}` : ""}</small></span>
                           </label>;
                         })}
-                        {!filteredLessonOptions.length && <p className="py-5 text-center text-sm text-muted-foreground">لا توجد دروس مطابقة للفلاتر الحالية.</p>}
+                        {!filteredLessonOptions.length && <p className="py-5 text-center text-sm text-slate-500">لا توجد دروس مطابقة للفلاتر الحالية.</p>}
                       </div>
                       {fileForm.videoIds.length > 0 && <p className="mt-2 text-xs font-bold text-primary">تم اختيار {fileForm.videoIds.length} {fileForm.videoIds.length === 1 ? "درس" : "دروس"}</p>}
                     </div>}
                     {fileForm.targetType === "stages" && <>
                     <div className="md:col-span-2">
                       <span className="block text-xs font-black text-primary">الخطوة 2</span>
-                      <span className="block text-base font-black text-foreground">حدد الكورس والقسم والمراحل</span>
-                      <p className="mt-1 text-xs text-muted-foreground">اختر الكورس التابع له الملف ثم حدد مراحل القسم الدراسي.</p>
+                      <span className="block text-base font-black text-slate-900">حدد الكورس والقسم والمراحل</span>
+                      <p className="mt-1 text-xs text-slate-500">اختر الكورس التابع له الملف ثم حدد مراحل القسم الدراسي.</p>
                     </div>
                     <div className="md:col-span-2">
                       <Field label="الكورس التابع له الملف 📚">
@@ -1502,7 +1502,7 @@ export function AdminLearning({
                               courseId: e.target.value,
                             });
                           }}
-                          className="input-admin min-h-12 border-border focus:border-primary font-bold text-sm"
+                          className="input-admin min-h-12 border-slate-300 focus:border-primary font-bold text-sm"
                         >
                           <option value="">-- اختياري: اختر الكورس التابع له الملف --</option>
                           {learningCourses.map((c) => (
@@ -1526,19 +1526,19 @@ export function AdminLearning({
                             stage: "",
                             stages: [],
                           })}
-                          className={`rounded-xl border p-4 text-right transition ${selected ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/10" : "border-border bg-white text-slate-700 hover:border-primary/50"}`}
+                          className={`rounded-xl border p-4 text-right transition ${selected ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/10" : "border-slate-200 bg-white text-slate-700 hover:border-primary/50"}`}
                         >
                           <strong className="block text-sm">{track.title}</strong>
-                          <span className="mt-1 block text-xs font-normal text-muted-foreground">{track.eyebrow}</span>
+                          <span className="mt-1 block text-xs font-normal text-slate-500">{track.eyebrow}</span>
                         </button>;
                       })}
                     </div>
                     <div className="md:col-span-2">
                     <Field label="المراحل التي سيظهر لها الملف">
-                      <div className="min-h-12 rounded-xl border border-border bg-white p-3">
+                      <div className="min-h-12 rounded-xl border border-slate-300 bg-white p-3">
                         {!selectedFileTrack && <span className="p-1 text-sm text-slate-400">اختر القسم التعليمي أولًا</span>}
                         {selectedFileTrack && availableFileStages.length > 5 && <div className="relative mb-3"><Search className="absolute right-3 top-3 h-4 w-4 text-slate-400" /><input value={fileStageSearch} onChange={(event) => setFileStageSearch(event.target.value)} placeholder="ابحث داخل مراحل القسم..." className="input-admin min-h-10 pr-9 text-xs" /></div>}
-                        {fileForm.stages.length > 0 && <div className="mb-3 flex flex-wrap items-center gap-1.5 border-b border-slate-100 pb-3"><span className="ml-1 text-[11px] font-bold text-muted-foreground">المحدد ({fileForm.stages.length}):</span>{fileForm.stages.slice(0, 4).map((stage) => <span key={stage} className="rounded-full bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-700">{stage}</span>)}{fileForm.stages.length > 4 && <span className="text-[11px] font-bold text-muted-foreground">+{fileForm.stages.length - 4}</span>}</div>}
+                        {fileForm.stages.length > 0 && <div className="mb-3 flex flex-wrap items-center gap-1.5 border-b border-slate-100 pb-3"><span className="ml-1 text-[11px] font-bold text-slate-500">المحدد ({fileForm.stages.length}):</span>{fileForm.stages.slice(0, 4).map((stage) => <span key={stage} className="rounded-full bg-blue-50 px-2 py-1 text-[11px] font-bold text-blue-700">{stage}</span>)}{fileForm.stages.length > 4 && <span className="text-[11px] font-bold text-slate-500">+{fileForm.stages.length - 4}</span>}</div>}
                         <div className="flex flex-wrap gap-2">
                         {selectedFileTrack && <button
                           type="button"
@@ -1551,25 +1551,25 @@ export function AdminLearning({
                         >
                           {availableFileStages.every((stage) => fileForm.stages.includes(stage)) ? "إلغاء تحديد الكل" : "تحديد كل مراحل القسم"}
                         </button>}
-                        {visibleFileStageGroups.map((group) => <details key={group.title} open className="w-full rounded-xl bg-muted p-3">
-                          <summary className="mb-2 cursor-pointer text-xs font-bold text-foreground">{group.title} <span className="font-normal text-slate-400">({group.stages.length})</span></summary>
+                        {visibleFileStageGroups.map((group) => <details key={group.title} open className="w-full rounded-xl bg-slate-50 p-3">
+                          <summary className="mb-2 cursor-pointer text-xs font-bold text-slate-800">{group.title} <span className="font-normal text-slate-400">({group.stages.length})</span></summary>
                           <div className="flex flex-wrap gap-2">{group.stages.map((stage) => {
                             const checked = fileForm.stages.includes(stage);
                             return <button key={stage} type="button" onClick={() => {
                               const stages = checked ? fileForm.stages.filter((item) => item !== stage) : [...fileForm.stages, stage];
                               setFileForm({ ...fileForm, stages, stage: stages[0] || "" });
-                            }} className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${checked ? "border-primary bg-primary text-white" : "border-border bg-white text-muted-foreground hover:border-primary"}`}>
+                            }} className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${checked ? "border-primary bg-primary text-white" : "border-slate-200 bg-white text-slate-600 hover:border-primary"}`}>
                               {stage.replace(`${group.title} · `, "")}
                             </button>;
                           })}</div>
                         </details>)}
-                        {selectedFileTrack && visibleFileStageGroups.length === 0 && <p className="w-full py-3 text-center text-xs text-muted-foreground">لا توجد مرحلة مطابقة للبحث</p>}
+                        {selectedFileTrack && visibleFileStageGroups.length === 0 && <p className="w-full py-3 text-center text-xs text-slate-500">لا توجد مرحلة مطابقة للبحث</p>}
                         </div>
                       </div>
                     </Field>
                     </div>
                     </>}
-                    <details className="md:col-span-2 rounded-xl border border-border bg-muted/70 p-4">
+                    <details className="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
                       <summary className="cursor-pointer select-none text-sm font-bold text-slate-700">تفاصيل إضافية (اختياري)</summary>
                       <div className="mt-4 grid gap-5 md:grid-cols-2">
                     <Field label="المادة">
@@ -1579,7 +1579,7 @@ export function AdminLearning({
                           setFileForm({ ...fileForm, subject: e.target.value })
                         }
                         placeholder="مثال: البرمجة وعلوم الحاسب"
-                        className="input-admin min-h-12 border-border focus:border-primary"
+                        className="input-admin min-h-12 border-slate-300 focus:border-primary"
                       />
                     </Field>
                     <Field label="الكلمات المفتاحية">
@@ -1589,9 +1589,9 @@ export function AdminLearning({
                           setFileForm({ ...fileForm, tags: e.target.value })
                         }
                         placeholder="PDF، مراجعة، تمارين"
-                        className="input-admin min-h-12 border-border focus:border-primary"
+                        className="input-admin min-h-12 border-slate-300 focus:border-primary"
                       />
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-slate-500">
                         افصل بين الكلمات بفاصلة.
                       </p>
                     </Field>
@@ -1606,7 +1606,7 @@ export function AdminLearning({
                             })
                           }
                           placeholder="اشرح محتوى الملف وطريقة استخدامه للطالب"
-                          className="input-admin min-h-28 resize-none border-border focus:border-primary"
+                          className="input-admin min-h-28 resize-none border-slate-300 focus:border-primary"
                         />
                       </Field>
                     </div>
@@ -1614,9 +1614,9 @@ export function AdminLearning({
                     </details>
                   </div>
 
-                  <div className="mt-6 rounded-2xl border border-border p-4 md:p-5">
+                  <div className="mt-6 rounded-2xl border border-slate-200 p-4 md:p-5">
                     <span className="mb-1 block text-xs font-black text-primary">الخطوة 3</span>
-                    <label className="mb-3 block text-base font-black text-foreground">
+                    <label className="mb-3 block text-base font-black text-slate-900">
                       اختر الملف واكتب اسمه
                     </label>
                     <div
@@ -1624,7 +1624,7 @@ export function AdminLearning({
                       onDragOver={(event) => event.preventDefault()}
                       onDragLeave={(event) => { event.preventDefault(); if (event.currentTarget === event.target) setIsFileDragging(false); }}
                       onDrop={(event) => { event.preventDefault(); selectLearningFile(event.dataTransfer.files?.[0] || null); }}
-                      className={`relative min-h-44 rounded-2xl border-2 border-dashed p-6 text-center transition ${isFileDragging ? "scale-[1.01] border-primary bg-blue-50 ring-4 ring-blue-100" : fileForm.file ? "border-emerald-300 bg-emerald-50/40" : "border-border bg-muted hover:border-primary hover:bg-blue-50/40"}`}
+                      className={`relative min-h-44 rounded-2xl border-2 border-dashed p-6 text-center transition ${isFileDragging ? "scale-[1.01] border-primary bg-blue-50 ring-4 ring-blue-100" : fileForm.file ? "border-emerald-300 bg-emerald-50/40" : "border-slate-300 bg-slate-50 hover:border-primary hover:bg-blue-50/40"}`}
                     >
                       <input
                         ref={fileInputRef}
@@ -1637,10 +1637,10 @@ export function AdminLearning({
                       <span className={`mx-auto grid h-14 w-14 place-items-center rounded-2xl ${fileForm.file ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-primary"}`}>
                         {fileForm.file ? <FileCheck2 className="h-7 w-7" /> : <Upload className="h-7 w-7" />}
                       </span>
-                      <strong className="mt-3 block text-sm text-foreground">
+                      <strong className="mt-3 block text-sm text-slate-800">
                         {fileForm.file ? "تم اختيار الملف — أكمل مكان ظهوره بالأسفل" : isFileDragging ? "اترك الملف هنا" : "اضغط لاختيار الملف أو اسحبه هنا"}
                       </strong>
-                      <span className="mt-1 block text-xs text-muted-foreground">
+                      <span className="mt-1 block text-xs text-slate-500">
                         PDF, DOCX, ZIP, PPTX — بحد أقصى 150MB
                       </span>
                     </div>
@@ -1651,15 +1651,15 @@ export function AdminLearning({
                           value={fileForm.title}
                           onChange={(event) => setFileForm({ ...fileForm, title: event.target.value })}
                           placeholder="مثال: ملخص الدرس الثالث"
-                          className="input-admin min-h-12 border-border focus:border-primary focus:ring-2 focus:ring-primary/10"
+                          className="input-admin min-h-12 border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/10"
                         />
-                        <p className="text-xs text-muted-foreground">يُكتب تلقائيًا من اسم الملف ويمكنك تعديله.</p>
+                        <p className="text-xs text-slate-500">يُكتب تلقائيًا من اسم الملف ويمكنك تعديله.</p>
                       </Field>
                     </div>
                     {fileValidationError && <p role="alert" className="mt-3 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700"><AlertCircle className="h-4 w-4 shrink-0" />{fileValidationError}</p>}
                     {fileOptimization && <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-700">تم تحسين الصورة تلقائيًا مع الحفاظ على الجودة: {(fileOptimization.before / 1024 / 1024).toFixed(1)} MB ← {(fileOptimization.after / 1024 / 1024).toFixed(1)} MB</p>}
                     {fileForm.file && (
-                      <div className="mt-3 rounded-xl border border-border bg-white p-4">
+                      <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4">
                         <div className="flex items-center gap-3">
                           <div className="grid h-10 w-10 place-items-center rounded-lg bg-blue-50 text-primary">
                             <FileText className="h-5 w-5" />
@@ -1668,7 +1668,7 @@ export function AdminLearning({
                             <strong className="block truncate text-sm">
                               {fileForm.file.name}
                             </strong>
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-xs text-slate-500">
                               {(fileForm.file.size / 1024 / 1024).toFixed(2)} MB
                             </span>
                           </div>
@@ -1760,14 +1760,14 @@ export function AdminLearning({
 
               </div>
 
-              <section className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
+              <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div className="border-b border-slate-100 p-5">
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div>
-                      <h3 className="text-xl font-black text-foreground">
+                      <h3 className="text-xl font-black text-slate-900">
                         الملفات التعليمية الأخيرة
                       </h3>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-slate-500">
                         {filteredFiles.length} ملف مطابق
                       </p>
                     </div>
@@ -1825,7 +1825,7 @@ export function AdminLearning({
                   <div className="p-14 text-center">
                     <FileText className="mx-auto h-10 w-10 text-slate-300" />
                     <h4 className="mt-3 font-bold">مفيش ملفات مطابقة</h4>
-                    <p className="mt-1 text-sm text-muted-foreground">
+                    <p className="mt-1 text-sm text-slate-500">
                       غيّر البحث أو الفلاتر، أو ارفع أول ملف.
                     </p>
                   </div>
@@ -1836,26 +1836,26 @@ export function AdminLearning({
                       const linkedLessons = videoOptions.filter((video) => file.videoIds?.includes(video.id));
                       const fileStages = file.stages?.length ? file.stages : file.stage ? [file.stage] : [];
                       return (
-                        <article key={file.id} className="rounded-xl border border-border p-4">
+                        <article key={file.id} className="rounded-xl border border-slate-200 p-4">
                           <div className="flex items-start gap-3">
                             <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-blue-50 text-primary"><FileText className="h-5 w-5" /></div>
                             <div className="min-w-0 flex-1">
                               <strong className="block truncate text-sm">{file.title}</strong>
-                              <span className="block truncate text-xs text-muted-foreground">{file.originalName}</span>
+                              <span className="block truncate text-xs text-slate-500">{file.originalName}</span>
                             </div>
                             <button type="button" onClick={() => void toggleFile(file)} className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold ${file.isPublished ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
                               {file.isPublished ? "منشور" : "مسودة"}
                             </button>
                           </div>
-                          <div className="mt-3 rounded-lg bg-muted p-3 text-xs text-muted-foreground">
-                            <strong className="mb-1 block text-foreground">مكان الظهور</strong>
+                          <div className="mt-3 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+                            <strong className="mb-1 block text-slate-800">مكان الظهور</strong>
                             {file.targetType === "videos"
                               ? linkedLessons.length
                                 ? linkedLessons.map((video) => video.title).join("، ")
                                 : `داخل ${file.videoIds?.length || 0} درس`
                               : `${getTrack(file.category)?.title || file.category}${fileStages.length ? ` ← ${fileStages.join("، ")}` : ""}`}
                           </div>
-                          <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                          <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
                             <span>{(file.sizeBytes / 1024 / 1024).toFixed(1)} MB</span>
                             <div className="flex gap-1">
                               <button type="button" onClick={() => setPreviewFile(file)} className="rounded-lg p-2 hover:bg-blue-50" aria-label="معاينة"><Eye className="h-4 w-4" /></button>
@@ -1870,7 +1870,7 @@ export function AdminLearning({
                   </div>
                   <div className="hidden overflow-x-auto md:block">
                     <table className="w-full min-w-[1050px] text-sm">
-                      <thead className="bg-muted text-xs text-muted-foreground">
+                      <thead className="bg-slate-50 text-xs text-slate-500">
                         <tr>
                           <th className="p-4 text-right">اسم الملف</th>
                           <th className="p-4 text-right">مكان الظهور</th>
@@ -1886,7 +1886,7 @@ export function AdminLearning({
                         {visibleFiles.map((file) => (
                           <tr
                             key={file.id}
-                            className="border-t border-slate-100 hover:bg-muted/70"
+                            className="border-t border-slate-100 hover:bg-slate-50/70"
                           >
                             <td className="p-4">
                               <div className="flex items-center gap-3">
@@ -1897,14 +1897,14 @@ export function AdminLearning({
                                   <strong className="block max-w-52 truncate">
                                     {file.title}
                                   </strong>
-                                  <small className="block max-w-52 truncate text-muted-foreground">
+                                  <small className="block max-w-52 truncate text-slate-500">
                                     {file.originalName}
                                   </small>
                                 </div>
                               </div>
                             </td>
                             <td className="p-4 font-semibold">{file.targetType === "videos" ? "داخل درس" : getTrack(file.category)?.title || file.category}</td>
-                            <td className="max-w-56 p-4 text-muted-foreground">
+                            <td className="max-w-56 p-4 text-slate-600">
                               {file.targetType === "videos"
                                 ? videoOptions.filter((video) => file.videoIds?.includes(video.id)).map((video) => video.title).join("، ") || `${file.videoIds?.length || 0} درس`
                                 : (file.stages?.length ? file.stages.join("، ") : file.stage || "غير محدد")}
@@ -1916,7 +1916,7 @@ export function AdminLearning({
                             <td className="p-4 text-center">
                               {(file.sizeBytes / 1024 / 1024).toFixed(1)} MB
                             </td>
-                            <td className="p-4 text-center text-muted-foreground">
+                            <td className="p-4 text-center text-slate-500">
                               {file.createdAt
                                 ? new Date(file.createdAt).toLocaleDateString(
                                     "ar-EG",
@@ -1937,7 +1937,7 @@ export function AdminLearning({
                                 <button
                                   type="button"
                                   onClick={() => setPreviewFile(file)}
-                                  className="rounded-lg p-2 text-muted-foreground hover:bg-blue-50 hover:text-primary"
+                                  className="rounded-lg p-2 text-slate-500 hover:bg-blue-50 hover:text-primary"
                                   title="معاينة"
                                 >
                                   <Eye className="h-4 w-4" />
@@ -1945,14 +1945,14 @@ export function AdminLearning({
                                 <button
                                   type="button"
                                   onClick={() => void editFile(file)}
-                                  className="rounded-lg p-2 text-muted-foreground hover:bg-slate-100"
+                                  className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
                                   title="تعديل"
                                 >
                                   <Edit2 className="h-4 w-4" />
                                 </button>
                                 <a
                                   href={`/api/learning/files/${file.id}/download`}
-                                  className="rounded-lg p-2 text-muted-foreground hover:bg-slate-100"
+                                  className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
                                   title="تحميل"
                                 >
                                   <Download className="h-4 w-4" />
@@ -1975,7 +1975,7 @@ export function AdminLearning({
                   </>
                 )}
                 <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4 text-sm">
-                  <span className="text-muted-foreground">
+                  <span className="text-slate-500">
                     صفحة {filePage} من {filePageCount}
                   </span>
                   <div className="flex gap-2">
@@ -2004,12 +2004,12 @@ export function AdminLearning({
               {editingFile && (
                 <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4" onClick={() => setEditingFile(null)}>
                   <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
-                    <div className="mb-5 flex items-center justify-between"><div><h3 className="text-lg font-black">تعديل الملف</h3><p className="text-xs text-muted-foreground">غيّر مكان ظهوره بدون إعادة رفعه.</p></div><button type="button" onClick={() => setEditingFile(null)}><X className="h-5 w-5" /></button></div>
+                    <div className="mb-5 flex items-center justify-between"><div><h3 className="text-lg font-black">تعديل الملف</h3><p className="text-xs text-slate-500">غيّر مكان ظهوره بدون إعادة رفعه.</p></div><button type="button" onClick={() => setEditingFile(null)}><X className="h-5 w-5" /></button></div>
                     <Field label="اسم الملف"><input className="input-admin" value={editingFile.title} onChange={(event) => setEditingFile({ ...editingFile, title: event.target.value })} /></Field>
-                    <div className="my-4 grid grid-cols-2 gap-2">{([['stages', 'مراحل محددة'], ['videos', 'فيديو أو درس']] as const).map(([value, label]) => <button type="button" key={value} onClick={() => setEditingFile({ ...editingFile, targetType: value, stages: [], videoIds: [] })} className={`rounded-xl border p-3 font-bold ${editingFile.targetType === value ? 'border-primary bg-primary/5 text-primary' : 'border-border'}`}>{label}</button>)}</div>
-                    {editingFile.targetType === "videos" ? <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border p-3">{videoOptions.map((video) => { const checked = editingFile.videoIds?.includes(video.id) || false; return <label key={video.id} className="flex gap-3 rounded-lg p-2 hover:bg-muted"><input type="checkbox" checked={checked} onChange={() => setEditingFile({ ...editingFile, videoIds: checked ? editingFile.videoIds?.filter((id) => id !== video.id) : [...(editingFile.videoIds || []), video.id] })} /><span><strong className="block text-sm">{video.title}</strong><small>{video.category}</small></span></label>; })}</div> : <div className="space-y-3">
-                      <div className="grid gap-2 sm:grid-cols-3">{ACADEMIC_TRACKS.map((track) => <button type="button" key={track.id} onClick={() => setEditingFile({ ...editingFile, courseId: null, category: track.id, stages: [] })} className={`rounded-xl border p-3 text-sm font-bold ${getTrack(editingFile.category)?.id === track.id ? "border-primary bg-primary/5 text-primary" : "border-border"}`}>{track.shortTitle}</button>)}</div>
-                      <div className="flex flex-wrap gap-2 rounded-xl border p-3">{(getTrack(editingFile.category)?.stages || []).map((stage) => { const checked = editingFile.stages?.includes(stage) || false; return <button type="button" key={stage} onClick={() => setEditingFile({ ...editingFile, stages: checked ? editingFile.stages?.filter((item) => item !== stage) : [...(editingFile.stages || []), stage] })} className={`rounded-lg border px-3 py-2 text-xs font-bold ${checked ? 'bg-primary text-white' : 'bg-muted'}`}>{stage}</button>; })}</div>
+                    <div className="my-4 grid grid-cols-2 gap-2">{([['stages', 'مراحل محددة'], ['videos', 'فيديو أو درس']] as const).map(([value, label]) => <button type="button" key={value} onClick={() => setEditingFile({ ...editingFile, targetType: value, stages: [], videoIds: [] })} className={`rounded-xl border p-3 font-bold ${editingFile.targetType === value ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200'}`}>{label}</button>)}</div>
+                    {editingFile.targetType === "videos" ? <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border p-3">{videoOptions.map((video) => { const checked = editingFile.videoIds?.includes(video.id) || false; return <label key={video.id} className="flex gap-3 rounded-lg p-2 hover:bg-slate-50"><input type="checkbox" checked={checked} onChange={() => setEditingFile({ ...editingFile, videoIds: checked ? editingFile.videoIds?.filter((id) => id !== video.id) : [...(editingFile.videoIds || []), video.id] })} /><span><strong className="block text-sm">{video.title}</strong><small>{video.category}</small></span></label>; })}</div> : <div className="space-y-3">
+                      <div className="grid gap-2 sm:grid-cols-3">{ACADEMIC_TRACKS.map((track) => <button type="button" key={track.id} onClick={() => setEditingFile({ ...editingFile, courseId: null, category: track.id, stages: [] })} className={`rounded-xl border p-3 text-sm font-bold ${getTrack(editingFile.category)?.id === track.id ? "border-primary bg-primary/5 text-primary" : "border-slate-200"}`}>{track.shortTitle}</button>)}</div>
+                      <div className="flex flex-wrap gap-2 rounded-xl border p-3">{(getTrack(editingFile.category)?.stages || []).map((stage) => { const checked = editingFile.stages?.includes(stage) || false; return <button type="button" key={stage} onClick={() => setEditingFile({ ...editingFile, stages: checked ? editingFile.stages?.filter((item) => item !== stage) : [...(editingFile.stages || []), stage] })} className={`rounded-lg border px-3 py-2 text-xs font-bold ${checked ? 'bg-primary text-white' : 'bg-slate-50'}`}>{stage}</button>; })}</div>
                     </div>}
                     <div className="mt-5 flex justify-end gap-2"><Button variant="outline" onClick={() => setEditingFile(null)}>إلغاء</Button><Button onClick={() => void saveEditedFile()}>حفظ التعديلات</Button></div>
                   </div>
@@ -2028,7 +2028,7 @@ export function AdminLearning({
                     <div className="mb-4 flex items-center justify-between">
                       <div>
                         <h3 className="font-black">{previewFile.title}</h3>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-slate-500">
                           {previewFile.originalName}
                         </p>
                       </div>
@@ -2043,7 +2043,7 @@ export function AdminLearning({
                     <iframe
                       src={`/api/learning/files/${previewFile.id}/download`}
                       title={`معاينة ${previewFile.title}`}
-                      className="h-[70vh] w-full rounded-xl border bg-muted"
+                      className="h-[70vh] w-full rounded-xl border bg-slate-50"
                     />
                     <a
                       href={`/api/learning/files/${previewFile.id}/download`}
@@ -2075,13 +2075,13 @@ export function AdminLearning({
           )}
           {tab === "results" && (
             <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
-              <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <label className="relative w-full sm:max-w-sm"><Search className="absolute right-3 top-3.5 h-4 w-4 text-slate-400" /><input value={resultSearch} onChange={(event) => setResultSearch(event.target.value)} placeholder="ابحث باسم الطالب أو الاختبار..." className="input-admin pr-9" /></label>
                 <Button type="button" variant="outline" disabled={!filteredAttempts.length} onClick={exportResults}><Download className="h-4 w-4" /> تصدير CSV</Button>
               </div>
               <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-muted text-muted-foreground">
+                <thead className="bg-slate-50 text-slate-600">
                   <tr>
                     <th className="p-4 text-right">الطالب</th>
                     <th className="p-4 text-right">الاختبار</th>
@@ -2092,7 +2092,7 @@ export function AdminLearning({
                 </thead>
                 <tbody>
                   {filteredAttempts.map((a) => (
-                    <tr key={a.id} className="border-t hover:bg-muted/70">
+                    <tr key={a.id} className="border-t hover:bg-slate-50/70">
                       <td className="p-4 font-bold">{a.studentName}</td>
                       <td className="p-4">{a.quizTitle}</td>
                       <td className="p-4 text-center font-black">{a.score}%</td>
@@ -2116,7 +2116,7 @@ export function AdminLearning({
                 <a
                   href="/api/admin/learning/analytics/export"
                   download
-                  className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm hover:bg-muted transition-colors"
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
                 >
                   <Download className="h-4 w-4" /> تصدير بيانات الطلاب CSV
                 </a>
@@ -2128,11 +2128,11 @@ export function AdminLearning({
                   ["متوسط تقدم الدروس", `${analytics.summary.averageProgress}%`, BarChart3, "bg-blue-50 text-blue-700"],
                   ["نسبة نجاح الاختبارات", `${analytics.summary.quizPassRate}%`, ClipboardCheck, "bg-violet-50 text-violet-700"],
                 ].map(([label, value, Icon, color]: any) => (
-                  <article key={String(label)} className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+                  <article key={String(label)} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <strong className="text-2xl font-black">{String(value)}</strong>
-                        <p className="mt-1 text-xs font-bold text-muted-foreground">{String(label)}</p>
+                        <p className="mt-1 text-xs font-bold text-slate-600">{String(label)}</p>
                       </div>
                       <span className={`grid h-11 w-11 place-items-center rounded-xl ${String(color)}`}><Icon className="h-5 w-5" /></span>
                     </div>
@@ -2140,21 +2140,21 @@ export function AdminLearning({
                 ))}
               </div>
 
-              <section className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="mb-4">
                   <h3 className="text-lg font-black">طلبات استرجاع الكود</h3>
-                  <p className="text-xs text-muted-foreground">راجع بيانات الطالب وابعتله الكود على رقم واتساب المسجل.</p>
+                  <p className="text-xs text-slate-500">راجع بيانات الطالب وابعتله الكود على رقم واتساب المسجل.</p>
                 </div>
                 <div className="space-y-2">
                   {recoveryRequests.filter((request) => request.status === "pending").length === 0 ? (
-                    <p className="rounded-xl bg-muted p-5 text-center text-sm text-muted-foreground">مفيش طلبات استرجاع معلقة</p>
+                    <p className="rounded-xl bg-slate-50 p-5 text-center text-sm text-slate-500">مفيش طلبات استرجاع معلقة</p>
                   ) : recoveryRequests.filter((request) => request.status === "pending").map((request) => {
                     const message = `أهلًا ${request.studentName}، كود دخول منصة د. محمود المهدي الخاص بيك هو: ${request.accessCode || ""}`;
                     return (
                       <article key={request.id} className="flex flex-col gap-3 rounded-xl border p-4 md:flex-row md:items-center md:justify-between">
                         <div>
                           <strong>{request.studentName}</strong>
-                          <p className="text-xs text-muted-foreground" dir="ltr">{request.phone}</p>
+                          <p className="text-xs text-slate-500" dir="ltr">{request.phone}</p>
                           <span className="mt-1 block font-mono text-xs font-bold text-primary">{request.accessCode}</span>
                         </div>
                         <div className="flex gap-2">
@@ -2179,11 +2179,11 @@ export function AdminLearning({
               {/* Geographic & Grade Distribution Section */}
               <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
                 {/* 1. Top Governorates Distribution */}
-                <div className="rounded-2xl border border-border bg-white p-5 shadow-sm space-y-4">
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                   <div className="flex items-center justify-between border-b pb-3">
                     <div>
-                      <h3 className="text-base font-extrabold text-foreground">أكثر المحافظات إقبالاً على المنصة 📍</h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">توزيع الطلاب حسب المحافظة والعنوان المسجل.</p>
+                      <h3 className="text-base font-extrabold text-slate-900">أكثر المحافظات إقبالاً على المنصة 📍</h3>
+                      <p className="text-xs text-slate-500 mt-0.5">توزيع الطلاب حسب المحافظة والعنوان المسجل.</p>
                     </div>
                     <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
                       {analytics.governorateDistribution?.length || 0} محافظة
@@ -2193,12 +2193,12 @@ export function AdminLearning({
                     {(analytics.governorateDistribution || []).slice(0, 7).map((gov) => (
                       <div key={gov.name} className="space-y-1">
                         <div className="flex justify-between text-xs font-bold">
-                          <span className="text-foreground">{gov.name}</span>
-                          <span className="text-muted-foreground">{gov.count} طالب ({gov.percentage}%)</span>
+                          <span className="text-slate-800">{gov.name}</span>
+                          <span className="text-slate-600">{gov.count} طالب ({gov.percentage}%)</span>
                         </div>
                         <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
                           <div
-                            className="h-full rounded-full bg-primary transition-all duration-500"
+                            className="h-full rounded-full bg-[#0866D9] transition-all duration-500"
                             style={{ width: `${Math.max(4, gov.percentage)}%` }}
                           />
                         </div>
@@ -2208,11 +2208,11 @@ export function AdminLearning({
                 </div>
 
                 {/* 2. Top Cities & Centered Hubs */}
-                <div className="rounded-2xl border border-border bg-white p-5 shadow-sm space-y-4">
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                   <div className="flex items-center justify-between border-b pb-3">
                     <div>
-                      <h3 className="text-base font-extrabold text-foreground">أعلى المراكز والمدن نشاطاً 🏛️</h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">أكثر المدن والمراكز المسجل منها طلاب.</p>
+                      <h3 className="text-base font-extrabold text-slate-900">أعلى المراكز والمدن نشاطاً 🏛️</h3>
+                      <p className="text-xs text-slate-500 mt-0.5">أكثر المدن والمراكز المسجل منها طلاب.</p>
                     </div>
                     <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
                       Top 10 مدن
@@ -2220,14 +2220,14 @@ export function AdminLearning({
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     {(analytics.topCities || []).slice(0, 10).map((city, idx) => (
-                      <div key={city.name} className="flex items-center justify-between rounded-xl border border-slate-100 bg-muted/70 p-2.5 text-xs font-semibold">
+                      <div key={city.name} className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 text-xs font-semibold">
                         <div className="flex items-center gap-2 truncate">
-                          <span className="grid h-5 w-5 place-items-center rounded-md bg-white border text-[10px] font-bold text-muted-foreground shadow-2xs">
+                          <span className="grid h-5 w-5 place-items-center rounded-md bg-white border text-[10px] font-bold text-slate-600 shadow-2xs">
                             {idx + 1}
                           </span>
-                          <span className="truncate text-foreground">{city.name}</span>
+                          <span className="truncate text-slate-800">{city.name}</span>
                         </div>
-                        <span className="rounded-md bg-white px-2 py-0.5 font-bold text-primary shadow-2xs shrink-0">
+                        <span className="rounded-md bg-white px-2 py-0.5 font-bold text-[#0866D9] shadow-2xs shrink-0">
                           {city.count}
                         </span>
                       </div>
@@ -2237,18 +2237,18 @@ export function AdminLearning({
               </div>
 
               {/* Detailed Student Progress & Location Table */}
-              <section className="overflow-x-auto rounded-2xl border border-border bg-white shadow-sm">
+              <section className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div className="border-b p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
-                    <h3 className="text-lg font-black text-foreground">تحليلات تقدم ومواقع الطلاب التفصيلية</h3>
-                    <p className="text-xs text-muted-foreground">الأقل نشاطاً ظاهرين في البداية لتسهيل المتابعة الفورية.</p>
+                    <h3 className="text-lg font-black text-slate-900">تحليلات تقدم ومواقع الطلاب التفصيلية</h3>
+                    <p className="text-xs text-slate-500">الأقل نشاطاً ظاهرين في البداية لتسهيل المتابعة الفورية.</p>
                   </div>
-                  <span className="text-xs font-bold text-muted-foreground">
+                  <span className="text-xs font-bold text-slate-500">
                     إجمالي المسجلين: {analytics.students.length} طالب
                   </span>
                 </div>
                 <table className="w-full min-w-[950px] text-sm">
-                  <thead className="bg-muted text-muted-foreground font-bold">
+                  <thead className="bg-slate-50 text-slate-600 font-bold">
                     <tr>
                       <th className="p-4 text-right">الطالب والمعلومات</th>
                       <th className="p-4 text-right">المحافظة والمدينة</th>
@@ -2262,14 +2262,14 @@ export function AdminLearning({
                   </thead>
                   <tbody>
                     {[...analytics.students].sort((a, b) => Number(a.isActive) - Number(b.isActive)).map((row) => (
-                      <tr key={row.studentId} className="border-t hover:bg-muted/60 transition">
+                      <tr key={row.studentId} className="border-t hover:bg-slate-50/60 transition">
                         <td className="p-4">
-                          <strong className="block text-foreground">{row.name}</strong>
-                          <span className="text-xs text-muted-foreground font-mono" dir="ltr">{row.phone}</span>
+                          <strong className="block text-slate-900">{row.name}</strong>
+                          <span className="text-xs text-slate-500 font-mono" dir="ltr">{row.phone}</span>
                         </td>
                         <td className="p-4 text-right">
-                          <span className="block text-xs font-bold text-foreground">{row.governorate}</span>
-                          <span className="text-[11px] text-muted-foreground">{row.city}</span>
+                          <span className="block text-xs font-bold text-slate-800">{row.governorate}</span>
+                          <span className="text-[11px] text-slate-500">{row.city}</span>
                         </td>
                         <td className="p-4 text-center">
                           <span className="inline-block rounded-md bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-700">
@@ -2281,11 +2281,11 @@ export function AdminLearning({
                         <td className="p-4">
                           <div className="mx-auto w-28">
                             <div className="mb-1 flex justify-between text-[11px]">
-                              <span className="text-muted-foreground">التقدم</span>
+                              <span className="text-slate-500">التقدم</span>
                               <strong>{row.averageProgress}%</strong>
                             </div>
                             <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
-                              <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, Math.max(0, row.averageProgress))}%` }} />
+                              <div className="h-full rounded-full bg-[#0866D9]" style={{ width: `${Math.min(100, Math.max(0, row.averageProgress))}%` }} />
                             </div>
                           </div>
                         </td>
@@ -2318,7 +2318,7 @@ export function AdminLearning({
               initial={{ scale: 0.94, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.94, opacity: 0 }}
-              className="w-full max-w-md overflow-hidden rounded-3xl border border-border bg-white p-6 shadow-2xl dark:border-border dark:bg-[#111C2E]"
+              className="w-full max-w-md overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-[#111C2E]"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-start gap-4">
@@ -2332,20 +2332,20 @@ export function AdminLearning({
                   <AlertCircle className="h-6 w-6" />
                 </div>
                 <div className="space-y-1 text-right">
-                  <h3 className="text-lg font-black text-foreground dark:text-slate-100">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-slate-100">
                     {confirmModal.title}
                   </h3>
-                  <p className="text-sm font-medium text-muted-foreground dark:text-slate-300">
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
                     {confirmModal.message}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-4 dark:border-border">
+              <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setConfirmModal(null)}
-                  className="rounded-xl border border-border bg-white px-4 py-2.5 text-xs font-bold text-muted-foreground transition hover:bg-muted dark:border-slate-700 dark:bg-transparent dark:text-slate-300 dark:hover:bg-slate-800 cursor-pointer"
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-transparent dark:text-slate-300 dark:hover:bg-slate-800 cursor-pointer"
                 >
                   {confirmModal.cancelText || "إلغاء"}
                 </button>
@@ -2568,12 +2568,12 @@ function PaymentReceiptsPanel({ receipts: propReceipts, onRefresh }: { receipts?
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-white p-5 shadow-xs space-y-5 text-foreground">
+    <div className="rounded-2xl border border-[#E4EAF2] bg-white p-5 shadow-xs space-y-5 text-[#0F172A]">
       {/* Card Header & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E4EAF2] pb-4">
         <div>
-          <h3 className="text-base font-extrabold text-foreground">إدارة إيصالات الدفع</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">مراجعة وتأكيد التحويلات وإيصالات الدفع المرفوعة من الطلاب</p>
+          <h3 className="text-base font-extrabold text-[#0F172A]">إدارة إيصالات الدفع</h3>
+          <p className="text-xs text-[#64748B] mt-0.5">مراجعة وتأكيد التحويلات وإيصالات الدفع المرفوعة من الطلاب</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -2581,9 +2581,9 @@ function PaymentReceiptsPanel({ receipts: propReceipts, onRefresh }: { receipts?
             variant="outline"
             size="sm"
             onClick={loadReceipts}
-            className="h-9 px-3 rounded-xl border-border bg-white hover:bg-muted text-xs font-bold text-foreground"
+            className="h-9 px-3 rounded-xl border-[#E4EAF2] bg-white hover:bg-[#F6F8FC] text-xs font-bold text-[#0F172A]"
           >
-            <RefreshCw className="h-3.5 w-3.5 ml-1.5 text-muted-foreground" /> تحديث القائمة
+            <RefreshCw className="h-3.5 w-3.5 ml-1.5 text-[#64748B]" /> تحديث القائمة
           </Button>
         </div>
       </div>
@@ -2602,8 +2602,8 @@ function PaymentReceiptsPanel({ receipts: propReceipts, onRefresh }: { receipts?
             onClick={() => setFilter(f.key as any)}
             className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all ${
               filter === f.key
-                ? "bg-primary text-white shadow-xs"
-                : "bg-muted border border-border text-muted-foreground hover:text-foreground hover:bg-[#E4EAF2]/50"
+                ? "bg-[#0866D9] text-white shadow-xs"
+                : "bg-[#F6F8FC] border border-[#E4EAF2] text-[#64748B] hover:text-[#0F172A] hover:bg-[#E4EAF2]/50"
             }`}
           >
             <span>{f.label}</span>
@@ -2611,7 +2611,7 @@ function PaymentReceiptsPanel({ receipts: propReceipts, onRefresh }: { receipts?
               className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
                 filter === f.key
                   ? "bg-white/20 text-white"
-                  : "bg-[#E4EAF2] text-foreground"
+                  : "bg-[#E4EAF2] text-[#0F172A]"
               }`}
             >
               {f.count}
@@ -2623,16 +2623,16 @@ function PaymentReceiptsPanel({ receipts: propReceipts, onRefresh }: { receipts?
       {/* Main Content Area */}
       {loading ? (
         <div className="flex items-center justify-center p-12">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <Loader2 className="h-6 w-6 animate-spin text-[#0866D9]" />
         </div>
       ) : filtered.length === 0 ? (
         /* Professional Empty State */
-        <div className="rounded-xl border border-dashed border-border bg-muted/50 p-12 text-center">
-          <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary mb-3">
+        <div className="rounded-xl border border-dashed border-[#E4EAF2] bg-[#F6F8FC]/50 p-12 text-center">
+          <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[#0866D9]/10 text-[#0866D9] mb-3">
             <FileCheck2 className="h-6 w-6" strokeWidth={1.8} />
           </div>
-          <h4 className="text-sm font-extrabold text-foreground">لا توجد إيصالات دفع</h4>
-          <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+          <h4 className="text-sm font-extrabold text-[#0F172A]">لا توجد إيصالات دفع</h4>
+          <p className="text-xs text-[#64748B] mt-1 max-w-sm mx-auto">
             {filter === "all"
               ? "لم يقم أي طالب برفع إيصال دفع حتى الآن."
               : `لا توجد إيصالات مضافة بحالة «${filter === "pending" ? "قيد المراجعة" : filter === "approved" ? "مقبول" : "مرفوض"}».`}
@@ -2640,9 +2640,9 @@ function PaymentReceiptsPanel({ receipts: propReceipts, onRefresh }: { receipts?
         </div>
       ) : (
         /* Responsive Table */
-        <div className="overflow-x-auto rounded-xl border border-border">
+        <div className="overflow-x-auto rounded-xl border border-[#E4EAF2]">
           <table className="w-full text-right text-xs">
-            <thead className="bg-muted text-muted-foreground font-bold border-b border-border">
+            <thead className="bg-[#F6F8FC] text-[#64748B] font-bold border-b border-[#E4EAF2]">
               <tr>
                 <th className="px-4 py-3">الطالب</th>
                 <th className="px-4 py-3">رقم الهاتف</th>
@@ -2654,14 +2654,14 @@ function PaymentReceiptsPanel({ receipts: propReceipts, onRefresh }: { receipts?
             <tbody className="divide-y divide-[#E4EAF2] bg-white">
               {filtered.map((receipt) => (
                 <React.Fragment key={receipt.id}>
-                  <tr className="hover:bg-muted/60 transition-colors">
-                    <td className="px-4 py-3.5 font-bold text-foreground">
+                  <tr className="hover:bg-[#F6F8FC]/60 transition-colors">
+                    <td className="px-4 py-3.5 font-bold text-[#0F172A]">
                       {receipt.studentName}
                     </td>
-                    <td className="px-4 py-3.5 text-muted-foreground dir-ltr text-right font-mono">
+                    <td className="px-4 py-3.5 text-[#64748B] dir-ltr text-right font-mono">
                       {receipt.studentPhone}
                     </td>
-                    <td className="px-4 py-3.5 text-muted-foreground">
+                    <td className="px-4 py-3.5 text-[#64748B]">
                       {new Date(receipt.createdAt).toLocaleDateString("ar-EG", {
                         year: "numeric",
                         month: "short",
@@ -2702,10 +2702,10 @@ function PaymentReceiptsPanel({ receipts: propReceipts, onRefresh }: { receipts?
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-8 px-2.5 text-xs font-bold border-border text-foreground hover:bg-muted"
+                          className="h-8 px-2.5 text-xs font-bold border-[#E4EAF2] text-[#0F172A] hover:bg-[#F6F8FC]"
                           onClick={() => setPreviewId(previewId === receipt.id ? null : receipt.id)}
                         >
-                          <Eye className="h-3.5 w-3.5 ml-1 text-muted-foreground" />
+                          <Eye className="h-3.5 w-3.5 ml-1 text-[#64748B]" />
                           {previewId === receipt.id ? "إخفاء" : "عرض الصورة"}
                         </Button>
                         {receipt.status === "pending" && (
@@ -2747,9 +2747,9 @@ function PaymentReceiptsPanel({ receipts: propReceipts, onRefresh }: { receipts?
 
                   {/* Inline Preview */}
                   {previewId === receipt.id && (
-                    <tr className="bg-muted/80">
+                    <tr className="bg-[#F6F8FC]/80">
                       <td colSpan={5} className="p-4">
-                        <div className="overflow-hidden rounded-xl border border-border bg-white p-3 text-center">
+                        <div className="overflow-hidden rounded-xl border border-[#E4EAF2] bg-white p-3 text-center">
                           <img
                             src={`/api/admin/payment-receipts/${receipt.id}/image`}
                             alt="إيصال الدفع"

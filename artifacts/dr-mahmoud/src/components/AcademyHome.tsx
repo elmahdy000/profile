@@ -85,7 +85,7 @@ function HomeHonorWallSection() {
           <h2 className="text-2xl sm:text-3xl font-black text-white">
             طلاب حققوا أعلى نسب متابعة ومشاهدة
           </h2>
-          <p className="mt-2 text-xs sm:text-sm font-semibold text-muted-foreground">
+          <p className="mt-2 text-xs sm:text-sm font-semibold text-slate-400">
             تكريم متميز للطلاب الأكثر التزاماً بمتابعة الدروس والتطبيقات العملية (80% وأكثر)!
           </p>
         </div>
@@ -131,12 +131,12 @@ function HomeHonorWallSection() {
 
                     <div className="min-w-0 flex-1">
                       <h3 className="text-xs font-black text-white truncate">{hero.name}</h3>
-                      <p className="text-[10px] font-medium text-muted-foreground truncate">{hero.school}</p>
+                      <p className="text-[10px] font-medium text-slate-400 truncate">{hero.school}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-3 pt-2.5 border-t border-slate-700/60 flex items-center justify-between text-[10px] font-semibold text-muted-foreground">
+                <div className="mt-3 pt-2.5 border-t border-slate-700/60 flex items-center justify-between text-[10px] font-semibold text-slate-400">
                   <span>نسبة الإنجاز:</span>
                   <span className="font-extrabold text-white dir-ltr">{displayPercent}% ({hero.completedVideos} فيديو)</span>
                 </div>
@@ -219,17 +219,17 @@ export function AcademyHome() {
   };
 
   return (
-    <div className=" min-h-screen bg-muted text-foreground font-sans" dir="rtl">
+    <div className="theme-adaptive min-h-screen bg-slate-50 text-slate-900 font-sans" dir="rtl">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }} />
       <Navbar />
 
       {/* First-time Visitor Welcome Modal */}
       {showWelcomeModal && (
         <div className="fixed inset-0 z-[120] grid place-items-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
-          <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white  p-6 text-right shadow-2xl border border-border  space-y-5">
+          <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white dark:bg-slate-900 p-6 text-right shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5">
             <button
               onClick={handleCloseWelcomeModal}
-              className="absolute top-4 left-4 grid h-8 w-8 place-items-center rounded-full bg-muted  text-muted-foreground hover:text-foreground dark:hover:text-white transition-colors"
+              className="absolute top-4 left-4 grid h-8 w-8 place-items-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
               aria-label="إغلاق"
             >
               ✕
@@ -241,11 +241,11 @@ export function AcademyHome() {
               </div>
               <div>
                 <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">أهلاً بك في منصة دكتور المهدي 👋</span>
-                <h3 className="text-lg font-black text-foreground ">جرب طريقة الشرح بنفسك!</h3>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">جرب طريقة الشرح بنفسك!</h3>
               </div>
             </div>
 
-            <p className="text-sm font-semibold text-muted-foreground  leading-relaxed">
+            <p className="text-sm font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">
               يسعدنا تواجدك معنا! شاهد المحاضرة التمهيدية الأولى من كورس C++ للتعرف على طريقة الشرح والتطبيقات العملية قبل أي خطوة.
             </p>
 
@@ -259,7 +259,7 @@ export function AcademyHome() {
               <Button
                 onClick={handleCloseWelcomeModal}
                 variant="outline"
-                className="h-11 rounded-xl font-semibold justify-center text-muted-foreground  border-border "
+                className="h-11 rounded-xl font-semibold justify-center text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800"
               >
                 تصفح الموقع أولاً
               </Button>
@@ -270,7 +270,7 @@ export function AcademyHome() {
 
       <main>
         {/* ─── 1. HERO SECTION ─── */}
-        <section id="hero" className="relative border-b border-border  bg-white  py-12 md:py-20 overflow-hidden">
+        <section id="hero" className="relative border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#07111f] py-12 md:py-20 overflow-hidden">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid items-center gap-10 lg:grid-cols-12">
               
@@ -297,11 +297,11 @@ export function AcademyHome() {
                   برامج البكالوريا المصرية وحاسبات ومعلومات • أونلاين لكل مصر
                 </span>
 
-                <h1 className="text-3xl font-black leading-tight text-foreground  sm:text-4xl md:text-5xl">
+                <h1 className="text-3xl font-black leading-tight text-slate-900 dark:text-white sm:text-4xl md:text-5xl">
                   اتعلم البرمجة وعلوم الحاسب <span className="text-blue-600">من البداية صح</span>
                 </h1>
 
-                <p className="max-w-2xl text-base font-semibold leading-relaxed text-muted-foreground  md:text-lg">
+                <p className="max-w-2xl text-base font-semibold leading-relaxed text-slate-600 dark:text-slate-300 md:text-lg">
                   شرح عملي وتأسيس شامل لطلاب البكالوريا وحاسبات ومعلومات مع د. محمود المهدي، ماجستير نظم المعلومات.
                 </p>
 
@@ -337,7 +337,7 @@ export function AcademyHome() {
 
                 {/* Secondary Actions */}
                 <div className="grid grid-cols-2 gap-3 pt-1">
-                  <Button asChild size="lg" variant="outline" className="h-11 rounded-xl border-border bg-white px-3 text-xs font-bold text-foreground hover:bg-muted   dark:text-slate-100 dark:hover:bg-slate-800">
+                  <Button asChild size="lg" variant="outline" className="h-11 rounded-xl border-slate-300 bg-white px-3 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100 dark:hover:bg-slate-800">
                     <a href="/platform" className="flex items-center justify-center gap-1.5">
                       <Laptop className="h-4 w-4 text-blue-600" />
                       <span>دخول الطالب</span>
@@ -353,7 +353,7 @@ export function AcademyHome() {
                 </div>
 
                 {/* Trust line */}
-                <div className="pt-2 text-xs font-bold text-muted-foreground  flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border  mt-4">
+                <div className="pt-2 text-xs font-bold text-slate-500 dark:text-slate-400 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-100 dark:border-slate-800 mt-4">
                   <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> أونلاين لكل مصر</span>
                   <a href="#offline-centers" className="flex items-center gap-1.5 text-emerald-700 font-extrabold hover:underline"><MapPin className="h-4 w-4 text-emerald-600" /> مواعيد حضور الزقازيق</a>
                   <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> متابعة واختبارات مستمرة</span>
@@ -367,9 +367,9 @@ export function AcademyHome() {
                     ["بنك أسئلة", "تدريبات وتطبيقات متدرجة"],
                     ["متابعة مستوى", "تقارير وتقييم مستمر"],
                   ].map(([title, sub]) => (
-                    <div key={title} className="rounded-xl border border-border bg-muted/60 p-3 text-right  /50">
-                      <strong className="block text-xs font-black text-foreground ">{title}</strong>
-                      <span className="mt-0.5 block text-[11px] font-semibold text-muted-foreground ">{sub}</span>
+                    <div key={title} className="rounded-xl border border-slate-200 bg-slate-50/60 p-3 text-right dark:border-slate-700 dark:bg-slate-800/50">
+                      <strong className="block text-xs font-black text-slate-900 dark:text-white">{title}</strong>
+                      <span className="mt-0.5 block text-[11px] font-semibold text-slate-500 dark:text-slate-400">{sub}</span>
                     </div>
                   ))}
                 </div>
@@ -398,16 +398,16 @@ export function AcademyHome() {
         </section>
 
         {/* ─── 2. WHY STUDENTS FIND PROGRAMMING DIFFICULT SECTION ─── */}
-        <section aria-labelledby="problem-section-heading" className="bg-muted  py-12 md:py-16 border-b border-border ">
+        <section aria-labelledby="problem-section-heading" className="bg-slate-50 dark:bg-[#080f1c] py-12 md:py-16 border-b border-slate-200 dark:border-slate-800">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <header className="mx-auto max-w-3xl text-center mb-10">
               <span className="inline-block rounded-full bg-blue-100/80 px-3.5 py-1 text-xs font-bold text-blue-700 tracking-normal dark:bg-blue-500/12 dark:text-blue-300 dark:border dark:border-blue-400/25">
                 المشكلة مش في قدرات الطالب
               </span>
-              <h2 id="problem-section-heading" className="mt-3 text-2xl font-black text-foreground  sm:text-3xl lg:text-4xl leading-tight">
+              <h2 id="problem-section-heading" className="mt-3 text-2xl font-black text-slate-900 dark:text-white sm:text-3xl lg:text-4xl leading-tight">
                 ليه طلاب كتير بيحسّوا إن البرمجة صعبة؟
               </h2>
-              <p className="mt-3 text-sm sm:text-base font-semibold leading-relaxed text-muted-foreground ">
+              <p className="mt-3 text-sm sm:text-base font-semibold leading-relaxed text-slate-600 dark:text-slate-400">
                 غالبًا السبب مش ضعف الطالب، لكن طريقة البداية وترتيب الشرح.
               </p>
             </header>
@@ -436,16 +436,16 @@ export function AcademyHome() {
               ].map((card) => (
                 <article
                   key={card.title}
-                  className="group flex flex-col justify-between rounded-2xl border border-border/90 bg-white p-6 shadow-xs hover:shadow-md hover:-translate-y-1 hover:border-border transition-all duration-200 text-right motion-reduce:hover:translate-y-0 motion-reduce:transition-none  /45 dark:hover:border-slate-600"
+                  className="group flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-6 shadow-xs hover:shadow-md hover:-translate-y-1 hover:border-slate-300 transition-all duration-200 text-right motion-reduce:hover:translate-y-0 motion-reduce:transition-none dark:border-slate-700 dark:bg-slate-900/45 dark:hover:border-slate-600"
                 >
                   <div>
                     <div className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border ${card.accentColor}`}>
                       <card.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
                     </div>
-                    <h3 className="text-lg font-black text-foreground leading-snug">
+                    <h3 className="text-lg font-black text-slate-900 leading-snug">
                       {card.title}
                     </h3>
-                    <p className="mt-2.5 text-xs sm:text-sm font-semibold leading-relaxed text-muted-foreground">
+                    <p className="mt-2.5 text-xs sm:text-sm font-semibold leading-relaxed text-slate-600">
                       {card.description}
                     </p>
                   </div>
@@ -460,11 +460,11 @@ export function AcademyHome() {
                   <Lightbulb className="h-5 w-5" aria-hidden="true" />
                 </div>
                 
-                <p className="text-base sm:text-lg font-black text-foreground  leading-relaxed">
+                <p className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-relaxed">
                   الحل مش في فيديوهات أكتر؛ الحل في مسار يخلي الطالب يفهم، يطبّق، يحل، ويعرف سبب كل خطوة.
                 </p>
 
-                <div className="mt-2 flex flex-col items-center gap-2 sm:flex-row sm:gap-3 text-xs sm:text-sm font-bold text-muted-foreground ">
+                <div className="mt-2 flex flex-col items-center gap-2 sm:flex-row sm:gap-3 text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-400">
                   <span>وده أساس طريقة الشرح داخل برنامج د. محمود المهدي.</span>
                   <a
                     href="#learning-method"
@@ -483,21 +483,21 @@ export function AcademyHome() {
         <HomeHonorWallSection />
 
         {/* ─── 3. GRADE SELECTION SECTION ─── */}
-        <section id="baccalaureate" className="bg-white  py-14 md:py-20 border-b border-border ">
+        <section id="baccalaureate" className="bg-white dark:bg-[#07111f] py-14 md:py-20 border-b border-slate-200 dark:border-slate-800">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-3xl text-center mb-12">
               <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">البرنامج المخصص</span>
-              <h2 className="mt-2 text-3xl font-black text-foreground ">
+              <h2 className="mt-2 text-3xl font-black text-slate-900 dark:text-white">
                 اختار برنامجك حسب مرحلتك
               </h2>
-              <p className="mt-2 text-sm font-semibold text-muted-foreground ">
+              <p className="mt-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
                 مسارات تعليمية متدرجة تضمن فهم المنهج والتدريب على الاختبارات بثقة.
               </p>
             </div>
 
             <div className="grid gap-8 md:grid-cols-2">
               {/* Card 1: 1st Secondary */}
-              <div id="first-sec" className="group flex flex-col justify-between overflow-hidden rounded-3xl border-2 border-blue-100  bg-muted/50  hover:border-blue-300 dark:hover:border-blue-700 transition-all hover:shadow-xl hover:shadow-blue-500/5">
+              <div id="first-sec" className="group flex flex-col justify-between overflow-hidden rounded-3xl border-2 border-blue-100 dark:border-blue-900 bg-slate-50/50 dark:bg-slate-900/60 hover:border-blue-300 dark:hover:border-blue-700 transition-all hover:shadow-xl hover:shadow-blue-500/5">
                 <div>
                   {/* Card Cover Image */}
                   <div className="relative h-48 sm:h-52 w-full overflow-hidden bg-slate-950">
@@ -517,11 +517,11 @@ export function AcademyHome() {
                   </div>
 
                   <div className="p-6 md:p-8 space-y-4 text-right">
-                    <p className="text-sm font-semibold leading-relaxed text-muted-foreground ">
+                    <p className="text-sm font-semibold leading-relaxed text-slate-600 dark:text-slate-300">
                       تأسيس الطالب في التفكير البرمجي، الخوارزميات، المتغيرات، الإدخال والإخراج، العمليات، الشروط، والتطبيقات الأساسية.
                     </p>
                     
-                    <div className="border-t border-border/80  pt-4 space-y-2 text-xs font-bold text-foreground ">
+                    <div className="border-t border-slate-200/80 dark:border-slate-700 pt-4 space-y-2 text-xs font-bold text-slate-700 dark:text-slate-300">
                       <span className="block text-blue-700 dark:text-blue-400">مخرجات التعلم الرئيسية:</span>
                       <ul className="space-y-1.5">
                         <li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> تحليل المشكلات ورسم Flowcharts</li>
@@ -532,8 +532,8 @@ export function AcademyHome() {
                   </div>
                 </div>
 
-                <div className="p-6 md:p-8 pt-0 border-t border-border/60  flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-auto">
-                  <span className="text-xs font-bold text-muted-foreground ">متاح أونلاين لكل مصر • أوفلاين بالزقازيق</span>
+                <div className="p-6 md:p-8 pt-0 border-t border-slate-200/60 dark:border-slate-700 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-auto">
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400">متاح أونلاين لكل مصر • أوفلاين بالزقازيق</span>
                   <Button asChild className="h-11 rounded-xl bg-blue-600 font-black text-white hover:bg-blue-700 shadow-md shadow-blue-600/20">
                     <a href="/baccalaureate">
                       شاهد برنامج أولى ثانوي
@@ -544,7 +544,7 @@ export function AcademyHome() {
               </div>
 
               {/* Card 2: 2nd Secondary */}
-              <div id="second-sec" className="group flex flex-col justify-between overflow-hidden rounded-3xl border-2 border-indigo-100 dark:border-indigo-900 bg-muted/50  hover:border-indigo-300 dark:hover:border-indigo-700 transition-all hover:shadow-xl hover:shadow-indigo-500/5">
+              <div id="second-sec" className="group flex flex-col justify-between overflow-hidden rounded-3xl border-2 border-indigo-100 dark:border-indigo-900 bg-slate-50/50 dark:bg-slate-900/60 hover:border-indigo-300 dark:hover:border-indigo-700 transition-all hover:shadow-xl hover:shadow-indigo-500/5">
                 <div>
                   {/* Card Cover Image */}
                   <div className="relative h-48 sm:h-52 w-full overflow-hidden bg-slate-950">
@@ -564,11 +564,11 @@ export function AcademyHome() {
                   </div>
 
                   <div className="p-6 md:p-8 space-y-4 text-right">
-                    <p className="text-sm font-semibold leading-relaxed text-muted-foreground ">
+                    <p className="text-sm font-semibold leading-relaxed text-slate-600 dark:text-slate-300">
                       استكمال المهارات البرمجية، حل المشكلات، تتبع الأكواد، التدريب على الأسئلة، والمفاهيم المتقدمة المناسبة للمنهج.
                     </p>
 
-                    <div className="border-t border-border/80  pt-4 space-y-2 text-xs font-bold text-foreground ">
+                    <div className="border-t border-slate-200/80 dark:border-slate-700 pt-4 space-y-2 text-xs font-bold text-slate-700 dark:text-slate-300">
                       <span className="block text-indigo-700 dark:text-indigo-400">مخرجات التعلم الرئيسية:</span>
                       <ul className="space-y-1.5">
                         <li className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-600 flex-shrink-0" /> تتبع الأكواد المعقدة واكتشاف الأخطاء</li>
@@ -579,8 +579,8 @@ export function AcademyHome() {
                   </div>
                 </div>
 
-                <div className="p-6 md:p-8 pt-0 border-t border-border/60  flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-auto">
-                  <span className="text-xs font-bold text-muted-foreground ">متاح أونلاين لكل مصر • أوفلاين بالزقازيق</span>
+                <div className="p-6 md:p-8 pt-0 border-t border-slate-200/60 dark:border-slate-700 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-auto">
+                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400">متاح أونلاين لكل مصر • أوفلاين بالزقازيق</span>
                   <Button asChild className="h-11 rounded-xl bg-indigo-600 font-black text-white hover:bg-indigo-700 shadow-md shadow-indigo-600/20">
                     <a href="/baccalaureate">
                       شاهد برنامج تانية ثانوي
@@ -594,12 +594,12 @@ export function AcademyHome() {
         </section>
 
         {/* ─── 4. LEARNING METHOD SECTION ─── */}
-        <section id="learning-method" className="bg-muted  py-14 md:py-20 border-b border-border ">
+        <section id="learning-method" className="bg-slate-50 dark:bg-[#080f1c] py-14 md:py-20 border-b border-slate-200 dark:border-slate-800">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-3xl text-center mb-12">
               <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">منهجية الفهم</span>
-              <h2 className="text-3xl font-black text-foreground ">الطالب هيتعلم إزاي؟</h2>
-              <p className="mt-2 text-sm font-semibold text-muted-foreground ">رحلة متدرجة تضمن الوصول لأعلى مستوى فهم وتطبيق.</p>
+              <h2 className="text-3xl font-black text-slate-900 dark:text-white">الطالب هيتعلم إزاي؟</h2>
+              <p className="mt-2 text-sm font-semibold text-slate-500 dark:text-slate-400">رحلة متدرجة تضمن الوصول لأعلى مستوى فهم وتطبيق.</p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
@@ -611,9 +611,9 @@ export function AcademyHome() {
                 ["5. نختبر الفهم", "اختبارات قصيرة بعد كل جزء."],
                 ["6. نتابع المستوى", "تحديد نقاط القوة والأجزاء التي تحتاج مراجعة."],
               ].map(([step, desc]) => (
-                <div key={step} className="rounded-2xl border border-border  bg-white  p-4 text-right shadow-xs">
+                <div key={step} className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 p-4 text-right shadow-xs">
                   <strong className="block text-sm font-black text-blue-600">{step}</strong>
-                  <p className="mt-2 text-xs font-semibold leading-relaxed text-muted-foreground ">{desc}</p>
+                  <p className="mt-2 text-xs font-semibold leading-relaxed text-slate-500 dark:text-slate-400">{desc}</p>
                 </div>
               ))}
             </div>
@@ -621,12 +621,12 @@ export function AcademyHome() {
         </section>
 
         {/* ─── 5. PLATFORM SHOWCASE SECTION ─── */}
-        <section className="bg-white  py-14 md:py-20 border-b border-border ">
+        <section className="bg-white dark:bg-[#07111f] py-14 md:py-20 border-b border-slate-200 dark:border-slate-800">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-3xl text-center mb-12">
               <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">بيئة التعلم المتكاملة</span>
-              <h2 className="text-3xl font-black text-foreground ">كل حاجة محتاجها الطالب في مكان واحد</h2>
-              <p className="mt-2 text-sm font-semibold text-muted-foreground ">منصة تعليمية مخصصة تجمع الشرح والأكواد والاختبارات والمتابعة.</p>
+              <h2 className="text-3xl font-black text-slate-900 dark:text-white">كل حاجة محتاجها الطالب في مكان واحد</h2>
+              <p className="mt-2 text-sm font-semibold text-slate-500 dark:text-slate-400">منصة تعليمية مخصصة تجمع الشرح والأكواد والاختبارات والمتابعة.</p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -638,13 +638,13 @@ export function AcademyHome() {
                 [Code, "بنك الأسئلة", "تدريبات وتطبيقات شاملة متدرجة الصعوبة."],
                 [UserCheck, "متابعة التقدم", "استكمال آخر درس وتتبع نسبة الإنجاز والدرجات."],
               ].map(([Icon, title, desc]: any) => (
-                <div key={title} className="flex gap-3.5 rounded-2xl border border-border  bg-muted/50  p-5 text-right">
+                <div key={title} className="flex gap-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/60 p-5 text-right">
                   <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400">
                     <Icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-foreground ">{title}</h3>
-                    <p className="mt-1 text-xs font-semibold text-muted-foreground  leading-relaxed">{desc}</p>
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white">{title}</h3>
+                    <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400 leading-relaxed">{desc}</p>
                   </div>
                 </div>
               ))}
@@ -673,7 +673,7 @@ export function AcademyHome() {
               <h2 className="text-3xl font-black text-white md:text-4xl">
                 2. مقدمة في لغة C++ وتأسيس التفكير البرمجي
               </h2>
-              <p className="text-sm font-semibold text-muted-foreground max-w-xl mx-auto">
+              <p className="text-sm font-semibold text-slate-400 max-w-xl mx-auto">
                 شاهد أول محاضرة من كورس C++ لطلاب البكالوريا وحاسبات ومعلومات وتعرّف على طريقة الشرح والتطبيق العملي.
               </p>
             </div>
@@ -717,11 +717,11 @@ export function AcademyHome() {
         </section>
 
         {/* ─── 6. INSTRUCTOR AUTHORITY SECTION ─── */}
-        <section id="about" className="bg-muted  py-14 md:py-20 border-b border-border ">
+        <section id="about" className="bg-slate-50 dark:bg-[#080f1c] py-14 md:py-20 border-b border-slate-200 dark:border-slate-800">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid items-center gap-10 lg:grid-cols-12">
               <div className="lg:col-span-5 flex justify-center">
-                <div className="overflow-hidden rounded-2xl border-4 border-white  bg-white  shadow-lg max-w-sm w-full">
+                <div className="overflow-hidden rounded-2xl border-4 border-white dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg max-w-sm w-full">
                   <img
                     src="/dr-mahmoud-hero-classroom.webp"
                     alt="د. محمود المهدي"
@@ -735,12 +735,12 @@ export function AcademyHome() {
 
               <div className="lg:col-span-7 space-y-4 text-right">
                 <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">المحاضر والمتخصص</span>
-                <h2 className="text-3xl font-black text-foreground ">مين هو د. محمود المهدي؟</h2>
-                <p className="text-sm font-semibold leading-relaxed text-muted-foreground ">
+                <h2 className="text-3xl font-black text-slate-900 dark:text-white">مين هو د. محمود المهدي؟</h2>
+                <p className="text-sm font-semibold leading-relaxed text-slate-600 dark:text-slate-300">
                   د. محمود المهدي، ماجستير نظم المعلومات، ومتخصص في تدريس البرمجة وعلوم الحاسب لطلاب المدارس والجامعات. بيعتمد في الشرح على الفهم والتطبيق وحل المشكلات، مش حفظ الأكواد أو تقليد أمثلة جاهزة.
                 </p>
 
-                <div className="grid gap-2.5 sm:grid-cols-2 pt-2 text-xs font-bold text-foreground ">
+                <div className="grid gap-2.5 sm:grid-cols-2 pt-2 text-xs font-bold text-slate-700 dark:text-slate-200">
                   {[
                     "ماجستير نظم المعلومات",
                     "تدريس البرمجة وعلوم الحاسب",
@@ -749,7 +749,7 @@ export function AcademyHome() {
                     "تأسيس عملي وحل مشكلات",
                     "إنشاء محتوى تعليمي واختبارات",
                   ].map((pt) => (
-                    <span key={pt} className="flex items-center gap-2 rounded-lg bg-white  p-2.5 border border-border ">
+                    <span key={pt} className="flex items-center gap-2 rounded-lg bg-white dark:bg-slate-800 p-2.5 border border-slate-200 dark:border-slate-700">
                       <CheckCircle2 className="h-4 w-4 text-blue-600 shrink-0" />
                       {pt}
                     </span>
@@ -757,7 +757,7 @@ export function AcademyHome() {
                 </div>
 
                 <div className="pt-3 flex items-center gap-3">
-                  <Button asChild variant="outline" className="h-10 rounded-xl font-bold border-border">
+                  <Button asChild variant="outline" className="h-10 rounded-xl font-bold border-slate-300">
                     <a href="/baccalaureate">اعرف أكتر عن د. المهدي</a>
                   </Button>
                   <Button asChild variant="ghost" className="h-10 rounded-xl font-bold text-blue-600 hover:bg-blue-50">
@@ -770,12 +770,12 @@ export function AcademyHome() {
         </section>
 
         {/* ─── 7. SAMPLE EDUCATIONAL CONTENT ─── */}
-        <section id="free-preview" className="bg-white  py-14 md:py-20 border-b border-border ">
+        <section id="free-preview" className="bg-white dark:bg-[#07111f] py-14 md:py-20 border-b border-slate-200 dark:border-slate-800">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-3xl text-center mb-12">
               <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">المعاينة المجانية</span>
-              <h2 className="text-3xl font-black text-foreground ">ابدأ تتعلم من دلوقتي</h2>
-              <p className="mt-2 text-sm font-semibold text-muted-foreground ">جرب أسلوب الشرح واطلع على المناهج والملفات المجانية المتاحة.</p>
+              <h2 className="text-3xl font-black text-slate-900 dark:text-white">ابدأ تتعلم من دلوقتي</h2>
+              <p className="mt-2 text-sm font-semibold text-slate-500 dark:text-slate-400">جرب أسلوب الشرح واطلع على المناهج والملفات المجانية المتاحة.</p>
             </div>
 
             <div className="grid gap-6 md:grid-cols-3">
@@ -784,15 +784,15 @@ export function AcademyHome() {
                 { title: "خريطة المناهج والمسارات", tag: "دليل المنهج", type: "ملف PDF", href: "/curriculum", cta: "استعرض المناهج" },
                 { title: "تجربة منصة الطالب", tag: "بنك الأسئلة", type: "اختبار تجريبي", href: "/platform", cta: "دخول المنصة" },
               ].map((item) => (
-                <div key={item.title} className="flex flex-col justify-between rounded-2xl border border-border  bg-muted/50  p-6 text-right">
+                <div key={item.title} className="flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/60 p-6 text-right">
                   <div className="space-y-2">
                     <span className="inline-block rounded-md bg-blue-50 dark:bg-blue-500/15 px-2.5 py-1 text-[11px] font-bold text-blue-700 dark:text-blue-400">
                       {item.tag}
                     </span>
-                    <h3 className="text-lg font-black text-foreground ">{item.title}</h3>
-                    <p className="text-xs font-semibold text-muted-foreground ">{item.type} لتوضيح تسلسل التعلم والتطبيق.</p>
+                    <h3 className="text-lg font-black text-slate-900 dark:text-white">{item.title}</h3>
+                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{item.type} لتوضيح تسلسل التعلم والتطبيق.</p>
                   </div>
-                  <Button asChild variant="outline" className="mt-5 h-10 w-full rounded-xl border-border   font-bold hover:bg-blue-50 dark:hover:bg-blue-500/15 hover:text-blue-600">
+                  <Button asChild variant="outline" className="mt-5 h-10 w-full rounded-xl border-slate-300 dark:border-slate-700 dark:text-slate-300 font-bold hover:bg-blue-50 dark:hover:bg-blue-500/15 hover:text-blue-600">
                     <a href={item.href}>{item.cta} ←</a>
                   </Button>
                 </div>
@@ -802,24 +802,24 @@ export function AcademyHome() {
         </section>
 
         {/* ─── 8. RESULTS AND TESTIMONIALS ─── */}
-        <section id="testimonials" className="bg-muted  py-14 md:py-20 border-b border-border ">
+        <section id="testimonials" className="bg-slate-50 dark:bg-[#080f1c] py-14 md:py-20 border-b border-slate-200 dark:border-slate-800">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-3xl text-center mb-12">
               <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">تجارب الفهم والتطبيق</span>
-              <h2 className="text-3xl font-black text-foreground ">تجارب حقيقية من الطلاب وأولياء الأمور</h2>
+              <h2 className="text-3xl font-black text-slate-900 dark:text-white">تجارب حقيقية من الطلاب وأولياء الأمور</h2>
             </div>
 
             <div className="grid gap-6 md:grid-cols-3">
               {testimonials.map((item, i) => (
-                <blockquote key={i} className="flex flex-col justify-between rounded-2xl border border-border  bg-white  p-6 shadow-xs text-right">
-                  <p className="text-sm font-semibold leading-relaxed text-foreground ">"{item.quote}"</p>
-                  <footer className="mt-4 pt-4 border-t border-border  flex items-center gap-3">
+                <blockquote key={i} className="flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 p-6 shadow-xs text-right">
+                  <p className="text-sm font-semibold leading-relaxed text-slate-700 dark:text-slate-300">"{item.quote}"</p>
+                  <footer className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center gap-3">
                     <span className="grid h-9 w-9 place-items-center rounded-full bg-blue-50 dark:bg-blue-500/15 text-xs font-bold text-blue-700 dark:text-blue-400">
                       {item.initials || item.author[0]}
                     </span>
                     <div>
-                      <strong className="block text-xs font-black text-foreground ">{item.author}</strong>
-                      <span className="text-[11px] font-semibold text-muted-foreground dark:text-muted-foreground">{item.role}</span>
+                      <strong className="block text-xs font-black text-slate-900 dark:text-white">{item.author}</strong>
+                      <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">{item.role}</span>
                     </div>
                   </footer>
                 </blockquote>
@@ -837,7 +837,7 @@ export function AcademyHome() {
                 <span>مواعيد وسناتر الحضور الأوفلاين - الزقازيق</span>
               </span>
               <h2 className="text-3xl font-black text-white">جدول ومواعيد السناتر في الزقازيق</h2>
-              <p className="mt-2 text-sm font-semibold text-muted-foreground">
+              <p className="mt-2 text-sm font-semibold text-slate-400">
                 اختر السنتر والمنطقة المباشرة الأقرب لك، ويمكنك تسجيل بياناتك وحجز المقعد أونلاين فوراً!
               </p>
             </div>
@@ -857,7 +857,7 @@ export function AcademyHome() {
                       )}
                     </div>
                     <h3 className="text-base font-black text-white">{center.name}</h3>
-                    <p className="mt-1 text-xs text-muted-foreground font-semibold">{center.area} - الحضور المباشر</p>
+                    <p className="mt-1 text-xs text-slate-400 font-semibold">{center.area} - الحضور المباشر</p>
                     
                     <div className="mt-4 space-y-2 border-t border-slate-700/60 pt-3 text-xs text-slate-300 font-semibold">
                       <div className="flex items-center gap-2">
@@ -884,11 +884,11 @@ export function AcademyHome() {
         </section>
 
         {/* ─── 9. NATIONWIDE ONLINE LEARNING SECTION ─── */}
-        <section className="bg-white  py-14 md:py-20 border-b border-border ">
+        <section className="bg-white dark:bg-[#07111f] py-14 md:py-20 border-b border-slate-200 dark:border-slate-800">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
             <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">التغطية والدراسة</span>
-            <h2 className="mt-2 text-3xl font-black text-foreground ">من أي محافظة في مصر… تقدر تبدأ</h2>
-            <p className="mt-3 max-w-2xl mx-auto text-sm font-semibold text-muted-foreground  leading-relaxed">
+            <h2 className="mt-2 text-3xl font-black text-slate-900 dark:text-white">من أي محافظة في مصر… تقدر تبدأ</h2>
+            <p className="mt-3 max-w-2xl mx-auto text-sm font-semibold text-slate-500 dark:text-slate-400 leading-relaxed">
               الشرح الأونلاين متاح لطلاب البكالوريا في جميع محافظات مصر، مع الوصول للدروس والملفات والاختبارات من خلال المنصة، ومتابعة منظمة تساعد الطالب يكمل من غير تشتت.
             </p>
 
@@ -899,9 +899,9 @@ export function AcademyHome() {
                 ["متاح على الموبايل والكمبيوتر", "تصفح مرن في أي وقت"],
                 ["محتوى منظم ومحدث", "تسلسل واضح يناسب المرحلة"],
               ].map(([t, s]) => (
-                <div key={t} className="rounded-xl border border-border  bg-muted  p-4 text-center">
-                  <strong className="block text-xs font-black text-foreground ">{t}</strong>
-                  <span className="mt-1 block text-[11px] font-semibold text-muted-foreground ">{s}</span>
+                <div key={t} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4 text-center">
+                  <strong className="block text-xs font-black text-slate-900 dark:text-white">{t}</strong>
+                  <span className="mt-1 block text-[11px] font-semibold text-slate-500 dark:text-slate-400">{s}</span>
                 </div>
               ))}
             </div>
@@ -909,12 +909,12 @@ export function AcademyHome() {
         </section>
 
         {/* ─── 10. PARENT-FOCUSED SECTION ─── */}
-        <section className="bg-muted  py-14 md:py-20 border-b border-border ">
+        <section className="bg-slate-50 dark:bg-[#080f1c] py-14 md:py-20 border-b border-slate-200 dark:border-slate-800">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-3xl text-center mb-12">
               <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">إجابات أولياء الأمور</span>
-              <h2 className="text-3xl font-black text-foreground ">إيه اللي يهم ولي الأمر؟</h2>
-              <p className="mt-2 text-sm font-semibold text-muted-foreground ">
+              <h2 className="text-3xl font-black text-slate-900 dark:text-white">إيه اللي يهم ولي الأمر؟</h2>
+              <p className="mt-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
                 المنصة والبرنامج مش مجرد فيديوهات. الطالب بيمشي في مسار واضح، يحل بعد كل جزء، ويعرف مستواه، وولي الأمر يقدر يفهم الطالب وصل لفين وإيه اللي محتاج مراجعة.
               </p>
             </div>
@@ -926,9 +926,9 @@ export function AcademyHome() {
                 ["هل مستواه بيتابع؟", "يتم تتبع نشاط الطالب على المنصة والدروس المكتملة ودرجات الاختبارات المنفذة."],
                 ["هل المحتوى مناسب لمرحلته؟", "المحتوى مصمم خصيصاً لمنهج أولى وتانية ثانوي بالبكالوريا المصرية لضمان التأسيس والتفوق."],
               ].map(([q, a]) => (
-                <div key={q} className="rounded-2xl border border-border  bg-white  p-6 text-right">
-                  <h3 className="text-base font-black text-foreground ">{q}</h3>
-                  <p className="mt-2 text-xs font-semibold leading-relaxed text-muted-foreground ">{a}</p>
+                <div key={q} className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 p-6 text-right">
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">{q}</h3>
+                  <p className="mt-2 text-xs font-semibold leading-relaxed text-slate-500 dark:text-slate-400">{a}</p>
                 </div>
               ))}
             </div>
@@ -936,12 +936,12 @@ export function AcademyHome() {
         </section>
 
         {/* ─── 11. OTHER PROGRAMS SECTION ─── */}
-        <section id="courses-section" className="bg-white  py-14 md:py-20 border-b border-border ">
+        <section id="courses-section" className="bg-white dark:bg-[#07111f] py-14 md:py-20 border-b border-slate-200 dark:border-slate-800">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-3xl text-center mb-12">
-              <span className="text-xs font-bold text-muted-foreground dark:text-muted-foreground uppercase tracking-wider">مسارات إضافية</span>
-              <h2 className="text-2xl font-black text-foreground ">برامج تعليمية تانية</h2>
-              <p className="mt-1 text-xs font-semibold text-muted-foreground ">مسارات متخصصة للجامعات والناشئين بجانب برنامج البكالوريا الرئيسي.</p>
+              <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">مسارات إضافية</span>
+              <h2 className="text-2xl font-black text-slate-800 dark:text-white">برامج تعليمية تانية</h2>
+              <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-400">مسارات متخصصة للجامعات والناشئين بجانب برنامج البكالوريا الرئيسي.</p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -951,9 +951,9 @@ export function AcademyHome() {
                 ["برمجة الأطفال", "للأطفال والناشئين", "/kids"],
                 ["مهارات الكمبيوتر", "ICDL والمكتبية", "/curriculum"],
               ].map(([title, sub, href]) => (
-                <a key={title} href={href} className="group rounded-2xl border border-border  bg-muted/50  p-4 text-right hover:border-blue-400 dark:hover:border-blue-600 transition-all">
-                  <strong className="block text-sm font-bold text-foreground  group-hover:text-blue-600">{title}</strong>
-                  <span className="mt-1 block text-xs text-muted-foreground ">{sub}</span>
+                <a key={title} href={href} className="group rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/60 p-4 text-right hover:border-blue-400 dark:hover:border-blue-600 transition-all">
+                  <strong className="block text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-600">{title}</strong>
+                  <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">{sub}</span>
                 </a>
               ))}
             </div>
@@ -961,20 +961,20 @@ export function AcademyHome() {
         </section>
 
         {/* ─── 12. FAQ SECTION ─── */}
-        <section id="faq" className="bg-muted  py-14 md:py-20 border-b border-border ">
+        <section id="faq" className="bg-slate-50 dark:bg-[#080f1c] py-14 md:py-20 border-b border-slate-200 dark:border-slate-800">
           <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-3xl text-center mb-10">
               <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">توضيحات سريعة</span>
-              <h2 className="text-3xl font-black text-foreground ">الأسئلة الشائعة</h2>
+              <h2 className="text-3xl font-black text-slate-900 dark:text-white">الأسئلة الشائعة</h2>
             </div>
 
             <Accordion type="single" collapsible className="space-y-3">
               {faqs.map(([q, a], i) => (
-                <AccordionItem key={q} value={`faq-${i}`} className="rounded-2xl border border-border  bg-white  px-5">
-                  <AccordionTrigger className="min-h-14 text-right font-black text-foreground  hover:no-underline text-sm sm:text-base">
+                <AccordionItem key={q} value={`faq-${i}`} className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-5">
+                  <AccordionTrigger className="min-h-14 text-right font-black text-slate-900 dark:text-white hover:no-underline text-sm sm:text-base">
                     {q}
                   </AccordionTrigger>
-                  <AccordionContent className="pb-5 text-xs font-semibold leading-relaxed text-muted-foreground ">
+                  <AccordionContent className="pb-5 text-xs font-semibold leading-relaxed text-slate-500 dark:text-slate-400">
                     {a}
                   </AccordionContent>
                 </AccordionItem>
@@ -984,13 +984,13 @@ export function AcademyHome() {
         </section>
 
         {/* ─── 13. FINAL CTA & BOOKING FORM SECTION ─── */}
-        <section id="contact" className="bg-white  py-14 md:py-20">
+        <section id="contact" className="bg-white dark:bg-[#07111f] py-14 md:py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid items-start gap-10 lg:grid-cols-12">
               <div className="lg:col-span-5 space-y-4 text-right">
                 <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">انضم للبرنامج</span>
-                <h2 className="text-3xl font-black text-foreground ">ابدأ تأسيس البرمجة صح</h2>
-                <p className="text-sm font-semibold leading-relaxed text-muted-foreground ">
+                <h2 className="text-3xl font-black text-slate-900 dark:text-white">ابدأ تأسيس البرمجة صح</h2>
+                <p className="text-sm font-semibold leading-relaxed text-slate-600 dark:text-slate-300">
                   اختار المرحلة المناسبة، شوف محتوى البرنامج، وابدأ التعلم بخطة واضحة بدل التشتت بين مصادر مختلفة.
                 </p>
 
@@ -1014,12 +1014,12 @@ export function AcademyHome() {
                 </div>
               </div>
 
-              <div className="lg:col-span-7 rounded-3xl border border-border  bg-muted  p-6 md:p-8 shadow-xs">
+              <div className="lg:col-span-7 rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-6 md:p-8 shadow-xs">
                 {submitted ? (
                   <div role="status" className="py-12 text-center space-y-3">
                     <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-600" />
-                    <h3 className="text-xl font-black text-foreground ">تم إرسال طلبك بنجاح</h3>
-                    <p className="text-xs font-semibold text-muted-foreground ">سيتم التواصل معك فوراً لتوضيح مواعيد وأسلوب الدراسة المناسب.</p>
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white">تم إرسال طلبك بنجاح</h3>
+                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">سيتم التواصل معك فوراً لتوضيح مواعيد وأسلوب الدراسة المناسب.</p>
                     <Button type="button" variant="outline" className="mt-4 font-bold" onClick={() => setSubmitted(false)}>
                       إرسال طلب جديد
                     </Button>
@@ -1027,23 +1027,23 @@ export function AcademyHome() {
                 ) : (
                   <form onSubmit={submitBooking} noValidate className="grid gap-4 sm:grid-cols-2 text-right">
                     <label>
-                      <span className="mb-1.5 block text-xs font-bold text-foreground ">اسم ولي الأمر</span>
-                      <input required value={form.parentName} onChange={(e) => setForm({ ...form, parentName: e.target.value })} className="h-11 w-full rounded-xl border border-border  bg-white  px-3 text-xs font-semibold text-foreground  focus:border-blue-600 focus:outline-none" />
+                      <span className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">اسم ولي الأمر</span>
+                      <input required value={form.parentName} onChange={(e) => setForm({ ...form, parentName: e.target.value })} className="h-11 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 text-xs font-semibold text-slate-900 dark:text-white focus:border-blue-600 focus:outline-none" />
                     </label>
 
                     <label>
-                      <span className="mb-1.5 block text-xs font-bold text-foreground ">اسم الطالب</span>
-                      <input required value={form.studentName} onChange={(e) => setForm({ ...form, studentName: e.target.value })} className="h-11 w-full rounded-xl border border-border  bg-white  px-3 text-xs font-semibold text-foreground  focus:border-blue-600 focus:outline-none" />
+                      <span className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">اسم الطالب</span>
+                      <input required value={form.studentName} onChange={(e) => setForm({ ...form, studentName: e.target.value })} className="h-11 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 text-xs font-semibold text-slate-900 dark:text-white focus:border-blue-600 focus:outline-none" />
                     </label>
 
                     <label>
-                      <span className="mb-1.5 block text-xs font-bold text-foreground ">رقم الهاتف</span>
-                      <input required inputMode="tel" dir="ltr" placeholder="01xxxxxxxxx" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="h-11 w-full rounded-xl border border-border  bg-white  px-3 text-xs font-semibold text-foreground  text-right focus:border-blue-600 focus:outline-none" />
+                      <span className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">رقم الهاتف</span>
+                      <input required inputMode="tel" dir="ltr" placeholder="01xxxxxxxxx" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="h-11 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 text-xs font-semibold text-slate-900 dark:text-white text-right focus:border-blue-600 focus:outline-none" />
                     </label>
 
                     <label>
-                      <span className="mb-1.5 block text-xs font-bold text-foreground ">المرحلة الدراسية</span>
-                      <select value={form.grade} onChange={(e) => setForm({ ...form, grade: e.target.value })} className="h-11 w-full rounded-xl border border-border  bg-white  px-3 text-xs font-bold text-foreground  focus:border-blue-600 focus:outline-none">
+                      <span className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">المرحلة الدراسية</span>
+                      <select value={form.grade} onChange={(e) => setForm({ ...form, grade: e.target.value })} className="h-11 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 focus:border-blue-600 focus:outline-none">
                         <option>أولى ثانوي</option>
                         <option>تانية ثانوي</option>
                         <option>جامعة</option>
@@ -1052,8 +1052,8 @@ export function AcademyHome() {
                     </label>
 
                     <label>
-                      <span className="mb-1.5 block text-xs font-bold text-foreground ">نوع المدرسة</span>
-                      <select value={form.schoolType} onChange={(e) => setForm({ ...form, schoolType: e.target.value })} className="h-11 w-full rounded-xl border border-border  bg-white  px-3 text-xs font-bold text-foreground  focus:border-blue-600 focus:outline-none">
+                      <span className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">نوع المدرسة</span>
+                      <select value={form.schoolType} onChange={(e) => setForm({ ...form, schoolType: e.target.value })} className="h-11 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 focus:border-blue-600 focus:outline-none">
                         <option>عربي</option>
                         <option>لغات</option>
                         <option>STEM</option>
@@ -1062,8 +1062,8 @@ export function AcademyHome() {
                     </label>
 
                      <label className="sm:col-span-2">
-                       <span className="mb-1.5 block text-xs font-bold text-foreground ">مقر الدراسة أو السنتر المفضّل (للحجز الأوفلاين في الزقازيق)</span>
-                       <select value={form.mode} onChange={(e) => setForm({ ...form, mode: e.target.value })} className="h-11 w-full rounded-xl border border-border  bg-white  px-3 text-xs font-bold text-foreground  focus:border-blue-600 focus:outline-none">
+                       <span className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">مقر الدراسة أو السنتر المفضّل (للحجز الأوفلاين في الزقازيق)</span>
+                       <select value={form.mode} onChange={(e) => setForm({ ...form, mode: e.target.value })} className="h-11 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 text-xs font-bold text-slate-700 dark:text-slate-200 focus:border-blue-600 focus:outline-none">
                          <option value="أونلاين لكل مصر">أونلاين لكل محافظات مصر (منصة + متابعة)</option>
                          {getJson<OfflineCenterItem[]>(SETTINGS_KEYS.OFFLINE_CENTERS_LIST, defaultOfflineCenters).map((c, i) => (
                            <option key={c.id || i} value={`${c.name} - ${c.daysStr} ${c.timeStr}`}>
@@ -1091,7 +1091,7 @@ export function AcademyHome() {
 
       <Footer />
       <FloatingButtons />
-      <div className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-2 gap-2 border-t border-border  bg-white/95 /95 p-2 pb-[calc(.5rem+env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(15,29,50,.08)] backdrop-blur md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-2 gap-2 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 p-2 pb-[calc(.5rem+env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(15,29,50,.08)] backdrop-blur md:hidden">
         <a href="/baccalaureate" className="flex min-h-11 items-center justify-center rounded-xl bg-blue-600 px-3 text-xs font-bold text-white">تفاصيل برنامج البكالوريا</a>
         <a href={`https://wa.me/${whatsapp}`} className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-emerald-600 text-xs font-bold text-emerald-700">
           <MessageCircle className="h-4 w-4" /> واتساب

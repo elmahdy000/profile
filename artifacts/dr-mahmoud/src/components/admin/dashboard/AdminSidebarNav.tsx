@@ -71,7 +71,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
       items: [
         {
           id: "learning-overview",
-          label: "اللوحة التشغيلية العامة",
+          label: "اللوحة التشغيلية العامة 📊",
           icon: LayoutDashboard,
           onClick: () => {
             setActiveTab("learning");
@@ -86,7 +86,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
       items: [
         {
           id: "center-bookings",
-          label: "جدول حجوزات السناتر",
+          label: "جدول حجوزات السناتر 📍",
           icon: MapPin,
           onClick: () => {
             setActiveTab("learning");
@@ -96,7 +96,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
         {
           id: "students",
-          label: "إدارة جميع الطلاب",
+          label: "إدارة جميع الطلاب 🎓",
           icon: Users,
           onClick: () => {
             setActiveTab("learning");
@@ -113,7 +113,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
         {
           id: "payments",
-          label: "إيصالات الدفع والاشتراكات",
+          label: "إيصالات الدفع والاشتراكات 💳",
           icon: FileCheck2,
           onClick: () => {
             setActiveTab("learning");
@@ -125,14 +125,14 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
         {
           id: "parents",
-          label: "حسابات أولياء الأمور",
+          label: "حسابات أولياء الأمور 👨‍👩‍👧",
           icon: ShieldCheck,
           onClick: () => setActiveTab("parents"),
           active: activeTab === "parents",
         },
         {
           id: "student-analytics",
-          label: "تحليلات الأداء والمشاهدات",
+          label: "تحليلات الأداء والمشاهدات 📊",
           icon: BarChart3,
           onClick: () => setActiveTab("student-analytics"),
           active: activeTab === "student-analytics",
@@ -165,7 +165,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
         {
           id: "upload-video",
-          label: "رفع فيديو جديد",
+          label: "رفع فيديو جديد 📤",
           icon: Upload,
           onClick: () => setActiveTab("upload-video"),
           active: activeTab === "upload-video",
@@ -254,16 +254,16 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
   ];
 
   const renderNavContent = () => (
-    <div className="flex h-full flex-col justify-between overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-border">
+    <div className="flex h-full flex-col justify-between overflow-y-auto p-4 space-y-6 scrollbar-thin scrollbar-thumb-slate-800">
       <div className="space-y-6">
         {/* Brand Header */}
-        <div className="flex items-center justify-between border-b border-sidebar-border pb-4">
+        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
           <div className="flex items-center gap-3">
-            <img src="/logo.webp" alt="شعار د. محمود" className="h-10 w-10 rounded-xl border border-primary/30 object-cover shadow-sm" />
+            <img src="/logo.webp" alt="شعار د. محمود" className="h-10 w-10 rounded-xl border border-blue-500/30 object-cover shadow-sm" />
             {!isCollapsed && (
               <div>
-                <strong className="block text-sm font-black text-sidebar-foreground">د. محمود المهدي</strong>
-                <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">
+                <strong className="block text-sm font-black text-[#F8FAFC]">د. محمود المهدي</strong>
+                <span className="text-[10px] font-semibold text-[#1677FF] uppercase tracking-wider">
                   {adminRole === "superadmin" ? "Super Admin" : "Sub Admin"}
                 </span>
               </div>
@@ -273,7 +273,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           <button
             type="button"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="hidden lg:flex h-7 w-7 items-center justify-center rounded-lg border border-sidebar-border bg-sidebar-accent text-muted-foreground hover:bg-muted hover:text-sidebar-foreground"
+            className="hidden lg:flex h-7 w-7 items-center justify-center rounded-lg border border-slate-800 bg-slate-900 text-[#94A3B8] hover:bg-slate-800 hover:text-white"
             title={isCollapsed ? "توسيع القائمة" : "طي القائمة"}
           >
             {isCollapsed ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -285,7 +285,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           <button
             type="button"
             onClick={() => openVideoModal("add")}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-extrabold text-white shadow-md transition-all hover:bg-primary/90 active:scale-98"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1677FF] px-4 py-2.5 text-xs font-extrabold text-white shadow-md transition-all hover:bg-[#4096FF] active:scale-98"
           >
             <Plus className="h-4 w-4" />
             <span>إضافة درس جديد</span>
@@ -297,7 +297,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           {navGroups.map((group, idx) => (
             <div key={idx} className="space-y-1.5">
               {!isCollapsed && (
-                <span className="block px-3 text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                <span className="block px-3 text-[10px] font-extrabold uppercase tracking-wider text-[#94A3B8]">
                   {group.title}
                 </span>
               )}
@@ -312,16 +312,16 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
                       title={isCollapsed ? item.label : undefined}
                       className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold transition-all ${
                         item.active
-                          ? "bg-primary/15 text-primary border-r-4 border-[#1677FF]"
-                          : "text-sidebar-foreground/80 hover:bg-muted/60 hover:text-sidebar-foreground"
+                          ? "bg-[#1677FF]/15 text-[#1677FF] border-r-4 border-[#1677FF]"
+                          : "text-[#CBD5E1] hover:bg-slate-800/60 hover:text-white"
                       }`}
                     >
-                      <Icon className={`h-4.5 w-4.5 shrink-0 ${item.active ? "text-primary" : "text-muted-foreground group-hover:text-white"}`} />
+                      <Icon className={`h-4.5 w-4.5 shrink-0 ${item.active ? "text-[#1677FF]" : "text-[#94A3B8] group-hover:text-white"}`} />
                       {!isCollapsed && <span className="flex-1 text-right truncate">{item.label}</span>}
                       {!isCollapsed && item.badge !== undefined && item.badge > 0 && (
                         <span
                           className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
-                            ("badgeColor" in item && item.badgeColor) ? item.badgeColor : "bg-primary text-white"
+                            ("badgeColor" in item && item.badgeColor) ? item.badgeColor : "bg-[#1677FF] text-white"
                           }`}
                         >
                           {item.badge}
@@ -337,12 +337,12 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
       </div>
 
       {/* Footer Profile & Logout */}
-      <div className="border-t border-sidebar-border pt-4 space-y-2">
+      <div className="border-t border-slate-800 pt-4 space-y-2">
         <a
           href="/"
           target="_blank"
           rel="noreferrer"
-          className="flex w-full items-center justify-between rounded-xl border border-sidebar-border bg-sidebar-accent/50 px-3 py-2 text-xs font-bold text-sidebar-foreground/80 hover:bg-muted hover:text-sidebar-foreground"
+          className="flex w-full items-center justify-between rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 text-xs font-bold text-[#CBD5E1] hover:bg-slate-800 hover:text-white"
         >
           <span className="flex items-center gap-2">
             <ExternalLink className="h-4 w-4 text-[#60A5FA]" />
@@ -368,9 +368,9 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
       {isMobileSidebarOpen && (
         <div className="fixed inset-0 z-[60] lg:hidden">
           <div className="fixed inset-0 bg-black/75 backdrop-blur-xs" onClick={() => setIsMobileSidebarOpen(false)} />
-          <aside className=" fixed inset-y-0 right-0 flex w-[280px] flex-col bg-sidebar text-sidebar-foreground shadow-2xl z-10 border-l border-sidebar-border">
-            <div className="flex items-center justify-between border-b border-sidebar-border px-4 py-3">
-              <span className="text-xs font-extrabold text-sidebar-foreground">قائمة الإدارة</span>
+          <aside className="admin-adaptive-dark-ui admin-sidebar-surface fixed inset-y-0 right-0 flex w-[280px] flex-col bg-[#131E31] text-[#F8FAFC] shadow-2xl z-10 border-l border-slate-800">
+            <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
+              <span className="text-xs font-extrabold text-[#F8FAFC]">قائمة الإدارة</span>
               <button
                 type="button"
                 onClick={() => setIsMobileSidebarOpen(false)}
@@ -386,7 +386,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
 
       {/* Desktop Sticky Sidebar - Full Viewport Height */}
       <aside
-        className={` hidden lg:flex flex-col border-l border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-300 shrink-0 sticky top-0 h-screen ${
+        className={`admin-adaptive-dark-ui admin-sidebar-surface hidden lg:flex flex-col border-l border-slate-800/80 bg-[#131E31] text-[#F8FAFC] transition-all duration-300 shrink-0 sticky top-0 h-screen ${
           isCollapsed ? "w-[72px]" : "w-[270px]"
         }`}
       >

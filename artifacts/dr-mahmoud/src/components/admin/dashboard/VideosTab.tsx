@@ -161,7 +161,7 @@ export const VideosTab: React.FC<VideosTabProps> = ({
                       className={`text-[10px] font-bold px-2 py-0.5 rounded-md border backdrop-blur-md ${
                         video.isPublished
                           ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
-                          : "bg-muted0/30 text-slate-200 border-slate-400/30"
+                          : "bg-slate-500/30 text-slate-200 border-slate-400/30"
                       }`}
                     >
                       {video.isPublished ? "منشور" : "مسودة"}

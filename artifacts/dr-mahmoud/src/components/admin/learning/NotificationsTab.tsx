@@ -30,14 +30,14 @@ export function NotificationsTab({ students, onSend }: Props) {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <div className="rounded-2xl border border-border bg-white p-6 shadow-sm space-y-5">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
         <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
             <MessageCircle className="h-5 w-5 text-primary" />
           </span>
           <div>
-            <h3 className="text-base font-black text-foreground">إرسال إشعار للطلاب</h3>
-            <p className="text-xs text-muted-foreground">الإشعار بيظهر فورًا في حساب الطالب داخل المنصة</p>
+            <h3 className="text-base font-black text-slate-900">إرسال إشعار للطلاب</h3>
+            <p className="text-xs text-slate-500">الإشعار بيظهر فورًا في حساب الطالب داخل المنصة</p>
           </div>
         </div>
         <div className="space-y-4">

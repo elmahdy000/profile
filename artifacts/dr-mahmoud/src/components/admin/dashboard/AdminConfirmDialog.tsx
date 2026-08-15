@@ -38,7 +38,7 @@ export function AdminConfirmDialog({
   const buttonStyle = {
     danger: "bg-rose-600 hover:bg-rose-700 text-white",
     warning: "bg-amber-600 hover:bg-amber-700 text-white",
-    info: "bg-primary hover:bg-primary/90 text-white",
+    info: "bg-[#1677FF] hover:bg-[#4096FF] text-white",
   }[variant];
 
   return (
@@ -50,16 +50,16 @@ export function AdminConfirmDialog({
       />
 
       {/* Dialog Box */}
-      <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-slate-700/80 bg-card p-6 shadow-2xl transition-all text-foreground">
+      <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-slate-700/80 bg-[#131E31] p-6 shadow-2xl transition-all text-[#F8FAFC]">
         <div className="flex items-start gap-4">
           <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${headerColors}`}>
             <AlertTriangle className="h-6 w-6" />
           </div>
 
           <div className="flex-1 space-y-1 text-right">
-            <h3 className="text-lg font-extrabold text-foreground">{title}</h3>
+            <h3 className="text-lg font-extrabold text-[#F8FAFC]">{title}</h3>
             {studentName && (
-              <div className="inline-block rounded-lg bg-slate-800/80 px-2.5 py-1 text-xs font-bold text-primary dir-ltr text-right">
+              <div className="inline-block rounded-lg bg-slate-800/80 px-2.5 py-1 text-xs font-bold text-[#1677FF] dir-ltr text-right">
                 {studentName}
               </div>
             )}
@@ -67,7 +67,7 @@ export function AdminConfirmDialog({
           </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-end gap-3 border-t border-border pt-4">
+        <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-800 pt-4">
           <Button
             type="button"
             variant="outline"

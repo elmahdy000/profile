@@ -102,7 +102,7 @@ export const UploadVideoTab: React.FC<UploadVideoTabProps> = ({
       </div>
 
       {/* Dedicated Upload Form Card */}
-      <form onSubmit={handleVideoSubmit} className="space-y-6 rounded-3xl border border-border bg-white p-5 shadow-sm md:p-7">
+      <form onSubmit={handleVideoSubmit} className="space-y-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm md:p-7">
         {/* Section 1: Video File Upload */}
         <div className="space-y-3 border-b border-border/40 pb-6">
           <div className="flex items-center gap-2">
@@ -119,7 +119,7 @@ export const UploadVideoTab: React.FC<UploadVideoTabProps> = ({
                 onDragOver={(event) => event.preventDefault()}
                 onDragLeave={(event) => { event.preventDefault(); if (event.currentTarget === event.target) setIsVideoDragging(false); }}
                 onDrop={(event) => { event.preventDefault(); selectVideoFile(event.dataTransfer.files?.[0] || null); }}
-                className={`group relative flex min-h-[180px] flex-col items-center justify-center rounded-2xl border-2 border-dashed p-5 text-center transition-all ${isVideoDragging ? "scale-[1.01] border-primary bg-blue-50 ring-4 ring-blue-100" : selectedVideoFile ? "border-emerald-300 bg-emerald-50/40" : "border-border bg-muted hover:border-primary hover:bg-blue-50/40"}`}
+                className={`group relative flex min-h-[180px] flex-col items-center justify-center rounded-2xl border-2 border-dashed p-5 text-center transition-all ${isVideoDragging ? "scale-[1.01] border-primary bg-blue-50 ring-4 ring-blue-100" : selectedVideoFile ? "border-emerald-300 bg-emerald-50/40" : "border-slate-300 bg-slate-50 hover:border-primary hover:bg-blue-50/40"}`}
               >
                 <input
                   type="file"
@@ -130,8 +130,8 @@ export const UploadVideoTab: React.FC<UploadVideoTabProps> = ({
                 {selectedVideoFile ? (
                   <div className="z-0 w-full space-y-2">
                     <span className="mx-auto grid h-12 w-12 place-items-center rounded-xl bg-emerald-100 text-emerald-700"><Check className="h-6 w-6" /></span>
-                    <span className="block truncate text-sm font-bold text-foreground">{selectedVideoFile.name}</span>
-                    <span className="block text-xs text-muted-foreground">
+                    <span className="block truncate text-sm font-bold text-slate-900">{selectedVideoFile.name}</span>
+                    <span className="block text-xs text-slate-500">
                       الحجم: {(selectedVideoFile.size / (1024 * 1024)).toFixed(1)} MB
                     </span>
                     <span className="block text-xs font-bold text-emerald-700">جاهز للرفع عند حفظ الدرس</span>
@@ -139,8 +139,8 @@ export const UploadVideoTab: React.FC<UploadVideoTabProps> = ({
                 ) : (
                   <div className="space-y-1.5 pointer-events-none">
                     <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-blue-100 text-primary"><Upload className="h-7 w-7 transition-transform group-hover:-translate-y-0.5" /></span>
-                    <span className="block text-sm font-bold text-foreground">{isVideoDragging ? "اترك الفيديو هنا" : "اسحب الفيديو أو اضغط للاختيار"}</span>
-                    <span className="block text-xs text-muted-foreground">MP4 أو WebM أو MOV — حتى 1 GB</span>
+                    <span className="block text-sm font-bold text-slate-900">{isVideoDragging ? "اترك الفيديو هنا" : "اسحب الفيديو أو اضغط للاختيار"}</span>
+                    <span className="block text-xs text-slate-500">MP4 أو WebM أو MOV — حتى 1 GB</span>
                     <span className="mt-1 block text-[11px] text-emerald-700">أفضل حجم وجودة: MP4 (H.264)، دقة 1080p، وميزة Web Optimized</span>
                   </div>
                 )}
@@ -155,7 +155,7 @@ export const UploadVideoTab: React.FC<UploadVideoTabProps> = ({
                 value={videoForm.youtubeUrl}
                 onChange={(e) => { setVideoForm({ ...videoForm, youtubeUrl: e.target.value }); if (e.target.value.trim()) setSelectedVideoFile(null); }}
                 placeholder="https://youtube.com/watch?v=... أو رابط مباشر"
-                className="h-[180px] w-full resize-none rounded-2xl border border-border bg-white px-4 py-4 text-sm text-foreground outline-none transition focus:border-primary focus:ring-4 focus:ring-blue-100"
+                className="h-[180px] w-full resize-none rounded-2xl border border-slate-300 bg-white px-4 py-4 text-sm text-slate-900 outline-none transition focus:border-primary focus:ring-4 focus:ring-blue-100"
               />
             </div>
           </div>
@@ -402,10 +402,10 @@ export const UploadVideoTab: React.FC<UploadVideoTabProps> = ({
                   </button>
                 </div>
               ) : (
-                <div className="border border-border rounded-2xl overflow-hidden bg-muted/50 p-4 space-y-3">
+                <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/50 p-4 space-y-3">
                   {/* Selection status header */}
-                  <div className="flex items-center justify-between text-xs font-bold border-b border-border pb-2">
-                    <span className="text-muted-foreground">الملفات المتاحة في الكورسات والمراحل</span>
+                  <div className="flex items-center justify-between text-xs font-bold border-b border-slate-200 pb-2">
+                    <span className="text-slate-600">الملفات المتاحة في الكورسات والمراحل</span>
                     <span className="bg-primary/10 text-primary px-2.5 py-1 rounded-full">
                       تم تحديد ({videoForm.attachmentFileIds.length}) ملف مرفق
                     </span>
@@ -427,14 +427,14 @@ export const UploadVideoTab: React.FC<UploadVideoTabProps> = ({
                           className={`flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
                             isChecked
                               ? "border-primary bg-blue-50/30 text-primary shadow-sm"
-                              : "border-border hover:border-border hover:bg-muted text-foreground bg-white"
+                              : "border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-800 bg-white"
                           }`}
                         >
                           <input
                             type="checkbox"
                             checked={isChecked}
                             onChange={() => {}}
-                            className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary pointer-events-none"
+                            className="mt-1 h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary pointer-events-none"
                           />
                           <div className="min-w-0 flex-1">
                             <span className="block truncate text-xs font-bold leading-tight">{file.title}</span>

@@ -225,11 +225,11 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-foreground flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-primary" />
+          <h2 className="text-xl font-black text-[#0F172A] flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-[#0866D9]" />
             إدارة حسابات أولياء الأمور (Full CRUD)
           </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-xs text-[#64748B] mt-0.5">
             إجمالي المسجلين: <strong>{total}</strong> ولي أمر — يمكنك إضافة وتعديل وحذف وتوليد أكواد الدخول.
           </p>
         </div>
@@ -241,7 +241,7 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
               placeholder="بحث بالاسم أو الرقم أو الكود..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pr-9 pl-4 py-2 text-xs rounded-xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-[#0866D9] w-64"
+              className="pr-9 pl-4 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#0866D9] w-64"
             />
           </div>
           <button
@@ -258,7 +258,7 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
           </button>
           <button
             onClick={load}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 transition-all"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#0866D9]/10 text-[#0866D9] text-xs font-bold hover:bg-[#0866D9]/20 transition-all"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             تحديث
@@ -268,8 +268,8 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
 
       {isLoading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
-          <span className="mr-2 text-sm text-muted-foreground">جاري التحميل...</span>
+          <Loader2 className="w-6 h-6 animate-spin text-[#0866D9]" />
+          <span className="mr-2 text-sm text-slate-500">جاري التحميل...</span>
         </div>
       ) : error ? (
         <div className="flex items-center gap-2 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm">
@@ -277,16 +277,16 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
           {error}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="py-16 text-center bg-white rounded-2xl border border-border">
+        <div className="py-16 text-center bg-white rounded-2xl border border-slate-200">
           <ShieldCheck className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-slate-500">
             {search ? "لا توجد نتائج مطابقة للبحث" : "لم يسجّل أي ولي أمر حتى الآن"}
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-border overflow-hidden shadow-sm">
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
           {/* Table header */}
-          <div className="grid grid-cols-[2fr_1.3fr_1fr_2fr_1.2fr_1.2fr_1.3fr] gap-0 border-b border-slate-100 bg-muted px-4 py-2.5 text-[11px] font-bold text-muted-foreground">
+          <div className="grid grid-cols-[2fr_1.3fr_1fr_2fr_1.2fr_1.2fr_1.3fr] gap-0 border-b border-slate-100 bg-slate-50 px-4 py-2.5 text-[11px] font-bold text-slate-500">
             <span>ولي الأمر</span>
             <span>رقم الهاتف</span>
             <span>الكود</span>
@@ -304,18 +304,18 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
               return (
                 <div
                   key={parent.id}
-                  className="grid grid-cols-[2fr_1.3fr_1fr_2fr_1.2fr_1.2fr_1.3fr] gap-0 px-4 py-3.5 items-center hover:bg-muted transition-colors text-xs"
+                  className="grid grid-cols-[2fr_1.3fr_1fr_2fr_1.2fr_1.2fr_1.3fr] gap-0 px-4 py-3.5 items-center hover:bg-slate-50 transition-colors text-xs"
                 >
                   {/* Parent name */}
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary font-black flex items-center justify-center text-xs shrink-0">
+                    <div className="w-8 h-8 rounded-xl bg-[#0866D9]/10 text-[#0866D9] font-black flex items-center justify-center text-xs shrink-0">
                       {parent.name.substring(0, 2)}
                     </div>
-                    <span className="font-bold text-foreground truncate">{parent.name}</span>
+                    <span className="font-bold text-slate-900 truncate">{parent.name}</span>
                   </div>
 
                   {/* Phone */}
-                  <div className="flex items-center gap-1 text-muted-foreground font-mono">
+                  <div className="flex items-center gap-1 text-slate-600 font-mono">
                     <Phone className="w-3 h-3 shrink-0 text-slate-400" />
                     {parent.phone}
                   </div>
@@ -328,10 +328,10 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
                   {/* Student */}
                   {parent.student ? (
                     <div>
-                      <span className="font-bold text-foreground block">{parent.student.name ?? "—"}</span>
+                      <span className="font-bold text-slate-900 block">{parent.student.name ?? "—"}</span>
                       <span className="text-slate-400 font-mono text-[10px]">{parent.student.phone ?? ""}</span>
                       {parent.student.grade && (
-                        <span className="text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded-md font-bold mt-0.5 inline-block">
+                        <span className="text-[10px] text-[#0866D9] bg-[#0866D9]/10 px-1.5 py-0.5 rounded-md font-bold mt-0.5 inline-block">
                           {parent.student.grade}
                         </span>
                       )}
@@ -341,7 +341,7 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
                   )}
 
                   {/* Registration date */}
-                  <span className="text-muted-foreground text-[11px]">{formatArabicDate(parent.createdAt)}</span>
+                  <span className="text-slate-500 text-[11px]">{formatArabicDate(parent.createdAt)}</span>
 
                   {/* Last session */}
                   <div className="flex flex-col gap-0.5">
@@ -351,7 +351,7 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
                           className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full w-fit ${
                             isActive
                               ? "bg-emerald-100 text-emerald-700"
-                              : "bg-slate-100 text-muted-foreground"
+                              : "bg-slate-100 text-slate-500"
                           }`}
                         >
                           <CheckCircle2 className="w-3 h-3" />
@@ -399,7 +399,7 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
             })}
           </div>
 
-          <div className="px-4 py-2.5 border-t border-slate-100 bg-muted text-[11px] text-slate-400">
+          <div className="px-4 py-2.5 border-t border-slate-100 bg-slate-50 text-[11px] text-slate-400">
             يتم عرض {filtered.length} من أصل {total} ولي أمر
           </div>
         </div>
@@ -410,11 +410,11 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 space-y-4">
             <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="text-base font-extrabold text-foreground flex items-center gap-2">
+              <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
                 <Plus className="w-5 h-5 text-emerald-600" />
                 إضافة حساب ولي أمر جديد
               </h3>
-              <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-muted-foreground">
+              <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -428,7 +428,7 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
                   placeholder="مثال: أحمد محمد علي"
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
-                  className="w-full bg-muted border border-border rounded-xl px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
@@ -440,7 +440,7 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
                   placeholder="01012345678"
                   value={phoneInput}
                   onChange={(e) => setPhoneInput(e.target.value)}
-                  className="w-full bg-muted border border-border rounded-xl px-3.5 py-2.5 text-xs font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 dir-ltr text-right"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 dir-ltr text-right"
                 />
               </div>
 
@@ -450,7 +450,7 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
                   required
                   value={studentIdInput}
                   onChange={(e) => setStudentIdInput(e.target.value ? Number(e.target.value) : "")}
-                  className="w-full bg-muted border border-border rounded-xl px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 >
                   <option value="">-- اختر الطالب --</option>
                   {students.map((st) => (
@@ -465,7 +465,7 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2.5 rounded-xl border border-border text-muted-foreground font-bold hover:bg-muted"
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50"
                 >
                   إلغاء
                 </button>
@@ -487,11 +487,11 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 space-y-4">
             <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="text-base font-extrabold text-foreground flex items-center gap-2">
+              <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
                 <Edit2 className="w-5 h-5 text-blue-600" />
                 تعديل بيانات ولي الأمر
               </h3>
-              <button onClick={() => setEditingParent(null)} className="text-slate-400 hover:text-muted-foreground">
+              <button onClick={() => setEditingParent(null)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -504,7 +504,7 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
                   required
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
-                  className="w-full bg-muted border border-border rounded-xl px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
@@ -515,7 +515,7 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
                   required
                   value={phoneInput}
                   onChange={(e) => setPhoneInput(e.target.value)}
-                  className="w-full bg-muted border border-border rounded-xl px-3.5 py-2.5 text-xs font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 dir-ltr text-right"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dir-ltr text-right"
                 />
               </div>
 
@@ -525,7 +525,7 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
                   required
                   value={studentIdInput}
                   onChange={(e) => setStudentIdInput(e.target.value ? Number(e.target.value) : "")}
-                  className="w-full bg-muted border border-border rounded-xl px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">-- اختر الطالب --</option>
                   {students.map((st) => (
@@ -540,7 +540,7 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
                 <button
                   type="button"
                   onClick={() => setEditingParent(null)}
-                  className="px-4 py-2.5 rounded-xl border border-border text-muted-foreground font-bold hover:bg-muted"
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50"
                 >
                   إلغاء
                 </button>

@@ -70,7 +70,7 @@ export const FileModal: React.FC<FileModalProps> = ({
             <div className="mb-5 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-black">تعديل الملف</h3>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-slate-500">
                   غيّر مكان ظهوره بدون إعادة رفعه.
                 </p>
               </div>
@@ -111,7 +111,7 @@ export const FileModal: React.FC<FileModalProps> = ({
                   className={`rounded-xl border p-3 font-bold ${
                     editingFile.targetType === value
                       ? "border-primary bg-primary/5 text-primary"
-                      : "border-border"
+                      : "border-slate-200"
                   }`}
                 >
                   {label}
@@ -126,7 +126,7 @@ export const FileModal: React.FC<FileModalProps> = ({
                   return (
                     <label
                       key={video.id}
-                      className="flex gap-3 rounded-lg p-2 hover:bg-muted"
+                      className="flex gap-3 rounded-lg p-2 hover:bg-slate-50"
                     >
                       <input
                         type="checkbox"
@@ -168,7 +168,7 @@ export const FileModal: React.FC<FileModalProps> = ({
                       className={`rounded-xl border p-3 text-sm font-bold ${
                         getTrack(editingFile.category)?.id === track.id
                           ? "border-primary bg-primary/5 text-primary"
-                          : "border-border"
+                          : "border-slate-200"
                       }`}
                     >
                       {track.shortTitle}
@@ -194,7 +194,7 @@ export const FileModal: React.FC<FileModalProps> = ({
                           })
                         }
                         className={`rounded-lg border px-3 py-2 text-xs font-bold ${
-                          checked ? "bg-primary text-white" : "bg-muted"
+                          checked ? "bg-primary text-white" : "bg-slate-50"
                         }`}
                       >
                         {stage}
@@ -228,7 +228,7 @@ export const FileModal: React.FC<FileModalProps> = ({
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h3 className="font-black">{previewFile.title}</h3>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-slate-500">
                   {previewFile.originalName}
                 </p>
               </div>
@@ -243,7 +243,7 @@ export const FileModal: React.FC<FileModalProps> = ({
             <iframe
               src={`/api/learning/files/${previewFile.id}/download`}
               title={`معاينة ${previewFile.title}`}
-              className="h-[70vh] w-full rounded-xl border bg-muted"
+              className="h-[70vh] w-full rounded-xl border bg-slate-50"
             />
             <a
               href={`/api/learning/files/${previewFile.id}/download`}

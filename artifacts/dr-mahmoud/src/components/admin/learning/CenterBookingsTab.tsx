@@ -318,7 +318,7 @@ export function CenterBookingsTab({
   };
 
   return (
-    <div className="center-bookings-workspace space-y-6 text-foreground" dir="rtl">
+    <div className="center-bookings-workspace space-y-6 text-[#F8FAFC]" dir="rtl">
       {/* 1. Header Banner & Page Action */}
       <div className="flex flex-col gap-4 rounded-3xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/70 via-[#0D1B2A] to-[#0A1424] p-6 shadow-xl sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-4">
@@ -348,7 +348,7 @@ export function CenterBookingsTab({
             type="button"
             onClick={() => window.print()}
             variant="outline"
-            className="h-11 px-4 rounded-xl border-emerald-500/40 bg-background hover:bg-emerald-500/20 text-emerald-300 font-extrabold text-xs transition-all flex items-center gap-1.5"
+            className="h-11 px-4 rounded-xl border-emerald-500/40 bg-[#0B1424] hover:bg-emerald-500/20 text-emerald-300 font-extrabold text-xs transition-all flex items-center gap-1.5"
           >
             <Printer className="h-4 w-4" /> طباعة كشف الحضور
           </Button>
@@ -357,7 +357,7 @@ export function CenterBookingsTab({
 
       {/* 2. Key Stats Summary */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-2xl border border-border bg-[#101B2D] p-4 shadow-sm">
+        <div className="rounded-2xl border border-[#2B3D57] bg-[#101B2D] p-4 shadow-sm">
           <div className="flex items-center justify-between text-[#8492A6]">
             <span className="text-xs font-extrabold">إجمالي حجوزات السناتر</span>
             <Users className="h-4 w-4 text-emerald-400" />
@@ -365,7 +365,7 @@ export function CenterBookingsTab({
           <p className="mt-2 text-2xl font-black text-white">{stats.total} <span className="text-xs font-bold text-[#8492A6]">حجز</span></p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-[#101B2D] p-4 shadow-sm">
+        <div className="rounded-2xl border border-[#2B3D57] bg-[#101B2D] p-4 shadow-sm">
           <div className="flex items-center justify-between text-[#8492A6]">
             <span className="text-xs font-extrabold">مواعيد محددة</span>
             <Clock className="h-4 w-4 text-amber-400" />
@@ -373,15 +373,15 @@ export function CenterBookingsTab({
           <p className="mt-2 text-2xl font-black text-amber-300">{stats.withSlot} <span className="text-xs font-bold text-[#8492A6]">طالب</span></p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-[#101B2D] p-4 shadow-sm">
+        <div className="rounded-2xl border border-[#2B3D57] bg-[#101B2D] p-4 shadow-sm">
           <div className="flex items-center justify-between text-[#8492A6]">
             <span className="text-xs font-extrabold">أولياء الأمور المسجلين</span>
-            <Phone className="h-4 w-4 text-primary" />
+            <Phone className="h-4 w-4 text-[#1677FF]" />
           </div>
           <p className="mt-2 text-2xl font-black text-[#69A5FF]">{stats.withParentPhone} <span className="text-xs font-bold text-[#8492A6]">رقم مسجل</span></p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-[#101B2D] p-4 shadow-sm">
+        <div className="rounded-2xl border border-[#2B3D57] bg-[#101B2D] p-4 shadow-sm">
           <div className="flex items-center justify-between text-[#8492A6]">
             <span className="text-xs font-extrabold">الاشتراكات المدفوعة</span>
             <CreditCard className="h-4 w-4 text-emerald-400" />
@@ -391,7 +391,7 @@ export function CenterBookingsTab({
       </div>
 
       {/* 3. Dedicated Filter Bar */}
-      <div className="rounded-2xl border border-border bg-[#101B2D] p-4 space-y-4 shadow-sm">
+      <div className="rounded-2xl border border-[#2B3D57] bg-[#101B2D] p-4 space-y-4 shadow-sm">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {/* Live Search */}
           <div className="relative sm:col-span-2 lg:col-span-2">
@@ -401,7 +401,7 @@ export function CenterBookingsTab({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="ابحث باسم الطالب، رقم التلفون، كود الحجز، أو هاتف ولي الأمر..."
-              className="h-11 w-full rounded-xl border border-border bg-background pr-10 pl-4 text-xs font-bold text-white placeholder-[#7F91AA] focus:border-emerald-500 focus:outline-none"
+              className="h-11 w-full rounded-xl border border-[#26364D] bg-[#0B1424] pr-10 pl-4 text-xs font-bold text-white placeholder-[#7F91AA] focus:border-emerald-500 focus:outline-none"
             />
             {searchQuery && (
               <button
@@ -418,7 +418,7 @@ export function CenterBookingsTab({
           <select
             value={centerFilter}
             onChange={(e) => setCenterFilter(e.target.value)}
-            className="h-11 rounded-xl border border-border bg-background px-3 text-xs font-bold text-muted-foreground focus:border-emerald-500 focus:outline-none"
+            className="h-11 rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7] focus:border-emerald-500 focus:outline-none"
           >
             <option value="all">كل السناتر والمراكز</option>
             {OFFICIAL_CENTERS.map((c) => (
@@ -433,7 +433,7 @@ export function CenterBookingsTab({
           <select
             value={slotFilter}
             onChange={(e) => setSlotFilter(e.target.value)}
-            className="h-11 rounded-xl border border-border bg-background px-3 text-xs font-bold text-muted-foreground focus:border-emerald-500 focus:outline-none"
+            className="h-11 rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7] focus:border-emerald-500 focus:outline-none"
           >
             <option value="all">كل المواعيد المتاحة</option>
             {OFFICIAL_SLOTS.map((s) => (
@@ -448,7 +448,7 @@ export function CenterBookingsTab({
           <select
             value={stageFilter}
             onChange={(e) => setStageFilter(e.target.value)}
-            className="h-11 rounded-xl border border-border bg-background px-3 text-xs font-bold text-muted-foreground focus:border-emerald-500 focus:outline-none"
+            className="h-11 rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7] focus:border-emerald-500 focus:outline-none"
           >
             <option value="all">كل المراحل الدراسية</option>
             {uniqueStages.map((st) => (
@@ -458,14 +458,14 @@ export function CenterBookingsTab({
         </div>
 
         {/* Additional Secondary Filters */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-border/60 text-xs font-bold text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#26364D]/60 text-xs font-bold text-[#A8B5C7]">
           <div className="flex flex-wrap items-center gap-3">
             <span>تصفية إضافية:</span>
             {uniqueSchools.length > 0 && (
               <select
                 value={schoolFilter}
                 onChange={(e) => setSchoolFilter(e.target.value)}
-                className="h-9 rounded-lg border border-border bg-background px-2.5 text-xs text-muted-foreground"
+                className="h-9 rounded-lg border border-[#26364D] bg-[#0B1424] px-2.5 text-xs text-[#A8B5C7]"
               >
                 <option value="all">كل المدارس</option>
                 {uniqueSchools.map((sc) => (
@@ -477,7 +477,7 @@ export function CenterBookingsTab({
             <select
               value={paymentFilter}
               onChange={(e) => setPaymentFilter(e.target.value)}
-              className="h-9 rounded-lg border border-border bg-background px-2.5 text-xs text-muted-foreground"
+              className="h-9 rounded-lg border border-[#26364D] bg-[#0B1424] px-2.5 text-xs text-[#A8B5C7]"
             >
               <option value="all">كل الاشتراكات</option>
               <option value="paid">مدفوع</option>
@@ -510,11 +510,11 @@ export function CenterBookingsTab({
       </div>
 
       {/* 4. Complete Center Bookings Table */}
-      <div className="admin-center-table relative overflow-x-auto rounded-2xl border border-border bg-[#101B2D] shadow-md">
+      <div className="admin-center-table relative overflow-x-auto rounded-2xl border border-[#2B3D57] bg-[#101B2D] shadow-md">
         <table className="w-full min-w-[1300px] border-separate border-spacing-0 text-right text-[11px]">
           <thead className="sticky top-0 z-20 bg-[#0A1424] text-[#B6C2D2]">
             <tr className="h-12">
-              <th className="w-10 border-b border-border px-2.5 text-center">
+              <th className="w-10 border-b border-[#2B3D57] px-2.5 text-center">
                 <button
                   type="button"
                   onClick={toggleSelectAll}
@@ -524,18 +524,18 @@ export function CenterBookingsTab({
                   {isAllSelected ? <CheckSquare className="h-4 w-4 text-emerald-400" /> : <Square className="h-4 w-4" />}
                 </button>
               </th>
-              <th className="w-10 border-b border-border px-2 py-2 text-center font-black">#</th>
-              <th className="border-b border-border px-3 py-2 font-extrabold min-w-[160px]">الطالب وكود الوصول</th>
-              <th className="border-b border-border px-3 py-2 font-extrabold min-w-[140px]">المرحلة التعليمية</th>
-              <th className="border-b border-border px-3 py-2 font-extrabold min-w-[120px]">اسم المدرسة</th>
-              <th className="border-b border-border px-3 py-2 font-extrabold min-w-[95px]">المسار</th>
-              <th className="border-b border-border px-3 py-2 font-extrabold min-w-[160px]">السنتر المختار 📍</th>
-              <th className="border-b border-border px-3 py-2 font-extrabold min-w-[160px]">الموعد المحدد ⏰</th>
-              <th className="border-b border-border px-3 py-2 font-extrabold min-w-[125px]">هاتف الطالب 📱</th>
-              <th className="border-b border-border px-3 py-2 font-extrabold min-w-[125px]">هاتف ولي الأمر 👨‍👩‍👦</th>
-              <th className="border-b border-border px-3 py-2 font-extrabold min-w-[95px]">تاريخ التسجيل</th>
-              <th className="border-b border-border px-3 py-2 font-extrabold min-w-[85px]">الاشتراك</th>
-              <th className="border-b border-border px-3 py-2 text-left font-extrabold min-w-[140px]">الإجراءات</th>
+              <th className="w-10 border-b border-[#2B3D57] px-2 py-2 text-center font-black">#</th>
+              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[160px]">الطالب وكود الوصول</th>
+              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[140px]">المرحلة التعليمية</th>
+              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[120px]">اسم المدرسة</th>
+              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[95px]">المسار</th>
+              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[160px]">السنتر المختار 📍</th>
+              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[160px]">الموعد المحدد ⏰</th>
+              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[125px]">هاتف الطالب 📱</th>
+              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[125px]">هاتف ولي الأمر 👨‍👩‍👦</th>
+              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[95px]">تاريخ التسجيل</th>
+              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[85px]">الاشتراك</th>
+              <th className="border-b border-[#2B3D57] px-3 py-2 text-left font-extrabold min-w-[140px]">الإجراءات</th>
             </tr>
           </thead>
 
@@ -559,7 +559,7 @@ export function CenterBookingsTab({
                     }`}
                   >
                     {/* Checkbox */}
-                    <td className="border-b border-border/55 px-2.5 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                    <td className="border-b border-[#26364D]/55 px-2.5 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                       <button
                         type="button"
                         onClick={() => toggleSelect(s.id)}
@@ -570,18 +570,18 @@ export function CenterBookingsTab({
                     </td>
 
                     {/* Serial Number */}
-                    <td className="border-b border-border/55 px-2 py-2 text-center font-mono font-bold text-[#7F91AA]">
+                    <td className="border-b border-[#26364D]/55 px-2 py-2 text-center font-mono font-bold text-[#7F91AA]">
                       {idx + 1}
                     </td>
 
                     {/* Student Name + Access Code */}
-                    <td className="border-b border-border/55 px-3 py-2">
+                    <td className="border-b border-[#26364D]/55 px-3 py-2">
                       <div className="flex items-center gap-2">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/15 text-xs font-black text-emerald-400">
                           {s.name.charAt(0)}
                         </div>
                         <div className="min-w-0 space-y-0.5">
-                          <span className="block max-w-[130px] truncate text-xs font-extrabold text-foreground group-hover:text-emerald-300" title={s.name}>
+                          <span className="block max-w-[130px] truncate text-xs font-extrabold text-[#F8FAFC] group-hover:text-emerald-300" title={s.name}>
                             {s.name}
                           </span>
                           {s.accessCode && (
@@ -599,28 +599,28 @@ export function CenterBookingsTab({
                     </td>
 
                     {/* Stage */}
-                    <td className="border-b border-border/55 px-3 py-2">
+                    <td className="border-b border-[#26364D]/55 px-3 py-2">
                       <span className="line-clamp-2 text-[11px] font-bold text-[#B7C4D6]" title={effectiveStage}>
                         {effectiveStage}
                       </span>
                     </td>
 
                     {/* School Name */}
-                    <td className="border-b border-border/55 px-3 py-2">
-                      <span className="truncate max-w-[110px] block text-[11px] font-bold text-muted-foreground" title={s.schoolName || "غير محدد"}>
+                    <td className="border-b border-[#26364D]/55 px-3 py-2">
+                      <span className="truncate max-w-[110px] block text-[11px] font-bold text-[#A8B5C7]" title={s.schoolName || "غير محدد"}>
                         {s.schoolName || "غير مسجل"}
                       </span>
                     </td>
 
                     {/* Language Track */}
-                    <td className="border-b border-border/55 px-3 py-2">
-                      <span className="inline-flex rounded-md border border-border bg-background px-2 py-0.5 text-[10px] font-bold text-[#A9B8CC]">
+                    <td className="border-b border-[#26364D]/55 px-3 py-2">
+                      <span className="inline-flex rounded-md border border-[#26364D] bg-[#0B1424] px-2 py-0.5 text-[10px] font-bold text-[#A9B8CC]">
                         {s.languageTrack || "عام"}
                       </span>
                     </td>
 
                     {/* Center Name */}
-                    <td className="border-b border-border/55 px-3 py-2">
+                    <td className="border-b border-[#26364D]/55 px-3 py-2">
                       {s.centerName ? (
                         <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/15 px-2.5 py-1 text-[11px] font-black text-emerald-300">
                           <MapPin className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
@@ -638,7 +638,7 @@ export function CenterBookingsTab({
                     </td>
 
                     {/* Appointment Slot */}
-                    <td className="border-b border-border/55 px-3 py-2">
+                    <td className="border-b border-[#26364D]/55 px-3 py-2">
                       {s.appointmentSlot ? (
                         <span className="inline-flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/15 px-2 py-1 text-[11px] font-extrabold text-amber-300">
                           <Clock className="h-3.5 w-3.5 shrink-0 text-amber-400" />
@@ -656,7 +656,7 @@ export function CenterBookingsTab({
                     </td>
 
                     {/* Student Phone */}
-                    <td className="border-b border-border/55 px-3 py-2">
+                    <td className="border-b border-[#26364D]/55 px-3 py-2">
                       <div className="flex items-center justify-end gap-1.5">
                         <a
                           href={`https://wa.me/${(s.phone.replace(/[^\d+]/g, "").startsWith("0") ? "2" + s.phone.replace(/[^\d+]/g, "") : s.phone.replace(/[^\d+]/g, ""))}?text=${encodeURIComponent(`مرحباً ${s.name} 👋، تواصل بخصوص حجز السنتر`)}`}
@@ -672,7 +672,7 @@ export function CenterBookingsTab({
                     </td>
 
                     {/* Parent Phone */}
-                    <td className="border-b border-border/55 px-3 py-2">
+                    <td className="border-b border-[#26364D]/55 px-3 py-2">
                       {s.parentPhone ? (
                         <div className="flex items-center justify-end gap-1.5">
                           <a
@@ -687,26 +687,26 @@ export function CenterBookingsTab({
                           <span className="font-mono text-xs font-bold text-amber-300 dir-ltr">{s.parentPhone}</span>
                         </div>
                       ) : (
-                        <span className="text-[10px] font-bold text-muted-foreground">غير مسجل</span>
+                        <span className="text-[10px] font-bold text-[#64748B]">غير مسجل</span>
                       )}
                     </td>
 
                     {/* Registration Date */}
-                    <td className="border-b border-border/55 px-3 py-2">
+                    <td className="border-b border-[#26364D]/55 px-3 py-2">
                       <span className="font-mono text-[10px] font-bold text-[#7F91AA]">
                         {s.createdAt ? new Date(s.createdAt).toLocaleDateString("ar-EG") : "—"}
                       </span>
                     </td>
 
                     {/* Payment Status */}
-                    <td className="border-b border-border/55 px-3 py-2">
+                    <td className="border-b border-[#26364D]/55 px-3 py-2">
                       <span
                         className={`inline-flex h-6 items-center justify-center gap-1 rounded-md px-2 text-[10px] font-extrabold ${
                           s.paymentStatus === "paid"
                             ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
                             : s.paymentStatus === "pending_review"
                             ? "bg-amber-500/15 text-amber-300 border border-amber-500/30"
-                            : "bg-background text-[#7F91AA] border border-border"
+                            : "bg-[#0B1424] text-[#7F91AA] border border-[#26364D]"
                         }`}
                       >
                         {s.paymentStatus === "paid" ? "مدفوع" : s.paymentStatus === "pending_review" ? "مراجعة" : "مجاني"}
@@ -714,7 +714,7 @@ export function CenterBookingsTab({
                     </td>
 
                     {/* Actions */}
-                    <td className="border-b border-border/55 px-3 py-2 text-left">
+                    <td className="border-b border-[#26364D]/55 px-3 py-2 text-left">
                       <div className="flex items-center gap-1.5 justify-end">
                         <button
                           type="button"
@@ -746,8 +746,8 @@ export function CenterBookingsTab({
       {/* 5. Quick Edit Booking Modal */}
       {editingStudent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="relative w-full max-w-lg rounded-3xl border border-emerald-500/40 bg-card p-6 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between border-b border-border pb-4">
+          <div className="relative w-full max-w-lg rounded-3xl border border-emerald-500/40 bg-[#0F172A] p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b border-[#26364D] pb-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400">
                   <MapPin className="h-5 w-5" />
@@ -769,11 +769,11 @@ export function CenterBookingsTab({
             <form onSubmit={handleSaveBooking} className="space-y-4 text-xs font-bold">
               {/* Center Selection */}
               <div className="space-y-1.5">
-                <label className="text-muted-foreground block">📍 السنتر المختار:</label>
+                <label className="text-[#94A3B8] block">📍 السنتر المختار:</label>
                 <select
                   value={editFormData.centerName}
                   onChange={(e) => setEditFormData({ ...editFormData, centerName: e.target.value })}
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-xs text-white focus:border-emerald-500 focus:outline-none"
+                  className="h-11 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs text-white focus:border-emerald-500 focus:outline-none"
                   required
                 >
                   {OFFICIAL_CENTERS.map((c) => (
@@ -786,11 +786,11 @@ export function CenterBookingsTab({
 
               {/* Slot Selection */}
               <div className="space-y-1.5">
-                <label className="text-muted-foreground block">⏰ الموعد المحدد للحضور:</label>
+                <label className="text-[#94A3B8] block">⏰ الموعد المحدد للحضور:</label>
                 <select
                   value={editFormData.appointmentSlot}
                   onChange={(e) => setEditFormData({ ...editFormData, appointmentSlot: e.target.value })}
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-xs text-white focus:border-emerald-500 focus:outline-none"
+                  className="h-11 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs text-white focus:border-emerald-500 focus:outline-none"
                   required
                 >
                   {OFFICIAL_SLOTS.map((s) => (
@@ -801,34 +801,34 @@ export function CenterBookingsTab({
 
               {/* Parent Phone */}
               <div className="space-y-1.5">
-                <label className="text-muted-foreground block">👨‍👩‍👦 رقم هاتف ولي الأمر:</label>
+                <label className="text-[#94A3B8] block">👨‍👩‍👦 رقم هاتف ولي الأمر:</label>
                 <input
                   type="text"
                   value={editFormData.parentPhone}
                   onChange={(e) => setEditFormData({ ...editFormData, parentPhone: e.target.value })}
                   placeholder="مثال: 01012345678"
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-xs text-white dir-ltr text-right focus:border-emerald-500 focus:outline-none font-mono"
+                  className="h-11 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs text-white dir-ltr text-right focus:border-emerald-500 focus:outline-none font-mono"
                 />
               </div>
 
               {/* School Name */}
               <div className="space-y-1.5">
-                <label className="text-muted-foreground block">🏫 اسم المدرسة:</label>
+                <label className="text-[#94A3B8] block">🏫 اسم المدرسة:</label>
                 <input
                   type="text"
                   value={editFormData.schoolName}
                   onChange={(e) => setEditFormData({ ...editFormData, schoolName: e.target.value })}
                   placeholder="مثال: مدرسة السادات الثانوية بنين"
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-xs text-white focus:border-emerald-500 focus:outline-none"
+                  className="h-11 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs text-white focus:border-emerald-500 focus:outline-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#26364D]">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setEditingStudent(null)}
-                  className="h-10 px-4 rounded-xl border-border bg-background text-white hover:bg-white/5 text-xs"
+                  className="h-10 px-4 rounded-xl border-[#26364D] bg-[#0B1424] text-white hover:bg-white/5 text-xs"
                 >
                   إلغاء
                 </Button>

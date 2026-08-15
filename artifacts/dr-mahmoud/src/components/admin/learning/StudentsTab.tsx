@@ -299,7 +299,7 @@ export function StudentsTab({
   };
 
   return (
-    <div className=" space-y-5 text-foreground" dir="rtl">
+    <div className="admin-adaptive-dark-ui space-y-5 text-[#F8FAFC]" dir="rtl">
       {modeFilter === "offline" && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-emerald-500/40 bg-emerald-950/40 p-4 text-emerald-300 shadow-sm">
           <div className="flex items-center gap-3">
@@ -314,7 +314,7 @@ export function StudentsTab({
           <button
             type="button"
             onClick={clearAllFilters}
-            className="shrink-0 px-3.5 py-2 rounded-xl bg-background border border-emerald-500/35 text-xs font-black text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+            className="shrink-0 px-3.5 py-2 rounded-xl bg-[#0B1424] border border-emerald-500/35 text-xs font-black text-emerald-400 hover:bg-emerald-500/20 transition-colors"
           >
             عرض جميع الطلاب (أونلاين + أوفلاين)
           </button>
@@ -322,11 +322,11 @@ export function StudentsTab({
       )}
 
       {contextFilterLabel && (
-        <div className="flex flex-col gap-3 rounded-2xl border border-[#1677FF]/35 bg-primary/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-2xl border border-[#1677FF]/35 bg-[#1677FF]/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-2.5">
             <SlidersHorizontal className="h-4 w-4 shrink-0 text-[#4096FF]" />
-            <p className="min-w-0 text-xs font-bold text-muted-foreground">
-              تعرض القائمة الآن: <strong className="text-foreground">{contextFilterLabel}</strong>
+            <p className="min-w-0 text-xs font-bold text-[#A8B5C7]">
+              تعرض القائمة الآن: <strong className="text-[#F8FAFC]">{contextFilterLabel}</strong>
               <span className="mr-2 text-[#7F91AA]">({students.length} طالب)</span>
             </p>
           </div>
@@ -334,7 +334,7 @@ export function StudentsTab({
             <button
               type="button"
               onClick={onClearContextFilter}
-              className="inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-[#1677FF]/35 bg-background px-3 text-xs font-black text-[#69A5FF] transition-colors hover:bg-[#13213A] hover:text-white"
+              className="inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-[#1677FF]/35 bg-[#0B1424] px-3 text-xs font-black text-[#69A5FF] transition-colors hover:bg-[#13213A] hover:text-white"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               عرض كل الطلاب
@@ -344,7 +344,7 @@ export function StudentsTab({
       )}
 
       {/* 1. Integrated Search & Filters Toolbar */}
-      <div className="rounded-2xl border border-border bg-card p-4 space-y-3 shadow-sm overflow-hidden">
+      <div className="rounded-2xl border border-[#26364D] bg-[#131E31] p-4 space-y-3 shadow-sm overflow-hidden">
         {/* Row 1: Search + Result Count + Clear */}
         <div className="flex items-center gap-3">
           {/* Search Input — min-w-[360px] on desktop, full width on mobile */}
@@ -355,13 +355,13 @@ export function StudentsTab({
               placeholder="ابحث بالاسم أو الهاتف أو الكود أو البريد"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="h-12 w-full min-w-0 rounded-xl border border-border bg-background pr-11 pl-10 text-sm font-bold text-foreground placeholder-[#8492A6] focus:border-[#1677FF] focus:outline-none transition-colors"
+              className="h-12 w-full min-w-0 rounded-xl border border-[#26364D] bg-[#0B1424] pr-11 pl-10 text-sm font-bold text-[#F8FAFC] placeholder-[#8492A6] focus:border-[#1677FF] focus:outline-none transition-colors"
             />
             {searchInput && (
               <button
                 type="button"
                 onClick={() => setSearchInput("")}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8492A6] hover:text-foreground"
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8492A6] hover:text-[#F8FAFC]"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -369,9 +369,9 @@ export function StudentsTab({
           </div>
 
           {/* Result Counter */}
-          <span className="shrink-0 text-xs font-bold text-muted-foreground whitespace-nowrap hidden sm:block">
-            عرض <strong className="text-foreground font-black">{filteredStudents.length}</strong>{" "}
-            من أصل <strong className="text-foreground font-black">{students.length}</strong> طالبًا
+          <span className="shrink-0 text-xs font-bold text-[#A8B5C7] whitespace-nowrap hidden sm:block">
+            عرض <strong className="text-[#F8FAFC] font-black">{filteredStudents.length}</strong>{" "}
+            من أصل <strong className="text-[#F8FAFC] font-black">{students.length}</strong> طالبًا
           </span>
 
           {/* Clear Filters (visible only when active) */}
@@ -390,9 +390,9 @@ export function StudentsTab({
           <button
             type="button"
             onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-            className="lg:hidden shrink-0 flex items-center gap-1.5 h-12 rounded-xl border border-border bg-background px-3 text-xs font-bold text-foreground"
+            className="lg:hidden shrink-0 flex items-center gap-1.5 h-12 rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#F8FAFC]"
           >
-            <SlidersHorizontal className="h-4 w-4 text-primary" />
+            <SlidersHorizontal className="h-4 w-4 text-[#1677FF]" />
           </button>
         </div>
 
@@ -402,7 +402,7 @@ export function StudentsTab({
           <select
             value={stageFilter}
             onChange={(e) => { setStageFilter(e.target.value); setCurrentPage(1); }}
-            className="h-12 w-full rounded-xl border border-border bg-background px-3 text-xs font-bold text-muted-foreground focus:border-[#1677FF] focus:outline-none"
+            className="h-12 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7] focus:border-[#1677FF] focus:outline-none"
           >
             <option value="all">كل المراحل</option>
             {uniqueStages.map((stage) => (
@@ -414,7 +414,7 @@ export function StudentsTab({
           <select
             value={courseFilter}
             onChange={(e) => { setCourseFilter(e.target.value); setCurrentPage(1); }}
-            className="h-12 w-full rounded-xl border border-border bg-background px-3 text-xs font-bold text-muted-foreground focus:border-[#1677FF] focus:outline-none"
+            className="h-12 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7] focus:border-[#1677FF] focus:outline-none"
           >
             <option value="all">كل الكورسات</option>
             {learningCourses.map((c) => (
@@ -426,7 +426,7 @@ export function StudentsTab({
           <select
             value={paymentFilter}
             onChange={(e) => { setPaymentFilter(e.target.value); setCurrentPage(1); }}
-            className="h-12 w-full rounded-xl border border-border bg-background px-3 text-xs font-bold text-muted-foreground focus:border-[#1677FF] focus:outline-none"
+            className="h-12 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7] focus:border-[#1677FF] focus:outline-none"
           >
             <option value="all">كل الاشتراكات</option>
             <option value="paid">مدفوع (وصول كامل)</option>
@@ -438,7 +438,7 @@ export function StudentsTab({
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-            className="h-12 w-full rounded-xl border border-border bg-background px-3 text-xs font-bold text-muted-foreground focus:border-[#1677FF] focus:outline-none"
+            className="h-12 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7] focus:border-[#1677FF] focus:outline-none"
           >
             <option value="all">كل الحسابات</option>
             <option value="approved">حساب نشط</option>
@@ -450,7 +450,7 @@ export function StudentsTab({
           <select
             value={modeFilter}
             onChange={(e) => { setModeFilter(e.target.value); setCurrentPage(1); }}
-            className="h-12 w-full rounded-xl border border-border bg-background px-3 text-xs font-bold text-muted-foreground focus:border-[#1677FF] focus:outline-none"
+            className="h-12 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7] focus:border-[#1677FF] focus:outline-none"
           >
             <option value="all">كل الأنظمة</option>
             <option value="online">أونلاين</option>
@@ -461,7 +461,7 @@ export function StudentsTab({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="h-12 w-full rounded-xl border border-border bg-background px-3 text-xs font-bold text-muted-foreground focus:border-[#1677FF] focus:outline-none"
+            className="h-12 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7] focus:border-[#1677FF] focus:outline-none"
           >
             <option value="newest">الأحدث تسجيلًا</option>
             <option value="name">أبجديًا بالاسم</option>
@@ -471,28 +471,28 @@ export function StudentsTab({
 
         {/* Mobile Filters Collapsible (2-col grid) */}
         {isMobileFilterOpen && (
-          <div className="lg:hidden grid grid-cols-2 gap-2 pt-3 border-t border-border">
+          <div className="lg:hidden grid grid-cols-2 gap-2 pt-3 border-t border-[#26364D]">
             <select value={stageFilter} onChange={(e) => setStageFilter(e.target.value)}
-              className="h-11 rounded-xl border border-border bg-background px-3 text-xs font-bold text-muted-foreground">
+              className="h-11 rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7]">
               <option value="all">كل المراحل</option>
               {uniqueStages.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
             <select value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value)}
-              className="h-11 rounded-xl border border-border bg-background px-3 text-xs font-bold text-muted-foreground">
+              className="h-11 rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7]">
               <option value="all">كل الاشتراكات</option>
               <option value="paid">مدفوع</option>
               <option value="pending_review">مراجعة</option>
               <option value="unpaid">مجاني</option>
             </select>
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-11 rounded-xl border border-border bg-background px-3 text-xs font-bold text-muted-foreground">
+              className="h-11 rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7]">
               <option value="all">كل الحسابات</option>
               <option value="approved">نشط</option>
               <option value="pending">معلق</option>
               <option value="suspended">موقوف</option>
             </select>
             <select value={modeFilter} onChange={(e) => setModeFilter(e.target.value)}
-              className="h-11 rounded-xl border border-border bg-background px-3 text-xs font-bold text-muted-foreground">
+              className="h-11 rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7]">
               <option value="all">كل الأنظمة</option>
               <option value="online">أونلاين</option>
               <option value="offline">أوفلاين</option>
@@ -502,23 +502,23 @@ export function StudentsTab({
 
         {/* Active Filter Chips */}
         {hasActiveFilters && (
-          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/60">
+          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-[#26364D]/60">
             <span className="text-xs font-bold text-[#8492A6]">فلاتر نشطة:</span>
 
             {stageFilter !== "all" && (
-              <span className="inline-flex items-center gap-1 rounded-lg bg-primary/15 border border-[#1677FF]/30 px-2.5 py-0.5 text-xs font-bold text-primary">
+              <span className="inline-flex items-center gap-1 rounded-lg bg-[#1677FF]/15 border border-[#1677FF]/30 px-2.5 py-0.5 text-xs font-bold text-[#1677FF]">
                 <span>المرحلة: {stageFilter}</span>
                 <button type="button" onClick={() => setStageFilter("all")} className="hover:text-white"><X className="h-3 w-3" /></button>
               </span>
             )}
             {paymentFilter !== "all" && (
-              <span className="inline-flex items-center gap-1 rounded-lg bg-primary/15 border border-[#1677FF]/30 px-2.5 py-0.5 text-xs font-bold text-primary">
+              <span className="inline-flex items-center gap-1 rounded-lg bg-[#1677FF]/15 border border-[#1677FF]/30 px-2.5 py-0.5 text-xs font-bold text-[#1677FF]">
                 <span>الاشتراك: {paymentFilter === "paid" ? "مدفوع" : paymentFilter === "pending_review" ? "مراجعة" : "مجاني"}</span>
                 <button type="button" onClick={() => setPaymentFilter("all")} className="hover:text-white"><X className="h-3 w-3" /></button>
               </span>
             )}
             {statusFilter !== "all" && (
-              <span className="inline-flex items-center gap-1 rounded-lg bg-primary/15 border border-[#1677FF]/30 px-2.5 py-0.5 text-xs font-bold text-primary">
+              <span className="inline-flex items-center gap-1 rounded-lg bg-[#1677FF]/15 border border-[#1677FF]/30 px-2.5 py-0.5 text-xs font-bold text-[#1677FF]">
                 <span>الحساب: {statusFilter === "approved" ? "نشط" : statusFilter === "suspended" ? "موقوف" : "معلق"}</span>
                 <button type="button" onClick={() => setStatusFilter("all")} className="hover:text-white"><X className="h-3 w-3" /></button>
               </span>
@@ -529,12 +529,12 @@ export function StudentsTab({
 
       {/* 2. Bulk Action Bar (Appears when 1+ selected) */}
       {selectedStudentIds.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#1677FF]/40 bg-primary/15 p-4 shadow-md">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#1677FF]/40 bg-[#1677FF]/15 p-4 shadow-md">
           <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-xs font-black text-white">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#1677FF] text-xs font-black text-white">
               {selectedStudentIds.length}
             </span>
-            <span className="text-xs font-extrabold text-foreground">طلاب محددون للإجراء الجماعي</span>
+            <span className="text-xs font-extrabold text-[#F8FAFC]">طلاب محددون للإجراء الجماعي</span>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -561,9 +561,9 @@ export function StudentsTab({
               size="sm"
               variant="outline"
               onClick={handleExportCSV}
-              className="border-border bg-background text-xs font-extrabold text-foreground hover:bg-card h-9 rounded-xl min-h-[44px]"
+              className="border-[#26364D] bg-[#0B1424] text-xs font-extrabold text-[#F8FAFC] hover:bg-[#131E31] h-9 rounded-xl min-h-[44px]"
             >
-              <Download className="h-4 w-4 ml-1 text-primary" /> تصدير CSV
+              <Download className="h-4 w-4 ml-1 text-[#1677FF]" /> تصدير CSV
             </Button>
 
             <button
@@ -580,28 +580,28 @@ export function StudentsTab({
       {/* 3. Mobile student cards — same data and drawer actions, without a desktop table squeeze */}
       <div className="grid gap-3 lg:hidden">
         {paginatedStudents.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-card p-8 text-center text-xs text-[#8492A6]">
+          <div className="rounded-2xl border border-[#26364D] bg-[#131E31] p-8 text-center text-xs text-[#8492A6]">
             لا توجد نتائج مسجلة مطابقة للبحث أو الفلاتر المختارة.
           </div>
         ) : paginatedStudents.map((student) => {
           const effectiveStage = student.grade === "أخرى" ? student.otherGradeDetail || "أخرى" : student.grade || "غير محدد";
           return (
-            <article key={student.id} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <article key={student.id} className="rounded-2xl border border-[#26364D] bg-[#131E31] p-4 shadow-sm">
               <button type="button" onClick={() => setActiveDrawerStudent(student)} className="w-full text-right focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1677FF] rounded-xl">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/15 text-sm font-black text-primary">{student.name.charAt(0)}</span>
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#1677FF]/15 text-sm font-black text-[#1677FF]">{student.name.charAt(0)}</span>
                     <div className="min-w-0">
-                      <h3 className="truncate text-sm font-black text-foreground">{student.name}</h3>
-                      <p className="mt-0.5 font-mono text-xs text-muted-foreground" dir="ltr">{student.phone}</p>
+                      <h3 className="truncate text-sm font-black text-[#F8FAFC]">{student.name}</h3>
+                      <p className="mt-0.5 font-mono text-xs text-[#A8B5C7]" dir="ltr">{student.phone}</p>
                     </div>
                   </div>
-                  <Eye className="mt-1 h-4 w-4 shrink-0 text-primary" />
+                  <Eye className="mt-1 h-4 w-4 shrink-0 text-[#1677FF]" />
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <span className={`rounded-lg border px-2 py-1 text-[10px] font-extrabold ${student.paymentStatus === "paid" ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400" : student.paymentStatus === "pending_review" ? "border-amber-500/30 bg-amber-500/15 text-amber-300" : "border-border bg-background text-[#8492A6]"}`}>{student.paymentStatus === "paid" ? "مدفوع" : student.paymentStatus === "pending_review" ? "مراجعة" : "مجاني"}</span>
+                  <span className={`rounded-lg border px-2 py-1 text-[10px] font-extrabold ${student.paymentStatus === "paid" ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400" : student.paymentStatus === "pending_review" ? "border-amber-500/30 bg-amber-500/15 text-amber-300" : "border-[#26364D] bg-[#0B1424] text-[#8492A6]"}`}>{student.paymentStatus === "paid" ? "مدفوع" : student.paymentStatus === "pending_review" ? "مراجعة" : "مجاني"}</span>
                   <span className={`rounded-lg border px-2 py-1 text-[10px] font-extrabold ${student.status === "approved" ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400" : student.status === "suspended" ? "border-rose-500/30 bg-rose-500/15 text-rose-400" : "border-amber-500/30 bg-amber-500/15 text-amber-300"}`}>{student.status === "approved" ? "نشط" : student.status === "suspended" ? "موقوف" : "معلق"}</span>
-                  <span className="rounded-lg border border-border bg-background px-2 py-1 text-[10px] font-bold text-muted-foreground">{student.learningMode === "offline" || student.centerName ? "أوفلاين (السنتر)" : "أونلاين"}</span>
+                  <span className="rounded-lg border border-[#26364D] bg-[#0B1424] px-2 py-1 text-[10px] font-bold text-[#A8B5C7]">{student.learningMode === "offline" || student.centerName ? "أوفلاين (السنتر)" : "أونلاين"}</span>
                 </div>
                 {(student.learningMode === "offline" || student.centerName || student.appointmentSlot) && (
                   <div className="mt-2.5 rounded-xl border border-emerald-500/35 bg-emerald-950/40 p-2.5 text-xs text-right space-y-1">
@@ -620,9 +620,9 @@ export function StudentsTab({
                   </div>
                 )}
               </button>
-              <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
-                {student.accessCode ? <button type="button" onClick={() => onCopyStudentCode(student)} className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-primary" dir="ltr"><Copy className="h-3.5 w-3.5" />{student.accessCode}</button> : <span />}
-                <button type="button" onClick={() => setActiveDrawerStudent(student)} className="rounded-lg bg-primary px-3 py-2 text-[11px] font-black text-white">عرض الملف الكامل</button>
+              <div className="mt-3 flex items-center justify-between border-t border-[#26364D] pt-3">
+                {student.accessCode ? <button type="button" onClick={() => onCopyStudentCode(student)} className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-[#1677FF]" dir="ltr"><Copy className="h-3.5 w-3.5" />{student.accessCode}</button> : <span />}
+                <button type="button" onClick={() => setActiveDrawerStudent(student)} className="rounded-lg bg-[#1677FF] px-3 py-2 text-[11px] font-black text-white">عرض الملف الكامل</button>
               </div>
             </article>
           );
@@ -630,13 +630,13 @@ export function StudentsTab({
       </div>
 
       {/* Desktop data table */}
-      <div className="w-full text-right border-collapse relative hidden overflow-x-auto rounded-2xl border border-border bg-[#101B2D] shadow-sm lg:block">
+      <div className="admin-students-table relative hidden overflow-x-auto rounded-2xl border border-[#2B3D57] bg-[#101B2D] shadow-sm lg:block">
         <table className="w-full min-w-[1160px] border-separate border-spacing-0 text-right text-[11px]">
           <thead className="sticky top-0 z-20 bg-[#0A1424] text-[#B6C2D2]">
             <tr className="h-12">
-              <th className="w-10 border-b border-border px-2.5 text-center">
+              <th className="w-10 border-b border-[#2B3D57] px-2.5 text-center">
                 <button type="button" onClick={toggleSelectAll} aria-label={isAllSelected ? "إلغاء تحديد كل الطلاب" : "تحديد كل الطلاب"} className="inline-grid h-8 w-8 place-items-center rounded-lg text-[#7F91AA] transition hover:bg-white/5 hover:text-white">
-                  {isAllSelected ? <CheckSquare className="h-4 w-4 text-primary" /> : <Square className="h-4 w-4" />}
+                  {isAllSelected ? <CheckSquare className="h-4 w-4 text-[#1677FF]" /> : <Square className="h-4 w-4" />}
                 </button>
               </th>
               {[
@@ -650,9 +650,9 @@ export function StudentsTab({
                 ["السنتر والموعد 📍", "min-w-[165px]"],
                 ["الأجهزة", "min-w-[85px]"],
               ].map(([label, width]) => (
-                <th key={label} className={`border-b border-border px-2.5 py-2 font-extrabold ${width}`}>{label}</th>
+                <th key={label} className={`border-b border-[#2B3D57] px-2.5 py-2 font-extrabold ${width}`}>{label}</th>
               ))}
-              <th className="min-w-[110px] border-b border-border px-2.5 py-2 text-left font-extrabold">الإجراءات</th>
+              <th className="min-w-[110px] border-b border-[#2B3D57] px-2.5 py-2 text-left font-extrabold">الإجراءات</th>
             </tr>
           </thead>
 
@@ -673,11 +673,11 @@ export function StudentsTab({
                     key={s.id}
                     onClick={() => setActiveDrawerStudent(s)}
                     className={`group h-[66px] cursor-pointer transition-[background-color,box-shadow] hover:bg-[#192A43] hover:shadow-[inset_-3px_0_0_#1677FF] ${
-                      isSelected ? "bg-primary/12 shadow-[inset_-3px_0_0_#1677FF]" : rowIndex % 2 ? "bg-[#0D192A]/45" : "bg-[#101B2D]"
+                      isSelected ? "bg-[#1677FF]/12 shadow-[inset_-3px_0_0_#1677FF]" : rowIndex % 2 ? "bg-[#0D192A]/45" : "bg-[#101B2D]"
                     }`}
                   >
                     {/* Checkbox */}
-                    <td className="border-b border-border/55 px-2.5 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                    <td className="border-b border-[#26364D]/55 px-2.5 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                       <button
                         type="button"
                         onClick={() => toggleSelectStudent(s.id)}
@@ -685,7 +685,7 @@ export function StudentsTab({
                         className="inline-grid h-8 w-8 place-items-center rounded-lg text-[#7F91AA] transition hover:bg-white/5 hover:text-white"
                       >
                         {isSelected ? (
-                          <CheckSquare className="h-4 w-4 text-primary" />
+                          <CheckSquare className="h-4 w-4 text-[#1677FF]" />
                         ) : (
                           <Square className="h-4 w-4" />
                         )}
@@ -693,13 +693,13 @@ export function StudentsTab({
                     </td>
 
                     {/* Student Primary Info (Name font >= 13px + Avatar 32px + Code LTR) */}
-                    <td className="border-b border-border/55 px-2.5 py-2">
+                    <td className="border-b border-[#26364D]/55 px-2.5 py-2">
                       <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#1677FF]/25 bg-primary/12 text-xs font-black text-[#69A5FF]">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#1677FF]/25 bg-[#1677FF]/12 text-xs font-black text-[#69A5FF]">
                           {s.name.charAt(0)}
                         </div>
                         <div className="min-w-0 space-y-1">
-                          <span className="block max-w-[135px] truncate text-xs font-extrabold text-foreground transition-colors group-hover:text-[#69A5FF]" title={s.name}>
+                          <span className="block max-w-[135px] truncate text-xs font-extrabold text-[#F8FAFC] transition-colors group-hover:text-[#69A5FF]" title={s.name}>
                             {s.name}
                           </span>
                           {s.accessCode && (
@@ -710,7 +710,7 @@ export function StudentsTab({
                                 onCopyStudentCode(s);
                               }}
                               title="اضغط لنسخ الكود"
-                              className="inline-flex items-center gap-1 font-mono text-xs font-bold text-primary dir-ltr text-right hover:underline"
+                              className="inline-flex items-center gap-1 font-mono text-xs font-bold text-[#1677FF] dir-ltr text-right hover:underline"
                             >
                               {copiedStudentId === s.id ? (
                                 <Check className="h-3 w-3 text-emerald-400" />
@@ -725,7 +725,7 @@ export function StudentsTab({
                     </td>
 
                     {/* Contact (Phone LTR + Email LTR + Parent Phone) */}
-                    <td className="border-b border-border/55 px-2.5 py-2">
+                    <td className="border-b border-[#26364D]/55 px-2.5 py-2">
                       <div className="space-y-1">
                         <div className="flex items-center gap-1.5 justify-end">
                           <a
@@ -756,32 +756,32 @@ export function StudentsTab({
                     </td>
 
                     {/* Platform registration date */}
-                    <td className="border-b border-border/55 px-2.5 py-2">
+                    <td className="border-b border-[#26364D]/55 px-2.5 py-2">
                       {s.createdAt && !Number.isNaN(new Date(s.createdAt).getTime()) ? (
-                        <div className="inline-flex items-center gap-1.5 rounded-lg border border-border/70 bg-background/70 px-2 py-1.5">
+                        <div className="inline-flex items-center gap-1.5 rounded-lg border border-[#334761]/70 bg-[#0B1424]/70 px-2 py-1.5">
                           <CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#69A5FF]" />
                           <div className="leading-tight">
                             <span className="block whitespace-nowrap text-[11px] font-extrabold text-[#D8E2EF]">
                               {new Date(s.createdAt).toLocaleDateString("ar-EG", { day: "2-digit", month: "short", year: "numeric" })}
                             </span>
-                            <span className="mt-0.5 block text-[9px] font-bold text-muted-foreground">انضم للمنصة</span>
+                            <span className="mt-0.5 block text-[9px] font-bold text-[#64748B]">انضم للمنصة</span>
                           </div>
                         </div>
                       ) : (
-                        <span className="text-[11px] font-bold text-muted-foreground">غير متاح</span>
+                        <span className="text-[11px] font-bold text-[#64748B]">غير متاح</span>
                       )}
                     </td>
 
                     {/* Stage (Line clamp 2 + Tooltip) */}
-                    <td className="max-w-[140px] border-b border-border/55 px-2.5 py-2">
+                    <td className="max-w-[140px] border-b border-[#26364D]/55 px-2.5 py-2">
                       <span className="line-clamp-2 rounded-lg bg-white/[0.035] px-2.5 py-1.5 text-[11px] font-bold leading-5 text-[#B7C4D6]" title={effectiveStage}>
                         {effectiveStage}
                       </span>
                     </td>
 
                     {/* Enrolled Courses Badge */}
-                    <td className="border-b border-border/55 px-2.5 py-2">
-                      <span className="inline-flex items-center gap-1 rounded-lg bg-background border border-border px-2.5 py-1 text-xs font-bold text-[#A9B8CC]">
+                    <td className="border-b border-[#26364D]/55 px-2.5 py-2">
+                      <span className="inline-flex items-center gap-1 rounded-lg bg-[#0B1424] border border-[#26364D] px-2.5 py-1 text-xs font-bold text-[#A9B8CC]">
                         {(s.enrolledCourseIds?.length ?? 0) === 0
                           ? "كل الكورسات"
                           : `${s.enrolledCourseIds?.length} كورس`}
@@ -789,14 +789,14 @@ export function StudentsTab({
                     </td>
 
                     {/* Payment Status (Lucide icons, NO emojis) */}
-                    <td className="border-b border-border/55 px-2.5 py-2">
+                    <td className="border-b border-[#26364D]/55 px-2.5 py-2">
                       <span
                         className={`inline-flex h-7 w-[88px] items-center justify-center gap-1 rounded-lg px-2 text-[10px] font-extrabold text-center ${
                           s.paymentStatus === "paid"
                             ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
                             : s.paymentStatus === "pending_review"
                             ? "bg-amber-500/15 text-amber-300 border border-amber-500/30"
-                            : "bg-background text-[#7F91AA] border border-border"
+                            : "bg-[#0B1424] text-[#7F91AA] border border-[#26364D]"
                         }`}
                       >
                         {s.paymentStatus === "paid" ? (
@@ -819,7 +819,7 @@ export function StudentsTab({
                     </td>
 
                     {/* Account Status (Lucide icons, NO emojis) */}
-                    <td className="border-b border-border/55 px-2.5 py-2">
+                    <td className="border-b border-[#26364D]/55 px-2.5 py-2">
                       <span
                         className={`inline-flex h-7 w-[84px] items-center justify-center gap-1 rounded-lg px-2 text-[10px] font-extrabold text-center ${
                           s.status === "approved"
@@ -849,7 +849,7 @@ export function StudentsTab({
                     </td>
 
                     {/* Mode / Center Name & Appointment Slot */}
-                    <td className="border-b border-border/55 px-2.5 py-2">
+                    <td className="border-b border-[#26364D]/55 px-2.5 py-2">
                       {s.learningMode === "offline" || s.centerName || s.appointmentSlot ? (
                         <div className="space-y-1">
                           <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-black text-emerald-400">
@@ -863,21 +863,21 @@ export function StudentsTab({
                           )}
                         </div>
                       ) : (
-                        <span className="inline-flex rounded-full border border-[#1677FF]/25 bg-primary/10 px-2.5 py-1 text-[10px] font-extrabold text-[#69A5FF]">
+                        <span className="inline-flex rounded-full border border-[#1677FF]/25 bg-[#1677FF]/10 px-2.5 py-1 text-[10px] font-extrabold text-[#69A5FF]">
                           أونلاين
                         </span>
                       )}
                     </td>
 
                     {/* Device Lock (Lucide icons, NO emojis) */}
-                    <td className="border-b border-border/55 px-2.5 py-2">
+                    <td className="border-b border-[#26364D]/55 px-2.5 py-2">
                       <span
                         className={`inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[10px] font-bold ${
                           (s.maxDevices || 1) === 2
                             ? "bg-purple-500/15 text-purple-300 border border-purple-500/30"
                             : s.deviceId || (s.boundDevices && s.boundDevices.length > 0)
                             ? "bg-amber-500/15 text-amber-300 border border-amber-500/30"
-                            : "bg-background text-[#7F91AA] border border-border"
+                            : "bg-[#0B1424] text-[#7F91AA] border border-[#26364D]"
                         }`}
                       >
                         {(s.maxDevices || 1) === 2 ? (
@@ -900,14 +900,14 @@ export function StudentsTab({
                     </td>
 
                     {/* Primary Action + 3-dots Dropdown Menu */}
-                    <td className="border-b border-border/55 px-2.5 py-2 text-left" onClick={(e) => e.stopPropagation()}>
+                    <td className="border-b border-[#26364D]/55 px-2.5 py-2 text-left" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1.5 relative">
                         {/* Primary Single Action: Eye icon + View Profile */}
                         <Button
                           type="button"
                           size="sm"
                           onClick={() => setActiveDrawerStudent(s)}
-                          className="h-8 min-h-8 rounded-lg bg-primary px-2.5 text-[10px] font-extrabold text-white shadow-none hover:bg-[#1267DB]"
+                          className="h-8 min-h-8 rounded-lg bg-[#1677FF] px-2.5 text-[10px] font-extrabold text-white shadow-none hover:bg-[#1267DB]"
                         >
                           <Eye className="h-4 w-4 ml-1.5" />
                           <span>عرض الملف</span>
@@ -917,7 +917,7 @@ export function StudentsTab({
                         <button
                           type="button"
                           onClick={() => setOpenDropdownId(openDropdownId === s.id ? null : s.id)}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-background text-[#A9B8CC] transition-colors hover:border-[#49617F] hover:bg-[#1A2942] hover:text-white"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#334761] bg-[#0B1424] text-[#A9B8CC] transition-colors hover:border-[#49617F] hover:bg-[#1A2942] hover:text-white"
                           title="إجراءات إضافية"
                         >
                           <MoreVertical className="h-4 w-4" />
@@ -925,7 +925,7 @@ export function StudentsTab({
 
                         {/* Dropdown Menu Overlay */}
                         {openDropdownId === s.id && (
-                          <div className="absolute left-0 top-11 z-30 w-48 rounded-xl border border-border bg-background p-1.5 shadow-2xl space-y-1">
+                          <div className="absolute left-0 top-11 z-30 w-48 rounded-xl border border-[#26364D] bg-[#0B1424] p-1.5 shadow-2xl space-y-1">
                             {s.status !== "approved" && (
                               <button
                                 type="button"
@@ -958,9 +958,9 @@ export function StudentsTab({
                                 onSetMaxDevices(s);
                                 setOpenDropdownId(null);
                               }}
-                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-[#A9B8CC] hover:bg-card"
+                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-[#A9B8CC] hover:bg-[#131E31]"
                             >
-                              <Smartphone className="h-3.5 w-3.5 text-primary" />
+                              <Smartphone className="h-3.5 w-3.5 text-[#1677FF]" />
                               <span>تغيير أجهزة اللوجن</span>
                             </button>
                             <button
@@ -969,7 +969,7 @@ export function StudentsTab({
                                 onResetDevice(s);
                                 setOpenDropdownId(null);
                               }}
-                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-[#A9B8CC] hover:bg-card"
+                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-[#A9B8CC] hover:bg-[#131E31]"
                             >
                               <Unlock className="h-3.5 w-3.5 text-amber-400" />
                               <span>فك قفل الجهاز</span>
@@ -981,9 +981,9 @@ export function StudentsTab({
                                   onCopyStudentCode(s);
                                   setOpenDropdownId(null);
                                 }}
-                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-[#A9B8CC] hover:bg-card"
+                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-[#A9B8CC] hover:bg-[#131E31]"
                               >
-                                <Copy className="h-3.5 w-3.5 text-primary" />
+                                <Copy className="h-3.5 w-3.5 text-[#1677FF]" />
                                 <span>نسخ كود الوصول</span>
                               </button>
                             )}
@@ -1011,7 +1011,7 @@ export function StudentsTab({
       </div>
 
       {/* 4. Pagination Footer */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 text-xs font-bold text-[#A9B8CC]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-[#26364D] bg-[#131E31] p-4 text-xs font-bold text-[#A9B8CC]">
         <div className="flex items-center gap-2">
           <span>عدد النتائج في الصفحة:</span>
           <select
@@ -1020,7 +1020,7 @@ export function StudentsTab({
               setPageSize(Number(e.target.value));
               setCurrentPage(1);
             }}
-            className="rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground focus:outline-none"
+            className="rounded-lg border border-[#26364D] bg-[#0B1424] px-2.5 py-1.5 text-xs text-[#F8FAFC] focus:outline-none"
           >
             <option value={10}>10</option>
             <option value={25}>25</option>
@@ -1039,7 +1039,7 @@ export function StudentsTab({
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               aria-label="الصفحة السابقة"
-              className="h-9 w-9 p-0 border-border bg-background text-foreground disabled:opacity-40"
+              className="h-9 w-9 p-0 border-[#26364D] bg-[#0B1424] text-[#F8FAFC] disabled:opacity-40"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -1051,7 +1051,7 @@ export function StudentsTab({
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               aria-label="الصفحة التالية"
-              className="h-9 w-9 p-0 border-border bg-background text-foreground disabled:opacity-40"
+              className="h-9 w-9 p-0 border-[#26364D] bg-[#0B1424] text-[#F8FAFC] disabled:opacity-40"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>

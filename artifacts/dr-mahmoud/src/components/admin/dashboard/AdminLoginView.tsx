@@ -24,7 +24,7 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({
 }) => {
   return (
     <main
-      className="relative min-h-screen w-full overflow-y-auto flex items-center justify-center bg-[#07111F] px-4 py-8 dir-rtl text-foreground selection:bg-[#2563EB] selection:text-white"
+      className="relative min-h-screen w-full overflow-y-auto flex items-center justify-center bg-[#07111F] px-4 py-8 dir-rtl text-[#F8FAFC] selection:bg-[#2563EB] selection:text-white"
       dir="rtl"
     >
       {/* Subtle background radial spotlight & dot pattern */}
@@ -55,13 +55,13 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({
             <span>بوابة إدارة المنصة</span>
           </div>
 
-          <h1 className="text-2xl sm:text-[30px] font-extrabold tracking-tight text-foreground leading-tight">
+          <h1 className="text-2xl sm:text-[30px] font-extrabold tracking-tight text-[#F8FAFC] leading-tight">
             لوحة إدارة المنصة
           </h1>
           <p className="text-xs sm:text-sm font-semibold text-[#3B82F6] mt-1">
             د. محمود المهدي — منصة البرمجة وعلوم الحاسب
           </p>
-          <p className="text-xs text-muted-foreground mt-2 max-w-[380px] leading-relaxed">
+          <p className="text-xs text-[#94A3B8] mt-2 max-w-[380px] leading-relaxed">
             دخول المسؤولين المصرح لهم فقط. هذه البوابة مخصصة لإدارة الطلاب والمحتوى والاختبارات والمدفوعات.
           </p>
         </div>
@@ -71,11 +71,11 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({
             <div className="flex items-center justify-between">
               <label
                 htmlFor="admin-password"
-                className="block text-xs font-bold text-foreground"
+                className="block text-xs font-bold text-[#F8FAFC]"
               >
                 كلمة مرور المسؤول
               </label>
-              <span className="text-[11px] text-muted-foreground">
+              <span className="text-[11px] text-[#64748B]">
                 أدخل كلمة المرور الخاصة بلوحة الإدارة
               </span>
             </div>
@@ -95,7 +95,7 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({
                 aria-describedby={
                   authError ? "admin-password-error" : undefined
                 }
-                className="h-[58px] w-full rounded-[12px] border border-[#2B3D5B] bg-[#071426] pl-12 pr-4 text-center font-mono text-lg font-bold tracking-widest text-foreground placeholder-[#64748B] outline-none transition-all focus:border-[#3B82F6] focus:ring-3 focus:ring-[#3B82F6]/14"
+                className="h-[58px] w-full rounded-[12px] border border-[#2B3D5B] bg-[#071426] pl-12 pr-4 text-center font-mono text-lg font-bold tracking-widest text-[#F8FAFC] placeholder-[#64748B] outline-none transition-all focus:border-[#3B82F6] focus:ring-3 focus:ring-[#3B82F6]/14"
                 autoFocus
               />
               <button
@@ -105,7 +105,7 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({
                   showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"
                 }
                 aria-pressed={showPassword}
-                className="absolute left-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-[#2563EB]/15 hover:text-[#60A5FA] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6]"
+                className="absolute left-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-lg text-[#94A3B8] hover:bg-[#2563EB]/15 hover:text-[#60A5FA] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6]"
               >
                 {showPassword ? (
                   <EyeOff className="h-5 w-5" />
@@ -131,7 +131,7 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({
           <button
             type="submit"
             disabled={isLoggingIn || !passwordInput.trim()}
-            className="h-[58px] w-full rounded-[12px] bg-[#2563EB] hover:bg-[#1D4ED8] active:translate-y-[1px] text-white font-bold text-sm sm:text-base transition-all duration-150 disabled:bg-[#334155] disabled:text-muted-foreground disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 shadow-md focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#3B82F6]"
+            className="h-[58px] w-full rounded-[12px] bg-[#2563EB] hover:bg-[#1D4ED8] active:translate-y-[1px] text-white font-bold text-sm sm:text-base transition-all duration-150 disabled:bg-[#334155] disabled:text-[#94A3B8] disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 shadow-md focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#3B82F6]"
           >
             {isLoggingIn ? (
               <>
@@ -151,12 +151,12 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({
         <div className="mt-8 pt-5 border-t border-[#223552] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
           <a
             href="/"
-            className="flex items-center gap-1.5 font-bold text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] rounded-md px-1 py-0.5"
+            className="flex items-center gap-1.5 font-bold text-[#94A3B8] hover:text-[#F8FAFC] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] rounded-md px-1 py-0.5"
           >
             <ChevronRight className="h-4 w-4" />
             <span>العودة إلى الموقع</span>
           </a>
-          <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#64748B]">
             <ShieldCheck className="h-3.5 w-3.5 text-[#2563EB]" />
             <span>اتصال آمن ومشفّر</span>
           </div>

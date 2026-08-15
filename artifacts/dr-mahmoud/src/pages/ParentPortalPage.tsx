@@ -284,7 +284,7 @@ export function ParentPortal() {
   };
 
   return (
-    <div className=" min-h-screen bg-muted/50 py-12 px-4 sm:px-6 lg:px-8 font-sans text-right" dir="rtl">
+    <div className="theme-adaptive min-h-screen bg-slate-50/50 py-12 px-4 sm:px-6 lg:px-8 font-sans text-right" dir="rtl">
       <div className="max-w-4xl mx-auto space-y-8">
         
         {/* Portal Header */}
@@ -295,8 +295,8 @@ export function ParentPortal() {
               <span>بوابة ولي الأمر الرسمية لمتابعة الطالب</span>
             </div>
           </div>
-          <h1 className="text-3xl font-black text-foreground tracking-tight">أكاديمية د. محمود المهدي للبرمجة</h1>
-          <p className="text-sm text-muted-foreground max-w-lg mx-auto">
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">أكاديمية د. محمود المهدي للبرمجة</h1>
+          <p className="text-sm text-slate-500 max-w-lg mx-auto">
             متابعة دقيقة ومستمرة لنسبة إنجاز ابنك، الدروس المسموعة بالدقيقة والتاريخ، وتنبيهات صوتية فورية للإدارة.
           </p>
         </div>
@@ -306,23 +306,23 @@ export function ParentPortal() {
           <div className="space-y-6">
             
             {/* Parent & Student Overview Card */}
-            <div className="bg-white rounded-3xl p-6 border border-border shadow-md space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
+            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-md space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-black flex items-center justify-center text-xl shadow-lg shadow-blue-500/20 shrink-0">
                     {reportData.student.name.substring(0, 2)}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h2 className="text-xl font-black text-foreground">{reportData.student.name}</h2>
+                      <h2 className="text-xl font-black text-slate-900">{reportData.student.name}</h2>
                       {reportData.student.grade && (
                         <span className="text-xs bg-blue-50 text-blue-700 font-bold px-2.5 py-0.5 rounded-full border border-blue-200">
                           {reportData.student.grade}
                         </span>
                       )}
                     </div>
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1.5">
-                      <span>مرحبا ولي الأمر: <strong className="text-foreground font-bold">{reportData.parent.name}</strong></span>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 mt-1.5">
+                      <span>مرحبا ولي الأمر: <strong className="text-slate-900 font-bold">{reportData.parent.name}</strong></span>
                       <span>•</span>
                       <span className="flex items-center gap-1">
                         كود التتبع: 
@@ -346,7 +346,7 @@ export function ParentPortal() {
                     className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shadow-2xs ${
                       soundEnabled
                         ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
-                        : "bg-muted text-muted-foreground border-border hover:bg-slate-200"
+                        : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"
                     }`}
                   >
                     {soundEnabled ? <BellRing className="w-4 h-4 text-emerald-600 animate-pulse" /> : <Bell className="w-4 h-4" />}
@@ -355,9 +355,9 @@ export function ParentPortal() {
 
                   <button
                     onClick={handleLogout}
-                    className="px-3.5 py-2 rounded-xl bg-muted hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 border border-border text-foreground text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs"
+                    className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 border border-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs"
                   >
-                    <LogOut className="w-4 h-4 text-muted-foreground" />
+                    <LogOut className="w-4 h-4 text-slate-500" />
                     <span>تسجيل الخروج</span>
                   </button>
                 </div>
@@ -370,7 +370,7 @@ export function ParentPortal() {
                     ? "bg-rose-50/80 border-rose-200 text-rose-900" 
                     : "bg-emerald-50/80 border-emerald-200 text-emerald-900"
                 }`}>
-                  <span className="text-[11px] font-bold text-muted-foreground block mb-1">حالة نشاط الطالب</span>
+                  <span className="text-[11px] font-bold text-slate-500 block mb-1">حالة نشاط الطالب</span>
                   {reportData.student.isInactive ? (
                     <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-rose-700">
                       <AlertCircle className="w-4 h-4 shrink-0" />
@@ -384,25 +384,25 @@ export function ParentPortal() {
                   )}
                 </div>
 
-                <div className="bg-muted p-4 rounded-2xl border border-border/80">
-                  <span className="text-[11px] font-bold text-muted-foreground block mb-1">الدروس المكتملة والمشاهدة</span>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
+                  <span className="text-[11px] font-bold text-slate-500 block mb-1">الدروس المكتملة والمشاهدة</span>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-lg font-black text-foreground">{reportData.student.completedCount}</span>
-                    <span className="text-xs text-muted-foreground font-semibold">من {reportData.student.watchedCount} درس</span>
+                    <span className="text-lg font-black text-slate-900">{reportData.student.completedCount}</span>
+                    <span className="text-xs text-slate-500 font-semibold">من {reportData.student.watchedCount} درس</span>
                   </div>
                 </div>
 
-                <div className="bg-muted p-4 rounded-2xl border border-border/80">
-                  <span className="text-[11px] font-bold text-muted-foreground block mb-1">اختبارات تم اجتيازها</span>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
+                  <span className="text-[11px] font-bold text-slate-500 block mb-1">اختبارات تم اجتيازها</span>
                   <div className="flex items-baseline gap-1">
                     <span className="text-lg font-black text-purple-700">{reportData.student.passedQuizzesCount}</span>
-                    <span className="text-xs text-muted-foreground font-semibold">من {reportData.student.quizzesCount} كويز</span>
+                    <span className="text-xs text-slate-500 font-semibold">من {reportData.student.quizzesCount} كويز</span>
                   </div>
                 </div>
 
-                <div className="bg-muted p-4 rounded-2xl border border-border/80">
-                  <span className="text-[11px] font-bold text-muted-foreground block mb-1">آخر موعد لتواجد الطالب</span>
-                  <span className="text-xs font-bold text-foreground block truncate">{formatDate(reportData.student.lastLoginAt)}</span>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
+                  <span className="text-[11px] font-bold text-slate-500 block mb-1">آخر موعد لتواجد الطالب</span>
+                  <span className="text-xs font-bold text-slate-900 block truncate">{formatDate(reportData.student.lastLoginAt)}</span>
                 </div>
               </div>
             </div>
@@ -411,7 +411,7 @@ export function ParentPortal() {
             {reportData.notifications && reportData.notifications.length > 0 && (
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-3xl p-6 space-y-4 shadow-sm">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-black text-foreground flex items-center gap-2">
+                  <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
                     <Bell className="w-4.5 h-4.5 text-[#0B63CE]" />
                     <span>إشعارات وتنبيهات المحاضر والإدارة ({reportData.notifications.length})</span>
                   </h3>
@@ -422,12 +422,12 @@ export function ParentPortal() {
 
                 <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
                   {reportData.notifications.map((notif) => (
-                    <div key={notif.id} className="p-4 bg-white rounded-2xl border border-border/80 space-y-1.5 text-xs shadow-2xs">
+                    <div key={notif.id} className="p-4 bg-white rounded-2xl border border-slate-200/80 space-y-1.5 text-xs shadow-2xs">
                       <div className="flex items-center justify-between">
-                        <strong className="font-bold text-foreground text-sm">{notif.title}</strong>
-                        <span className="text-[10px] text-muted-foreground font-semibold">{formatDate(notif.createdAt)}</span>
+                        <strong className="font-bold text-slate-900 text-sm">{notif.title}</strong>
+                        <span className="text-[10px] text-slate-400 font-semibold">{formatDate(notif.createdAt)}</span>
                       </div>
-                      <p className="text-foreground text-xs leading-relaxed font-medium">{notif.message}</p>
+                      <p className="text-slate-700 text-xs leading-relaxed font-medium">{notif.message}</p>
                     </div>
                   ))}
                 </div>
@@ -435,36 +435,36 @@ export function ParentPortal() {
             )}
 
             {/* Watch History */}
-            <div className="bg-white rounded-3xl p-6 border border-border shadow-sm space-y-4">
+            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-black text-foreground flex items-center gap-2">
+                <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
                   <Video className="w-4.5 h-4.5 text-[#0B63CE]" />
                   <span>سجل مشاهدة واستماع المحاضرات بالتفصيل ({reportData.watchHistory.length})</span>
                 </h3>
               </div>
 
               {reportData.watchHistory.length === 0 ? (
-                <div className="p-8 text-center bg-muted rounded-2xl text-xs text-muted-foreground font-medium">
+                <div className="p-8 text-center bg-slate-50 rounded-2xl text-xs text-slate-500 font-medium">
                   لم يقم الطالب بمشاهدة أية دروس حتى الآن.
                 </div>
               ) : (
                 <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
                   {reportData.watchHistory.map((watch, idx) => (
-                    <div key={idx} className="p-4 bg-muted/80 hover:bg-muted/80 transition-colors rounded-2xl border border-border/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                    <div key={idx} className="p-4 bg-slate-50/80 hover:bg-slate-100/80 transition-colors rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                       <div className="space-y-1">
-                        <strong className="block font-bold text-foreground text-sm">{watch.videoTitle}</strong>
-                        <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                        <strong className="block font-bold text-slate-900 text-sm">{watch.videoTitle}</strong>
+                        <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
                           <span className="bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-md font-bold">{watch.category}</span>
-                          {watch.stage && <span className="bg-slate-200 text-foreground px-2 py-0.5 rounded font-semibold">{watch.stage}</span>}
+                          {watch.stage && <span className="bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-semibold">{watch.stage}</span>}
                           <span>تاريخ المشاهدة: {formatDate(watch.updatedAt)}</span>
                         </div>
                       </div>
 
-                      <div className="sm:text-left flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/60">
+                      <div className="sm:text-left flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60">
                         <div className="flex items-center gap-2 justify-between sm:justify-end mb-1.5">
-                          <span className="text-[11px] text-muted-foreground font-mono">التقدم:</span>
+                          <span className="text-[11px] text-slate-500 font-mono">التقدم:</span>
                           <span className="font-extrabold text-emerald-600 text-xs">{watch.progress}%</span>
-                          <span className="text-[11px] text-muted-foreground font-mono">({formatSeconds(watch.currentTimeSeconds)})</span>
+                          <span className="text-[11px] text-slate-400 font-mono">({formatSeconds(watch.currentTimeSeconds)})</span>
                         </div>
                         <div className="w-full sm:w-36 h-2 bg-slate-200 rounded-full overflow-hidden">
                           <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${watch.progress}%` }} />
@@ -477,23 +477,23 @@ export function ParentPortal() {
             </div>
 
             {/* Quiz History */}
-            <div className="bg-white rounded-3xl p-6 border border-border shadow-sm space-y-4">
-              <h3 className="text-sm font-black text-foreground flex items-center gap-2">
+            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+              <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
                 <Award className="w-4.5 h-4.5 text-purple-600" />
                 <span>نتائج وتقييمات الكويزات والاختبارات ({reportData.quizHistory.length})</span>
               </h3>
 
               {reportData.quizHistory.length === 0 ? (
-                <div className="p-8 text-center bg-muted rounded-2xl text-xs text-muted-foreground font-medium">
+                <div className="p-8 text-center bg-slate-50 rounded-2xl text-xs text-slate-500 font-medium">
                   لم يؤدِّ الطالب أية اختبارات حتى الآن.
                 </div>
               ) : (
                 <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
                   {reportData.quizHistory.map((quiz, idx) => (
-                    <div key={idx} className="p-4 bg-muted/80 rounded-2xl border border-border/80 flex items-center justify-between text-xs">
+                    <div key={idx} className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/80 flex items-center justify-between text-xs">
                       <div>
-                        <span className="font-bold text-foreground text-sm block mb-1">اختبار كويز #{quiz.quizId}</span>
-                        <span className="text-[11px] text-muted-foreground">{formatDate(quiz.createdAt)}</span>
+                        <span className="font-bold text-slate-900 text-sm block mb-1">اختبار كويز #{quiz.quizId}</span>
+                        <span className="text-[11px] text-slate-500">{formatDate(quiz.createdAt)}</span>
                       </div>
                       <span className={`px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-2xs ${quiz.passed ? "bg-emerald-100 text-emerald-800 border border-emerald-300" : "bg-rose-100 text-rose-800 border border-rose-300"}`}>
                         النتيجة: {quiz.score}% ({quiz.passed ? "ناجح ومجتاز ✓" : "لم يجتز ✕"})
@@ -507,15 +507,15 @@ export function ParentPortal() {
           </div>
         ) : (
           /* Login / Register / Recover Toggle Card */
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-border shadow-md max-w-lg mx-auto space-y-6">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md max-w-lg mx-auto space-y-6">
             
             {/* Form Mode Selector */}
-            <div className="flex items-center bg-muted p-1 rounded-2xl">
+            <div className="flex items-center bg-slate-100 p-1 rounded-2xl">
               <button
                 type="button"
                 onClick={() => { setActiveMode("login"); setRecoveredCode(null); }}
                 className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                  activeMode === "login" ? "bg-white text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
+                  activeMode === "login" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-900"
                 }`}
               >
                 تسجيل الدخول
@@ -524,7 +524,7 @@ export function ParentPortal() {
                 type="button"
                 onClick={() => { setActiveMode("register"); setRecoveredCode(null); }}
                 className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                  activeMode === "register" ? "bg-white text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
+                  activeMode === "register" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-900"
                 }`}
               >
                 تسجيل جديد
@@ -533,7 +533,7 @@ export function ParentPortal() {
                 type="button"
                 onClick={() => { setActiveMode("recover"); setRecoveredCode(null); }}
                 className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                  activeMode === "recover" ? "bg-white text-amber-900 font-black shadow-xs" : "text-muted-foreground hover:text-foreground"
+                  activeMode === "recover" ? "bg-white text-amber-900 font-black shadow-xs" : "text-slate-500 hover:text-slate-900"
                 }`}
               >
                 نسيت الكود؟
@@ -543,23 +543,23 @@ export function ParentPortal() {
             {activeMode === "login" ? (
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-foreground">رقم هاتف ولي الأمر:</label>
+                  <label className="block text-xs font-bold text-slate-800">رقم هاتف ولي الأمر:</label>
                   <div className="relative">
-                    <Phone className="w-4 h-4 text-muted-foreground absolute right-3.5 top-1/2 -translate-y-1/2" />
+                    <Phone className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       required
                       placeholder="أدخل رقم هاتفك المسجل..."
                       value={loginPhone}
                       onChange={(e) => setLoginPhone(e.target.value)}
-                      className="w-full pr-10 pl-4 py-3 text-xs bg-muted border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B63CE]"
+                      className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B63CE]"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="block text-xs font-bold text-foreground">كود ولي الأمر (Parent Code):</label>
+                    <label className="block text-xs font-bold text-slate-800">كود ولي الأمر (Parent Code):</label>
                     <button
                       type="button"
                       onClick={() => setActiveMode("recover")}
@@ -569,14 +569,14 @@ export function ParentPortal() {
                     </button>
                   </div>
                   <div className="relative">
-                    <KeyRound className="w-4 h-4 text-muted-foreground absolute right-3.5 top-1/2 -translate-y-1/2" />
+                    <KeyRound className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       required
                       placeholder="مثال: PAR-839201"
                       value={loginCode}
                       onChange={(e) => setLoginCode(e.target.value)}
-                      className="w-full pr-10 pl-4 py-3 text-xs bg-muted border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B63CE] font-mono tracking-wider"
+                      className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B63CE] font-mono tracking-wider"
                     />
                   </div>
                 </div>
@@ -601,7 +601,7 @@ export function ParentPortal() {
                 {recoveredCode ? (
                   <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-2xl text-center space-y-2">
                     <span className="text-xs font-bold text-emerald-800 block">تم استرداد الكود الخاص بك بنجاح:</span>
-                    <strong className="font-mono text-xl text-foreground bg-white border border-emerald-300 px-4 py-1.5 rounded-xl inline-block shadow-2xs font-extrabold text-amber-600">
+                    <strong className="font-mono text-xl text-slate-900 bg-white border border-emerald-300 px-4 py-1.5 rounded-xl inline-block shadow-2xs font-extrabold text-amber-600">
                       {recoveredCode}
                     </strong>
                     <button
@@ -615,31 +615,31 @@ export function ParentPortal() {
                 ) : (
                   <>
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-bold text-foreground">رقم هاتف ولي الأمر:</label>
+                      <label className="block text-xs font-bold text-slate-800">رقم هاتف ولي الأمر:</label>
                       <div className="relative">
-                        <Phone className="w-4 h-4 text-muted-foreground absolute right-3.5 top-1/2 -translate-y-1/2" />
+                        <Phone className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
                         <input
                           type="text"
                           required
                           placeholder="أدخل رقم هاتفك..."
                           value={recoverPhone}
                           onChange={(e) => setRecoverPhone(e.target.value)}
-                          className="w-full pr-10 pl-4 py-3 text-xs bg-muted border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+                          className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-bold text-foreground">رقم هاتف الطالب أو كود الطالب المسجل:</label>
+                      <label className="block text-xs font-bold text-slate-800">رقم هاتف الطالب أو كود الطالب المسجل:</label>
                       <div className="relative">
-                        <Users className="w-4 h-4 text-muted-foreground absolute right-3.5 top-1/2 -translate-y-1/2" />
+                        <Users className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
                         <input
                           type="text"
                           required
                           placeholder="أدخل رقم هاتف الطالب..."
                           value={recoverStudentQuery}
                           onChange={(e) => setRecoverStudentQuery(e.target.value)}
-                          className="w-full pr-10 pl-4 py-3 text-xs bg-muted border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+                          className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
                         />
                       </div>
                     </div>
@@ -657,43 +657,43 @@ export function ParentPortal() {
             ) : (
               <form onSubmit={handleRegister} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-foreground">اسم ولي الأمر الكامل:</label>
+                  <label className="block text-xs font-bold text-slate-800">اسم ولي الأمر الكامل:</label>
                   <input
                     type="text"
                     required
                     placeholder="أدخل اسمك الكامل..."
                     value={regName}
                     onChange={(e) => setRegName(e.target.value)}
-                    className="w-full px-4 py-3 text-xs bg-muted border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B63CE]"
+                    className="w-full px-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B63CE]"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-foreground">رقم هاتف ولي الأمر:</label>
+                  <label className="block text-xs font-bold text-slate-800">رقم هاتف ولي الأمر:</label>
                   <div className="relative">
-                    <Phone className="w-4 h-4 text-muted-foreground absolute right-3.5 top-1/2 -translate-y-1/2" />
+                    <Phone className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       required
                       placeholder="أدخل رقم هاتفك..."
                       value={regPhone}
                       onChange={(e) => setRegPhone(e.target.value)}
-                      className="w-full pr-10 pl-4 py-3 text-xs bg-muted border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B63CE]"
+                      className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B63CE]"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-foreground">رقم هاتف الطالب أو كود الطالب المسجل بالمنصة:</label>
+                  <label className="block text-xs font-bold text-slate-800">رقم هاتف الطالب أو كود الطالب المسجل بالمنصة:</label>
                   <div className="relative">
-                    <Users className="w-4 h-4 text-muted-foreground absolute right-3.5 top-1/2 -translate-y-1/2" />
+                    <Users className="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       required
                       placeholder="أدخل رقم هاتف ابنك المسجل في المنصة..."
                       value={regStudentQuery}
                       onChange={(e) => setRegStudentQuery(e.target.value)}
-                      className="w-full pr-10 pl-4 py-3 text-xs bg-muted border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B63CE]"
+                      className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B63CE]"
                     />
                   </div>
                 </div>
