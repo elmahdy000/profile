@@ -83,8 +83,18 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           id: "bookings",
           label: "الحجوزات والطلبات",
           icon: Calendar,
-          onClick: () => setActiveTab("bookings"),
-          active: activeTab === "bookings",
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("students");
+            if (typeof window !== "undefined") {
+              const params = new URLSearchParams(window.location.search);
+              params.set("status", "pending");
+              params.delete("mode");
+              window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
+              window.dispatchEvent(new Event("popstate"));
+            }
+          },
+          active: activeTab === "learning" && learningSubTab === "students" && (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("status") === "pending"),
           badge: bookingsCount,
         },
         {
@@ -106,8 +116,15 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           onClick: () => {
             setActiveTab("learning");
             setLearningSubTab("students");
+            if (typeof window !== "undefined") {
+              const params = new URLSearchParams(window.location.search);
+              params.delete("mode");
+              params.delete("status");
+              window.history.replaceState(null, "", `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`);
+              window.dispatchEvent(new Event("popstate"));
+            }
           },
-          active: activeTab === "learning" && learningSubTab === "students",
+          active: activeTab === "learning" && learningSubTab === "students" && (typeof window === "undefined" || (!new URLSearchParams(window.location.search).get("mode") && new URLSearchParams(window.location.search).get("status") !== "pending")),
         },
         {
           id: "center-bookings",
@@ -119,6 +136,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
             if (typeof window !== "undefined") {
               const params = new URLSearchParams(window.location.search);
               params.set("mode", "offline");
+              params.delete("status");
               window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
               window.dispatchEvent(new Event("popstate"));
             }

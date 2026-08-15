@@ -90,7 +90,8 @@ export function SubAdminDashboard() {
                 if (typeof window !== "undefined") {
                   const params = new URLSearchParams(window.location.search);
                   params.delete("mode");
-                  window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
+                  params.delete("status");
+                  window.history.replaceState(null, "", `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`);
                   window.dispatchEvent(new Event("popstate"));
                 }
               }}
@@ -105,6 +106,7 @@ export function SubAdminDashboard() {
                 if (typeof window !== "undefined") {
                   const params = new URLSearchParams(window.location.search);
                   params.set("mode", "offline");
+                  params.delete("status");
                   window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
                   window.dispatchEvent(new Event("popstate"));
                 }

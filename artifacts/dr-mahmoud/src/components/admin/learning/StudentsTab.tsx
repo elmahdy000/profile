@@ -144,6 +144,24 @@ export function StudentsTab({
     return Array.from(set);
   }, [students]);
 
+  // Listen for URL search parameter changes (popstate)
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      setSearchInput(params.get("search") || "");
+      setDebouncedSearch(params.get("search") || "");
+      setStageFilter(params.get("stage") || "all");
+      setCourseFilter(params.get("course") || "all");
+      setPaymentFilter(params.get("payment") || "all");
+      setStatusFilter(params.get("status") || "all");
+      setModeFilter(params.get("mode") || "all");
+      setSortBy((params.get("sort") as any) || "newest");
+      setCurrentPage(Number(params.get("page")) || 1);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   // Filtering Logic
   const filteredStudents = useMemo(() => {
     return students
@@ -182,8 +200,13 @@ export function StudentsTab({
         // Status Filter
         if (statusFilter !== "all" && s.status !== statusFilter) return false;
 
-        // Mode Filter
-        if (modeFilter !== "all" && (s.learningMode || "online") !== modeFilter) return false;
+        // Mode Filter (Center bookings: learningMode === "offline" OR has centerName/appointmentSlot)
+        if (modeFilter !== "all") {
+          const isOfflineStudent = s.learningMode === "offline" || Boolean(s.centerName && s.centerName.trim()) || Boolean(s.appointmentSlot && s.appointmentSlot.trim());
+          if (modeFilter === "offline" && !isOfflineStudent) return false;
+          if (modeFilter === "online" && isOfflineStudent) return false;
+          if (modeFilter !== "offline" && modeFilter !== "online" && s.learningMode !== modeFilter) return false;
+        }
 
         return true;
       })
@@ -215,6 +238,9 @@ export function StudentsTab({
     setModeFilter("all");
     setSortBy("newest");
     setCurrentPage(1);
+    if (typeof window !== "undefined") {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
   };
 
   // Pagination Logic
