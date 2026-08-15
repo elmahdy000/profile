@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { SETTINGS_KEYS } from "@/hooks/useSiteSettings";
-import { MapPin, Clock, Plus, Trash2, Edit2, Check, ArrowUp, ArrowDown, Save } from "lucide-react";
+import { MapPin, Clock, Plus, Trash2, Edit2, Check, ArrowUp, ArrowDown, Save, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export interface OfflineCenterItem {
@@ -11,6 +11,51 @@ export interface OfflineCenterItem {
   timeStr: string;
   daysStr: string;
   color: string;
+}
+
+export function normalizeDays(daysStr: string): string[] {
+  const clean = daysStr.trim().toLowerCase();
+  const days: string[] = [];
+  if (clean.includes("سبت")) days.push("سبت");
+  if (clean.includes("أحد") || clean.includes("حد")) days.push("أحد");
+  if (clean.includes("اتنين") || clean.includes("إثنين") || clean.includes("اثنين")) days.push("اثنين");
+  if (clean.includes("تلات") || clean.includes("ثلاثاء")) days.push("ثلاثاء");
+  if (clean.includes("أربع") || clean.includes("اربع") || clean.includes("أربعاء")) days.push("أربعاء");
+  if (clean.includes("خميس")) days.push("خميس");
+  if (clean.includes("جمعة")) days.push("جمعة");
+  return days;
+}
+
+export function normalizeTime(timeStr: string): string {
+  return timeStr
+    .trim()
+    .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+    .replace(/\s+/g, "")
+    .toLowerCase();
+}
+
+export function findScheduleConflicts(centers: OfflineCenterItem[]): { itemA: OfflineCenterItem; itemB: OfflineCenterItem; commonDays: string[]; time: string }[] {
+  const conflicts: { itemA: OfflineCenterItem; itemB: OfflineCenterItem; commonDays: string[]; time: string }[] = [];
+
+  for (let i = 0; i < centers.length; i++) {
+    for (let j = i + 1; j < centers.length; j++) {
+      const a = centers[i];
+      const b = centers[j];
+      const daysA = normalizeDays(a.daysStr);
+      const daysB = normalizeDays(b.daysStr);
+      const commonDays = daysA.filter((day) => daysB.includes(day));
+
+      if (commonDays.length > 0) {
+        const timeA = normalizeTime(a.timeStr);
+        const timeB = normalizeTime(b.timeStr);
+        if (timeA && timeB && timeA === timeB) {
+          conflicts.push({ itemA: a, itemB: b, commonDays, time: a.timeStr });
+        }
+      }
+    }
+  }
+
+  return conflicts;
 }
 
 export const defaultOfflineCenters: OfflineCenterItem[] = [
@@ -117,6 +162,8 @@ export const CentersTab: React.FC<CentersTabProps> = ({
     setCenters(updated);
   };
 
+  const conflicts = findScheduleConflicts(centers);
+
   return (
     <div className="space-y-6 text-right" dir="rtl">
       <div className="flex items-center justify-between gap-4 border-b border-border pb-4">
@@ -138,14 +185,37 @@ export const CentersTab: React.FC<CentersTabProps> = ({
         </Button>
       </div>
 
+      {conflicts.length > 0 && (
+        <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 space-y-2 text-rose-300">
+          <div className="flex items-center gap-2 font-black text-sm text-rose-400">
+            <AlertTriangle className="h-5 w-5 text-rose-500 shrink-0 animate-pulse" />
+            تنبيه وجود تعارض في مواعيد السناتر!
+          </div>
+          <div className="space-y-1 text-xs font-bold leading-relaxed">
+            {conflicts.map((conf, cIdx) => (
+              <p key={cIdx}>
+                • تعارض بين <strong>{conf.itemA.name}</strong> و <strong>{conf.itemB.name}</strong> في يوم ({conf.commonDays.join("، ")}) الساعة <strong>{conf.time}</strong>!
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-4 md:grid-cols-2">
         {centers.map((c, idx) => {
           const isEditing = editingIdx === idx;
+          const hasConflict = conflicts.some(
+            (conf) => conf.itemA.id === c.id || conf.itemB.id === c.id
+          );
           return (
             <div
               key={c.id || idx}
               className={`rounded-2xl border bg-card p-4 shadow-sm transition-all relative space-y-3 ${
-                isEditing ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/40"
+                hasConflict
+                  ? "border-rose-500/60 bg-rose-500/5 ring-2 ring-rose-500/20"
+                  : isEditing
+                  ? "border-primary ring-2 ring-primary/20"
+                  : "border-border hover:border-primary/40"
               }`}
             >
               {isEditing ? (
@@ -236,6 +306,12 @@ export const CentersTab: React.FC<CentersTabProps> = ({
                         {c.grade && (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
                             {c.grade}
+                          </span>
+                        )}
+                        {hasConflict && (
+                          <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center gap-1">
+                            <AlertTriangle className="h-3 w-3 text-rose-500 shrink-0" />
+                            تعارض في المواعيد!
                           </span>
                         )}
                       </div>
