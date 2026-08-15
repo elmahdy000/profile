@@ -1061,7 +1061,7 @@ export function StudentsTab({
 
       {/* 5. Full Student Profile Drawer */}
       <StudentDrawer
-        student={activeDrawerStudent}
+        student={activeDrawerStudent ? students.find((s) => s.id === activeDrawerStudent.id) || activeDrawerStudent : null}
         isOpen={Boolean(activeDrawerStudent)}
         onClose={() => setActiveDrawerStudent(null)}
         role={role}

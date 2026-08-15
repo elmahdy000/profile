@@ -853,7 +853,7 @@ export function CenterBookingsTab({
       {/* Active Drawer Modal */}
       {activeDrawerStudent && (
         <StudentDrawer
-          student={activeDrawerStudent}
+          student={localStudents.find((s) => s.id === activeDrawerStudent.id) || activeDrawerStudent}
           isOpen={Boolean(activeDrawerStudent)}
           onClose={() => setActiveDrawerStudent(null)}
           role={role}
