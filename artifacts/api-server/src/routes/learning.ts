@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 import multer from "multer";
 import mammoth from "mammoth";
-import { and, desc, eq, ilike, inArray, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, isNull, or, sql } from "drizzle-orm";
 import {
   auditLogsTable,
   codeRecoveryRequestsTable,
@@ -3476,7 +3476,12 @@ router.get(
           grade: studentsTable.grade,
         })
         .from(studentsTable)
-        .where(eq(studentsTable.learningMode, "offline"));
+        .where(
+          or(
+            eq(studentsTable.learningMode, "offline"),
+            sql`${studentsTable.centerName} IS NOT NULL AND ${studentsTable.centerName} != ''`
+          )
+        );
 
       const statsMap: Record<string, number> = {};
       let totalOffline = 0;

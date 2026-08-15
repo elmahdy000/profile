@@ -81,10 +81,15 @@ export const CenterStatsCards: React.FC<CenterStatsCardsProps> = ({
     // Find matching count by checking center name substring matches
     let count = 0;
     Object.entries(centerCounts).forEach(([cNameKey, val]) => {
+      const keyLower = cNameKey.toLowerCase().trim();
+      const cLower = c.name.toLowerCase().trim();
+      const firstWord = cLower.replace(/^سنتر\s+/, "").split(" ")[0];
+
       if (
-        cNameKey.toLowerCase().includes(c.name.toLowerCase()) ||
-        c.name.toLowerCase().includes(cNameKey.toLowerCase()) ||
-        cNameKey.includes(c.name.split(" ")[0])
+        keyLower === cLower ||
+        keyLower.includes(cLower) ||
+        cLower.includes(keyLower) ||
+        (firstWord.length > 2 && keyLower.includes(firstWord))
       ) {
         count += val;
       }
