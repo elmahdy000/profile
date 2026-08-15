@@ -1431,7 +1431,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="admin-dashboard-shell min-h-screen bg-[#F8FAFC] dark:bg-[#0F172A] text-slate-900 dark:text-[#F8FAFC] dir-rtl flex flex-col lg:flex-row">
+    <div className=" min-h-screen bg-background text-foreground dir-rtl flex flex-col lg:flex-row">
       {/* Top Admin Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-white px-4 py-3 shadow-sm lg:hidden">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
@@ -1439,7 +1439,7 @@ export default function AdminDashboard() {
             <button
               type="button"
               onClick={() => setIsMobileSidebarOpen(true)}
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:border-primary hover:text-primary"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-border bg-muted text-slate-700 hover:border-primary hover:text-primary"
               aria-label="فتح قائمة الإدارة"
               aria-expanded={isMobileSidebarOpen}
               aria-controls="admin-mobile-sidebar"
@@ -1504,19 +1504,19 @@ export default function AdminDashboard() {
         <div className="w-full max-w-[1400px] mx-auto">
 
             {/* Top Desktop Executive Header */}
-            <div className="hidden lg:flex items-center justify-between gap-4 mb-6 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+            <div className="hidden lg:flex items-center justify-between gap-4 mb-6 bg-white p-4 rounded-2xl border border-border shadow-xs">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#0B63CE] text-white flex items-center justify-center font-black text-sm shadow-sm">
+                <div className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center font-black text-sm shadow-sm">
                   د.م
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-black text-slate-900">أكاديمية د. محمود المهدي</h2>
+                    <h2 className="text-sm font-black text-foreground">أكاديمية د. محمود المهدي</h2>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> السيرفر نشط
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5">لوحة التحكم التنفيذية وإدارة محتوى الأكاديمية</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">لوحة التحكم التنفيذية وإدارة محتوى الأكاديمية</p>
                 </div>
               </div>
 
@@ -1525,7 +1525,7 @@ export default function AdminDashboard() {
                 <button
                   type="button"
                   onClick={() => openCourseModal("add")}
-                  className="px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#0B63CE] text-xs font-bold transition-all flex items-center gap-1.5 border border-blue-200/60"
+                  className="px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-primary text-xs font-bold transition-all flex items-center gap-1.5 border border-blue-200/60"
                 >
                   <Plus className="w-3.5 h-3.5" /> كورس جديد
                 </button>
@@ -1550,7 +1550,7 @@ export default function AdminDashboard() {
                   href="/"
                   target="_blank"
                   rel="noreferrer"
-                  className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 border border-slate-200"
+                  className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 border border-border"
                 >
                   <ExternalLink className="w-3.5 h-3.5" /> الموقع
                 </a>

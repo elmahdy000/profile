@@ -87,12 +87,12 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh, role = "superad
   };
 
   return (
-    <div className="rounded-2xl border border-[#E4EAF2] bg-white p-5 shadow-xs space-y-5 text-[#0F172A]">
+    <div className="rounded-2xl border border-border bg-white p-5 shadow-xs space-y-5 text-foreground">
       {/* Card Header & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E4EAF2] pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
         <div>
-          <h3 className="text-base font-extrabold text-[#0F172A]">إدارة ومتابعة إيصالات الدفع والتفعيل</h3>
-          <p className="text-xs text-[#64748B] mt-0.5">مراجعة التحويلات، توثيق المشرف المفعل بالاسم والتاريخ، وتأكيد اشتراكات الطلاب</p>
+          <h3 className="text-base font-extrabold text-foreground">إدارة ومتابعة إيصالات الدفع والتفعيل</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">مراجعة التحويلات، توثيق المشرف المفعل بالاسم والتاريخ، وتأكيد اشتراكات الطلاب</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -100,9 +100,9 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh, role = "superad
             variant="outline"
             size="sm"
             onClick={loadReceipts}
-            className="h-9 px-3 rounded-xl border-[#E4EAF2] bg-white hover:bg-[#F6F8FC] text-xs font-bold text-[#0F172A]"
+            className="h-9 px-3 rounded-xl border-border bg-white hover:bg-muted text-xs font-bold text-foreground"
           >
-            <RefreshCw className="h-3.5 w-3.5 ml-1.5 text-[#64748B]" /> تحديث القائمة
+            <RefreshCw className="h-3.5 w-3.5 ml-1.5 text-muted-foreground" /> تحديث القائمة
           </Button>
         </div>
       </div>
@@ -121,14 +121,14 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh, role = "superad
             onClick={() => setFilter(f.key as any)}
             className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all ${
               filter === f.key
-                ? "bg-[#0866D9] text-white shadow-xs"
-                : "bg-[#F6F8FC] border border-[#E4EAF2] text-[#64748B] hover:text-[#0F172A] hover:bg-[#E4EAF2]/50"
+                ? "bg-primary text-white shadow-xs"
+                : "bg-muted border border-border text-muted-foreground hover:text-foreground hover:bg-[#E4EAF2]/50"
             }`}
           >
             <span>{f.label}</span>
             <span
               className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
-                filter === f.key ? "bg-white/20 text-white" : "bg-[#E4EAF2] text-[#0F172A]"
+                filter === f.key ? "bg-white/20 text-white" : "bg-[#E4EAF2] text-foreground"
               }`}
             >
               {f.count}
@@ -140,24 +140,24 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh, role = "superad
       {/* Main Content Area */}
       {loading ? (
         <div className="flex items-center justify-center p-12">
-          <Loader2 className="h-6 w-6 animate-spin text-[#0866D9]" />
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[#E4EAF2] bg-[#F6F8FC]/50 p-12 text-center">
-          <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-[#0866D9]/10 text-[#0866D9] mb-3">
+        <div className="rounded-xl border border-dashed border-border bg-muted/50 p-12 text-center">
+          <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary mb-3">
             <FileCheck2 className="h-6 w-6" strokeWidth={1.8} />
           </div>
-          <h4 className="text-sm font-extrabold text-[#0F172A]">لا توجد إيصالات دفع</h4>
-          <p className="text-xs text-[#64748B] mt-1 max-w-sm mx-auto">
+          <h4 className="text-sm font-extrabold text-foreground">لا توجد إيصالات دفع</h4>
+          <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
             {filter === "all"
               ? "لم يقم أي طالب برفع إيصال دفع حتى الآن."
               : `لا توجد إيصالات مضافة بحالة «${filter === "pending" ? "قيد المراجعة" : filter === "approved" ? "مقبول" : "مرفوض"}».`}
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-[#E4EAF2]">
+        <div className="overflow-x-auto rounded-xl border border-border">
           <table className="w-full text-right text-xs">
-            <thead className="bg-[#F6F8FC] text-[#64748B] font-bold border-b border-[#E4EAF2]">
+            <thead className="bg-muted text-muted-foreground font-bold border-b border-border">
               <tr>
                 <th className="px-4 py-3">الطالب</th>
                 <th className="px-4 py-3">رقم الهاتف</th>
@@ -170,10 +170,10 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh, role = "superad
             <tbody className="divide-y divide-[#E4EAF2] bg-white">
               {filtered.map((receipt) => (
                 <React.Fragment key={receipt.id}>
-                  <tr className="hover:bg-[#F6F8FC]/60 transition-colors">
-                    <td className="px-4 py-3.5 font-bold text-[#0F172A]">{receipt.studentName}</td>
-                    <td className="px-4 py-3.5 text-[#64748B] dir-ltr text-right font-mono">{receipt.studentPhone}</td>
-                    <td className="px-4 py-3.5 text-[#64748B]">
+                  <tr className="hover:bg-muted/60 transition-colors">
+                    <td className="px-4 py-3.5 font-bold text-foreground">{receipt.studentName}</td>
+                    <td className="px-4 py-3.5 text-muted-foreground dir-ltr text-right font-mono">{receipt.studentPhone}</td>
+                    <td className="px-4 py-3.5 text-muted-foreground">
                       {new Date(receipt.createdAt).toLocaleDateString("ar-EG", {
                         year: "numeric",
                         month: "short",
@@ -189,7 +189,7 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh, role = "superad
                             👤 {receipt.reviewedByName}
                           </span>
                           {receipt.reviewedAt && (
-                            <span className="block text-[10px] text-slate-500 font-mono">
+                            <span className="block text-[10px] text-muted-foreground font-mono">
                               ⏱️ {new Date(receipt.reviewedAt).toLocaleString("ar-EG", { year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                             </span>
                           )}
@@ -227,7 +227,7 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh, role = "superad
                           variant="outline"
                           size="sm"
                           onClick={() => setPreviewId(previewId === receipt.id ? null : receipt.id)}
-                          className="h-8 px-2.5 text-xs font-bold border-[#E4EAF2]"
+                          className="h-8 px-2.5 text-xs font-bold border-border"
                         >
                           <Eye className="h-3.5 w-3.5 ml-1" /> {previewId === receipt.id ? "إخفاء" : "معاينة الإيصال"}
                         </Button>
@@ -260,8 +260,8 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh, role = "superad
                   {/* Image Preview Accordion */}
                   {previewId === receipt.id && (
                     <tr>
-                      <td colSpan={5} className="bg-[#F6F8FC] p-4 border-b border-[#E4EAF2]">
-                        <div className="max-w-md mx-auto rounded-xl border border-[#E4EAF2] bg-white p-3 text-center shadow-xs">
+                      <td colSpan={5} className="bg-muted p-4 border-b border-border">
+                        <div className="max-w-md mx-auto rounded-xl border border-border bg-white p-3 text-center shadow-xs">
                           <img
                             src={`/api/admin/payment-receipts/${receipt.id}/image`}
                             alt={`إيصال ${receipt.studentName}`}

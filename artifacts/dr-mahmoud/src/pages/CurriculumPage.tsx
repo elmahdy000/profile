@@ -225,7 +225,7 @@ export default function CurriculumPage() {
           </div>
         ) : !curriculums || curriculums.length === 0 ? (
           <div className="text-center py-20 bg-card border border-border rounded-3xl max-w-xl mx-auto px-6 shadow-sm">
-            <BookOpen className="w-12 h-12 mx-auto text-slate-600 mb-4" />
+            <BookOpen className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="font-bold text-foreground text-lg">لم يتم رفع مناهج تعليمية بعد</h3>
             <p className="text-xs text-muted-foreground mt-2">
               تابعنا باستمرار، سيقوم الدكتور بإضافة شروحات برمجية بصرية رائعة قريبًا جدًا!
@@ -361,14 +361,14 @@ export default function CurriculumPage() {
                   <span className="text-[10px] bg-primary/20 text-primary border border-primary/30 font-bold px-2 py-0.5 rounded">
                     {activeLesson.subject}
                   </span>
-                  <span className="text-xs text-slate-400">الدرس رقم {activeLesson.order}</span>
+                  <span className="text-xs text-muted-foreground">الدرس رقم {activeLesson.order}</span>
                 </div>
                 <h3 className="font-bold text-sm md:text-lg">{activeLesson.title}</h3>
               </div>
 
               <button
                 onClick={closeLesson}
-                className="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors"
+                className="p-2 hover:bg-white/10 rounded-full text-muted-foreground hover:text-white transition-colors"
                 title="إغلاق"
               >
                 <X className="w-6 h-6" />
@@ -436,7 +436,7 @@ export default function CurriculumPage() {
             {/* Footer with slides strip and indicators */}
             <div className="p-4 border-t border-white/10 bg-black/40 backdrop-blur-md relative z-10 flex flex-col items-center gap-3">
               {/* Info text */}
-              <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+              <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                 <Info className="w-3.5 h-3.5 text-primary/80" />
                 <span>يمكنك استخدام الأسهم يمين ويسار (← →) في الكيبورد للتنقل</span>
               </div>

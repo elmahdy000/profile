@@ -49,7 +49,7 @@ export default function CenterBookingPage() {
             </span>
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-bold text-slate-400 pt-2">
+          <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-bold text-muted-foreground pt-2">
             <span className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-[#131E31] px-3.5 py-2">
               <MapPin className="h-4 w-4 text-blue-400" /> جميع سناتر الزقازيق الرئيسية
             </span>

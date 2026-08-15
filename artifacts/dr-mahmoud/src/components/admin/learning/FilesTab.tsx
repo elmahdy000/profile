@@ -236,21 +236,21 @@ export const FilesTab: React.FC<FilesTabProps> = ({
             event.preventDefault();
             void uploadFile(true);
           }}
-          className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-7"
+          className="rounded-2xl border border-border bg-white p-5 shadow-sm md:p-7"
         >
           <div className="mb-6 border-b border-slate-100 pb-5">
-            <h3 className="text-xl font-black text-slate-900">
+            <h3 className="text-xl font-black text-foreground">
               رفع ملف تعليمي جديد
             </h3>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-muted-foreground">
               حدد مكان الظهور، اختر الطلاب أو الدروس، ثم أضف الملف وانشره.
             </p>
           </div>
 
           <div className="grid gap-5 md:grid-cols-2">
-            <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:p-5">
+            <div className="md:col-span-2 rounded-2xl border border-border bg-muted p-4 md:p-5">
               <span className="mb-1 block text-xs font-black text-primary">الخطوة 1</span>
-              <span className="mb-3 block text-base font-black text-slate-900">أين سيظهر الملف؟</span>
+              <span className="mb-3 block text-base font-black text-foreground">أين سيظهر الملف؟</span>
               <div className="grid gap-2 sm:grid-cols-2">
                 {[
                   ['stages', 'لطلاب كورس ومراحل', 'يظهر في مكتبة الملفات للطلاب المحددين'],
@@ -272,11 +272,11 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                     className={`rounded-xl border p-4 text-right transition ${
                       fileForm.targetType === value
                         ? 'border-primary bg-white text-primary ring-2 ring-primary/10'
-                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                        : 'border-border bg-white text-muted-foreground hover:border-border'
                     }`}
                   >
                     <strong className="block text-sm">{label}</strong>
-                    <span className="mt-1 block text-xs font-normal text-slate-500">{description}</span>
+                    <span className="mt-1 block text-xs font-normal text-muted-foreground">{description}</span>
                   </button>
                 ))}
               </div>
@@ -285,7 +285,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
             {fileForm.targetType === "videos" && (
               <div className="md:col-span-2">
                 <span className="mb-1 block text-xs font-black text-primary">الخطوة 2</span>
-                <span className="mb-3 block text-base font-black text-slate-900">اختر الدروس المرتبطة</span>
+                <span className="mb-3 block text-base font-black text-foreground">اختر الدروس المرتبطة</span>
                 <div className="mb-3 grid gap-2 sm:grid-cols-3">
                   <select
                     value={lessonCourseFilter}
@@ -325,14 +325,14 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                     />
                   </label>
                 </div>
-                <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border border-slate-200 p-3">
+                <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border border-border p-3">
                   {filteredLessonOptions.map((video) => {
                     const id = String(video.id);
                     const checked = fileForm.videoIds.includes(id);
                     return (
                       <label
                         key={video.id}
-                        className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-100 p-3 hover:bg-slate-50"
+                        className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-100 p-3 hover:bg-muted"
                       >
                         <input
                           className="mt-1"
@@ -354,7 +354,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                         />
                         <span className="min-w-0">
                           <strong className="block truncate text-sm">{video.title}</strong>
-                          <small className="text-slate-500">
+                          <small className="text-muted-foreground">
                             {video.category}
                             {video.stage ? ` · ${video.stage}` : ""}
                           </small>
@@ -363,7 +363,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                     );
                   })}
                   {!filteredLessonOptions.length && (
-                    <p className="py-5 text-center text-sm text-slate-500">
+                    <p className="py-5 text-center text-sm text-muted-foreground">
                       لا توجد دروس مطابقة للفلاتر الحالية.
                     </p>
                   )}
@@ -381,8 +381,8 @@ export const FilesTab: React.FC<FilesTabProps> = ({
               <>
                 <div className="md:col-span-2">
                   <span className="block text-xs font-black text-primary">الخطوة 2</span>
-                  <span className="block text-base font-black text-slate-900">حدد الكورس والقسم والمراحل</span>
-                  <p className="mt-1 text-xs text-slate-500">اختر الكورس التابع له الملف ثم حدد مراحل القسم الدراسي.</p>
+                  <span className="block text-base font-black text-foreground">حدد الكورس والقسم والمراحل</span>
+                  <p className="mt-1 text-xs text-muted-foreground">اختر الكورس التابع له الملف ثم حدد مراحل القسم الدراسي.</p>
                 </div>
                 <div className="md:col-span-2">
                   <Field label="الكورس التابع له الملف 📚">
@@ -394,7 +394,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                           courseId: e.target.value,
                         });
                       }}
-                      className="input-admin min-h-12 border-slate-300 focus:border-primary font-bold text-sm"
+                      className="input-admin min-h-12 border-border focus:border-primary font-bold text-sm"
                     >
                       <option value="">-- اختياري: اختر الكورس التابع له الملف --</option>
                       {learningCourses.map((c) => (
@@ -424,11 +424,11 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                         className={`rounded-xl border p-4 text-right transition ${
                           selected
                             ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/10"
-                            : "border-slate-200 bg-white text-slate-700 hover:border-primary/50"
+                            : "border-border bg-white text-slate-700 hover:border-primary/50"
                         }`}
                       >
                         <strong className="block text-sm">{track.title}</strong>
-                        <span className="mt-1 block text-xs font-normal text-slate-500">
+                        <span className="mt-1 block text-xs font-normal text-muted-foreground">
                           {track.eyebrow}
                         </span>
                       </button>
@@ -437,7 +437,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                 </div>
                 <div className="md:col-span-2">
                   <Field label="المراحل التي سيظهر لها الملف">
-                    <div className="min-h-12 rounded-xl border border-slate-300 bg-white p-3">
+                    <div className="min-h-12 rounded-xl border border-border bg-white p-3">
                       {!selectedFileTrack && (
                         <span className="p-1 text-sm text-slate-400">اختر القسم التعليمي أولًا</span>
                       )}
@@ -454,7 +454,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                       )}
                       {fileForm.stages.length > 0 && (
                         <div className="mb-3 flex flex-wrap items-center gap-1.5 border-b border-slate-100 pb-3">
-                          <span className="ml-1 text-[11px] font-bold text-slate-500">
+                          <span className="ml-1 text-[11px] font-bold text-muted-foreground">
                             المحدد ({fileForm.stages.length}):
                           </span>
                           {fileForm.stages.slice(0, 4).map((stage) => (
@@ -466,7 +466,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                             </span>
                           ))}
                           {fileForm.stages.length > 4 && (
-                            <span className="text-[11px] font-bold text-slate-500">
+                            <span className="text-[11px] font-bold text-muted-foreground">
                               +{fileForm.stages.length - 4}
                             </span>
                           )}
@@ -491,8 +491,8 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                           </button>
                         )}
                         {visibleFileStageGroups.map((group) => (
-                          <details key={group.title} open className="w-full rounded-xl bg-slate-50 p-3">
-                            <summary className="mb-2 cursor-pointer text-xs font-bold text-slate-800">
+                          <details key={group.title} open className="w-full rounded-xl bg-muted p-3">
+                            <summary className="mb-2 cursor-pointer text-xs font-bold text-foreground">
                               {group.title}{" "}
                               <span className="font-normal text-slate-400">
                                 ({group.stages.length})
@@ -514,7 +514,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                                     className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${
                                       checked
                                         ? "border-primary bg-primary text-white"
-                                        : "border-slate-200 bg-white text-slate-600 hover:border-primary"
+                                        : "border-border bg-white text-muted-foreground hover:border-primary"
                                     }`}
                                   >
                                     {stage.replace(`${group.title} · `, "")}
@@ -525,7 +525,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                           </details>
                         ))}
                         {selectedFileTrack && visibleFileStageGroups.length === 0 && (
-                          <p className="w-full py-3 text-center text-xs text-slate-500">
+                          <p className="w-full py-3 text-center text-xs text-muted-foreground">
                             لا توجد مرحلة مطابقة للبحث
                           </p>
                         )}
@@ -536,7 +536,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
               </>
             )}
 
-            <details className="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+            <details className="md:col-span-2 rounded-xl border border-border bg-muted/70 p-4">
               <summary className="cursor-pointer select-none text-sm font-bold text-slate-700">
                 تفاصيل إضافية (اختياري)
               </summary>
@@ -548,7 +548,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                       setFileForm({ ...fileForm, subject: e.target.value })
                     }
                     placeholder="مثال: البرمجة وعلوم الحاسب"
-                    className="input-admin min-h-12 border-slate-300 focus:border-primary"
+                    className="input-admin min-h-12 border-border focus:border-primary"
                   />
                 </Field>
                 <Field label="الكلمات المفتاحية">
@@ -558,9 +558,9 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                       setFileForm({ ...fileForm, tags: e.target.value })
                     }
                     placeholder="PDF، مراجعة، تمارين"
-                    className="input-admin min-h-12 border-slate-300 focus:border-primary"
+                    className="input-admin min-h-12 border-border focus:border-primary"
                   />
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted-foreground">
                     افصل بين الكلمات بفاصلة.
                   </p>
                 </Field>
@@ -575,7 +575,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                         })
                       }
                       placeholder="اشرح محتوى الملف وطريقة استخدامه للطالب"
-                      className="input-admin min-h-28 resize-none border-slate-300 focus:border-primary"
+                      className="input-admin min-h-28 resize-none border-border focus:border-primary"
                     />
                   </Field>
                 </div>
@@ -583,9 +583,9 @@ export const FilesTab: React.FC<FilesTabProps> = ({
             </details>
           </div>
 
-          <div className="mt-6 rounded-2xl border border-slate-200 p-4 md:p-5">
+          <div className="mt-6 rounded-2xl border border-border p-4 md:p-5">
             <span className="mb-1 block text-xs font-black text-primary">الخطوة 3</span>
-            <label className="mb-3 block text-base font-black text-slate-900">
+            <label className="mb-3 block text-base font-black text-foreground">
               اختر الملف واكتب اسمه
             </label>
             <div
@@ -607,7 +607,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                   ? "scale-[1.01] border-primary bg-blue-50 ring-4 ring-blue-100"
                   : fileForm.file
                   ? "border-emerald-300 bg-emerald-50/40"
-                  : "border-slate-300 bg-slate-50 hover:border-primary hover:bg-blue-50/40"
+                  : "border-border bg-muted hover:border-primary hover:bg-blue-50/40"
               }`}
             >
               <input
@@ -628,14 +628,14 @@ export const FilesTab: React.FC<FilesTabProps> = ({
               >
                 {fileForm.file ? <FileCheck2 className="h-7 w-7" /> : <Upload className="h-7 w-7" />}
               </span>
-              <strong className="mt-3 block text-sm text-slate-800">
+              <strong className="mt-3 block text-sm text-foreground">
                 {fileForm.file
                   ? "تم اختيار الملف — أكمل مكان ظهوره بالأسفل"
                   : isFileDragging
                   ? "اترك الملف هنا"
                   : "اضغط لاختيار الملف أو اسحبه هنا"}
               </strong>
-              <span className="mt-1 block text-xs text-slate-500">
+              <span className="mt-1 block text-xs text-muted-foreground">
                 PDF, DOCX, ZIP, PPTX — بحد أقصى 150MB
               </span>
             </div>
@@ -646,9 +646,9 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                   value={fileForm.title}
                   onChange={(event) => setFileForm({ ...fileForm, title: event.target.value })}
                   placeholder="مثال: ملخص الدرس الثالث"
-                  className="input-admin min-h-12 border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/10"
+                  className="input-admin min-h-12 border-border focus:border-primary focus:ring-2 focus:ring-primary/10"
                 />
-                <p className="text-xs text-slate-500">يُكتب تلقائيًا من اسم الملف ويمكنك تعديله.</p>
+                <p className="text-xs text-muted-foreground">يُكتب تلقائيًا من اسم الملف ويمكنك تعديله.</p>
               </Field>
             </div>
             {fileValidationError && (
@@ -668,7 +668,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
               </p>
             )}
             {fileForm.file && (
-              <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4">
+              <div className="mt-3 rounded-xl border border-border bg-white p-4">
                 <div className="flex items-center gap-3">
                   <div className="grid h-10 w-10 place-items-center rounded-lg bg-blue-50 text-primary">
                     <FileText className="h-5 w-5" />
@@ -677,7 +677,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                     <strong className="block truncate text-sm">
                       {fileForm.file.name}
                     </strong>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-muted-foreground">
                       {(fileForm.file.size / 1024 / 1024).toFixed(2)} MB
                     </span>
                   </div>
@@ -773,14 +773,14 @@ export const FilesTab: React.FC<FilesTabProps> = ({
         </form>
       </div>
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <section className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
         <div className="border-b border-slate-100 p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h3 className="text-xl font-black text-slate-900">
+              <h3 className="text-xl font-black text-foreground">
                 الملفات التعليمية الأخيرة
               </h3>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 {filteredFiles.length} ملف مطابق
               </p>
             </div>
@@ -841,7 +841,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
           <div className="p-14 text-center">
             <FileText className="mx-auto h-10 w-10 text-slate-300" />
             <h4 className="mt-3 font-bold">مفيش ملفات مطابقة</h4>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-muted-foreground">
               غيّر البحث أو الفلاتر، أو ارفع أول ملف.
             </p>
           </div>
@@ -860,7 +860,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                 return (
                   <article
                     key={file.id}
-                    className="rounded-xl border border-slate-200 p-4"
+                    className="rounded-xl border border-border p-4"
                   >
                     <div className="flex items-start gap-3">
                       <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-blue-50 text-primary">
@@ -870,7 +870,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                         <strong className="block truncate text-sm">
                           {file.title}
                         </strong>
-                        <span className="block truncate text-xs text-slate-500">
+                        <span className="block truncate text-xs text-muted-foreground">
                           {file.originalName}
                         </span>
                       </div>
@@ -886,8 +886,8 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                         {file.isPublished ? "منشور" : "مسودة"}
                       </button>
                     </div>
-                    <div className="mt-3 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
-                      <strong className="mb-1 block text-slate-800">
+                    <div className="mt-3 rounded-lg bg-muted p-3 text-xs text-muted-foreground">
+                      <strong className="mb-1 block text-foreground">
                         مكان الظهور
                       </strong>
                       {file.targetType === "videos"
@@ -898,7 +898,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                             fileStages.length ? ` ← ${fileStages.join("، ")}` : ""
                           }`}
                     </div>
-                    <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+                    <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
                       <span>{(file.sizeBytes / 1024 / 1024).toFixed(1)} MB</span>
                       <div className="flex items-center gap-1">
                         <Button
@@ -931,7 +931,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
 
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-right text-sm">
-                <thead className="bg-slate-50 text-xs font-black text-slate-600">
+                <thead className="bg-muted text-xs font-black text-muted-foreground">
                   <tr>
                     <th className="p-4">اسم الملف والتفاصيل</th>
                     <th className="p-4">مكان الظهور والمستهدف</th>
@@ -951,7 +951,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                       ? [file.stage]
                       : [];
                     return (
-                      <tr key={file.id} className="hover:bg-slate-50/80">
+                      <tr key={file.id} className="hover:bg-muted/80">
                         <td className="p-4">
                           <div className="flex items-center gap-3">
                             <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-blue-50 text-primary">
@@ -961,14 +961,14 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                               <strong className="block truncate text-sm">
                                 {file.title}
                               </strong>
-                              <span className="block truncate text-xs text-slate-500">
+                              <span className="block truncate text-xs text-muted-foreground">
                                 {file.originalName}
                               </span>
                             </div>
                           </div>
                         </td>
                         <td className="p-4">
-                          <span className="block text-xs font-bold text-slate-800">
+                          <span className="block text-xs font-bold text-foreground">
                             {file.targetType === "videos"
                               ? linkedLessons.length
                                 ? linkedLessons.map((video) => video.title).join("، ")
@@ -978,7 +978,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                                 }`}
                           </span>
                         </td>
-                        <td className="p-4 text-xs font-bold text-slate-600">
+                        <td className="p-4 text-xs font-bold text-muted-foreground">
                           {(file.sizeBytes / 1024 / 1024).toFixed(1)} MB
                         </td>
                         <td className="p-4">
@@ -1035,7 +1035,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                   type="button"
                   disabled={filePage === 1}
                   onClick={() => setFilePage((prev) => Math.max(1, prev - 1))}
-                  className="rounded-lg border border-slate-200 px-3 py-1.5 font-bold disabled:opacity-50"
+                  className="rounded-lg border border-border px-3 py-1.5 font-bold disabled:opacity-50"
                 >
                   السابق
                 </button>
@@ -1046,7 +1046,7 @@ export const FilesTab: React.FC<FilesTabProps> = ({
                   type="button"
                   disabled={filePage === totalPages}
                   onClick={() => setFilePage((prev) => Math.min(totalPages, prev + 1))}
-                  className="rounded-lg border border-slate-200 px-3 py-1.5 font-bold disabled:opacity-50"
+                  className="rounded-lg border border-border px-3 py-1.5 font-bold disabled:opacity-50"
                 >
                   التالي
                 </button>

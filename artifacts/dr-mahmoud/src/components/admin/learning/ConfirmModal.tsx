@@ -31,7 +31,7 @@ export function ConfirmModal({ modal, onClose }: ConfirmModalProps) {
             initial={{ scale: 0.94, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.94, opacity: 0 }}
-            className="w-full max-w-md overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-[#111C2E]"
+            className="w-full max-w-md overflow-hidden rounded-3xl border border-border bg-white p-6 shadow-2xl dark:border-border dark:bg-[#111C2E]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start gap-4">
@@ -45,20 +45,20 @@ export function ConfirmModal({ modal, onClose }: ConfirmModalProps) {
                 <AlertCircle className="h-6 w-6" />
               </div>
               <div className="space-y-1 text-right">
-                <h3 className="text-lg font-black text-slate-900 dark:text-slate-100">
+                <h3 className="text-lg font-black text-foreground dark:text-slate-100">
                   {modal.title}
                 </h3>
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                <p className="text-sm font-medium text-muted-foreground dark:text-slate-300">
                   {modal.message}
                 </p>
               </div>
             </div>
 
-            <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
+            <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-4 dark:border-border">
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-transparent dark:text-slate-300 dark:hover:bg-slate-800 cursor-pointer"
+                className="rounded-xl border border-border bg-white px-4 py-2.5 text-xs font-bold text-muted-foreground transition hover:bg-muted dark:border-slate-700 dark:bg-transparent dark:text-slate-300 dark:hover:bg-slate-800 cursor-pointer"
               >
                 {modal.cancelText || "إلغاء"}
               </button>
