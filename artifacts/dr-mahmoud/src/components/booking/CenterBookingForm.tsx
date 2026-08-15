@@ -198,16 +198,17 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
     setLoading(true);
     setError("");
 
+    const normalizePhone = (num: string) =>
+      num
+        .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+        .replace(/[^\d]/g, "");
+
     const payload = {
       name: studentName.trim(),
       schoolName: schoolName.trim(),
       grade: grade,
-      educationSystem: "baccalaureate",
-      educationGrade: grade === "أولى بكالوريا" ? "1st_bac" : "2nd_bac",
-      schoolType: schoolName.trim(),
-      academicTrack: languageTrack === "لغات" ? "languages" : "arabic",
-      phone: studentPhone.replace(/\s+/g, ""),
-      parentPhone: parentPhone.replace(/\s+/g, ""),
+      phone: normalizePhone(studentPhone),
+      parentPhone: normalizePhone(parentPhone),
       languageTrack: languageTrack,
       centerName: selectedCenter,
       appointmentSlot: selectedSlot,

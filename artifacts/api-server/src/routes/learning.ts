@@ -484,14 +484,20 @@ router.post(
   async (req, res, next) => {
     try {
       const name = String(req.body.name ?? "").trim();
-      const phone = String(req.body.phone ?? "").replace(/\s+/g, "");
+      const rawPhone = String(req.body.phone ?? "");
+      const phone = rawPhone
+        .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+        .replace(/[^\d]/g, "");
       const rawEmail = String(req.body.email ?? "").trim().toLowerCase();
       const email = rawEmail.length > 0 ? rawEmail : null;
       const governorate = String(req.body.governorate ?? "الشرقية").trim() || "الشرقية";
       const city = String(req.body.city ?? "الزقازيق").trim() || "الزقازيق";
       const submittedGrade = String(req.body.grade ?? "").trim();
       const schoolName = String(req.body.schoolName ?? "").trim() || null;
-      const parentPhone = String(req.body.parentPhone ?? "").replace(/\s+/g, "") || null;
+      const parentPhoneRaw = String(req.body.parentPhone ?? "");
+      const parentPhone = parentPhoneRaw
+        ? parentPhoneRaw.replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString()).replace(/[^\d]/g, "")
+        : null;
       const languageTrack = String(req.body.languageTrack ?? "").trim() || null;
       const centerName = String(req.body.centerName ?? "").trim() || null;
       const appointmentSlot = String(req.body.appointmentSlot ?? "").trim() || null;
@@ -502,9 +508,9 @@ router.post(
         "academicTrack",
       ].some((key) => req.body[key] !== undefined);
       const resolvedStage = hasStructuredStage
-        ? resolveAcademicStageSelection(req.body)
+        ? (resolveAcademicStageSelection(req.body) || submittedGrade)
         : submittedGrade;
-      const grade = resolvedStage ?? "";
+      const grade = resolvedStage || submittedGrade || "";
       const educationSystem = hasStructuredStage
         ? String(req.body.educationSystem ?? "")
         : null;
@@ -541,8 +547,8 @@ router.post(
         return;
       }
       if (
-        (hasStructuredStage && !resolvedStage) ||
-        (grade !== "أخرى" && !isAcceptedAcademicStage(grade))
+        grade !== "أخرى" &&
+        !isAcceptedAcademicStage(grade)
       ) {
         res.status(400).json({ error: "المرحلة الدراسية غير صالحة" });
         return;
