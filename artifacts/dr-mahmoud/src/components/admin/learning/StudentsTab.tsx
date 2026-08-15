@@ -598,16 +598,31 @@ export function StudentsTab({
                   </div>
                   <Eye className="mt-1 h-4 w-4 shrink-0 text-[#1677FF]" />
                 </div>
-                <p className="mt-3 line-clamp-2 border-t border-[#26364D] pt-3 text-[11px] font-bold leading-5 text-[#A8B5C7]">{effectiveStage}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <span className={`rounded-lg border px-2 py-1 text-[10px] font-extrabold ${student.paymentStatus === "paid" ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400" : student.paymentStatus === "pending_review" ? "border-amber-500/30 bg-amber-500/15 text-amber-300" : "border-[#26364D] bg-[#0B1424] text-[#8492A6]"}`}>{student.paymentStatus === "paid" ? "مدفوع" : student.paymentStatus === "pending_review" ? "مراجعة" : "مجاني"}</span>
                   <span className={`rounded-lg border px-2 py-1 text-[10px] font-extrabold ${student.status === "approved" ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400" : student.status === "suspended" ? "border-rose-500/30 bg-rose-500/15 text-rose-400" : "border-amber-500/30 bg-amber-500/15 text-amber-300"}`}>{student.status === "approved" ? "نشط" : student.status === "suspended" ? "موقوف" : "معلق"}</span>
-                  <span className="rounded-lg border border-[#26364D] bg-[#0B1424] px-2 py-1 text-[10px] font-bold text-[#A8B5C7]">{student.learningMode === "offline" ? "أوفلاين" : "أونلاين"}</span>
+                  <span className="rounded-lg border border-[#26364D] bg-[#0B1424] px-2 py-1 text-[10px] font-bold text-[#A8B5C7]">{student.learningMode === "offline" || student.centerName ? "أوفلاين (السنتر)" : "أونلاين"}</span>
                 </div>
+                {(student.learningMode === "offline" || student.centerName || student.appointmentSlot) && (
+                  <div className="mt-2.5 rounded-xl border border-emerald-500/35 bg-emerald-950/40 p-2.5 text-xs text-right space-y-1">
+                    <p className="font-extrabold text-emerald-400 flex items-center gap-1">
+                      <MapPin className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                      <span>السنتر: {student.centerName || "حضور بالسنتر (الزقازيق)"}</span>
+                    </p>
+                    <p className="text-[11px] font-bold text-amber-300">
+                      ⏰ الموعد المحدد: {student.appointmentSlot || "حسب الجدول والأيام المعروضة"}
+                    </p>
+                    {student.parentPhone && (
+                      <p className="text-[10px] font-bold text-slate-300 dir-ltr text-right">
+                        👨‍👩‍👦 هاتف ولي الأمر: {student.parentPhone}
+                      </p>
+                    )}
+                  </div>
+                )}
               </button>
               <div className="mt-3 flex items-center justify-between border-t border-[#26364D] pt-3">
                 {student.accessCode ? <button type="button" onClick={() => onCopyStudentCode(student)} className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-[#1677FF]" dir="ltr"><Copy className="h-3.5 w-3.5" />{student.accessCode}</button> : <span />}
-                <button type="button" onClick={() => setActiveDrawerStudent(student)} className="rounded-lg bg-[#1677FF] px-3 py-2 text-[11px] font-black text-white">عرض الملف</button>
+                <button type="button" onClick={() => setActiveDrawerStudent(student)} className="rounded-lg bg-[#1677FF] px-3 py-2 text-[11px] font-black text-white">عرض الملف الكامل</button>
               </div>
             </article>
           );
@@ -625,19 +640,19 @@ export function StudentsTab({
                 </button>
               </th>
               {[
-                ["الطالب وكود الوصول", "min-w-[170px]"],
-                ["بيانات التواصل", "min-w-[145px]"],
-                ["تاريخ التسجيل", "min-w-[110px]"],
-                ["المرحلة التعليمية", "min-w-[145px]"],
-                ["الكورسات", "min-w-[92px]"],
-                ["الاشتراك", "min-w-[100px]"],
-                ["الحساب", "min-w-[92px]"],
-                ["النظام", "min-w-[82px]"],
-                ["الأجهزة", "min-w-[92px]"],
+                ["الطالب وكود الوصول", "min-w-[160px]"],
+                ["بيانات التواصل", "min-w-[155px]"],
+                ["تاريخ التسجيل", "min-w-[105px]"],
+                ["المرحلة التعليمية", "min-w-[140px]"],
+                ["الكورسات", "min-w-[90px]"],
+                ["الاشتراك", "min-w-[95px]"],
+                ["الحساب", "min-w-[85px]"],
+                ["السنتر والموعد 📍", "min-w-[165px]"],
+                ["الأجهزة", "min-w-[85px]"],
               ].map(([label, width]) => (
                 <th key={label} className={`border-b border-[#2B3D57] px-2.5 py-2 font-extrabold ${width}`}>{label}</th>
               ))}
-              <th className="min-w-[120px] border-b border-[#2B3D57] px-2.5 py-2 text-left font-extrabold">الإجراءات</th>
+              <th className="min-w-[110px] border-b border-[#2B3D57] px-2.5 py-2 text-left font-extrabold">الإجراءات</th>
             </tr>
           </thead>
 
@@ -709,7 +724,7 @@ export function StudentsTab({
                       </div>
                     </td>
 
-                    {/* Contact (Phone LTR + Email LTR + WhatsApp) */}
+                    {/* Contact (Phone LTR + Email LTR + Parent Phone) */}
                     <td className="border-b border-[#26364D]/55 px-2.5 py-2">
                       <div className="space-y-1">
                         <div className="flex items-center gap-1.5 justify-end">
@@ -727,6 +742,11 @@ export function StudentsTab({
                             {s.phone}
                           </span>
                         </div>
+                        {s.parentPhone && (
+                          <span className="block font-mono text-[10px] font-bold text-amber-300 dir-ltr text-right" title="رقم ولي الأمر">
+                            ولي الأمر: {s.parentPhone}
+                          </span>
+                        )}
                         {s.email && (
                           <span className="block max-w-[125px] truncate font-sans text-[10px] text-[#7F91AA] dir-ltr text-right" title={s.email}>
                             {s.email}
@@ -753,7 +773,7 @@ export function StudentsTab({
                     </td>
 
                     {/* Stage (Line clamp 2 + Tooltip) */}
-                    <td className="max-w-[150px] border-b border-[#26364D]/55 px-2.5 py-2">
+                    <td className="max-w-[140px] border-b border-[#26364D]/55 px-2.5 py-2">
                       <span className="line-clamp-2 rounded-lg bg-white/[0.035] px-2.5 py-1.5 text-[11px] font-bold leading-5 text-[#B7C4D6]" title={effectiveStage}>
                         {effectiveStage}
                       </span>
@@ -828,11 +848,25 @@ export function StudentsTab({
                       </span>
                     </td>
 
-                    {/* Mode */}
+                    {/* Mode / Center Name & Appointment Slot */}
                     <td className="border-b border-[#26364D]/55 px-2.5 py-2">
-                      <span className="inline-flex rounded-full border border-[#1677FF]/25 bg-[#1677FF]/10 px-3 py-1.5 text-[11px] font-extrabold text-[#69A5FF]">
-                        {s.learningMode === "offline" ? "أوفلاين" : "أونلاين"}
-                      </span>
+                      {s.learningMode === "offline" || s.centerName || s.appointmentSlot ? (
+                        <div className="space-y-1">
+                          <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-black text-emerald-400">
+                            <MapPin className="h-3 w-3 shrink-0" />
+                            <span className="truncate max-w-[130px]">{s.centerName || "سنتر الزقازيق"}</span>
+                          </span>
+                          {s.appointmentSlot && (
+                            <span className="block text-[10px] font-bold text-amber-300 truncate max-w-[135px]" title={s.appointmentSlot}>
+                              ⏰ {s.appointmentSlot}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="inline-flex rounded-full border border-[#1677FF]/25 bg-[#1677FF]/10 px-2.5 py-1 text-[10px] font-extrabold text-[#69A5FF]">
+                          أونلاين
+                        </span>
+                      )}
                     </td>
 
                     {/* Device Lock (Lucide icons, NO emojis) */}
