@@ -9,9 +9,15 @@ export interface SiteSettingValue {
 export type SiteSettingsMap = Record<string, SiteSettingValue>;
 
 async function fetchSettings(): Promise<SiteSettingsMap> {
-  const res = await fetch("/api/settings");
-  if (!res.ok) throw new Error("Failed to fetch settings");
-  return res.json();
+  try {
+    const res = await fetch("/api/settings");
+    if (!res.ok) return {};
+    const data = await res.json();
+    if (!data || typeof data !== "object" || Array.isArray(data)) return {};
+    return data;
+  } catch (_err) {
+    return {};
+  }
 }
 
 export function useSiteSettings() {
