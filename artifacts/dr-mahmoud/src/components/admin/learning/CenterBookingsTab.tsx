@@ -61,6 +61,7 @@ interface CenterBookingsTabProps {
   onCopyStudentCode: (student: ExtendedStudent) => void;
   learningCourses?: Array<{ id: number; title: string }>;
   onUpdateStudentCourses?: (student: ExtendedStudent, courseIds: number[]) => void;
+  onUpdateBooking?: (id: number, patch: Partial<ExtendedStudent>) => void;
 }
 
 export function CenterBookingsTab({
@@ -76,6 +77,7 @@ export function CenterBookingsTab({
   onCopyStudentCode,
   learningCourses = [],
   onUpdateStudentCourses,
+  onUpdateBooking,
 }: CenterBookingsTabProps) {
   const { toast } = useToast();
 
@@ -159,6 +161,7 @@ export function CenterBookingsTab({
       setLocalStudents((prev) =>
         prev.map((s) => (s.id === editingStudent.id ? { ...s, ...updated } : s))
       );
+      onUpdateBooking?.(editingStudent.id, updated);
 
       toast({
         title: "تم حفظ وتحديث السنتر والموعد بنجاح 📍",

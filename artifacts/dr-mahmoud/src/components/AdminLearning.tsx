@@ -1376,6 +1376,9 @@ export function AdminLearning({
               copiedStudentId={copiedStudentId}
               onCopyStudentCode={(s) => copyStudentCode(s)}
               onUpdateStudentCourses={async (s, ids) => { await updateStudentCourses(s, ids); }}
+              onUpdateBooking={(id, data) => {
+                setStudents((prev) => prev.map((s) => (s.id === id ? { ...s, ...data } : s)));
+              }}
             />
           )}
           {tab === "payments" && (
