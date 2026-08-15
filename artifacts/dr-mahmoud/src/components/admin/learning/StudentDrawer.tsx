@@ -341,11 +341,11 @@ export function StudentDrawer({
                   </div>
                   <div className="rounded-2xl border border-slate-800 bg-[#131E31] p-4 space-y-1.5">
                     <span className="text-[11px] text-[#94A3B8]">السنتر المختار</span>
-                    <p className="text-xs font-extrabold text-emerald-400">{student.centerName || (student.learningMode === "offline" ? "حضور بالسنتر" : "أونلاين")}</p>
+                    <p className="text-xs font-extrabold text-emerald-400">{student.centerName || (student.learningMode === "offline" ? "حضور بالسنتر (الزقازيق)" : "أونلاين بالكامل")}</p>
                   </div>
                   <div className="rounded-2xl border border-slate-800 bg-[#131E31] p-4 space-y-1.5">
                     <span className="text-[11px] text-[#94A3B8]">الموعد المتاح</span>
-                    <p className="text-xs font-extrabold text-emerald-300">{student.appointmentSlot || "حسب المواعيد المعروضة"}</p>
+                    <p className="text-xs font-extrabold text-amber-300">{student.appointmentSlot || (student.learningMode === "offline" ? "بانتظار تحديد موعد الحضور" : "—")}</p>
                   </div>
                   <div className="rounded-2xl border border-slate-800 bg-[#131E31] p-4 space-y-1.5">
                     <span className="text-[11px] text-[#94A3B8]">نظام الحضور</span>

@@ -23,9 +23,30 @@ import {
   XCircle,
   CreditCard,
   Sparkles,
+  Edit2,
+  Save,
+  Loader2,
+  School,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { StudentDrawer, type ExtendedStudent } from "./StudentDrawer";
+
+const OFFICIAL_CENTERS = [
+  { name: "سنتر رافال أكاديمي (Rafal Academy)", location: "بجوار الثانوية العسكرية - الزقازيق" },
+  { name: "سنتر زاج أكاديمي (Zag Academy)", location: "منطقة الفلل - الزقازيق" },
+  { name: "سنتر إديوفيرس (EduVerse)", location: "منطقة الفلل - الزقازيق" },
+  { name: "سنتر حسن صميدة", location: "منطقة الحناوي - الزقازيق" },
+];
+
+const OFFICIAL_SLOTS = [
+  "سبت - اتنين - أربع (الساعة 3:30 عصراً)",
+  "سبت - اتنين - أربع (الساعة 5:00 مساءً)",
+  "سبت - اتنين - أربع (الساعة 6:30 مساءً)",
+  "حد - تلات - خميس (الساعة 6:30 مساءً)",
+  "حسب جدول المجموعات بالسنتر (الساعة 3:00 عصراً)",
+];
 
 interface CenterBookingsTabProps {
   students: ExtendedStudent[];
@@ -56,16 +77,26 @@ export function CenterBookingsTab({
   learningCourses = [],
   onUpdateStudentCourses,
 }: CenterBookingsTabProps) {
+  const { toast } = useToast();
+
+  // Local state for students list to reflect immediate edits
+  const [localStudents, setLocalStudents] = useState<ExtendedStudent[]>(students);
+
+  // Sync if parent prop updates
+  React.useEffect(() => {
+    setLocalStudents(students);
+  }, [students]);
+
   // Filter for center / offline students
   const centerStudents = useMemo(() => {
-    return students.filter((s) => {
+    return localStudents.filter((s) => {
       return (
         s.learningMode === "offline" ||
         Boolean(s.centerName && s.centerName.trim()) ||
         Boolean(s.appointmentSlot && s.appointmentSlot.trim())
       );
     });
-  }, [students]);
+  }, [localStudents]);
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,7 +107,75 @@ export function CenterBookingsTab({
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [activeDrawerStudent, setActiveDrawerStudent] = useState<ExtendedStudent | null>(null);
-  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+
+  // Edit Modal State
+  const [editingStudent, setEditingStudent] = useState<ExtendedStudent | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    centerName: "",
+    appointmentSlot: "",
+    parentPhone: "",
+    schoolName: "",
+    languageTrack: "",
+  });
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  // Open Edit Modal
+  const handleOpenEdit = (student: ExtendedStudent) => {
+    setEditingStudent(student);
+    setEditFormData({
+      centerName: student.centerName || "سنتر رافال أكاديمي (Rafal Academy)",
+      appointmentSlot: student.appointmentSlot || "سبت - اتنين - أربع (الساعة 3:30 عصراً)",
+      parentPhone: student.parentPhone || "",
+      schoolName: student.schoolName || "",
+      languageTrack: student.languageTrack || "عربي",
+    });
+  };
+
+  // Save Booking Details to Server
+  const handleSaveBooking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingStudent) return;
+    setIsSavingEdit(true);
+
+    try {
+      const res = await fetch(`/api/admin/students/${editingStudent.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          centerName: editFormData.centerName.trim() || null,
+          appointmentSlot: editFormData.appointmentSlot.trim() || null,
+          parentPhone: editFormData.parentPhone.trim() || null,
+          schoolName: editFormData.schoolName.trim() || null,
+          languageTrack: editFormData.languageTrack.trim() || null,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("فشل حفظ بيانات حجز السنتر");
+      }
+
+      const updated = await res.json();
+      setLocalStudents((prev) =>
+        prev.map((s) => (s.id === editingStudent.id ? { ...s, ...updated } : s))
+      );
+
+      toast({
+        title: "تم حفظ وتحديث السنتر والموعد بنجاح 📍",
+        description: `تم ربط الطالب ${editingStudent.name} بـ ${editFormData.centerName}`,
+      });
+
+      setEditingStudent(null);
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "خطأ في التحديث",
+        description: err.message || "حدث خطأ أثناء الاتصال بالسيرفر",
+      });
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
 
   // Extract unique filter options
   const uniqueCenters = useMemo(() => {
@@ -215,11 +314,6 @@ export function CenterBookingsTab({
     document.body.removeChild(link);
   };
 
-  // Trigger Print
-  const handlePrint = () => {
-    window.print();
-  };
-
   return (
     <div className="center-bookings-workspace space-y-6 text-[#F8FAFC]" dir="rtl">
       {/* 1. Header Banner & Page Action */}
@@ -233,7 +327,7 @@ export function CenterBookingsTab({
               📍 كشف وتفاصيل حجوزات السناتر (المواعيد الحضورية)
             </h1>
             <p className="mt-1 text-xs text-emerald-300 font-bold leading-relaxed">
-              جدول مخصص وشامل لجميع الطلاب المسجلين لحضور دروس السنتر بالزقازيق، مع المواعيد المحددة، أسماء المدارس، وأرقام أولياء الأمور.
+              جدول مخصص وشامل لجميع الطلاب المسجلين بالسناتر بالزقازيق، مع إمكانية تحديد السنتر والموعد مباشرة لكل طالب.
             </p>
           </div>
         </div>
@@ -249,7 +343,7 @@ export function CenterBookingsTab({
 
           <Button
             type="button"
-            onClick={handlePrint}
+            onClick={() => window.print()}
             variant="outline"
             className="h-11 px-4 rounded-xl border-emerald-500/40 bg-[#0B1424] hover:bg-emerald-500/20 text-emerald-300 font-extrabold text-xs transition-all flex items-center gap-1.5"
           >
@@ -323,8 +417,11 @@ export function CenterBookingsTab({
             onChange={(e) => setCenterFilter(e.target.value)}
             className="h-11 rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7] focus:border-emerald-500 focus:outline-none"
           >
-            <option value="all">كل السناتر والمراكز ({uniqueCenters.length})</option>
-            {uniqueCenters.map((c) => (
+            <option value="all">كل السناتر والمراكز</option>
+            {OFFICIAL_CENTERS.map((c) => (
+              <option key={c.name} value={c.name}>{c.name}</option>
+            ))}
+            {uniqueCenters.filter(c => !OFFICIAL_CENTERS.some(oc => oc.name === c)).map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
@@ -336,7 +433,10 @@ export function CenterBookingsTab({
             className="h-11 rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7] focus:border-emerald-500 focus:outline-none"
           >
             <option value="all">كل المواعيد المتاحة</option>
-            {uniqueSlots.map((s) => (
+            {OFFICIAL_SLOTS.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+            {uniqueSlots.filter(s => !OFFICIAL_SLOTS.includes(s)).map((s) => (
               <option key={s} value={s}>{s}</option>
             ))}
           </select>
@@ -408,7 +508,7 @@ export function CenterBookingsTab({
 
       {/* 4. Complete Center Bookings Table */}
       <div className="admin-center-table relative overflow-x-auto rounded-2xl border border-[#2B3D57] bg-[#101B2D] shadow-md">
-        <table className="w-full min-w-[1280px] border-separate border-spacing-0 text-right text-[11px]">
+        <table className="w-full min-w-[1300px] border-separate border-spacing-0 text-right text-[11px]">
           <thead className="sticky top-0 z-20 bg-[#0A1424] text-[#B6C2D2]">
             <tr className="h-12">
               <th className="w-10 border-b border-[#2B3D57] px-2.5 text-center">
@@ -425,14 +525,14 @@ export function CenterBookingsTab({
               <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[160px]">الطالب وكود الوصول</th>
               <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[140px]">المرحلة التعليمية</th>
               <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[120px]">اسم المدرسة</th>
-              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[100px]">المسار / الشعبة</th>
-              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[140px]">السنتر المختار 📍</th>
-              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[150px]">الموعد المحدد ⏰</th>
-              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[130px]">هاتف الطالب 📱</th>
-              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[130px]">هاتف ولي الأمر 👨‍👩‍👦</th>
-              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[100px]">تاريخ الحجز 📅</th>
-              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[90px]">الاشتراك</th>
-              <th className="border-b border-[#2B3D57] px-3 py-2 text-left font-extrabold min-w-[110px]">الإجراءات</th>
+              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[95px]">المسار</th>
+              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[160px]">السنتر المختار 📍</th>
+              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[160px]">الموعد المحدد ⏰</th>
+              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[125px]">هاتف الطالب 📱</th>
+              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[125px]">هاتف ولي الأمر 👨‍👩‍👦</th>
+              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[95px]">تاريخ التسجيل</th>
+              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[85px]">الاشتراك</th>
+              <th className="border-b border-[#2B3D57] px-3 py-2 text-left font-extrabold min-w-[140px]">الإجراءات</th>
             </tr>
           </thead>
 
@@ -451,8 +551,7 @@ export function CenterBookingsTab({
                 return (
                   <tr
                     key={s.id}
-                    onClick={() => setActiveDrawerStudent(s)}
-                    className={`group h-[64px] cursor-pointer transition-[background-color] hover:bg-[#192A43] ${
+                    className={`group h-[64px] transition-[background-color] hover:bg-[#192A43] ${
                       isSelected ? "bg-emerald-500/10 shadow-[inset_-3px_0_0_#10B981]" : idx % 2 ? "bg-[#0D192A]/45" : "bg-[#101B2D]"
                     }`}
                   >
@@ -485,10 +584,7 @@ export function CenterBookingsTab({
                           {s.accessCode && (
                             <button
                               type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onCopyStudentCode(s);
-                              }}
+                              onClick={() => onCopyStudentCode(s)}
                               className="inline-flex items-center gap-1 font-mono text-[11px] font-bold text-emerald-400 dir-ltr text-right hover:underline"
                             >
                               {copiedStudentId === s.id ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
@@ -522,10 +618,20 @@ export function CenterBookingsTab({
 
                     {/* Center Name */}
                     <td className="border-b border-[#26364D]/55 px-3 py-2">
-                      <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/15 px-2.5 py-1 text-[11px] font-black text-emerald-300">
-                        <MapPin className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                        <span className="truncate max-w-[125px]">{s.centerName || "سنتر الزقازيق"}</span>
-                      </span>
+                      {s.centerName ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/15 px-2.5 py-1 text-[11px] font-black text-emerald-300">
+                          <MapPin className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                          <span className="truncate max-w-[140px]" title={s.centerName}>{s.centerName}</span>
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(s)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-dashed border-amber-500/50 bg-amber-500/10 px-2 py-1 text-[10px] font-bold text-amber-300 hover:bg-amber-500/20"
+                        >
+                          <Plus className="h-3 w-3" /> حدد السنتر
+                        </button>
+                      )}
                     </td>
 
                     {/* Appointment Slot */}
@@ -533,10 +639,16 @@ export function CenterBookingsTab({
                       {s.appointmentSlot ? (
                         <span className="inline-flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/15 px-2 py-1 text-[11px] font-extrabold text-amber-300">
                           <Clock className="h-3.5 w-3.5 shrink-0 text-amber-400" />
-                          <span className="truncate max-w-[135px]" title={s.appointmentSlot}>{s.appointmentSlot}</span>
+                          <span className="truncate max-w-[145px]" title={s.appointmentSlot}>{s.appointmentSlot}</span>
                         </span>
                       ) : (
-                        <span className="text-[10px] font-bold text-[#64748B]">غير محدد بعد</span>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(s)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-dashed border-amber-500/50 bg-amber-500/10 px-2 py-1 text-[10px] font-bold text-amber-300 hover:bg-amber-500/20"
+                        >
+                          <Clock className="h-3 w-3" /> حدد الموعد
+                        </button>
                       )}
                     </td>
 
@@ -547,7 +659,6 @@ export function CenterBookingsTab({
                           href={`https://wa.me/${(s.phone.replace(/[^\d+]/g, "").startsWith("0") ? "2" + s.phone.replace(/[^\d+]/g, "") : s.phone.replace(/[^\d+]/g, ""))}?text=${encodeURIComponent(`مرحباً ${s.name} 👋، تواصل بخصوص حجز السنتر`)}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
                           className="inline-flex p-1 rounded-md bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-400 transition"
                           title="واتساب الطالب"
                         >
@@ -565,7 +676,6 @@ export function CenterBookingsTab({
                             href={`https://wa.me/${(s.parentPhone.replace(/[^\d+]/g, "").startsWith("0") ? "2" + s.parentPhone.replace(/[^\d+]/g, "") : s.parentPhone.replace(/[^\d+]/g, ""))}?text=${encodeURIComponent(`مرحباً ولي أمر الطالب ${s.name} 👋، تواصل من إدارة السنتر`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
                             className="inline-flex p-1 rounded-md bg-amber-500/15 hover:bg-amber-500/30 text-amber-300 transition"
                             title="واتساب ولي الأمر"
                           >
@@ -601,14 +711,26 @@ export function CenterBookingsTab({
                     </td>
 
                     {/* Actions */}
-                    <td className="border-b border-[#26364D]/55 px-3 py-2 text-left" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        type="button"
-                        onClick={() => setActiveDrawerStudent(s)}
-                        className="rounded-lg bg-emerald-600/30 border border-emerald-500/40 px-2.5 py-1.5 text-[11px] font-black text-emerald-300 hover:bg-emerald-500/30 transition-all flex items-center gap-1"
-                      >
-                        <Eye className="h-3.5 w-3.5" /> التفاصيل
-                      </button>
+                    <td className="border-b border-[#26364D]/55 px-3 py-2 text-left">
+                      <div className="flex items-center gap-1.5 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(s)}
+                          className="rounded-lg bg-amber-500/15 border border-amber-500/30 px-2 py-1 text-[10px] font-extrabold text-amber-300 hover:bg-amber-500/25 transition-all flex items-center gap-1"
+                          title="تعديل السنتر والموعد وبيانات ولي الأمر"
+                        >
+                          <Edit2 className="h-3 w-3" /> تعديل
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setActiveDrawerStudent(s)}
+                          className="rounded-lg bg-emerald-600/30 border border-emerald-500/40 px-2 py-1 text-[10px] font-black text-emerald-300 hover:bg-emerald-500/30 transition-all flex items-center gap-1"
+                          title="عرض الملف الكامل"
+                        >
+                          <Eye className="h-3 w-3" /> الملف
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -617,6 +739,116 @@ export function CenterBookingsTab({
           </tbody>
         </table>
       </div>
+
+      {/* 5. Quick Edit Booking Modal */}
+      {editingStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="relative w-full max-w-lg rounded-3xl border border-emerald-500/40 bg-[#0F172A] p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b border-[#26364D] pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400">
+                  <MapPin className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-white">تعديل وتحديد حجز السنتر</h3>
+                  <p className="text-xs text-emerald-400 font-bold">{editingStudent.name}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingStudent(null)}
+                className="text-[#7F91AA] hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveBooking} className="space-y-4 text-xs font-bold">
+              {/* Center Selection */}
+              <div className="space-y-1.5">
+                <label className="text-[#94A3B8] block">📍 السنتر المختار:</label>
+                <select
+                  value={editFormData.centerName}
+                  onChange={(e) => setEditFormData({ ...editFormData, centerName: e.target.value })}
+                  className="h-11 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs text-white focus:border-emerald-500 focus:outline-none"
+                  required
+                >
+                  {OFFICIAL_CENTERS.map((c) => (
+                    <option key={c.name} value={c.name}>
+                      {c.name} — {c.location}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Slot Selection */}
+              <div className="space-y-1.5">
+                <label className="text-[#94A3B8] block">⏰ الموعد المحدد للحضور:</label>
+                <select
+                  value={editFormData.appointmentSlot}
+                  onChange={(e) => setEditFormData({ ...editFormData, appointmentSlot: e.target.value })}
+                  className="h-11 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs text-white focus:border-emerald-500 focus:outline-none"
+                  required
+                >
+                  {OFFICIAL_SLOTS.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Parent Phone */}
+              <div className="space-y-1.5">
+                <label className="text-[#94A3B8] block">👨‍👩‍👦 رقم هاتف ولي الأمر:</label>
+                <input
+                  type="text"
+                  value={editFormData.parentPhone}
+                  onChange={(e) => setEditFormData({ ...editFormData, parentPhone: e.target.value })}
+                  placeholder="مثال: 01012345678"
+                  className="h-11 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs text-white dir-ltr text-right focus:border-emerald-500 focus:outline-none font-mono"
+                />
+              </div>
+
+              {/* School Name */}
+              <div className="space-y-1.5">
+                <label className="text-[#94A3B8] block">🏫 اسم المدرسة:</label>
+                <input
+                  type="text"
+                  value={editFormData.schoolName}
+                  onChange={(e) => setEditFormData({ ...editFormData, schoolName: e.target.value })}
+                  placeholder="مثال: مدرسة السادات الثانوية بنين"
+                  className="h-11 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs text-white focus:border-emerald-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#26364D]">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditingStudent(null)}
+                  className="h-10 px-4 rounded-xl border-[#26364D] bg-[#0B1424] text-white hover:bg-white/5 text-xs"
+                >
+                  إلغاء
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSavingEdit}
+                  className="h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center gap-1.5"
+                >
+                  {isSavingEdit ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> جاري الحفظ...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" /> حفظ بيانات الحجز
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Active Drawer Modal */}
       {activeDrawerStudent && (

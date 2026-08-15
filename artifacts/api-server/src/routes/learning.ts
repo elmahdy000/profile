@@ -1318,6 +1318,26 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
           ["online", "offline"].includes(String(req.body.learningMode))
             ? String(req.body.learningMode)
             : current.learningMode,
+        centerName:
+          req.body.centerName !== undefined
+            ? (String(req.body.centerName).trim() || null)
+            : current.centerName,
+        appointmentSlot:
+          req.body.appointmentSlot !== undefined
+            ? (String(req.body.appointmentSlot).trim() || null)
+            : current.appointmentSlot,
+        schoolName:
+          req.body.schoolName !== undefined
+            ? (String(req.body.schoolName).trim() || null)
+            : current.schoolName,
+        parentPhone:
+          req.body.parentPhone !== undefined
+            ? (String(req.body.parentPhone).trim() || null)
+            : current.parentPhone,
+        languageTrack:
+          req.body.languageTrack !== undefined
+            ? (String(req.body.languageTrack).trim() || null)
+            : current.languageTrack,
         paymentStatus:
           req.body.paymentStatus !== undefined &&
           ["paid", "pending_review", "unpaid"].includes(String(req.body.paymentStatus))
