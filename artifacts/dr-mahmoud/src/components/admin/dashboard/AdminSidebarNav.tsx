@@ -67,21 +67,11 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
 
   const navGroups = [
     {
-      title: "الإدارة والمتابعة",
+      title: "الطلاب وحجوزات السناتر",
       items: [
         {
-          id: "learning-overview",
-          label: "اللوحة التشغيلية",
-          icon: LayoutDashboard,
-          onClick: () => {
-            setActiveTab("learning");
-            setLearningSubTab("students");
-          },
-          active: activeTab === "learning" && learningSubTab === "students",
-        },
-        {
-          id: "center-bookings-top",
-          label: "حجوزات السناتر 📍",
+          id: "center-bookings",
+          label: "جدول حجوزات السناتر 📍",
           icon: MapPin,
           onClick: () => {
             setActiveTab("learning");
@@ -90,38 +80,8 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           active: activeTab === "learning" && (learningSubTab as string) === "center-bookings",
         },
         {
-          id: "bookings",
-          label: "الحجوزات والطلبات",
-          icon: Calendar,
-          onClick: () => {
-            setActiveTab("learning");
-            setLearningSubTab("students");
-            if (typeof window !== "undefined") {
-              const params = new URLSearchParams(window.location.search);
-              params.set("status", "pending");
-              params.delete("mode");
-              window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
-              window.dispatchEvent(new Event("popstate"));
-            }
-          },
-          active: activeTab === "learning" && learningSubTab === "students" && (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("status") === "pending"),
-          badge: bookingsCount,
-        },
-        {
-          id: "student-analytics",
-          label: "تحليلات الأداء والطلاب",
-          icon: BarChart3,
-          onClick: () => setActiveTab("student-analytics"),
-          active: activeTab === "student-analytics",
-        },
-      ],
-    },
-    {
-      title: "الطلاب والاشتراكات",
-      items: [
-        {
           id: "students",
-          label: "إدارة جميع الطلاب",
+          label: "إدارة جميع الطلاب 🎓",
           icon: Users,
           onClick: () => {
             setActiveTab("learning");
@@ -134,21 +94,11 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
               window.dispatchEvent(new Event("popstate"));
             }
           },
-          active: activeTab === "learning" && learningSubTab === "students" && (typeof window === "undefined" || (!new URLSearchParams(window.location.search).get("mode") && new URLSearchParams(window.location.search).get("status") !== "pending")),
-        },
-        {
-          id: "center-bookings",
-          label: "جدول حجوزات السناتر 📍",
-          icon: MapPin,
-          onClick: () => {
-            setActiveTab("learning");
-            setLearningSubTab("center-bookings" as any);
-          },
-          active: activeTab === "learning" && (learningSubTab as string) === "center-bookings",
+          active: activeTab === "learning" && learningSubTab === "students",
         },
         {
           id: "payments",
-          label: "إيصالات الدفع والاشتراكات",
+          label: "إيصالات الدفع والاشتراكات 💳",
           icon: FileCheck2,
           onClick: () => {
             setActiveTab("learning");
@@ -160,10 +110,17 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
         {
           id: "parents",
-          label: "حسابات أولياء الأمور",
+          label: "حسابات أولياء الأمور 👨‍👩‍👧",
           icon: ShieldCheck,
           onClick: () => setActiveTab("parents"),
           active: activeTab === "parents",
+        },
+        {
+          id: "student-analytics",
+          label: "تحليلات الأداء والمشاهدات 📊",
+          icon: BarChart3,
+          onClick: () => setActiveTab("student-analytics"),
+          active: activeTab === "student-analytics",
         },
       ],
     },
