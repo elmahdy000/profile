@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Camera, Trash2 } from "lucide-react";
+import { Camera, Trash2, MapPin, Clock, School, Phone, Building2, CalendarDays, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import type { Student } from "@/types/platform";
@@ -65,9 +65,11 @@ export function ProfileTab({
     }
   };
 
+  const isCenterStudent = student.learningMode === "offline" || Boolean(student.centerName) || Boolean(student.appointmentSlot);
+
   return (
     <div className="space-y-5 pb-6 text-right" dir="rtl">
-      <PageHeader title="حسابي" description="بياناتك الشخصية والتعليمية وإعدادات الحساب." />
+      <PageHeader title="حسابي" description="بياناتك الشخصية والتعليمية وإعدادات الحساب وحجز السنتر." />
 
       {/* Avatar Card */}
       <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -94,6 +96,30 @@ export function ProfileTab({
         </div>
       </article>
 
+      {/* Center Booking Banner (for offline/center students) */}
+      {isCenterStudent && (
+        <article className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/40 via-emerald-900/10 to-transparent p-5 shadow-sm space-y-3">
+          <div className="flex items-center gap-2 text-emerald-400 font-extrabold text-sm">
+            <MapPin className="h-5 w-5 shrink-0" />
+            <span>📍 بيانات حجز السنتر والمواعيد الحضورية بالزقازيق</span>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 text-xs">
+            <div className="rounded-xl border border-emerald-500/20 bg-background/60 p-3 space-y-1">
+              <span className="text-muted-foreground text-[11px] block">السنتر المختار:</span>
+              <p className="font-extrabold text-emerald-300 text-sm">
+                {student.centerName || "حضور بالسنتر (الزقازيق)"}
+              </p>
+            </div>
+            <div className="rounded-xl border border-emerald-500/20 bg-background/60 p-3 space-y-1">
+              <span className="text-muted-foreground text-[11px] block">الموعد المحدد للحضور:</span>
+              <p className="font-extrabold text-amber-300 text-sm">
+                {student.appointmentSlot || "حسب جدول المجموعات بالسنتر"}
+              </p>
+            </div>
+          </div>
+        </article>
+      )}
+
       {/* Info Cards */}
       <div className="grid gap-4 md:grid-cols-2">
         <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -101,17 +127,22 @@ export function ProfileTab({
           <dl className="divide-y divide-border">
             <ProfileInfoRow label="الاسم" value={student.name} />
             <ProfileInfoRow label="رقم الموبايل" value={student.phone} />
+            {student.parentPhone && <ProfileInfoRow label="رقم ولي الأمر" value={student.parentPhone} />}
             <ProfileInfoRow label="البريد الإلكتروني" value={student.email || "غير مضاف"} />
-            <ProfileInfoRow label="المحافظة" value={student.governorate || "—"} />
-            <ProfileInfoRow label="المدينة" value={student.city || "—"} />
+            <ProfileInfoRow label="المحافظة" value={student.governorate || "الشرقية"} />
+            <ProfileInfoRow label="المدينة" value={student.city || "الزقازيق"} />
           </dl>
         </article>
 
         <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <h2 className="text-sm font-extrabold text-foreground mb-3">المعلومات التعليمية</h2>
+          <h2 className="text-sm font-extrabold text-foreground mb-3">المعلومات التعليمية والحجز</h2>
           <dl className="divide-y divide-border">
             <ProfileInfoRow label="المرحلة الدراسية" value={student.grade || "—"} />
-            <ProfileInfoRow label="نظام الدراسة" value={student.learningMode === "offline" ? "حضوري" : "أونلاين"} />
+            {student.schoolName && <ProfileInfoRow label="اسم المدرسة" value={student.schoolName} />}
+            {student.languageTrack && <ProfileInfoRow label="الشعبة والمسار" value={student.languageTrack} />}
+            <ProfileInfoRow label="نظام الدراسة" value={student.learningMode === "offline" ? "حضوري بالسنتر" : "أونلاين"} />
+            {student.centerName && <ProfileInfoRow label="السنتر المختار" value={student.centerName} />}
+            {student.appointmentSlot && <ProfileInfoRow label="الموعد المحدد" value={student.appointmentSlot} />}
             <ProfileInfoRow label="حالة الحساب" value="متفعّل ✅" />
             <ProfileInfoRow label="حالة الاشتراك" value={student.paymentStatus === "paid" ? "مدفوع 💳" : student.paymentStatus === "pending_review" ? "قيد المراجعة ⏳" : "مجاني 🆓"} />
           </dl>

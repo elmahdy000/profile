@@ -17,7 +17,8 @@ import {
   Clock,
   Sparkles,
   AlertCircle,
-  RotateCcw
+  RotateCcw,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getTrackForStage } from "@/data/academic";
@@ -84,8 +85,20 @@ export function DashboardHeader({
                 : "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/40"
             }`}
           >
-            {student.learningMode === "offline" ? "نظامك: أوفلاين" : "نظامك: أونلاين"}
+            {student.learningMode === "offline" ? "نظامك: أوفلاين (السنتر)" : "نظامك: أونلاين"}
           </span>
+
+          {student.centerName && (
+            <span className="inline-flex items-center gap-1 rounded-full px-3 py-0.5 text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/40">
+              <MapPin className="h-3 w-3" /> {student.centerName}
+            </span>
+          )}
+
+          {student.appointmentSlot && (
+            <span className="inline-flex items-center gap-1 rounded-full px-3 py-0.5 text-xs font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/40">
+              <Clock className="h-3 w-3" /> {student.appointmentSlot}
+            </span>
+          )}
         </div>
         <p className="text-xs md:text-sm font-medium text-slate-500 dark:text-[#B1C0D4]">
           {academicTrackTitle
