@@ -566,11 +566,21 @@ router.post(
         return;
       }
 
+      const phoneVariants = [phone];
+      if (phone.startsWith("0") && phone.length === 11) {
+        phoneVariants.push(`+20${phone.slice(1)}`);
+        phoneVariants.push(`20${phone.slice(1)}`);
+      } else if (phone.startsWith("20") && phone.length === 12) {
+        phoneVariants.push(`0${phone.slice(2)}`);
+        phoneVariants.push(`+${phone}`);
+      }
+
       const [existingByPhone] = await db
         .select()
         .from(studentsTable)
-        .where(eq(studentsTable.phone, phone))
+        .where(inArray(studentsTable.phone, phoneVariants))
         .limit(1);
+
       if (existingByPhone) {
         if (centerName || appointmentSlot) {
           await db
@@ -591,6 +601,13 @@ router.post(
         res.json({
           status: existingByPhone.status,
           isNewStudent: false,
+          studentName: existingByPhone.name,
+          schoolName: schoolName || existingByPhone.schoolName || "",
+          grade: grade || existingByPhone.grade || "",
+          languageTrack: languageTrack || existingByPhone.languageTrack || "",
+          centerName: centerName || existingByPhone.centerName || "",
+          appointmentSlot: appointmentSlot || existingByPhone.appointmentSlot || "",
+          parentPhone: parentPhone || existingByPhone.parentPhone || "",
           accessCode: undefined,
           message: "تم تحديث بيانات حجز السنتر بنجاح (طالب مسجل مسبقاً)",
         });
