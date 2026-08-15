@@ -659,10 +659,21 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
 
               {/* Success Message Header */}
               <div className="space-y-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-3 py-1 text-xs font-black text-emerald-300">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400" /> تم الحجز واشترك في المنصة لمتابعة الدروس
-                </span>
-                <h3 className="text-xl sm:text-2xl font-black text-white">تم الحجز واشترك في المنصة لمتابعة الدروس</h3>
+                {bookingSuccessData.isNewStudent ? (
+                  <>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-3 py-1 text-xs font-black text-emerald-300">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400" /> تم الحجز واشترك في المنصة لمتابعة الدروس
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-black text-white">تم الحجز واشترك في المنصة لمتابعة الدروس</h3>
+                  </>
+                ) : (
+                  <>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/15 px-3 py-1 text-xs font-black text-amber-300">
+                      <AlertTriangle className="h-4 w-4 text-amber-400" /> رقم الهاتف مسجل مسبقاً بالسنتر
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-black text-white">لقد قمت بالحجز مسبقاً في السنتر</h3>
+                  </>
+                )}
                 <p className="text-sm sm:text-base font-black text-amber-300 bg-amber-500/15 border border-amber-500/30 p-3 rounded-2xl">
                   والدفع أول يوم في السنتر بإذن الله ... 500 جنيه
                 </p>
@@ -715,8 +726,14 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
                   </div>
                 </div>
               ) : (
-                <div className="rounded-2xl border border-[#1677FF]/30 bg-[#1677FF]/10 p-3.5 text-xs font-bold text-[#69A5FF] leading-relaxed">
-                  رقم الهاتف مسجل مسبقاً على المنصة — تم تحديث وتأكيد حجز السنتر بنجاح، ويمكنك استخدام كود الدخول الخاص بك السابق للمتابعة.
+                <div className="rounded-2xl border border-amber-500/40 bg-amber-500/15 p-4 text-xs font-bold text-amber-200 leading-relaxed text-right space-y-1">
+                  <div className="flex items-center gap-1.5 font-black text-sm text-amber-300">
+                    <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
+                    تنبيه: لقد قمت بالحجز مسبقاً بالسنتر بهذا الرقم!
+                  </div>
+                  <p className="text-amber-100">
+                    تم تحديث الموعد والسنتر المختار بنجاح. يمكنك استخدام كود الدخول الخاص بك السابق للمتابعة على المنصة.
+                  </p>
                 </div>
               )}
 
