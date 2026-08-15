@@ -30,6 +30,7 @@ export function normalizeTime(timeStr: string): string {
   return timeStr
     .trim()
     .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+    .replace(/[\u064B-\u0652]/g, "")
     .replace(/\s+/g, "")
     .toLowerCase();
 }
