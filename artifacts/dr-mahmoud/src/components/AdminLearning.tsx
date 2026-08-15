@@ -28,6 +28,7 @@ import {
   ChevronUp,
   BookOpen,
   MapPin,
+  LayoutDashboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -209,10 +210,10 @@ export function AdminLearning({
   initialTab = "students",
 }: {
   role?: "superadmin" | "subadmin";
-  initialTab?: "students" | "center-bookings" | "payments" | "notifications" | "files" | "quizzes" | "results" | "reports";
+  initialTab?: "overview" | "students" | "center-bookings" | "payments" | "notifications" | "files" | "quizzes" | "results" | "reports";
 }) {
   const { toast } = useToast();
-  const [tab, setTab] = useState<"students" | "center-bookings" | "payments" | "notifications" | "files" | "quizzes" | "results" | "reports">(
+  const [tab, setTab] = useState<"overview" | "students" | "center-bookings" | "payments" | "notifications" | "files" | "quizzes" | "results" | "reports">(
     initialTab,
   );
 
@@ -1144,24 +1145,26 @@ export function AdminLearning({
     setFilePage(1);
   }, [fileSearch, fileCourseFilter, fileStageFilter, fileStatusFilter]);
   const tabs = [
-    ["students", "الطلاب", GraduationCap],
+    ["overview", "اللوحة التشغيلية 📊", LayoutDashboard],
     ["center-bookings", "حجوزات السناتر 📍", MapPin],
-    ["files", "الملفات", FileText],
-    ["quizzes", "الاختبارات", ClipboardCheck],
-    ["results", "النتائج", Check],
-    ["payments", "إيصالات الدفع", FileCheck2],
-    ["notifications", "إرسال إشعار", MessageCircle],
-    ["reports", "التقارير", BarChart3],
+    ["students", "الطلاب 🎓", GraduationCap],
+    ["payments", "إيصالات الدفع 💳", FileCheck2],
+    ["files", "الملفات 📁", FileText],
+    ["quizzes", "الاختبارات 📝", ClipboardCheck],
+    ["results", "النتائج 🏆", Check],
+    ["notifications", "إرسال إشعار 🔔", MessageCircle],
+    ["reports", "التقارير 📈", BarChart3],
   ] as const;
   const tabMeta = {
-    students: ["إدارة الطلاب", "راجع التسجيلات والصلاحيات والكورسات المخصصة لكل طالب."],
+    overview: ["اللوحة التشغيلية وإحصائيات المنصة 📊", "نظرة عامة على أعداد الطلاب، المشتركين، والتوزيع حسب المراحل والكورسات."],
+    students: ["إدارة جميع الطلاب 🎓", "راجع التسجيلات والصلاحيات والكورسات المخصصة لكل طالب."],
     "center-bookings": ["كشف وإدارة حجوزات السناتر 📍", "جدول تفصيلي مخصص لمتابعة جميع الطلاب المسجلين بالسناتر والمواعيد الحضورية المحددة."],
-    payments: ["إيصالات الدفع", "راجع إيصالات الدفع من الطلاب ووافق أو ارفض."],
-    notifications: ["إرسال إشعار للطلاب", "أرسل تنبيهًا أو إشعارًا عامًا لجميع الطلاب أو مرحلة دراسية محددة."],
-    files: ["مكتبة الملفات التعليمية", "ارفع الملفات وحدد مكان ظهورها للطلاب أو داخل الدروس."],
-    quizzes: ["بناء وإدارة الاختبارات", "أنشئ الاختبارات وحدد الجمهور والإعدادات والأسئلة ثم انشرها."],
-    results: ["نتائج الاختبارات", "تابع محاولات الطلاب ودرجات النجاح من مكان واحد."],
-    reports: ["التقارير والمتابعة", "راقب نشاط الطلاب والتقدم ومؤشرات الأداء التعليمية."],
+    payments: ["إيصالات الدفع 💳", "راجع إيصالات الدفع من الطلاب ووافق أو ارفض."],
+    notifications: ["إرسال إشعار للطلاب 🔔", "أرسل تنبيهًا أو إشعارًا عامًا لجميع الطلاب أو مرحلة دراسية محددة."],
+    files: ["مكتبة الملفات التعليمية 📁", "ارفع الملفات وحدد مكان ظهورها للطلاب أو داخل الدروس."],
+    quizzes: ["بناء وإدارة الاختبارات 📝", "أنشئ الاختبارات وحدد الجمهور والإعدادات والأسئلة ثم انشرها."],
+    results: ["نتائج الاختبارات 🏆", "تابع محاولات الطلاب ودرجات النجاح من مكان واحد."],
+    reports: ["التقارير والمتابعة 📈", "راقب نشاط الطلاب والتقدم ومؤشرات الأداء التعليمية."],
   } as const;
   return (
     <div className="admin-learning-workspace space-y-6 text-[#0F172A]" dir="rtl">
@@ -1204,28 +1207,6 @@ export function AdminLearning({
           </Button>
         </div>
       </div>
-
-      {/* OverviewSection with dark mode WCAG styling */}
-      <OverviewSection
-        students={students as any}
-        learningCourses={learningCourses}
-        onSelectStageFilter={(filter) => {
-          setTab("students");
-          setStudentSearch("");
-          setStudentStageFilter(filter);
-          setTimeout(() => {
-            document.getElementById("students-tab-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
-          }, 50);
-        }}
-        onSelectCourseFilter={(courseTitle) => {
-          setTab("students");
-          setStudentStageFilter("all");
-          setStudentSearch(courseTitle);
-          setTimeout(() => {
-            document.getElementById("students-tab-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
-          }, 50);
-        }}
-      />
 
       {/* 5. Management Tabs Bar */}
       <div className="w-full overflow-x-auto pb-1 no-scrollbar">
@@ -1280,6 +1261,22 @@ export function AdminLearning({
         </div>
       ) : (
         <>
+          {tab === "overview" && (
+            <OverviewSection
+              students={students as any}
+              learningCourses={learningCourses}
+              onSelectStageFilter={(filter) => {
+                setTab("students");
+                setStudentSearch("");
+                setStudentStageFilter(filter);
+              }}
+              onSelectCourseFilter={(courseTitle) => {
+                setTab("students");
+                setStudentStageFilter("all");
+                setStudentSearch(courseTitle);
+              }}
+            />
+          )}
           {tab === "students" && (
             <div id="students-tab-section">
               <StudentsTab

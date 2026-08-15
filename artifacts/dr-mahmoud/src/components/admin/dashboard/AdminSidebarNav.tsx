@@ -67,6 +67,21 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
 
   const navGroups = [
     {
+      title: "الرئيسية والمتابعة",
+      items: [
+        {
+          id: "learning-overview",
+          label: "اللوحة التشغيلية العامة 📊",
+          icon: LayoutDashboard,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("overview" as any);
+          },
+          active: activeTab === "learning" && (learningSubTab as string) === "overview",
+        },
+      ],
+    },
+    {
       title: "الطلاب وحجوزات السناتر",
       items: [
         {
