@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   UserCheck,
@@ -21,11 +21,34 @@ import {
   Send,
   Plus,
   MessageCircle,
+  Edit2,
+  Building2,
+  School,
+  Save,
+  Loader2,
+  MapPin,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import type { Student as PlatformStudent } from "@/types/platform";
 import type { PaymentReceipt } from "./PaymentReceiptsPanel";
 import { AdminConfirmDialog } from "../dashboard/AdminConfirmDialog";
+
+const OFFICIAL_CENTERS = [
+  { name: "سنتر رافال أكاديمي (Rafal Academy)", location: "بجوار الثانوية العسكرية - الزقازيق" },
+  { name: "سنتر زاج أكاديمي (Zag Academy)", location: "منطقة الفلل - الزقازيق" },
+  { name: "سنتر إديوفيرس (EduVerse)", location: "منطقة الفلل - الزقازيق" },
+  { name: "سنتر حسن صميدة", location: "منطقة الحناوي - الزقازيق" },
+];
+
+const OFFICIAL_SLOTS = [
+  "سبت - اتنين - أربع (الساعة 3:30 عصراً)",
+  "سبت - اتنين - أربع (الساعة 5:00 مساءً)",
+  "سبت - اتنين - أربع (الساعة 6:30 مساءً)",
+  "حد - تلات - خميس (الساعة 6:30 مساءً)",
+  "حسب جدول المجموعات بالسنتر (الساعة 3:00 عصراً)",
+];
 
 export type ExtendedStudent = PlatformStudent & {
   accessCode?: string | null;
@@ -40,6 +63,11 @@ export type ExtendedStudent = PlatformStudent & {
   otherGradeDetail?: string | null;
   learningMode?: "online" | "offline";
   createdAt?: string;
+  school_name?: string | null;
+  parent_phone?: string | null;
+  center_name?: string | null;
+  appointment_slot?: string | null;
+  language_track?: string | null;
 };
 
 interface StudentDrawerProps {
@@ -77,11 +105,23 @@ export function StudentDrawer({
   onApproveReceipt,
   onSendNotificationToStudent,
 }: StudentDrawerProps) {
+  const { toast } = useToast();
+  const [localStudent, setLocalStudent] = useState<ExtendedStudent | null>(student);
   const [activeTab, setActiveTab] = useState<
     "overview" | "payments" | "courses" | "attendance" | "quizzes" | "files" | "security" | "logs"
   >("overview");
   const [copied, setCopied] = useState(false);
   const [showMoreActions, setShowMoreActions] = useState(false);
+  const [isEditingBooking, setIsEditingBooking] = useState(false);
+  const [isSavingBooking, setIsSavingBooking] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    centerName: "",
+    appointmentSlot: "",
+    schoolName: "",
+    parentPhone: "",
+    languageTrack: "عربي",
+    learningMode: "offline" as "online" | "offline",
+  });
   const [confirmState, setConfirmState] = useState<{
     isOpen: boolean;
     title: string;
@@ -96,13 +136,78 @@ export function StudentDrawer({
     action: () => {},
   });
 
+  useEffect(() => {
+    if (student) {
+      setLocalStudent(student);
+    }
+  }, [student]);
+
   if (!isOpen || !student) return null;
 
-  const receipt = paymentReceipts.find((r) => r.studentId === student.id);
+  const currentStudent = localStudent || student;
+  const receipt = paymentReceipts.find((r) => r.studentId === currentStudent.id);
+
+  const resolvedSchoolName = currentStudent.schoolName || currentStudent.school_name || currentStudent.schoolType || "";
+  const resolvedParentPhone = currentStudent.parentPhone || currentStudent.parent_phone || "";
+  const resolvedCenterName = currentStudent.centerName || currentStudent.center_name || "";
+  const resolvedAppointmentSlot = currentStudent.appointmentSlot || currentStudent.appointment_slot || "";
+  const resolvedLanguageTrack = currentStudent.languageTrack || currentStudent.language_track || currentStudent.academicTrack || "عربي";
+
+  const handleOpenEditBooking = () => {
+    setEditFormData({
+      centerName: resolvedCenterName || OFFICIAL_CENTERS[0].name,
+      appointmentSlot: resolvedAppointmentSlot || OFFICIAL_SLOTS[0],
+      schoolName: resolvedSchoolName,
+      parentPhone: resolvedParentPhone,
+      languageTrack: resolvedLanguageTrack,
+      learningMode: currentStudent.learningMode === "offline" || resolvedCenterName ? "offline" : "online",
+    });
+    setIsEditingBooking(true);
+  };
+
+  const handleSaveBooking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingBooking(true);
+    try {
+      const res = await fetch(`/api/admin/students/${currentStudent.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          centerName: editFormData.centerName.trim() || null,
+          appointmentSlot: editFormData.appointmentSlot.trim() || null,
+          parentPhone: editFormData.parentPhone.trim() || null,
+          schoolName: editFormData.schoolName.trim() || null,
+          languageTrack: editFormData.languageTrack.trim() || null,
+          learningMode: editFormData.learningMode,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("فشل حفظ بيانات حجز السنتر");
+      }
+
+      const updated = await res.json();
+      setLocalStudent((prev) => (prev ? { ...prev, ...updated } : updated));
+      toast({
+        title: "تم تحديث بيانات السنتر والمدرسة بنجاح 📍",
+        description: `تم ربط الطالب ${currentStudent.name} بـ ${editFormData.centerName || "السنتر المختار"}`,
+      });
+      setIsEditingBooking(false);
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "خطأ في التحديث",
+        description: err.message || "حدث خطأ أثناء حفظ التحديث",
+      });
+    } finally {
+      setIsSavingBooking(false);
+    }
+  };
 
   const handleCopyCode = () => {
-    if (student.accessCode) {
-      navigator.clipboard.writeText(student.accessCode);
+    if (currentStudent.accessCode) {
+      navigator.clipboard.writeText(currentStudent.accessCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -318,51 +423,61 @@ export function StudentDrawer({
             {activeTab === "overview" && (
               <div className="grid gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.75fr)]">
                 <section className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-black text-white">بيانات الطالب الأساسية ورغبة الحجز</h3>
-                    <p className="mt-1 text-[11px] text-[#7F91AA]">بيانات التسجيل وتأكيد السنتر والموعد والتواصل.</p>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-black text-white">بيانات الطالب الأساسية ورغبة الحجز</h3>
+                      <p className="mt-1 text-[11px] text-[#7F91AA]">بيانات التسجيل وتأكيد السنتر والموعد والتواصل.</p>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleOpenEditBooking}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-blue-500/40 bg-blue-500/15 px-3 py-1.5 text-xs font-bold text-blue-300 hover:bg-blue-500/25 transition"
+                    >
+                      <Edit2 className="h-3.5 w-3.5" /> تعديل بيانات الحجز
+                    </Button>
                   </div>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                   <div className="rounded-2xl border border-slate-800 bg-[#131E31] p-4 space-y-1.5">
                     <span className="text-[11px] text-[#94A3B8]">المرحلة التعليمية</span>
-                    <p className="text-sm font-extrabold text-[#F8FAFC]">{student.grade === "أخرى" ? student.otherGradeDetail || student.grade : student.grade || "غير محدد"}</p>
+                    <p className="text-sm font-extrabold text-[#F8FAFC]">{currentStudent.grade === "أخرى" ? currentStudent.otherGradeDetail || currentStudent.grade : currentStudent.grade || "غير محدد"}</p>
                   </div>
                   <div className="rounded-2xl border border-slate-800 bg-[#131E31] p-4 space-y-1.5">
                     <span className="text-[11px] text-[#94A3B8]">اسم المدرسة</span>
-                    <p className="text-xs font-extrabold text-[#F8FAFC]">{student.schoolName || student.schoolType || "غير محدد"}</p>
+                    <p className="text-xs font-extrabold text-[#F8FAFC]">{resolvedSchoolName || "غير محدد"}</p>
                   </div>
                   <div className="rounded-2xl border border-slate-800 bg-[#131E31] p-4 space-y-1.5">
                     <span className="text-[11px] text-[#94A3B8]">الشعبة والمسار</span>
-                    <p className="text-xs font-extrabold text-purple-300">{student.languageTrack || student.academicTrack || "عربي"}</p>
+                    <p className="text-xs font-extrabold text-purple-300">{resolvedLanguageTrack || "عربي"}</p>
                   </div>
                   <div className="rounded-2xl border border-slate-800 bg-[#131E31] p-4 space-y-1.5">
                     <span className="text-[11px] text-[#94A3B8]">تليفون ولي الأمر</span>
-                    <p className="text-xs font-extrabold text-amber-300 dir-ltr text-right">{student.parentPhone || "غير مسجل"}</p>
+                    <p className="text-xs font-extrabold text-amber-300 dir-ltr text-right">{resolvedParentPhone || "غير مسجل"}</p>
                   </div>
                   <div className="rounded-2xl border border-slate-800 bg-[#131E31] p-4 space-y-1.5">
                     <span className="text-[11px] text-[#94A3B8]">السنتر المختار</span>
-                    <p className="text-xs font-extrabold text-emerald-400">{student.centerName || (student.learningMode === "offline" ? "حضور بالسنتر (الزقازيق)" : "أونلاين بالكامل")}</p>
+                    <p className="text-xs font-extrabold text-emerald-400">{resolvedCenterName || (currentStudent.learningMode === "offline" ? "حضور بالسنتر (الزقازيق)" : "أونلاين بالكامل")}</p>
                   </div>
                   <div className="rounded-2xl border border-slate-800 bg-[#131E31] p-4 space-y-1.5">
                     <span className="text-[11px] text-[#94A3B8]">الموعد المتاح</span>
-                    <p className="text-xs font-extrabold text-amber-300">{student.appointmentSlot || (student.learningMode === "offline" ? "بانتظار تحديد موعد الحضور" : "—")}</p>
+                    <p className="text-xs font-extrabold text-amber-300">{resolvedAppointmentSlot || (currentStudent.learningMode === "offline" ? "بانتظار تحديد موعد الحضور" : "—")}</p>
                   </div>
                   <div className="rounded-2xl border border-slate-800 bg-[#131E31] p-4 space-y-1.5">
                     <span className="text-[11px] text-[#94A3B8]">نظام الحضور</span>
                     <p className="text-xs font-extrabold text-[#1677FF]">
-                      {student.learningMode === "offline" || student.centerName ? "أوفلاين (السنتر)" : "أونلاين بالكامل"}
+                      {currentStudent.learningMode === "offline" || resolvedCenterName ? "أوفلاين (السنتر)" : "أونلاين بالكامل"}
                     </p>
                   </div>
                   <div className="rounded-2xl border border-slate-800 bg-[#131E31] p-4 space-y-1.5">
                     <span className="text-[11px] text-[#94A3B8]">المحافظة / المدينة</span>
                     <p className="text-xs font-extrabold text-[#F8FAFC]">
-                      {student.governorate ? `${student.governorate} - ${student.city || ""}` : "الشرقية - الزقازيق"}
+                      {currentStudent.governorate ? `${currentStudent.governorate} - ${currentStudent.city || ""}` : "الشرقية - الزقازيق"}
                     </p>
                   </div>
                   <div className="rounded-2xl border border-slate-800 bg-[#131E31] p-4 space-y-1.5">
                     <span className="text-[11px] text-[#94A3B8]">تاريخ التسجيل</span>
                     <p className="text-xs font-bold text-[#CBD5E1]">
-                      {student.createdAt ? new Date(student.createdAt).toLocaleDateString("ar-EG") : "غير تواريخ"}
+                      {currentStudent.createdAt ? new Date(currentStudent.createdAt).toLocaleDateString("ar-EG") : "غير تواريخ"}
                     </p>
                   </div>
                   </div>
@@ -393,11 +508,11 @@ export function StudentDrawer({
                   </div>
                   <div className="overflow-hidden rounded-2xl border border-slate-800 bg-[#131E31]">
                     {[
-                      ["حالة الاشتراك", student.paymentStatus === "paid" ? "مدفوع" : student.paymentStatus === "pending_review" ? "قيد المراجعة" : "مجاني"],
-                      ["الكورسات المخصصة", (student.enrolledCourseIds?.length ?? 0) === 0 ? "كل كورسات المرحلة" : `${student.enrolledCourseIds?.length} كورس`],
-                      ["عدد الأجهزة المسموح", `${student.maxDevices || 1} جهاز`],
-                      ["الهاتف", student.phone || "غير مسجل"],
-                      ["كود الوصول", student.accessCode || "غير متاح"],
+                      ["حالة الاشتراك", currentStudent.paymentStatus === "paid" ? "مدفوع" : currentStudent.paymentStatus === "pending_review" ? "قيد المراجعة" : "مجاني"],
+                      ["الكورسات المخصصة", (currentStudent.enrolledCourseIds?.length ?? 0) === 0 ? "كل كورسات المرحلة" : `${currentStudent.enrolledCourseIds?.length} كورس`],
+                      ["عدد الأجهزة المسموح", `${currentStudent.maxDevices || 1} جهاز`],
+                      ["الهاتف", currentStudent.phone || "غير مسجل"],
+                      ["كود الوصول", currentStudent.accessCode || "غير متاح"],
                     ].map(([label, value], index) => (
                       <div key={label} className={`flex items-center justify-between gap-4 px-4 py-3.5 ${index ? "border-t border-slate-800" : ""}`}>
                         <span className="text-[11px] font-bold text-[#7F91AA]">{label}</span>
@@ -559,6 +674,149 @@ export function StudentDrawer({
         }}
         onCancel={() => setConfirmState((prev) => ({ ...prev, isOpen: false }))}
       />
+
+      {/* Edit Center Booking & School Details Modal */}
+      {isEditingBooking && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-700 bg-[#0F172A] p-6 text-right shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2 text-white">
+                <Building2 className="h-5 w-5 text-blue-400" />
+                <h3 className="text-base font-bold">تعديل بيانات حجز السنتر والمدرسة</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditingBooking(false)}
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveBooking} className="space-y-4 text-xs font-semibold">
+              <div className="rounded-xl border border-slate-800 bg-[#131E31] p-3 text-slate-300">
+                <span className="text-slate-400 text-[11px] block">اسم الطالب:</span>
+                <strong className="text-sm font-bold text-white">{currentStudent.name}</strong>
+                <span className="text-slate-400 text-[11px] mr-2">({currentStudent.phone})</span>
+              </div>
+
+              {/* Learning Mode */}
+              <div className="space-y-1.5">
+                <label className="block text-slate-300">نظام الحضور والدراسة</label>
+                <select
+                  value={editFormData.learningMode}
+                  onChange={(e) => setEditFormData({ ...editFormData, learningMode: e.target.value as any })}
+                  className="h-11 w-full rounded-xl border border-slate-700 bg-[#0B1424] px-3 text-white outline-none focus:border-blue-500"
+                >
+                  <option value="offline">أوفلاين (حضور بالسنتر بالزقازيق)</option>
+                  <option value="online">أونلاين بالكامل عبر المنصة</option>
+                </select>
+              </div>
+
+              {/* Center Name */}
+              <div className="space-y-1.5">
+                <label className="block text-slate-300">السنتر المختار بالزقازيق</label>
+                <select
+                  value={editFormData.centerName}
+                  onChange={(e) => setEditFormData({ ...editFormData, centerName: e.target.value })}
+                  className="h-11 w-full rounded-xl border border-slate-700 bg-[#0B1424] px-3 text-white outline-none focus:border-blue-500 font-bold"
+                >
+                  <option value="">-- بدون سنتر محدد --</option>
+                  {OFFICIAL_CENTERS.map((c) => (
+                    <option key={c.name} value={c.name}>
+                      {c.name} ({c.location})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Appointment Slot */}
+              <div className="space-y-1.5">
+                <label className="block text-slate-300">موعد المجموعة المتاح</label>
+                <select
+                  value={editFormData.appointmentSlot}
+                  onChange={(e) => setEditFormData({ ...editFormData, appointmentSlot: e.target.value })}
+                  className="h-11 w-full rounded-xl border border-slate-700 bg-[#0B1424] px-3 text-white outline-none focus:border-blue-500"
+                >
+                  <option value="">-- بدون موعد محدد --</option>
+                  {OFFICIAL_SLOTS.map((slot) => (
+                    <option key={slot} value={slot}>
+                      {slot}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* School Name & Parent Phone */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="block text-slate-300">اسم المدرسة</label>
+                  <input
+                    type="text"
+                    value={editFormData.schoolName}
+                    onChange={(e) => setEditFormData({ ...editFormData, schoolName: e.target.value })}
+                    placeholder="مثال: مدرسة السادات الثانوية"
+                    className="h-11 w-full rounded-xl border border-slate-700 bg-[#0B1424] px-3 text-white outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-slate-300">رقم ولي الأمر</label>
+                  <input
+                    type="tel"
+                    value={editFormData.parentPhone}
+                    onChange={(e) => setEditFormData({ ...editFormData, parentPhone: e.target.value })}
+                    placeholder="01XXXXXXXXX"
+                    dir="ltr"
+                    className="h-11 w-full rounded-xl border border-slate-700 bg-[#0B1424] px-3 text-white font-mono text-left outline-none focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Language Track */}
+              <div className="space-y-1.5">
+                <label className="block text-slate-300">الشعبة / المسار اللغوي</label>
+                <select
+                  value={editFormData.languageTrack}
+                  onChange={(e) => setEditFormData({ ...editFormData, languageTrack: e.target.value })}
+                  className="h-11 w-full rounded-xl border border-slate-700 bg-[#0B1424] px-3 text-white outline-none focus:border-blue-500"
+                >
+                  <option value="عربي">عربي (عام)</option>
+                  <option value="لغات (إنجليزي)">لغات (إنجليزي)</option>
+                  <option value="لغات (فرنسي)">لغات (فرنسي)</option>
+                  <option value="علمي علوم">علمي علوم</option>
+                  <option value="علمي رياضة">علمي رياضة</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditingBooking(false)}
+                  className="border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700"
+                >
+                  إلغاء
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSavingBooking}
+                  className="bg-blue-600 hover:bg-blue-500 text-white min-w-[120px]"
+                >
+                  {isSavingBooking ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin ml-1.5" /> جاري الحفظ...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 ml-1.5" /> حفظ البيانات
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }
