@@ -75,9 +75,11 @@ export function AccessScreen({
   const [form, setForm] = useState(() => ({
     name: "",
     phone: "",
+    parentPhone: "",
+    schoolName: "",
     email: "",
-    governorate: "",
-    city: "",
+    governorate: "الشرقية",
+    city: "الزقازيق",
     ...createDefaultRegistrationStage(),
     ...(shouldStartRegistration && requestedTrack && {
       educationSystem: "university" as const,
@@ -86,7 +88,9 @@ export function AccessScreen({
     }),
     otherGradeDetail: "",
     learningMode: "online" as "online" | "offline",
-    centerChoice: "أونلاين لكل مصر",
+    centerName: "سنتر رافال أكاديمي (Rafal Academy)",
+    appointmentSlot: "حسب جدول المجموعات بالسنتر (الساعة 3:00 عصراً)",
+    centerChoice: "سنتر رافال أكاديمي (Rafal Academy) - حسب جدول المجموعات بالسنتر (الساعة 3:00 عصراً)",
   }));
 
   useEffect(() => {
@@ -131,10 +135,18 @@ export function AccessScreen({
     setMessage("");
     setRegisteredCode("");
     try {
+      const normalizePhone = (num: string) =>
+        num
+          .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+          .replace(/[^\d]/g, "");
+
       const payload = {
         ...form,
-        centerName: form.learningMode === "offline" ? (form.centerChoice?.split(" - ")[0] || form.centerChoice) : undefined,
-        appointmentSlot: form.learningMode === "offline" ? (form.centerChoice?.split(" - ")[1] || form.centerChoice) : undefined,
+        phone: normalizePhone(form.phone),
+        parentPhone: form.parentPhone ? normalizePhone(form.parentPhone) : undefined,
+        schoolName: form.schoolName ? form.schoolName.trim() : undefined,
+        centerName: form.learningMode === "offline" ? (form.centerName || form.centerChoice?.split(" - ")[0] || form.centerChoice) : undefined,
+        appointmentSlot: form.learningMode === "offline" ? (form.appointmentSlot || form.centerChoice?.split(" - ")[1] || "حسب جدول المجموعات بالسنتر") : undefined,
       };
       const result = await api<{ status: string; accessCode?: string; message: string }>("/api/student/register", {
         method: "POST",
@@ -145,12 +157,16 @@ export function AccessScreen({
       setForm({
         name: "",
         phone: "",
+        parentPhone: "",
+        schoolName: "",
         email: "",
-        governorate: "",
-        city: "",
+        governorate: "الشرقية",
+        city: "الزقازيق",
         ...createDefaultRegistrationStage(),
         otherGradeDetail: "",
         learningMode: "online",
+        centerName: "سنتر رافال أكاديمي (Rafal Academy)",
+        appointmentSlot: "حسب جدول المجموعات بالسنتر (الساعة 3:00 عصراً)",
         centerChoice: "أونلاين لكل مصر",
       });
       setRegStep(1);
@@ -682,6 +698,54 @@ export function AccessScreen({
                       </div>
                     </div>
 
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <div className="flex flex-col text-xs font-semibold">
+                        <div className="mb-1.5 flex items-center justify-between">
+                          <label htmlFor="student-parent-phone" className={`text-xs font-semibold ${isLight ? "text-[#334155]" : "text-[#E2E8F0]"}`}>
+                            هاتف ولي الأمر
+                          </label>
+                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-normal ${isLight ? "bg-slate-100 text-[#64748B]" : "bg-[#091426] border border-[rgba(148,163,184,0.15)] text-[#94A3B8]"}`}>
+                            للتواصل والمتابعة
+                          </span>
+                        </div>
+                        <input
+                          id="student-parent-phone"
+                          value={form.parentPhone}
+                          onChange={(e) => setForm({ ...form, parentPhone: e.target.value })}
+                          inputMode="tel"
+                          placeholder="01XXXXXXXXX"
+                          dir="ltr"
+                          className={`h-[56px] w-full rounded-[12px] border px-4 text-left font-mono text-sm font-medium outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[#3B82F6]/12 ${
+                            isLight
+                              ? "border-[#CBD5E1] bg-[#F8FAFC] text-[#0F172A] placeholder-[#94A3B8] focus:bg-white"
+                              : "border-[rgba(148,163,184,0.20)] bg-[#091426] text-[#F8FAFC] placeholder-[#64748B] focus:bg-[#091426]"
+                          }`}
+                        />
+                      </div>
+
+                      <div className="flex flex-col text-xs font-semibold">
+                        <div className="mb-1.5 flex items-center justify-between">
+                          <label htmlFor="student-school" className={`text-xs font-semibold ${isLight ? "text-[#334155]" : "text-[#E2E8F0]"}`}>
+                            اسم المدرسة الحالية
+                          </label>
+                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-normal ${isLight ? "bg-slate-100 text-[#64748B]" : "bg-[#091426] border border-[rgba(148,163,184,0.15)] text-[#94A3B8]"}`}>
+                            اختياري
+                          </span>
+                        </div>
+                        <input
+                          id="student-school"
+                          value={form.schoolName}
+                          onChange={(e) => setForm({ ...form, schoolName: e.target.value })}
+                          placeholder="مثال: مدرسة السادات الثانوية"
+                          className={`h-[56px] w-full rounded-[12px] border px-4 text-sm font-medium outline-none transition focus:border-[#3B82F6] focus:ring-4 focus:ring-[#3B82F6]/12 ${
+                            isLight
+                              ? "border-[#CBD5E1] bg-[#F8FAFC] text-[#0F172A] placeholder-[#94A3B8] focus:bg-white"
+                              : "border-[rgba(148,163,184,0.20)] bg-[#091426] text-[#F8FAFC] placeholder-[#64748B] focus:bg-[#091426]"
+                          }`}
+                        />
+                      </div>
+                    </div>
+
                     <div className="flex flex-col text-xs font-semibold">
                       <div className="mb-1.5 flex items-center justify-between">
                         <label htmlFor="student-email" className={`text-xs font-semibold ${isLight ? "text-[#334155]" : "text-[#E2E8F0]"}`}>
@@ -872,7 +936,14 @@ export function AccessScreen({
                               return (
                                 <div
                                   key={center.id}
-                                  onClick={() => setForm({ ...form, centerChoice: center.id })}
+                                  onClick={() =>
+                                    setForm({
+                                      ...form,
+                                      centerName: center.title,
+                                      appointmentSlot: center.time,
+                                      centerChoice: `${center.title} - ${center.time}`,
+                                    })
+                                  }
                                   className={`relative cursor-pointer rounded-[14px] border p-3 transition-all text-right ${
                                     isSelected
                                       ? "border-[#0866D9] bg-[#E8F1FF] shadow-xs"
@@ -961,6 +1032,18 @@ export function AccessScreen({
                         <span className="text-[#64748B]">رقم الهاتف:</span>
                         <strong className="font-mono font-bold text-[#0F172A]" dir="ltr">{form.phone}</strong>
                       </div>
+                      {form.parentPhone && (
+                        <div className="flex justify-between border-b border-[#E2E8F0] pb-2">
+                          <span className="text-[#64748B]">هاتف ولي الأمر:</span>
+                          <strong className="font-mono font-bold text-[#0F172A]" dir="ltr">{form.parentPhone}</strong>
+                        </div>
+                      )}
+                      {form.schoolName && (
+                        <div className="flex justify-between border-b border-[#E2E8F0] pb-2">
+                          <span className="text-[#64748B]">اسم المدرسة:</span>
+                          <strong className="font-bold text-[#0F172A]">{form.schoolName}</strong>
+                        </div>
+                      )}
                       {form.email && (
                         <div className="flex justify-between border-b border-[#E2E8F0] pb-2">
                           <span className="text-[#64748B]">البريد الإلكتروني:</span>
@@ -980,10 +1063,16 @@ export function AccessScreen({
                         <strong className="font-bold text-[#0F172A]">{form.learningMode === "online" ? "أونلاين" : "أوفلاين (سنتر)"}</strong>
                       </div>
                       {form.learningMode === "offline" && (
-                        <div className="flex justify-between">
-                          <span className="text-[#64748B]">السنتر والموعد:</span>
-                          <strong className="font-bold text-[#0866D9]">{form.centerChoice}</strong>
-                        </div>
+                        <>
+                          <div className="flex justify-between border-b border-[#E2E8F0] pb-2">
+                            <span className="text-[#64748B]">السنتر المختار:</span>
+                            <strong className="font-bold text-[#0866D9]">{form.centerName || form.centerChoice}</strong>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-[#64748B]">الموعد المحدد:</span>
+                            <strong className="font-bold text-amber-600 dark:text-amber-400">{form.appointmentSlot || "حسب جدول المجموعات بالسنتر"}</strong>
+                          </div>
+                        </>
                       )}
                     </div>
 
