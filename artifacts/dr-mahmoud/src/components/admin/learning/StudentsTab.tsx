@@ -26,6 +26,7 @@ import {
   MessageCircle,
   SlidersHorizontal,
   RotateCcw,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { PaymentReceipt } from "./PaymentReceiptsPanel";
@@ -299,6 +300,27 @@ export function StudentsTab({
 
   return (
     <div className="admin-adaptive-dark-ui space-y-5 text-[#F8FAFC]" dir="rtl">
+      {modeFilter === "offline" && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-emerald-500/40 bg-emerald-950/40 p-4 text-emerald-300 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 font-bold">
+              <MapPin className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-sm font-black text-white">📍 قائمة حجوزات السناتر والمواعيد الحضورية</h2>
+              <p className="text-xs font-bold text-emerald-300">تعرض الآن جميع الحجوزات والطلاب المسجلين بنظام الأوفلاين ({filteredStudents.length} حجز بمركز التعليم)</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={clearAllFilters}
+            className="shrink-0 px-3.5 py-2 rounded-xl bg-[#0B1424] border border-emerald-500/35 text-xs font-black text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+          >
+            عرض جميع الطلاب (أونلاين + أوفلاين)
+          </button>
+        </div>
+      )}
+
       {contextFilterLabel && (
         <div className="flex flex-col gap-3 rounded-2xl border border-[#1677FF]/35 bg-[#1677FF]/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-2.5">

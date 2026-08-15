@@ -1244,15 +1244,32 @@ export function AdminLearning({
       </div>
 
       {/* Active Section Info Header */}
-      <div className="flex flex-col gap-2 rounded-2xl border border-[#E4EAF2] bg-white px-5 py-4 shadow-xs sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 className="text-base font-extrabold text-[#0F172A]">{tabMeta[tab][0]}</h3>
-          <p className="mt-0.5 text-xs text-[#64748B]">{tabMeta[tab][1]}</p>
-        </div>
-        <span className="w-fit rounded-full bg-[#F6F8FC] border border-[#E4EAF2] px-3 py-1 text-[11px] font-bold text-[#64748B]">
-          تحديث تلقائي للبيانات
-        </span>
-      </div>
+      {(() => {
+        const urlMode = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("mode") : null;
+        const urlStatus = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("status") : null;
+        const activeTitle = tab === "students" && urlMode === "offline"
+          ? "📍 حجوزات السناتر والمواعيد (أوفلاين)"
+          : tab === "students" && urlStatus === "pending"
+          ? "⏳ الحجوزات والطلبات ينتظر التفعيل"
+          : tabMeta[tab][0];
+        const activeSub = tab === "students" && urlMode === "offline"
+          ? "سجل حجوزات وطلاب السناتر الحضورية بالزقازيق والمواعيد المحددة."
+          : tab === "students" && urlStatus === "pending"
+          ? "طلبات التسجيل الجديدة والاشتراكات المعلقة بانتظار تفعيل المشرف."
+          : tabMeta[tab][1];
+
+        return (
+          <div className="flex flex-col gap-2 rounded-2xl border border-[#E4EAF2] bg-white px-5 py-4 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="text-base font-extrabold text-[#0F172A]">{activeTitle}</h3>
+              <p className="mt-0.5 text-xs text-[#64748B]">{activeSub}</p>
+            </div>
+            <span className="w-fit rounded-full bg-[#F6F8FC] border border-[#E4EAF2] px-3 py-1 text-[11px] font-bold text-[#64748B]">
+              تحديث تلقائي للبيانات
+            </span>
+          </div>
+        );
+      })()}
       {loading ? (
         <div className="grid place-items-center py-24">
           <Loader2 className="animate-spin text-primary" />
@@ -1262,6 +1279,7 @@ export function AdminLearning({
           {tab === "students" && (
             <div id="students-tab-section">
               <StudentsTab
+              key={`${typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("mode") || "all" : "all"}_${typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("status") || "all" : "all"}`}
               role={role}
               students={students}
               recoveryRequests={recoveryRequests}
