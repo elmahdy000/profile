@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { SETTINGS_KEYS } from "@/hooks/useSiteSettings";
 import { MapPin, Clock, Plus, Trash2, Edit2, Check, ArrowUp, ArrowDown, Save, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CenterStatsCards } from "./CenterStatsCards";
 
 export interface OfflineCenterItem {
   id: string;
@@ -163,11 +164,37 @@ export const CentersTab: React.FC<CentersTabProps> = ({
     setCenters(updated);
   };
 
+  const [centerCounts, setCenterCounts] = useState<Record<string, number>>({});
+  const [totalOffline, setTotalOffline] = useState(0);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/admin/center-stats")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (isMounted && data) {
+          setCenterCounts(data.centerCounts || {});
+          setTotalOffline(data.totalOffline || 0);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const conflicts = findScheduleConflicts(centers);
 
   return (
     <div className="space-y-6 text-right" dir="rtl">
-      <div className="flex items-center justify-between gap-4 border-b border-border pb-4">
+      {/* Center Statistics Cards Header Section */}
+      <CenterStatsCards
+        centers={centers}
+        centerCounts={centerCounts}
+        totalOfflineCount={totalOffline}
+      />
+
+      <div className="flex items-center justify-between gap-4 border-b border-border pb-4 pt-4">
         <div>
           <h3 className="text-xl font-bold text-foreground flex items-center gap-2">
             <MapPin className="h-5 w-5 text-primary" />

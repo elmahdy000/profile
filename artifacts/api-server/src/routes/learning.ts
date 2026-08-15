@@ -3462,7 +3462,39 @@ router.post(
   }
 );
 
-// ─────────────────────────────────────────────
-// PARENT PORTAL ENDPOINTS
-// ─────────────────────────────────────────────
+router.get(
+  "/admin/center-stats",
+  requireAdmin,
+  async (_req, res, next) => {
+    try {
+      const offlineStudents = await db
+        .select({
+          id: studentsTable.id,
+          centerName: studentsTable.centerName,
+          appointmentSlot: studentsTable.appointmentSlot,
+          status: studentsTable.status,
+          grade: studentsTable.grade,
+        })
+        .from(studentsTable)
+        .where(eq(studentsTable.learningMode, "offline"));
+
+      const statsMap: Record<string, number> = {};
+      let totalOffline = 0;
+
+      for (const s of offlineStudents) {
+        totalOffline++;
+        const cName = s.centerName || "غير محدد";
+        statsMap[cName] = (statsMap[cName] || 0) + 1;
+      }
+
+      res.json({
+        totalOffline,
+        centerCounts: statsMap,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 export default router;
