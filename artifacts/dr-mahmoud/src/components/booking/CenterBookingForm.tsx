@@ -21,55 +21,97 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export interface CenterSlotOption {
-  centerId: string;
+export interface UnifiedCenterCard {
+  id: string;
   centerName: string;
-  area: string;
-  slots: {
-    grade: "1st_bac" | "2nd_bac" | "both";
-    days: string;
-    time: string;
-  }[];
+  location: string;
+  days: string;
+  time: string;
+  gradeBadge: string;
+  forGrade: "1st_bac" | "2nd_bac" | "both";
+  slotText: string;
 }
 
-export const CENTER_APPOINTMENT_SCHEDULES: CenterSlotOption[] = [
+export const UNIFIED_CENTER_CARDS: UnifiedCenterCard[] = [
   {
-    centerId: "zag-academy",
+    id: "rafal-3pm",
+    centerName: "سنتر رافال أكاديمي (Rafal Academy)",
+    location: "بجوار الثانوية العسكرية - الزقازيق",
+    days: "حسب جدول المجموعات بالسنتر",
+    time: "3:00 عصراً",
+    gradeBadge: "أولى وتانية بكالوريا",
+    forGrade: "both",
+    slotText: "حسب جدول المجموعات بالسنتر (الساعة 3:00 عصراً)",
+  },
+  {
+    id: "zag-5pm",
     centerName: "سنتر زاج أكاديمي (Zag Academy)",
-    area: "منطقة الفلل - الزقازيق",
-    slots: [
-      { grade: "both", days: "سبت - اتنين - أربع", time: "5:00 مساءً" },
-      { grade: "1st_bac", days: "سبت - اتنين - أربع", time: "3:30 عصراً" },
-      { grade: "2nd_bac", days: "سبت - اتنين - أربع", time: "6:30 مساءً" },
-    ],
+    location: "منطقة الفلل - الزقازيق",
+    days: "سبت - اتنين - أربع",
+    time: "5:00 مساءً",
+    gradeBadge: "أولى وتانية بكالوريا",
+    forGrade: "both",
+    slotText: "سبت - اتنين - أربع (الساعة 5:00 مساءً)",
   },
   {
-    centerId: "eduverse",
+    id: "zag-330pm",
+    centerName: "سنتر زاج أكاديمي (Zag Academy)",
+    location: "منطقة الفلل - الزقازيق",
+    days: "سبت - اتنين - أربع",
+    time: "3:30 عصراً",
+    gradeBadge: "أولى بكالوريا",
+    forGrade: "1st_bac",
+    slotText: "سبت - اتنين - أربع (الساعة 3:30 عصراً)",
+  },
+  {
+    id: "zag-630pm",
+    centerName: "سنتر زاج أكاديمي (Zag Academy)",
+    location: "منطقة الفلل - الزقازيق",
+    days: "سبت - اتنين - أربع",
+    time: "6:30 مساءً",
+    gradeBadge: "تانية بكالوريا",
+    forGrade: "2nd_bac",
+    slotText: "سبت - اتنين - أربع (الساعة 6:30 مساءً)",
+  },
+  {
+    id: "eduverse-330pm",
     centerName: "سنتر إديوفيرس (EduVerse)",
-    area: "منطقة الفلل - الزقازيق",
-    slots: [
-      { grade: "both", days: "سبت - اتنين - أربع", time: "3:30 عصراً" },
-      { grade: "2nd_bac", days: "سبت - اتنين - أربع", time: "5:00 مساءً" },
-    ],
+    location: "منطقة الفلل - الزقازيق",
+    days: "سبت - اتنين - أربع",
+    time: "3:30 عصراً",
+    gradeBadge: "أولى وتانية بكالوريا",
+    forGrade: "both",
+    slotText: "سبت - اتنين - أربع (الساعة 3:30 عصراً)",
   },
   {
-    centerId: "hassan-somida",
+    id: "eduverse-5pm",
+    centerName: "سنتر إديوفيرس (EduVerse)",
+    location: "منطقة الفلل - الزقازيق",
+    days: "سبت - اتنين - أربع",
+    time: "5:00 مساءً",
+    gradeBadge: "تانية بكالوريا",
+    forGrade: "2nd_bac",
+    slotText: "سبت - اتنين - أربع (الساعة 5:00 مساءً)",
+  },
+  {
+    id: "hassan-5pm",
     centerName: "سنتر حسن صميدة",
-    area: "منطقة الحناوي - الزقازيق",
-    slots: [
-      { grade: "1st_bac", days: "حد - تلات - خميس", time: "5:00 مساءً" },
-      { grade: "2nd_bac", days: "حد - تلات - خميس", time: "6:30 مساءً" },
-      { grade: "both", days: "حد - تلات - خميس", time: "4:00 عصراً" },
-    ],
+    location: "منطقة الحناوي - الزقازيق",
+    days: "حد - تلات - خميس",
+    time: "5:00 مساءً",
+    gradeBadge: "أولى بكالوريا",
+    forGrade: "1st_bac",
+    slotText: "حد - تلات - خميس (الساعة 5:00 مساءً)",
   },
   {
-    centerId: "noreen",
-    centerName: "سنتر نورين",
-    area: "مباشر - الزقازيق",
-    slots: [
-      { grade: "1st_bac", days: "حد - تلات - خميس", time: "5:00 مساءً" },
-      { grade: "2nd_bac", days: "حد - تلات - خميس", time: "6:30 مساءً" },
-    ],
+    id: "hassan-630pm",
+    centerName: "سنتر حسن صميدة",
+    location: "منطقة الحناوي - الزقازيق",
+    days: "حد - تلات - خميس",
+    time: "6:30 مساءً",
+    gradeBadge: "تانية بكالوريا",
+    forGrade: "2nd_bac",
+    slotText: "حد - تلات - خميس (الساعة 6:30 مساءً)",
   },
 ];
 
@@ -89,8 +131,8 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
   const [studentPhone, setStudentPhone] = useState("");
   const [parentPhone, setParentPhone] = useState("");
   const [languageTrack, setLanguageTrack] = useState<"عربي" | "لغات">("عربي");
-  const [selectedCenter, setSelectedCenter] = useState<string>("سنتر زاج أكاديمي (Zag Academy)");
-  const [selectedSlot, setSelectedSlot] = useState<string>("سبت - اتنين - أربع — 5:00 مساءً");
+  const [selectedCenter, setSelectedCenter] = useState<string>("سنتر رافال أكاديمي (Rafal Academy)");
+  const [selectedSlot, setSelectedSlot] = useState<string>("حسب جدول المجموعات بالسنتر (الساعة 3:00 عصراً)");
 
   // Success Confirmation Modal state
   const [bookingSuccessData, setBookingSuccessData] = useState<{
@@ -107,25 +149,13 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
 
   const [copiedCode, setCopiedCode] = useState(false);
 
-  // Available slots dynamically filtered based on selected Center & Grade
-  const currentCenterSchedule = CENTER_APPOINTMENT_SCHEDULES.find((c) => c.centerName === selectedCenter);
-
-  const availableSlotOptions = React.useMemo(() => {
-    if (!currentCenterSchedule) return ["سبت - اتنين - أربع — 5:00 مساءً"];
+  // Available cards filtered based on grade
+  const filteredCards = React.useMemo(() => {
     const gradeKey = grade === "أولى بكالوريا" ? "1st_bac" : "2nd_bac";
-    const matching = currentCenterSchedule.slots.filter(
-      (s) => s.grade === gradeKey || s.grade === "both"
+    return UNIFIED_CENTER_CARDS.filter(
+      (c) => c.forGrade === gradeKey || c.forGrade === "both"
     );
-    if (matching.length === 0) return currentCenterSchedule.slots.map((s) => `${s.days} — ${s.time}`);
-    return matching.map((s) => `${s.days} — ${s.time}`);
-  }, [currentCenterSchedule, grade]);
-
-  // Handle slot auto selection on center or grade change
-  React.useEffect(() => {
-    if (availableSlotOptions.length > 0 && !availableSlotOptions.includes(selectedSlot)) {
-      setSelectedSlot(availableSlotOptions[0]);
-    }
-  }, [availableSlotOptions, selectedSlot]);
+  }, [grade]);
 
   const validateStep1 = () => {
     if (!studentName.trim() || studentName.trim().length < 3) {
@@ -493,7 +523,7 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
             </motion.div>
           )}
 
-          {/* STEP 3: Center Choice & Available Appointment Schedule */}
+          {/* STEP 3: Unified Center + Schedule Cards */}
           {formStep === 3 && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -502,57 +532,79 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
               className="space-y-6"
             >
               <div>
-                <label className="block text-xs font-black text-[#D8E2EF] mb-3 flex items-center gap-2">
-                  <Building2 className="h-4 w-4 text-[#1677FF]" />
-                  اختر اسم السنتر الذي ترغب بالحجز فيه (الزقازيق) <span className="text-rose-400">*</span>
-                </label>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {CENTER_APPOINTMENT_SCHEDULES.map((c) => (
-                    <button
-                      key={c.centerId}
-                      type="button"
-                      onClick={() => setSelectedCenter(c.centerName)}
-                      className={`p-4 rounded-2xl border text-right transition-all space-y-1.5 ${
-                        selectedCenter === c.centerName
-                          ? "border-[#1677FF] bg-[#1677FF]/15 ring-2 ring-[#1677FF]/30"
-                          : "border-[#26364D] bg-[#131E31] hover:border-[#3a5275]"
-                      }`}
-                    >
-                      <h4 className="text-sm font-black text-[#F8FAFC]">{c.centerName}</h4>
-                      <p className="text-xs font-bold text-[#69A5FF] flex items-center gap-1">
-                        <MapPin className="h-3.5 w-3.5 shrink-0" /> {c.area}
-                      </p>
-                    </button>
-                  ))}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                  <label className="block text-xs sm:text-sm font-black text-[#D8E2EF] flex items-center gap-2">
+                    <Building2 className="h-4.5 w-4.5 text-[#1677FF]" />
+                    اختر كارت الموعد والسنتر المناسب لك <span className="text-rose-400">*</span>
+                  </label>
+                  <span className="text-[11px] font-extrabold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20 self-start sm:self-auto">
+                    المرحلة: {grade} ({languageTrack})
+                  </span>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-xs font-black text-[#D8E2EF] mb-3 flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4 text-emerald-400" />
-                  المواعيد المتاحة المُنَزَّلَة لـ ({grade}) <span className="text-rose-400">*</span>
-                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filteredCards.map((card) => {
+                    const isSelected = selectedCenter === card.centerName && selectedSlot === card.slotText;
+                    return (
+                      <button
+                        key={card.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCenter(card.centerName);
+                          setSelectedSlot(card.slotText);
+                        }}
+                        className={`relative p-5 rounded-2xl border text-right transition-all duration-200 flex flex-col justify-between space-y-3 cursor-pointer group ${
+                          isSelected
+                            ? "border-emerald-500 bg-[#102924] ring-2 ring-emerald-500/40 shadow-xl shadow-emerald-500/10"
+                            : "border-[#26364D] bg-[#131E31] hover:border-[#3a5275] hover:bg-[#18263e]"
+                        }`}
+                      >
+                        {/* Card Header Badges */}
+                        <div className="flex items-center justify-between gap-2 border-b border-[#26364D] pb-3">
+                          <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg border ${
+                            isSelected ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-300" : "bg-[#1677FF]/15 border-[#1677FF]/30 text-[#69A5FF]"
+                          }`}>
+                            {card.gradeBadge}
+                          </span>
+                          <span className="text-[11px] font-bold text-[#8492A6] flex items-center gap-1">
+                            <MapPin className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+                            {card.location}
+                          </span>
+                        </div>
 
-                <div className="space-y-2.5">
-                  {availableSlotOptions.map((slot) => (
-                    <button
-                      key={slot}
-                      type="button"
-                      onClick={() => setSelectedSlot(slot)}
-                      className={`w-full p-4 rounded-2xl border text-right transition-all flex items-center justify-between ${
-                        selectedSlot === slot
-                          ? "border-emerald-500 bg-emerald-500/15 ring-2 ring-emerald-500/30"
-                          : "border-[#26364D] bg-[#131E31] hover:border-[#3a5275]"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Clock className="h-4 w-4 text-emerald-400 shrink-0" />
-                        <span className="text-sm font-black text-[#F8FAFC]">{slot}</span>
-                      </div>
-                      {selectedSlot === slot && <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />}
-                    </button>
-                  ))}
+                        {/* Center Name & Time Details */}
+                        <div className="space-y-3">
+                          <h4 className="text-base font-black text-[#F8FAFC] group-hover:text-emerald-300 transition-colors">
+                            {card.centerName}
+                          </h4>
+
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="rounded-xl border border-[#26364D] bg-[#0B1424] p-2.5 space-y-1">
+                              <span className="text-[10px] font-bold text-[#8492A6] flex items-center gap-1">
+                                <CalendarDays className="h-3 w-3 text-amber-400" /> الأيام:
+                              </span>
+                              <strong className="block text-xs font-black text-white">{card.days}</strong>
+                            </div>
+
+                            <div className="rounded-xl border border-[#26364D] bg-[#0B1424] p-2.5 space-y-1">
+                              <span className="text-[10px] font-bold text-[#8492A6] flex items-center gap-1">
+                                <Clock className="h-3 w-3 text-emerald-400" /> الميعاد:
+                              </span>
+                              <strong className="block text-xs font-black text-emerald-400">{card.time}</strong>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Selection Indicator */}
+                        <div className="pt-1 flex items-center justify-between text-xs font-black">
+                          <span className={isSelected ? "text-emerald-400 flex items-center gap-1" : "text-[#8492A6]"}>
+                            {isSelected ? "تم اختيار هذا الموعد والسنتر ✓" : "اضغط لاختيار هذا الموعد"}
+                          </span>
+                          {isSelected && <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -563,7 +615,7 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
                 </h4>
                 <div className="text-xs font-bold text-[#D8E2EF] space-y-1">
                   <p>• الطالب: <strong>{studentName}</strong> ({schoolName}) - {grade} ({languageTrack})</p>
-                  <p>• السنتر والموعد: <strong>{selectedCenter}</strong> ({selectedSlot})</p>
+                  <p>• السنتر والموعد: <strong className="text-emerald-300">{selectedCenter}</strong> ({selectedSlot})</p>
                   <p className="text-emerald-400 pt-1">
                     • مبلغ الرسوم: <strong className="text-white font-black text-sm">500 جنيه</strong> (يتم السداد بالسنتر في أول يوم حضور)
                   </p>
@@ -581,14 +633,14 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
                 </Button>
                 <Button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !selectedCenter || !selectedSlot}
                   className="flex-1 h-12 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm shadow-xl shadow-emerald-600/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {loading ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
                     <>
-                      تأكيد الحجز مجاناً وتأكيد الموعد <Check className="h-5 w-5" />
+                      تأكيد الحجز وتثبيت الموعد بالسنتر <Check className="h-5 w-5" />
                     </>
                   )}
                 </Button>

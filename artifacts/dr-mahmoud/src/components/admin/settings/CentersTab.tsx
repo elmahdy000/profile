@@ -51,12 +51,12 @@ export const defaultOfflineCenters: OfflineCenterItem[] = [
     color: "purple",
   },
   {
-    id: "noreen-1st",
-    name: "سنتر نورين",
-    area: "مباشر",
-    grade: "أولى ثانوي",
-    timeStr: "5:00 مساءً",
-    daysStr: "حد - تلات - خميس",
+    id: "rafal-academy-3pm",
+    name: "سنتر رافال أكاديمي (Rafal Academy)",
+    area: "بجوار الثانوية العسكرية",
+    grade: "أولى وتانية ثانوي",
+    timeStr: "3:00 عصراً",
+    daysStr: "حسب جدول المجموعات بالسنتر",
     color: "emerald",
   },
 ];
