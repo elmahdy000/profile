@@ -509,7 +509,83 @@ export function CenterBookingsTab({
         </div>
       </div>
 
-      {/* 4. Complete Center Bookings Table */}
+      
+      {/* 3.5. Mobile Center Bookings Cards (lg:hidden) */}
+      <div className="grid gap-3 lg:hidden">
+        {filteredBookings.length === 0 ? (
+          <div className="rounded-2xl border border-[#2B3D57] bg-[#101B2D] p-6 text-center text-xs text-[#8492A6]">
+            لا توجد حجوزات سناتر مطابقة للبحث الفلاتر.
+          </div>
+        ) : (
+          filteredBookings.map((student) => {
+            const effectiveStage = student.grade === "أخرى" ? student.otherGradeDetail || "أخرى" : student.grade || "غير محدد";
+            return (
+              <div key={student.id} className="rounded-2xl border border-[#2B3D57] bg-[#101B2D] p-4 space-y-3 shadow-md">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-500/15 text-sm font-black text-emerald-400">
+                      {student.name.charAt(0)}
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="truncate text-sm font-black text-white">{student.name}</h3>
+                      <p className="mt-0.5 font-mono text-xs text-[#A8B5C7]" dir="ltr">{student.phone}</p>
+                    </div>
+                  </div>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
+                    student.status === "approved" ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" :
+                    student.status === "suspended" ? "bg-rose-500/15 text-rose-400 border-rose-500/30" :
+                    "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                  }`}>
+                    {student.status === "approved" ? "مفعل" : student.status === "suspended" ? "موقوف" : "معلق"}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[11px] bg-[#0A1424] p-3 rounded-xl border border-[#26364D]">
+                  <div>
+                    <span className="block text-[#8492A6] text-[10px]">السنتر:</span>
+                    <span className="font-bold text-emerald-300 truncate block">{student.centerName || "سنتر الزقازيق"}</span>
+                  </div>
+                  <div>
+                    <span className="block text-[#8492A6] text-[10px]">الموعد:</span>
+                    <span className="font-bold text-white truncate block">{student.appointmentSlot || "حسب المواعيد"}</span>
+                  </div>
+                  <div>
+                    <span className="block text-[#8492A6] text-[10px]">المرحلة:</span>
+                    <span className="font-bold text-[#A8B5C7] truncate block">{effectiveStage}</span>
+                  </div>
+                  <div>
+                    <span className="block text-[#8492A6] text-[10px]">هاتف ولي الأمر:</span>
+                    <span className="font-bold text-[#A8B5C7] font-mono block" dir="ltr">{student.parentPhone || "غير مسجل"}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setActiveDrawerStudent(student)}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 h-9 rounded-xl bg-emerald-600/20 border border-emerald-500/35 text-xs font-bold text-emerald-300 hover:bg-emerald-600/30"
+                  >
+                    <Eye className="h-4 w-4" /> فتح ملف الطالب والتعديل
+                  </button>
+                  <a
+                    href={`https://wa.me/${student.phone.replace(/[^\d+]/g, "")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center h-9 w-9 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 shrink-0"
+                    title="واتساب"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                  </a>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop Table View (hidden on small mobile screens if preferred, or scrollable) */}
+      <div className="hidden lg:block">
+{/* 4. Complete Center Bookings Table */}
       <div className="admin-center-table relative overflow-x-auto rounded-2xl border border-[#2B3D57] bg-[#101B2D] shadow-md">
         <table className="w-full min-w-[1300px] border-separate border-spacing-0 text-right text-[11px]">
           <thead className="sticky top-0 z-20 bg-[#0A1424] text-[#B6C2D2]">
@@ -741,6 +817,7 @@ export function CenterBookingsTab({
             )}
           </tbody>
         </table>
+      </div>
       </div>
 
       {/* 5. Quick Edit Booking Modal */}

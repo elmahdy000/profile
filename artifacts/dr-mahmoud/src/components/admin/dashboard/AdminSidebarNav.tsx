@@ -308,7 +308,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
                     <button
                       key={item.id}
                       type="button"
-                      onClick={item.onClick}
+                      onClick={() => { item.onClick(); setIsMobileSidebarOpen(false); }}
                       title={isCollapsed ? item.label : undefined}
                       className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold transition-all ${
                         item.active
