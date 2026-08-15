@@ -34,7 +34,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="relative z-10 border-t border-slate-200 bg-[#0F1D32] pb-24 pt-12 text-white/75 md:pb-8" dir="rtl">
+    <footer className="relative z-10 border-t border-slate-700/60 bg-[#0F1D32] pb-24 pt-12 text-white/75 md:pb-8" dir="rtl">
       <div className="container mx-auto px-4 lg:px-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8 mb-10 text-right">
           

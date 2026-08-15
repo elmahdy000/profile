@@ -670,28 +670,87 @@ html:not(.dark) .admin-sidebar-surface nav button:hover {
   background-color: hsl(var(--primary) / 0.15) !important;
 }
 
-/* Theme bridge for older public pages that use fixed slate utilities. */
-.dark .theme-adaptive { background-color: hsl(var(--background)) !important; color: hsl(var(--foreground)) !important; }
+/* Theme bridge for public pages that use fixed slate utilities. */
+.dark .theme-adaptive {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Backgrounds */
 .dark .theme-adaptive .bg-white,
 .dark .theme-adaptive .bg-white\/95,
 .dark .theme-adaptive .bg-slate-50,
 .dark .theme-adaptive .bg-slate-50\/50,
 .dark .theme-adaptive .bg-slate-50\/60,
-.dark .theme-adaptive .bg-slate-50\/70 { background-color: hsl(var(--card)) !important; }
+.dark .theme-adaptive .bg-slate-50\/70,
+.dark .theme-adaptive .bg-slate-50\/80 { background-color: hsl(var(--card)) !important; }
+
+/* Section alternate backgrounds */
+.dark .theme-adaptive section.bg-white,
+.dark .theme-adaptive section[class~="bg-white"] { background-color: hsl(var(--background)) !important; }
+.dark .theme-adaptive section.bg-slate-50,
+.dark .theme-adaptive section[class~="bg-slate-50"] { background-color: hsl(218 37% 11%) !important; }
+
+/* Text */
 .dark .theme-adaptive .text-slate-900,
 .dark .theme-adaptive .text-slate-800,
 .dark .theme-adaptive .text-slate-700 { color: hsl(var(--foreground)) !important; }
 .dark .theme-adaptive .text-slate-600,
-.dark .theme-adaptive .text-slate-500 { color: hsl(var(--muted-foreground)) !important; }
+.dark .theme-adaptive .text-slate-500,
+.dark .theme-adaptive .text-slate-400 { color: hsl(var(--muted-foreground)) !important; }
+
+/* Borders */
 .dark .theme-adaptive .border-slate-100,
 .dark .theme-adaptive .border-slate-200,
 .dark .theme-adaptive .border-slate-300,
 .dark .theme-adaptive .border-slate-200\/60,
 .dark .theme-adaptive .border-slate-200\/80,
-.dark .theme-adaptive .border-slate-200\/90 { border-color: hsl(var(--border)) !important; }
+.dark .theme-adaptive .border-slate-200\/90,
+.dark .theme-adaptive .border-slate-100\/80 { border-color: hsl(var(--border)) !important; }
+
+/* Cards within sections */
+.dark .theme-adaptive article,
+.dark .theme-adaptive blockquote,
+.dark .theme-adaptive .rounded-2xl.border,
+.dark .theme-adaptive .rounded-3xl.border { border-color: hsl(var(--border)) !important; }
+
+/* Inline colored backgrounds */
+.dark .theme-adaptive .bg-blue-50 { background-color: hsl(var(--primary) / 0.12) !important; }
+.dark .theme-adaptive .bg-blue-100,
+.dark .theme-adaptive .bg-blue-100\/80 { background-color: hsl(var(--primary) / 0.15) !important; }
+.dark .theme-adaptive .bg-emerald-500\/15 { background-color: hsl(142 71% 45% / 0.12) !important; }
+
+/* Inputs, forms */
 .dark .theme-adaptive input,
 .dark .theme-adaptive select,
-.dark .theme-adaptive textarea { background-color: hsl(var(--background)); border-color: hsl(var(--border)); color: hsl(var(--foreground)); }
+.dark .theme-adaptive textarea {
+  background-color: hsl(var(--background));
+  border-color: hsl(var(--border));
+  color: hsl(var(--foreground));
+}
+
+/* --- HOME-INPUT (contact form fields on landing page) --- */
+.dark .home-input {
+  background: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+.dark .home-input::placeholder { color: hsl(var(--muted-foreground)) !important; }
+.dark .home-input:focus {
+  border-color: hsl(var(--primary)) !important;
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.15) !important;
+}
+
+/* --- ACADEMY CARD (home page cards) --- */
+.dark .academy-card {
+  background: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+}
+.dark .academy-card:hover {
+  border-color: hsl(var(--primary) / 0.5) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+}
 
 /* The university page retains its navy identity in dark mode and uses the
    shared light surfaces when light mode is active. */
