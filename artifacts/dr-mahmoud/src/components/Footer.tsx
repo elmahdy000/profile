@@ -93,7 +93,7 @@ export function Footer() {
               <li><a href="/curriculum" className="hover:text-primary transition-colors">المناهج والمسارات</a></li>
               <li><a href="/#free-preview" className="hover:text-primary transition-colors">الدروس المجانية</a></li>
               <li><a href="/#faq" className="hover:text-primary transition-colors">الأسئلة الشائعة</a></li>
-              <li><a href="/kids" className="hover:text-primary transition-colors">برمجة الأطفال والأشبال</a></li>
+              <li><a href="/platform?action=register" className="hover:text-primary transition-colors">التسجيل والتحاق الطالب</a></li>
             </ul>
           </div>
 

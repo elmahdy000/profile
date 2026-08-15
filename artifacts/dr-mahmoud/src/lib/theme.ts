@@ -22,6 +22,9 @@ export function applyTheme(theme: AppTheme) {
   root.dataset.theme = theme;
   localStorage.setItem(STORAGE_KEY, theme);
   localStorage.removeItem(LEGACY_STORAGE_KEY);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("app-theme-changed", { detail: theme }));
+  }
   listeners.forEach((listener) => listener());
 }
 

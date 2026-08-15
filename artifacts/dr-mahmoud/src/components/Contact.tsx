@@ -75,121 +75,63 @@ export function Contact() {
           </motion.div>
 
           <div className="grid md:grid-cols-12 gap-8 items-start">
-            {/* Left/Form Card - Order 1 on mobile, Order 2 on desktop */}
+            {/* Left/Registration Notice Card */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="md:col-span-7 bg-card border border-border shadow-xl rounded-3xl p-6 md:p-8 order-1"
+              className="md:col-span-7 bg-card border border-primary/30 shadow-xl rounded-3xl p-6 md:p-8 order-1 relative overflow-hidden"
             >
-              <h3 className="text-xl font-bold text-foreground mb-1">احجز تقييم مجاني</h3>
-              <p className="text-xs text-foreground/60 mb-6">املأ البيانات وسيتم التواصل معك على واتساب.</p>
-
-              {submitted ? (
-                <div className="flex flex-col items-center justify-center h-80 gap-4 text-center">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-2">
-                    <CheckCircle2 className="w-8 h-8" />
-                  </div>
-                  <p className="font-bold text-foreground text-xl">تم تسجيل طلبك بنجاح!</p>
-                  <p className="text-foreground/50 text-sm max-w-xs">
-                    جاري توجيهك الآن إلى واتساب لإتمام الحجز وتنسيق الموعد.
-                  </p>
+              <div className="absolute top-0 right-0 left-0 h-1.5 bg-gradient-to-r from-primary via-blue-500 to-indigo-500" />
+              
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                  <CheckCircle2 className="w-5 h-5" />
                 </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-foreground/80 mb-1.5">الاسم الكامل</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="اسم الطالب أو ولي الأمر"
-                        value={form.name}
-                        onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 transition-colors text-sm"
-                      />
-                    </div>
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">طريقة الحجز والاشتراك</h3>
+                  <p className="text-xs text-primary font-semibold">التسجيل عبر المنصة التعليمية والتواصل مع الحجز</p>
+                </div>
+              </div>
 
-                    <div>
-                      <label className="block text-xs font-semibold text-foreground/80 mb-1.5">رقم الهاتف</label>
-                      <input
-                        type="tel"
-                        required
-                        placeholder="01xxxxxxxxx"
-                        dir="ltr"
-                        value={form.phone}
-                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                        className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 transition-colors text-sm text-right"
-                      />
-                    </div>
-                  </div>
+              <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 mb-6 text-right">
+                <p className="text-sm md:text-base font-bold text-foreground leading-relaxed mb-3">
+                  من فضلًا: للحجز والاشتراك، يُرجى إنشاء حساب الطالب وتسجيل البيانات أولاً على المنصة التعليمية، ثم التواصل مع فريق الحجز عبر الأرقام الموضحة لتفعيل اشتراكك وتأكيد الموعد.
+                </p>
+                <ul className="space-y-2 text-xs text-foreground/75 font-medium">
+                  <li className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                    <span>1. سجّل حسابك الجديد واطلع على كود الدخول الخاص بك.</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                    <span>2. تواصل مع أرقام الحجز عبر واتساب أو الهاتف لتفعيل الكود.</span>
+                  </li>
+                </ul>
+              </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-foreground/80 mb-1.5">سن الطالب</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="مثال: 12 سنة"
-                        value={form.age}
-                        onChange={(e) => setForm({ ...form, age: e.target.value })}
-                        className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 transition-colors text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-foreground/80 mb-1.5">المرحلة الدراسية</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="مثال: الصف السادس الابتدائي"
-                        value={form.grade}
-                        onChange={(e) => setForm({ ...form, grade: e.target.value })}
-                        className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 transition-colors text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-foreground/80 mb-1.5">اختر البرنامج</label>
-                    <div className="relative">
-                      <select
-                        value={form.program}
-                        onChange={(e) => setForm({ ...form, program: e.target.value })}
-                        className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-primary/60 transition-colors text-sm appearance-none cursor-pointer pr-10"
-                      >
-                        <option value="برمجة الأطفال">برمجة الأطفال</option>
-                        <option value="نظام البكالوريا">نظام البكالوريا</option>
-                        <option value="Python & AI">Python & AI</option>
-                        <option value="دعم الجامعة">دعم الجامعة</option>
-                        <option value="ICDL">ICDL</option>
-                        <option value="مش عارف أختار">مش عارف أختار</option>
-                      </select>
-                      <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50 pointer-events-none" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-foreground/80 mb-1.5">رسالتك (اختياري)</label>
-                    <textarea
-                      rows={3}
-                      placeholder="أي تفاصيل أو استفسارات إضافية تود مشاركتها..."
-                      value={form.message}
-                      onChange={(e) => setForm({ ...form, message: e.target.value })}
-                      className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 transition-colors text-sm resize-none"
-                    />
-                  </div>
-
-                  <Button
-                    type="submit"
-                    disabled={isPending}
-                    className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-[#25D366]/10 transition-all duration-300 flex items-center justify-center gap-2 text-sm mt-2 hover:scale-[1.01]"
-                  >
-                    <Send className="w-4 h-4 shrink-0" />
-                    {isPending ? "جاري تسجيل البيانات..." : "احجز تقييم مجاني عبر واتساب"}
-                  </Button>
-                </form>
-              )}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  asChild
+                  className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3.5 h-12 rounded-xl shadow-lg shadow-primary/20 transition-all duration-300 text-sm hover:scale-[1.01]"
+                >
+                  <a href="/platform?action=register">
+                    <Send className="w-4 h-4 ml-2" />
+                    إنشاء حساب والتسجيل على المنصة
+                  </a>
+                </Button>
+                
+                <Button
+                  asChild
+                  variant="outline"
+                  className="bg-[#25D366]/10 border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/20 font-bold py-3.5 h-12 rounded-xl transition-all text-sm"
+                >
+                  <a href={`https://wa.me/${whatsapp}?text=${encodeURIComponent("مرحباً، أود التواصل لحجز الاشتراك بعد التسجيل على المنصة")}`} target="_blank" rel="noreferrer">
+                    <MessageCircle className="w-4 h-4 ml-2" />
+                    تواصل مع أرقام الحجز
+                  </a>
+                </Button>
+              </div>
             </motion.div>
 
             {/* Right Contact Cards - Order 2 on mobile, Order 1 on desktop */}

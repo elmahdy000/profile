@@ -308,10 +308,12 @@ export function StudentPlatform() {
         api<ProgressRow[]>("/api/learning/progress"),
         api<StudentNotification[]>("/api/learning/notifications"),
       ]);
+      const progressRes: any = p;
+      const progressRows: ProgressRow[] = Array.isArray(progressRes) ? progressRes : (progressRes?.rows || []);
       setFiles(f);
       setQuizzes(q);
       setVideos(v);
-      setProgress(p);
+      setProgress(progressRows);
       setNotifications(n);
       latestNotificationIdRef.current = Math.max(0, ...n.map((item) => item.id));
     } catch (err) {

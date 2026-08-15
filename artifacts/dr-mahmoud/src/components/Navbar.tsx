@@ -6,6 +6,7 @@ import {
   GraduationCap,
   Home,
   Layers3,
+  MapPin,
   Menu,
   MessageCircle,
   MessageSquareQuote,
@@ -24,6 +25,7 @@ const navLinks = [
   { label: "الرئيسية", href: "/#hero", id: "hero", icon: Home },
   { label: "برنامج البكالوريا", href: "/baccalaureate", id: "baccalaureate", icon: BookOpen },
   { label: "مواد حاسبات ومعلومات", href: "/university", id: "university", icon: GraduationCap },
+  { label: "مواعيد السناتر", href: "/#offline-centers", id: "offline-centers", icon: MapPin },
   { label: "الكورسات", href: "/#courses-section", id: "courses-section", icon: Layers3 },
   { label: "عن د. المهدي", href: "/#about", id: "about", icon: UserRound },
 ] as const;
@@ -113,13 +115,7 @@ export function Navbar() {
     <>
       <nav
         aria-label="التنقل الرئيسي"
-        className={`sticky top-0 z-50 w-full transition-all duration-300 h-[74px] sm:h-[78px] ${
-          theme === "light"
-            ? "bg-white/95 border-b border-slate-200 text-slate-900 shadow-xs"
-            : isScrolled
-            ? "bg-[#07111f]/95 shadow-[0_8px_30px_rgba(0,0,0,0.25)] border-b border-[rgba(148,163,184,0.14)]"
-            : "bg-[#07111f]/92 shadow-[0_8px_30px_rgba(0,0,0,0.18)] border-b border-[rgba(148,163,184,0.14)]"
-        } backdrop-blur-[18px]`}
+        className="sticky top-0 z-50 w-full transition-all duration-300 h-[74px] sm:h-[78px] bg-white/95 border-b border-slate-200 text-slate-900 shadow-xs dark:bg-[#07111f]/95 dark:border-[rgba(148,163,184,0.14)] dark:text-slate-100 dark:shadow-[0_8px_30px_rgba(0,0,0,0.25)] backdrop-blur-[18px]"
         dir="rtl"
       >
         <div className="mx-auto flex h-full max-w-[1536px] items-center justify-between px-3 sm:px-5 md:px-6 lg:px-8">
@@ -138,10 +134,10 @@ export function Navbar() {
               />
             </div>
             <div className="flex flex-col justify-center text-right">
-              <span className={`block text-[16px] sm:text-[18px] lg:text-[19px] font-black leading-[1.2] tracking-tight ${theme === "light" ? "text-slate-900" : "text-[#F8FAFC]"}`}>
+              <span className="block text-[16px] sm:text-[18px] lg:text-[19px] font-black leading-[1.2] tracking-tight text-slate-900 dark:text-[#F8FAFC]">
                 د. محمود المهدي
               </span>
-              <span className={`hidden md:block text-[11px] font-semibold leading-[1.3] ${theme === "light" ? "text-slate-500" : "text-[#94A3B8]"}`}>
+              <span className="hidden md:block text-[11px] font-semibold leading-[1.3] text-slate-500 dark:text-[#94A3B8]">
                 منصة البرمجة وعلوم الحاسب
               </span>
             </div>
@@ -160,9 +156,7 @@ export function Navbar() {
                       className={`relative flex h-[40px] items-center rounded-xl px-3 text-[14px] font-bold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] whitespace-nowrap ${
                         isActive
                           ? "text-[#3B82F6] bg-[rgba(59,130,246,0.12)]"
-                          : theme === "light"
-                          ? "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
-                          : "text-[#CBD5E1] hover:bg-[rgba(148,163,184,0.10)] hover:text-[#F8FAFC]"
+                          : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-[#CBD5E1] dark:hover:bg-[rgba(148,163,184,0.10)] dark:hover:text-[#F8FAFC]"
                       }`}
                     >
                       {link.label}
@@ -186,11 +180,7 @@ export function Navbar() {
               target="_blank"
               rel="noreferrer"
               aria-label="تواصل عبر الواتساب"
-              className={`flex h-[40px] items-center gap-1.5 rounded-xl border px-3 text-[13px] font-bold transition-all duration-200 ${
-                theme === "light"
-                  ? "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                  : "border-[rgba(148,163,184,0.18)] bg-[rgba(255,255,255,0.04)] text-[#CBD5E1] hover:bg-[rgba(148,163,184,0.12)] hover:text-[#F8FAFC]"
-              }`}
+              className="flex h-[40px] items-center gap-1.5 rounded-xl border px-3 text-[13px] font-bold transition-all duration-200 border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-[rgba(148,163,184,0.18)] dark:bg-[rgba(255,255,255,0.04)] dark:text-[#CBD5E1] dark:hover:bg-[rgba(148,163,184,0.12)] dark:hover:text-[#F8FAFC]"
             >
               <MessageCircle className="h-4 w-4 text-[#25D366]" />
               <span>واتساب</span>
@@ -199,11 +189,7 @@ export function Navbar() {
             <a
               href="/parent"
               aria-label="بوابة ولي الأمر"
-              className={`flex h-[40px] items-center gap-1.5 rounded-xl border px-3 text-[13px] font-bold transition-all duration-200 ${
-                theme === "light"
-                  ? "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                  : "border-[rgba(148,163,184,0.18)] bg-[rgba(255,255,255,0.04)] text-[#CBD5E1] hover:bg-[rgba(148,163,184,0.12)] hover:text-[#F8FAFC]"
-              }`}
+              className="flex h-[40px] items-center gap-1.5 rounded-xl border px-3 text-[13px] font-bold transition-all duration-200 border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-[rgba(148,163,184,0.18)] dark:bg-[rgba(255,255,255,0.04)] dark:text-[#CBD5E1] dark:hover:bg-[rgba(148,163,184,0.12)] dark:hover:text-[#F8FAFC]"
             >
               <Users className="h-4 w-4 text-[#3B82F6]" />
               <span>دخول ولي الأمر</span>
@@ -225,11 +211,7 @@ export function Navbar() {
               href="/parent"
               aria-label="بوابة ولي الأمر"
               title="دخول ولي الأمر"
-              className={`flex h-[40px] w-[40px] items-center justify-center rounded-[10px] border transition-all ${
-                theme === "light"
-                  ? "border-slate-300 bg-slate-100 text-[#3B82F6]"
-                  : "border-[rgba(148,163,184,0.22)] bg-transparent text-[#60A5FA]"
-              }`}
+              className="flex h-[40px] w-[40px] items-center justify-center rounded-[10px] border transition-all border-slate-300 bg-slate-100 text-[#3B82F6] dark:border-[rgba(148,163,184,0.22)] dark:bg-transparent dark:text-[#60A5FA]"
             >
               <Users className="h-4.5 w-4.5" />
             </a>
@@ -247,11 +229,7 @@ export function Navbar() {
               aria-expanded={isOpen}
               aria-controls="mobile-navigation"
               aria-label="افتح القائمة"
-              className={`grid h-[42px] w-[42px] place-items-center rounded-[10px] border transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] ${
-                theme === "light"
-                  ? "border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200"
-                  : "border-[rgba(148,163,184,0.20)] bg-[rgba(148,163,184,0.08)] text-[#F8FAFC] hover:bg-[rgba(148,163,184,0.15)]"
-              }`}
+              className="grid h-[42px] w-[42px] place-items-center rounded-[10px] border transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200 dark:border-[rgba(148,163,184,0.20)] dark:bg-[rgba(148,163,184,0.08)] dark:text-[#F8FAFC] dark:hover:bg-[rgba(148,163,184,0.15)]"
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -264,11 +242,7 @@ export function Navbar() {
             aria-expanded={isOpen}
             aria-controls="mobile-navigation"
             aria-label="افتح القائمة"
-            className={`hidden sm:grid lg:hidden h-[44px] w-[44px] place-items-center rounded-[12px] border transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] ${
-              theme === "light"
-                ? "border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200"
-                : "border-[rgba(148,163,184,0.20)] bg-[rgba(148,163,184,0.08)] text-[#F8FAFC] hover:bg-[rgba(148,163,184,0.15)]"
-            }`}
+            className="hidden sm:grid lg:hidden h-[44px] w-[44px] place-items-center rounded-[12px] border transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200 dark:border-[rgba(148,163,184,0.20)] dark:bg-[rgba(148,163,184,0.08)] dark:text-[#F8FAFC] dark:hover:bg-[rgba(148,163,184,0.15)]"
           >
             <Menu className="h-6 w-6" />
           </button>

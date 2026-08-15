@@ -10,9 +10,9 @@ import {
   ArrowLeft, BookOpen, Check, CheckCircle2, ClipboardCheck,
   Clock, FileText, GraduationCap, Laptop, MapPin, MessageCircle,
   Play, Send, ShieldCheck, Star, UserCheck, Users, Code, Award,
-  CheckCircle, ArrowRight, ExternalLink, HelpCircle, Layers,
-  Brain, Code2, GitFork, Lightbulb, Crown
+  Brain, Code2, GitFork, Lightbulb, Crown, Layers
 } from "lucide-react";
+import { defaultOfflineCenters, type OfflineCenterItem } from "@/components/admin/settings/CentersTab";
 
 type BookingForm = { parentName: string; studentName: string; phone: string; grade: string; schoolType: string; mode: string; message: string };
 type Testimonial = { quote: string; author: string; role: string; stars?: number; initials?: string };
@@ -157,6 +157,30 @@ export function AcademyHome() {
   const [form, setForm] = useState<BookingForm>(initialBooking);
   const [submitted, setSubmitted] = useState(false);
   const [formError, setFormError] = useState("");
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
+  useEffect(() => {
+    const hasVisited = localStorage.getItem("dr_mahmoud_visited_before");
+    if (hasVisited) return;
+    const timer = setTimeout(() => {
+      setShowWelcomeModal(true);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleCloseWelcomeModal = () => {
+    localStorage.setItem("dr_mahmoud_visited_before", "true");
+    setShowWelcomeModal(false);
+  };
+
+  const handleGoToPreview = () => {
+    localStorage.setItem("dr_mahmoud_visited_before", "true");
+    setShowWelcomeModal(false);
+    const element = document.getElementById("cpp-preview");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   const submitBooking = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -199,6 +223,51 @@ export function AcademyHome() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }} />
       <Navbar />
 
+      {/* First-time Visitor Welcome Modal */}
+      {showWelcomeModal && (
+        <div className="fixed inset-0 z-[120] grid place-items-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
+          <div className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white dark:bg-slate-900 p-6 text-right shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5">
+            <button
+              onClick={handleCloseWelcomeModal}
+              className="absolute top-4 left-4 grid h-8 w-8 place-items-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+              aria-label="إغلاق"
+            >
+              ✕
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400">
+                <Play className="h-6 w-6 fill-current" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">أهلاً بك في منصة دكتور المهدي 👋</span>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">جرب طريقة الشرح بنفسك!</h3>
+              </div>
+            </div>
+
+            <p className="text-sm font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">
+              يسعدنا تواجدك معنا! شاهد المحاضرة التمهيدية الأولى من كورس C++ للتعرف على طريقة الشرح والتطبيقات العملية قبل أي خطوة.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
+              <Button
+                onClick={handleGoToPreview}
+                className="h-11 flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 font-bold text-white shadow-lg shadow-blue-600/25 justify-center"
+              >
+                <span>شاهد فيديو الشرح الآن 🎥</span>
+              </Button>
+              <Button
+                onClick={handleCloseWelcomeModal}
+                variant="outline"
+                className="h-11 rounded-xl font-semibold justify-center text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800"
+              >
+                تصفح الموقع أولاً
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <main>
         {/* ─── 1. HERO SECTION ─── */}
         <section id="hero" className="relative border-b border-slate-200 bg-white py-12 md:py-20 overflow-hidden">
@@ -207,39 +276,76 @@ export function AcademyHome() {
               
               {/* Right Content Column */}
               <div className="lg:col-span-7 space-y-5 text-right">
+                {/* Booking Open Announcement Banner */}
+                <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/15 p-3.5 text-right text-xs sm:text-sm font-black text-emerald-700 dark:text-emerald-300 shadow-md flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white font-black text-xs shadow-sm animate-bounce">🔥</span>
+                    <span><strong>تم فتح باب حجز السناتر رسمياً الآن!</strong> (أولى وتانية بكالوريا 2026 - الزقازيق)</span>
+                  </div>
+                  <a
+                    href="/baccalaureate#booking-form"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white hover:bg-emerald-700 transition-all shrink-0 shadow-sm"
+                  >
+                    احجز مكانك بالسنتر الآن 🚀
+                  </a>
+                </div>
+
                 <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-xs font-bold text-blue-700 border border-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-400/35">
                   <GraduationCap className="h-4 w-4 text-blue-600" />
-                  برمجة البكالوريا المصرية • أونلاين لكل محافظات مصر
+                  برامج البكالوريا المصرية وحاسبات ومعلومات • أونلاين لكل مصر
                 </span>
 
                 <h1 className="text-3xl font-black leading-tight text-slate-900 sm:text-4xl md:text-5xl">
-                  اتعلم برمجة البكالوريا صح <span className="text-blue-600">من البداية</span>
+                  اتعلم البرمجة وعلوم الحاسب <span className="text-blue-600">من البداية صح</span>
                 </h1>
 
                 <p className="max-w-2xl text-base font-semibold leading-relaxed text-slate-600 md:text-lg">
-                  شرح عملي لطلاب أولى وتانية ثانوي مع د. محمود المهدي، ماجستير نظم المعلومات. هتفهم الفكرة، تطبق بنفسك، تحل تدريبات واختبارات، وتتابع مستواك خطوة بخطوة من خلال المنصة.
+                  شرح عملي وتأسيس شامل لطلاب البكالوريا وحاسبات ومعلومات مع د. محمود المهدي، ماجستير نظم المعلومات.
                 </p>
 
-                {/* Primary & Secondary Actions */}
-                <div className="flex flex-col gap-3 sm:flex-row pt-2">
-                  <Button asChild size="lg" className="h-12 rounded-xl bg-blue-600 px-6 font-black text-white hover:bg-blue-700 shadow-md">
-                    <a href="#baccalaureate">
-                      ابدأ برنامج البكالوريا
-                      <ArrowLeft className="mr-2 h-4 w-4" />
+                {/* Primary Dual Actions: Baccalaureate & Computer Science */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                  <Button asChild size="lg" className="h-12 rounded-xl bg-blue-600 px-4 font-black text-white hover:bg-blue-700 shadow-md w-full justify-center">
+                    <a href="/baccalaureate" className="flex items-center justify-center gap-2">
+                      <BookOpen className="h-4 w-4" />
+                      <span>برنامج البكالوريا</span>
+                      <ArrowLeft className="mr-1 h-4 w-4" />
                     </a>
                   </Button>
 
-                  <Button asChild size="lg" variant="outline" className="h-12 rounded-xl border-slate-300 bg-white px-6 font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100 dark:hover:bg-slate-800">
-                    <a href="/platform">
-                      <Laptop className="ml-2 h-4 w-4 text-blue-600" />
-                      دخول الطالب
+                  <Button asChild size="lg" className="h-12 rounded-xl bg-indigo-600 px-4 font-black text-white hover:bg-indigo-700 shadow-md w-full justify-center">
+                    <a href="/university" className="flex items-center justify-center gap-2">
+                      <GraduationCap className="h-4 w-4" />
+                      <span>حاسبات ومعلومات</span>
+                      <ArrowLeft className="mr-1 h-4 w-4" />
+                    </a>
+                  </Button>
+                </div>
+
+                {/* Prominent Offline Center Booking CTA Button */}
+                <div className="pt-1">
+                  <Button asChild size="lg" className="h-12 w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm shadow-lg shadow-emerald-600/20 border border-emerald-500/30 justify-center">
+                    <a href="#offline-centers" className="flex items-center justify-center gap-2">
+                      <MapPin className="h-5 w-5 text-emerald-200 animate-pulse" />
+                      <span>📍 حجز سناتر الزقازيق (أوفلاين)</span>
+                      <ArrowLeft className="mr-1 h-4 w-4" />
+                    </a>
+                  </Button>
+                </div>
+
+                {/* Secondary Actions */}
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <Button asChild size="lg" variant="outline" className="h-11 rounded-xl border-slate-300 bg-white px-3 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100 dark:hover:bg-slate-800">
+                    <a href="/platform" className="flex items-center justify-center gap-1.5">
+                      <Laptop className="h-4 w-4 text-blue-600" />
+                      <span>دخول الطالب</span>
                     </a>
                   </Button>
 
-                  <Button asChild size="lg" variant="outline" className="h-12 rounded-xl border-blue-200 bg-blue-50/70 px-6 font-bold text-blue-800 hover:bg-blue-100 dark:border-blue-400/30 dark:bg-blue-500/10 dark:text-blue-200 dark:hover:bg-blue-500/20">
-                    <a href="/parent">
-                      <Users className="ml-2 h-4 w-4 text-blue-700" />
-                      بوابة ولي الأمر
+                  <Button asChild size="lg" variant="outline" className="h-11 rounded-xl border-blue-200 bg-blue-50/70 px-3 text-xs font-bold text-blue-800 hover:bg-blue-100 dark:border-blue-400/30 dark:bg-blue-500/10 dark:text-blue-200 dark:hover:bg-blue-500/20">
+                    <a href="/parent" className="flex items-center justify-center gap-1.5">
+                      <Users className="h-4 w-4 text-blue-700" />
+                      <span>بوابة ولي الأمر</span>
                     </a>
                   </Button>
                 </div>
@@ -247,7 +353,7 @@ export function AcademyHome() {
                 {/* Trust line */}
                 <div className="pt-2 text-xs font-bold text-slate-500 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-100 mt-4">
                   <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> أونلاين لكل مصر</span>
-                  <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> حضور في الزقازيق</span>
+                  <a href="#offline-centers" className="flex items-center gap-1.5 text-emerald-700 font-extrabold hover:underline"><MapPin className="h-4 w-4 text-emerald-600" /> مواعيد حضور الزقازيق</a>
                   <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> متابعة واختبارات مستمرة</span>
                 </div>
 
@@ -550,6 +656,64 @@ export function AcademyHome() {
           </div>
         </section>
 
+        {/* ─── FREE C++ PREVIEW LESSON SECTION ─── */}
+        <section id="cpp-preview" className="bg-slate-900 py-14 md:py-20 border-b border-slate-800 text-white relative overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-blue-600/10 rounded-full blur-[130px]" />
+          </div>
+
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="mx-auto max-w-3xl text-center mb-10 space-y-3">
+              <span className="inline-flex items-center gap-2 rounded-full bg-blue-500/10 px-4 py-1.5 text-xs font-bold text-blue-400 border border-blue-500/20">
+                <Play className="h-3.5 w-3.5 fill-blue-400" />
+                معاينة مجانية • تجربة طريقة الشرح
+              </span>
+              <h2 className="text-3xl font-black text-white md:text-4xl">
+                2. مقدمة في لغة C++ وتأسيس التفكير البرمجي
+              </h2>
+              <p className="text-sm font-semibold text-slate-400 max-w-xl mx-auto">
+                شاهد أول محاضرة من كورس C++ لطلاب البكالوريا وحاسبات ومعلومات وتعرّف على طريقة الشرح والتطبيق العملي.
+              </p>
+            </div>
+
+            <div className="mx-auto max-w-4xl">
+              <div className="relative rounded-3xl overflow-hidden border border-slate-800 bg-slate-950 shadow-2xl shadow-blue-600/10">
+                <div className="aspect-video w-full bg-black flex items-center justify-center">
+                  <video
+                    src="/preview/cpp-intro.mp4"
+                    controls
+                    controlsList="nodownload"
+                    className="w-full h-full object-contain"
+                    poster="/dr-mahmoud-hero-classroom.webp"
+                  >
+                    متصفحك لا يدعم تشغيل الفيديو المباشر.
+                  </video>
+                </div>
+                <div className="p-5 md:p-6 bg-slate-950/90 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-right">
+                    <span className="text-xs font-bold text-blue-400">محاضرة تمهيدية تجريبية</span>
+                    <h3 className="text-base font-black text-white mt-0.5">كورس أساسيات البرمجة C++ والتفكير المنطقي</h3>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button asChild className="h-11 rounded-xl bg-blue-600 hover:bg-blue-700 font-bold text-white px-5 shrink-0 shadow-lg shadow-blue-600/25">
+                      <a href="https://wa.me/201066711545?text=%D8%A7%D9%84%D8%B3%D9%84%D8%A7%D9%85%20%D8%B9%D9%84%D9%8A%D9%83%D9%85%20%D8%AF.%20%D9%85%D8%AD%D9%85%D9%88%D8%AF%D9%80%20%D8%B4%D8%A7%D9%87%D8%AF%D8%AA%20%D8%A7%D9%84%D9%85%D8%AD%D8%A7%D8%B6%D8%B1%D8%A9%20%D8%A7%D9%84%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D8%A9%20%D9%88%D8%A3%D8%B1%D8%BA%D8%A8%D9%80%20%D9%81%D9%8A%20%D8%A7%D9%84%D8%A7%D8%B4%D8%AA%D8%B1%D8%A7%D9%83" target="_blank" rel="noreferrer">
+                        <span>اشترك في الكورس الكامل</span>
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                      </a>
+                    </Button>
+                    <Button asChild variant="outline" className="h-11 rounded-xl font-bold text-slate-200 border-slate-700 hover:bg-slate-800 px-5 shrink-0">
+                      <a href="/platform">
+                        <span>ادخل المنصة الآن</span>
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ─── 6. INSTRUCTOR AUTHORITY SECTION ─── */}
         <section id="about" className="bg-slate-50 py-14 md:py-20 border-b border-slate-200">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -657,6 +821,61 @@ export function AcademyHome() {
                     </div>
                   </footer>
                 </blockquote>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── 8.5 OFFLINE CENTERS & SCHEDULES IN ZAGAZIG ─── */}
+        <section id="offline-centers" className="bg-slate-900 text-white py-14 md:py-20 border-b border-slate-800 relative overflow-hidden">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-3xl text-center mb-12">
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-black rounded-full mb-3">
+                <MapPin className="h-3.5 w-3.5 text-blue-400" />
+                <span>مواعيد وسناتر الحضور الأوفلاين - الزقازيق</span>
+              </span>
+              <h2 className="text-3xl font-black text-white">جدول ومواعيد السناتر في الزقازيق</h2>
+              <p className="mt-2 text-sm font-semibold text-slate-400">
+                اختر السنتر والمنطقة المباشرة الأقرب لك، ويمكنك تسجيل بياناتك وحجز المقعد أونلاين فوراً!
+              </p>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 max-w-6xl mx-auto">
+              {getJson<OfflineCenterItem[]>(SETTINGS_KEYS.OFFLINE_CENTERS_LIST, defaultOfflineCenters).map((center, idx) => (
+                <div key={center.id || idx} className="rounded-2xl border border-slate-700 bg-slate-800/90 p-5 text-right flex flex-col justify-between hover:border-blue-500/50 transition-all shadow-md">
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                        {center.area}
+                      </span>
+                      {center.grade && (
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-700/80 text-slate-300">
+                          {center.grade}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-base font-black text-white">{center.name}</h3>
+                    <p className="mt-1 text-xs text-slate-400 font-semibold">{center.area} - الحضور المباشر</p>
+                    
+                    <div className="mt-4 space-y-2 border-t border-slate-700/60 pt-3 text-xs text-slate-300 font-semibold">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                        <span>الأيام: {center.daysStr}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                        <span>الموعد: {center.timeStr}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <a
+                    href="#contact"
+                    className="mt-5 block w-full text-center rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 transition-all shadow-xs"
+                  >
+                    احجز في {center.name.split("(")[0]}
+                  </a>
+                </div>
               ))}
             </div>
           </div>
@@ -840,14 +1059,18 @@ export function AcademyHome() {
                       </select>
                     </label>
 
-                    <label>
-                      <span className="mb-1.5 block text-xs font-bold text-slate-700">طريقة الدراسة</span>
-                      <select value={form.mode} onChange={(e) => setForm({ ...form, mode: e.target.value })} className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-xs font-bold text-slate-700 focus:border-blue-600 focus:outline-none">
-                        <option>أونلاين لكل مصر</option>
-                        <option>أوفلاين بالزقازيق</option>
-                        <option>مساعدة في الاختيار</option>
-                      </select>
-                    </label>
+                     <label className="sm:col-span-2">
+                       <span className="mb-1.5 block text-xs font-bold text-slate-700">مقر الدراسة أو السنتر المفضّل (للحجز الأوفلاين في الزقازيق)</span>
+                       <select value={form.mode} onChange={(e) => setForm({ ...form, mode: e.target.value })} className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-xs font-bold text-slate-700 focus:border-blue-600 focus:outline-none">
+                         <option value="أونلاين لكل مصر">أونلاين لكل محافظات مصر (منصة + متابعة)</option>
+                         {getJson<OfflineCenterItem[]>(SETTINGS_KEYS.OFFLINE_CENTERS_LIST, defaultOfflineCenters).map((c, i) => (
+                           <option key={c.id || i} value={`${c.name} - ${c.daysStr} ${c.timeStr}`}>
+                             {c.name} ({c.area}) {c.grade ? `[${c.grade}]` : ""} - {c.daysStr} ({c.timeStr})
+                           </option>
+                         ))}
+                         <option value="مساعدة في اختيار الموعد والسنتر المناسب">مساعدة في اختيار الموعد والسنتر المناسب</option>
+                       </select>
+                     </label>
 
                     {formError && <p role="alert" className="sm:col-span-2 rounded-xl bg-red-50 p-3 text-xs font-bold text-red-700">{formError}</p>}
 

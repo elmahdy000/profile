@@ -23,6 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useCreateBooking } from "@workspace/api-client-react";
 import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
+import { CenterBookingForm } from "@/components/booking/CenterBookingForm";
 
 // Curriculum Modules Data
 const curriculumModules = [
@@ -500,9 +501,9 @@ export default function BaccalaureatePage() {
             <a href="#faq" className="hover:text-primary transition-colors">أسئلة شائعة</a>
           </nav>
           <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-full px-5 h-9 text-sm shadow-md shadow-primary/10 hover:scale-[1.03] transition-all">
-            <a href="#booking-form">
+            <a href="/platform?action=register">
               <MessageCircle className="w-4 h-4 ml-2" />
-              احجز تقييم مجاني
+              التسجيل والحجز بالمنصة
             </a>
           </Button>
         </div>
@@ -1109,132 +1110,10 @@ export default function BaccalaureatePage() {
         </div>
       </section>
 
-      {/* Dynamic Booking Section */}
-      <section id="booking-form" className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[120px]" />
-        </div>
-
-        <div className="container mx-auto px-4 lg:px-8 relative z-10">
-          <div className="max-w-2xl mx-auto bg-card border border-border shadow-xl rounded-3xl p-6 md:p-8">
-            <div className="text-center mb-8">
-              <span className="text-primary font-bold text-xs uppercase tracking-wider block mb-2">أول سيشن مجاناً</span>
-              <h3 className="text-xl md:text-2xl font-extrabold text-foreground mb-2">احجز جلسة التقييم والتوجيه الآن</h3>
-              <p className="text-xs md:text-sm text-foreground/60">
-                املأ البيانات وسيتم التواصل معك مباشرة لتحديد موعد الجلسة المناسب.
-              </p>
-            </div>
-
-            {submitted ? (
-              <div className="flex flex-col items-center justify-center py-10 gap-4 text-center">
-                <div className="w-16 h-16 rounded-full bg-secondary/10 border border-secondary/20 flex items-center justify-center text-secondary mb-2">
-                  <Check className="w-8 h-8" />
-                </div>
-                <p className="font-bold text-foreground text-xl">تم تسجيل طلبك بنجاح!</p>
-                <p className="text-foreground/50 text-xs max-w-xs">
-                  جاري توجيهك الآن إلى واتساب لإتمام تنسيق موعد الجلسة المجانية.
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handleFormSubmit} className="space-y-4">
-                {/* Name */}
-                <div className="space-y-1.5">
-                  <label htmlFor="name" className="text-xs font-bold text-foreground/80 block">
-                    اسم الطالب بالكامل
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="مثال: أحمد محمد علي"
-                    className="w-full h-11 px-4 rounded-xl border border-border bg-background focus:outline-none focus:border-primary text-sm transition-all text-right"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Phone */}
-                  <div className="space-y-1.5">
-                    <label htmlFor="phone" className="text-xs font-bold text-foreground/80 block">
-                      رقم واتساب ولي الأمر / الطالب
-                    </label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      required
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="مثال: 01066711545"
-                      className="w-full h-11 px-4 rounded-xl border border-border bg-background focus:outline-none focus:border-primary text-sm transition-all text-right"
-                    />
-                  </div>
-
-                  {/* School Type */}
-                  <div className="space-y-1.5">
-                    <label htmlFor="schoolType" className="text-xs font-bold text-foreground/80 block">
-                      نوع التعليم الدراسي
-                    </label>
-                    <select
-                      id="schoolType"
-                      value={formData.schoolType}
-                      onChange={(e) => setFormData({ ...formData, schoolType: e.target.value })}
-                      className="w-full h-11 px-4 rounded-xl border border-border bg-background focus:outline-none focus:border-primary text-sm transition-all text-right cursor-pointer"
-                    >
-                      <option value="ثانوي عام">ثانوي عام</option>
-                      <option value="STEM وبكالوريا">STEM وبكالوريا</option>
-                      <option value="ثانوي لغات / تجريبي">ثانوي لغات / تجريبي</option>
-                      <option value="أخرى">أخرى</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Grade */}
-                <div className="space-y-1.5">
-                  <label htmlFor="grade" className="text-xs font-bold text-foreground/80 block">
-                    السنة الدراسية
-                  </label>
-                  <select
-                    id="grade"
-                    value={formData.grade}
-                    onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
-                    className="w-full h-11 px-4 rounded-xl border border-border bg-background focus:outline-none focus:border-primary text-sm transition-all text-right cursor-pointer"
-                  >
-                    <option value="الصف الأول الثانوي">الصف الأول الثانوي</option>
-                    <option value="الصف الثاني الثانوي">الصف الثاني الثانوي</option>
-                    <option value="الصف الثالث الثانوي">الصف الثالث الثانوي</option>
-                  </select>
-                </div>
-
-                {/* Notes */}
-                <div className="space-y-1.5">
-                  <label htmlFor="notes" className="text-xs font-bold text-foreground/80 block">
-                    ملاحظات أو أسئلة إضافية (اختياري)
-                  </label>
-                  <textarea
-                    id="notes"
-                    rows={3}
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    placeholder="مثال: عاوز مساعدة في مشروع مدرسة STEM، أو حابب جدول مكثف..."
-                    className="w-full p-4 rounded-xl border border-border bg-background focus:outline-none focus:border-primary text-sm transition-all text-right resize-none"
-                  />
-                </div>
-
-                {/* Submit */}
-                <Button
-                  type="submit"
-                  disabled={isPending}
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-12 rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.01] transition-all"
-                >
-                  {isPending ? "جاري تسجيل طلبك..." : "احجز الجلسة المجانية وتواصل واتساب"}
-                </Button>
-                <p className="text-center text-[10px] text-foreground/45 mt-2">
-                  * الجلسة مجانية تماماً ولا تتضمن أي التزام بالاشتراك.
-                </p>
-              </form>
-            )}
-          </div>
+      {/* Dynamic Registration & Center Booking Section */}
+      <section id="booking-form" className="py-16 relative overflow-hidden">
+        <div className="container mx-auto px-4 lg:px-8 relative z-10 max-w-4xl">
+          <CenterBookingForm />
         </div>
       </section>
 

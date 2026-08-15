@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Switch, Route, useLocation } from "wouter";
+import { Redirect, Route, Switch, useLocation } from "wouter";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -13,7 +13,6 @@ const AcademyHome = lazy(() => import("@/components/AcademyHome").then(m => ({ d
 const AdminDashboard = lazy(() => import("@/components/AdminDashboard"));
 const SubAdminDashboard = lazy(() => import("@/components/SubAdminDashboard").then(m => ({ default: m.SubAdminDashboard })));
 const BaccalaureatePage = lazy(() => import("@/pages/BaccalaureatePage"));
-const KidsPage = lazy(() => import("@/pages/KidsPage"));
 const UniversityPage = lazy(() => import("@/pages/UniversityPage"));
 const CurriculumPage = lazy(() => import("@/pages/CurriculumPage"));
 const PlatformPage = lazy(() => import("@/pages/PlatformPage"));
@@ -67,7 +66,9 @@ function App() {
                 <Route path="/admin" component={AdminDashboard} />
                 <Route path="/subadmin" component={SubAdminDashboard} />
                 <Route path="/baccalaureate" component={BaccalaureatePage} />
-                <Route path="/kids" component={KidsPage} />
+                <Route path="/kids">
+                  <Redirect to="/platform?action=register" />
+                </Route>
                 <Route path="/university" component={UniversityPage} />
                 <Route path="/curriculum" component={CurriculumPage} />
                 <Route path="/platform" component={PlatformPage} />

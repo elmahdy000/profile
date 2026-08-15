@@ -503,31 +503,35 @@ export function DashboardTab({
   onOpen: (tab: "lessons" | "compiler" | "files" | "quizzes") => void;
 }) {
   const academicTrack = getTrackForStage(student.grade);
-  const progressByVideo = new Map(progress.map((row) => [row.videoId, row]));
+  const safeFiles = Array.isArray(files) ? files : [];
+  const safeQuizzes = Array.isArray(quizzes) ? quizzes : [];
+  const safeVideos = Array.isArray(videos) ? videos : [];
+  const safeProgress = Array.isArray(progress) ? progress : [];
+  const progressByVideo = new Map(safeProgress.map((row) => [row.videoId, row]));
 
   // Progress Calculations
-  const completedLessonsCount = videos.filter(
+  const completedLessonsCount = safeVideos.filter(
     (v) => (progressByVideo.get(v.id)?.progress || 0) >= 90
   ).length;
 
-  const availableQuizzesCount = quizzes.filter((q) => !q.locked).length;
-  const completedQuizzesCount = quizzes.filter((q) => (q.attemptsUsed || 0) > 0).length;
+  const availableQuizzesCount = safeQuizzes.filter((q) => !q.locked).length;
+  const completedQuizzesCount = safeQuizzes.filter((q) => (q.attemptsUsed || 0) > 0).length;
 
-  const averageProgress = videos.length
+  const averageProgress = safeVideos.length
     ? Math.round(
-        videos.reduce(
+        safeVideos.reduce(
           (sum, video) => sum + (progressByVideo.get(video.id)?.progress || 0),
           0,
-        ) / videos.length,
+        ) / safeVideos.length,
       )
     : 0;
 
-  const continueRow = [...progress]
+  const continueRow = [...safeProgress]
     .filter(
       (row) =>
         row.progress > 0 &&
         row.progress < 100 &&
-        videos.some((video) => video.id === row.videoId),
+        safeVideos.some((video) => video.id === row.videoId),
     )
     .sort(
       (a, b) =>
@@ -536,7 +540,7 @@ export function DashboardTab({
     )[0];
 
   const continueVideo =
-    videos.find((video) => video.id === continueRow?.videoId) || videos[0];
+    safeVideos.find((video) => video.id === continueRow?.videoId) || safeVideos[0];
   const continueProgress = continueVideo
     ? progressByVideo.get(continueVideo.id)?.progress || 0
     : 0;
@@ -555,7 +559,7 @@ export function DashboardTab({
     );
   }
 
-  const attemptedQuizzes = quizzes.filter((q) => (q.bestScore !== undefined && q.bestScore !== null));
+  const attemptedQuizzes = safeQuizzes.filter((q) => (q.bestScore !== undefined && q.bestScore !== null));
   const realAverageResult = attemptedQuizzes.length
     ? Math.round(attemptedQuizzes.reduce((acc, curr) => acc + (curr.bestScore || 0), 0) / attemptedQuizzes.length)
     : 0;
@@ -596,7 +600,7 @@ export function DashboardTab({
       <StudentStatistics
         completedLessonsCount={completedLessonsCount}
         availableQuizzesCount={availableQuizzesCount}
-        newFilesCount={files.length}
+        newFilesCount={safeFiles.length}
         hasQuizResults={attemptedQuizzes.length > 0}
         averageResult={realAverageResult}
       />
@@ -605,9 +609,9 @@ export function DashboardTab({
       <StudentProgressSummary
         overallProgress={averageProgress}
         completedLessons={completedLessonsCount}
-        totalLessons={videos.length}
+        totalLessons={safeVideos.length}
         completedQuizzes={completedQuizzesCount}
-        totalQuizzes={quizzes.length}
+        totalQuizzes={safeQuizzes.length}
       />
 
       {/* 4 & 5. Continue Learning & Next Steps Grid */}
@@ -621,15 +625,15 @@ export function DashboardTab({
         />
 
         <NextStepsList
-          quizzes={quizzes}
-          files={files}
-          videos={videos}
+          quizzes={safeQuizzes}
+          files={safeFiles}
+          videos={safeVideos}
           onOpen={onOpen}
         />
       </div>
 
       {/* 6. Latest Files Section */}
-      <LatestFilesSection files={files} onOpenFiles={() => onOpen("files")} />
+      <LatestFilesSection files={safeFiles} onOpenFiles={() => onOpen("files")} />
     </section>
   );
 }

@@ -2,6 +2,20 @@ import React, { useState, useEffect } from "react";
 import { useSiteSettings, useUpdateSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
 import { Loader2, Save, CheckCircle2, UploadCloud, Plus, Trash2, ArrowUp, ArrowDown, HelpCircle, X, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { GeneralTab } from "./admin/settings/GeneralTab";
+import { HeroTab } from "./admin/settings/HeroTab";
+import { AboutTab } from "./admin/settings/AboutTab";
+import { ServicesTab } from "./admin/settings/ServicesTab";
+import { PricingTab } from "./admin/settings/PricingTab";
+import { TestimonialsTab } from "./admin/settings/TestimonialsTab";
+import { FaqTab } from "./admin/settings/FaqTab";
+import { PortfolioTab } from "./admin/settings/PortfolioTab";
+import { EduverseTab } from "./admin/settings/EduverseTab";
+import { WhyChooseMeTab } from "./admin/settings/WhyChooseMeTab";
+import { ContactSocialTab } from "./admin/settings/ContactSocialTab";
+import { AuditLogsTab } from "./admin/settings/AuditLogsTab";
+import { AdminAccountsTab } from "./admin/settings/AdminAccountsTab";
+import { CentersTab, defaultOfflineCenters, type OfflineCenterItem } from "./admin/settings/CentersTab";
 
 // Default Fallbacks
 const defaultServices = [
@@ -217,7 +231,7 @@ export function AdminSettings({ role = "superadmin" }: { role?: "superadmin" | "
   const updateSettingsMutation = useUpdateSiteSettings();
 
   const [activeTab, setActiveTab] = useState<
-    "general" | "hero" | "about" | "services" | "pricing" | "testimonials" | "faq" | "contact" | "social" | "portfolio" | "eduverse" | "why-choose-me" | "audit-logs" | "admin-accounts"
+    "general" | "offline-centers" | "hero" | "about" | "services" | "pricing" | "testimonials" | "faq" | "contact" | "social" | "portfolio" | "eduverse" | "why-choose-me" | "audit-logs" | "admin-accounts"
   >("general");
 
   const [auditLogs, setAuditLogs] = useState<Array<{
@@ -283,6 +297,7 @@ export function AdminSettings({ role = "superadmin" }: { role?: "superadmin" | "
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [faq, setFaq] = useState<any[]>([]);
   const [portfolio, setPortfolio] = useState<any[]>([]);
+  const [offlineCenters, setOfflineCenters] = useState<OfflineCenterItem[]>([]);
 
   // Selected item indices for editing
   const [selServiceIdx, setSelServiceIdx] = useState<number | null>(null);
@@ -334,6 +349,13 @@ export function AdminSettings({ role = "superadmin" }: { role?: "superadmin" | "
         setPortfolio(val ? JSON.parse(val) : defaultPortfolio);
       } catch {
         setPortfolio(defaultPortfolio);
+      }
+
+      try {
+        const val = settings[SETTINGS_KEYS.OFFLINE_CENTERS_LIST]?.value;
+        setOfflineCenters(val ? JSON.parse(val) : defaultOfflineCenters);
+      } catch {
+        setOfflineCenters(defaultOfflineCenters);
       }
     }
   }, [settings]);
@@ -442,6 +464,7 @@ export function AdminSettings({ role = "superadmin" }: { role?: "superadmin" | "
       { key: SETTINGS_KEYS.TESTIMONIALS_LIST, value: JSON.stringify(testimonials) },
       { key: SETTINGS_KEYS.FAQ_LIST, value: JSON.stringify(faq) },
       { key: SETTINGS_KEYS.PORTFOLIO_LIST, value: JSON.stringify(portfolio) },
+      { key: SETTINGS_KEYS.OFFLINE_CENTERS_LIST, value: JSON.stringify(offlineCenters) },
     ];
 
     try {
@@ -483,6 +506,7 @@ export function AdminSettings({ role = "superadmin" }: { role?: "superadmin" | "
 
   const subTabs = [
     { id: "general", label: "الإعدادات العامة" },
+    { id: "offline-centers", label: "📍 السناتر والمواعيد (الزقازيق)" },
     { id: "audit-logs", label: "سجل العمليات (Audit Logs)" },
     { id: "admin-accounts", label: "إدارة الحسابات والكلمات" },
     { id: "hero", label: "القسم الرئيسي (Hero)" },
@@ -542,1760 +566,174 @@ export function AdminSettings({ role = "superadmin" }: { role?: "superadmin" | "
       {/* Main Tab Content */}
       <div className="bg-card border border-border shadow-sm rounded-2xl p-6">
         
-        {/* GENERAL SETTINGS */}
         {activeTab === "general" && (
-          <div className="space-y-5">
-            <h3 className="text-lg font-bold text-foreground">الإعدادات العامة وشعار الموقع</h3>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5 font-bold">اسم الموقع (Site Name)</label>
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.SITE_NAME] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.SITE_NAME, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                  placeholder="د. محمود المهدي"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5 font-bold">شعار الموقع الفرعي (Site Tagline)</label>
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.SITE_TAGLINE] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.SITE_TAGLINE, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                  placeholder="مدرب برمجة وذكاء اصطناعي"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5 font-bold">وصف الموقع لمحركات البحث (SEO Description)</label>
-              <textarea
-                value={formData[SETTINGS_KEYS.SITE_SEO_DESC] || ""}
-                onChange={(e) => handleChange(SETTINGS_KEYS.SITE_SEO_DESC, e.target.value)}
-                rows={3}
-                className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                placeholder="كورسات برمجة وتأسيس ذكاء اصطناعي في الزقازيق..."
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5 font-sans font-bold">شعار الموقع (Logo URL)</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.SITE_LOGO_URL] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.SITE_LOGO_URL, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                  dir="ltr"
-                />
-                <div className="relative flex-shrink-0">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileUpload(e, SETTINGS_KEYS.SITE_LOGO_URL)}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    disabled={isUploading}
-                  />
-                  <button
-                    type="button"
-                    className="h-full px-4 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 rounded-xl flex items-center gap-2 transition-colors font-bold text-xs"
-                    disabled={isUploading}
-                  >
-                    {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
-                    <span>رفع شعار</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <GeneralTab
+            formData={formData}
+            handleChange={handleChange}
+            handleFileUpload={handleFileUpload}
+            isUploading={isUploading}
+          />
         )}
 
-        {/* HERO SECTION */}
+        {activeTab === "offline-centers" && (
+          <CentersTab
+            centers={offlineCenters}
+            setCenters={setOfflineCenters}
+            onSave={() => handleSubmit()}
+          />
+        )}
+
         {activeTab === "hero" && (
-          <div className="space-y-5">
-            <h3 className="text-lg font-bold text-foreground">إعدادات القسم الرئيسي (Hero)</h3>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">العنوان الرئيسي (Hero Title)</label>
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.HERO_TITLE] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.HERO_TITLE, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                  placeholder="تعلم البرمجة والذكاء الاصطناعي"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">العنوان الفرعي (Hero Subtitle)</label>
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.HERO_SUBTITLE] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.HERO_SUBTITLE, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                  placeholder="مع د. محمود المهدي"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">الشارة / الـ Badge (مثال: متواجدون في الزقازيق)</label>
-              <input
-                type="text"
-                value={formData[SETTINGS_KEYS.HERO_BADGE] || ""}
-                onChange={(e) => handleChange(SETTINGS_KEYS.HERO_BADGE, e.target.value)}
-                className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                placeholder="حجز تقييم مجاني بالكامل"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">الوصف (Hero Description)</label>
-              <textarea
-                value={formData[SETTINGS_KEYS.HERO_DESC] || ""}
-                onChange={(e) => handleChange(SETTINGS_KEYS.HERO_DESC, e.target.value)}
-                rows={4}
-                className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                placeholder="أول سيشن مجاناً لتحديد المستوى والمشاريع العملية..."
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">صورة البطل الشخصية (Hero Image)</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.HERO_PHOTO_URL] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.HERO_PHOTO_URL, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                  dir="ltr"
-                />
-                <div className="relative flex-shrink-0">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileUpload(e, SETTINGS_KEYS.HERO_PHOTO_URL)}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    disabled={isUploading}
-                  />
-                  <button
-                    type="button"
-                    className="h-full px-4 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 rounded-xl flex items-center gap-2 transition-colors font-bold text-xs"
-                    disabled={isUploading}
-                  >
-                    {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
-                    <span>رفع صورة</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <HeroTab
+            formData={formData}
+            handleChange={handleChange}
+            handleFileUpload={handleFileUpload}
+            isUploading={isUploading}
+          />
         )}
 
-        {/* ABOUT SECTION */}
         {activeTab === "about" && (
-          <div className="space-y-5">
-            <h3 className="text-lg font-bold text-foreground">إعدادات قسم "عن الدكتور" (About)</h3>
-            
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">العنوان الرئيسي</label>
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.ABOUT_TITLE] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.ABOUT_TITLE, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                  placeholder="من هو د. محمود المهدي؟"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5 font-sans">سنوات الخبرة</label>
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.ABOUT_YEARS] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.ABOUT_YEARS, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5 font-sans">عدد الطلاب</label>
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.ABOUT_STUDENTS] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.ABOUT_STUDENTS, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">الوصف التعريفي</label>
-              <textarea
-                value={formData[SETTINGS_KEYS.ABOUT_DESC] || ""}
-                onChange={(e) => handleChange(SETTINGS_KEYS.ABOUT_DESC, e.target.value)}
-                rows={5}
-                className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                placeholder="حاصل على ماجستير ودكتوراه في هندسة البرمجيات..."
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">صورة قسم عن الدكتور</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.ABOUT_IMAGE_URL] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.ABOUT_IMAGE_URL, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                  dir="ltr"
-                />
-                <div className="relative flex-shrink-0">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileUpload(e, SETTINGS_KEYS.ABOUT_IMAGE_URL)}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    disabled={isUploading}
-                  />
-                  <button
-                    type="button"
-                    className="h-full px-4 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 rounded-xl flex items-center gap-2 transition-colors font-bold text-xs"
-                    disabled={isUploading}
-                  >
-                    {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
-                    <span>رفع صورة</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <AboutTab
+            formData={formData}
+            handleChange={handleChange}
+            handleFileUpload={handleFileUpload}
+            isUploading={isUploading}
+          />
         )}
 
-        {/* SERVICES SECTION */}
         {activeTab === "services" && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center border-b border-border/30 pb-3">
-              <h3 className="text-lg font-bold text-foreground font-outfit">البرامج والخدمات التعليمية</h3>
-              <button
-                onClick={() => {
-                  const newService = {
-                    title: "برنامج جديد",
-                    description: "تفاصيل ووصف الكورس الجديد هنا...",
-                    img: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&q=70",
-                    icon: "MonitorPlay"
-                  };
-                  setServices([...services, newService]);
-                  setSelServiceIdx(services.length);
-                  setIsSaved(false);
-                }}
-                className="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 font-bold rounded-xl px-4 py-2 text-xs flex items-center gap-1.5 transition-all"
-              >
-                <Plus className="w-4 h-4" /> إضافة برنامج جديد
-              </button>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-6">
-              {/* List */}
-              <div className="md:col-span-1 space-y-2 border-l border-border/30 pl-4 max-h-[500px] overflow-y-auto">
-                {services.map((service, index) => (
-                  <div
-                    key={index}
-                    onClick={() => setSelServiceIdx(index)}
-                    className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 ${
-                      selServiceIdx === index
-                        ? "bg-primary/10 border-primary text-primary"
-                        : "bg-background border-border hover:bg-muted/80 text-muted-foreground"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 truncate">
-                      {service.img && (
-                        <img src={service.img} className="w-8 h-8 rounded-lg object-cover flex-shrink-0" alt="" />
-                      )}
-                      <span className="text-sm font-bold truncate">{service.title || "بدون عنوان"}</span>
-                    </div>
-
-                    <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => moveItem(services, setServices, index, "up", setSelServiceIdx)}
-                        className="p-1 hover:text-foreground transition-colors"
-                        disabled={index === 0}
-                      >
-                        <ArrowUp className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => moveItem(services, setServices, index, "down", setSelServiceIdx)}
-                        className="p-1 hover:text-foreground transition-colors"
-                        disabled={index === services.length - 1}
-                      >
-                        <ArrowDown className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => deleteItem(services, setServices, index, setSelServiceIdx)}
-                        className="p-1 text-red-400 hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Edit Detail */}
-              <div className="md:col-span-2">
-                {selServiceIdx !== null && services[selServiceIdx] ? (
-                  <div className="space-y-4 bg-background p-5 rounded-2xl border border-border">
-                    <h4 className="font-bold text-foreground border-b border-border/20 pb-2">تعديل تفاصيل البرنامج</h4>
-                    
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">عنوان البرنامج</label>
-                        <input
-                          type="text"
-                          value={services[selServiceIdx].title || ""}
-                          onChange={(e) => {
-                            const copy = [...services];
-                            copy[selServiceIdx].title = e.target.value;
-                            setServices(copy);
-                            setIsSaved(false);
-                          }}
-                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">الأيقونة (Lucide Icon)</label>
-                        <select
-                          value={services[selServiceIdx].icon || "MonitorPlay"}
-                          onChange={(e) => {
-                            const copy = [...services];
-                            copy[selServiceIdx].icon = e.target.value;
-                            setServices(copy);
-                            setIsSaved(false);
-                          }}
-                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary font-sans"
-                        >
-                          <option value="MonitorPlay">MonitorPlay (شاشة ألعاب)</option>
-                          <option value="Terminal">Terminal (شاشة كود)</option>
-                          <option value="Lightbulb">Lightbulb (لمبة إبداع)</option>
-                          <option value="FileText">FileText (ملفات ونصوص)</option>
-                          <option value="GraduationCap">GraduationCap (قبعة تخرج)</option>
-                          <option value="Code2">Code2 (رمز كود)</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-muted-foreground mb-1.5">صورة البرنامج (رابط أو رفع)</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={services[selServiceIdx].img || ""}
-                          onChange={(e) => {
-                            const copy = [...services];
-                            copy[selServiceIdx].img = e.target.value;
-                            setServices(copy);
-                            setIsSaved(false);
-                          }}
-                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                          dir="ltr"
-                        />
-                        <div className="relative flex-shrink-0">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              handleFileUpload(e, "", (url) => {
-                                const copy = [...services];
-                                copy[selServiceIdx].img = url;
-                                setServices(copy);
-                                setIsSaved(false);
-                              });
-                            }}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            disabled={isUploading}
-                          />
-                          <button
-                            type="button"
-                            className="h-full px-4 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 rounded-xl flex items-center gap-2 transition-colors font-bold text-xs"
-                            disabled={isUploading}
-                          >
-                            {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
-                            <span>رفع صورة</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-muted-foreground mb-1.5">الوصف / التفاصيل</label>
-                      <textarea
-                        value={services[selServiceIdx].description || ""}
-                        onChange={(e) => {
-                          const copy = [...services];
-                          copy[selServiceIdx].description = e.target.value;
-                          setServices(copy);
-                          setIsSaved(false);
-                        }}
-                        rows={4}
-                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="h-full flex items-center justify-center text-center p-8 border border-dashed border-border rounded-2xl bg-background">
-                    <p className="text-muted-foreground text-sm">اختر برنامجاً من القائمة الجانبية لتعديله أو أضف برنامجاً جديداً.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <ServicesTab
+            services={services}
+            setServices={setServices}
+            selServiceIdx={selServiceIdx}
+            setSelServiceIdx={setSelServiceIdx}
+            moveItem={moveItem}
+            deleteItem={deleteItem}
+            handleFileUpload={handleFileUpload}
+            isUploading={isUploading}
+            setIsSaved={setIsSaved}
+          />
         )}
 
-        {/* PRICING SECTION */}
         {activeTab === "pricing" && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center border-b border-border/30 pb-3">
-              <h3 className="text-lg font-bold text-foreground">إعدادات أسعار المسارات (Pricing Plans)</h3>
-              <button
-                onClick={() => {
-                  const newPlan = {
-                    id: "plan_" + Date.now(),
-                    name: "باقة جديدة",
-                    subtitle: "تفاصيل الفئة المستهدفة",
-                    headline: "تعلم قوي بمشاريع عملية",
-                    desc: "",
-                    badge: "",
-                    featured: false,
-                    features: ["ميزة 1", "ميزة 2"]
-                  };
-                  setPricing([...pricing, newPlan]);
-                  setSelPlanIdx(pricing.length);
-                  setIsSaved(false);
-                }}
-                className="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 font-bold rounded-xl px-4 py-2 text-xs flex items-center gap-1.5 transition-all"
-              >
-                <Plus className="w-4 h-4" /> إضافة باقة جديدة
-              </button>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-6">
-              {/* List */}
-              <div className="md:col-span-1 space-y-2 border-l border-border/30 pl-4 max-h-[500px] overflow-y-auto">
-                {pricing.map((plan, index) => (
-                  <div
-                    key={plan.id || index}
-                    onClick={() => setSelPlanIdx(index)}
-                    className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 ${
-                      selPlanIdx === index
-                        ? "bg-primary/10 border-primary text-primary"
-                        : "bg-background border-border hover:bg-muted/80 text-muted-foreground"
-                    }`}
-                  >
-                    <div className="truncate">
-                      <span className="text-sm font-bold block truncate">{plan.name || "بدون عنوان"}</span>
-                      <span className="text-[10px] text-muted-foreground truncate block">{plan.subtitle}</span>
-                    </div>
-
-                    <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => moveItem(pricing, setPricing, index, "up", setSelPlanIdx)}
-                        className="p-1 hover:text-foreground transition-colors"
-                        disabled={index === 0}
-                      >
-                        <ArrowUp className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => moveItem(pricing, setPricing, index, "down", setSelPlanIdx)}
-                        className="p-1 hover:text-foreground transition-colors"
-                        disabled={index === pricing.length - 1}
-                      >
-                        <ArrowDown className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => deleteItem(pricing, setPricing, index, setSelPlanIdx)}
-                        className="p-1 text-red-400 hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Edit Detail */}
-              <div className="md:col-span-2">
-                {selPlanIdx !== null && pricing[selPlanIdx] ? (
-                  <div className="space-y-4 bg-background p-5 rounded-2xl border border-border">
-                    <h4 className="font-bold text-foreground border-b border-border/20 pb-2">تعديل تفاصيل الباقة</h4>
-                    
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">اسم الباقة</label>
-                        <input
-                          type="text"
-                          value={pricing[selPlanIdx].name || ""}
-                          onChange={(e) => {
-                            const copy = [...pricing];
-                            copy[selPlanIdx].name = e.target.value;
-                            setPricing(copy);
-                            setIsSaved(false);
-                          }}
-                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5 font-sans">معرف الباقة (ID فريد بالإنجليزية)</label>
-                        <input
-                          type="text"
-                          value={pricing[selPlanIdx].id || ""}
-                          onChange={(e) => {
-                            const copy = [...pricing];
-                            copy[selPlanIdx].id = e.target.value.replace(/[^a-zA-Z0-9_-]/g, "");
-                            setPricing(copy);
-                            setIsSaved(false);
-                          }}
-                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary font-sans"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">العنوان الفرعي (Subtitle)</label>
-                        <input
-                          type="text"
-                          value={pricing[selPlanIdx].subtitle || ""}
-                          onChange={(e) => {
-                            const copy = [...pricing];
-                            copy[selPlanIdx].subtitle = e.target.value;
-                            setPricing(copy);
-                            setIsSaved(false);
-                          }}
-                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">السطر الترويجي (Headline)</label>
-                        <input
-                          type="text"
-                          value={pricing[selPlanIdx].headline || ""}
-                          onChange={(e) => {
-                            const copy = [...pricing];
-                            copy[selPlanIdx].headline = e.target.value;
-                            setPricing(copy);
-                            setIsSaved(false);
-                          }}
-                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-4 items-center">
-                      <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">شارة مميزة (Badge)</label>
-                        <input
-                          type="text"
-                          value={pricing[selPlanIdx].badge || ""}
-                          onChange={(e) => {
-                            const copy = [...pricing];
-                            copy[selPlanIdx].badge = e.target.value;
-                            setPricing(copy);
-                            setIsSaved(false);
-                          }}
-                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                          placeholder="مثال: الأكثر طلباً"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2 pt-4">
-                        <input
-                          type="checkbox"
-                          id="planFeatured"
-                          checked={!!pricing[selPlanIdx].featured}
-                          onChange={(e) => {
-                            const copy = [...pricing];
-                            copy[selPlanIdx].featured = e.target.checked;
-                            setPricing(copy);
-                            setIsSaved(false);
-                          }}
-                          className="w-4 h-4 rounded text-primary focus:ring-primary bg-background border-border"
-                        />
-                        <label htmlFor="planFeatured" className="text-xs font-semibold text-foreground cursor-pointer select-none">تمييز هذه الباقة (Featured)</label>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-muted-foreground mb-1.5">وصف إضافي (اختياري)</label>
-                      <input
-                        type="text"
-                        value={pricing[selPlanIdx].desc || ""}
-                        onChange={(e) => {
-                          const copy = [...pricing];
-                          copy[selPlanIdx].desc = e.target.value;
-                          setPricing(copy);
-                          setIsSaved(false);
-                        }}
-                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-muted-foreground mb-1.5">المميزات (اكتب كل ميزة في سطر منفصل)</label>
-                      <textarea
-                        value={pricing[selPlanIdx].features ? pricing[selPlanIdx].features.join("\n") : ""}
-                        onChange={(e) => {
-                          const copy = [...pricing];
-                          copy[selPlanIdx].features = e.target.value.split("\n").filter(line => line.trim() !== "");
-                          setPricing(copy);
-                          setIsSaved(false);
-                        }}
-                        rows={5}
-                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary font-sans"
-                        placeholder="مميزات الكورس..."
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="h-full flex items-center justify-center text-center p-8 border border-dashed border-border rounded-2xl bg-background">
-                    <p className="text-muted-foreground text-sm">اختر باقة أسعار من القائمة لتعديلها أو أضف باقة جديدة.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <PricingTab
+            pricing={pricing}
+            setPricing={setPricing}
+            selPlanIdx={selPlanIdx}
+            setSelPlanIdx={setSelPlanIdx}
+            moveItem={moveItem}
+            deleteItem={deleteItem}
+            setIsSaved={setIsSaved}
+          />
         )}
 
-        {/* TESTIMONIALS SECTION */}
         {activeTab === "testimonials" && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center border-b border-border/30 pb-3">
-              <h3 className="text-lg font-bold text-foreground">إعدادات آراء الطلاب (Testimonials)</h3>
-              <button
-                onClick={() => {
-                  const newTestimonial = {
-                    quote: "الشرح ممتاز وجدير بالتقدير...",
-                    author: "اسم الطالب الجديد",
-                    role: "المرحلة الدراسية",
-                    stars: 5,
-                    initials: "أ"
-                  };
-                  setTestimonials([...testimonials, newTestimonial]);
-                  setSelTestimonialIdx(testimonials.length);
-                  setIsSaved(false);
-                }}
-                className="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 font-bold rounded-xl px-4 py-2 text-xs flex items-center gap-1.5 transition-all"
-              >
-                <Plus className="w-4 h-4" /> إضافة رأي جديد
-              </button>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-6">
-              {/* List */}
-              <div className="md:col-span-1 space-y-2 border-l border-border/30 pl-4 max-h-[500px] overflow-y-auto">
-                {testimonials.map((test, index) => (
-                  <div
-                    key={index}
-                    onClick={() => setSelTestimonialIdx(index)}
-                    className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 ${
-                      selTestimonialIdx === index
-                        ? "bg-primary/10 border-primary text-primary"
-                        : "bg-background border-border hover:bg-muted/80 text-muted-foreground"
-                    }`}
-                  >
-                    <div className="truncate">
-                      <span className="text-sm font-bold block truncate">{test.author || "بدون اسم"}</span>
-                      <span className="text-[10px] text-muted-foreground truncate block">{test.role}</span>
-                    </div>
-
-                    <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => moveItem(testimonials, setTestimonials, index, "up", setSelTestimonialIdx)}
-                        className="p-1 hover:text-foreground transition-colors"
-                        disabled={index === 0}
-                      >
-                        <ArrowUp className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => moveItem(testimonials, setTestimonials, index, "down", setSelTestimonialIdx)}
-                        className="p-1 hover:text-foreground transition-colors"
-                        disabled={index === testimonials.length - 1}
-                      >
-                        <ArrowDown className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => deleteItem(testimonials, setTestimonials, index, setSelTestimonialIdx)}
-                        className="p-1 text-red-400 hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Edit Detail */}
-              <div className="md:col-span-2">
-                {selTestimonialIdx !== null && testimonials[selTestimonialIdx] ? (
-                  <div className="space-y-4 bg-background p-5 rounded-2xl border border-border">
-                    <h4 className="font-bold text-foreground border-b border-border/20 pb-2">تعديل تفاصيل الرأي</h4>
-                    
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-2">
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">اسم الكاتب (طالب / ولي أمر)</label>
-                        <input
-                          type="text"
-                          value={testimonials[selTestimonialIdx].author || ""}
-                          onChange={(e) => {
-                            const copy = [...testimonials];
-                            copy[selTestimonialIdx].author = e.target.value;
-                            // Update initials automatically
-                            if (e.target.value) {
-                              copy[selTestimonialIdx].initials = e.target.value.trim().charAt(0);
-                            }
-                            setTestimonials(copy);
-                            setIsSaved(false);
-                          }}
-                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">الحرف الأول (للدائرة)</label>
-                        <input
-                          type="text"
-                          value={testimonials[selTestimonialIdx].initials || ""}
-                          onChange={(e) => {
-                            const copy = [...testimonials];
-                            copy[selTestimonialIdx].initials = e.target.value;
-                            setTestimonials(copy);
-                            setIsSaved(false);
-                          }}
-                          maxLength={2}
-                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground text-center focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">الوصف / الدور</label>
-                        <input
-                          type="text"
-                          value={testimonials[selTestimonialIdx].role || ""}
-                          onChange={(e) => {
-                            const copy = [...testimonials];
-                            copy[selTestimonialIdx].role = e.target.value;
-                            setTestimonials(copy);
-                            setIsSaved(false);
-                          }}
-                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                          placeholder="طالب ثانوي، ولي أمر..."
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">عدد النجوم (Stars)</label>
-                        <select
-                          value={testimonials[selTestimonialIdx].stars || 5}
-                          onChange={(e) => {
-                            const copy = [...testimonials];
-                            copy[selTestimonialIdx].stars = Number(e.target.value);
-                            setTestimonials(copy);
-                            setIsSaved(false);
-                          }}
-                          className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                        >
-                          <option value="5">⭐⭐⭐⭐⭐ (5 نجوم)</option>
-                          <option value="4">⭐⭐⭐⭐ (4 نجوم)</option>
-                          <option value="3">⭐⭐⭐ (3 نجوم)</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-muted-foreground mb-1.5">الرأي / النص</label>
-                      <textarea
-                        value={testimonials[selTestimonialIdx].quote || ""}
-                        onChange={(e) => {
-                          const copy = [...testimonials];
-                          copy[selTestimonialIdx].quote = e.target.value;
-                          setTestimonials(copy);
-                          setIsSaved(false);
-                        }}
-                        rows={4}
-                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="h-full flex items-center justify-center text-center p-8 border border-dashed border-border rounded-2xl bg-background">
-                    <p className="text-muted-foreground text-sm">اختر رأياً من القائمة لتعديله أو أضف رأياً جديداً.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Testimonials Background Image Upload */}
-            <div className="mt-6 pt-6 border-t border-border/30">
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5 font-sans font-bold">صورة الخلفية لقسم الآراء (Testimonials Background Image)</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.TESTIMONIALS_BG_URL] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.TESTIMONIALS_BG_URL, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                  dir="ltr"
-                />
-                <div className="relative flex-shrink-0">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileUpload(e, SETTINGS_KEYS.TESTIMONIALS_BG_URL)}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    disabled={isUploading}
-                  />
-                  <button
-                    type="button"
-                    className="h-full px-4 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 rounded-xl flex items-center gap-2 transition-colors font-bold text-xs"
-                    disabled={isUploading}
-                  >
-                    {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
-                    <span>رفع صورة</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-          </div>
+          <TestimonialsTab
+            testimonials={testimonials}
+            setTestimonials={setTestimonials}
+            selTestimonialIdx={selTestimonialIdx}
+            setSelTestimonialIdx={setSelTestimonialIdx}
+            moveItem={moveItem}
+            deleteItem={deleteItem}
+            formData={formData}
+            handleChange={handleChange}
+            handleFileUpload={handleFileUpload}
+            isUploading={isUploading}
+            setIsSaved={setIsSaved}
+          />
         )}
 
-        {/* FAQ SECTION */}
         {activeTab === "faq" && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center border-b border-border/30 pb-3">
-              <h3 className="text-lg font-bold text-foreground">إعدادات الأسئلة الشائعة (FAQ)</h3>
-              <button
-                onClick={() => {
-                  const newFaq = {
-                    q: "سؤال جديد؟",
-                    a: "الإجابة هنا..."
-                  };
-                  setFaq([...faq, newFaq]);
-                  setSelFaqIdx(faq.length);
-                  setIsSaved(false);
-                }}
-                className="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 font-bold rounded-xl px-4 py-2 text-xs flex items-center gap-1.5 transition-all"
-              >
-                <Plus className="w-4 h-4" /> إضافة سؤال جديد
-              </button>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-6">
-              {/* List */}
-              <div className="md:col-span-1 space-y-2 border-l border-border/30 pl-4 max-h-[500px] overflow-y-auto">
-                {faq.map((item, index) => (
-                  <div
-                    key={index}
-                    onClick={() => setSelFaqIdx(index)}
-                    className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 ${
-                      selFaqIdx === index
-                        ? "bg-primary/10 border-primary text-primary"
-                        : "bg-background border-border hover:bg-muted/80 text-muted-foreground"
-                    }`}
-                  >
-                    <span className="text-sm font-bold truncate block">{item.q || "بدون سؤال"}</span>
-
-                    <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => moveItem(faq, setFaq, index, "up", setSelFaqIdx)}
-                        className="p-1 hover:text-foreground transition-colors"
-                        disabled={index === 0}
-                      >
-                        <ArrowUp className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => moveItem(faq, setFaq, index, "down", setSelFaqIdx)}
-                        className="p-1 hover:text-foreground transition-colors"
-                        disabled={index === faq.length - 1}
-                      >
-                        <ArrowDown className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => deleteItem(faq, setFaq, index, setSelFaqIdx)}
-                        className="p-1 text-red-400 hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Edit Detail */}
-              <div className="md:col-span-2">
-                {selFaqIdx !== null && faq[selFaqIdx] ? (
-                  <div className="space-y-4 bg-background p-5 rounded-2xl border border-border">
-                    <h4 className="font-bold text-foreground border-b border-border/20 pb-2">تعديل تفاصيل السؤال</h4>
-                    
-                    <div>
-                      <label className="block text-xs font-semibold text-muted-foreground mb-1.5">السؤال</label>
-                      <input
-                        type="text"
-                        value={faq[selFaqIdx].q || ""}
-                        onChange={(e) => {
-                          const copy = [...faq];
-                          copy[selFaqIdx].q = e.target.value;
-                          setFaq(copy);
-                          setIsSaved(false);
-                        }}
-                        className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-muted-foreground mb-1.5">الإجابة</label>
-                      <textarea
-                        value={faq[selFaqIdx].a || ""}
-                        onChange={(e) => {
-                          const copy = [...faq];
-                          copy[selFaqIdx].a = e.target.value;
-                          setFaq(copy);
-                          setIsSaved(false);
-                        }}
-                        rows={5}
-                        className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="h-full flex items-center justify-center text-center p-8 border border-dashed border-border rounded-2xl bg-background">
-                    <p className="text-muted-foreground text-sm">اختر سؤالاً من القائمة لتعديله أو أضف سؤالاً جديداً.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <FaqTab
+            faq={faq}
+            setFaq={setFaq}
+            selFaqIdx={selFaqIdx}
+            setSelFaqIdx={setSelFaqIdx}
+            moveItem={moveItem}
+            deleteItem={deleteItem}
+            setIsSaved={setIsSaved}
+          />
         )}
 
-        {/* PORTFOLIO SECTION */}
         {activeTab === "portfolio" && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center border-b border-border/30 pb-3">
-              <h3 className="text-lg font-bold text-foreground">إعدادات معرض الأعمال (Portfolio)</h3>
-              <button
-                onClick={() => {
-                  const newItem = {
-                    category: "Programming",
-                    title: "مشروع جديد للطلاب",
-                    img: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&q=70"
-                  };
-                  setPortfolio([...portfolio, newItem]);
-                  setSelPortfolioIdx(portfolio.length);
-                  setIsSaved(false);
-                }}
-                className="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 font-bold rounded-xl px-4 py-2 text-xs flex items-center gap-1.5 transition-all"
-              >
-                <Plus className="w-4 h-4" /> إضافة عمل جديد
-              </button>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-6">
-              {/* List */}
-              <div className="md:col-span-1 space-y-2 border-l border-border/30 pl-4 max-h-[500px] overflow-y-auto">
-                {portfolio.map((item, index) => (
-                  <div
-                    key={index}
-                    onClick={() => setSelPortfolioIdx(index)}
-                    className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 ${
-                      selPortfolioIdx === index
-                        ? "bg-primary/10 border-primary text-primary"
-                        : "bg-background border-border hover:bg-muted/80 text-muted-foreground"
-                    }`}
-                  >
-                    <div className="truncate flex items-center gap-2">
-                      {item.img && (
-                        <img src={item.img} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
-                      )}
-                      <div className="truncate text-right">
-                        <span className="text-sm font-bold block truncate">{item.title || "بدون عنوان"}</span>
-                        <span className="text-[10px] text-muted-foreground truncate block">{item.category}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => moveItem(portfolio, setPortfolio, index, "up", setSelPortfolioIdx)}
-                        className="p-1 hover:text-foreground transition-colors"
-                        disabled={index === 0}
-                      >
-                        <ArrowUp className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => moveItem(portfolio, setPortfolio, index, "down", setSelPortfolioIdx)}
-                        className="p-1 hover:text-foreground transition-colors"
-                        disabled={index === portfolio.length - 1}
-                      >
-                        <ArrowDown className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => deleteItem(portfolio, setPortfolio, index, setSelPortfolioIdx)}
-                        className="p-1 text-red-400 hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Edit Detail */}
-              <div className="md:col-span-2">
-                {selPortfolioIdx !== null && portfolio[selPortfolioIdx] ? (
-                  <div className="space-y-4 bg-background p-5 rounded-2xl border border-border">
-                    <h4 className="font-bold text-foreground border-b border-border/20 pb-2">تعديل تفاصيل العمل</h4>
-                    
-                    <div>
-                      <label className="block text-xs font-semibold text-muted-foreground mb-1.5">عنوان العمل (Title)</label>
-                      <input
-                        type="text"
-                        value={portfolio[selPortfolioIdx].title || ""}
-                        onChange={(e) => {
-                          const copy = [...portfolio];
-                          copy[selPortfolioIdx].title = e.target.value;
-                          setPortfolio(copy);
-                          setIsSaved(false);
-                        }}
-                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-muted-foreground mb-1.5">القسم / الفئة (Category)</label>
-                      <select
-                        value={portfolio[selPortfolioIdx].category || "Programming"}
-                        onChange={(e) => {
-                          const copy = [...portfolio];
-                          copy[selPortfolioIdx].category = e.target.value;
-                          setPortfolio(copy);
-                          setIsSaved(false);
-                        }}
-                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary font-sans"
-                      >
-                        <option value="Kids">الأطفال (Kids)</option>
-                        <option value="Programming">برمجة (Programming)</option>
-                        <option value="AI">ذكاء اصطناعي (AI)</option>
-                        <option value="Educational">تعليمي (Educational)</option>
-                        <option value="Web">ويب (Web)</option>
-                        <option value="Academic">أكاديمي (Academic)</option>
-                        <option value="Media">ميديا (Media)</option>
-                        <option value="Branding">براندنج (Branding)</option>
-                        <option value="Showcase">مشاريع الطلاب (Showcase)</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-muted-foreground mb-1.5">صورة العمل (Image URL)</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={portfolio[selPortfolioIdx].img || ""}
-                          onChange={(e) => {
-                            const copy = [...portfolio];
-                            copy[selPortfolioIdx].img = e.target.value;
-                            setPortfolio(copy);
-                            setIsSaved(false);
-                          }}
-                          className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                          dir="ltr"
-                        />
-                        <div className="relative flex-shrink-0">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleFileUpload(e, "", (url) => {
-                              const copy = [...portfolio];
-                              copy[selPortfolioIdx].img = url;
-                              setPortfolio(copy);
-                              setIsSaved(false);
-                            })}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            disabled={isUploading}
-                          />
-                          <button
-                            type="button"
-                            className="h-full px-4 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 rounded-xl flex items-center gap-2 transition-colors font-bold text-xs"
-                            disabled={isUploading}
-                          >
-                            {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
-                            <span>رفع صورة</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="h-full flex items-center justify-center text-center p-8 border border-dashed border-border rounded-2xl bg-background">
-                    <p className="text-muted-foreground text-sm">اختر عملاً من القائمة لتعديله أو أضف عملاً جديداً.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <PortfolioTab
+            portfolio={portfolio}
+            setPortfolio={setPortfolio}
+            selPortfolioIdx={selPortfolioIdx}
+            setSelPortfolioIdx={setSelPortfolioIdx}
+            moveItem={moveItem}
+            deleteItem={deleteItem}
+            handleFileUpload={handleFileUpload}
+            isUploading={isUploading}
+            setIsSaved={setIsSaved}
+          />
         )}
 
-        {/* EDUVERSE SECTION */}
         {activeTab === "eduverse" && (
-          <div className="space-y-5">
-            <h3 className="text-lg font-bold text-foreground">إعدادات سكن إيدوفيرس (Eduverse)</h3>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5 font-sans font-bold">صورة خلفية القسم (Background Image)</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.EDUVERSE_IMAGE_URL] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.EDUVERSE_IMAGE_URL, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                  dir="ltr"
-                />
-                <div className="relative flex-shrink-0">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileUpload(e, SETTINGS_KEYS.EDUVERSE_IMAGE_URL)}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    disabled={isUploading}
-                  />
-                  <button
-                    type="button"
-                    className="h-full px-4 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 rounded-xl flex items-center gap-2 transition-colors font-bold text-xs"
-                    disabled={isUploading}
-                  >
-                    {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
-                    <span>رفع صورة</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <EduverseTab
+            formData={formData}
+            handleChange={handleChange}
+            handleFileUpload={handleFileUpload}
+            isUploading={isUploading}
+          />
         )}
 
-        {/* WHY CHOOSE ME SECTION */}
         {activeTab === "why-choose-me" && (
-          <div className="space-y-5">
-            <h3 className="text-lg font-bold text-foreground">إعدادات سكن "ليه تختارني" (Why Choose Me)</h3>
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5 font-sans font-bold">صورة خلفية القسم (Background Image)</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.WHY_CHOOSE_ME_BG_URL] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.WHY_CHOOSE_ME_BG_URL, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                  dir="ltr"
-                />
-                <div className="relative flex-shrink-0">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileUpload(e, SETTINGS_KEYS.WHY_CHOOSE_ME_BG_URL)}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    disabled={isUploading}
-                  />
-                  <button
-                    type="button"
-                    className="h-full px-4 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 rounded-xl flex items-center gap-2 transition-colors font-bold text-xs"
-                    disabled={isUploading}
-                  >
-                    {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
-                    <span>رفع صورة</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <WhyChooseMeTab
+            formData={formData}
+            handleChange={handleChange}
+            handleFileUpload={handleFileUpload}
+            isUploading={isUploading}
+          />
         )}
 
-        {/* CONTACT SECTION */}
-        {activeTab === "contact" && (
-          <div className="space-y-5">
-            <h3 className="text-lg font-bold text-foreground">بيانات التواصل (Contact Info)</h3>
-            
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">رقم الواتساب الرئيسي (مع كود الدولة، مثال: 201066711545)</label>
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.CONTACT_WHATSAPP] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.CONTACT_WHATSAPP, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-left font-sans"
-                  dir="ltr"
-                  placeholder="201066711545"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">العنوان / المقر (مثل: Eduverse، فلل الجامعة، الزقازيق)</label>
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.CONTACT_ADDRESS] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.CONTACT_ADDRESS, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                  placeholder="Eduverse، فلل الجامعة، الزقازيق"
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">رقم الهاتف الأول (Phone 1)</label>
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.CONTACT_PHONE1] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.CONTACT_PHONE1, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-left font-sans"
-                  dir="ltr"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">رقم الهاتف الثاني (Phone 2)</label>
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.CONTACT_PHONE2] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.CONTACT_PHONE2, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-left font-sans"
-                  dir="ltr"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">رقم الهاتف الثالث (Phone 3)</label>
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.CONTACT_PHONE3] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.CONTACT_PHONE3, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-left font-sans"
-                  dir="ltr"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">رابط خرائط جوجل (Google Maps Embed or Link URL)</label>
-              <input
-                type="text"
-                value={formData[SETTINGS_KEYS.CONTACT_MAPS_URL] || ""}
-                onChange={(e) => handleChange(SETTINGS_KEYS.CONTACT_MAPS_URL, e.target.value)}
-                className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-left font-sans"
-                dir="ltr"
-                placeholder="https://maps.google.com/..."
-              />
-            </div>
-          </div>
+        {(activeTab === "contact" || activeTab === "social") && (
+          <ContactSocialTab
+            activeTab={activeTab}
+            formData={formData}
+            handleChange={handleChange}
+          />
         )}
 
-        {/* SOCIAL SECTION */}
-        {activeTab === "social" && (
-          <div className="space-y-5">
-            <h3 className="text-lg font-bold text-foreground">مواقع التواصل الاجتماعي (Social Media links)</h3>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">فيسبوك (Facebook URL)</label>
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.SOCIAL_FACEBOOK] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.SOCIAL_FACEBOOK, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-left font-sans"
-                  dir="ltr"
-                  placeholder="https://facebook.com/..."
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">انستجرام (Instagram URL)</label>
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.SOCIAL_INSTAGRAM] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.SOCIAL_INSTAGRAM, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-left font-sans"
-                  dir="ltr"
-                  placeholder="https://instagram.com/..."
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">يوتيوب (YouTube URL)</label>
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.SOCIAL_YOUTUBE] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.SOCIAL_YOUTUBE, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-left font-sans"
-                  dir="ltr"
-                  placeholder="https://youtube.com/..."
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">لينكد إن (LinkedIn URL)</label>
-                <input
-                  type="text"
-                  value={formData[SETTINGS_KEYS.SOCIAL_LINKEDIN] || ""}
-                  onChange={(e) => handleChange(SETTINGS_KEYS.SOCIAL_LINKEDIN, e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-left font-sans"
-                  dir="ltr"
-                  placeholder="https://linkedin.com/in/..."
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 13. Audit Logs Tab */}
         {activeTab === "audit-logs" && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-border/60 pb-3">
-              <div>
-                <h3 className="text-lg font-bold text-foreground">📋 سجل عمليات وإجراءات المشرفين (Audit Logs)</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">تتبع كامل بكل الإجراءات والتعديلات والعمليات التي تمت على المنصة ومُجري كل عملية بالوقت والدقيقة.</p>
-              </div>
-              <button
-                type="button"
-                onClick={fetchAuditLogs}
-                disabled={loadingAuditLogs}
-                className="rounded-xl border border-border px-3 py-1.5 text-xs font-bold text-foreground hover:bg-muted/50 transition flex items-center gap-1.5"
-              >
-                {loadingAuditLogs ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "🔄 تحديث السجل"}
-              </button>
-            </div>
-
-            {loadingAuditLogs ? (
-              <div className="py-12 text-center text-muted-foreground flex flex-col items-center justify-center gap-2">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                <span className="text-xs font-semibold">جاري جلب سجل العمليات...</span>
-              </div>
-            ) : auditLogs.length === 0 ? (
-              <div className="rounded-2xl border border-dashed p-8 text-center text-xs text-muted-foreground">
-                لا توجد عمليات مسجلة حتى الآن.
-              </div>
-            ) : (
-              <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-right text-xs">
-                    <thead className="bg-muted/50 text-muted-foreground font-bold border-b border-border">
-                      <tr>
-                        <th className="p-3">الوقت والتاريخ</th>
-                        <th className="p-3">المُنفِّذ (Role)</th>
-                        <th className="p-3">نوع الإجراء</th>
-                        <th className="p-3">التفاصيل والوصف</th>
-                        <th className="p-3 text-left">عنوان IP</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {auditLogs.map((log) => (
-                        <tr
-                          key={log.id}
-                          onClick={() => setSelectedAuditLog(log)}
-                          className="hover:bg-primary/5 cursor-pointer transition-colors group"
-                          title="انقر لعرض التفاصيل الكاملة للإجراء في نافذة مخصصة"
-                        >
-                          <td className="p-3 font-semibold text-foreground whitespace-nowrap">
-                            {new Date(log.createdAt).toLocaleDateString("ar-EG")} - {new Date(log.createdAt).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}
-                          </td>
-                          <td className="p-3 whitespace-nowrap">
-                            <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-extrabold border ${
-                              log.actorRole === "superadmin"
-                                ? "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200"
-                                : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-200"
-                            }`}>
-                              {log.actorRole === "superadmin" ? "Super Admin" : "Subadmin"}
-                            </span>
-                          </td>
-                          <td className="p-3 font-bold text-foreground whitespace-nowrap dir-ltr text-right">
-                            {log.action}
-                          </td>
-                          <td className="p-3 text-foreground/80 leading-relaxed max-w-md truncate group-hover:text-primary font-medium">
-                            {log.details || "—"}
-                          </td>
-                          <td className="p-3 text-left font-mono text-[11px] text-muted-foreground whitespace-nowrap dir-ltr">
-                            {log.ipAddress || "—"}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {/* AUDIT LOG DETAILS MODAL */}
-            {selectedAuditLog && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 dir-rtl">
-                <div className="w-full max-w-lg bg-card border border-border rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-                  {/* Modal Header */}
-                  <div className="flex items-center justify-between border-b border-border/80 bg-muted/30 px-6 py-4">
-                    <div className="flex items-center gap-2.5">
-                      <span className="grid h-9 w-9 place-items-center rounded-2xl bg-primary/10 text-primary font-black text-sm">
-                        📋
-                      </span>
-                      <div>
-                        <h3 className="text-base font-extrabold text-foreground">تفاصيل الإجراء المُسجل</h3>
-                        <p className="text-xs text-muted-foreground dir-ltr text-right font-mono">ID #{selectedAuditLog.id}</p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedAuditLog(null)}
-                      className="rounded-xl p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-
-                  {/* Modal Content */}
-                  <div className="p-6 space-y-4 text-xs font-medium">
-                    <div className="grid grid-cols-2 gap-3 bg-muted/20 p-3.5 rounded-2xl border border-border/60">
-                      <div>
-                        <span className="block text-muted-foreground text-[11px] font-bold mb-0.5">تاريخ ووقت الإجراء</span>
-                        <span className="font-bold text-foreground dir-rtl">
-                          {new Date(selectedAuditLog.createdAt).toLocaleDateString("ar-EG")} - {new Date(selectedAuditLog.createdAt).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="block text-muted-foreground text-[11px] font-bold mb-0.5">عنوان IP المنفذ</span>
-                        <span className="font-mono font-bold text-primary dir-ltr block text-right">
-                          {selectedAuditLog.ipAddress || "—"}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div>
-                        <span className="block text-muted-foreground text-[11px] font-bold mb-1">نوع الإجراء (Action Type)</span>
-                        <span className="inline-block px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-xl font-bold font-mono text-xs dir-ltr">
-                          {selectedAuditLog.action}
-                        </span>
-                      </div>
-
-                      <div>
-                        <span className="block text-muted-foreground text-[11px] font-bold mb-1">العنصر المستهدف (Target)</span>
-                        <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-0.5 bg-muted text-foreground font-bold rounded-lg uppercase">
-                            {selectedAuditLog.targetType}
-                          </span>
-                          {selectedAuditLog.targetId && (
-                            <span className="font-mono text-muted-foreground font-bold">
-                              [ID: {selectedAuditLog.targetId}]
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="space-y-1.5 pt-2 border-t border-border/60">
-                        <span className="block text-muted-foreground text-[11px] font-bold">تفاصيل العملية والتغييرات بالتفصيل (Full Change Log):</span>
-                        <div className="p-4 bg-muted/40 rounded-2xl border border-border/80 text-foreground leading-relaxed font-semibold text-xs space-y-2 whitespace-pre-wrap">
-                          {selectedAuditLog.details
-                            ? selectedAuditLog.details.split(" | ").map((part, idx) => (
-                                <div key={idx} className="flex items-start gap-2">
-                                  <span className="text-primary font-black">•</span>
-                                  <span>{part}</span>
-                                </div>
-                              ))
-                            : "لا توجد تفاصيل إضافية مسجلة لهذا الإجراء."}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Modal Footer */}
-                  <div className="border-t border-border/80 bg-muted/20 px-6 py-3.5 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedAuditLog(null)}
-                      className="px-5 py-2 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:bg-primary/90 transition shadow-xs cursor-pointer"
-                    >
-                      إغلاق Window
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          <AuditLogsTab
+            auditLogs={auditLogs}
+            loadingAuditLogs={loadingAuditLogs}
+            fetchAuditLogs={fetchAuditLogs}
+            selectedAuditLog={selectedAuditLog}
+            setSelectedAuditLog={setSelectedAuditLog}
+          />
         )}
 
-        {/* 14. Admin Accounts & Password Management Tab */}
         {activeTab === "admin-accounts" && (
-          <div className="space-y-6">
-            <div className="border-b border-border/60 pb-3">
-              <h3 className="text-lg font-bold text-foreground">التحكم في الحسابات وكلمات المرور والصلاحيات</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">إدارة كاملة لكلمات مرور المدير الرئيسي (Super Admin) والمشرف المساعد (Subadmin).</p>
-            </div>
-
-            {role !== "superadmin" ? (
-              <div className="rounded-2xl border border-amber-300 bg-amber-50/80 p-5 text-xs text-amber-900 font-semibold leading-relaxed">
-                عذرًا، تغيير كلمات المرور وإدارة الحسابات مقتصر فقط على المدير الرئيسي (Super Admin).
-              </div>
-            ) : (
-              <form onSubmit={handlePasswordChange} className="space-y-5 max-w-xl bg-card border border-border p-6 rounded-2xl shadow-2xs">
-                {lastUpdatedInfo && (
-                  <div className="rounded-2xl border border-emerald-300 bg-emerald-50/90 dark:bg-emerald-950/50 p-4 space-y-2 text-emerald-950 dark:text-emerald-200 text-xs font-semibold">
-                    <div className="flex items-center gap-2 font-extrabold text-sm text-emerald-800 dark:text-emerald-300">
-                      <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-                      <span>تم حفظ وتأكيد كلمة المرور بنجاح في قاعدة البيانات!</span>
-                    </div>
-                    {lastUpdatedInfo.pass && (
-                      <p className="dir-rtl">
-                        • كلمة مرور المدير الرئيسي الجديدة: <code className="bg-emerald-200/60 dark:bg-emerald-900/60 px-2 py-0.5 rounded-md font-mono text-emerald-950 dark:text-emerald-100 font-bold">{lastUpdatedInfo.pass}</code>
-                      </p>
-                    )}
-                    {lastUpdatedInfo.subPass && (
-                      <p className="dir-rtl">
-                        • كلمة مرور المشرف المساعد الجديدة: <code className="bg-emerald-200/60 dark:bg-emerald-900/60 px-2 py-0.5 rounded-md font-mono text-emerald-950 dark:text-emerald-100 font-bold">{lastUpdatedInfo.subPass}</code>
-                      </p>
-                    )}
-                    <span className="block text-[11px] text-emerald-700/80 dark:text-emerald-400/80 mt-1">
-                      وقت التحديث: {lastUpdatedInfo.time} — كلمة المرور الآن نشطة ومحفوظة بصفة دائمة ولن تتأثر بفرق التحديثات مستقبلاً.
-                    </span>
-                  </div>
-                )}
-
-                <div className="space-y-4">
-                  <div className="rounded-xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 p-4 space-y-2">
-                    <strong className="block text-sm font-bold text-blue-900 dark:text-blue-300">كلمة مرور المدير الرئيسي (Super Admin)</strong>
-                    <p className="text-xs text-blue-700 dark:text-blue-400">تتيح الوصول لجميع الصلاحيات والإعدادات وحذف الطلاب.</p>
-                    <div className="relative flex items-center">
-                      <input
-                        type={showSuperAdminPass ? "text" : "password"}
-                        value={superAdminPass}
-                        onChange={(e) => setSuperAdminPass(e.target.value)}
-                        placeholder="أدخل كلمة مرور جديدة للـ Super Admin (أو اتركها فارغة)..."
-                        className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm font-sans"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowSuperAdminPass(!showSuperAdminPass)}
-                        className="absolute left-3 text-muted-foreground hover:text-foreground transition-colors p-1"
-                        title={showSuperAdminPass ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-                      >
-                        {showSuperAdminPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl bg-amber-50/60 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 p-4 space-y-2">
-                    <strong className="block text-sm font-bold text-amber-900 dark:text-amber-300">كلمة مرور المشرف المساعد (Subadmin)</strong>
-                    <p className="text-xs text-amber-700 dark:text-amber-400">تتيح إدارة الطلاب كاملة والرد والحجوزات والإشعارات وقبول الإيصالات (بدون حذف).</p>
-                    <div className="relative flex items-center">
-                      <input
-                        type={showSubAdminPass ? "text" : "password"}
-                        value={subAdminPass}
-                        onChange={(e) => setSubAdminPass(e.target.value)}
-                        placeholder="أدخل كلمة مرور جديدة للـ Subadmin..."
-                        className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm font-sans"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowSubAdminPass(!showSubAdminPass)}
-                        className="absolute left-3 text-muted-foreground hover:text-foreground transition-colors p-1"
-                        title={showSubAdminPass ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-                      >
-                        {showSubAdminPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isUpdatingPasswords || (!superAdminPass && !subAdminPass)}
-                  className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold text-xs shadow-sm hover:bg-primary/90 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                >
-                  {isUpdatingPasswords ? <Loader2 className="h-4 w-4 animate-spin" /> : "حفظ وتأكيد كلمات المرور في قاعدة البيانات"}
-                </button>
-              </form>
-            )}
-
-            {/* Dynamic Subadmin Accounts Management Section */}
-            {role === "superadmin" && (
-              <div className="space-y-4 pt-6 border-t border-border/60">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <h4 className="text-base font-extrabold text-foreground">👥 إنشاء وإدارة حسابات المشرفين المساعدين</h4>
-                    <p className="text-xs text-muted-foreground mt-0.5">يمكنك إنشاء حسابات منفصلة بأسماء مختلفة وكلمات مرور خاصة بكل مشرف لتوثيق إجراءاته بدقة.</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowSubAdminModal(true)}
-                    className="h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm"
-                  >
-                    <Plus className="h-4 w-4" /> إضافة مشرف مساعد جديد
-                  </button>
-                </div>
-
-                {loadingSubAdminAccounts ? (
-                  <div className="py-8 text-center text-muted-foreground flex items-center justify-center gap-2">
-                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                    <span className="text-xs font-bold">جاري تحميل حسابات المشرفين...</span>
-                  </div>
-                ) : subAdminAccounts.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed p-6 text-center text-xs text-muted-foreground bg-muted/20">
-                    لا توجد حسابات ديناميكية مضافة بعد. يمكنك إنشاء حساب جديد بالضغط على الزر أعلاه.
-                  </div>
-                ) : (
-                  <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-2xs">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-right text-xs">
-                        <thead className="bg-muted/50 text-muted-foreground font-bold border-b border-border">
-                          <tr>
-                            <th className="p-3">اسم المشرف (الاسم الظاهر)</th>
-                            <th className="p-3">اسم المستخدم (Username)</th>
-                            <th className="p-3">تاريخ الإنشاء</th>
-                            <th className="p-3">الحالة</th>
-                            <th className="p-3 text-left">الإجراءات</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                          {subAdminAccounts.map((acc) => (
-                            <tr key={acc.id} className="hover:bg-muted/30 transition-colors">
-                              <td className="p-3 font-extrabold text-foreground">
-                                👤 {acc.displayName}
-                              </td>
-                              <td className="p-3 font-mono text-primary font-bold dir-ltr text-right">
-                                @{acc.username}
-                              </td>
-                              <td className="p-3 text-muted-foreground">
-                                {new Date(acc.createdAt).toLocaleDateString("ar-EG")}
-                              </td>
-                              <td className="p-3">
-                                <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-200">
-                                  نشط ومفعّل
-                                </span>
-                              </td>
-                              <td className="p-3 text-left">
-                                <button
-                                  type="button"
-                                  onClick={async () => {
-                                    if (!confirm(`هل أنت تأكد من حذف حساب المشرف (${acc.displayName})؟`)) return;
-                                    try {
-                                      const res = await fetch(`/api/admin/subadmins/${acc.id}`, {
-                                        method: "DELETE",
-                                        credentials: "include",
-                                      });
-                                      if (!res.ok) throw new Error("فشل حذف الحساب");
-                                      toast({ variant: "success", title: "تم حذف حساب المشرف بنجاح" });
-                                      fetchSubAdminAccounts();
-                                    } catch (err: any) {
-                                      toast({ title: "خطأ", description: err.message, variant: "destructive" });
-                                    }
-                                  }}
-                                  className="h-8 px-2.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold transition flex items-center gap-1 ml-auto"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" /> حذف الحساب
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <AdminAccountsTab
+            role={role}
+            handlePasswordChange={handlePasswordChange}
+            lastUpdatedInfo={lastUpdatedInfo}
+            superAdminPass={superAdminPass}
+            setSuperAdminPass={setSuperAdminPass}
+            showSuperAdminPass={showSuperAdminPass}
+            setShowSuperAdminPass={setShowSuperAdminPass}
+            subAdminPass={subAdminPass}
+            setSubAdminPass={setSubAdminPass}
+            showSubAdminPass={showSubAdminPass}
+            setShowSubAdminPass={setShowSubAdminPass}
+            isUpdatingPasswords={isUpdatingPasswords}
+            showSubAdminModal={showSubAdminModal}
+            setShowSubAdminModal={setShowSubAdminModal}
+            loadingSubAdminAccounts={loadingSubAdminAccounts}
+            subAdminAccounts={subAdminAccounts}
+            fetchSubAdminAccounts={fetchSubAdminAccounts}
+            newSubAdminUsername={newSubAdminUsername}
+            setNewSubAdminUsername={setNewSubAdminUsername}
+            newSubAdminDisplayName={newSubAdminDisplayName}
+            setNewSubAdminDisplayName={setNewSubAdminDisplayName}
+            newSubAdminPassword={newSubAdminPassword}
+            setNewSubAdminPassword={setNewSubAdminPassword}
+            isCreatingSubAdmin={isCreatingSubAdmin}
+            setIsCreatingSubAdmin={setIsCreatingSubAdmin}
+          />
         )}
-
-      {/* Modal: Create Subadmin Account */}
-      {showSubAdminModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs dir-rtl">
-          <div className="w-full max-w-md bg-card border border-border rounded-3xl p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <h3 className="font-extrabold text-base text-foreground flex items-center gap-2">
-                <span>👤</span> إضافة حساب مشرف مساعد جديد
-              </h3>
-              <button
-                type="button"
-                onClick={() => setShowSubAdminModal(false)}
-                className="rounded-xl p-1.5 text-muted-foreground hover:bg-muted"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                setIsCreatingSubAdmin(true);
-                try {
-                  const res = await fetch("/api/admin/subadmins", {
-                    method: "POST",
-                    credentials: "include",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      username: newSubAdminUsername,
-                      displayName: newSubAdminDisplayName,
-                      password: newSubAdminPassword,
-                    }),
-                  });
-                  const data = await res.json();
-                  if (!res.ok) throw new Error(data.error || "فشل إنشاء حساب المشرف");
-                  toast({ variant: "success", title: "تم إنشاء حساب المشرف بنجاح 🎉", description: `يمكن للمشرف الدخول باستخدام اسم المستخدم @${newSubAdminUsername}` });
-                  setShowSubAdminModal(false);
-                  setNewSubAdminUsername("");
-                  setNewSubAdminDisplayName("");
-                  setNewSubAdminPassword("");
-                  fetchSubAdminAccounts();
-                } catch (err: any) {
-                  toast({ title: "خطأ في الإضافة", description: err.message, variant: "destructive" });
-                } finally {
-                  setIsCreatingSubAdmin(false);
-                }
-              }}
-              className="space-y-4 text-xs"
-            >
-              <div>
-                <label className="block font-bold text-foreground mb-1">اسم المشرف (الاسم الظاهر مثل: أحمد علي)</label>
-                <input
-                  type="text"
-                  required
-                  value={newSubAdminDisplayName}
-                  onChange={(e) => setNewSubAdminDisplayName(e.target.value)}
-                  placeholder="مثال: أستاذ أحمد / مساعد 1"
-                  className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-foreground mb-1">اسم المستخدم للدخول (Username بالإنجليزية)</label>
-                <input
-                  type="text"
-                  required
-                  value={newSubAdminUsername}
-                  onChange={(e) => setNewSubAdminUsername(e.target.value)}
-                  placeholder="مثال: ahmed_ali"
-                  className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-sm dir-ltr text-right"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-foreground mb-1">كلمة المرور (لا تقل عن 6 أحرف)</label>
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  value={newSubAdminPassword}
-                  onChange={(e) => setNewSubAdminPassword(e.target.value)}
-                  placeholder="أدخل كلمة مرور قوية..."
-                  className="w-full bg-background border border-border rounded-xl px-3.5 py-2.5 text-sm"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => setShowSubAdminModal(false)}
-                  className="h-10 px-4 rounded-xl border border-border text-foreground font-bold hover:bg-muted"
-                >
-                  إلغاء
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreatingSubAdmin}
-                  className="h-10 px-5 rounded-xl bg-primary text-primary-foreground font-bold flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-50"
-                >
-                  {isCreatingSubAdmin ? <Loader2 className="h-4 w-4 animate-spin" /> : "إنشاء الحساب 🚀"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       </div>
     </div>

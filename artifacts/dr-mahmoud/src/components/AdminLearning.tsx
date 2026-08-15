@@ -36,6 +36,7 @@ import type { Student as PlatformStudent } from "@/types/platform";
 import { StudentsTab } from "./admin/learning/StudentsTab";
 import { PaymentsTab } from "./admin/learning/PaymentsTab";
 import { NotificationsTab } from "./admin/learning/NotificationsTab";
+import { OverviewSection } from "./admin/learning/OverviewSection";
 
 type Student = PlatformStudent & {
   accessCode?: string | null;
@@ -1200,212 +1201,27 @@ export function AdminLearning({
         </div>
       </div>
 
-      {/* 2 & 4. Education Statistics Cards & Stage Breakdown */}
-      {(() => {
-        const paidCount = students.filter((s) => s.paymentStatus === "paid").length;
-
-        return (
-          <div className="space-y-4">
-            {/* General System Stats */}
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
-              <button
-                type="button"
-                onClick={() => setTab("students")}
-                className="rounded-2xl border border-[#E4EAF2] bg-white p-4 text-right shadow-xs transition hover:border-[#0866D9]/40 flex flex-col justify-between"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="text-xs font-semibold text-[#64748B] block">إجمالي الطلاب</span>
-                    <strong className="mt-1 text-2xl font-black text-[#0F172A] block">{students.length}</strong>
-                  </div>
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#F6F8FC] border border-[#E4EAF2] text-[#0866D9]">
-                    <GraduationCap className="h-5 w-5" strokeWidth={1.8} />
-                  </div>
-                </div>
-                <p className="mt-3 text-xs text-[#64748B] border-t border-[#E4EAF2] pt-2">
-                  {students.filter((s) => s.createdAt && new Date(s.createdAt).toDateString() === new Date().toDateString()).length} جديد اليوم ({students.filter((s) => s.paymentStatus === "pending_review").length} قيد المراجعة)
-                </p>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setTab("students")}
-                className="rounded-2xl border border-[#E4EAF2] bg-white p-4 text-right shadow-xs transition hover:border-[#0866D9]/40 flex flex-col justify-between"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="text-xs font-semibold text-[#64748B] block">الطلاب الجدد اليوم</span>
-                    <strong className="mt-1 text-2xl font-black text-[#0F172A] block">
-                      {students.filter((s) => s.createdAt && new Date(s.createdAt).toDateString() === new Date().toDateString()).length}
-                    </strong>
-                  </div>
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#F6F8FC] border border-[#E4EAF2] text-[#0866D9]">
-                    <UserCheck className="h-5 w-5" strokeWidth={1.8} />
-                  </div>
-                </div>
-                <p className="mt-3 text-xs text-[#64748B] border-t border-[#E4EAF2] pt-2">
-                  {students.filter((s) => s.status === "approved").length} طالب معتمد ومُفعّل
-                </p>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setTab("files")}
-                className="rounded-2xl border border-[#E4EAF2] bg-white p-4 text-right shadow-xs transition hover:border-[#0866D9]/40 flex flex-col justify-between"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="text-xs font-semibold text-[#64748B] block">الملفات التعليمية</span>
-                    <strong className="mt-1 text-2xl font-black text-[#0F172A] block">{files.length}</strong>
-                  </div>
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#F6F8FC] border border-[#E4EAF2] text-[#0866D9]">
-                    <FileText className="h-5 w-5" strokeWidth={1.8} />
-                  </div>
-                </div>
-                <p className="mt-3 text-xs text-[#64748B] border-t border-[#E4EAF2] pt-2">
-                  {files.filter((file) => file.isPublished).length} ملف منشور
-                </p>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setTab("quizzes")}
-                className="rounded-2xl border border-[#E4EAF2] bg-white p-4 text-right shadow-xs transition hover:border-[#0866D9]/40 flex flex-col justify-between"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="text-xs font-semibold text-[#64748B] block">الاختبارات المنشورة</span>
-                    <strong className="mt-1 text-2xl font-black text-[#0F172A] block">
-                      {quizzes.filter((quiz) => quiz.isPublished).length}
-                    </strong>
-                  </div>
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#F6F8FC] border border-[#E4EAF2] text-[#0866D9]">
-                    <ClipboardCheck className="h-5 w-5" strokeWidth={1.8} />
-                  </div>
-                </div>
-                <p className="mt-3 text-xs text-[#64748B] border-t border-[#E4EAF2] pt-2">
-                  {quizzes.length} اختبار إجمالي
-                </p>
-              </button>
-            </div>
-
-            <section className="overflow-hidden rounded-3xl border border-[#DDE7F5] bg-[linear-gradient(135deg,#F8FBFF_0%,#EEF5FF_55%,#F8FAFC_100%)] shadow-sm">
-              <div className="flex flex-col gap-3 border-b border-[#DDE7F5] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#0866D9] text-white shadow-md shadow-blue-200">
-                    <BarChart3 className="h-5 w-5" />
-                  </span>
-                  <div>
-                    <h2 className="text-sm font-black text-[#10223D]">توزيع الطلاب حسب المرحلة</h2>
-                    <p className="mt-0.5 text-[11px] text-[#64748B]">أعداد حقيقية محسوبة من بيانات الطلاب الحالية</p>
-                  </div>
-                </div>
-                <span className="w-fit rounded-full border border-blue-200 bg-white px-3 py-1.5 text-[11px] font-extrabold text-[#0866D9]">
-                  {paidCount} مدفوع من {students.length} طالب
-                </span>
-              </div>
-              <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
-                {studentDistribution.stages.map((stage, index) => {
-                  const percent = students.length ? Math.round((stage.count / students.length) * 100) : 0;
-                  const accents = ["#0866D9", "#7C3AED", "#059669", "#D97706", "#DB2777", "#0891B2"];
-                  const accent = accents[index % accents.length];
-                  return (
-                    <button
-                      key={stage.name}
-                      type="button"
-                      onClick={() => {
-                        setTab("students");
-                        setStudentSearch("");
-                        setStudentStageFilter(stage.name === "مرحلة غير محددة" ? "all" : stage.name);
-                      }}
-                      className="group relative overflow-hidden rounded-2xl border border-white bg-white p-4 text-right shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0866D9]"
-                    >
-                      <span className="absolute inset-y-0 right-0 w-1.5" style={{ backgroundColor: accent }} />
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <span className="block truncate text-xs font-extrabold text-[#334155]" title={stage.name}>{stage.name}</span>
-                          <strong className="mt-2 block text-3xl font-black tracking-tight text-[#0F172A]">{stage.count}</strong>
-                          <span className="text-[11px] font-semibold text-[#64748B]">طالب في هذه المرحلة</span>
-                        </div>
-                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ backgroundColor: `${accent}14`, color: accent }}>
-                          <GraduationCap className="h-5 w-5" />
-                        </span>
-                      </div>
-                      <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                        <div className="h-full rounded-full transition-all" style={{ width: `${percent}%`, backgroundColor: accent }} />
-                      </div>
-                      <div className="mt-2 flex items-center justify-between text-[10px] font-bold text-[#64748B]">
-                        <span>{stage.paid} مدفوع · {stage.count - stage.paid} غير مدفوع</span>
-                        <span style={{ color: accent }}>{percent}% من الإجمالي</span>
-                      </div>
-                    </button>
-                  );
-                })}
-                {studentDistribution.stages.length === 0 && <p className="col-span-full py-8 text-center text-sm font-bold text-[#64748B]">لا توجد بيانات طلاب لعرضها بعد.</p>}
-              </div>
-            </section>
-
-            <section className="overflow-hidden rounded-3xl border border-[#E7E0F8] bg-[linear-gradient(135deg,#FBFAFF_0%,#F5F1FF_55%,#FCFAFF_100%)] shadow-sm">
-              <div className="flex flex-col gap-3 border-b border-[#E7E0F8] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#6D4AFF] text-white shadow-md shadow-violet-200">
-                    <BookOpen className="h-5 w-5" />
-                  </span>
-                  <div>
-                    <h2 className="text-sm font-black text-[#241447]">توزيع الطلاب حسب الكورس</h2>
-                    <p className="mt-0.5 text-[11px] text-[#70658A]">الطلاب المسجلون في كل كورس بدون تكرار</p>
-                  </div>
-                </div>
-                <span className="w-fit rounded-full border border-violet-200 bg-white px-3 py-1.5 text-[11px] font-extrabold text-[#6D4AFF]">
-                  {studentDistribution.courses.length} كورس
-                </span>
-              </div>
-              <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
-                {studentDistribution.courses.map((course, index) => {
-                  const percent = students.length ? Math.round((course.count / students.length) * 100) : 0;
-                  return (
-                    <button
-                      key={course.id}
-                      type="button"
-                      onClick={() => {
-                        setTab("students");
-                        setStudentStageFilter("all");
-                        setStudentSearch(course.title);
-                      }}
-                      className="group rounded-2xl border border-white bg-white p-4 text-right shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6D4AFF]"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <span className="block line-clamp-2 min-h-9 text-xs font-black leading-5 text-[#2B2140]">{course.title}</span>
-                          <div className="mt-2 flex items-end gap-2">
-                            <strong className="text-3xl font-black text-[#6D4AFF]">{course.count}</strong>
-                            <span className="pb-1 text-[11px] font-bold text-[#70658A]">طالب</span>
-                          </div>
-                        </div>
-                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-50 text-[#6D4AFF]">
-                          <BookOpen className="h-5 w-5" />
-                        </span>
-                      </div>
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        {course.stages.slice(0, 2).map((stage) => <span key={stage} className="max-w-full truncate rounded-full bg-[#F3F0FF] px-2 py-1 text-[9px] font-bold text-[#6D4AFF]">{stage}</span>)}
-                        {course.stages.length > 2 && <span className="rounded-full bg-slate-100 px-2 py-1 text-[9px] font-bold text-slate-500">+{course.stages.length - 2}</span>}
-                      </div>
-                      <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-violet-50">
-                        <div className="h-full rounded-full bg-[linear-gradient(90deg,#6D4AFF,#A78BFA)]" style={{ width: `${percent}%` }} />
-                      </div>
-                      <div className="mt-2 flex items-center justify-between text-[10px] font-bold text-[#70658A]">
-                        <span>{course.paid} مدفوع · {course.active} حساب نشط</span>
-                        <span className="text-[#6D4AFF]">{percent}% من الطلاب</span>
-                      </div>
-                    </button>
-                  );
-                })}
-                {studentDistribution.courses.length === 0 && <p className="col-span-full py-8 text-center text-sm font-bold text-[#70658A]">لا توجد كورسات لعرضها بعد.</p>}
-              </div>
-            </section>
-          </div>
-        );
-      })()}
+      {/* OverviewSection with dark mode WCAG styling */}
+      <OverviewSection
+        students={students as any}
+        learningCourses={learningCourses}
+        onSelectStageFilter={(filter) => {
+          setTab("students");
+          setStudentSearch("");
+          setStudentStageFilter(filter);
+          setTimeout(() => {
+            document.getElementById("students-tab-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }, 50);
+        }}
+        onSelectCourseFilter={(courseTitle) => {
+          setTab("students");
+          setStudentStageFilter("all");
+          setStudentSearch(courseTitle);
+          setTimeout(() => {
+            document.getElementById("students-tab-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+          }, 50);
+        }}
+      />
 
       {/* 5. Management Tabs Bar */}
       <div className="w-full overflow-x-auto pb-1 no-scrollbar">
@@ -1444,7 +1260,8 @@ export function AdminLearning({
       ) : (
         <>
           {tab === "students" && (
-            <StudentsTab
+            <div id="students-tab-section">
+              <StudentsTab
               role={role}
               students={students}
               recoveryRequests={recoveryRequests}
@@ -1498,6 +1315,7 @@ export function AdminLearning({
                 }
               }}
             />
+            </div>
           )}
           {tab === "payments" && (
             <PaymentsTab receipts={paymentReceipts} onRefresh={load} />

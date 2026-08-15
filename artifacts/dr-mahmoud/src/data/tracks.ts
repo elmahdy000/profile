@@ -47,17 +47,6 @@ export const tracks: Track[] = [
     level: "متقدم",
     accent: "secondary",
   },
-  {
-    slug: "kids",
-    title: "برمجة الأطفال والناشئين",
-    subtitle: "مسار الأطفال",
-    description:
-      "Scratch للأطفال الصغار و Python مبسط للأكبر — أسلوب تفاعلي ممتع بمشاريع حقيقية.",
-    icon: "Baby",
-    categories: ["kids", "أطفال"],
-    level: "مبتدئ",
-    accent: "secondary",
-  },
 ];
 
 export function getTrackBySlug(slug: string): Track | undefined {

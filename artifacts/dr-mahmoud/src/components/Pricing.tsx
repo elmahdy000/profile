@@ -5,22 +5,6 @@ import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
 
 const defaultPlans = [
   {
-    id: "kids",
-    name: "Kids Package",
-    subtitle: "للأطفال من 4 إلى 18 سنة",
-    headline: "تعلم البرمجة بطريقة ممتعة",
-    desc: null,
-    badge: null,
-    featured: false,
-    features: [
-      "Scratch + Python مبسط",
-      "مشاريع صغيرة",
-      "حصص أسبوعية",
-      "متابعة للوالدين",
-      "أول سيشن تقييم مجانًا",
-    ],
-  },
-  {
     id: "bac",
     name: "تأسيس البكالوريا",
     subtitle: "للصف الأول والثاني والثالث الثانوي",
@@ -34,7 +18,7 @@ const defaultPlans = [
       "حل تدريبات عملية",
       "متابعة مستوى الطالب",
       "تجهيز للامتحانات",
-      "أول سيشن تقييم مجانًا",
+      "معاينة مجانية للمحتوى",
     ],
   },
   {
@@ -50,7 +34,7 @@ const defaultPlans = [
       "ذكاء اصطناعي تطبيقي",
       "تدريبات عملية",
       "مشروع في النهاية",
-      "أول سيشن تقييم مجانًا",
+      "تأهيل سوق العمل",
     ],
   },
   {
@@ -67,14 +51,14 @@ const defaultPlans = [
       "Discrete Math",
       "تحضير للامتحانات",
       "جلسات فردية أو جروب",
-      "أول سيشن تقييم مجانًا",
     ],
   },
 ];
 
 export function Pricing() {
   const { getJson } = useSiteSettings();
-  const plans = getJson(SETTINGS_KEYS.PRICING_LIST, defaultPlans);
+  const rawPlans = getJson(SETTINGS_KEYS.PRICING_LIST, defaultPlans);
+  const plans = (Array.isArray(rawPlans) ? rawPlans : defaultPlans).filter((p: any) => p.id !== "kids");
 
   return (
     <section id="pricing" className="py-20 lg:py-28 bg-muted/40 border-t border-border relative overflow-hidden">
@@ -92,20 +76,20 @@ export function Pricing() {
           className="text-center mb-14"
         >
           <span className="text-primary font-bold text-sm uppercase tracking-wider mb-3 block">
-            المسارات
+            المسارات التعليمية
           </span>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            اختار المسار اللي يناسبك
+            اختر المسار الذي يناسبك
           </h2>
           <p className="text-muted-foreground text-base max-w-lg mx-auto leading-relaxed">
-            أول سيشن تقييم مجانية علشان نحدد المستوى والخطة المناسبة.
+            سجل حسابك على المنصة وتواصل مع أرقام الحجز لتأكيد تفعيل اشتراكك في المسار المناسب.
           </p>
           <div className="w-20 h-0.5 bg-primary/60 mx-auto rounded-full mt-5" />
         </motion.div>
 
-        {/* Cards grid — 4 cols on lg, 2 on md, 1 on mobile */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 max-w-6xl mx-auto">
-          {plans.map((plan, index) => (
+        {/* Cards grid — 3 cols on lg, 1 on mobile */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {plans.map((plan: any, index: number) => (
             <motion.div
               key={plan.id}
               initial={{ opacity: 0, y: 28 }}
@@ -162,7 +146,7 @@ export function Pricing() {
 
               {/* Features list */}
               <ul className="space-y-2.5 flex-grow mb-7">
-                {plan.features.map((f) => (
+                {(plan.features || []).map((f: string) => (
                   <li
                     key={f}
                     className="flex items-center gap-2.5 text-xs text-foreground/80"
@@ -186,9 +170,9 @@ export function Pricing() {
                     : "bg-transparent text-primary border border-primary/30 hover:border-primary/60 hover:bg-primary/6"
                 }`}
               >
-                <a href="https://wa.me/201066711545" target="_blank" rel="noreferrer">
+                <a href="/platform?action=register">
                   <MessageCircle className="w-4 h-4 me-2" />
-                  احجز تقييم مجاني
+                  سجّل بالمنصة للتواصل والحجز
                 </a>
               </Button>
             </motion.div>

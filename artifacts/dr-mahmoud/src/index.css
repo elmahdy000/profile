@@ -62,11 +62,19 @@
 .dark .admin-dashboard-shell [class~="bg-white"],
 .dark .admin-dashboard-shell [class~="bg-[#F7F9FC]"],
 .dark .admin-dashboard-shell [class~="bg-[#F6F8FC]"],
+.dark .admin-dashboard-shell [class~="bg-[#F8FAFC]"],
+.dark .admin-dashboard-shell [class~="bg-[#FAF9FD]"],
 .dark .admin-dashboard-shell [class~="bg-slate-50"],
 .dark .admin-dashboard-shell [class~="bg-slate-50/70"],
 .dark .admin-dashboard-shell [class~="bg-slate-50/80"],
-.dark .admin-dashboard-shell [class~="bg-slate-50/60"] {
+.dark .admin-dashboard-shell [class~="bg-slate-50/60"],
+.dark .admin-dashboard-shell [class~="bg-slate-100"],
+.dark .admin-dashboard-shell [class~="bg-[#E4EAF2]"] {
   background-color: #151e2e !important;
+}
+.dark .admin-dashboard-shell [class~="bg-[#F3F0FF]"],
+.dark .admin-dashboard-shell [class~="bg-violet-50"] {
+  background-color: #211d3a !important;
 }
 .dark .admin-dashboard-shell [class*="bg-[linear-gradient"] {
   background-image: none !important;
@@ -78,6 +86,7 @@
 .dark .admin-dashboard-shell [class~="text-[#241447]"],
 .dark .admin-dashboard-shell [class~="text-[#26364D]"],
 .dark .admin-dashboard-shell [class~="text-[#2B2140]"],
+.dark .admin-dashboard-shell [class~="text-[#334155]"],
 .dark .admin-dashboard-shell [class~="text-slate-900"],
 .dark .admin-dashboard-shell [class~="text-slate-800"],
 .dark .admin-dashboard-shell [class~="text-slate-700"] {
@@ -97,7 +106,9 @@
 .dark .admin-dashboard-shell [class~="border-slate-100"],
 .dark .admin-dashboard-shell [class~="border-slate-200"],
 .dark .admin-dashboard-shell [class~="border-slate-200/80"],
-.dark .admin-dashboard-shell [class~="border-slate-300"] {
+.dark .admin-dashboard-shell [class~="border-slate-300"],
+.dark .admin-dashboard-shell [class~="border-blue-200"],
+.dark .admin-dashboard-shell [class~="border-violet-200"] {
   border-color: #263449 !important;
 }
 .dark .admin-dashboard-shell input,
@@ -121,6 +132,144 @@
 .dark .admin-learning-workspace article:hover {
   border-color: #3b82f6;
   box-shadow: 0 8px 24px rgb(0 0 0 / 22%);
+}
+
+/* Adaptive admin surfaces
+ * Several operational views intentionally share a navy visual language. In
+ * light mode these tokens are translated to the same neutral system used by
+ * the dashboard, while dark mode keeps the native navy palette. */
+.admin-adaptive-dark-ui {
+  color-scheme: dark;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+html:not(.dark) .admin-adaptive-dark-ui {
+  color-scheme: light;
+  color: #172033 !important;
+}
+html:not(.dark) .admin-adaptive-dark-ui[class~="bg-[#0F172A]"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="bg-[#0F172A]"],
+html:not(.dark) .admin-adaptive-dark-ui[class~="bg-[#131E31]"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="bg-[#131E31]"] {
+  background-color: #ffffff !important;
+}
+html:not(.dark) .admin-adaptive-dark-ui [class~="bg-[#0B1424]"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="bg-[#0B1424]/70"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="bg-[#0C1728]"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="bg-[#0D192A]/45"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="bg-[#101B2D]"] {
+  background-color: #f7f9fc !important;
+}
+html:not(.dark) .admin-adaptive-dark-ui [class~="bg-[#131E31]/40"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="bg-[#131E31]/70"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="bg-slate-900/60"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="bg-slate-900/60"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="bg-slate-800/80"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="bg-slate-800"] {
+  background-color: #f1f5f9 !important;
+}
+html:not(.dark) .admin-adaptive-dark-ui [class*="bg-[linear-gradient"] {
+  background-image: none !important;
+  background-color: #ffffff !important;
+}
+html:not(.dark) .admin-adaptive-dark-ui [class~="text-[#F8FAFC]"] {
+  color: #172033 !important;
+}
+html:not(.dark) .admin-adaptive-dark-ui h1[class~="text-white"],
+html:not(.dark) .admin-adaptive-dark-ui h2[class~="text-white"],
+html:not(.dark) .admin-adaptive-dark-ui h3[class~="text-white"],
+html:not(.dark) .admin-adaptive-dark-ui h4[class~="text-white"],
+html:not(.dark) .admin-adaptive-dark-ui strong[class~="text-white"] {
+  color: #172033 !important;
+}
+html:not(.dark) .admin-adaptive-dark-ui [class~="text-[#CBD5E1]"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="text-[#D8E2EF]"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="text-[#E2E8F0]"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="text-[#A9B8CC]"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="text-[#A8B5C7]"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="text-[#B7C4D6]"] {
+  color: #475569 !important;
+}
+html:not(.dark) .admin-adaptive-dark-ui [class~="text-[#94A3B8]"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="text-[#8492A6]"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="text-[#7F91AA]"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="text-[#64748B]"] {
+  color: #64748b !important;
+}
+html:not(.dark) .admin-adaptive-dark-ui [class~="border-[#26364D]"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="border-[#26364D]/55"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="border-[#26364D]/60"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="border-[#2B3D57]"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="border-[#334761]"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="border-[#334761]/70"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="border-slate-800"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="border-slate-800/80"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="border-slate-700"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="border-slate-700/80"] {
+  border-color: #dce4ef !important;
+}
+html:not(.dark) .admin-adaptive-dark-ui input,
+html:not(.dark) .admin-adaptive-dark-ui select,
+html:not(.dark) .admin-adaptive-dark-ui textarea {
+  background-color: #ffffff !important;
+  border-color: #cfd9e7 !important;
+  color: #172033 !important;
+}
+html:not(.dark) .admin-adaptive-dark-ui input::placeholder,
+html:not(.dark) .admin-adaptive-dark-ui textarea::placeholder {
+  color: #7b8ba1 !important;
+}
+html:not(.dark) .admin-adaptive-dark-ui tbody tr:hover {
+  background-color: #eef4fb !important;
+}
+html:not(.dark) .admin-students-table {
+  border-color: #cbd6e4 !important;
+  background-color: #ffffff !important;
+}
+html:not(.dark) .admin-students-table thead {
+  background-color: #162235 !important;
+  color: #dbe5f1 !important;
+}
+html:not(.dark) .admin-students-table tbody {
+  background-color: #ffffff !important;
+}
+html:not(.dark) .admin-students-table tbody tr {
+  background-color: #ffffff !important;
+}
+html:not(.dark) .admin-students-table tbody tr:nth-child(even) {
+  background-color: #f7f9fc !important;
+}
+html:not(.dark) .admin-students-table tbody tr:hover {
+  background-color: #edf3fa !important;
+}
+html:not(.dark) .admin-students-table .text-emerald-400,
+html:not(.dark) .admin-students-table .text-emerald-300 {
+  color: #047857 !important;
+}
+html:not(.dark) .admin-students-table .text-amber-300,
+html:not(.dark) .admin-students-table .text-amber-400 {
+  color: #a16207 !important;
+}
+html:not(.dark) .admin-students-table .text-purple-300 {
+  color: #6d28d9 !important;
+}
+html:not(.dark) .admin-students-table .text-rose-400 {
+  color: #be123c !important;
+}
+html:not(.dark) .admin-adaptive-dark-ui .shadow-xl,
+html:not(.dark) .admin-adaptive-dark-ui .shadow-2xl {
+  --tw-shadow-color: rgb(15 23 42 / 10%);
+}
+html:not(.dark) .admin-sidebar-surface {
+  border-color: #dce4ef !important;
+  background-color: #ffffff !important;
+  box-shadow: -8px 0 30px rgb(15 23 42 / 5%);
+}
+html:not(.dark) .admin-sidebar-surface nav button:not([class*="bg-[#1677FF]"]) {
+  color: #475569;
+}
+html:not(.dark) .admin-sidebar-surface nav button:hover {
+  background-color: #f1f5f9 !important;
+  color: #172033 !important;
 }
 @media (prefers-reduced-motion: reduce) {
   .admin-learning-workspace *,

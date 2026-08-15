@@ -87,6 +87,9 @@ export const SETTINGS_KEYS = {
   ABOUT_STUDENTS: "about_students",
   ABOUT_TRACKS: "about_tracks",
 
+  // Offline Centers
+  OFFLINE_CENTERS_LIST: "offline_centers_list",
+
   // Services, Pricing, Testimonials, FAQ
   SERVICES_LIST: "services_list",
   PRICING_LIST: "pricing_list",

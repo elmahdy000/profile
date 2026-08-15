@@ -10,6 +10,8 @@ import {
   EyeOff,
   UserPlus,
   Loader2,
+  MapPin,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
@@ -19,6 +21,7 @@ import {
   createDefaultRegistrationStage,
 } from "@/components/ui/RegistrationStageSelector";
 import type { Student } from "@/types/platform";
+import { useAppTheme } from "@/lib/theme";
 
 async function api<T>(url: string, options?: RequestInit): Promise<T> {
   const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
@@ -83,6 +86,7 @@ export function AccessScreen({
     }),
     otherGradeDetail: "",
     learningMode: "online" as "online" | "offline",
+    centerChoice: "أونلاين لكل مصر",
   }));
 
   useEffect(() => {
@@ -127,9 +131,14 @@ export function AccessScreen({
     setMessage("");
     setRegisteredCode("");
     try {
+      const payload = {
+        ...form,
+        centerName: form.learningMode === "offline" ? (form.centerChoice?.split(" - ")[0] || form.centerChoice) : undefined,
+        appointmentSlot: form.learningMode === "offline" ? (form.centerChoice?.split(" - ")[1] || form.centerChoice) : undefined,
+      };
       const result = await api<{ status: string; accessCode?: string; message: string }>("/api/student/register", {
         method: "POST",
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       setMessage(result.message || "تم تسجيل حسابك بنجاح! احتفظ بكود الدخول أدناه واستخدمه فوراً لدخول المنصة ومتابعة المحتوى.");
       if (result.accessCode) setRegisteredCode(result.accessCode);
@@ -142,6 +151,7 @@ export function AccessScreen({
         ...createDefaultRegistrationStage(),
         otherGradeDetail: "",
         learningMode: "online",
+        centerChoice: "أونلاين لكل مصر",
       });
       setRegStep(1);
     } catch (err) {
@@ -208,29 +218,16 @@ export function AccessScreen({
   const step1Valid = Boolean(nameValid && phoneValid && emailValid && form.governorate && form.city);
   const registrationValid = Boolean(step1Valid && educationValid && form.learningMode);
 
-  const [theme, setTheme] = useState<"dark" | "light">(() => {
-    return (localStorage.getItem("app-theme") as "dark" | "light") || "dark";
-  });
-
-  useEffect(() => {
-    const handleThemeChange = (e: CustomEvent<"dark" | "light">) => {
-      setTheme(e.detail);
-    };
-    window.addEventListener("app-theme-changed", handleThemeChange as EventListener);
-    return () => window.removeEventListener("app-theme-changed", handleThemeChange as EventListener);
-  }, []);
-
+  const theme = useAppTheme();
   const isLight = theme === "light";
 
   return (
     <main
-      className={`relative min-h-[calc(100vh-4rem)] w-full overflow-x-hidden px-3 sm:px-6 py-3 sm:py-5 lg:py-7 dir-rtl font-sans transition-colors duration-300 ${
-        isLight ? "bg-[#F8FAFC] text-slate-900" : "bg-[#07111F] text-[#F8FAFC]"
-      }`}
+      className="relative min-h-[calc(100vh-4rem)] w-full overflow-x-hidden px-3 sm:px-6 py-3 sm:py-5 lg:py-7 dir-rtl font-sans transition-colors duration-300 bg-[#F8FAFC] text-slate-900 dark:bg-[#07111F] dark:text-[#F8FAFC]"
       dir="rtl"
     >
-      <div className={`absolute top-0 right-1/4 h-[300px] sm:h-[500px] w-[300px] sm:w-[500px] rounded-full blur-[100px] sm:blur-[140px] pointer-events-none ${isLight ? "bg-blue-200/40" : "bg-[#3B82F6]/10"}`} />
-      <div className={`absolute bottom-0 left-1/4 h-[300px] sm:h-[500px] w-[300px] sm:w-[500px] rounded-full blur-[120px] sm:blur-[160px] pointer-events-none ${isLight ? "bg-sky-200/40" : "bg-[#1E3A5F]/20"}`} />
+      <div className="absolute top-0 right-1/4 h-[300px] sm:h-[500px] w-[300px] sm:w-[500px] rounded-full blur-[100px] sm:blur-[140px] pointer-events-none bg-blue-200/40 dark:bg-[#3B82F6]/10" />
+      <div className="absolute bottom-0 left-1/4 h-[300px] sm:h-[500px] w-[300px] sm:w-[500px] rounded-full blur-[120px] sm:blur-[160px] pointer-events-none bg-sky-200/40 dark:bg-[#1E3A5F]/20" />
       <div className="absolute inset-0 bg-[radial-gradient(rgba(148,163,184,0.12)_1px,transparent_1px)] [background-size:24px_24px] opacity-25 pointer-events-none" />
 
       <div className={`relative mx-auto grid items-start gap-5 sm:gap-8 transition-[max-width] duration-300 ${
@@ -778,13 +775,13 @@ export function AccessScreen({
 
                     <fieldset className="space-y-3 rounded-[16px] border border-[#E2E8F0] bg-[#F8FAFC] p-4">
                       <legend className="px-1 text-xs font-bold uppercase text-[#0866D9] tracking-wide">
-                        طريقة المتابعة والدراسة
+                        طريقة المتابعة والدراسة ومقر السنتر
                       </legend>
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         {(
                           [
-                            ["online", "أونلاين", "متابعة فيديوهات الأونلاين"],
-                            ["offline", "أوفلاين", "متابعة فيديوهات السنتر"],
+                            ["online", "أونلاين لكل المحافظات", "منصة + مراجعات + متابعة"],
+                            ["offline", "أوفلاين في سناتر الزقازيق", "حضور مباشر وتطبيق عملي"],
                           ] as const
                         ).map(([value, label, description]) => (
                           <label
@@ -800,7 +797,14 @@ export function AccessScreen({
                               name="learning-mode"
                               value={value}
                               checked={form.learningMode === value}
-                              onChange={() => setForm({ ...form, learningMode: value })}
+                              onChange={() => {
+                                const nextMode = value;
+                                setForm({
+                                  ...form,
+                                  learningMode: nextMode,
+                                  centerChoice: nextMode === "online" ? "أونلاين لكل مصر" : "سنتر زاج أكاديمي (الفلل) - سبت واتنين واربع 5:00 م",
+                                });
+                              }}
                               className="sr-only"
                             />
                             <span className="min-w-0 flex-1">
@@ -811,6 +815,86 @@ export function AccessScreen({
                           </label>
                         ))}
                       </div>
+
+                      {form.learningMode === "offline" && (
+                        <div className="mt-4 pt-3 border-t border-[#E2E8F0] space-y-3 animate-in fade-in duration-200">
+                          <div className="flex items-center gap-1.5 text-xs font-black text-[#0866D9]">
+                            <MapPin className="h-4 w-4 text-[#0866D9]" />
+                            <span>اختر السنتر والموعد المناسب بالزقازيق:</span>
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                            {[
+                              {
+                                id: "سنتر زاج أكاديمي (الفلل) - سبت واتنين واربع 5:00 م",
+                                title: "سنتر زاج أكاديمي (Zag Academy)",
+                                area: "منطقة الفلل",
+                                time: "سبت - اتنين - أربع (5:00 مساءً)",
+                                badge: "الفلل",
+                              },
+                              {
+                                id: "سنتر إديوفيرس (الفلل) - أولى ثانوي: سبت واتنين واربع 5:00 م",
+                                title: "سنتر إديوفيرس (أولى ثانوي)",
+                                area: "منطقة الفلل",
+                                time: "سبت - اتنين - أربع (5:00 مساءً)",
+                                badge: "أولى ثانوي",
+                              },
+                              {
+                                id: "سنتر إديوفيرس (الفلل) - تانية ثانوي: سبت واتنين واربع 3:30 م",
+                                title: "سنتر إديوفيرس (تانية ثانوي)",
+                                area: "منطقة الفلل",
+                                time: "سبت - اتنين - أربع (3:30 عصراً)",
+                                badge: "تانية ثانوي",
+                              },
+                              {
+                                id: "سنتر إديوفيرس (الفلل) - حد وتلات وخميس 5:00 م",
+                                title: "سنتر إديوفيرس (مجموعة ثانية)",
+                                area: "منطقة الفلل",
+                                time: "حد - تلات - خميس (5:00 مساءً)",
+                                badge: "الفلل",
+                              },
+                              {
+                                id: "سنتر حسن صميدة (الحناوي) - حد وتلات وخميس 6:30 م",
+                                title: "سنتر حسن صميدة",
+                                area: "منطقة الحناوي",
+                                time: "حد - تلات - خميس (6:30 مساءً)",
+                                badge: "الحناوي",
+                              },
+                              {
+                                id: "سنتر نورين (أولى ثانوي) - حد وتلات وخميس 5:00 م",
+                                title: "سنتر نورين (أولى ثانوي)",
+                                area: "مباشر",
+                                time: "حد - تلات - خميس (5:00 مساءً)",
+                                badge: "أولى ثانوي",
+                              },
+                            ].map((center) => {
+                              const isSelected = form.centerChoice === center.id;
+                              return (
+                                <div
+                                  key={center.id}
+                                  onClick={() => setForm({ ...form, centerChoice: center.id })}
+                                  className={`relative cursor-pointer rounded-[14px] border p-3 transition-all text-right ${
+                                    isSelected
+                                      ? "border-[#0866D9] bg-[#E8F1FF] shadow-xs"
+                                      : "border-[#E2E8F0] bg-white hover:border-[#3B82F6]/40 hover:bg-[#F8FAFC]"
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between gap-1 mb-1">
+                                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-[#0866D9]/10 text-[#0866D9]">
+                                      {center.badge}
+                                    </span>
+                                    <span className="text-[11px] font-semibold text-[#64748B] flex items-center gap-1">
+                                      <Clock className="h-3 w-3 text-[#0866D9]" /> {center.area}
+                                    </span>
+                                  </div>
+                                  <strong className="block text-xs font-extrabold text-[#0F172A]">{center.title}</strong>
+                                  <span className="mt-1 block text-[11px] font-semibold text-[#0866D9]">{center.time}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </fieldset>
                   </div>
 
@@ -891,10 +975,16 @@ export function AccessScreen({
                         <span className="text-[#64748B]">المرحلة والصف:</span>
                         <strong className="text-[#0866D9] font-bold">{form.grade || "غير محدد"}</strong>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between border-b border-[#E2E8F0] pb-2">
                         <span className="text-[#64748B]">نظام الدراسة:</span>
                         <strong className="font-bold text-[#0F172A]">{form.learningMode === "online" ? "أونلاين" : "أوفلاين (سنتر)"}</strong>
                       </div>
+                      {form.learningMode === "offline" && (
+                        <div className="flex justify-between">
+                          <span className="text-[#64748B]">السنتر والموعد:</span>
+                          <strong className="font-bold text-[#0866D9]">{form.centerChoice}</strong>
+                        </div>
+                      )}
                     </div>
 
                     <div className="rounded-[14px] border border-blue-200 bg-[#E8F1FF] p-3 text-xs leading-relaxed text-[#0866D9]">

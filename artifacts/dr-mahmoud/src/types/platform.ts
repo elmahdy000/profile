@@ -13,6 +13,11 @@ export type Student = {
   schoolType?: string | null;
   academicTrack?: string | null;
   otherGradeDetail?: string | null;
+  schoolName?: string | null;
+  parentPhone?: string | null;
+  languageTrack?: string | null;
+  centerName?: string | null;
+  appointmentSlot?: string | null;
   learningMode?: "online" | "offline";
   enrolledCourseIds?: number[];
   paymentStatus?: string;

@@ -2,8 +2,7 @@ import { expect, test } from "@playwright/test";
 
 const publicRoutes = [
   { path: "/", title: /د\. محمود المهدي/, heading: /اتعلم برمجة البكالوريا/, hasImage: true },
-  { path: "/baccalaureate", title: /البكالوريا/, heading: /ابنك هيتعلم برمجة/, hasImage: true },
-  { path: "/kids", title: /للأطفال/, heading: /تعلم البرمجة/, hasImage: false },
+  { path: "/baccalaureate", title: /البكالوريا/, heading: /شرح برمجة البكالوريا/, hasImage: true },
   { path: "/university", title: /حاسبات|البرمجة/, heading: /شرح وتبسيط.*حاسبات ومعلومات/, hasImage: false },
   { path: "/curriculum", title: /المناهج/, heading: /مكتبة المناهج/, hasImage: true },
   { path: "/platform", title: /المنصة التعليمية/, heading: /منصتك التعليمية/, hasImage: true },
@@ -28,6 +27,7 @@ test.describe("public platform", () => {
     page,
   }) => {
     await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
 
     const phoneLinks = page.locator('footer a[href^="tel:"]');
     await expect(phoneLinks).toHaveCount(2);
@@ -52,9 +52,9 @@ test.describe("public platform", () => {
     await expect(page.getByLabel("رقم الهاتف")).toBeVisible();
     await expect(page.getByLabel("المحافظة")).toBeVisible();
     await expect(page.getByLabel("المدينة / المركز")).toBeVisible();
-    await expect(page.getByRole("button", { name: /1.*البيانات الأساسية/ })).toBeVisible();
-    await expect(page.getByRole("button", { name: /2.*الدراسة/ })).toBeVisible();
-    await expect(page.getByRole("button", { name: /3.*التأكيد/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /1.*بيانات الطالب/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /2.*المرحلة/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /3.*مراجعة/ })).toBeVisible();
 
     await page.getByRole("button", { name: "دخول الطالب" }).click();
     await page.getByRole("button", { name: "نسيت كود الدخول؟" }).click();

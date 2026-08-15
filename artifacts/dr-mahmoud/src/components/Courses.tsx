@@ -6,7 +6,6 @@ import { useListCourses } from "@workspace/api-client-react";
 
 const categories = [
   { id: "all", label: "الكل" },
-  { id: "kids", label: "الأطفال" },
   { id: "python", label: "Python" },
   { id: "db", label: "قواعد البيانات" },
   { id: "mobile", label: "تطبيقات موبايل" },
@@ -16,16 +15,6 @@ const categories = [
 ];
 
 const courses = [
-  {
-    title: "Kids Programming Package",
-    age: "من 4 إلى 18 سنة",
-    duration: "3 أشهر",
-    sessions: "12 حصة",
-    level: "مبتدئ",
-    category: "kids",
-    tags: ["Scratch", "Python basics", "AI basics", "mini projects", "creative thinking"],
-    img: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&q=70"
-  },
   {
     title: "Python Track",
     age: "من الصفر",
@@ -142,7 +131,8 @@ export function Courses() {
   const [active, setActive] = useState("all");
   const { data: dbCourses } = useListCourses();
 
-  const activeCourses = dbCourses && dbCourses.length > 0 ? dbCourses : (courses as any[]);
+  const rawCourses = dbCourses && dbCourses.length > 0 ? dbCourses : (courses as any[]);
+  const activeCourses = rawCourses.filter((c: any) => c.category !== "kids");
   const filtered = active === "all" ? activeCourses : activeCourses.filter(c => c.category === active);
 
   return (
@@ -156,7 +146,7 @@ export function Courses() {
         >
           <span className="text-primary font-bold text-sm uppercase tracking-wider mb-4 block">المسارات</span>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">الكورسات والمسارات التدريبية</h2>
-          <p className="text-muted-foreground mt-2">احجز أول سيشن مجانًا لتحديد البرنامج المناسب</p>
+          <p className="text-muted-foreground mt-2">سجّل حسابك على المنصة وتواصل للحجز وتأكيد الاشتراك</p>
           <div className="w-24 h-0.5 bg-primary mx-auto rounded-full mt-4" />
         </motion.div>
 
@@ -180,7 +170,7 @@ export function Courses() {
               {cat.label}
               {cat.id !== "all" && (
                 <span className="mr-1.5 text-xs opacity-60">
-                  ({courses.filter(c => c.category === cat.id).length})
+                  ({activeCourses.filter(c => c.category === cat.id).length})
                 </span>
               )}
             </button>
@@ -240,45 +230,24 @@ export function Courses() {
                   </div>
 
                   <div className="flex flex-wrap gap-1.5 mb-5 flex-grow">
-                    {course.tags.map((tag: string) => (
+                    {(course.tags || []).map((tag: string) => (
                       <span key={tag} className="px-2 py-0.5 bg-muted border border-border text-muted-foreground text-xs rounded-md">
                         {tag}
                       </span>
                     ))}
                   </div>
 
-                  {course.title.toLowerCase().includes("baccalaureate") ? (
-                    <div className="flex flex-col sm:flex-row gap-2 w-full mt-auto">
-                      <Button
-                        asChild
-                        className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 font-bold text-xs py-5"
-                      >
-                        <a href="/baccalaureate">
-                          عرض المنهج والتفاصيل
-                        </a>
-                      </Button>
-                      <Button
-                        asChild
-                        variant="outline"
-                        className="flex-1 border-primary/30 text-primary hover:bg-primary/5 transition-all duration-300 font-bold text-xs py-5"
-                      >
-                        <a href="https://wa.me/201066711545" target="_blank" rel="noreferrer">
-                          <MessageCircle className="w-3.5 h-3.5 me-1.5 shrink-0" />
-                          احجز الآن
-                        </a>
-                      </Button>
-                    </div>
-                  ) : (
+                  <div className="flex flex-col sm:flex-row gap-2 w-full mt-auto">
                     <Button
                       asChild
-                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 font-bold mt-auto"
+                      className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 font-bold text-xs py-5"
                     >
-                      <a href="https://wa.me/201066711545" target="_blank" rel="noreferrer">
-                        <MessageCircle className="w-4 h-4 me-2" />
-                        استفسر وسجّل
+                      <a href="/platform?action=register">
+                        <MessageCircle className="w-3.5 h-3.5 me-1.5 shrink-0" />
+                        سجّل بالمنصة للحجز
                       </a>
                     </Button>
-                  )}
+                  </div>
                 </div>
               </motion.div>
             ))}

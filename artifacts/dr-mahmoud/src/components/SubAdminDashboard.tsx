@@ -6,6 +6,7 @@ import {
   Loader2,
   Menu,
   X,
+  MapPin,
 } from "lucide-react";
 import { AdminLearning } from "./AdminLearning";
 
@@ -81,12 +82,38 @@ export function SubAdminDashboard() {
             </div>
           </div>
 
-          <nav className="flex-1 space-y-1">
+          <nav className="flex-1 space-y-2">
             <span className="block px-3 pb-1 pt-1 text-[11px] font-bold tracking-wider text-[#64748B]">إدارة الطلاب والخدمات</span>
-            <div className="flex items-center gap-3 rounded-xl bg-[#0866D9] text-white px-3.5 py-3 text-xs font-bold shadow-xs">
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  const params = new URLSearchParams(window.location.search);
+                  params.delete("mode");
+                  window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
+                  window.dispatchEvent(new Event("popstate"));
+                }
+              }}
+              className="w-full flex items-center gap-3 rounded-xl bg-[#0866D9] text-white px-3.5 py-3 text-xs font-bold shadow-xs hover:bg-[#0756B8] transition-colors"
+            >
               <Users className="h-4 w-4" />
               <span>إدارة الطلاب والاشتراكات</span>
-            </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  const params = new URLSearchParams(window.location.search);
+                  params.set("mode", "offline");
+                  window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
+                  window.dispatchEvent(new Event("popstate"));
+                }
+              }}
+              className="w-full flex items-center gap-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-3 text-xs font-bold shadow-xs transition-colors"
+            >
+              <MapPin className="h-4 w-4" />
+              <span>حجوزات السناتر والمواعيد 📍</span>
+            </button>
           </nav>
 
           <div className="mt-auto border-t border-[#E4EAF2] pt-4 space-y-3">

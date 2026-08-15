@@ -745,8 +745,10 @@ export function VideoLessonsSection({
     };
     loadProgress();
     void fetch("/api/learning/progress", { credentials: "include" })
-      .then((response) => (response.ok ? response.json() : []))
-      .then((rows: Array<{ videoId: number; progress: number }>) => {
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: any) => {
+        if (!data) return;
+        const rows: Array<{ videoId: number; progress: number }> = Array.isArray(data) ? data : (data.rows || []);
         const serverMap: Record<number, number> = {};
         rows.forEach((row) => {
           serverMap[row.videoId] = row.progress;
@@ -816,6 +818,14 @@ export function VideoLessonsSection({
       return true;
     }
 
+    // ── KEY FIX ──
+    // If the admin has explicitly assigned courses to this student, ONLY those
+    // courses should be visible. Do NOT fall back to stage/grade matching —
+    // that would silently re-show courses the admin intentionally removed.
+    const hasExplicitEnrollment = enrolledIds.length > 0 || enrolledCats.length > 0;
+    if (hasExplicitEnrollment) return false;
+
+    // No explicit enrollment → show content based on student's grade/stage
     const grade = studentGrade || "";
     const stageArr: string[] = Array.isArray((item as any).stages) && (item as any).stages.length
       ? (item as any).stages

@@ -162,6 +162,11 @@ function publicStudent(student: typeof studentsTable.$inferSelect) {
     schoolType: student.schoolType,
     academicTrack: student.academicTrack,
     otherGradeDetail: student.otherGradeDetail,
+    schoolName: student.schoolName,
+    parentPhone: student.parentPhone,
+    languageTrack: student.languageTrack,
+    centerName: student.centerName,
+    appointmentSlot: student.appointmentSlot,
     learningMode: student.learningMode,
     enrolledCategories: student.enrolledCategories,
     enrolledCourseIds: student.enrolledCourseIds,
@@ -419,6 +424,10 @@ function normalizeStringList(value: unknown): string[] {
   );
 }
 
+// Keeps an intentionally empty manual course selection distinct from the
+// legacy "no assignments yet" state, which still receives stage defaults.
+const MANUAL_EMPTY_ENROLLMENT = "__manual_empty__";
+
 async function getAutomaticCourseAssignments(student: typeof studentsTable.$inferSelect) {
   const courses = await db
     .select()
@@ -478,9 +487,14 @@ router.post(
       const phone = String(req.body.phone ?? "").replace(/\s+/g, "");
       const rawEmail = String(req.body.email ?? "").trim().toLowerCase();
       const email = rawEmail.length > 0 ? rawEmail : null;
-      const governorate = String(req.body.governorate ?? "").trim();
-      const city = String(req.body.city ?? "").trim();
+      const governorate = String(req.body.governorate ?? "الشرقية").trim() || "الشرقية";
+      const city = String(req.body.city ?? "الزقازيق").trim() || "الزقازيق";
       const submittedGrade = String(req.body.grade ?? "").trim();
+      const schoolName = String(req.body.schoolName ?? "").trim() || null;
+      const parentPhone = String(req.body.parentPhone ?? "").replace(/\s+/g, "") || null;
+      const languageTrack = String(req.body.languageTrack ?? "").trim() || null;
+      const centerName = String(req.body.centerName ?? "").trim() || null;
+      const appointmentSlot = String(req.body.appointmentSlot ?? "").trim() || null;
       const hasStructuredStage = [
         "educationSystem",
         "educationGrade",
@@ -499,13 +513,13 @@ router.post(
         : null;
       const schoolType = hasStructuredStage
         ? String(req.body.schoolType ?? "")
-        : null;
+        : (schoolName || null);
       const academicTrack = hasStructuredStage
         ? String(req.body.academicTrack ?? "")
-        : null;
+        : (languageTrack || null);
       const otherGradeDetail =
         String(req.body.otherGradeDetail ?? "").trim() || null;
-      const learningMode = String(req.body.learningMode ?? "online").trim();
+      const learningMode = centerName ? "offline" : String(req.body.learningMode ?? "online").trim();
 
       if (hasStructuredStage && educationSystem === "general_secondary") {
         res.status(400).json({ error: "التسجيل متاح لطلاب البكالوريا والجامعة فقط" });
@@ -588,6 +602,11 @@ router.post(
           schoolType,
           academicTrack,
           otherGradeDetail,
+          schoolName,
+          parentPhone,
+          languageTrack,
+          centerName,
+          appointmentSlot,
           learningMode,
           // Both baccalaureate and university students are approved on signup so
           // they can log in with their access code and watch the free preview
@@ -1210,6 +1229,35 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
         return;
       }
     }
+    const requestedCourseIds = Array.isArray(req.body.enrolledCourseIds)
+      ? Array.from(
+          new Set<number>(
+            (req.body.enrolledCourseIds as unknown[])
+              .map(Number)
+              .filter((value) => Number.isInteger(value) && value > 0),
+          ),
+        ).slice(0, 50)
+      : current.enrolledCourseIds;
+    let requestedCategories = Array.isArray(req.body.enrolledCategories)
+      ? Array.from(
+          new Set<string>(
+            (req.body.enrolledCategories as unknown[])
+              .map((value) => String(value).trim())
+              .filter(Boolean),
+          ),
+        ).slice(0, 20)
+      : current.enrolledCategories;
+    const adminExplicitlySetEnrollment =
+      req.body.enrolledCourseIds !== undefined ||
+      req.body.enrolledCategories !== undefined;
+    if (
+      adminExplicitlySetEnrollment &&
+      requestedCourseIds.length === 0 &&
+      requestedCategories.length === 0
+    ) {
+      requestedCategories = [MANUAL_EMPTY_ENROLLMENT];
+    }
+
     let [student] = await db
       .update(studentsTable)
       .set({
@@ -1222,24 +1270,8 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
           status === "approved"
             ? current.approvedAt || new Date()
             : current.approvedAt,
-        enrolledCategories: Array.isArray(req.body.enrolledCategories)
-          ? Array.from(
-              new Set<string>(
-                (req.body.enrolledCategories as unknown[])
-                  .map((value) => String(value).trim())
-                  .filter(Boolean),
-              ),
-            ).slice(0, 20)
-          : current.enrolledCategories,
-        enrolledCourseIds: Array.isArray(req.body.enrolledCourseIds)
-          ? Array.from(
-              new Set<number>(
-                (req.body.enrolledCourseIds as unknown[])
-                  .map(Number)
-                  .filter((value) => Number.isInteger(value) && value > 0),
-              ),
-            ).slice(0, 50)
-          : current.enrolledCourseIds,
+        enrolledCategories: requestedCategories,
+        enrolledCourseIds: requestedCourseIds,
         learningMode:
           req.body.learningMode !== undefined &&
           ["online", "offline"].includes(String(req.body.learningMode))
@@ -1261,7 +1293,10 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
         .delete(studentSessionsTable)
         .where(eq(studentSessionsTable.studentId, id));
     }
-    if (student && student.status === "approved") {
+    // Only auto-assign courses if the admin did NOT explicitly set enrollment in this request.
+    // If enrolledCourseIds or enrolledCategories were sent (even as []), the admin intended
+    // that exact value — running auto-assign would silently re-add the deleted courses.
+    if (student && student.status === "approved" && !adminExplicitlySetEnrollment) {
       student = await ensureAutomaticCourseAssignments(student);
     }
     if (req.body.status === "approved" && current.status !== "approved") {
@@ -1721,7 +1756,7 @@ router.post("/admin/notifications/broadcast", requireAdmin, async (req, res, nex
   }
 });
 
-router.delete("/admin/students/:id", requireSuperAdmin, async (req, res, next) => {
+router.delete("/admin/students/:id", requireAdmin, async (req, res, next) => {
   try {
     const studentId = Number(req.params.id);
     if (!Number.isInteger(studentId) || studentId <= 0) {
@@ -2253,12 +2288,6 @@ export function generateStudentMotivationMessage(studentName: string, progressPe
 router.get("/learning/progress", requireStudent, async (_req, res, next) => {
   try {
     const student = res.locals.student as typeof studentsTable.$inferSelect;
-    const allowed = getStudentAllowedCategories(student);
-    if (allowed.length === 0) {
-      res.json([]);
-      return;
-    }
-
     const [rows, accessibleVideos] = await Promise.all([
       db
         .select({
@@ -2270,17 +2299,10 @@ router.get("/learning/progress", requireStudent, async (_req, res, next) => {
           updatedAt: videoProgressTable.updatedAt,
         })
         .from(videoProgressTable)
-        .innerJoin(videosTable, eq(videoProgressTable.videoId, videosTable.id))
-        .where(
-          and(
-            eq(videoProgressTable.studentId, student.id),
-            inArray(videosTable.category, allowed),
-          ),
-        ),
+        .where(eq(videoProgressTable.studentId, student.id)),
       db
         .select({ id: videosTable.id, category: videosTable.category, stage: videosTable.stage, stages: videosTable.stages, courseId: videosTable.courseId })
-        .from(videosTable)
-        .where(inArray(videosTable.category, allowed)),
+        .from(videosTable),
     ]);
 
     const studentAccessibleVideos = accessibleVideos.filter((v) =>
