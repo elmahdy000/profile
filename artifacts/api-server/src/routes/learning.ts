@@ -572,10 +572,27 @@ router.post(
         .where(eq(studentsTable.phone, phone))
         .limit(1);
       if (existingByPhone) {
+        if (centerName || appointmentSlot) {
+          await db
+            .update(studentsTable)
+            .set({
+              centerName: centerName || existingByPhone.centerName,
+              appointmentSlot: appointmentSlot || existingByPhone.appointmentSlot,
+              schoolName: schoolName || existingByPhone.schoolName,
+              parentPhone: parentPhone || existingByPhone.parentPhone,
+              languageTrack: languageTrack || existingByPhone.languageTrack,
+              grade: grade || existingByPhone.grade,
+              learningMode: "offline",
+              updatedAt: new Date(),
+            })
+            .where(eq(studentsTable.id, existingByPhone.id));
+        }
+
         res.json({
           status: existingByPhone.status,
-          accessCode: existingByPhone.status === "approved" ? existingByPhone.accessCode : undefined,
-          message: "Registration already exists",
+          isNewStudent: false,
+          accessCode: undefined,
+          message: "تم تحديث بيانات حجز السنتر بنجاح (طالب مسجل مسبقاً)",
         });
         return;
       }
@@ -637,6 +654,7 @@ router.post(
 
       res.status(201).json({
         status: student.status,
+        isNewStudent: true,
         accessCode: student.accessCode,
         message: educationSystem === "university"
           ? "تم إنشاء حسابك بنجاح! احفظ كود الدخول وادخل فوراً لمشاهدة فيديو مجاني واحد من كل مادة. ارفع الإيصال لفتح باقي المحتوى."

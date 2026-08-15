@@ -15,10 +15,19 @@ export interface OfflineCenterItem {
 
 export const defaultOfflineCenters: OfflineCenterItem[] = [
   {
+    id: "rafal-academy-3pm",
+    name: "سنتر رافال أكاديمي (Rafal Academy)",
+    area: "بجوار الثانوية العسكرية",
+    grade: "تانية ثانوي",
+    timeStr: "3:00 عصراً",
+    daysStr: "حسب جدول المجموعات بالسنتر",
+    color: "emerald",
+  },
+  {
     id: "zag-academy",
     name: "سنتر زاج أكاديمي (Zag Academy)",
     area: "منطقة الفلل",
-    grade: "الكل",
+    grade: "تانية ثانوي",
     timeStr: "5:00 مساءً",
     daysStr: "سبت - اتنين - أربع",
     color: "blue",
@@ -33,15 +42,6 @@ export const defaultOfflineCenters: OfflineCenterItem[] = [
     color: "indigo",
   },
   {
-    id: "hassan-somida-1st",
-    name: "سنتر حسن صميدة",
-    area: "منطقة الحناوي",
-    grade: "أولى ثانوي",
-    timeStr: "5:00 مساءً",
-    daysStr: "حد - تلات - خميس",
-    color: "purple",
-  },
-  {
     id: "hassan-somida-2nd",
     name: "سنتر حسن صميدة",
     area: "منطقة الحناوي",
@@ -49,15 +49,6 @@ export const defaultOfflineCenters: OfflineCenterItem[] = [
     timeStr: "6:30 مساءً",
     daysStr: "حد - تلات - خميس",
     color: "purple",
-  },
-  {
-    id: "rafal-academy-3pm",
-    name: "سنتر رافال أكاديمي (Rafal Academy)",
-    area: "بجوار الثانوية العسكرية",
-    grade: "أولى وتانية ثانوي",
-    timeStr: "3:00 عصراً",
-    daysStr: "حسب جدول المجموعات بالسنتر",
-    color: "emerald",
   },
 ];
 

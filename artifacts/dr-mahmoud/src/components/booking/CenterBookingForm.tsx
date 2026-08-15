@@ -39,8 +39,8 @@ export const UNIFIED_CENTER_CARDS: UnifiedCenterCard[] = [
     location: "بجوار الثانوية العسكرية - الزقازيق",
     days: "حسب جدول المجموعات بالسنتر",
     time: "3:00 عصراً",
-    gradeBadge: "أولى وتانية بكالوريا",
-    forGrade: "both",
+    gradeBadge: "تانية بكالوريا",
+    forGrade: "2nd_bac",
     slotText: "حسب جدول المجموعات بالسنتر (الساعة 3:00 عصراً)",
   },
   {
@@ -49,19 +49,9 @@ export const UNIFIED_CENTER_CARDS: UnifiedCenterCard[] = [
     location: "منطقة الفلل - الزقازيق",
     days: "سبت - اتنين - أربع",
     time: "5:00 مساءً",
-    gradeBadge: "أولى وتانية بكالوريا",
-    forGrade: "both",
+    gradeBadge: "تانية بكالوريا",
+    forGrade: "2nd_bac",
     slotText: "سبت - اتنين - أربع (الساعة 5:00 مساءً)",
-  },
-  {
-    id: "zag-330pm",
-    centerName: "سنتر زاج أكاديمي (Zag Academy)",
-    location: "منطقة الفلل - الزقازيق",
-    days: "سبت - اتنين - أربع",
-    time: "3:30 عصراً",
-    gradeBadge: "أولى بكالوريا",
-    forGrade: "1st_bac",
-    slotText: "سبت - اتنين - أربع (الساعة 3:30 عصراً)",
   },
   {
     id: "zag-630pm",
@@ -79,8 +69,8 @@ export const UNIFIED_CENTER_CARDS: UnifiedCenterCard[] = [
     location: "منطقة الفلل - الزقازيق",
     days: "سبت - اتنين - أربع",
     time: "3:30 عصراً",
-    gradeBadge: "أولى وتانية بكالوريا",
-    forGrade: "both",
+    gradeBadge: "تانية بكالوريا",
+    forGrade: "2nd_bac",
     slotText: "سبت - اتنين - أربع (الساعة 3:30 عصراً)",
   },
   {
@@ -92,16 +82,6 @@ export const UNIFIED_CENTER_CARDS: UnifiedCenterCard[] = [
     gradeBadge: "تانية بكالوريا",
     forGrade: "2nd_bac",
     slotText: "سبت - اتنين - أربع (الساعة 5:00 مساءً)",
-  },
-  {
-    id: "hassan-5pm",
-    centerName: "سنتر حسن صميدة",
-    location: "منطقة الحناوي - الزقازيق",
-    days: "حد - تلات - خميس",
-    time: "5:00 مساءً",
-    gradeBadge: "أولى بكالوريا",
-    forGrade: "1st_bac",
-    slotText: "حد - تلات - خميس (الساعة 5:00 مساءً)",
   },
   {
     id: "hassan-630pm",
@@ -127,7 +107,7 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
 
   const [studentName, setStudentName] = useState("");
   const [schoolName, setSchoolName] = useState("");
-  const [grade, setGrade] = useState<"أولى بكالوريا" | "تانية بكالوريا">("أولى بكالوريا");
+  const [grade, setGrade] = useState<"أولى بكالوريا" | "تانية بكالوريا">("تانية بكالوريا");
   const [studentPhone, setStudentPhone] = useState("");
   const [parentPhone, setParentPhone] = useState("");
   const [languageTrack, setLanguageTrack] = useState<"عربي" | "لغات">("عربي");
@@ -144,18 +124,16 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
     parentPhone: string;
     centerName: string;
     appointmentSlot: string;
+    isNewStudent: boolean;
     accessCode?: string;
   } | null>(null);
 
   const [copiedCode, setCopiedCode] = useState(false);
 
-  // Available cards filtered based on grade
+  // Cards list
   const filteredCards = React.useMemo(() => {
-    const gradeKey = grade === "أولى بكالوريا" ? "1st_bac" : "2nd_bac";
-    return UNIFIED_CENTER_CARDS.filter(
-      (c) => c.forGrade === gradeKey || c.forGrade === "both"
-    );
-  }, [grade]);
+    return UNIFIED_CENTER_CARDS;
+  }, []);
 
   const validateStep1 = () => {
     if (!studentName.trim() || studentName.trim().length < 3) {
@@ -229,6 +207,7 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
         throw new Error(result.error || result.message || "حدث خطأ أثناء حفظ التنسيق والتأكيد.");
       }
 
+      const isNewStudent = result.isNewStudent !== false;
       const successData = {
         studentName: studentName.trim(),
         schoolName: schoolName.trim(),
@@ -238,7 +217,8 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
         parentPhone: parentPhone.trim(),
         centerName: selectedCenter,
         appointmentSlot: selectedSlot,
-        accessCode: result.accessCode || "BD-" + Math.floor(100000 + Math.random() * 900000),
+        isNewStudent,
+        accessCode: isNewStudent && result.accessCode ? result.accessCode : undefined,
       };
 
       setBookingSuccessData(successData);
@@ -715,8 +695,8 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
                 </div>
               </div>
 
-              {/* Student Access Code Card */}
-              {bookingSuccessData.accessCode && (
+              {/* Student Access Code Card (Only for NEW Students) */}
+              {bookingSuccessData.isNewStudent && bookingSuccessData.accessCode ? (
                 <div className="rounded-2xl border border-[#1677FF]/40 bg-[#1677FF]/15 p-4 space-y-2">
                   <span className="text-[11px] font-extrabold text-[#69A5FF]">كود الدخول الخاص بالطالب لمتابعة الدروس على المنصة:</span>
                   <div className="flex items-center justify-between gap-3 bg-[#0B1424] p-3 rounded-xl border border-[#1677FF]/30">
@@ -732,6 +712,10 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
                       <span>{copiedCode ? "تم النسخ" : "نسخ الكود"}</span>
                     </button>
                   </div>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-[#1677FF]/30 bg-[#1677FF]/10 p-3.5 text-xs font-bold text-[#69A5FF] leading-relaxed">
+                  رقم الهاتف مسجل مسبقاً على المنصة — تم تحديث وتأكيد حجز السنتر بنجاح، ويمكنك استخدام كود الدخول الخاص بك السابق للمتابعة.
                 </div>
               )}
 
