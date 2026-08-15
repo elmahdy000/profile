@@ -27,6 +27,7 @@ import {
   ChevronDown,
   ChevronUp,
   BookOpen,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +35,7 @@ import { ExamWizard } from "./ExamWizard";
 import { ACADEMIC_TRACKS, getStagesForTrack, getTrack } from "@/data/academic";
 import type { Student as PlatformStudent } from "@/types/platform";
 import { StudentsTab } from "./admin/learning/StudentsTab";
+import { CenterBookingsTab } from "./admin/learning/CenterBookingsTab";
 import { PaymentsTab } from "./admin/learning/PaymentsTab";
 import { NotificationsTab } from "./admin/learning/NotificationsTab";
 import { OverviewSection } from "./admin/learning/OverviewSection";
@@ -207,10 +209,10 @@ export function AdminLearning({
   initialTab = "students",
 }: {
   role?: "superadmin" | "subadmin";
-  initialTab?: "students" | "payments" | "notifications" | "files" | "quizzes" | "results" | "reports";
+  initialTab?: "students" | "center-bookings" | "payments" | "notifications" | "files" | "quizzes" | "results" | "reports";
 }) {
   const { toast } = useToast();
-  const [tab, setTab] = useState<"students" | "payments" | "notifications" | "files" | "quizzes" | "results" | "reports">(
+  const [tab, setTab] = useState<"students" | "center-bookings" | "payments" | "notifications" | "files" | "quizzes" | "results" | "reports">(
     initialTab,
   );
 
@@ -1143,6 +1145,7 @@ export function AdminLearning({
   }, [fileSearch, fileCourseFilter, fileStageFilter, fileStatusFilter]);
   const tabs = [
     ["students", "الطلاب", GraduationCap],
+    ["center-bookings", "حجوزات السناتر 📍", MapPin],
     ["files", "الملفات", FileText],
     ["quizzes", "الاختبارات", ClipboardCheck],
     ["results", "النتائج", Check],
@@ -1152,6 +1155,7 @@ export function AdminLearning({
   ] as const;
   const tabMeta = {
     students: ["إدارة الطلاب", "راجع التسجيلات والصلاحيات والكورسات المخصصة لكل طالب."],
+    "center-bookings": ["كشف وإدارة حجوزات السناتر 📍", "جدول تفصيلي مخصص لمتابعة جميع الطلاب المسجلين بالسناتر والمواعيد الحضورية المحددة."],
     payments: ["إيصالات الدفع", "راجع إيصالات الدفع من الطلاب ووافق أو ارفض."],
     notifications: ["إرسال إشعار للطلاب", "أرسل تنبيهًا أو إشعارًا عامًا لجميع الطلاب أو مرحلة دراسية محددة."],
     files: ["مكتبة الملفات التعليمية", "ارفع الملفات وحدد مكان ظهورها للطلاب أو داخل الدروس."],
@@ -1334,6 +1338,45 @@ export function AdminLearning({
               }}
             />
             </div>
+          )}
+          {tab === "center-bookings" && (
+            <CenterBookingsTab
+              role={role}
+              students={students}
+              learningCourses={learningCourses}
+              onUpdateStatus={async (id, status) => { await updateStudent(id, status); }}
+              onUpdatePaymentStatus={async (student, status) => { await updateStudentPaymentStatus(student, status); }}
+              onUpdateMode={async (student, mode) => { await updateStudentMode(student, mode); }}
+              onResetDevice={async (s) => {
+                if (!s.deviceId && (!s.boundDevices || s.boundDevices.length === 0)) return;
+                try {
+                  await adminApi(`/api/admin/students/${s.id}/reset-device`, { method: "POST" });
+                  toast({ title: "تم فك وإلغاء قفل الأجهزة", description: `تمت إزالة ربط كافة الأجهزة للطالب ${s.name} بنجاح.` });
+                  setStudents((prev) => prev.map((item) => item.id === s.id ? { ...item, deviceId: null, boundDevices: [] } : item));
+                } catch (err) {
+                  toast({ variant: "destructive", description: (err as Error).message });
+                }
+              }}
+              onSetMaxDevices={async (s) => {
+                const newMax = s.maxDevices === 2 ? 1 : 2;
+                try {
+                  await adminApi(`/api/admin/students/${s.id}/set-max-devices`, {
+                    method: "POST",
+                    body: JSON.stringify({ maxDevices: newMax }),
+                  });
+                  toast({
+                    title: newMax === 2 ? "تمت الموافقة والسماح بجهاز ثانٍ 📱📱" : "تم إلغاء تفعيل الجهاز الثاني 📱",
+                  });
+                  setStudents((prev) => prev.map((item) => item.id === s.id ? { ...item, maxDevices: newMax } : item));
+                } catch (err) {
+                  toast({ variant: "destructive", description: (err as Error).message });
+                }
+              }}
+              onDeleteStudent={(id) => deleteStudent(id)}
+              copiedStudentId={copiedStudentId}
+              onCopyStudentCode={(s) => copyStudentCode(s)}
+              onUpdateStudentCourses={async (s, ids) => { await updateStudentCourses(s, ids); }}
+            />
           )}
           {tab === "payments" && (
             <PaymentsTab receipts={paymentReceipts} onRefresh={load} />

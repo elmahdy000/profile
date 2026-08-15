@@ -132,16 +132,9 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           icon: MapPin,
           onClick: () => {
             setActiveTab("learning");
-            setLearningSubTab("students");
-            if (typeof window !== "undefined") {
-              const params = new URLSearchParams(window.location.search);
-              params.set("mode", "offline");
-              params.delete("status");
-              window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
-              window.dispatchEvent(new Event("popstate"));
-            }
+            setLearningSubTab("center-bookings" as any);
           },
-          active: activeTab === "learning" && learningSubTab === "students" && (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("mode") === "offline"),
+          active: activeTab === "learning" && (learningSubTab as string) === "center-bookings",
         },
         {
           id: "payments",

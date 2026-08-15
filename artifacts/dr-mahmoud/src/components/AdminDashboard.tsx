@@ -158,7 +158,7 @@ export default function AdminDashboard() {
     | "parents"
     | "settings"
   >("learning");
-  const [learningSubTab, setLearningSubTab] = useState<"students" | "payments" | "notifications" | "files" | "quizzes" | "results" | "reports">("students");
+  const [learningSubTab, setLearningSubTab] = useState<"students" | "center-bookings" | "payments" | "notifications" | "files" | "quizzes" | "results" | "reports">("students");
   const [bookingFilter, setBookingFilter] = useState<"pending" | "confirmed" | "completed" | "all">("pending");
   const [selectedSubjectFilter, setSelectedSubjectFilter] =
     useState<string>("all");
