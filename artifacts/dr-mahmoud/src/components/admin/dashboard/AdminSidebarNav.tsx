@@ -80,6 +80,16 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           active: activeTab === "learning" && learningSubTab === "students",
         },
         {
+          id: "center-bookings-top",
+          label: "حجوزات السناتر 📍",
+          icon: MapPin,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("center-bookings" as any);
+          },
+          active: activeTab === "learning" && (learningSubTab as string) === "center-bookings",
+        },
+        {
           id: "bookings",
           label: "الحجوزات والطلبات",
           icon: Calendar,
@@ -128,7 +138,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
         {
           id: "center-bookings",
-          label: "حجوزات السناتر 📍",
+          label: "جدول حجوزات السناتر 📍",
           icon: MapPin,
           onClick: () => {
             setActiveTab("learning");
