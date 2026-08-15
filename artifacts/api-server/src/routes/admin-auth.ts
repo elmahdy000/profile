@@ -45,7 +45,7 @@ router.post("/admin/login", adminLoginLimit, async (req, res) => {
 router.get("/admin/me", (req, res) => {
   const role = getAdminRole(req);
   if (!role) {
-    res.status(401).json({ authenticated: false });
+    res.json({ authenticated: false });
     return;
   }
   res.json({ authenticated: true, role });

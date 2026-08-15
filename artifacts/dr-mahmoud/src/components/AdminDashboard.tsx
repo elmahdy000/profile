@@ -203,8 +203,12 @@ export default function AdminDashboard() {
           return;
         }
         const data = await response.json();
-        setIsAuthenticated(true);
-        if (data.role) setAdminRole(data.role);
+        if (data.authenticated) {
+          setIsAuthenticated(true);
+          if (data.role) setAdminRole(data.role);
+        } else {
+          setIsAuthenticated(false);
+        }
       })
       .catch(() => setIsAuthenticated(false))
       .finally(() => setIsInitializing(false));

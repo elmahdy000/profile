@@ -24,7 +24,7 @@ export function SubAdminDashboard() {
           return;
         }
         const data = await response.json();
-        if (data.role === "subadmin" || data.role === "superadmin") {
+        if (data.authenticated && (data.role === "subadmin" || data.role === "superadmin")) {
           setIsAuthenticated(true);
         } else {
           setIsAuthenticated(false);
