@@ -105,14 +105,14 @@ export function Footer() {
                 <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                 <span className="leading-snug">{address}</span>
               </div>
-              <div className="flex flex-col gap-1.5" dir="ltr">
-                <a href={toTelephoneUrl(whatsapp)} className="hover:text-primary transition-colors text-right flex items-center gap-1.5 justify-end">
-                  <span>{whatsapp}</span>
-                  <Phone className="w-3.5 h-3.5 text-primary shrink-0" />
+              <div className="flex flex-col gap-2 pt-1">
+                <a href="tel:01025131212" className="flex items-center gap-2 text-white/80 hover:text-primary transition-colors">
+                  <Phone className="w-4 h-4 text-primary shrink-0" />
+                  <span className="font-mono text-xs font-bold text-white tracking-wide" dir="ltr">01025131212</span>
                 </a>
-                <a href={toTelephoneUrl(phone1)} className="hover:text-primary transition-colors text-right flex items-center gap-1.5 justify-end">
-                  <span>{phone1}</span>
-                  <Phone className="w-3.5 h-3.5 text-primary shrink-0" />
+                <a href="tel:01066711545" className="flex items-center gap-2 text-white/80 hover:text-primary transition-colors">
+                  <Phone className="w-4 h-4 text-primary shrink-0" />
+                  <span className="font-mono text-xs font-bold text-white tracking-wide" dir="ltr">01066711545</span>
                 </a>
               </div>
             </div>
