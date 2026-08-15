@@ -10,7 +10,7 @@ import {
   ArrowLeft, BookOpen, Check, CheckCircle2, ClipboardCheck,
   Clock, FileText, GraduationCap, Laptop, MapPin, MessageCircle,
   Play, Send, ShieldCheck, Star, UserCheck, Users, Code, Award,
-  Brain, Code2, GitFork, Lightbulb, Crown, Layers
+  Brain, Code2, GitFork, Lightbulb, Crown, Layers, Sparkles
 } from "lucide-react";
 import { defaultOfflineCenters, type OfflineCenterItem } from "@/components/admin/settings/CentersTab";
 
@@ -279,14 +279,16 @@ export function AcademyHome() {
                 {/* Booking Open Announcement Banner */}
                 <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/15 p-3.5 text-right text-xs sm:text-sm font-black text-emerald-700 dark:text-emerald-300 shadow-md flex flex-col sm:flex-row items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white font-black text-xs shadow-sm animate-bounce">🔥</span>
-                    <span><strong>تم فتح باب حجز السناتر رسمياً الآن!</strong> (أولى وتانية بكالوريا 2026 - الزقازيق)</span>
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white font-black text-xs shadow-sm">
+                      <Sparkles className="h-4 w-4" />
+                    </span>
+                    <span><strong>تم فتح باب حجز السناتر رسمياً الآن</strong> (أولى وتانية بكالوريا 2026 - الزقازيق)</span>
                   </div>
                   <a
                     href="/booking"
                     className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white hover:bg-emerald-700 transition-all shrink-0 shadow-sm"
                   >
-                    احجز مكانك بالسنتر الآن 🚀
+                    احجز مكانك بالسنتر الآن
                   </a>
                 </div>
 
