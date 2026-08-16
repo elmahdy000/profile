@@ -326,6 +326,21 @@ export function OverviewSection({
               <span>إرسال إشعار</span>
             </button>
           </div>
+
+          <div className="flex items-center justify-between rounded-xl border border-[#BFDBFE] bg-[#EFF6FF] p-4 sm:col-span-3">
+            <div className="space-y-1">
+              <span className="text-xs font-bold text-[#0F172A]">جدول حجوزات السناتر المخصص 📍</span>
+              <p className="text-xs text-[#475569]">عرض ومتابعة كافة الطلاب المسجلين بالسناتر الحضورية بالزقازيق والمواعيد المحددة.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onNavigateToTab?.("center-bookings" as any)}
+              className="flex items-center gap-1.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] px-4 py-2 text-xs font-semibold text-white transition-colors shadow-xs shrink-0 min-h-[44px]"
+            >
+              <span>فتح كشف حجوزات السناتر</span>
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 

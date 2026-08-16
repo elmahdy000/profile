@@ -1269,6 +1269,7 @@ export function AdminLearning({
             <OverviewSection
               students={students as any}
               learningCourses={learningCourses}
+              onNavigateToTab={(targetTab) => setTab(targetTab as any)}
               onSelectStageFilter={(filter) => {
                 setTab("students");
                 setStudentSearch("");

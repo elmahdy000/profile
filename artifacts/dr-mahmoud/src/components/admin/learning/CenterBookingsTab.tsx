@@ -92,11 +92,11 @@ export function CenterBookingsTab({
   // Filter for center / offline students
   const centerStudents = useMemo(() => {
     return localStudents.filter((s) => {
-      return (
-        s.learningMode === "offline" ||
-        Boolean(s.centerName && s.centerName.trim()) ||
-        Boolean(s.appointmentSlot && s.appointmentSlot.trim())
-      );
+      const isOfflineMode = String(s.learningMode || "").trim().toLowerCase() === "offline";
+      const hasCenter = Boolean(s.centerName && String(s.centerName).trim());
+      const hasSlot = Boolean(s.appointmentSlot && String(s.appointmentSlot).trim());
+      const hasParentPhone = Boolean(s.parentPhone && String(s.parentPhone).trim());
+      return isOfflineMode || hasCenter || hasSlot || hasParentPhone;
     });
   }, [localStudents]);
 
