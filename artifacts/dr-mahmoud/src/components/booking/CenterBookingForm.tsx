@@ -219,7 +219,7 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
         centerName: selectedCenter,
         appointmentSlot: selectedSlot,
         isNewStudent,
-        accessCode: isNewStudent && result.accessCode ? result.accessCode : undefined,
+        accessCode: result.accessCode ? result.accessCode : undefined,
       };
 
       setBookingSuccessData(successData);
@@ -707,10 +707,14 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
                 </div>
               </div>
 
-              {/* Student Access Code Card (Only for NEW Students) */}
-              {bookingSuccessData.isNewStudent && bookingSuccessData.accessCode ? (
+              {/* Student Access Code Card (For NEW & Existing Students) */}
+              {bookingSuccessData.accessCode ? (
                 <div className="rounded-2xl border border-[#1677FF]/40 bg-[#1677FF]/15 p-4 space-y-2">
-                  <span className="text-[11px] font-extrabold text-[#69A5FF]">كود الدخول الخاص بالطالب لمتابعة الدروس على المنصة:</span>
+                  <span className="text-[11px] font-extrabold text-[#69A5FF]">
+                    {bookingSuccessData.isNewStudent
+                      ? "كود الدخول الخاص بالطالب لمتابعة الدروس على المنصة:"
+                      : "كود الدخول الخاص بحسابك المسجل مسبقاً لمتابعة الدروس:"}
+                  </span>
                   <div className="flex items-center justify-between gap-3 bg-[#0B1424] p-3 rounded-xl border border-[#1677FF]/30">
                     <span className="font-mono text-lg font-black text-[#4096FF] dir-ltr">
                       {bookingSuccessData.accessCode}

@@ -608,7 +608,7 @@ router.post(
           centerName: centerName || existingByPhone.centerName || "",
           appointmentSlot: appointmentSlot || existingByPhone.appointmentSlot || "",
           parentPhone: parentPhone || existingByPhone.parentPhone || "",
-          accessCode: undefined,
+          accessCode: existingByPhone.accessCode || undefined,
           message: "تم تحديث بيانات حجز السنتر بنجاح (طالب مسجل مسبقاً)",
         });
         return;
