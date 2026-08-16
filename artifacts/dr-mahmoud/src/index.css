@@ -16,12 +16,36 @@
   outline: none;
 }
 
+:root {
+  --background: #F6F8FC;
+  --surface: #FFFFFF;
+  --foreground: #0F172A;
+  --muted-foreground: #64748B;
+  --border: #E2E8F0;
+
+  --primary: #2563EB;
+  --primary-hover: #1D4ED8;
+  --primary-soft: #EFF6FF;
+
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 /* Educational admin workspace — visual-only refinement. */
 .admin-learning-workspace {
-  color: #142033;
-  --admin-primary: #1266d4;
-  --admin-border: #e1e7f0;
-  --admin-muted: #66758c;
+  color: #0F172A;
+  --admin-primary: #2563EB;
+  --admin-border: #E2E8F0;
+  --admin-muted: #64748B;
 }
 .admin-learning-workspace .input-admin {
   font-size: 0.8125rem;

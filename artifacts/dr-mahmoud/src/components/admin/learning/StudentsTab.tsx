@@ -299,22 +299,22 @@ export function StudentsTab({
   };
 
   return (
-    <div className="admin-adaptive-dark-ui space-y-5 text-[#F8FAFC]" dir="rtl">
+    <div className="space-y-5 text-[#0F172A]" dir="rtl">
       {modeFilter === "offline" && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-emerald-500/40 bg-emerald-950/40 p-4 text-emerald-300 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-[#E2E8F0] bg-white p-4 text-[#0F172A] shadow-xs">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 font-bold">
-              <MapPin className="h-5 w-5" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EFF6FF] text-[#2563EB] font-bold">
+              <MapPin className="h-5 w-5 text-[#2563EB]" />
             </div>
             <div>
-              <h2 className="text-sm font-black text-white">📍 قائمة حجوزات السناتر والمواعيد الحضورية</h2>
-              <p className="text-xs font-bold text-emerald-300">تعرض الآن جميع الحجوزات والطلاب المسجلين بنظام الأوفلاين ({filteredStudents.length} حجز بمركز التعليم)</p>
+              <h2 className="text-sm font-bold text-[#0F172A]">قائمة حجوزات السناتر والمواعيد الحضورية</h2>
+              <p className="text-xs text-[#64748B]">تعرض الآن جميع الحجوزات والطلاب المسجلين بنظام الأوفلاين ({filteredStudents.length} حجز بمركز التعليم)</p>
             </div>
           </div>
           <button
             type="button"
             onClick={clearAllFilters}
-            className="shrink-0 px-3.5 py-2 rounded-xl bg-[#0B1424] border border-emerald-500/35 text-xs font-black text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+            className="shrink-0 px-3.5 py-2 rounded-xl bg-[#EFF6FF] border border-[#BFDBFE] text-xs font-semibold text-[#2563EB] hover:bg-[#DBEAFE] transition-colors"
           >
             عرض جميع الطلاب (أونلاين + أوفلاين)
           </button>
@@ -322,19 +322,19 @@ export function StudentsTab({
       )}
 
       {contextFilterLabel && (
-        <div className="flex flex-col gap-3 rounded-2xl border border-[#1677FF]/35 bg-[#1677FF]/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-2xl border border-[#BFDBFE] bg-[#EFF6FF] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-2.5">
-            <SlidersHorizontal className="h-4 w-4 shrink-0 text-[#4096FF]" />
-            <p className="min-w-0 text-xs font-bold text-[#A8B5C7]">
-              تعرض القائمة الآن: <strong className="text-[#F8FAFC]">{contextFilterLabel}</strong>
-              <span className="mr-2 text-[#7F91AA]">({students.length} طالب)</span>
+            <SlidersHorizontal className="h-4 w-4 shrink-0 text-[#2563EB]" />
+            <p className="min-w-0 text-xs font-semibold text-[#475569]">
+              تعرض القائمة الآن: <strong className="text-[#0F172A]">{contextFilterLabel}</strong>
+              <span className="mr-2 text-[#64748B]">({students.length} طالب)</span>
             </p>
           </div>
           {onClearContextFilter && (
             <button
               type="button"
               onClick={onClearContextFilter}
-              className="inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-[#1677FF]/35 bg-[#0B1424] px-3 text-xs font-black text-[#69A5FF] transition-colors hover:bg-[#13213A] hover:text-white"
+              className="inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-[#BFDBFE] bg-white px-3 text-xs font-semibold text-[#2563EB] transition-colors hover:bg-[#EFF6FF]"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               عرض كل الطلاب
@@ -344,24 +344,24 @@ export function StudentsTab({
       )}
 
       {/* 1. Integrated Search & Filters Toolbar */}
-      <div className="rounded-2xl border border-[#26364D] bg-[#131E31] p-4 space-y-3 shadow-sm overflow-hidden">
+      <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4 space-y-3 shadow-xs overflow-hidden">
         {/* Row 1: Search + Result Count + Clear */}
         <div className="flex items-center gap-3">
           {/* Search Input — min-w-[360px] on desktop, full width on mobile */}
           <div className="relative min-w-0 flex-1">
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8492A6] pointer-events-none" />
+            <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748B] pointer-events-none" />
             <input
               type="text"
               placeholder="ابحث بالاسم أو الهاتف أو الكود أو البريد"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="h-12 w-full min-w-0 rounded-xl border border-[#26364D] bg-[#0B1424] pr-11 pl-10 text-sm font-bold text-[#F8FAFC] placeholder-[#8492A6] focus:border-[#1677FF] focus:outline-none transition-colors"
+              className="h-12 w-full min-w-0 rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] pr-11 pl-10 text-sm font-medium text-[#0F172A] placeholder-[#64748B] focus:border-[#2563EB] focus:bg-white focus:outline-none transition-colors"
             />
             {searchInput && (
               <button
                 type="button"
                 onClick={() => setSearchInput("")}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8492A6] hover:text-[#F8FAFC]"
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-[#0F172A]"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -369,9 +369,9 @@ export function StudentsTab({
           </div>
 
           {/* Result Counter */}
-          <span className="shrink-0 text-xs font-bold text-[#A8B5C7] whitespace-nowrap hidden sm:block">
-            عرض <strong className="text-[#F8FAFC] font-black">{filteredStudents.length}</strong>{" "}
-            من أصل <strong className="text-[#F8FAFC] font-black">{students.length}</strong> طالبًا
+          <span className="shrink-0 text-xs font-medium text-[#64748B] whitespace-nowrap hidden sm:block">
+            عرض <strong className="text-[#0F172A] font-bold">{filteredStudents.length}</strong>{" "}
+            من أصل <strong className="text-[#0F172A] font-bold">{students.length}</strong> طالبًا
           </span>
 
           {/* Clear Filters (visible only when active) */}
@@ -379,7 +379,7 @@ export function StudentsTab({
             <button
               type="button"
               onClick={clearAllFilters}
-              className="shrink-0 inline-flex items-center gap-1.5 text-xs font-bold text-rose-400 hover:text-rose-300 transition-colors whitespace-nowrap"
+              className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 hover:text-red-700 transition-colors whitespace-nowrap"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">مسح الفلاتر</span>
@@ -390,9 +390,9 @@ export function StudentsTab({
           <button
             type="button"
             onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-            className="lg:hidden shrink-0 flex items-center gap-1.5 h-12 rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#F8FAFC]"
+            className="lg:hidden shrink-0 flex items-center gap-1.5 h-12 rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-semibold text-[#0F172A]"
           >
-            <SlidersHorizontal className="h-4 w-4 text-[#1677FF]" />
+            <SlidersHorizontal className="h-4 w-4 text-[#2563EB]" />
           </button>
         </div>
 
@@ -402,7 +402,7 @@ export function StudentsTab({
           <select
             value={stageFilter}
             onChange={(e) => { setStageFilter(e.target.value); setCurrentPage(1); }}
-            className="h-12 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7] focus:border-[#1677FF] focus:outline-none"
+            className="h-12 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
           >
             <option value="all">كل المراحل</option>
             {uniqueStages.map((stage) => (
@@ -414,7 +414,7 @@ export function StudentsTab({
           <select
             value={courseFilter}
             onChange={(e) => { setCourseFilter(e.target.value); setCurrentPage(1); }}
-            className="h-12 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7] focus:border-[#1677FF] focus:outline-none"
+            className="h-12 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
           >
             <option value="all">كل الكورسات</option>
             {learningCourses.map((c) => (
@@ -426,7 +426,7 @@ export function StudentsTab({
           <select
             value={paymentFilter}
             onChange={(e) => { setPaymentFilter(e.target.value); setCurrentPage(1); }}
-            className="h-12 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7] focus:border-[#1677FF] focus:outline-none"
+            className="h-12 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
           >
             <option value="all">كل الاشتراكات</option>
             <option value="paid">مدفوع (وصول كامل)</option>
@@ -438,7 +438,7 @@ export function StudentsTab({
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-            className="h-12 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7] focus:border-[#1677FF] focus:outline-none"
+            className="h-12 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
           >
             <option value="all">كل الحسابات</option>
             <option value="approved">حساب نشط</option>
@@ -450,7 +450,7 @@ export function StudentsTab({
           <select
             value={modeFilter}
             onChange={(e) => { setModeFilter(e.target.value); setCurrentPage(1); }}
-            className="h-12 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7] focus:border-[#1677FF] focus:outline-none"
+            className="h-12 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
           >
             <option value="all">كل الأنظمة</option>
             <option value="online">أونلاين</option>

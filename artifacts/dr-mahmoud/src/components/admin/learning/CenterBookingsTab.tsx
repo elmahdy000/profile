@@ -318,96 +318,96 @@ export function CenterBookingsTab({
   };
 
   return (
-    <div className="admin-adaptive-dark-ui center-bookings-workspace space-y-6 text-[#F8FAFC]" dir="rtl">
-      {/* 1. Header Banner & Page Action */}
-      <div className="flex flex-col gap-4 rounded-3xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/70 via-[#0D1B2A] to-[#0A1424] p-6 shadow-xl sm:flex-row sm:items-center sm:justify-between">
+    <div className="center-bookings-workspace space-y-6 text-[#0F172A]" dir="rtl">
+      {/* 1. White Header Card & Page Actions */}
+      <div className="flex flex-col gap-4 rounded-[18px] border border-[#E2E8F0] bg-white p-5 sm:p-6 shadow-xs sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/40 shadow-inner">
-            <MapPin className="h-7 w-7" />
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EFF6FF] text-[#2563EB] font-bold border border-[#BFDBFE]">
+            <MapPin className="h-5 w-5 text-[#2563EB]" />
           </div>
           <div>
-            <h1 className="text-xl font-black text-white flex items-center gap-2">
-              📍 كشف وتفاصيل حجوزات السناتر (المواعيد الحضورية)
+            <h1 className="text-xl sm:text-2xl font-bold text-[#0F172A]">
+              كشف تفاصيل حجوزات السناتر
             </h1>
-            <p className="mt-1 text-xs text-emerald-300 font-bold leading-relaxed">
-              جدول مخصص وشامل لجميع الطلاب المسجلين بالسناتر بالزقازيق، مع إمكانية تحديد السنتر والموعد مباشرة لكل طالب.
+            <p className="mt-1 text-sm text-[#475569] leading-relaxed">
+              جدول مخصص وشامل لجميع الطلاب المسجلين بالسناتر، مع إمكانية تحديد السنتر والموعد مباشرة لكل طالب.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0 w-full sm:w-auto">
           <Button
             type="button"
             onClick={handleExportCSV}
-            className="h-11 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5"
+            className="h-11 px-4 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-semibold text-xs shadow-xs transition-all flex items-center justify-center gap-2"
           >
-            <Download className="h-4 w-4" /> تصدير كشف الحجز (CSV)
+            <Download className="h-4 w-4" /> تصدير كشف الحجز CSV
           </Button>
 
           <Button
             type="button"
             onClick={() => window.print()}
             variant="outline"
-            className="h-11 px-4 rounded-xl border-emerald-500/40 bg-[#0B1424] hover:bg-emerald-500/20 text-emerald-300 font-extrabold text-xs transition-all flex items-center gap-1.5"
+            className="h-11 px-4 rounded-xl border border-[#E2E8F0] bg-white hover:bg-[#EFF6FF] text-[#2563EB] font-semibold text-xs transition-all flex items-center justify-center gap-2"
           >
-            <Printer className="h-4 w-4" /> طباعة كشف الحضور
+            <Printer className="h-4 w-4 text-[#2563EB]" /> طباعة كشف الحضور
           </Button>
         </div>
       </div>
 
       {/* 2. Key Stats Summary */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-2xl border border-[#2B3D57] bg-[#101B2D] p-4 shadow-sm">
-          <div className="flex items-center justify-between text-[#8492A6]">
-            <span className="text-xs font-extrabold">إجمالي حجوزات السناتر</span>
-            <Users className="h-4 w-4 text-emerald-400" />
+        <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
+          <div className="flex items-center justify-between text-[#64748B]">
+            <span className="text-xs font-semibold">إجمالي حجوزات السناتر</span>
+            <Users className="h-4 w-4 text-[#2563EB]" />
           </div>
-          <p className="mt-2 text-2xl font-black text-white">{stats.total} <span className="text-xs font-bold text-[#8492A6]">حجز</span></p>
+          <p className="mt-2 text-2xl font-bold text-[#0F172A]">{stats.total} <span className="text-xs font-normal text-[#64748B]">حجز</span></p>
         </div>
 
-        <div className="rounded-2xl border border-[#2B3D57] bg-[#101B2D] p-4 shadow-sm">
-          <div className="flex items-center justify-between text-[#8492A6]">
-            <span className="text-xs font-extrabold">مواعيد محددة</span>
-            <Clock className="h-4 w-4 text-amber-400" />
+        <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
+          <div className="flex items-center justify-between text-[#64748B]">
+            <span className="text-xs font-semibold">مواعيد محددة</span>
+            <Clock className="h-4 w-4 text-[#F59E0B]" />
           </div>
-          <p className="mt-2 text-2xl font-black text-amber-300">{stats.withSlot} <span className="text-xs font-bold text-[#8492A6]">طالب</span></p>
+          <p className="mt-2 text-2xl font-bold text-[#0F172A]">{stats.withSlot} <span className="text-xs font-normal text-[#64748B]">طالب</span></p>
         </div>
 
-        <div className="rounded-2xl border border-[#2B3D57] bg-[#101B2D] p-4 shadow-sm">
-          <div className="flex items-center justify-between text-[#8492A6]">
-            <span className="text-xs font-extrabold">أولياء الأمور المسجلين</span>
-            <Phone className="h-4 w-4 text-[#1677FF]" />
+        <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
+          <div className="flex items-center justify-between text-[#64748B]">
+            <span className="text-xs font-semibold">أولياء الأمور المسجلين</span>
+            <Phone className="h-4 w-4 text-[#2563EB]" />
           </div>
-          <p className="mt-2 text-2xl font-black text-[#69A5FF]">{stats.withParentPhone} <span className="text-xs font-bold text-[#8492A6]">رقم مسجل</span></p>
+          <p className="mt-2 text-2xl font-bold text-[#0F172A]">{stats.withParentPhone} <span className="text-xs font-normal text-[#64748B]">رقم مسجل</span></p>
         </div>
 
-        <div className="rounded-2xl border border-[#2B3D57] bg-[#101B2D] p-4 shadow-sm">
-          <div className="flex items-center justify-between text-[#8492A6]">
-            <span className="text-xs font-extrabold">الاشتراكات المدفوعة</span>
-            <CreditCard className="h-4 w-4 text-emerald-400" />
+        <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
+          <div className="flex items-center justify-between text-[#64748B]">
+            <span className="text-xs font-semibold">الاشتراكات المدفوعة</span>
+            <CreditCard className="h-4 w-4 text-[#10B981]" />
           </div>
-          <p className="mt-2 text-2xl font-black text-emerald-400">{stats.paidCount} <span className="text-xs font-bold text-[#8492A6]">اشتراك</span></p>
+          <p className="mt-2 text-2xl font-bold text-[#0F172A]">{stats.paidCount} <span className="text-xs font-normal text-[#64748B]">اشتراك</span></p>
         </div>
       </div>
 
       {/* 3. Dedicated Filter Bar */}
-      <div className="rounded-2xl border border-[#2B3D57] bg-[#101B2D] p-4 space-y-4 shadow-sm">
+      <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4 space-y-4 shadow-xs">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {/* Live Search */}
           <div className="relative sm:col-span-2 lg:col-span-2">
-            <Search className="absolute right-3.5 top-3.5 h-4 w-4 text-[#7F91AA]" />
+            <Search className="absolute right-3.5 top-3.5 h-4 w-4 text-[#64748B]" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ابحث باسم الطالب، رقم التلفون، كود الحجز، أو هاتف ولي الأمر..."
-              className="h-11 w-full rounded-xl border border-[#26364D] bg-[#0B1424] pr-10 pl-4 text-xs font-bold text-white placeholder-[#7F91AA] focus:border-emerald-500 focus:outline-none"
+              placeholder="ابحث باسم الطالب، رقم التلفون، كود الحجز..."
+              className="h-11 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] pr-10 pl-4 text-xs font-medium text-[#0F172A] placeholder-[#64748B] focus:border-[#2563EB] focus:bg-white focus:outline-none"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
-                className="absolute left-3 top-3.5 text-[#7F91AA] hover:text-white"
+                className="absolute left-3 top-3.5 text-[#64748B] hover:text-[#0F172A]"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -418,7 +418,7 @@ export function CenterBookingsTab({
           <select
             value={centerFilter}
             onChange={(e) => setCenterFilter(e.target.value)}
-            className="h-11 rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7] focus:border-emerald-500 focus:outline-none"
+            className="h-11 rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
           >
             <option value="all">كل السناتر والمراكز</option>
             {OFFICIAL_CENTERS.map((c) => (
@@ -433,7 +433,7 @@ export function CenterBookingsTab({
           <select
             value={slotFilter}
             onChange={(e) => setSlotFilter(e.target.value)}
-            className="h-11 rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7] focus:border-emerald-500 focus:outline-none"
+            className="h-11 rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
           >
             <option value="all">كل المواعيد المتاحة</option>
             {OFFICIAL_SLOTS.map((s) => (
@@ -448,7 +448,7 @@ export function CenterBookingsTab({
           <select
             value={stageFilter}
             onChange={(e) => setStageFilter(e.target.value)}
-            className="h-11 rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7] focus:border-emerald-500 focus:outline-none"
+            className="h-11 rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
           >
             <option value="all">كل المراحل الدراسية</option>
             {uniqueStages.map((st) => (
@@ -458,14 +458,14 @@ export function CenterBookingsTab({
         </div>
 
         {/* Additional Secondary Filters */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#26364D]/60 text-xs font-bold text-[#A8B5C7]">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#F1F5F9] text-xs font-medium text-[#64748B]">
           <div className="flex flex-wrap items-center gap-3">
             <span>تصفية إضافية:</span>
             {uniqueSchools.length > 0 && (
               <select
                 value={schoolFilter}
                 onChange={(e) => setSchoolFilter(e.target.value)}
-                className="h-9 rounded-lg border border-[#26364D] bg-[#0B1424] px-2.5 text-xs text-[#A8B5C7]"
+                className="h-9 rounded-lg border border-[#E2E8F0] bg-[#F6F8FC] px-2.5 text-xs text-[#0F172A]"
               >
                 <option value="all">كل المدارس</option>
                 {uniqueSchools.map((sc) => (
@@ -477,7 +477,7 @@ export function CenterBookingsTab({
             <select
               value={paymentFilter}
               onChange={(e) => setPaymentFilter(e.target.value)}
-              className="h-9 rounded-lg border border-[#26364D] bg-[#0B1424] px-2.5 text-xs text-[#A8B5C7]"
+              className="h-9 rounded-lg border border-[#E2E8F0] bg-[#F6F8FC] px-2.5 text-xs text-[#0F172A]"
             >
               <option value="all">كل الاشتراكات</option>
               <option value="paid">مدفوع</option>
@@ -496,66 +496,65 @@ export function CenterBookingsTab({
                   setSchoolFilter("all");
                   setPaymentFilter("all");
                 }}
-                className="text-emerald-400 hover:underline flex items-center gap-1"
+                className="text-[#2563EB] hover:underline flex items-center gap-1 font-semibold"
               >
                 <X className="h-3.5 w-3.5" /> إعادة ضبط الفلاتر
               </button>
             )}
           </div>
 
-          <span className="text-[#8492A6]">
-            معروض الآن: <strong className="text-white">{filteredBookings.length}</strong> حجز بالسنتر من إجمالي {centerStudents.length}
+          <span className="text-[#64748B]">
+            معروض الآن: <strong className="text-[#0F172A]">{filteredBookings.length}</strong> حجز بالسنتر من إجمالي {centerStudents.length}
           </span>
         </div>
       </div>
 
-      
       {/* 3.5. Mobile Center Bookings Cards (lg:hidden) */}
       <div className="grid gap-3 lg:hidden">
         {filteredBookings.length === 0 ? (
-          <div className="rounded-2xl border border-[#2B3D57] bg-[#101B2D] p-6 text-center text-xs text-[#8492A6]">
-            لا توجد حجوزات سناتر مطابقة للبحث الفلاتر.
+          <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6 text-center text-xs text-[#64748B]">
+            لا توجد حجوزات سناتر مطابقة للبحث أو الفلاتر.
           </div>
         ) : (
           filteredBookings.map((student) => {
             const effectiveStage = student.grade === "أخرى" ? student.otherGradeDetail || "أخرى" : student.grade || "غير محدد";
             return (
-              <div key={student.id} className="rounded-2xl border border-[#2B3D57] bg-[#101B2D] p-4 space-y-3 shadow-md">
+              <div key={student.id} className="rounded-2xl border border-[#E2E8F0] bg-white p-4 space-y-3 shadow-xs">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-500/15 text-sm font-black text-emerald-400">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#EFF6FF] text-sm font-bold text-[#2563EB]">
                       {student.name.charAt(0)}
                     </span>
                     <div className="min-w-0">
-                      <h3 className="truncate text-sm font-black text-white">{student.name}</h3>
-                      <p className="mt-0.5 font-mono text-xs text-[#A8B5C7]" dir="ltr">{student.phone}</p>
+                      <h3 className="truncate text-sm font-bold text-[#0F172A]">{student.name}</h3>
+                      <p className="mt-0.5 font-mono text-xs text-[#64748B]" dir="ltr">{student.phone}</p>
                     </div>
                   </div>
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
-                    student.status === "approved" ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" :
-                    student.status === "suspended" ? "bg-rose-500/15 text-rose-400 border-rose-500/30" :
-                    "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border shrink-0 ${
+                    student.status === "approved" ? "bg-[#ECFDF5] text-[#10B981] border-[#A7F3D0]" :
+                    student.status === "suspended" ? "bg-red-50 text-red-600 border-red-200" :
+                    "bg-amber-50 text-amber-600 border-amber-200"
                   }`}>
                     {student.status === "approved" ? "مفعل" : student.status === "suspended" ? "موقوف" : "معلق"}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-[11px] bg-[#0A1424] p-3 rounded-xl border border-[#26364D]">
+                <div className="grid grid-cols-2 gap-2 text-[11px] bg-[#F8FAFC] p-3 rounded-xl border border-[#E2E8F0]">
                   <div>
-                    <span className="block text-[#8492A6] text-[10px]">السنتر:</span>
-                    <span className="font-bold text-emerald-300 truncate block">{student.centerName || "سنتر الزقازيق"}</span>
+                    <span className="block text-[#64748B] text-[10px]">السنتر:</span>
+                    <span className="font-semibold text-[#2563EB] truncate block">{student.centerName || "سنتر الزقازيق"}</span>
                   </div>
                   <div>
-                    <span className="block text-[#8492A6] text-[10px]">الموعد:</span>
-                    <span className="font-bold text-white truncate block">{student.appointmentSlot || "حسب المواعيد"}</span>
+                    <span className="block text-[#64748B] text-[10px]">الموعد:</span>
+                    <span className="font-semibold text-[#0F172A] truncate block">{student.appointmentSlot || "حسب المواعيد"}</span>
                   </div>
                   <div>
-                    <span className="block text-[#8492A6] text-[10px]">المرحلة:</span>
-                    <span className="font-bold text-[#A8B5C7] truncate block">{effectiveStage}</span>
+                    <span className="block text-[#64748B] text-[10px]">المرحلة:</span>
+                    <span className="font-semibold text-[#475569] truncate block">{effectiveStage}</span>
                   </div>
                   <div>
-                    <span className="block text-[#8492A6] text-[10px]">هاتف ولي الأمر:</span>
-                    <span className="font-bold text-[#A8B5C7] font-mono block" dir="ltr">{student.parentPhone || "غير مسجل"}</span>
+                    <span className="block text-[#64748B] text-[10px]">هاتف ولي الأمر:</span>
+                    <span className="font-semibold text-[#475569] font-mono block" dir="ltr">{student.parentPhone || "غير مسجل"}</span>
                   </div>
                 </div>
 
@@ -563,7 +562,7 @@ export function CenterBookingsTab({
                   <button
                     type="button"
                     onClick={() => setActiveDrawerStudent(student)}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 h-9 rounded-xl bg-emerald-600/20 border border-emerald-500/35 text-xs font-bold text-emerald-300 hover:bg-emerald-600/30"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 h-10 rounded-xl bg-[#EFF6FF] border border-[#BFDBFE] text-xs font-semibold text-[#2563EB] hover:bg-[#DBEAFE]"
                   >
                     <Eye className="h-4 w-4" /> فتح ملف الطالب والتعديل
                   </button>
@@ -571,7 +570,7 @@ export function CenterBookingsTab({
                     href={`https://wa.me/${student.phone.replace(/[^\d+]/g, "")}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center justify-center h-9 w-9 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500 shrink-0"
+                    className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-[#10B981] text-white hover:bg-[#059669] shrink-0"
                     title="واتساب"
                   >
                     <MessageCircle className="h-4 w-4" />
@@ -583,274 +582,256 @@ export function CenterBookingsTab({
         )}
       </div>
 
-      {/* Desktop Table View (hidden on small mobile screens if preferred, or scrollable) */}
+      {/* Desktop Table View */}
       <div className="hidden lg:block">
-{/* 4. Complete Center Bookings Table */}
-      <div className="admin-center-table relative overflow-x-auto rounded-2xl border border-[#2B3D57] bg-[#101B2D] shadow-md">
-        <table className="w-full min-w-[1300px] border-separate border-spacing-0 text-right text-[11px]">
-          <thead className="sticky top-0 z-20 bg-[#0A1424] text-[#B6C2D2]">
-            <tr className="h-12">
-              <th className="w-10 border-b border-[#2B3D57] px-2.5 text-center">
-                <button
-                  type="button"
-                  onClick={toggleSelectAll}
-                  aria-label="تحديد الكل"
-                  className="inline-grid h-8 w-8 place-items-center rounded-lg text-[#7F91AA] transition hover:bg-white/5 hover:text-white"
-                >
-                  {isAllSelected ? <CheckSquare className="h-4 w-4 text-emerald-400" /> : <Square className="h-4 w-4" />}
-                </button>
-              </th>
-              <th className="w-10 border-b border-[#2B3D57] px-2 py-2 text-center font-black">#</th>
-              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[160px]">الطالب وكود الوصول</th>
-              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[140px]">المرحلة التعليمية</th>
-              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[120px]">اسم المدرسة</th>
-              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[95px]">المسار</th>
-              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[160px]">السنتر المختار 📍</th>
-              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[160px]">الموعد المحدد ⏰</th>
-              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[125px]">هاتف الطالب 📱</th>
-              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[125px]">هاتف ولي الأمر 👨‍👩‍👦</th>
-              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[95px]">تاريخ التسجيل</th>
-              <th className="border-b border-[#2B3D57] px-3 py-2 font-extrabold min-w-[85px]">الاشتراك</th>
-              <th className="border-b border-[#2B3D57] px-3 py-2 text-left font-extrabold min-w-[140px]">الإجراءات</th>
-            </tr>
-          </thead>
-
-          <tbody className="bg-[#101B2D]">
-            {filteredBookings.length === 0 ? (
-              <tr>
-                <td colSpan={13} className="p-12 text-center text-xs text-[#7F91AA]">
-                  لا توجد حجوزات سناتر مطابقة للبحث أو الفلاتر المحددة.
-                </td>
-              </tr>
-            ) : (
-              filteredBookings.map((s, idx) => {
-                const isSelected = selectedIds.includes(s.id);
-                const effectiveStage = s.grade === "أخرى" ? s.otherGradeDetail || "أخرى" : s.grade || "غير محدد";
-
-                return (
-                  <tr
-                    key={s.id}
-                    className={`group h-[64px] transition-[background-color] hover:bg-[#192A43] ${
-                      isSelected ? "bg-emerald-500/10 shadow-[inset_-3px_0_0_#10B981]" : idx % 2 ? "bg-[#0D192A]/45" : "bg-[#101B2D]"
-                    }`}
+        <div className="admin-center-table relative overflow-x-auto rounded-2xl border border-[#E2E8F0] bg-white shadow-xs">
+          <table className="w-full min-w-[1300px] border-separate border-spacing-0 text-right text-[11px]">
+            <thead className="sticky top-0 z-20 bg-[#F8FAFC] text-[#475569]">
+              <tr className="h-12">
+                <th className="w-10 border-b border-[#E2E8F0] px-2.5 text-center">
+                  <button
+                    type="button"
+                    onClick={toggleSelectAll}
+                    aria-label="تحديد الكل"
+                    className="inline-grid h-8 w-8 place-items-center rounded-lg text-[#64748B] transition hover:bg-[#F1F5F9]"
                   >
-                    {/* Checkbox */}
-                    <td className="border-b border-[#26364D]/55 px-2.5 py-2 text-center" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        type="button"
-                        onClick={() => toggleSelect(s.id)}
-                        className="inline-grid h-8 w-8 place-items-center rounded-lg text-[#7F91AA] transition hover:bg-white/5 hover:text-white"
-                      >
-                        {isSelected ? <CheckSquare className="h-4 w-4 text-emerald-400" /> : <Square className="h-4 w-4" />}
-                      </button>
-                    </td>
+                    {isAllSelected ? <CheckSquare className="h-4 w-4 text-[#2563EB]" /> : <Square className="h-4 w-4" />}
+                  </button>
+                </th>
+                <th className="w-10 border-b border-[#E2E8F0] px-2 py-2 text-center font-bold">#</th>
+                <th className="border-b border-[#E2E8F0] px-3 py-2 font-bold min-w-[160px]">الطالب وكود الوصول</th>
+                <th className="border-b border-[#E2E8F0] px-3 py-2 font-bold min-w-[140px]">المرحلة التعليمية</th>
+                <th className="border-b border-[#E2E8F0] px-3 py-2 font-bold min-w-[120px]">اسم المدرسة</th>
+                <th className="border-b border-[#E2E8F0] px-3 py-2 font-bold min-w-[95px]">المسار</th>
+                <th className="border-b border-[#E2E8F0] px-3 py-2 font-bold min-w-[160px]">السنتر المختار</th>
+                <th className="border-b border-[#E2E8F0] px-3 py-2 font-bold min-w-[160px]">الموعد المحدد</th>
+                <th className="border-b border-[#E2E8F0] px-3 py-2 font-bold min-w-[125px]">هاتف الطالب</th>
+                <th className="border-b border-[#E2E8F0] px-3 py-2 font-bold min-w-[125px]">هاتف ولي الأمر</th>
+                <th className="border-b border-[#E2E8F0] px-3 py-2 font-bold min-w-[95px]">تاريخ التسجيل</th>
+                <th className="border-b border-[#E2E8F0] px-3 py-2 font-bold min-w-[85px]">الاشتراك</th>
+                <th className="border-b border-[#E2E8F0] px-3 py-2 text-left font-bold min-w-[140px]">الإجراءات</th>
+              </tr>
+            </thead>
 
-                    {/* Serial Number */}
-                    <td className="border-b border-[#26364D]/55 px-2 py-2 text-center font-mono font-bold text-[#7F91AA]">
-                      {idx + 1}
-                    </td>
+            <tbody className="bg-white">
+              {filteredBookings.length === 0 ? (
+                <tr>
+                  <td colSpan={13} className="p-12 text-center text-xs text-[#64748B]">
+                    لا توجد حجوزات سناتر مطابقة للبحث أو الفلاتر المحددة.
+                  </td>
+                </tr>
+              ) : (
+                filteredBookings.map((s, idx) => {
+                  const isSelected = selectedIds.includes(s.id);
+                  const effectiveStage = s.grade === "أخرى" ? s.otherGradeDetail || "أخرى" : s.grade || "غير محدد";
 
-                    {/* Student Name + Access Code */}
-                    <td className="border-b border-[#26364D]/55 px-3 py-2">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-emerald-500/30 bg-emerald-500/15 text-xs font-black text-emerald-400">
-                          {s.name.charAt(0)}
+                  return (
+                    <tr
+                      key={s.id}
+                      className={`group h-[60px] transition-colors hover:bg-[#F8FAFC] ${
+                        isSelected ? "bg-[#EFF6FF]" : idx % 2 ? "bg-[#FAF9FD]" : "bg-white"
+                      }`}
+                    >
+                      {/* Checkbox */}
+                      <td className="border-b border-[#E2E8F0] px-2.5 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={() => toggleSelect(s.id)}
+                          className="inline-grid h-8 w-8 place-items-center rounded-lg text-[#64748B] transition hover:bg-[#F1F5F9]"
+                        >
+                          {isSelected ? <CheckSquare className="h-4 w-4 text-[#2563EB]" /> : <Square className="h-4 w-4" />}
+                        </button>
+                      </td>
+
+                      {/* Serial Number */}
+                      <td className="border-b border-[#E2E8F0] px-2 py-2 text-center font-mono font-medium text-[#64748B]">
+                        {idx + 1}
+                      </td>
+
+                      {/* Student Name + Access Code */}
+                      <td className="border-b border-[#E2E8F0] px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] text-xs font-bold text-[#2563EB]">
+                            {s.name.charAt(0)}
+                          </div>
+                          <div className="min-w-0 space-y-0.5">
+                            <span className="block max-w-[130px] truncate text-xs font-bold text-[#0F172A] group-hover:text-[#2563EB]" title={s.name}>
+                              {s.name}
+                            </span>
+                            {s.accessCode && (
+                              <button
+                                type="button"
+                                onClick={() => onCopyStudentCode(s)}
+                                className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold text-[#2563EB] dir-ltr text-right hover:underline"
+                              >
+                                {copiedStudentId === s.id ? <Check className="h-3 w-3 text-[#10B981]" /> : <Copy className="h-3 w-3" />}
+                                <span>{s.accessCode}</span>
+                              </button>
+                            )}
+                          </div>
                         </div>
-                        <div className="min-w-0 space-y-0.5">
-                          <span className="block max-w-[130px] truncate text-xs font-extrabold text-[#F8FAFC] group-hover:text-emerald-300" title={s.name}>
-                            {s.name}
+                      </td>
+
+                      {/* Stage */}
+                      <td className="border-b border-[#E2E8F0] px-3 py-2">
+                        <span className="line-clamp-2 text-[11px] font-medium text-[#475569]" title={effectiveStage}>
+                          {effectiveStage}
+                        </span>
+                      </td>
+
+                      {/* School Name */}
+                      <td className="border-b border-[#E2E8F0] px-3 py-2">
+                        <span className="truncate max-w-[110px] block text-[11px] font-medium text-[#64748B]" title={s.schoolName || "غير محدد"}>
+                          {s.schoolName || "غير مسجل"}
+                        </span>
+                      </td>
+
+                      {/* Language Track */}
+                      <td className="border-b border-[#E2E8F0] px-3 py-2">
+                        <span className="inline-flex rounded-md border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-0.5 text-[10px] font-semibold text-[#475569]">
+                          {s.languageTrack || "عام"}
+                        </span>
+                      </td>
+
+                      {/* Center Name */}
+                      <td className="border-b border-[#E2E8F0] px-3 py-2">
+                        {s.centerName ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] px-2.5 py-1 text-[11px] font-bold text-[#2563EB]">
+                            <MapPin className="h-3.5 w-3.5 text-[#2563EB] shrink-0" />
+                            <span className="truncate max-w-[140px]" title={s.centerName}>{s.centerName}</span>
                           </span>
-                          {s.accessCode && (
-                            <button
-                              type="button"
-                              onClick={() => onCopyStudentCode(s)}
-                              className="inline-flex items-center gap-1 font-mono text-[11px] font-bold text-emerald-400 dir-ltr text-right hover:underline"
-                            >
-                              {copiedStudentId === s.id ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-                              <span>{s.accessCode}</span>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Stage */}
-                    <td className="border-b border-[#26364D]/55 px-3 py-2">
-                      <span className="line-clamp-2 text-[11px] font-bold text-[#B7C4D6]" title={effectiveStage}>
-                        {effectiveStage}
-                      </span>
-                    </td>
-
-                    {/* School Name */}
-                    <td className="border-b border-[#26364D]/55 px-3 py-2">
-                      <span className="truncate max-w-[110px] block text-[11px] font-bold text-[#A8B5C7]" title={s.schoolName || "غير محدد"}>
-                        {s.schoolName || "غير مسجل"}
-                      </span>
-                    </td>
-
-                    {/* Language Track */}
-                    <td className="border-b border-[#26364D]/55 px-3 py-2">
-                      <span className="inline-flex rounded-md border border-[#26364D] bg-[#0B1424] px-2 py-0.5 text-[10px] font-bold text-[#A9B8CC]">
-                        {s.languageTrack || "عام"}
-                      </span>
-                    </td>
-
-                    {/* Center Name */}
-                    <td className="border-b border-[#26364D]/55 px-3 py-2">
-                      {s.centerName ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/15 px-2.5 py-1 text-[11px] font-black text-emerald-300">
-                          <MapPin className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                          <span className="truncate max-w-[140px]" title={s.centerName}>{s.centerName}</span>
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(s)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-dashed border-amber-500/50 bg-amber-500/10 px-2 py-1 text-[10px] font-bold text-amber-300 hover:bg-amber-500/20"
-                        >
-                          <Plus className="h-3 w-3" /> حدد السنتر
-                        </button>
-                      )}
-                    </td>
-
-                    {/* Appointment Slot */}
-                    <td className="border-b border-[#26364D]/55 px-3 py-2">
-                      {s.appointmentSlot ? (
-                        <span className="inline-flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/15 px-2 py-1 text-[11px] font-extrabold text-amber-300">
-                          <Clock className="h-3.5 w-3.5 shrink-0 text-amber-400" />
-                          <span className="truncate max-w-[145px]" title={s.appointmentSlot}>{s.appointmentSlot}</span>
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(s)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-dashed border-amber-500/50 bg-amber-500/10 px-2 py-1 text-[10px] font-bold text-amber-300 hover:bg-amber-500/20"
-                        >
-                          <Clock className="h-3 w-3" /> حدد الموعد
-                        </button>
-                      )}
-                    </td>
-
-                    {/* Student Phone */}
-                    <td className="border-b border-[#26364D]/55 px-3 py-2">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <a
-                          href={`https://wa.me/${(s.phone.replace(/[^\d+]/g, "").startsWith("0") ? "2" + s.phone.replace(/[^\d+]/g, "") : s.phone.replace(/[^\d+]/g, ""))}?text=${encodeURIComponent(`مرحباً ${s.name} 👋، تواصل بخصوص حجز السنتر`)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex p-1 rounded-md bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-400 transition"
-                          title="واتساب الطالب"
-                        >
-                          <MessageCircle className="h-3.5 w-3.5" />
-                        </a>
-                        <span className="font-mono text-xs font-bold text-[#A9B8CC] dir-ltr">{s.phone}</span>
-                      </div>
-                    </td>
-
-                    {/* Parent Phone */}
-                    <td className="border-b border-[#26364D]/55 px-3 py-2">
-                      {s.parentPhone ? (
-                        <div className="flex items-center justify-end gap-1.5">
-                          <a
-                            href={`https://wa.me/${(s.parentPhone.replace(/[^\d+]/g, "").startsWith("0") ? "2" + s.parentPhone.replace(/[^\d+]/g, "") : s.parentPhone.replace(/[^\d+]/g, ""))}?text=${encodeURIComponent(`مرحباً ولي أمر الطالب ${s.name} 👋، تواصل من إدارة السنتر`)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex p-1 rounded-md bg-amber-500/15 hover:bg-amber-500/30 text-amber-300 transition"
-                            title="واتساب ولي الأمر"
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEdit(s)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-dashed border-amber-300 bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700 hover:bg-amber-100"
                           >
-                            <MessageCircle className="h-3.5 w-3.5" />
-                          </a>
-                          <span className="font-mono text-xs font-bold text-amber-300 dir-ltr">{s.parentPhone}</span>
+                            <Plus className="h-3 w-3" /> حدد السنتر
+                          </button>
+                        )}
+                      </td>
+
+                      {/* Appointment Slot */}
+                      <td className="border-b border-[#E2E8F0] px-3 py-2">
+                        {s.appointmentSlot ? (
+                          <span className="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-800">
+                            <Clock className="h-3.5 w-3.5 shrink-0 text-amber-600" />
+                            <span className="truncate max-w-[140px]" title={s.appointmentSlot}>{s.appointmentSlot}</span>
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-[#64748B]">غير محدد</span>
+                        )}
+                      </td>
+
+                      {/* Phone */}
+                      <td className="border-b border-[#E2E8F0] px-3 py-2 font-mono text-xs text-[#0F172A]" dir="ltr">
+                        {s.phone}
+                      </td>
+
+                      {/* Parent Phone */}
+                      <td className="border-b border-[#E2E8F0] px-3 py-2">
+                        {s.parentPhone ? (
+                          <div className="flex items-center justify-end gap-1.5">
+                            <a
+                              href={`https://wa.me/${(s.parentPhone.replace(/[^\d+]/g, "").startsWith("0") ? "2" + s.parentPhone.replace(/[^\d+]/g, "") : s.parentPhone.replace(/[^\d+]/g, ""))}?text=${encodeURIComponent(`مرحباً ولي أمر الطالب ${s.name} 👋، تواصل من إدارة السنتر`)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex p-1 rounded-md bg-[#ECFDF5] hover:bg-[#D1FAE5] text-[#10B981] transition"
+                              title="واتساب ولي الأمر"
+                            >
+                              <MessageCircle className="h-3.5 w-3.5" />
+                            </a>
+                            <span className="font-mono text-xs font-semibold text-[#0F172A] dir-ltr">{s.parentPhone}</span>
+                          </div>
+                        ) : (
+                          <span className="text-[10px] font-normal text-[#64748B]">غير مسجل</span>
+                        )}
+                      </td>
+
+                      {/* Registration Date */}
+                      <td className="border-b border-[#E2E8F0] px-3 py-2">
+                        <span className="font-mono text-[10px] text-[#64748B]">
+                          {s.createdAt ? new Date(s.createdAt).toLocaleDateString("ar-EG") : "—"}
+                        </span>
+                      </td>
+
+                      {/* Payment Status */}
+                      <td className="border-b border-[#E2E8F0] px-3 py-2">
+                        <span
+                          className={`inline-flex h-6 items-center justify-center gap-1 rounded-md px-2 text-[10px] font-bold ${
+                            s.paymentStatus === "paid"
+                              ? "bg-[#ECFDF5] text-[#10B981] border border-[#A7F3D0]"
+                              : s.paymentStatus === "pending_review"
+                              ? "bg-amber-50 text-amber-700 border border-amber-200"
+                              : "bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0]"
+                          }`}
+                        >
+                          {s.paymentStatus === "paid" ? "مدفوع" : s.paymentStatus === "pending_review" ? "مراجعة" : "مجاني"}
+                        </span>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="border-b border-[#E2E8F0] px-3 py-2 text-left">
+                        <div className="flex items-center gap-1.5 justify-end">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEdit(s)}
+                            className="rounded-lg bg-amber-50 border border-amber-200 px-2 py-1 text-[10px] font-semibold text-amber-800 hover:bg-amber-100 transition-all flex items-center gap-1"
+                            title="تعديل السنتر والموعد وبيانات ولي الأمر"
+                          >
+                            <Edit2 className="h-3 w-3" /> تعديل
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setActiveDrawerStudent(s)}
+                            className="rounded-lg bg-[#EFF6FF] border border-[#BFDBFE] px-2 py-1 text-[10px] font-semibold text-[#2563EB] hover:bg-[#DBEAFE] transition-all flex items-center gap-1"
+                            title="عرض الملف الكامل"
+                          >
+                            <Eye className="h-3 w-3" /> الملف
+                          </button>
                         </div>
-                      ) : (
-                        <span className="text-[10px] font-bold text-[#64748B]">غير مسجل</span>
-                      )}
-                    </td>
-
-                    {/* Registration Date */}
-                    <td className="border-b border-[#26364D]/55 px-3 py-2">
-                      <span className="font-mono text-[10px] font-bold text-[#7F91AA]">
-                        {s.createdAt ? new Date(s.createdAt).toLocaleDateString("ar-EG") : "—"}
-                      </span>
-                    </td>
-
-                    {/* Payment Status */}
-                    <td className="border-b border-[#26364D]/55 px-3 py-2">
-                      <span
-                        className={`inline-flex h-6 items-center justify-center gap-1 rounded-md px-2 text-[10px] font-extrabold ${
-                          s.paymentStatus === "paid"
-                            ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                            : s.paymentStatus === "pending_review"
-                            ? "bg-amber-500/15 text-amber-300 border border-amber-500/30"
-                            : "bg-[#0B1424] text-[#7F91AA] border border-[#26364D]"
-                        }`}
-                      >
-                        {s.paymentStatus === "paid" ? "مدفوع" : s.paymentStatus === "pending_review" ? "مراجعة" : "مجاني"}
-                      </span>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="border-b border-[#26364D]/55 px-3 py-2 text-left">
-                      <div className="flex items-center gap-1.5 justify-end">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(s)}
-                          className="rounded-lg bg-amber-500/15 border border-amber-500/30 px-2 py-1 text-[10px] font-extrabold text-amber-300 hover:bg-amber-500/25 transition-all flex items-center gap-1"
-                          title="تعديل السنتر والموعد وبيانات ولي الأمر"
-                        >
-                          <Edit2 className="h-3 w-3" /> تعديل
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setActiveDrawerStudent(s)}
-                          className="rounded-lg bg-emerald-600/30 border border-emerald-500/40 px-2 py-1 text-[10px] font-black text-emerald-300 hover:bg-emerald-500/30 transition-all flex items-center gap-1"
-                          title="عرض الملف الكامل"
-                        >
-                          <Eye className="h-3 w-3" /> الملف
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* 5. Quick Edit Booking Modal */}
       {editingStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="relative w-full max-w-lg rounded-3xl border border-emerald-500/40 bg-[#0F172A] p-6 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between border-b border-[#26364D] pb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
+          <div className="relative w-full max-w-lg rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-xl space-y-5">
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EFF6FF] text-[#2563EB]">
                   <MapPin className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-white">تعديل وتحديد حجز السنتر</h3>
-                  <p className="text-xs text-emerald-400 font-bold">{editingStudent.name}</p>
+                  <h3 className="text-base font-bold text-[#0F172A]">تعديل وتحديد حجز السنتر</h3>
+                  <p className="text-xs text-[#2563EB] font-semibold">{editingStudent.name}</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setEditingStudent(null)}
-                className="text-[#7F91AA] hover:text-white"
+                className="text-[#64748B] hover:text-[#0F172A]"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveBooking} className="space-y-4 text-xs font-bold">
+            <form onSubmit={handleSaveBooking} className="space-y-4 text-xs font-medium">
               {/* Center Selection */}
               <div className="space-y-1.5">
-                <label className="text-[#94A3B8] block">📍 السنتر المختار:</label>
+                <label className="text-[#475569] block">📍 السنتر المختار:</label>
                 <select
                   value={editFormData.centerName}
                   onChange={(e) => setEditFormData({ ...editFormData, centerName: e.target.value })}
-                  className="h-11 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs text-white focus:border-emerald-500 focus:outline-none"
+                  className="h-11 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
                   required
                 >
                   {OFFICIAL_CENTERS.map((c) => (
@@ -863,11 +844,11 @@ export function CenterBookingsTab({
 
               {/* Slot Selection */}
               <div className="space-y-1.5">
-                <label className="text-[#94A3B8] block">⏰ الموعد المحدد للحضور:</label>
+                <label className="text-[#475569] block">⏰ الموعد المحدد للحضور:</label>
                 <select
                   value={editFormData.appointmentSlot}
                   onChange={(e) => setEditFormData({ ...editFormData, appointmentSlot: e.target.value })}
-                  className="h-11 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs text-white focus:border-emerald-500 focus:outline-none"
+                  className="h-11 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
                   required
                 >
                   {OFFICIAL_SLOTS.map((s) => (
@@ -878,19 +859,19 @@ export function CenterBookingsTab({
 
               {/* Parent Phone */}
               <div className="space-y-1.5">
-                <label className="text-[#94A3B8] block">👨‍👩‍👦 رقم هاتف ولي الأمر:</label>
+                <label className="text-[#475569] block">👨‍👩‍👦 رقم هاتف ولي الأمر:</label>
                 <input
                   type="text"
                   value={editFormData.parentPhone}
                   onChange={(e) => setEditFormData({ ...editFormData, parentPhone: e.target.value })}
                   placeholder="مثال: 01012345678"
-                  className="h-11 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs text-white dir-ltr text-right focus:border-emerald-500 focus:outline-none font-mono"
+                  className="h-11 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs text-[#0F172A] dir-ltr text-right focus:border-[#2563EB] focus:bg-white focus:outline-none font-mono"
                 />
               </div>
 
               {/* School Name */}
               <div className="space-y-1.5">
-                <label className="text-[#94A3B8] block">🏫 اسم المدرسة:</label>
+                <label className="text-[#475569] block">🏫 اسم المدرسة:</label>
                 <input
                   type="text"
                   value={editFormData.schoolName}

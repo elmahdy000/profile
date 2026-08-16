@@ -29,6 +29,9 @@ import {
   BookOpen,
   MapPin,
   LayoutDashboard,
+  Folder,
+  Bell,
+  CreditCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -1145,36 +1148,36 @@ export function AdminLearning({
     setFilePage(1);
   }, [fileSearch, fileCourseFilter, fileStageFilter, fileStatusFilter]);
   const tabs = [
-    ["overview", "اللوحة التشغيلية 📊", LayoutDashboard],
-    ["center-bookings", "حجوزات السناتر 📍", MapPin],
-    ["students", "الطلاب 🎓", GraduationCap],
-    ["payments", "إيصالات الدفع 💳", FileCheck2],
-    ["files", "الملفات 📁", FileText],
-    ["quizzes", "الاختبارات 📝", ClipboardCheck],
-    ["results", "النتائج 🏆", Check],
-    ["notifications", "إرسال إشعار 🔔", MessageCircle],
-    ["reports", "التقارير 📈", BarChart3],
+    ["overview", "اللوحة التشغيلية", LayoutDashboard],
+    ["center-bookings", "حجوزات السناتر", MapPin],
+    ["students", "الطلاب", GraduationCap],
+    ["payments", "إيصالات الدفع", CreditCard],
+    ["files", "الملفات", Folder],
+    ["quizzes", "الاختبارات", ClipboardCheck],
+    ["results", "النتائج", Check],
+    ["notifications", "إرسال إشعار", Bell],
+    ["reports", "التقارير", BarChart3],
   ] as const;
   const tabMeta = {
-    overview: ["اللوحة التشغيلية وإحصائيات المنصة 📊", "نظرة عامة على أعداد الطلاب، المشتركين، والتوزيع حسب المراحل والكورسات."],
-    students: ["إدارة جميع الطلاب 🎓", "راجع التسجيلات والصلاحيات والكورسات المخصصة لكل طالب."],
-    "center-bookings": ["كشف وإدارة حجوزات السناتر 📍", "جدول تفصيلي مخصص لمتابعة جميع الطلاب المسجلين بالسناتر والمواعيد الحضورية المحددة."],
-    payments: ["إيصالات الدفع 💳", "راجع إيصالات الدفع من الطلاب ووافق أو ارفض."],
-    notifications: ["إرسال إشعار للطلاب 🔔", "أرسل تنبيهًا أو إشعارًا عامًا لجميع الطلاب أو مرحلة دراسية محددة."],
-    files: ["مكتبة الملفات التعليمية 📁", "ارفع الملفات وحدد مكان ظهورها للطلاب أو داخل الدروس."],
-    quizzes: ["بناء وإدارة الاختبارات 📝", "أنشئ الاختبارات وحدد الجمهور والإعدادات والأسئلة ثم انشرها."],
-    results: ["نتائج الاختبارات 🏆", "تابع محاولات الطلاب ودرجات النجاح من مكان واحد."],
-    reports: ["التقارير والمتابعة 📈", "راقب نشاط الطلاب والتقدم ومؤشرات الأداء التعليمية."],
+    overview: ["اللوحة التشغيلية وإحصائيات المنصة", "نظرة عامة على أعداد الطلاب، المشتركين، والتوزيع حسب المراحل والكورسات."],
+    students: ["إدارة جميع الطلاب", "راجع التسجيلات والصلاحيات والكورسات المخصصة لكل طالب."],
+    "center-bookings": ["كشف وإدارة حجوزات السناتر", "جدول تفصيلي مخصص لمتابعة جميع الطلاب المسجلين بالسناتر والمواعيد الحضورية المحددة."],
+    payments: ["إيصالات الدفع", "راجع إيصالات الدفع من الطلاب ووافق أو ارفض."],
+    notifications: ["إرسال إشعار للطلاب", "أرسل تنبيهًا أو إشعارًا عامًا لجميع الطلاب أو مرحلة دراسية محددة."],
+    files: ["مكتبة الملفات التعليمية", "ارفع الملفات وحدد مكان ظهورها للطلاب أو داخل الدروس."],
+    quizzes: ["بناء وإدارة الاختبارات", "أنشئ الاختبارات وحدد الجمهور والإعدادات والأسئلة ثم انشرها."],
+    results: ["نتائج الاختبارات", "تابع محاولات الطلاب ودرجات النجاح من مكان واحد."],
+    reports: ["التقارير والمتابعة", "راقب نشاط الطلاب والتقدم ومؤشرات الأداء التعليمية."],
   } as const;
   return (
     <div className="admin-learning-workspace space-y-6 text-[#0F172A]" dir="rtl">
       {/* 1. Page Header */}
-      <div className="flex flex-col gap-4 border-b border-[#E4EAF2] pb-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 border-b border-[#E2E8F0] pb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-black text-[#0F172A]">
+          <h1 className="text-2xl font-bold text-[#0F172A]">
             إدارة المنصة التعليمية
           </h1>
-          <p className="mt-1 text-xs text-[#64748B]">
+          <p className="mt-1 text-sm text-[#64748B]">
             لوحة الإدارة الشاملة للطلاب، الملفات، الاختبارات والنتائج
           </p>
         </div>
@@ -1191,7 +1194,7 @@ export function AdminLearning({
                 50,
               );
             }}
-            className="h-10 px-4 rounded-xl bg-[#0866D9] hover:bg-[#0753B3] text-white text-xs font-bold shadow-xs transition-colors"
+            className="h-10 px-4 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-semibold shadow-xs transition-colors"
           >
             <Plus className="h-4 w-4 ml-1" /> إضافة ملف تعليمي
           </Button>
@@ -1200,25 +1203,25 @@ export function AdminLearning({
             variant="outline"
             disabled={isRefreshingData}
             onClick={load}
-            className="h-10 px-4 rounded-xl border-[#E4EAF2] bg-white hover:bg-[#F6F8FC] text-[#0F172A] text-xs font-bold transition-all disabled:opacity-75"
+            className="h-10 px-4 rounded-xl border-[#E2E8F0] bg-white hover:bg-[#F6F8FC] text-[#0F172A] text-xs font-semibold transition-all disabled:opacity-75"
           >
-            <RefreshCw className={`h-4 w-4 ml-1 text-[#64748B] ${isRefreshingData ? "animate-spin text-[#0866D9]" : ""}`} />
+            <RefreshCw className={`h-4 w-4 ml-1 text-[#64748B] ${isRefreshingData ? "animate-spin text-[#2563EB]" : ""}`} />
             {isRefreshingData ? "جاري التحديث..." : "تحديث البيانات"}
           </Button>
         </div>
       </div>
 
-      {/* 5. Management Tabs Bar */}
-      <div className="w-full overflow-x-auto pb-1 no-scrollbar">
-        <div className="flex min-w-full gap-2 rounded-2xl border border-[#E4EAF2] bg-white p-1.5 shadow-xs">
+      {/* 5. Management Tabs Bar (RTL Horizontal Scroll on Mobile) */}
+      <div className="w-full overflow-x-auto overflow-y-hidden pb-1 scrollbar-none">
+        <div className="flex w-max min-w-full gap-2 rounded-2xl border border-[#E2E8F0] bg-white p-1.5 shadow-xs">
           {tabs.map(([value, label, Icon]) => (
             <button
               key={value}
               onClick={() => setTab(value)}
-              className={`flex-1 min-w-[110px] flex h-11 items-center justify-center gap-2 rounded-xl px-3 text-xs font-bold transition-all whitespace-nowrap ${
+              className={`flex-none flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-xs font-semibold transition-all whitespace-nowrap ${
                 tab === value
-                  ? "bg-[#0866D9] text-white shadow-xs"
-                  : "bg-white text-[#64748B] hover:bg-[#F6F8FC] hover:text-[#0F172A]"
+                  ? "bg-[#2563EB] text-white shadow-xs shadow-blue-500/20"
+                  : "bg-transparent text-[#475569] hover:bg-[#F6F8FC] hover:text-[#0F172A]"
               }`}
             >
               <Icon className="h-4 w-4 shrink-0" strokeWidth={1.8} />
@@ -1233,9 +1236,9 @@ export function AdminLearning({
         const urlMode = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("mode") : null;
         const urlStatus = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("status") : null;
         const activeTitle = tab === "students" && urlMode === "offline"
-          ? "📍 حجوزات السناتر والمواعيد (أوفلاين)"
+          ? "حجوزات السناتر والمواعيد (أوفلاين)"
           : tab === "students" && urlStatus === "pending"
-          ? "⏳ الحجوزات والطلبات ينتظر التفعيل"
+          ? "الحجوزات والطلبات ينتظر التفعيل"
           : tabMeta[tab][0];
         const activeSub = tab === "students" && urlMode === "offline"
           ? "سجل حجوزات وطلاب السناتر الحضورية بالزقازيق والمواعيد المحددة."
@@ -1244,14 +1247,15 @@ export function AdminLearning({
           : tabMeta[tab][1];
 
         return (
-          <div className="flex flex-col gap-2 rounded-2xl border border-[#E4EAF2] bg-white px-5 py-4 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3.5 rounded-2xl border border-[#E2E8F0] bg-white p-5 shadow-xs sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-base font-extrabold text-[#0F172A]">{activeTitle}</h3>
-              <p className="mt-0.5 text-xs text-[#64748B]">{activeSub}</p>
+              <h3 className="text-lg font-bold text-[#0F172A]">{activeTitle}</h3>
+              <p className="mt-1 text-sm text-[#64748B]">{activeSub}</p>
             </div>
-            <span className="w-fit rounded-full bg-[#F6F8FC] border border-[#E4EAF2] px-3 py-1 text-[11px] font-bold text-[#64748B]">
-              تحديث تلقائي للبيانات
-            </span>
+            <div className="flex h-10 w-fit items-center gap-2 rounded-xl border border-[#E2E8F0] bg-[#F1F5F9] px-3.5 text-xs font-medium text-[#64748B] shrink-0">
+              <RefreshCw className="h-3.5 w-3.5 text-[#64748B]" />
+              <span>تحديث تلقائي للبيانات</span>
+            </div>
           </div>
         );
       })()}

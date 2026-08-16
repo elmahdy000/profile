@@ -71,7 +71,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
       items: [
         {
           id: "learning-overview",
-          label: "اللوحة التشغيلية العامة 📊",
+          label: "اللوحة التشغيلية العامة",
           icon: LayoutDashboard,
           onClick: () => {
             setActiveTab("learning");
@@ -86,7 +86,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
       items: [
         {
           id: "center-bookings",
-          label: "جدول حجوزات السناتر 📍",
+          label: "جدول حجوزات السناتر",
           icon: MapPin,
           onClick: () => {
             setActiveTab("learning");
@@ -96,7 +96,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
         {
           id: "students",
-          label: "إدارة جميع الطلاب 🎓",
+          label: "إدارة جميع الطلاب",
           icon: Users,
           onClick: () => {
             setActiveTab("learning");
@@ -113,7 +113,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
         {
           id: "payments",
-          label: "إيصالات الدفع والاشتراكات 💳",
+          label: "إيصالات الدفع والاشتراكات",
           icon: FileCheck2,
           onClick: () => {
             setActiveTab("learning");
@@ -125,14 +125,14 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
         {
           id: "parents",
-          label: "حسابات أولياء الأمور 👨‍👩‍👧",
+          label: "حسابات أولياء الأمور",
           icon: ShieldCheck,
           onClick: () => setActiveTab("parents"),
           active: activeTab === "parents",
         },
         {
           id: "student-analytics",
-          label: "تحليلات الأداء والمشاهدات 📊",
+          label: "تحليلات الأداء والمشاهدات",
           icon: BarChart3,
           onClick: () => setActiveTab("student-analytics"),
           active: activeTab === "student-analytics",
