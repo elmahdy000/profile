@@ -30,51 +30,51 @@ export function AdminConfirmDialog({
   if (!isOpen) return null;
 
   const headerColors = {
-    danger: "border-rose-500/30 bg-rose-500/10 text-rose-400",
-    warning: "border-amber-500/30 bg-amber-500/10 text-amber-400",
-    info: "border-blue-500/30 bg-blue-500/10 text-blue-400",
+    danger: "border-red-200 bg-red-50 text-red-600",
+    warning: "border-amber-200 bg-amber-50 text-amber-700",
+    info: "border-[#BFDBFE] bg-[#EFF6FF] text-[#2563EB]",
   }[variant];
 
   const buttonStyle = {
-    danger: "bg-rose-600 hover:bg-rose-700 text-white",
+    danger: "bg-red-600 hover:bg-red-700 text-white",
     warning: "bg-amber-600 hover:bg-amber-700 text-white",
-    info: "bg-[#1677FF] hover:bg-[#4096FF] text-white",
+    info: "bg-[#2563EB] hover:bg-[#1D4ED8] text-white",
   }[variant];
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/75 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
         onClick={onCancel}
       />
 
       {/* Dialog Box */}
-      <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-slate-700/80 bg-[#131E31] p-6 shadow-2xl transition-all text-[#F8FAFC]">
+      <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-2xl transition-all text-[#0F172A]">
         <div className="flex items-start gap-4">
           <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${headerColors}`}>
             <AlertTriangle className="h-6 w-6" />
           </div>
 
           <div className="flex-1 space-y-1 text-right">
-            <h3 className="text-lg font-extrabold text-[#F8FAFC]">{title}</h3>
+            <h3 className="text-base font-bold text-[#0F172A]">{title}</h3>
             {studentName && (
-              <div className="inline-block rounded-lg bg-slate-800/80 px-2.5 py-1 text-xs font-bold text-[#1677FF] dir-ltr text-right">
+              <div className="inline-block rounded-lg bg-[#EFF6FF] border border-[#BFDBFE] px-2.5 py-0.5 text-xs font-semibold text-[#2563EB] dir-ltr text-right">
                 {studentName}
               </div>
             )}
-            <p className="text-xs text-[#CBD5E1] leading-relaxed pt-1">{description}</p>
+            <p className="text-xs text-[#475569] leading-relaxed pt-1">{description}</p>
           </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-800 pt-4">
+        <div className="mt-6 flex items-center justify-end gap-3 border-t border-[#E2E8F0] pt-4">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={onCancel}
             disabled={isLoading}
-            className="h-10 border-slate-700 bg-slate-800/80 text-xs font-bold text-[#CBD5E1] hover:bg-slate-700 hover:text-white"
+            className="h-9 border-[#E2E8F0] bg-white text-xs font-semibold text-[#475569] hover:bg-[#F8FAFC]"
           >
             {cancelLabel}
           </Button>
@@ -84,7 +84,7 @@ export function AdminConfirmDialog({
             size="sm"
             onClick={onConfirm}
             disabled={isLoading}
-            className={`h-10 px-5 text-xs font-extrabold shadow-md transition-all ${buttonStyle}`}
+            className={`h-9 px-5 text-xs font-semibold shadow-xs transition-all ${buttonStyle}`}
           >
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin ml-1.5" /> : null}
             {confirmLabel}

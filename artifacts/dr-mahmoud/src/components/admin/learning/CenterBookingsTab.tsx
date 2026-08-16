@@ -877,23 +877,23 @@ export function CenterBookingsTab({
                   value={editFormData.schoolName}
                   onChange={(e) => setEditFormData({ ...editFormData, schoolName: e.target.value })}
                   placeholder="مثال: مدرسة السادات الثانوية بنين"
-                  className="h-11 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs text-white focus:border-emerald-500 focus:outline-none"
+                  className="h-11 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#26364D]">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E2E8F0]">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setEditingStudent(null)}
-                  className="h-10 px-4 rounded-xl border-[#26364D] bg-[#0B1424] text-white hover:bg-white/5 text-xs"
+                  className="h-10 px-4 rounded-xl border-[#E2E8F0] bg-white text-[#475569] hover:bg-[#F8FAFC] text-xs font-semibold"
                 >
                   إلغاء
                 </Button>
                 <Button
                   type="submit"
                   disabled={isSavingEdit}
-                  className="h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center gap-1.5"
+                  className="h-10 px-5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-xs flex items-center gap-1.5 shadow-xs"
                 >
                   {isSavingEdit ? (
                     <>

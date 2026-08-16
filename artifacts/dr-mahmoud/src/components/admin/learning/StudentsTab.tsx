@@ -461,7 +461,7 @@ export function StudentsTab({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="h-12 w-full rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7] focus:border-[#1677FF] focus:outline-none"
+            className="h-12 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-semibold text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
           >
             <option value="newest">الأحدث تسجيلًا</option>
             <option value="name">أبجديًا بالاسم</option>
