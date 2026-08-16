@@ -471,28 +471,28 @@ export function StudentsTab({
 
         {/* Mobile Filters Collapsible (2-col grid) */}
         {isMobileFilterOpen && (
-          <div className="lg:hidden grid grid-cols-2 gap-2 pt-3 border-t border-[#26364D]">
+          <div className="lg:hidden grid grid-cols-2 gap-2 pt-3 border-t border-[#E2E8F0]">
             <select value={stageFilter} onChange={(e) => setStageFilter(e.target.value)}
-              className="h-11 rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7]">
+              className="h-11 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 text-xs font-semibold text-[#0F172A]">
               <option value="all">كل المراحل</option>
               {uniqueStages.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
             <select value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value)}
-              className="h-11 rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7]">
+              className="h-11 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 text-xs font-semibold text-[#0F172A]">
               <option value="all">كل الاشتراكات</option>
               <option value="paid">مدفوع</option>
               <option value="pending_review">مراجعة</option>
               <option value="unpaid">مجاني</option>
             </select>
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-11 rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7]">
+              className="h-11 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 text-xs font-semibold text-[#0F172A]">
               <option value="all">كل الحسابات</option>
               <option value="approved">نشط</option>
               <option value="pending">معلق</option>
               <option value="suspended">موقوف</option>
             </select>
             <select value={modeFilter} onChange={(e) => setModeFilter(e.target.value)}
-              className="h-11 rounded-xl border border-[#26364D] bg-[#0B1424] px-3 text-xs font-bold text-[#A8B5C7]">
+              className="h-11 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 text-xs font-semibold text-[#0F172A]">
               <option value="all">كل الأنظمة</option>
               <option value="online">أونلاين</option>
               <option value="offline">أوفلاين</option>
@@ -502,25 +502,25 @@ export function StudentsTab({
 
         {/* Active Filter Chips */}
         {hasActiveFilters && (
-          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-[#26364D]/60">
-            <span className="text-xs font-bold text-[#8492A6]">فلاتر نشطة:</span>
+          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-[#E2E8F0]">
+            <span className="text-xs font-semibold text-[#64748B]">فلاتر نشطة:</span>
 
             {stageFilter !== "all" && (
-              <span className="inline-flex items-center gap-1 rounded-lg bg-[#1677FF]/15 border border-[#1677FF]/30 px-2.5 py-0.5 text-xs font-bold text-[#1677FF]">
+              <span className="inline-flex items-center gap-1 rounded-lg bg-[#EFF6FF] border border-[#BFDBFE] px-2.5 py-0.5 text-xs font-semibold text-[#2563EB]">
                 <span>المرحلة: {stageFilter}</span>
-                <button type="button" onClick={() => setStageFilter("all")} className="hover:text-white"><X className="h-3 w-3" /></button>
+                <button type="button" onClick={() => setStageFilter("all")} className="hover:text-[#0F172A]"><X className="h-3 w-3" /></button>
               </span>
             )}
             {paymentFilter !== "all" && (
-              <span className="inline-flex items-center gap-1 rounded-lg bg-[#1677FF]/15 border border-[#1677FF]/30 px-2.5 py-0.5 text-xs font-bold text-[#1677FF]">
+              <span className="inline-flex items-center gap-1 rounded-lg bg-[#EFF6FF] border border-[#BFDBFE] px-2.5 py-0.5 text-xs font-semibold text-[#2563EB]">
                 <span>الاشتراك: {paymentFilter === "paid" ? "مدفوع" : paymentFilter === "pending_review" ? "مراجعة" : "مجاني"}</span>
-                <button type="button" onClick={() => setPaymentFilter("all")} className="hover:text-white"><X className="h-3 w-3" /></button>
+                <button type="button" onClick={() => setPaymentFilter("all")} className="hover:text-[#0F172A]"><X className="h-3 w-3" /></button>
               </span>
             )}
             {statusFilter !== "all" && (
-              <span className="inline-flex items-center gap-1 rounded-lg bg-[#1677FF]/15 border border-[#1677FF]/30 px-2.5 py-0.5 text-xs font-bold text-[#1677FF]">
+              <span className="inline-flex items-center gap-1 rounded-lg bg-[#EFF6FF] border border-[#BFDBFE] px-2.5 py-0.5 text-xs font-semibold text-[#2563EB]">
                 <span>الحساب: {statusFilter === "approved" ? "نشط" : statusFilter === "suspended" ? "موقوف" : "معلق"}</span>
-                <button type="button" onClick={() => setStatusFilter("all")} className="hover:text-white"><X className="h-3 w-3" /></button>
+                <button type="button" onClick={() => setStatusFilter("all")} className="hover:text-[#0F172A]"><X className="h-3 w-3" /></button>
               </span>
             )}
           </div>
