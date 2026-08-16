@@ -45,7 +45,7 @@ export function SubAdminDashboard() {
 
   if (isInitializing) {
     return (
-      <div className="grid min-h-screen place-items-center bg-[#F6F8FC]">
+      <div className="admin-dashboard-shell grid min-h-screen place-items-center bg-[#F6F8FC]">
         <Loader2 className="h-10 w-10 animate-spin text-[#0866D9]" />
       </div>
     );
@@ -220,7 +220,7 @@ function SubAdminLogin({ onSuccess }: { onSuccess: () => void }) {
   };
 
   return (
-    <div className="grid min-h-screen place-items-center bg-[#F6F8FC] p-4 dir-rtl">
+    <div className="admin-dashboard-shell grid min-h-screen place-items-center bg-[#F6F8FC] p-4 dir-rtl">
       <div className="w-full max-w-md bg-white border border-[#E4EAF2] rounded-3xl p-8 shadow-xl space-y-6">
         <div className="text-center space-y-2">
           <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-2xl mx-auto flex items-center justify-center text-amber-600 font-black text-xl">

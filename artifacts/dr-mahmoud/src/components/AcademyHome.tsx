@@ -377,7 +377,7 @@ export function AcademyHome() {
 
               {/* Left Photo Column */}
               <div className="lg:col-span-5 flex justify-center">
-                <div className="relative w-full max-w-md overflow-hidden rounded-2xl border-4 border-white bg-white shadow-xl">
+                <div className="relative w-full max-w-md overflow-hidden rounded-2xl border-4 border-white bg-white shadow-xl dark:border-slate-700">
                   <img
                     src="/dr-mahmoud-hero-classroom.webp"
                     alt="د. محمود المهدي — مدرس برمجة البكالوريا المصرية"

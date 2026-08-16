@@ -135,7 +135,7 @@ export function OverviewSection({
   };
 
   return (
-    <div className="space-y-6 text-[#F8FAFC]" dir="rtl">
+    <div className="admin-adaptive-dark-ui space-y-6 text-[#F8FAFC]" dir="rtl">
       {/* 1. Operational KPI Cards Row (Single operational metrics definitions) */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {/* KPI 1: Active Approved Students */}

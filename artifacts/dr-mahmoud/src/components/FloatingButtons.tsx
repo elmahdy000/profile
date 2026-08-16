@@ -24,7 +24,7 @@ export function FloatingButtons() {
             exit={{ opacity: 0, scale: 0.5, y: 15 }}
             transition={{ type: "spring", stiffness: 300, damping: 22 }}
             onClick={scrollToTop}
-            className="hidden h-11 w-11 rounded-full border border-slate-200 bg-white text-slate-600 shadow-lg transition-all hover:border-primary hover:text-primary sm:flex sm:items-center sm:justify-center"
+            className="hidden h-11 w-11 rounded-full border border-slate-200 bg-white text-slate-600 shadow-lg transition-all hover:border-primary hover:text-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-primary dark:hover:text-primary sm:flex sm:items-center sm:justify-center"
             aria-label="العودة للأعلى"
           >
             <ArrowUp className="w-4 h-4 sm:w-5 sm:h-5" />

@@ -496,7 +496,7 @@ export default function BaccalaureatePage() {
           </a>
           <nav className="hidden lg:flex items-center gap-7 text-sm font-medium text-foreground/70">
             <a href="#curriculum" className="hover:text-primary transition-colors">منهج Python</a>
-            <a href="#tofas" className="hover:text-secondary transition-colors">مسار ToFAS</a>
+            <a href="#tofas" className="hover:text-secondary dark:hover:text-secondary-foreground transition-colors">مسار ToFAS</a>
             <a href="#projects" className="hover:text-primary transition-colors">المشاريع</a>
             <a href="#faq" className="hover:text-primary transition-colors">أسئلة شائعة</a>
           </nav>
@@ -830,13 +830,13 @@ export default function BaccalaureatePage() {
               </span>
             </a>
             <a href="#tofas" className="group bg-card border border-border hover:border-secondary/40 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col relative overflow-hidden">
-              <div className="absolute top-4 left-4 text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary/10 text-secondary border border-secondary/20">متقدم</div>
+              <div className="absolute top-4 left-4 text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary/10 text-secondary dark:text-secondary-foreground border border-secondary/20">متقدم</div>
               <div className="w-12 h-12 rounded-2xl bg-secondary/10 border border-secondary/20 flex items-center justify-center mb-4">
-                <Cpu className="w-6 h-6 text-secondary" />
+                <Cpu className="w-6 h-6 text-secondary dark:text-secondary-foreground" />
               </div>
               <h3 className="text-lg font-bold text-foreground mb-2">مسار ToFAS</h3>
               <p className="text-sm text-foreground/60 leading-relaxed flex-grow">مسار تعليمي مميز يأخذ الطالب لمستوى أعمق بخطوات منظمة من الأساسيات حتى المشروع المتكامل.</p>
-              <span className="inline-flex items-center gap-1.5 text-secondary font-bold text-sm mt-4 group-hover:gap-2.5 transition-all">
+              <span className="inline-flex items-center gap-1.5 text-secondary dark:text-secondary-foreground font-bold text-sm mt-4 group-hover:gap-2.5 transition-all">
                 اكتشف المسار
                 <ChevronLeft className="w-4 h-4" />
               </span>
@@ -1009,7 +1009,7 @@ export default function BaccalaureatePage() {
                       className="space-y-6"
                     >
                       <div>
-                        <span className="text-secondary font-bold text-xs uppercase tracking-wider mb-2 block">
+                        <span className="text-secondary dark:text-secondary-foreground font-bold text-xs uppercase tracking-wider mb-2 block">
                           مرحلة ToFAS {module.number}
                         </span>
                         <h3 className="text-xl md:text-2xl font-bold text-foreground">{module.title}</h3>
@@ -1023,7 +1023,7 @@ export default function BaccalaureatePage() {
                         <div className="grid sm:grid-cols-2 gap-3">
                           {module.topics.map((topic, index) => (
                             <div key={index} className="flex gap-2.5 items-start p-3 bg-background/40 border border-border/50 rounded-xl">
-                              <CheckCircle2 className="w-4 h-4 text-secondary shrink-0 mt-0.5" />
+                              <CheckCircle2 className="w-4 h-4 text-secondary dark:text-secondary-foreground shrink-0 mt-0.5" />
                               <span className="text-xs text-foreground/85 leading-snug">{topic}</span>
                             </div>
                           ))}
@@ -1053,7 +1053,7 @@ export default function BaccalaureatePage() {
               <div key={idx} className="bg-card border border-border/80 hover:border-primary/30 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-center gap-2 mb-4">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary/10 text-secondary border border-secondary/20">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary/10 text-secondary dark:text-secondary-foreground border border-secondary/20">
                       {project.difficulty}
                     </span>
                     <Code2 className="w-4 h-4 text-primary/75" />

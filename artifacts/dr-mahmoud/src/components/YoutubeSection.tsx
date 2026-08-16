@@ -1353,12 +1353,12 @@ function EmptyStateMessage({ searchQuery, statusFilter }: { searchQuery: string;
   else if (statusFilter !== "all") title = "مفيش دروس بالحالة دي داخل الكورس.";
 
   return (
-    <div className="rounded-2xl border border-dashed border-[#223552] dark:border-[#223552] light:border-slate-300 bg-[#0D1B2E] dark:bg-[#0D1B2E] light:bg-white p-8 text-center shadow-sm">
+    <div className="rounded-2xl border border-dashed border-slate-200 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-8 text-center shadow-sm">
       <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-blue-500/10 text-blue-500">
         <BookOpen className="h-6 w-6" />
       </div>
-      <h3 className="text-sm font-extrabold text-white dark:text-white light:text-slate-800">{title}</h3>
-      <p className="mt-1 text-xs text-slate-400 dark:text-slate-400 light:text-slate-500">جرب تغير فلاتر البحث أو اختار كورس تاني من فوق.</p>
+      <h3 className="text-sm font-extrabold text-slate-800 dark:text-white">{title}</h3>
+      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">جرب تغير فلاتر البحث أو اختار كورس تاني من فوق.</p>
     </div>
   );
 }

@@ -318,7 +318,7 @@ export function CenterBookingsTab({
   };
 
   return (
-    <div className="center-bookings-workspace space-y-6 text-[#F8FAFC]" dir="rtl">
+    <div className="admin-adaptive-dark-ui center-bookings-workspace space-y-6 text-[#F8FAFC]" dir="rtl">
       {/* 1. Header Banner & Page Action */}
       <div className="flex flex-col gap-4 rounded-3xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/70 via-[#0D1B2A] to-[#0A1424] p-6 shadow-xl sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-4">

@@ -285,8 +285,9 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
           {/* Table header */}
-          <div className="grid grid-cols-[2fr_1.3fr_1fr_2fr_1.2fr_1.2fr_1.3fr] gap-0 border-b border-slate-100 bg-slate-50 px-4 py-2.5 text-[11px] font-bold text-slate-500">
+          <div className="grid grid-cols-[2fr_1.3fr_1fr_2fr_1.2fr_1.2fr_1.3fr] min-w-[1160px] gap-0 border-b border-slate-100 bg-slate-50 px-4 py-2.5 text-[11px] font-bold text-slate-500">
             <span>ولي الأمر</span>
             <span>رقم الهاتف</span>
             <span>الكود</span>
@@ -296,7 +297,7 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
             <span className="text-left pl-2">الإجراءات (CRUD)</span>
           </div>
 
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-100 min-w-[1160px]">
             {filtered.map((parent) => {
               const isActive = parent.lastSessionExpiresAt
                 ? new Date(parent.lastSessionExpiresAt) > new Date()
@@ -397,6 +398,7 @@ export function ParentsTab({ role = "superadmin" }: { role?: "superadmin" | "sub
                 </div>
               );
             })}
+          </div>
           </div>
 
           <div className="px-4 py-2.5 border-t border-slate-100 bg-slate-50 text-[11px] text-slate-400">

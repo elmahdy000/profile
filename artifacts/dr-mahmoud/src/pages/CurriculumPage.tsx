@@ -214,10 +214,10 @@ export default function CurriculumPage() {
             <p className="text-muted-foreground text-sm">جاري تحميل المناهج والدروس المصورة...</p>
           </div>
         ) : isError ? (
-          <div className="mx-auto max-w-xl rounded-3xl border border-red-200 bg-red-50 px-6 py-12 text-center shadow-sm" role="alert">
-            <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-red-600" />
-            <h3 className="text-lg font-bold text-red-900">تعذر تحميل المناهج حاليًا</h3>
-            <p className="mt-2 text-sm leading-6 text-red-700">حصلت مشكلة مؤقتة أثناء تحميل المحتوى. جرّب مرة ثانية، ولو استمرت تواصل مع الدعم.</p>
+          <div className="mx-auto max-w-xl rounded-3xl border border-red-200 bg-red-50 px-6 py-12 text-center shadow-sm dark:border-red-900/60 dark:bg-red-950/30" role="alert">
+            <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-red-600 dark:text-red-400" />
+            <h3 className="text-lg font-bold text-red-900 dark:text-red-300">تعذر تحميل المناهج حاليًا</h3>
+            <p className="mt-2 text-sm leading-6 text-red-700 dark:text-red-300">حصلت مشكلة مؤقتة أثناء تحميل المحتوى. جرّب مرة ثانية، ولو استمرت تواصل مع الدعم.</p>
             <Button type="button" onClick={() => void refetch()} disabled={isFetching} className="mt-6 font-bold">
               <RefreshCw className={`me-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
               {isFetching ? "جاري المحاولة..." : "إعادة المحاولة"}
@@ -225,7 +225,7 @@ export default function CurriculumPage() {
           </div>
         ) : !curriculums || curriculums.length === 0 ? (
           <div className="text-center py-20 bg-card border border-border rounded-3xl max-w-xl mx-auto px-6 shadow-sm">
-            <BookOpen className="w-12 h-12 mx-auto text-slate-600 mb-4" />
+            <BookOpen className="w-12 h-12 mx-auto text-slate-600 dark:text-muted-foreground mb-4" />
             <h3 className="font-bold text-foreground text-lg">لم يتم رفع مناهج تعليمية بعد</h3>
             <p className="text-xs text-muted-foreground mt-2">
               تابعنا باستمرار، سيقوم الدكتور بإضافة شروحات برمجية بصرية رائعة قريبًا جدًا!

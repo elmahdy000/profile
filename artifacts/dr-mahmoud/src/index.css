@@ -271,6 +271,15 @@ html:not(.dark) .admin-sidebar-surface nav button:hover {
   background-color: #f1f5f9 !important;
   color: #172033 !important;
 }
+
+/* Additional navy literals used by CenterBookingsTab and OverviewSection */
+html:not(.dark) .admin-adaptive-dark-ui [class~="bg-[#0A1424]"] { background-color: #f7f9fc !important; }
+html:not(.dark) .admin-adaptive-dark-ui [class~="text-[#B6C2D2]"] { color: #475569 !important; }
+html:not(.dark) .admin-adaptive-dark-ui [class~="text-[#69A5FF]"] { color: #2563eb !important; }
+html:not(.dark) .admin-adaptive-dark-ui [class~="text-[#38BDF8]"] { color: #0369a1 !important; }
+html:not(.dark) .admin-adaptive-dark-ui [class~="border-[#384D6C]"] { border-color: #dce4ef !important; }
+html:not(.dark) .admin-adaptive-dark-ui [class~="hover:bg-[#192A43]"],
+html:not(.dark) .admin-adaptive-dark-ui [class~="hover:bg-[#1A2942]"] { background-color: #eef4fb !important; }
 @media (prefers-reduced-motion: reduce) {
   .admin-learning-workspace *,
   .admin-learning-workspace *::before,
@@ -720,6 +729,48 @@ html:not(.dark) .admin-sidebar-surface nav button:hover {
 .dark .theme-adaptive .bg-blue-100\/80 { background-color: hsl(var(--primary) / 0.15) !important; }
 .dark .theme-adaptive .bg-emerald-500\/15 { background-color: hsl(142 71% 45% / 0.12) !important; }
 
+/* Additional slate chips used by ParentPortalPage (not covered above) */
+.dark .theme-adaptive .bg-slate-100,
+.dark .theme-adaptive .bg-slate-100\/80,
+.dark .theme-adaptive .hover\:bg-slate-100\/80:hover,
+.dark .theme-adaptive .bg-slate-200 { background-color: hsl(var(--muted)) !important; }
+
+/* Blue borders and text */
+.dark .theme-adaptive .border-blue-200,
+.dark .theme-adaptive .border-blue-200\/80 { border-color: hsl(var(--primary) / 0.25) !important; }
+.dark .theme-adaptive .text-blue-700,
+.dark .theme-adaptive .text-blue-800,
+.dark .theme-adaptive .text-\[\#0B63CE\] { color: hsl(var(--primary)) !important; }
+.dark .theme-adaptive .from-blue-50 { --tw-gradient-from: hsl(var(--muted)) !important; }
+.dark .theme-adaptive .to-indigo-50 { --tw-gradient-to: hsl(var(--muted)) !important; }
+
+/* Amber info / warning surfaces */
+.dark .theme-adaptive .bg-amber-50,
+.dark .theme-adaptive .bg-amber-50\/80 { background-color: hsl(38 92% 50% / 0.12) !important; }
+.dark .theme-adaptive .border-amber-200 { border-color: hsl(38 92% 50% / 0.3) !important; }
+.dark .theme-adaptive .text-amber-900,
+.dark .theme-adaptive .text-amber-600 { color: hsl(38 92% 62%) !important; }
+
+/* Rose / destructive surfaces */
+.dark .theme-adaptive .bg-rose-50,
+.dark .theme-adaptive .bg-rose-50\/80,
+.dark .theme-adaptive .bg-rose-100 { background-color: hsl(0 84% 60% / 0.1) !important; }
+.dark .theme-adaptive .border-rose-200,
+.dark .theme-adaptive .border-rose-300 { border-color: hsl(0 84% 60% / 0.25) !important; }
+.dark .theme-adaptive .text-rose-900,
+.dark .theme-adaptive .text-rose-800,
+.dark .theme-adaptive .text-rose-700 { color: hsl(0 84% 70%) !important; }
+
+/* Emerald success surfaces */
+.dark .theme-adaptive .bg-emerald-50,
+.dark .theme-adaptive .bg-emerald-50\/80,
+.dark .theme-adaptive .bg-emerald-100 { background-color: hsl(142 71% 45% / 0.14) !important; }
+.dark .theme-adaptive .border-emerald-300,
+.dark .theme-adaptive .border-emerald-200 { border-color: hsl(142 71% 45% / 0.3) !important; }
+.dark .theme-adaptive .text-emerald-900,
+.dark .theme-adaptive .text-emerald-800,
+.dark .theme-adaptive .text-emerald-700 { color: hsl(142 71% 55%) !important; }
+
 /* Inputs, forms */
 .dark .theme-adaptive input,
 .dark .theme-adaptive select,
@@ -752,27 +803,64 @@ html:not(.dark) .admin-sidebar-surface nav button:hover {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
 }
 
-/* The university page retains its navy identity in dark mode and uses the
-   shared light surfaces when light mode is active. */
+/* ── Adaptive navy surfaces (University page) ────────────────────────────────
+ * The university page retains its navy identity in dark mode and uses the
+ * shared light surfaces when light mode is active. */
 .university-theme nav,
 .university-theme section,
 .university-theme footer { transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease; }
+
+html:not(.dark) .university-theme { background-color: hsl(var(--background)) !important; color: hsl(var(--foreground)) !important; }
+
+/* Navy surfaces → light card surfaces */
 html:not(.dark) .university-theme .bg-slate-950,
+html:not(.dark) .university-theme .bg-slate-950\/20,
 html:not(.dark) .university-theme .bg-slate-950\/60,
+html:not(.dark) .university-theme .bg-slate-950\/80,
+html:not(.dark) .university-theme .bg-slate-950\/90,
 html:not(.dark) .university-theme .bg-slate-900,
-html:not(.dark) .university-theme .bg-slate-900\/90,
-html:not(.dark) .university-theme .bg-slate-900\/40 { background-color: hsl(var(--card)) !important; }
-html:not(.dark) .university-theme .from-slate-900 { --tw-gradient-from: hsl(var(--card)) var(--tw-gradient-from-position) !important; }
-html:not(.dark) .university-theme .to-slate-900\/60 { --tw-gradient-to: hsl(var(--muted) / .6) var(--tw-gradient-to-position) !important; }
-html:not(.dark) .university-theme .text-slate-100,
+html:not(.dark) .university-theme .bg-slate-900\/40,
+html:not(.dark) .university-theme .bg-slate-900\/60,
+html:not(.dark) .university-theme .bg-slate-900\/90 { background-color: hsl(var(--card)) !important; }
+html:not(.dark) .university-theme .bg-slate-800 { background-color: hsl(var(--muted)) !important; }
+
+/* Navy gradients → light gradients */
+html:not(.dark) .university-theme .from-slate-950 { --tw-gradient-from: hsl(var(--card)) !important; }
+html:not(.dark) .university-theme .via-slate-900 { --tw-gradient-via: hsl(var(--muted)) !important; }
+html:not(.dark) .university-theme .to-slate-950 { --tw-gradient-to: hsl(var(--card)) !important; }
+html:not(.dark) .university-theme .from-slate-900 { --tw-gradient-from: hsl(var(--card)) !important; }
+html:not(.dark) .university-theme .to-slate-900\/60 { --tw-gradient-to: hsl(var(--muted) / .6) !important; }
+html:not(.dark) .university-theme .via-slate-950\/20 { --tw-gradient-via: hsl(var(--muted) / .2) !important; }
+
+/* White / light text on navy → dark text on light (buttons keep their color) */
 html:not(.dark) .university-theme h1.text-white,
 html:not(.dark) .university-theme h2.text-white,
 html:not(.dark) .university-theme h3.text-white,
+html:not(.dark) .university-theme h4.text-white,
 html:not(.dark) .university-theme strong.text-white,
-html:not(.dark) .university-theme p.text-white { color: hsl(var(--foreground)) !important; }
+html:not(.dark) .university-theme p.text-white,
+html:not(.dark) .university-theme .text-slate-100 { color: hsl(var(--foreground)) !important; }
+html:not(.dark) .university-theme .text-white:not([class~="bg-[#0866D9]"]) { color: hsl(var(--foreground)) !important; }
+html:not(.dark) .university-theme .hover\:text-white:hover { color: hsl(var(--foreground)) !important; }
+
+/* Muted text */
 html:not(.dark) .university-theme .text-slate-300,
 html:not(.dark) .university-theme .text-slate-400,
 html:not(.dark) .university-theme .text-slate-500 { color: hsl(var(--muted-foreground)) !important; }
+
+/* Blue accents → primary (readable on light surfaces) */
+html:not(.dark) .university-theme .text-blue-400,
+html:not(.dark) .university-theme .text-cyan-400,
+html:not(.dark) .university-theme .text-cyan-300 { color: hsl(var(--primary)) !important; }
+html:not(.dark) .university-theme .hover\:text-blue-400:hover,
+html:not(.dark) .university-theme .group:hover .group-hover\:text-blue-400,
+html:not(.dark) .university-theme .group:hover .group-hover\:text-cyan-400 { color: hsl(var(--primary)) !important; }
+
+/* Colored accents → darker shades on light surfaces */
+html:not(.dark) .university-theme .text-emerald-400 { color: #047857 !important; }
+html:not(.dark) .university-theme .text-amber-400 { color: #b45309 !important; }
+
+/* Navy borders → light borders */
 html:not(.dark) .university-theme .border-slate-800,
 html:not(.dark) .university-theme .border-slate-800\/60,
 html:not(.dark) .university-theme .border-slate-800\/80 { border-color: hsl(var(--border)) !important; }
