@@ -220,7 +220,9 @@ export function AccessScreen({
     }
   };
 
-  const normalizedPhone = form.phone.replace(/\s+/g, "");
+  const normalizedPhone = form.phone
+    .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+    .replace(/\s+/g, "");
   const nameValid = form.name.trim().length >= 2;
   const phoneValid = /^\+?\d{10,15}$/.test(normalizedPhone);
   const emailValid = !form.email.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim());

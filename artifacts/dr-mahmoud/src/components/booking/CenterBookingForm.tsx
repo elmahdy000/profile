@@ -136,6 +136,11 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
     return UNIFIED_CENTER_CARDS;
   }, []);
 
+  const normalizePhone = (num: string) =>
+    num
+      .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+      .replace(/[^\d]/g, "");
+
   const validateStep1 = () => {
     if (!studentName.trim() || studentName.trim().length < 3) {
       setError("يرجى كتابة اسم الطالب رباعي بشكل صحيح");
@@ -145,12 +150,12 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
       setError("يرجى كتابة اسم المدرسة الحالية للطالب");
       return false;
     }
-    const cleanStudentPhone = studentPhone.replace(/\s+/g, "");
+    const cleanStudentPhone = normalizePhone(studentPhone);
     if (!/^(?:01[0125]\d{8}|\+?\d{10,15})$/.test(cleanStudentPhone)) {
       setError("يرجى إدخال رقم تليفون الطالب بشكل صحيح (11 رقم)");
       return false;
     }
-    const cleanParentPhone = parentPhone.replace(/\s+/g, "");
+    const cleanParentPhone = normalizePhone(parentPhone);
     if (!/^(?:01[0125]\d{8}|\+?\d{10,15})$/.test(cleanParentPhone)) {
       setError("يرجى إدخال رقم تليفون ولي الأمر بشكل صحيح (11 رقم)");
       return false;
