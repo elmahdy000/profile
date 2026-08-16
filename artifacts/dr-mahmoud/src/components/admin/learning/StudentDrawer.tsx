@@ -151,11 +151,13 @@ export function StudentDrawer({
   const currentStudent = localStudent || student;
   const receipt = paymentReceipts.find((r) => r.studentId === currentStudent.id);
 
-  const resolvedSchoolName = currentStudent.schoolName || currentStudent.school_name || currentStudent.schoolType || "";
+  const rawSchool = currentStudent.schoolName || currentStudent.school_name || "";
+  const resolvedSchoolName = (rawSchool && rawSchool !== "arabic" && rawSchool !== "languages") ? rawSchool : "";
   const resolvedParentPhone = currentStudent.parentPhone || currentStudent.parent_phone || "";
   const resolvedCenterName = currentStudent.centerName || currentStudent.center_name || "";
   const resolvedAppointmentSlot = currentStudent.appointmentSlot || currentStudent.appointment_slot || "";
-  const resolvedLanguageTrack = currentStudent.languageTrack || currentStudent.language_track || currentStudent.academicTrack || "عربي";
+  const rawTrack = currentStudent.languageTrack || currentStudent.language_track || currentStudent.academicTrack || "";
+  const resolvedLanguageTrack = rawTrack === "general" || rawTrack === "arabic" || !rawTrack ? "عربي (عام)" : rawTrack === "languages" ? "لغات (إنجليزي)" : rawTrack;
 
   const handleOpenEditBooking = () => {
     setEditFormData({
@@ -448,23 +450,63 @@ export function StudentDrawer({
                     </div>
                     <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 space-y-1.5">
                       <span className="text-[11px] text-[#64748B]">اسم المدرسة</span>
-                      <p className="text-xs font-bold text-[#0F172A]">{resolvedSchoolName || "غير محدد"}</p>
+                      {resolvedSchoolName ? (
+                        <p className="text-xs font-bold text-[#0F172A]">{resolvedSchoolName}</p>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleOpenEditBooking}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-[#2563EB] hover:underline"
+                        >
+                          <Plus className="h-3 w-3" /> أضف اسم المدرسة
+                        </button>
+                      )}
                     </div>
                     <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 space-y-1.5">
                       <span className="text-[11px] text-[#64748B]">الشعبة والمسار</span>
-                      <p className="text-xs font-bold text-purple-700">{resolvedLanguageTrack || "عربي"}</p>
+                      <p className="text-xs font-bold text-purple-700">{resolvedLanguageTrack}</p>
                     </div>
                     <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 space-y-1.5">
                       <span className="text-[11px] text-[#64748B]">تليفون ولي الأمر</span>
-                      <p className="text-xs font-bold text-amber-800 dir-ltr text-right">{resolvedParentPhone || "غير مسجل"}</p>
+                      {resolvedParentPhone ? (
+                        <p className="text-xs font-bold text-amber-800 dir-ltr text-right">{resolvedParentPhone}</p>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleOpenEditBooking}
+                          className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 hover:underline"
+                        >
+                          <Plus className="h-3 w-3" /> أضف رقم ولي الأمر
+                        </button>
+                      )}
                     </div>
                     <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 space-y-1.5">
                       <span className="text-[11px] text-[#64748B]">السنتر المختار</span>
-                      <p className="text-xs font-bold text-[#10B981]">{resolvedCenterName || (currentStudent.learningMode === "offline" ? "حضور بالسنتر (الزقازيق)" : "أونلاين بالكامل")}</p>
+                      {resolvedCenterName ? (
+                        <p className="text-xs font-bold text-[#10B981]">{resolvedCenterName}</p>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleOpenEditBooking}
+                          className="inline-flex items-center gap-1 rounded-lg border border-dashed border-[#A7F3D0] bg-[#ECFDF5] px-2 py-1 text-xs font-bold text-[#10B981] hover:bg-[#D1FAE5]"
+                        >
+                          <Plus className="h-3.5 w-3.5" /> حدد السنتر الآن
+                        </button>
+                      )}
                     </div>
                     <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 space-y-1.5">
                       <span className="text-[11px] text-[#64748B]">الموعد المتاح</span>
-                      <p className="text-xs font-bold text-amber-800">{resolvedAppointmentSlot || (currentStudent.learningMode === "offline" ? "بانتظار تحديد موعد الحضور" : "—")}</p>
+                      {resolvedAppointmentSlot ? (
+                        <p className="text-xs font-bold text-amber-800">{resolvedAppointmentSlot}</p>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleOpenEditBooking}
+                          className="inline-flex items-center gap-1 rounded-lg border border-dashed border-amber-300 bg-amber-50 px-2 py-1 text-xs font-bold text-amber-700 hover:bg-amber-100"
+                        >
+                          <Plus className="h-3.5 w-3.5" /> حدد موعد الحضور
+                        </button>
+                      )}
                     </div>
                     <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 space-y-1.5">
                       <span className="text-[11px] text-[#64748B]">نظام الحضور</span>
