@@ -529,12 +529,12 @@ export function StudentsTab({
 
       {/* 2. Bulk Action Bar (Appears when 1+ selected) */}
       {selectedStudentIds.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#1677FF]/40 bg-[#1677FF]/15 p-4 shadow-md">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#BFDBFE] bg-[#EFF6FF] p-4 shadow-xs">
           <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#1677FF] text-xs font-black text-white">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#2563EB] text-xs font-bold text-white">
               {selectedStudentIds.length}
             </span>
-            <span className="text-xs font-extrabold text-[#F8FAFC]">طلاب محددون للإجراء الجماعي</span>
+            <span className="text-xs font-bold text-[#0F172A]">طلاب محددون للإجراء الجماعي</span>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -542,7 +542,7 @@ export function StudentsTab({
               type="button"
               size="sm"
               onClick={handleBulkApprove}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs h-9 rounded-xl min-h-[44px]"
+              className="bg-[#10B981] hover:bg-[#059669] text-white font-semibold text-xs h-9 rounded-xl min-h-[44px]"
             >
               <UserCheck className="h-4 w-4 ml-1" /> قبول وتفعيل المحدد
             </Button>
@@ -551,7 +551,7 @@ export function StudentsTab({
               type="button"
               size="sm"
               onClick={handleBulkSuspend}
-              className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs h-9 rounded-xl min-h-[44px]"
+              className="bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs h-9 rounded-xl min-h-[44px]"
             >
               <UserX className="h-4 w-4 ml-1" /> إيقاف المحدد
             </Button>
@@ -561,15 +561,15 @@ export function StudentsTab({
               size="sm"
               variant="outline"
               onClick={handleExportCSV}
-              className="border-[#26364D] bg-[#0B1424] text-xs font-extrabold text-[#F8FAFC] hover:bg-[#131E31] h-9 rounded-xl min-h-[44px]"
+              className="border-[#E2E8F0] bg-white text-xs font-semibold text-[#2563EB] hover:bg-[#EFF6FF] h-9 rounded-xl min-h-[44px]"
             >
-              <Download className="h-4 w-4 ml-1 text-[#1677FF]" /> تصدير CSV
+              <Download className="h-4 w-4 ml-1 text-[#2563EB]" /> تصدير CSV
             </Button>
 
             <button
               type="button"
               onClick={() => setSelectedStudentIds([])}
-              className="text-xs text-[#A9B8CC] hover:text-white underline mr-2"
+              className="text-xs text-[#64748B] hover:text-[#0F172A] underline mr-2 font-medium"
             >
               إلغاء التحديد
             </button>
@@ -577,52 +577,52 @@ export function StudentsTab({
         </div>
       )}
 
-      {/* 3. Mobile student cards — same data and drawer actions, without a desktop table squeeze */}
+      {/* 3. Mobile student cards */}
       <div className="grid gap-3 lg:hidden">
         {paginatedStudents.length === 0 ? (
-          <div className="rounded-2xl border border-[#26364D] bg-[#131E31] p-8 text-center text-xs text-[#8492A6]">
+          <div className="rounded-2xl border border-[#E2E8F0] bg-white p-8 text-center text-xs text-[#64748B]">
             لا توجد نتائج مسجلة مطابقة للبحث أو الفلاتر المختارة.
           </div>
         ) : paginatedStudents.map((student) => {
           const effectiveStage = student.grade === "أخرى" ? student.otherGradeDetail || "أخرى" : student.grade || "غير محدد";
           return (
-            <article key={student.id} className="rounded-2xl border border-[#26364D] bg-[#131E31] p-4 shadow-sm">
-              <button type="button" onClick={() => setActiveDrawerStudent(student)} className="w-full text-right focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1677FF] rounded-xl">
+            <article key={student.id} className="rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
+              <button type="button" onClick={() => setActiveDrawerStudent(student)} className="w-full text-right focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] rounded-xl">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#1677FF]/15 text-sm font-black text-[#1677FF]">{student.name.charAt(0)}</span>
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#EFF6FF] text-sm font-bold text-[#2563EB]">{student.name.charAt(0)}</span>
                     <div className="min-w-0">
-                      <h3 className="truncate text-sm font-black text-[#F8FAFC]">{student.name}</h3>
-                      <p className="mt-0.5 font-mono text-xs text-[#A8B5C7]" dir="ltr">{student.phone}</p>
+                      <h3 className="truncate text-sm font-bold text-[#0F172A]">{student.name}</h3>
+                      <p className="mt-0.5 font-mono text-xs text-[#64748B]" dir="ltr">{student.phone}</p>
                     </div>
                   </div>
-                  <Eye className="mt-1 h-4 w-4 shrink-0 text-[#1677FF]" />
+                  <Eye className="mt-1 h-4 w-4 shrink-0 text-[#2563EB]" />
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <span className={`rounded-lg border px-2 py-1 text-[10px] font-extrabold ${student.paymentStatus === "paid" ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400" : student.paymentStatus === "pending_review" ? "border-amber-500/30 bg-amber-500/15 text-amber-300" : "border-[#26364D] bg-[#0B1424] text-[#8492A6]"}`}>{student.paymentStatus === "paid" ? "مدفوع" : student.paymentStatus === "pending_review" ? "مراجعة" : "مجاني"}</span>
-                  <span className={`rounded-lg border px-2 py-1 text-[10px] font-extrabold ${student.status === "approved" ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-400" : student.status === "suspended" ? "border-rose-500/30 bg-rose-500/15 text-rose-400" : "border-amber-500/30 bg-amber-500/15 text-amber-300"}`}>{student.status === "approved" ? "نشط" : student.status === "suspended" ? "موقوف" : "معلق"}</span>
-                  <span className="rounded-lg border border-[#26364D] bg-[#0B1424] px-2 py-1 text-[10px] font-bold text-[#A8B5C7]">{student.learningMode === "offline" || student.centerName ? "أوفلاين (السنتر)" : "أونلاين"}</span>
+                  <span className={`rounded-lg border px-2 py-1 text-[10px] font-semibold ${student.paymentStatus === "paid" ? "border-[#A7F3D0] bg-[#ECFDF5] text-[#10B981]" : student.paymentStatus === "pending_review" ? "border-amber-200 bg-amber-50 text-amber-700" : "border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B]"}`}>{student.paymentStatus === "paid" ? "مدفوع" : student.paymentStatus === "pending_review" ? "مراجعة" : "مجاني"}</span>
+                  <span className={`rounded-lg border px-2 py-1 text-[10px] font-semibold ${student.status === "approved" ? "border-[#A7F3D0] bg-[#ECFDF5] text-[#10B981]" : student.status === "suspended" ? "border-red-200 bg-red-50 text-red-600" : "border-amber-200 bg-amber-50 text-amber-700"}`}>{student.status === "approved" ? "نشط" : student.status === "suspended" ? "موقوف" : "معلق"}</span>
+                  <span className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-1 text-[10px] font-semibold text-[#475569]">{student.learningMode === "offline" || student.centerName ? "أوفلاين (السنتر)" : "أونلاين"}</span>
                 </div>
                 {(student.learningMode === "offline" || student.centerName || student.appointmentSlot) && (
-                  <div className="mt-2.5 rounded-xl border border-emerald-500/35 bg-emerald-950/40 p-2.5 text-xs text-right space-y-1">
-                    <p className="font-extrabold text-emerald-400 flex items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                  <div className="mt-2.5 rounded-xl border border-[#BFDBFE] bg-[#EFF6FF] p-2.5 text-xs text-right space-y-1">
+                    <p className="font-bold text-[#2563EB] flex items-center gap-1">
+                      <MapPin className="h-3.5 w-3.5 text-[#2563EB] shrink-0" />
                       <span>السنتر: {student.centerName || "حضور بالسنتر (الزقازيق)"}</span>
                     </p>
-                    <p className="text-[11px] font-bold text-amber-300">
+                    <p className="text-[11px] font-semibold text-amber-800">
                       ⏰ الموعد المحدد: {student.appointmentSlot || "حسب الجدول والأيام المعروضة"}
                     </p>
                     {student.parentPhone && (
-                      <p className="text-[10px] font-bold text-slate-300 dir-ltr text-right">
+                      <p className="text-[10px] font-medium text-[#475569] dir-ltr text-right">
                         👨‍👩‍👦 هاتف ولي الأمر: {student.parentPhone}
                       </p>
                     )}
                   </div>
                 )}
               </button>
-              <div className="mt-3 flex items-center justify-between border-t border-[#26364D] pt-3">
-                {student.accessCode ? <button type="button" onClick={() => onCopyStudentCode(student)} className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-[#1677FF]" dir="ltr"><Copy className="h-3.5 w-3.5" />{student.accessCode}</button> : <span />}
-                <button type="button" onClick={() => setActiveDrawerStudent(student)} className="rounded-lg bg-[#1677FF] px-3 py-2 text-[11px] font-black text-white">عرض الملف الكامل</button>
+              <div className="mt-3 flex items-center justify-between border-t border-[#E2E8F0] pt-3">
+                {student.accessCode ? <button type="button" onClick={() => onCopyStudentCode(student)} className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-[#2563EB]" dir="ltr"><Copy className="h-3.5 w-3.5" />{student.accessCode}</button> : <span />}
+                <button type="button" onClick={() => setActiveDrawerStudent(student)} className="rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] px-3 py-2 text-[11px] font-semibold text-white">عرض الملف الكامل</button>
               </div>
             </article>
           );
@@ -630,13 +630,13 @@ export function StudentsTab({
       </div>
 
       {/* Desktop data table */}
-      <div className="admin-students-table relative hidden overflow-x-auto rounded-2xl border border-[#2B3D57] bg-[#101B2D] shadow-sm lg:block">
+      <div className="admin-students-table relative hidden overflow-x-auto rounded-2xl border border-[#E2E8F0] bg-white shadow-xs lg:block">
         <table className="w-full min-w-[1160px] border-separate border-spacing-0 text-right text-[11px]">
-          <thead className="sticky top-0 z-20 bg-[#0A1424] text-[#B6C2D2]">
+          <thead className="sticky top-0 z-20 bg-[#F8FAFC] text-[#475569]">
             <tr className="h-12">
-              <th className="w-10 border-b border-[#2B3D57] px-2.5 text-center">
-                <button type="button" onClick={toggleSelectAll} aria-label={isAllSelected ? "إلغاء تحديد كل الطلاب" : "تحديد كل الطلاب"} className="inline-grid h-8 w-8 place-items-center rounded-lg text-[#7F91AA] transition hover:bg-white/5 hover:text-white">
-                  {isAllSelected ? <CheckSquare className="h-4 w-4 text-[#1677FF]" /> : <Square className="h-4 w-4" />}
+              <th className="w-10 border-b border-[#E2E8F0] px-2.5 text-center">
+                <button type="button" onClick={toggleSelectAll} aria-label={isAllSelected ? "إلغاء تحديد كل الطلاب" : "تحديد كل الطلاب"} className="inline-grid h-8 w-8 place-items-center rounded-lg text-[#64748B] transition hover:bg-[#F1F5F9]">
+                  {isAllSelected ? <CheckSquare className="h-4 w-4 text-[#2563EB]" /> : <Square className="h-4 w-4" />}
                 </button>
               </th>
               {[
@@ -650,16 +650,16 @@ export function StudentsTab({
                 ["السنتر والموعد 📍", "min-w-[165px]"],
                 ["الأجهزة", "min-w-[85px]"],
               ].map(([label, width]) => (
-                <th key={label} className={`border-b border-[#2B3D57] px-2.5 py-2 font-extrabold ${width}`}>{label}</th>
+                <th key={label} className={`border-b border-[#E2E8F0] px-2.5 py-2 font-bold ${width}`}>{label}</th>
               ))}
-              <th className="min-w-[110px] border-b border-[#2B3D57] px-2.5 py-2 text-left font-extrabold">الإجراءات</th>
+              <th className="min-w-[110px] border-b border-[#E2E8F0] px-2.5 py-2 text-left font-bold">الإجراءات</th>
             </tr>
           </thead>
 
-          <tbody className="bg-[#101B2D]">
+          <tbody className="bg-white">
             {paginatedStudents.length === 0 ? (
               <tr>
-                <td colSpan={11} className="p-12 text-center text-xs text-[#7F91AA]">
+                <td colSpan={11} className="p-12 text-center text-xs text-[#64748B]">
                   لا توجد نتائج مسجلة مطابقة للبحث أو الفلاتر المختارة.
                 </td>
               </tr>
@@ -672,34 +672,34 @@ export function StudentsTab({
                   <tr
                     key={s.id}
                     onClick={() => setActiveDrawerStudent(s)}
-                    className={`group h-[66px] cursor-pointer transition-[background-color,box-shadow] hover:bg-[#192A43] hover:shadow-[inset_-3px_0_0_#1677FF] ${
-                      isSelected ? "bg-[#1677FF]/12 shadow-[inset_-3px_0_0_#1677FF]" : rowIndex % 2 ? "bg-[#0D192A]/45" : "bg-[#101B2D]"
+                    className={`group h-[64px] cursor-pointer transition-colors hover:bg-[#F8FAFC] ${
+                      isSelected ? "bg-[#EFF6FF]" : rowIndex % 2 ? "bg-[#FAF9FD]" : "bg-white"
                     }`}
                   >
                     {/* Checkbox */}
-                    <td className="border-b border-[#26364D]/55 px-2.5 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                    <td className="border-b border-[#E2E8F0] px-2.5 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                       <button
                         type="button"
                         onClick={() => toggleSelectStudent(s.id)}
                         aria-label={isSelected ? `إلغاء تحديد ${s.name}` : `تحديد ${s.name}`}
-                        className="inline-grid h-8 w-8 place-items-center rounded-lg text-[#7F91AA] transition hover:bg-white/5 hover:text-white"
+                        className="inline-grid h-8 w-8 place-items-center rounded-lg text-[#64748B] transition hover:bg-[#F1F5F9]"
                       >
                         {isSelected ? (
-                          <CheckSquare className="h-4 w-4 text-[#1677FF]" />
+                          <CheckSquare className="h-4 w-4 text-[#2563EB]" />
                         ) : (
                           <Square className="h-4 w-4" />
                         )}
                       </button>
                     </td>
 
-                    {/* Student Primary Info (Name font >= 13px + Avatar 32px + Code LTR) */}
-                    <td className="border-b border-[#26364D]/55 px-2.5 py-2">
+                    {/* Student Primary Info */}
+                    <td className="border-b border-[#E2E8F0] px-2.5 py-2">
                       <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#1677FF]/25 bg-[#1677FF]/12 text-xs font-black text-[#69A5FF]">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] text-xs font-bold text-[#2563EB]">
                           {s.name.charAt(0)}
                         </div>
-                        <div className="min-w-0 space-y-1">
-                          <span className="block max-w-[135px] truncate text-xs font-extrabold text-[#F8FAFC] transition-colors group-hover:text-[#69A5FF]" title={s.name}>
+                        <div className="min-w-0 space-y-0.5">
+                          <span className="block max-w-[135px] truncate text-xs font-bold text-[#0F172A] transition-colors group-hover:text-[#2563EB]" title={s.name}>
                             {s.name}
                           </span>
                           {s.accessCode && (
@@ -710,10 +710,10 @@ export function StudentsTab({
                                 onCopyStudentCode(s);
                               }}
                               title="اضغط لنسخ الكود"
-                              className="inline-flex items-center gap-1 font-mono text-xs font-bold text-[#1677FF] dir-ltr text-right hover:underline"
+                              className="inline-flex items-center gap-1 font-mono text-xs font-semibold text-[#2563EB] dir-ltr text-right hover:underline"
                             >
                               {copiedStudentId === s.id ? (
-                                <Check className="h-3 w-3 text-emerald-400" />
+                                <Check className="h-3 w-3 text-[#10B981]" />
                               ) : (
                                 <Copy className="h-3 w-3" />
                               )}
@@ -724,79 +724,79 @@ export function StudentsTab({
                       </div>
                     </td>
 
-                    {/* Contact (Phone LTR + Email LTR + Parent Phone) */}
-                    <td className="border-b border-[#26364D]/55 px-2.5 py-2">
-                      <div className="space-y-1">
+                    {/* Contact */}
+                    <td className="border-b border-[#E2E8F0] px-2.5 py-2">
+                      <div className="space-y-0.5">
                         <div className="flex items-center gap-1.5 justify-end">
                           <a
                             href={`https://wa.me/${(s.phone.replace(/[^\d+]/g, "").startsWith("0") ? "2" + s.phone.replace(/[^\d+]/g, "") : s.phone.replace(/[^\d+]/g, ""))}?text=${encodeURIComponent(`مرحباً ${s.name} 👋، تواصل من د. محمود المهدي`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="inline-flex items-center justify-center p-1 rounded-md bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/20 transition-all shrink-0"
+                            className="inline-flex items-center justify-center p-1 rounded-md bg-[#ECFDF5] hover:bg-[#D1FAE5] text-[#10B981] border border-[#A7F3D0] transition-all shrink-0"
                             title="تواصل واتساب مباشر"
                           >
                             <MessageCircle className="h-3.5 w-3.5" />
                           </a>
-                          <span className="font-mono text-xs font-bold text-[#A9B8CC] dir-ltr">
+                          <span className="font-mono text-xs font-medium text-[#0F172A] dir-ltr">
                             {s.phone}
                           </span>
                         </div>
                         {s.parentPhone && (
-                          <span className="block font-mono text-[10px] font-bold text-amber-300 dir-ltr text-right" title="رقم ولي الأمر">
+                          <span className="block font-mono text-[10px] font-semibold text-amber-800 dir-ltr text-right" title="رقم ولي الأمر">
                             ولي الأمر: {s.parentPhone}
                           </span>
                         )}
                         {s.email && (
-                          <span className="block max-w-[125px] truncate font-sans text-[10px] text-[#7F91AA] dir-ltr text-right" title={s.email}>
+                          <span className="block max-w-[125px] truncate font-sans text-[10px] text-[#64748B] dir-ltr text-right" title={s.email}>
                             {s.email}
                           </span>
                         )}
                       </div>
                     </td>
 
-                    {/* Platform registration date */}
-                    <td className="border-b border-[#26364D]/55 px-2.5 py-2">
+                    {/* Registration date */}
+                    <td className="border-b border-[#E2E8F0] px-2.5 py-2">
                       {s.createdAt && !Number.isNaN(new Date(s.createdAt).getTime()) ? (
-                        <div className="inline-flex items-center gap-1.5 rounded-lg border border-[#334761]/70 bg-[#0B1424]/70 px-2 py-1.5">
-                          <CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#69A5FF]" />
+                        <div className="inline-flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-1">
+                          <CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#2563EB]" />
                           <div className="leading-tight">
-                            <span className="block whitespace-nowrap text-[11px] font-extrabold text-[#D8E2EF]">
+                            <span className="block whitespace-nowrap text-[11px] font-semibold text-[#0F172A]">
                               {new Date(s.createdAt).toLocaleDateString("ar-EG", { day: "2-digit", month: "short", year: "numeric" })}
                             </span>
-                            <span className="mt-0.5 block text-[9px] font-bold text-[#64748B]">انضم للمنصة</span>
+                            <span className="block text-[9px] font-medium text-[#64748B]">انضم للمنصة</span>
                           </div>
                         </div>
                       ) : (
-                        <span className="text-[11px] font-bold text-[#64748B]">غير متاح</span>
+                        <span className="text-[11px] font-medium text-[#64748B]">غير متاح</span>
                       )}
                     </td>
 
-                    {/* Stage (Line clamp 2 + Tooltip) */}
-                    <td className="max-w-[140px] border-b border-[#26364D]/55 px-2.5 py-2">
-                      <span className="line-clamp-2 rounded-lg bg-white/[0.035] px-2.5 py-1.5 text-[11px] font-bold leading-5 text-[#B7C4D6]" title={effectiveStage}>
+                    {/* Stage */}
+                    <td className="max-w-[140px] border-b border-[#E2E8F0] px-2.5 py-2">
+                      <span className="line-clamp-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] px-2 py-1 text-[11px] font-medium leading-5 text-[#475569]" title={effectiveStage}>
                         {effectiveStage}
                       </span>
                     </td>
 
                     {/* Enrolled Courses Badge */}
-                    <td className="border-b border-[#26364D]/55 px-2.5 py-2">
-                      <span className="inline-flex items-center gap-1 rounded-lg bg-[#0B1424] border border-[#26364D] px-2.5 py-1 text-xs font-bold text-[#A9B8CC]">
+                    <td className="border-b border-[#E2E8F0] px-2.5 py-2">
+                      <span className="inline-flex items-center gap-1 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] px-2.5 py-1 text-xs font-semibold text-[#334155]">
                         {(s.enrolledCourseIds?.length ?? 0) === 0
                           ? "كل الكورسات"
                           : `${s.enrolledCourseIds?.length} كورس`}
                       </span>
                     </td>
 
-                    {/* Payment Status (Lucide icons, NO emojis) */}
-                    <td className="border-b border-[#26364D]/55 px-2.5 py-2">
+                    {/* Payment Status */}
+                    <td className="border-b border-[#E2E8F0] px-2.5 py-2">
                       <span
-                        className={`inline-flex h-7 w-[88px] items-center justify-center gap-1 rounded-lg px-2 text-[10px] font-extrabold text-center ${
+                        className={`inline-flex h-7 w-[88px] items-center justify-center gap-1 rounded-lg px-2 text-[10px] font-bold text-center ${
                           s.paymentStatus === "paid"
-                            ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                            ? "bg-[#ECFDF5] text-[#10B981] border border-[#A7F3D0]"
                             : s.paymentStatus === "pending_review"
-                            ? "bg-amber-500/15 text-amber-300 border border-amber-500/30"
-                            : "bg-[#0B1424] text-[#7F91AA] border border-[#26364D]"
+                            ? "bg-amber-50 text-amber-700 border border-amber-200"
+                            : "bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0]"
                         }`}
                       >
                         {s.paymentStatus === "paid" ? (
@@ -818,15 +818,15 @@ export function StudentsTab({
                       </span>
                     </td>
 
-                    {/* Account Status (Lucide icons, NO emojis) */}
-                    <td className="border-b border-[#26364D]/55 px-2.5 py-2">
+                    {/* Account Status */}
+                    <td className="border-b border-[#E2E8F0] px-2.5 py-2">
                       <span
-                        className={`inline-flex h-7 w-[84px] items-center justify-center gap-1 rounded-lg px-2 text-[10px] font-extrabold text-center ${
+                        className={`inline-flex h-7 w-[84px] items-center justify-center gap-1 rounded-lg px-2 text-[10px] font-bold text-center ${
                           s.status === "approved"
-                            ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                            ? "bg-[#ECFDF5] text-[#10B981] border border-[#A7F3D0]"
                             : s.status === "suspended"
-                            ? "bg-rose-500/15 text-rose-400 border border-rose-500/30"
-                            : "bg-amber-500/15 text-amber-300 border border-amber-500/30"
+                            ? "bg-red-50 text-red-600 border border-red-200"
+                            : "bg-amber-50 text-amber-700 border border-amber-200"
                         }`}
                       >
                         {s.status === "approved" ? (
@@ -849,35 +849,35 @@ export function StudentsTab({
                     </td>
 
                     {/* Mode / Center Name & Appointment Slot */}
-                    <td className="border-b border-[#26364D]/55 px-2.5 py-2">
+                    <td className="border-b border-[#E2E8F0] px-2.5 py-2">
                       {s.learningMode === "offline" || s.centerName || s.appointmentSlot ? (
                         <div className="space-y-1">
-                          <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-black text-emerald-400">
+                          <span className="inline-flex items-center gap-1 rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] px-2 py-0.5 text-[10px] font-bold text-[#2563EB]">
                             <MapPin className="h-3 w-3 shrink-0" />
                             <span className="truncate max-w-[130px]">{s.centerName || "سنتر الزقازيق"}</span>
                           </span>
                           {s.appointmentSlot && (
-                            <span className="block text-[10px] font-bold text-amber-300 truncate max-w-[135px]" title={s.appointmentSlot}>
+                            <span className="block text-[10px] font-semibold text-amber-800 truncate max-w-[135px]" title={s.appointmentSlot}>
                               ⏰ {s.appointmentSlot}
                             </span>
                           )}
                         </div>
                       ) : (
-                        <span className="inline-flex rounded-full border border-[#1677FF]/25 bg-[#1677FF]/10 px-2.5 py-1 text-[10px] font-extrabold text-[#69A5FF]">
+                        <span className="inline-flex rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1 text-[10px] font-semibold text-[#64748B]">
                           أونلاين
                         </span>
                       )}
                     </td>
 
-                    {/* Device Lock (Lucide icons, NO emojis) */}
-                    <td className="border-b border-[#26364D]/55 px-2.5 py-2">
+                    {/* Device Lock */}
+                    <td className="border-b border-[#E2E8F0] px-2.5 py-2">
                       <span
-                        className={`inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[10px] font-bold ${
+                        className={`inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[10px] font-semibold ${
                           (s.maxDevices || 1) === 2
-                            ? "bg-purple-500/15 text-purple-300 border border-purple-500/30"
+                            ? "bg-purple-50 text-purple-700 border border-purple-200"
                             : s.deviceId || (s.boundDevices && s.boundDevices.length > 0)
-                            ? "bg-amber-500/15 text-amber-300 border border-amber-500/30"
-                            : "bg-[#0B1424] text-[#7F91AA] border border-[#26364D]"
+                            ? "bg-amber-50 text-amber-700 border border-amber-200"
+                            : "bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0]"
                         }`}
                       >
                         {(s.maxDevices || 1) === 2 ? (
@@ -900,14 +900,14 @@ export function StudentsTab({
                     </td>
 
                     {/* Primary Action + 3-dots Dropdown Menu */}
-                    <td className="border-b border-[#26364D]/55 px-2.5 py-2 text-left" onClick={(e) => e.stopPropagation()}>
+                    <td className="border-b border-[#E2E8F0] px-2.5 py-2 text-left" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1.5 relative">
-                        {/* Primary Single Action: Eye icon + View Profile */}
+                        {/* Primary Action Button */}
                         <Button
                           type="button"
                           size="sm"
                           onClick={() => setActiveDrawerStudent(s)}
-                          className="h-8 min-h-8 rounded-lg bg-[#1677FF] px-2.5 text-[10px] font-extrabold text-white shadow-none hover:bg-[#1267DB]"
+                          className="h-8 min-h-8 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] px-2.5 text-[10px] font-semibold text-white shadow-none"
                         >
                           <Eye className="h-4 w-4 ml-1.5" />
                           <span>عرض الملف</span>
@@ -917,7 +917,7 @@ export function StudentsTab({
                         <button
                           type="button"
                           onClick={() => setOpenDropdownId(openDropdownId === s.id ? null : s.id)}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#334761] bg-[#0B1424] text-[#A9B8CC] transition-colors hover:border-[#49617F] hover:bg-[#1A2942] hover:text-white"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] text-[#475569] transition-colors hover:bg-white hover:text-[#0F172A]"
                           title="إجراءات إضافية"
                         >
                           <MoreVertical className="h-4 w-4" />
@@ -925,7 +925,7 @@ export function StudentsTab({
 
                         {/* Dropdown Menu Overlay */}
                         {openDropdownId === s.id && (
-                          <div className="absolute left-0 top-11 z-30 w-48 rounded-xl border border-[#26364D] bg-[#0B1424] p-1.5 shadow-2xl space-y-1">
+                          <div className="absolute left-0 top-11 z-30 w-48 rounded-xl border border-[#E2E8F0] bg-white p-1.5 shadow-xl space-y-1">
                             {s.status !== "approved" && (
                               <button
                                 type="button"
@@ -933,7 +933,7 @@ export function StudentsTab({
                                   onUpdateStatus(s.id, "approved");
                                   setOpenDropdownId(null);
                                 }}
-                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-emerald-400 hover:bg-emerald-500/10"
+                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-[#10B981] hover:bg-[#ECFDF5]"
                               >
                                 <CheckCircle2 className="h-3.5 w-3.5" />
                                 <span>تفعيل الحساب</span>
@@ -946,7 +946,7 @@ export function StudentsTab({
                                   onUpdateStatus(s.id, "suspended");
                                   setOpenDropdownId(null);
                                 }}
-                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-amber-400 hover:bg-amber-500/10"
+                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50"
                               >
                                 <UserX className="h-3.5 w-3.5" />
                                 <span>إيقاف الحساب</span>
@@ -958,9 +958,9 @@ export function StudentsTab({
                                 onSetMaxDevices(s);
                                 setOpenDropdownId(null);
                               }}
-                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-[#A9B8CC] hover:bg-[#131E31]"
+                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] hover:bg-[#F6F8FC]"
                             >
-                              <Smartphone className="h-3.5 w-3.5 text-[#1677FF]" />
+                              <Smartphone className="h-3.5 w-3.5 text-[#2563EB]" />
                               <span>تغيير أجهزة اللوجن</span>
                             </button>
                             <button
@@ -969,9 +969,9 @@ export function StudentsTab({
                                 onResetDevice(s);
                                 setOpenDropdownId(null);
                               }}
-                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-[#A9B8CC] hover:bg-[#131E31]"
+                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] hover:bg-[#F6F8FC]"
                             >
-                              <Unlock className="h-3.5 w-3.5 text-amber-400" />
+                              <Unlock className="h-3.5 w-3.5 text-amber-600" />
                               <span>فك قفل الجهاز</span>
                             </button>
                             {s.accessCode && (
@@ -981,9 +981,9 @@ export function StudentsTab({
                                   onCopyStudentCode(s);
                                   setOpenDropdownId(null);
                                 }}
-                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-[#A9B8CC] hover:bg-[#131E31]"
+                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-[#0F172A] hover:bg-[#F6F8FC]"
                               >
-                                <Copy className="h-3.5 w-3.5 text-[#1677FF]" />
+                                <Copy className="h-3.5 w-3.5 text-[#2563EB]" />
                                 <span>نسخ كود الوصول</span>
                               </button>
                             )}
@@ -993,7 +993,7 @@ export function StudentsTab({
                                 onDeleteStudent(s.id);
                                 setOpenDropdownId(null);
                               }}
-                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold text-rose-400 hover:bg-rose-500/10"
+                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                               <span>حذف الطالب</span>
@@ -1011,7 +1011,7 @@ export function StudentsTab({
       </div>
 
       {/* 4. Pagination Footer */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-[#26364D] bg-[#131E31] p-4 text-xs font-bold text-[#A9B8CC]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-[#E2E8F0] bg-white p-4 text-xs font-semibold text-[#475569] shadow-xs">
         <div className="flex items-center gap-2">
           <span>عدد النتائج في الصفحة:</span>
           <select
@@ -1020,7 +1020,7 @@ export function StudentsTab({
               setPageSize(Number(e.target.value));
               setCurrentPage(1);
             }}
-            className="rounded-lg border border-[#26364D] bg-[#0B1424] px-2.5 py-1.5 text-xs text-[#F8FAFC] focus:outline-none"
+            className="rounded-lg border border-[#E2E8F0] bg-[#F6F8FC] px-2.5 py-1.5 text-xs text-[#0F172A] focus:outline-none"
           >
             <option value={10}>10</option>
             <option value={25}>25</option>
@@ -1039,7 +1039,7 @@ export function StudentsTab({
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               aria-label="الصفحة السابقة"
-              className="h-9 w-9 p-0 border-[#26364D] bg-[#0B1424] text-[#F8FAFC] disabled:opacity-40"
+              className="h-9 w-9 p-0 border-[#E2E8F0] bg-white text-[#0F172A] hover:bg-[#F6F8FC] disabled:opacity-40"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -1051,7 +1051,7 @@ export function StudentsTab({
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               aria-label="الصفحة التالية"
-              className="h-9 w-9 p-0 border-[#26364D] bg-[#0B1424] text-[#F8FAFC] disabled:opacity-40"
+              className="h-9 w-9 p-0 border-[#E2E8F0] bg-white text-[#0F172A] hover:bg-[#F6F8FC] disabled:opacity-40"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
