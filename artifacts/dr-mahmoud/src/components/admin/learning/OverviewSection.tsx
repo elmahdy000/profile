@@ -41,11 +41,11 @@ export function OverviewSection({
   onSelectCourseFilter,
 }: OverviewSectionProps) {
   // Metric Definitions
-  const totalRegisteredAccounts = students.length; // 127
-  const activeStudents = students.filter((s) => s.status === "approved").length; // 104
-  const paidStudents = students.filter((s) => s.paymentStatus === "paid").length; // 78
-  const pendingStudents = students.filter((s) => s.status !== "approved" && s.status !== "suspended").length; // 22
-  const suspendedStudents = students.filter((s) => s.status === "suspended").length; // 1
+  const totalRegisteredAccounts = students.length;
+  const activeStudents = students.filter((s) => s.status === "approved").length;
+  const paidStudents = students.filter((s) => s.paymentStatus === "paid").length;
+  const pendingStudents = students.filter((s) => s.status !== "approved" && s.status !== "suspended").length;
+  const suspendedStudents = students.filter((s) => s.status === "suspended").length;
   const pendingReceipts = paymentReceipts.filter((r) => r.status === "pending").length;
 
   const todayStr = new Date().toDateString();
@@ -135,29 +135,29 @@ export function OverviewSection({
   };
 
   return (
-    <div className="admin-adaptive-dark-ui space-y-6 text-[#F8FAFC]" dir="rtl">
-      {/* 1. Operational KPI Cards Row (Single operational metrics definitions) */}
+    <div className="space-y-6 text-[#0F172A]" dir="rtl">
+      {/* 1. Operational KPI Cards Row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {/* KPI 1: Active Approved Students */}
         <button
           type="button"
           onClick={() => handleKpiClick("status", "approved")}
-          className="group rounded-2xl border border-[#26364D] bg-[#131E31] p-3.5 text-right transition-all hover:border-[#1677FF] hover:bg-[#1A2942] h-[130px] flex flex-col justify-between"
+          className="group rounded-2xl border border-[#E2E8F0] bg-white p-3.5 text-right transition-all hover:border-[#BFDBFE] hover:shadow-xs h-[130px] flex flex-col justify-between"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold text-[#A8B5C7]">الطلاب النشطون</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
+            <span className="text-xs font-semibold text-[#64748B]">الطلاب النشطون</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#ECFDF5] text-[#10B981]">
               <Users className="h-4 w-4" />
             </div>
           </div>
           <div>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-[#F8FAFC]">{activeStudents}</span>
-              <span className="text-xs font-bold text-emerald-400 flex items-center">
+              <span className="text-2xl font-bold text-[#0F172A]">{activeStudents}</span>
+              <span className="text-xs font-bold text-[#10B981] flex items-center">
                 <TrendingUp className="h-3 w-3 me-0.5" /> %{totalRegisteredAccounts > 0 ? Math.round((activeStudents / totalRegisteredAccounts) * 100) : 0}
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-[#8492A6] truncate">حسابات مفعّلة ومصرح لها</p>
+            <p className="mt-1 text-[11px] text-[#64748B] truncate">حسابات مفعّلة ومصرح لها</p>
           </div>
         </button>
 
@@ -165,20 +165,20 @@ export function OverviewSection({
         <button
           type="button"
           onClick={() => handleKpiClick("status", "all")}
-          className="group rounded-2xl border border-[#26364D] bg-[#131E31] p-3.5 text-right transition-all hover:border-[#1677FF] hover:bg-[#1A2942] h-[130px] flex flex-col justify-between"
+          className="group rounded-2xl border border-[#E2E8F0] bg-white p-3.5 text-right transition-all hover:border-[#BFDBFE] hover:shadow-xs h-[130px] flex flex-col justify-between"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold text-[#A8B5C7]">إجمالي الحسابات</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#1677FF]/15 text-[#1677FF]">
+            <span className="text-xs font-semibold text-[#64748B]">إجمالي الحسابات</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#EFF6FF] text-[#2563EB]">
               <GraduationCap className="h-4 w-4" />
             </div>
           </div>
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-black text-[#F8FAFC]">{totalRegisteredAccounts}</span>
-              <span className="text-xs font-bold text-[#1677FF]">سجل مسجل</span>
+              <span className="text-2xl font-bold text-[#0F172A]">{totalRegisteredAccounts}</span>
+              <span className="text-xs font-bold text-[#2563EB]">سجل مسجل</span>
             </div>
-            <p className="mt-1 text-[11px] text-[#8492A6] truncate">إجمالي قاعدة الطلاب</p>
+            <p className="mt-1 text-[11px] text-[#64748B] truncate">إجمالي قاعدة الطلاب</p>
           </div>
         </button>
 
@@ -186,20 +186,20 @@ export function OverviewSection({
         <button
           type="button"
           onClick={() => handleKpiClick("payment", "paid")}
-          className="group rounded-2xl border border-[#26364D] bg-[#131E31] p-3.5 text-right transition-all hover:border-[#1677FF] hover:bg-[#1A2942] h-[130px] flex flex-col justify-between"
+          className="group rounded-2xl border border-[#E2E8F0] bg-white p-3.5 text-right transition-all hover:border-[#BFDBFE] hover:shadow-xs h-[130px] flex flex-col justify-between"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold text-[#A8B5C7]">الاشتراكات المدفوعة</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-500/15 text-blue-400">
+            <span className="text-xs font-semibold text-[#64748B]">الاشتراكات المدفوعة</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#EFF6FF] text-[#2563EB]">
               <CreditCard className="h-4 w-4" />
             </div>
           </div>
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-black text-[#F8FAFC]">{paidStudents}</span>
-              <span className="text-xs font-bold text-blue-400">اشتراك</span>
+              <span className="text-2xl font-bold text-[#0F172A]">{paidStudents}</span>
+              <span className="text-xs font-bold text-[#2563EB]">اشتراك</span>
             </div>
-            <p className="mt-1 text-[11px] text-[#8492A6] truncate">وصول كامل مدفوع الأجر</p>
+            <p className="mt-1 text-[11px] text-[#64748B] truncate">وصول كامل مدفوع الأجر</p>
           </div>
         </button>
 
@@ -207,20 +207,20 @@ export function OverviewSection({
         <button
           type="button"
           onClick={() => handleKpiClick("status", "pending")}
-          className="group rounded-2xl border border-[#26364D] bg-[#131E31] p-3.5 text-right transition-all hover:border-[#1677FF] hover:bg-[#1A2942] h-[130px] flex flex-col justify-between"
+          className="group rounded-2xl border border-[#E2E8F0] bg-white p-3.5 text-right transition-all hover:border-[#BFDBFE] hover:shadow-xs h-[130px] flex flex-col justify-between"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold text-[#A8B5C7]">ينتظر التفعيل</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/15 text-amber-400">
+            <span className="text-xs font-semibold text-[#64748B]">ينتظر التفعيل</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
               <Clock className="h-4 w-4" />
             </div>
           </div>
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-black text-[#F8FAFC]">{pendingStudents}</span>
-              <span className="text-xs font-bold text-amber-400">طلب</span>
+              <span className="text-2xl font-bold text-[#0F172A]">{pendingStudents}</span>
+              <span className="text-xs font-bold text-amber-600">طلب</span>
             </div>
-            <p className="mt-1 text-[11px] text-[#8492A6] truncate">ينتظر موافقة المشرف</p>
+            <p className="mt-1 text-[11px] text-[#64748B] truncate">ينتظر موافقة المشرف</p>
           </div>
         </button>
 
@@ -228,20 +228,20 @@ export function OverviewSection({
         <button
           type="button"
           onClick={() => handleKpiClick("sort", "newest")}
-          className="group rounded-2xl border border-[#26364D] bg-[#131E31] p-3.5 text-right transition-all hover:border-[#1677FF] hover:bg-[#1A2942] h-[130px] flex flex-col justify-between"
+          className="group rounded-2xl border border-[#E2E8F0] bg-white p-3.5 text-right transition-all hover:border-[#BFDBFE] hover:shadow-xs h-[130px] flex flex-col justify-between"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold text-[#A8B5C7]">الطلاب الجدد اليوم</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-500/15 text-purple-400">
+            <span className="text-xs font-semibold text-[#64748B]">الطلاب الجدد اليوم</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
               <UserPlus className="h-4 w-4" />
             </div>
           </div>
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-black text-[#F8FAFC]">{todayNewStudents}</span>
-              <span className="text-xs font-bold text-purple-400">طالب جديد</span>
+              <span className="text-2xl font-bold text-[#0F172A]">{todayNewStudents}</span>
+              <span className="text-xs font-bold text-purple-600">طالب جديد</span>
             </div>
-            <p className="mt-1 text-[11px] text-[#8492A6] truncate">مسجل خلال الـ 24 ساعة</p>
+            <p className="mt-1 text-[11px] text-[#64748B] truncate">مسجل خلال الـ 24 ساعة</p>
           </div>
         </button>
 
@@ -249,107 +249,107 @@ export function OverviewSection({
         <button
           type="button"
           onClick={() => handleKpiClick("status", "suspended")}
-          className="group rounded-2xl border border-[#26364D] bg-[#131E31] p-3.5 text-right transition-all hover:border-[#1677FF] hover:bg-[#1A2942] h-[130px] flex flex-col justify-between"
+          className="group rounded-2xl border border-[#E2E8F0] bg-white p-3.5 text-right transition-all hover:border-[#BFDBFE] hover:shadow-xs h-[130px] flex flex-col justify-between"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-extrabold text-[#A8B5C7]">الحسابات الموقوفة</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-500/15 text-rose-400">
+            <span className="text-xs font-semibold text-[#64748B]">الحسابات الموقوفة</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
               <UserX className="h-4 w-4" />
             </div>
           </div>
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-black text-[#F8FAFC]">{suspendedStudents}</span>
-              <span className="text-xs font-bold text-rose-400">موقوف</span>
+              <span className="text-2xl font-bold text-[#0F172A]">{suspendedStudents}</span>
+              <span className="text-xs font-bold text-rose-600">موقوف</span>
             </div>
-            <p className="mt-1 text-[11px] text-[#8492A6] truncate">حسابات معطلة مؤقتًا</p>
+            <p className="mt-1 text-[11px] text-[#64748B] truncate">حسابات معطلة مؤقتًا</p>
           </div>
         </button>
       </div>
 
       {/* 2. Needs Action Section */}
-      <div className="rounded-2xl border border-[#26364D] bg-[#131E31] p-5 space-y-4 shadow-sm">
-        <div className="flex items-center justify-between border-b border-[#26364D] pb-3">
+      <div className="rounded-2xl border border-[#E2E8F0] bg-white p-5 space-y-4 shadow-xs">
+        <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/15 text-amber-400">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
               <AlertTriangle className="h-4.5 w-4.5" />
             </div>
             <div>
-              <h3 className="text-sm font-extrabold text-[#F8FAFC]">تحتاج إلى إجراء فوري</h3>
-              <p className="text-xs text-[#A8B5C7]">تنبيهات العمليات والمعاملات التي تتطلب تدخل المشرف</p>
+              <h3 className="text-sm font-bold text-[#0F172A]">تحتاج إلى إجراء فوري</h3>
+              <p className="text-xs text-[#64748B]">تنبيهات العمليات والمعاملات التي تتطلب تدخل المشرف</p>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="flex items-center justify-between rounded-xl border border-[#26364D] bg-[#0B1424] p-4">
+          <div className="flex items-center justify-between rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
             <div className="space-y-1">
-              <span className="text-xs font-extrabold text-[#F8FAFC]">مراجعة إيصالات التحويل</span>
-              <p className="text-xs text-[#A8B5C7]">{pendingReceipts} إيصال مرفوع ينتظر التأكيد</p>
+              <span className="text-xs font-bold text-[#0F172A]">مراجعة إيصالات التحويل</span>
+              <p className="text-xs text-[#64748B]">{pendingReceipts} إيصال مرفوع ينتظر التأكيد</p>
             </div>
             <button
               type="button"
               onClick={() => onNavigateToTab?.("payments")}
-              className="flex items-center gap-1 rounded-xl bg-amber-500 px-3 py-2 text-xs font-black text-slate-950 hover:bg-amber-400 transition-colors shadow-sm min-h-[44px]"
+              className="flex items-center gap-1 rounded-xl bg-amber-500 hover:bg-amber-600 px-3 py-2 text-xs font-semibold text-white transition-colors shadow-xs min-h-[44px]"
             >
               <span>مراجعة ({pendingReceipts})</span>
               <ChevronLeft className="h-3.5 w-3.5" />
             </button>
           </div>
 
-          <div className="flex items-center justify-between rounded-xl border border-[#26364D] bg-[#0B1424] p-4">
+          <div className="flex items-center justify-between rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
             <div className="space-y-1">
-              <span className="text-xs font-extrabold text-[#F8FAFC]">تفعيل الطلاب الجدد</span>
-              <p className="text-xs text-[#A8B5C7]">{pendingStudents} حساب جديد ينتظر الموافقة</p>
+              <span className="text-xs font-bold text-[#0F172A]">تفعيل الطلاب الجدد</span>
+              <p className="text-xs text-[#64748B]">{pendingStudents} حساب جديد ينتظر الموافقة</p>
             </div>
             <button
               type="button"
               onClick={() => handleKpiClick("status", "pending")}
-              className="flex items-center gap-1 rounded-xl bg-[#1677FF] px-3 py-2 text-xs font-extrabold text-white hover:bg-[#4096FF] transition-colors shadow-sm min-h-[44px]"
+              className="flex items-center gap-1 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] px-3 py-2 text-xs font-semibold text-white transition-colors shadow-xs min-h-[44px]"
             >
               <span>قبول ({pendingStudents})</span>
               <ChevronLeft className="h-3.5 w-3.5" />
             </button>
           </div>
 
-          <div className="flex items-center justify-between rounded-xl border border-[#26364D] bg-[#0B1424] p-4">
+          <div className="flex items-center justify-between rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
             <div className="space-y-1">
-              <span className="text-xs font-extrabold text-[#F8FAFC]">إرسال إشعارات المنصة</span>
-              <p className="text-xs text-[#A8B5C7]">تنبيه جميع الطلاب بالتحديثات</p>
+              <span className="text-xs font-bold text-[#0F172A]">إرسال إشعارات المنصة</span>
+              <p className="text-xs text-[#64748B]">تنبيه جميع الطلاب بالتحديثات</p>
             </div>
             <button
               type="button"
               onClick={() => onNavigateToTab?.("notifications")}
-              className="flex items-center gap-1.5 rounded-xl border border-[#26364D] bg-[#131E31] px-3 py-2 text-xs font-bold text-[#F8FAFC] hover:bg-[#1A2942] transition-colors min-h-[44px]"
+              className="flex items-center gap-1.5 rounded-xl border border-[#E2E8F0] bg-white px-3 py-2 text-xs font-semibold text-[#0F172A] hover:bg-[#F6F8FC] transition-colors min-h-[44px]"
             >
-              <Bell className="h-3.5 w-3.5 text-[#1677FF]" />
+              <Bell className="h-3.5 w-3.5 text-[#2563EB]" />
               <span>إرسال إشعار</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* 3. Section 1: Stage Distribution Statistical Table (No empty gaps, Auto Height) */}
-      <div className="rounded-2xl border border-[#26364D] bg-[#131E31] p-5 space-y-4 shadow-sm h-auto">
-        <div className="flex items-center justify-between border-b border-[#26364D] pb-3">
+      {/* 3. Section 1: Stage Distribution Statistical Table */}
+      <div className="rounded-2xl border border-[#E2E8F0] bg-white p-5 space-y-4 shadow-xs h-auto">
+        <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1677FF]/15 text-[#1677FF]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EFF6FF] text-[#2563EB]">
               <GraduationCap className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-sm font-extrabold text-[#F8FAFC]">توزيع الطلاب حسب المرحلة الدراسية</h3>
-              <p className="text-xs text-[#A8B5C7]">إحصائيات إجمالي الطلاب، الاشتراكات والنسب المئوية لكافة المراحل</p>
+              <h3 className="text-sm font-bold text-[#0F172A]">توزيع الطلاب حسب المرحلة الدراسية</h3>
+              <p className="text-xs text-[#64748B]">إحصائيات إجمالي الطلاب، الاشتراكات والنسب المئوية لكافة المراحل</p>
             </div>
           </div>
-          <span className="rounded-full bg-[#1677FF]/15 border border-[#1677FF]/30 px-3 py-1 text-xs font-extrabold text-[#1677FF]">
+          <span className="rounded-full bg-[#EFF6FF] border border-[#BFDBFE] px-3 py-1 text-xs font-semibold text-[#2563EB]">
             {sortedStages.length} مراحل دراسية
           </span>
         </div>
 
         {/* Compact Table */}
-        <div className="overflow-x-auto rounded-xl border border-[#26364D] bg-[#0B1424]">
+        <div className="overflow-x-auto rounded-xl border border-[#E2E8F0] bg-white">
           <table className="w-full text-right text-xs">
-            <thead className="bg-[#131E31] text-[#A8B5C7] font-bold border-b border-[#26364D]">
+            <thead className="bg-[#F8FAFC] text-[#475569] font-bold border-b border-[#E2E8F0]">
               <tr className="h-12">
                 <th className="py-3 px-4">المرحلة الدراسية</th>
                 <th className="py-3 px-4">المسار</th>
@@ -360,10 +360,10 @@ export function OverviewSection({
                 <th className="py-3 px-4 text-left">عرض الطلاب</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#26364D]/70 bg-[#0B1424]">
+            <tbody className="divide-y divide-[#E2E8F0] bg-white">
               {sortedStages.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-xs text-[#8492A6]">
+                  <td colSpan={7} className="py-8 text-center text-xs text-[#64748B]">
                     لا توجد بيانات طلاب مسجلة بعد.
                   </td>
                 </tr>
@@ -372,33 +372,33 @@ export function OverviewSection({
                   <tr
                     key={stage.name}
                     onClick={() => handleKpiClick("stage", stage.name)}
-                    className="h-14 transition-colors hover:bg-[#1A2942] cursor-pointer group"
+                    className="h-14 transition-colors hover:bg-[#F8FAFC] cursor-pointer group"
                   >
-                    <td className="py-3 px-4 font-bold text-[#F8FAFC] max-w-[240px]">
-                      <div className="truncate text-xs group-hover:text-[#1677FF] transition-colors" title={stage.name}>
+                    <td className="py-3 px-4 font-bold text-[#0F172A] max-w-[240px]">
+                      <div className="truncate text-xs group-hover:text-[#2563EB] transition-colors" title={stage.name}>
                         {stage.name}
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-[#A8B5C7] font-semibold text-xs whitespace-nowrap">
+                    <td className="py-3 px-4 text-[#64748B] font-medium text-xs whitespace-nowrap">
                       {stage.track}
                     </td>
-                    <td className="py-3 px-4 text-center font-black text-sm text-[#F8FAFC]">
+                    <td className="py-3 px-4 text-center font-bold text-sm text-[#0F172A]">
                       {stage.count}
                     </td>
-                    <td className="py-3 px-4 text-center font-bold text-emerald-400">
+                    <td className="py-3 px-4 text-center font-semibold text-[#10B981]">
                       {stage.paid}
                     </td>
-                    <td className="py-3 px-4 text-center font-bold text-amber-400">
+                    <td className="py-3 px-4 text-center font-semibold text-amber-700">
                       {stage.unpaid}
                     </td>
                     <td className="py-3 px-4">
                       <div className="space-y-1">
-                        <div className="flex items-center justify-between text-[11px] font-bold text-[#A8B5C7]">
+                        <div className="flex items-center justify-between text-[11px] font-semibold text-[#64748B]">
                           <span>{stage.percent}%</span>
                         </div>
-                        <div className="h-2 w-full overflow-hidden rounded-full bg-[#131E31]">
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-[#F1F5F9]">
                           <div
-                            className="h-full bg-[#1677FF] rounded-full transition-all duration-300"
+                            className="h-full bg-[#2563EB] rounded-full transition-all duration-300"
                             style={{ width: `${stage.percent}%` }}
                           />
                         </div>
@@ -415,9 +415,9 @@ export function OverviewSection({
                             handleKpiClick("stage", stage.name);
                           }
                         }}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-[#384D6C] bg-[#1C2C44] px-3 py-1.5 text-xs font-bold text-[#F8FAFC] hover:bg-[#1677FF] hover:border-[#1677FF] hover:text-white transition-all shadow-xs min-h-[40px]"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-[#BFDBFE] bg-[#EFF6FF] px-3 py-1.5 text-xs font-semibold text-[#2563EB] hover:bg-[#2563EB] hover:text-white hover:border-[#2563EB] transition-all shadow-xs min-h-[38px]"
                       >
-                        <Eye className="h-3.5 w-3.5 text-[#38BDF8]" />
+                        <Eye className="h-3.5 w-3.5" />
                         <span>عرض الطلاب</span>
                       </button>
                     </td>
@@ -430,26 +430,26 @@ export function OverviewSection({
       </div>
 
       {/* 4. Section 2: Course Distribution Statistical Table */}
-      <div className="rounded-2xl border border-[#26364D] bg-[#131E31] p-5 space-y-4 shadow-sm h-auto">
-        <div className="flex items-center justify-between border-b border-[#26364D] pb-3">
+      <div className="rounded-2xl border border-[#E2E8F0] bg-white p-5 space-y-4 shadow-xs h-auto">
+        <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1677FF]/15 text-[#1677FF]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EFF6FF] text-[#2563EB]">
               <BookOpen className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-sm font-extrabold text-[#F8FAFC]">توزيع الطلاب حسب الكورس</h3>
-              <p className="text-xs text-[#A8B5C7]">أعداد التسجيلات، الحسابات النشطة، والاشتراكات المدفوعة لكل كورس</p>
+              <h3 className="text-sm font-bold text-[#0F172A]">توزيع الطلاب حسب الكورس</h3>
+              <p className="text-xs text-[#64748B]">أعداد التسجيلات، الحسابات النشطة، والاشتراكات المدفوعة لكل كورس</p>
             </div>
           </div>
-          <span className="rounded-full bg-[#1677FF]/15 border border-[#1677FF]/30 px-3 py-1 text-xs font-extrabold text-[#1677FF]">
+          <span className="rounded-full bg-[#EFF6FF] border border-[#BFDBFE] px-3 py-1 text-xs font-semibold text-[#2563EB]">
             {sortedCourses.length} كورسات تعليمية
           </span>
         </div>
 
         {/* Compact Course Table */}
-        <div className="overflow-x-auto rounded-xl border border-[#26364D] bg-[#0B1424]">
+        <div className="overflow-x-auto rounded-xl border border-[#E2E8F0] bg-white">
           <table className="w-full text-right text-xs">
-            <thead className="bg-[#131E31] text-[#A8B5C7] font-bold border-b border-[#26364D]">
+            <thead className="bg-[#F8FAFC] text-[#475569] font-bold border-b border-[#E2E8F0]">
               <tr className="h-12">
                 <th className="py-3 px-4">اسم الكورس التعليمي</th>
                 <th className="py-3 px-4 text-center">الطلاب المسجلون</th>
@@ -460,10 +460,10 @@ export function OverviewSection({
                 <th className="py-3 px-4 text-left">عرض الطلاب</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#26364D]/70 bg-[#0B1424]">
+            <tbody className="divide-y divide-[#E2E8F0] bg-white">
               {sortedCourses.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-xs text-[#8492A6]">
+                  <td colSpan={7} className="py-8 text-center text-xs text-[#64748B]">
                     لا توجد كورسات مضافة بعد.
                   </td>
                 </tr>
@@ -472,37 +472,37 @@ export function OverviewSection({
                   <tr
                     key={c.id}
                     onClick={() => handleKpiClick("course", c.titleRaw)}
-                    className="h-16 transition-colors hover:bg-[#1A2942] cursor-pointer group"
+                    className="h-16 transition-colors hover:bg-[#F8FAFC] cursor-pointer group"
                   >
                     <td className="py-3 px-4 max-w-[280px]">
                       <div className="space-y-0.5">
-                        <span className="block font-black text-sm text-[#F8FAFC] dir-ltr text-right group-hover:text-[#1677FF] transition-colors truncate" title={c.titleEng}>
+                        <span className="block font-bold text-sm text-[#0F172A] dir-ltr text-right group-hover:text-[#2563EB] transition-colors truncate" title={c.titleEng}>
                           {c.titleEng}
                         </span>
                         {c.titleAr && (
-                          <span className="block text-xs font-semibold text-[#A8B5C7] truncate" title={c.titleAr}>
+                          <span className="block text-xs font-semibold text-[#64748B] truncate" title={c.titleAr}>
                             {c.titleAr}
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-center font-black text-base text-[#F8FAFC]">
+                    <td className="py-3 px-4 text-center font-bold text-base text-[#0F172A]">
                       {c.count}
                     </td>
-                    <td className="py-3 px-4 text-center font-bold text-emerald-400">
+                    <td className="py-3 px-4 text-center font-semibold text-[#10B981]">
                       {c.activeCount}
                     </td>
-                    <td className="py-3 px-4 text-center font-bold text-[#1677FF]">
+                    <td className="py-3 px-4 text-center font-semibold text-[#2563EB]">
                       {c.paidCount}
                     </td>
                     <td className="py-3 px-4">
                       <div className="space-y-1">
-                        <div className="flex items-center justify-between text-[11px] font-bold text-[#A8B5C7]">
+                        <div className="flex items-center justify-between text-[11px] font-semibold text-[#64748B]">
                           <span>{c.percent}%</span>
                         </div>
-                        <div className="h-2 w-full overflow-hidden rounded-full bg-[#131E31]">
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-[#F1F5F9]">
                           <div
-                            className="h-full bg-[#1677FF] rounded-full transition-all duration-300"
+                            className="h-full bg-[#2563EB] rounded-full transition-all duration-300"
                             style={{ width: `${c.percent}%` }}
                           />
                         </div>
@@ -510,10 +510,10 @@ export function OverviewSection({
                     </td>
                     <td className="py-3 px-4">
                       <span
-                        className="inline-flex items-center gap-1 rounded-lg bg-[#131E31] border border-[#26364D] px-2.5 py-1 text-xs font-bold text-[#A8B5C7]"
+                        className="inline-flex items-center gap-1 rounded-lg bg-[#F1F5F9] border border-[#E2E8F0] px-2.5 py-1 text-xs font-medium text-[#334155]"
                         title={c.stages.length > 0 ? c.stages.join(" | ") : "جميع المراحل"}
                       >
-                        <Layers className="h-3.5 w-3.5 text-[#1677FF]" />
+                        <Layers className="h-3.5 w-3.5 text-[#2563EB]" />
                         <span>
                           {c.stages.length === 0
                             ? "جميع المراحل"
@@ -536,9 +536,9 @@ export function OverviewSection({
                             handleKpiClick("course", c.titleRaw);
                           }
                         }}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-[#384D6C] bg-[#1C2C44] px-3 py-1.5 text-xs font-bold text-[#F8FAFC] hover:bg-[#1677FF] hover:border-[#1677FF] hover:text-white transition-all shadow-xs min-h-[40px]"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-[#BFDBFE] bg-[#EFF6FF] px-3 py-1.5 text-xs font-semibold text-[#2563EB] hover:bg-[#2563EB] hover:text-white hover:border-[#2563EB] transition-all shadow-xs min-h-[38px]"
                       >
-                        <Eye className="h-3.5 w-3.5 text-[#38BDF8]" />
+                        <Eye className="h-3.5 w-3.5" />
                         <span>عرض الطلاب</span>
                       </button>
                     </td>
