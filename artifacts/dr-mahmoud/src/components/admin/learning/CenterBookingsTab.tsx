@@ -681,14 +681,14 @@ export function CenterBookingsTab({
 
                       {/* School Name */}
                       <td className="border-b border-[#E2E8F0] px-3 py-2">
-                        <span className="truncate max-w-[110px] block text-[11px] font-medium text-[#64748B]" title={s.schoolName || "غير محدد"}>
+                        <span className="truncate max-w-[110px] block text-[11px] font-medium text-[#334155]" title={s.schoolName || "غير محدد"}>
                           {s.schoolName || "غير مسجل"}
                         </span>
                       </td>
 
                       {/* Language Track */}
                       <td className="border-b border-[#E2E8F0] px-3 py-2">
-                        <span className="inline-flex rounded-md border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-0.5 text-[10px] font-semibold text-[#475569]">
+                        <span className="inline-flex rounded-md border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-0.5 text-[10px] font-semibold text-[#334155]">
                           {s.languageTrack || "عام"}
                         </span>
                       </td>
@@ -724,7 +724,7 @@ export function CenterBookingsTab({
                       </td>
 
                       {/* Phone */}
-                      <td className="border-b border-[#E2E8F0] px-3 py-2 font-mono text-xs text-[#0F172A]" dir="ltr">
+                      <td className="border-b border-[#E2E8F0] px-3 py-2 font-mono text-xs text-[#0F172A] font-semibold" dir="ltr">
                         {s.phone}
                       </td>
 
@@ -744,13 +744,13 @@ export function CenterBookingsTab({
                             <span className="font-mono text-xs font-semibold text-[#0F172A] dir-ltr">{s.parentPhone}</span>
                           </div>
                         ) : (
-                          <span className="text-[10px] font-normal text-[#64748B]">غير مسجل</span>
+                          <span className="text-[10px] font-medium text-[#64748B]">غير مسجل</span>
                         )}
                       </td>
 
                       {/* Registration Date */}
                       <td className="border-b border-[#E2E8F0] px-3 py-2">
-                        <span className="font-mono text-[10px] text-[#64748B]">
+                        <span className="font-mono text-xs font-semibold text-[#334155]">
                           {s.createdAt ? new Date(s.createdAt).toLocaleDateString("ar-EG") : "—"}
                         </span>
                       </td>
