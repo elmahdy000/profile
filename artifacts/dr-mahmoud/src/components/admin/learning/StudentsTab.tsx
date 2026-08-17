@@ -607,10 +607,10 @@ export function StudentsTab({
                   <div className="mt-2.5 rounded-xl border border-[#BFDBFE] bg-[#EFF6FF] p-2.5 text-xs text-right space-y-1">
                     <p className="font-bold text-[#2563EB] flex items-center gap-1">
                       <MapPin className="h-3.5 w-3.5 text-[#2563EB] shrink-0" />
-                      <span>السنتر: {student.centerName || "حضور بالسنتر (الزقازيق)"}</span>
+                      <span>السنتر: {student.centerName || "—"}</span>
                     </p>
                     <p className="text-[11px] font-semibold text-amber-800">
-                      ⏰ الموعد المحدد: {student.appointmentSlot || "حسب الجدول والأيام المعروضة"}
+                      ⏰ الموعد المحدد: {student.appointmentSlot || "—"}
                     </p>
                     {student.parentPhone && (
                       <p className="text-[10px] font-medium text-[#475569] dir-ltr text-right">
@@ -854,7 +854,7 @@ export function StudentsTab({
                         <div className="space-y-1">
                           <span className="inline-flex items-center gap-1 rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] px-2 py-0.5 text-[10px] font-bold text-[#2563EB]">
                             <MapPin className="h-3 w-3 shrink-0" />
-                            <span className="truncate max-w-[130px]">{s.centerName || "سنتر الزقازيق"}</span>
+                            <span className="truncate max-w-[200px]">{s.centerName || "—"}</span>
                           </span>
                           {s.appointmentSlot && (
                             <span className="block text-[10px] font-semibold text-amber-800 truncate max-w-[135px]" title={s.appointmentSlot}>

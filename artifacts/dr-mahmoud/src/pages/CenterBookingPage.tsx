@@ -10,12 +10,12 @@ export default function CenterBookingPage() {
   const whatsapp = get(SETTINGS_KEYS.CONTACT_WHATSAPP, "201066711545");
 
   useEffect(() => {
-    document.title = "حجز السناتر الرسمية (أولى وتانية بكالوريا 2026) | د. محمود المهدي";
+    document.title = "حجز السناتر الرسمية (تانية بكالوريا 2026) | د. محمود المهدي";
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) {
       metaDesc.setAttribute(
         "content",
-        "استمارة حجز السناتر الرسمية بمحافظة الشرقية (الزقازيق) لطلاب الصف الأول والثاني البكالوريا المصرية مع د. محمود المهدي ... رسوم الحجز والسداد 500 جنيه بالسنتر بأول يوم حضور."
+        "استمارة حجز السناتر الرسمية بمحافظة الشرقية (الزقازيق) لطلاب الصف الثاني البكالوريا المصرية مع د. محمود المهدي ... رسوم الحجز والسداد 500 جنيه بالسنتر بأول يوم حضور."
       );
     }
     window.scrollTo(0, 0);
@@ -35,7 +35,7 @@ export default function CenterBookingPage() {
         <div className="container mx-auto px-4 lg:px-8 relative z-10 text-center max-w-4xl space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-4 py-1.5 text-xs sm:text-sm font-black text-emerald-700 dark:text-emerald-300 shadow-md animate-pulse">
             <Sparkles className="h-4 w-4 text-emerald-400" />
-            <span>تم فتح باب الحجز المباشر للسناتر الآن (أولى وتانية بكالوريا 2026)</span>
+            <span>تم فتح باب الحجز المباشر للسناتر الآن (تانية بكالوريا 2026)</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight text-foreground dark:text-white">

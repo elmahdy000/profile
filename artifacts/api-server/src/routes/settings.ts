@@ -5,12 +5,14 @@ import { eq } from "drizzle-orm";
 
 const router: IRouter = Router();
 
-// List all settings (public)
+const SENSITIVE_KEYS = new Set(["admin_password_hash", "subadmin_password_hash"]);
+
+// List all settings — public keys only (no password hashes)
 router.get("/settings", async (_req, res, next) => {
   try {
     const settings = await db.select().from(siteSettingsTable);
-    // Convert array to an object: { key: value }
     const formatted = settings.reduce((acc, curr) => {
+      if (SENSITIVE_KEYS.has(curr.key)) return acc;
       acc[curr.key] = { value: curr.value, type: curr.type };
       return acc;
     }, {} as Record<string, any>);

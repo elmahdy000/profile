@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
@@ -21,6 +21,8 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { OfflineCenterItem } from "@/components/admin/settings/CentersTab";
+import { defaultOfflineCenters } from "@/components/admin/settings/CentersTab";
 
 export interface UnifiedCenterCard {
   id: string;
@@ -33,68 +35,36 @@ export interface UnifiedCenterCard {
   slotText: string;
 }
 
-export const UNIFIED_CENTER_CARDS: UnifiedCenterCard[] = [
-  {
-    id: "rafal-3pm",
-    centerName: "سنتر رافال أكاديمي (Rafal Academy)",
-    location: "بجوار الثانوية العسكرية - الزقازيق",
-    days: "حسب جدول المجموعات بالسنتر",
-    time: "3:00 عصراً",
-    gradeBadge: "تانية بكالوريا",
-    forGrade: "2nd_bac",
-    slotText: "حسب جدول المجموعات بالسنتر (الساعة 3:00 عصراً)",
-  },
-  {
-    id: "zag-5pm",
-    centerName: "سنتر زاج أكاديمي (Zag Academy)",
-    location: "منطقة الفلل - الزقازيق",
-    days: "سبت - اتنين - أربع",
-    time: "5:00 مساءً",
-    gradeBadge: "تانية بكالوريا",
-    forGrade: "2nd_bac",
-    slotText: "سبت - اتنين - أربع (الساعة 5:00 مساءً)",
-  },
-  {
-    id: "zag-630pm",
-    centerName: "سنتر زاج أكاديمي (Zag Academy)",
-    location: "منطقة الفلل - الزقازيق",
-    days: "سبت - اتنين - أربع",
-    time: "6:30 مساءً",
-    gradeBadge: "تانية بكالوريا",
-    forGrade: "2nd_bac",
-    slotText: "سبت - اتنين - أربع (الساعة 6:30 مساءً)",
-  },
-  {
-    id: "eduverse-330pm",
-    centerName: "سنتر إديوفيرس (EduVerse)",
-    location: "منطقة الفلل - الزقازيق",
-    days: "سبت - اتنين - أربع",
-    time: "3:30 عصراً",
-    gradeBadge: "تانية بكالوريا",
-    forGrade: "2nd_bac",
-    slotText: "سبت - اتنين - أربع (الساعة 3:30 عصراً)",
-  },
-  {
-    id: "eduverse-5pm",
-    centerName: "سنتر إديوفيرس (EduVerse)",
-    location: "منطقة الفلل - الزقازيق",
-    days: "سبت - اتنين - أربع",
-    time: "5:00 مساءً",
-    gradeBadge: "تانية بكالوريا",
-    forGrade: "2nd_bac",
-    slotText: "سبت - اتنين - أربع (الساعة 5:00 مساءً)",
-  },
-  {
-    id: "hassan-630pm",
-    centerName: "سنتر حسن صميدة",
-    location: "منطقة الحناوي - الزقازيق",
-    days: "حد - تلات - خميس",
-    time: "6:30 مساءً",
-    gradeBadge: "تانية بكالوريا",
-    forGrade: "2nd_bac",
-    slotText: "حد - تلات - خميس (الساعة 6:30 مساءً)",
-  },
-];
+function offlineCenterToCards(items: OfflineCenterItem[]): UnifiedCenterCard[] {
+  return items.map((c) => ({
+    id: c.id,
+    centerName: c.name,
+    location: c.area ? `${c.area} - الزقازيق` : "الزقازيق",
+    days: c.daysStr,
+    time: c.timeStr,
+    gradeBadge: c.grade || "تانية بكالوريا",
+    forGrade: "2nd_bac" as const,
+    slotText: `${c.daysStr} (الساعة ${c.timeStr})`,
+  }));
+}
+
+async function fetchCentersFromSettings(): Promise<UnifiedCenterCard[]> {
+  try {
+    const res = await fetch("/api/settings");
+    if (!res.ok) return offlineCenterToCards(defaultOfflineCenters);
+    const data = await res.json();
+    const raw = data?.["offline_centers_list"]?.value;
+    if (!raw) return offlineCenterToCards(defaultOfflineCenters);
+    const parsed: OfflineCenterItem[] = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) return offlineCenterToCards(defaultOfflineCenters);
+    return offlineCenterToCards(parsed);
+  } catch {
+    return offlineCenterToCards(defaultOfflineCenters);
+  }
+}
+
+// Kept for backward compatibility with any code that imports UNIFIED_CENTER_CARDS directly.
+export const UNIFIED_CENTER_CARDS: UnifiedCenterCard[] = offlineCenterToCards(defaultOfflineCenters);
 
 interface CenterBookingFormProps {
   onSuccess?: (studentData: any) => void;
@@ -112,8 +82,14 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
   const [studentPhone, setStudentPhone] = useState("");
   const [parentPhone, setParentPhone] = useState("");
   const [languageTrack, setLanguageTrack] = useState<"عربي" | "لغات">("عربي");
-  const [selectedCenter, setSelectedCenter] = useState<string>("سنتر رافال أكاديمي (Rafal Academy)");
-  const [selectedSlot, setSelectedSlot] = useState<string>("حسب جدول المجموعات بالسنتر (الساعة 3:00 عصراً)");
+  const [selectedCenter, setSelectedCenter] = useState<string>("");
+  const [selectedSlot, setSelectedSlot] = useState<string>("");
+
+  // Live centers fetched from settings (admin-editable via CentersTab)
+  const [allCards, setAllCards] = useState<UnifiedCenterCard[]>(UNIFIED_CENTER_CARDS);
+  useEffect(() => {
+    fetchCentersFromSettings().then(setAllCards);
+  }, []);
 
   // Success Confirmation Modal state
   const [bookingSuccessData, setBookingSuccessData] = useState<{
@@ -131,15 +107,24 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
 
   const [copiedCode, setCopiedCode] = useState(false);
 
-  // Cards list
-  const filteredCards = React.useMemo(() => {
-    return UNIFIED_CENTER_CARDS;
-  }, []);
-
   const normalizePhone = (num: string) =>
     num
       .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
       .replace(/[^\d]/g, "");
+
+  // Filter cards by selected grade; reset selection when grade changes
+  const gradeKey: "1st_bac" | "2nd_bac" = grade === "أولى بكالوريا" ? "1st_bac" : "2nd_bac";
+  const filteredCards = React.useMemo(() => {
+    return allCards.filter(
+      (c) => c.forGrade === gradeKey || c.forGrade === "both"
+    );
+  }, [allCards, gradeKey]);
+
+  // Reset card selection whenever the grade changes
+  React.useEffect(() => {
+    setSelectedCenter("");
+    setSelectedSlot("");
+  }, [gradeKey]);
 
   const validateStep1 = () => {
     if (!studentName.trim() || studentName.trim().length < 3) {
@@ -178,14 +163,14 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
       setFormStep(1);
       return;
     }
+    if (!selectedCenter || !selectedSlot) {
+      setError("يرجى اختيار السنتر والموعد المناسب");
+      setFormStep(3);
+      return;
+    }
 
     setLoading(true);
     setError("");
-
-    const normalizePhone = (num: string) =>
-      num
-        .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
-        .replace(/[^\d]/g, "");
 
     const payload = {
       name: studentName.trim(),
@@ -530,7 +515,17 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {filteredCards.map((card) => {
+                  {filteredCards.length === 0 ? (
+                    <div className="col-span-2 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-center space-y-2">
+                      <AlertTriangle className="h-8 w-8 text-amber-400 mx-auto" />
+                      <p className="text-sm font-black text-amber-300">
+                        حجز السناتر لأولى بكالوريا سيُفتح قريباً بإذن الله
+                      </p>
+                      <p className="text-xs font-bold text-amber-200/70">
+                        تابعنا على صفحة د. محمود للإعلان عن المواعيد
+                      </p>
+                    </div>
+                  ) : filteredCards.map((card) => {
                     const isSelected = selectedCenter === card.centerName && selectedSlot === card.slotText;
                     return (
                       <button

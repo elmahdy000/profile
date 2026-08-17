@@ -297,8 +297,8 @@ export function CenterBookingsTab({
       s.grade === "أخرى" ? s.otherGradeDetail || s.grade : s.grade || "",
       s.schoolName || "غير محدد",
       s.languageTrack || "عام",
-      s.centerName || "سنتر الزقازيق",
-      s.appointmentSlot || "حسب المواعيد",
+      s.centerName || "—",
+      s.appointmentSlot || "—",
       s.paymentStatus === "paid" ? "مدفوع" : s.paymentStatus === "pending_review" ? "مراجعة" : "مجاني",
       s.status === "approved" ? "نشط" : s.status === "suspended" ? "موقوف" : "معلق",
       s.createdAt ? new Date(s.createdAt).toLocaleDateString("ar-EG") : "",
@@ -542,11 +542,11 @@ export function CenterBookingsTab({
                 <div className="grid grid-cols-2 gap-2 text-[11px] bg-[#F8FAFC] p-3 rounded-xl border border-[#E2E8F0]">
                   <div>
                     <span className="block text-[#64748B] text-[10px]">السنتر:</span>
-                    <span className="font-semibold text-[#2563EB] truncate block">{student.centerName || "سنتر الزقازيق"}</span>
+                    <span className="font-semibold text-[#2563EB] truncate block">{student.centerName || "—"}</span>
                   </div>
                   <div>
                     <span className="block text-[#64748B] text-[10px]">الموعد:</span>
-                    <span className="font-semibold text-[#0F172A] truncate block">{student.appointmentSlot || "حسب المواعيد"}</span>
+                    <span className="font-semibold text-[#0F172A] truncate block">{student.appointmentSlot || "—"}</span>
                   </div>
                   <div>
                     <span className="block text-[#64748B] text-[10px]">المرحلة:</span>

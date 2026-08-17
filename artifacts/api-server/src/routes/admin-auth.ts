@@ -160,8 +160,6 @@ router.get("/admin/subadmins", requireSuperAdmin, async (_req, res, next) => {
 
 // POST /api/admin/subadmins (Super Admin only: Create a new subadmin account)
 router.post("/admin/subadmins", requireSuperAdmin, async (req, res, next) => {
-  res.status(403).json({ error: "إنشاء حسابات إدارة إضافية معطل. الحسابات المسموحة: محمود وأحمد فقط." });
-  return;
   try {
     const username = String(req.body.username ?? "").trim().toLowerCase();
     const displayName = String(req.body.displayName ?? "").trim();
@@ -213,8 +211,6 @@ router.post("/admin/subadmins", requireSuperAdmin, async (req, res, next) => {
 
 // DELETE /api/admin/subadmins/:id (Super Admin only: Delete a subadmin account)
 router.delete("/admin/subadmins/:id", requireSuperAdmin, async (req, res, next) => {
-  res.status(403).json({ error: "حذف وإدارة الحسابات الإضافية معطل. الحسابات المسموحة: محمود وأحمد فقط." });
-  return;
   try {
     const id = Number(req.params.id);
     const [deleted] = await db

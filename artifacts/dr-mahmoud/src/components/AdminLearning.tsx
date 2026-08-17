@@ -512,27 +512,38 @@ export function AdminLearning({
   };
   useEffect(() => {
     void load();
-    const refreshStudentQueues = async () => {
-      if (document.visibilityState !== "visible") return;
-      try {
-        const [studentRows, recoveryRows] = await Promise.all([
-          adminApi<Student[]>("/api/admin/students"),
-          adminApi<RecoveryRequest[]>("/api/admin/recovery-requests"),
-        ]);
-        setStudents(studentRows);
-        setRecoveryRequests(recoveryRows);
-      } catch {
-        // The next polling cycle retries without interrupting admin work.
-      }
+    let es: EventSource | null = null;
+    let retryTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    const connect = () => {
+      es = new EventSource("/api/admin/students/stream", { withCredentials: true });
+
+      es.onmessage = (event) => {
+        try {
+          const { students: studentRows, recoveryRequests: recoveryRows } = JSON.parse(event.data) as {
+            students: Student[];
+            recoveryRequests: RecoveryRequest[];
+          };
+          setStudents(studentRows);
+          setRecoveryRequests(recoveryRows);
+        } catch {
+          // malformed frame — ignore
+        }
+      };
+
+      es.onerror = () => {
+        es?.close();
+        es = null;
+        // reconnect after 4 s (server retry hint is 2 s, give a bit more buffer)
+        retryTimeout = setTimeout(connect, 4000);
+      };
     };
-    const timer = window.setInterval(refreshStudentQueues, 8000);
-    const handleVisibility = () => void refreshStudentQueues();
-    document.addEventListener("visibilitychange", handleVisibility);
-    window.addEventListener("focus", handleVisibility);
+
+    connect();
+
     return () => {
-      window.clearInterval(timer);
-      document.removeEventListener("visibilitychange", handleVisibility);
-      window.removeEventListener("focus", handleVisibility);
+      if (retryTimeout) clearTimeout(retryTimeout);
+      es?.close();
     };
   }, []);
   const updateStudent = (id: number, status: string) => {
@@ -1391,7 +1402,7 @@ export function AdminLearning({
               students={students}
               onSend={async (form) => {
                 try {
-                  const result = await adminApi<{ count: number }>("/api/admin/broadcast-notification", {
+                  const result = await adminApi<{ count: number }>("/api/admin/notifications/broadcast", {
                     method: "POST",
                     body: JSON.stringify(form),
                   });

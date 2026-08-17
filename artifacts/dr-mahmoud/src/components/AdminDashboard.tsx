@@ -274,7 +274,7 @@ export default function AdminDashboard() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: "mahmoud", password: passwordInput }),
+        body: JSON.stringify({ password: passwordInput }),
       });
       if (!response.ok) throw new Error("invalid password");
       const data = await response.json();

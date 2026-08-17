@@ -122,6 +122,20 @@ export async function verifyAdminCredentialsAsync(passwordInput: string, usernam
     return { role: "subadmin", username: "أحمد (المشرف المساعد)" };
   }
 
+  try {
+    const [dbSubadmin] = await db
+      .select()
+      .from(subadminAccountsTable)
+      .where(eq(subadminAccountsTable.username, user))
+      .limit(1);
+
+    if (dbSubadmin && dbSubadmin.isActive && verifyStoredPassword(pass, dbSubadmin.passwordHash)) {
+      return { role: "subadmin", username: dbSubadmin.displayName || dbSubadmin.username };
+    }
+  } catch (e) {
+    // Ignore DB error fallback
+  }
+
   return null;
 }
 
