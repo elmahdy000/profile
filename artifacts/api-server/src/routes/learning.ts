@@ -536,6 +536,17 @@ router.post(
         res.status(400).json({ error: "الاسم ورقم الهاتف مطلوبان بشكل صحيح" });
         return;
       }
+      if (parentPhone && !/^(?:01[0125]\d{8}|\+?\d{10,15})$/.test(parentPhone)) {
+        res.status(400).json({ error: "رقم هاتف ولي الأمر غير صحيح" });
+        return;
+      }
+      if (
+        (centerName && centerName.length > 200) ||
+        (appointmentSlot && appointmentSlot.length > 300)
+      ) {
+        res.status(400).json({ error: "بيانات السنتر أو الموعد طويلة جداً" });
+        return;
+      }
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         res.status(400).json({ error: "البريد الإلكتروني غير صحيح" });
         return;
@@ -578,7 +589,11 @@ router.post(
       const [existingByPhone] = await db
         .select()
         .from(studentsTable)
-        .where(inArray(studentsTable.phone, phoneVariants))
+        .where(or(
+          inArray(studentsTable.phone, phoneVariants),
+          // Also match legacy records that stored spaces, +20, or Arabic digits.
+          sql`REGEXP_REPLACE(TRANSLATE(${studentsTable.phone}, '٠١٢٣٤٥٦٧٨٩', '0123456789'), '[^0-9]', '', 'g') = ${phone}`,
+        ))
         .limit(1);
 
       if (existingByPhone) {
@@ -591,7 +606,6 @@ router.post(
               schoolName: schoolName || existingByPhone.schoolName,
               parentPhone: parentPhone || existingByPhone.parentPhone,
               languageTrack: languageTrack || existingByPhone.languageTrack,
-              grade: grade || existingByPhone.grade,
               learningMode: "offline",
               updatedAt: new Date(),
             })
@@ -667,7 +681,15 @@ router.post(
             enrolledCourseIds: [],
           } as any)),
         })
+        // Two requests for the same phone can pass the lookup concurrently.
+        // Let the unique index win instead of surfacing a database 500.
+        .onConflictDoNothing({ target: studentsTable.phone })
         .returning();
+
+      if (!student) {
+        res.status(409).json({ error: "تم تسجيل هذا الرقم للتو. أعد المحاولة لتحديث الحجز." });
+        return;
+      }
 
       res.status(201).json({
         status: student.status,
