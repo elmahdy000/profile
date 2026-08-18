@@ -43,7 +43,12 @@ function offlineCenterToCards(items: OfflineCenterItem[]): UnifiedCenterCard[] {
     days: c.daysStr,
     time: c.timeStr,
     gradeBadge: c.grade || "تانية بكالوريا",
-    forGrade: "2nd_bac" as const,
+    forGrade: (() => {
+      const grade = String(c.grade ?? "").trim().toLocaleLowerCase("ar");
+      if (grade.includes("أولى") || grade.includes("اولى") || grade.includes("first")) return "1st_bac" as const;
+      if (grade.includes("تانية") || grade.includes("ثانية") || grade.includes("second")) return "2nd_bac" as const;
+      return "both" as const;
+    })(),
     slotText: `${c.daysStr} (الساعة ${c.timeStr})`,
   }));
 }
@@ -407,23 +412,7 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
                   اختر المرحلة الدراسية <span className="text-rose-400">*</span>
                 </label>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setGrade("أولى بكالوريا")}
-                    className={`p-4 rounded-2xl border text-right transition-all flex flex-col justify-between ${
-                      grade === "أولى بكالوريا"
-                        ? "border-[#1677FF] bg-[#1677FF]/15 ring-2 ring-[#1677FF]/30"
-                        : "border-[#26364D] bg-[#131E31] hover:border-[#3a5275]"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-black text-[#F8FAFC]">أولى بكالوريا</span>
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded-lg bg-[#1677FF]/20 text-[#69A5FF]">1st Bac</span>
-                    </div>
-                    <p className="mt-2 text-xs font-bold text-[#A8B5C7]">الصف الثاني الثانوي (منهج التأسيس البرمجي)</p>
-                  </button>
-
+                <div className="grid grid-cols-1 gap-3">
                   <button
                     type="button"
                     onClick={() => setGrade("تانية بكالوريا")}

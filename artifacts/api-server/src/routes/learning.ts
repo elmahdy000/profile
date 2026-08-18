@@ -26,6 +26,7 @@ import {
   parentsTable,
   parentSessionsTable,
   bookingsTable,
+  siteSettingsTable,
   type QuizQuestion,
 } from "@workspace/db";
 import { getAdminIdentity, getAdminRole, isAdminRequest, requireAdmin, requireSuperAdmin } from "../middleware/auth";
@@ -454,6 +455,44 @@ async function ensureAutomaticCourseAssignments(student: typeof studentsTable.$i
   return updated;
 }
 
+async function isValidCenterBookingSelection(
+  centerName: string | null,
+  appointmentSlot: string | null,
+  studentGrade: string,
+): Promise<boolean> {
+  if (!centerName || !appointmentSlot) return false;
+  const [setting] = await db
+    .select({ value: siteSettingsTable.value })
+    .from(siteSettingsTable)
+    .where(eq(siteSettingsTable.key, "offline_centers_list"))
+    .limit(1);
+  if (!setting?.value) return true; // Keep legacy behavior if settings are not configured.
+  try {
+    const centers = JSON.parse(setting.value) as Array<{
+      name?: unknown;
+      daysStr?: unknown;
+      timeStr?: unknown;
+      grade?: unknown;
+    }>;
+    if (!Array.isArray(centers) || centers.length === 0) return true;
+    const requestedGrade = studentGrade.toLocaleLowerCase("ar");
+    const wantsFirst = requestedGrade.includes("أولى") || requestedGrade.includes("اولى");
+    const wantsSecond = requestedGrade.includes("تانية") || requestedGrade.includes("ثانية");
+    return centers.some((center) => {
+      const centerGrade = String(center.grade ?? "").trim().toLocaleLowerCase("ar");
+      const gradeMatches =
+        !centerGrade || centerGrade.includes("الكل") || centerGrade.includes("both") ||
+        (wantsFirst && (centerGrade.includes("أولى") || centerGrade.includes("اولى") || centerGrade.includes("first"))) ||
+        (wantsSecond && (centerGrade.includes("تانية") || centerGrade.includes("ثانية") || centerGrade.includes("second")));
+      return gradeMatches &&
+        String(center.name ?? "").trim() === centerName &&
+        `${String(center.daysStr ?? "").trim()} (الساعة ${String(center.timeStr ?? "").trim()})` === appointmentSlot;
+    });
+  } catch {
+    return true; // Do not break bookings because of malformed optional settings.
+  }
+}
+
 async function calculateStreak(studentId: number): Promise<number> {
   const rows = await db
     .select({ updatedAt: videoProgressTable.updatedAt })
@@ -547,6 +586,20 @@ router.post(
         res.status(400).json({ error: "بيانات السنتر أو الموعد طويلة جداً" });
         return;
       }
+      if (centerName || appointmentSlot) {
+        if (!centerName || !appointmentSlot) {
+          res.status(400).json({ error: "السنتر والموعد مطلوبان معاً" });
+          return;
+        }
+        if (grade !== "تانية بكالوريا") {
+          res.status(400).json({ error: "حجز السناتر متاح حالياً لطلاب تانية بكالوريا فقط" });
+          return;
+        }
+        if (!(await isValidCenterBookingSelection(centerName, appointmentSlot, grade))) {
+          res.status(400).json({ error: "السنتر أو الموعد المحدد غير متاح" });
+          return;
+        }
+      }
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         res.status(400).json({ error: "البريد الإلكتروني غير صحيح" });
         return;
@@ -617,12 +670,11 @@ router.post(
           isNewStudent: false,
           studentName: existingByPhone.name,
           schoolName: schoolName || existingByPhone.schoolName || "",
-          grade: grade || existingByPhone.grade || "",
+          grade: existingByPhone.grade || grade || "",
           languageTrack: languageTrack || existingByPhone.languageTrack || "",
           centerName: centerName || existingByPhone.centerName || "",
           appointmentSlot: appointmentSlot || existingByPhone.appointmentSlot || "",
           parentPhone: parentPhone || existingByPhone.parentPhone || "",
-          accessCode: existingByPhone.accessCode || undefined,
           message: "تم تحديث بيانات حجز السنتر بنجاح (طالب مسجل مسبقاً)",
         });
         return;
