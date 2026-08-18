@@ -238,14 +238,15 @@ export function AdminLearning({
     [files, setFiles] = useState<FileItem[]>([]),
     [quizzes, setQuizzes] = useState<Quiz[]>([]),
     [attempts, setAttempts] = useState<Attempt[]>([]);
+  const [recoveryRequests, setRecoveryRequests] = useState<RecoveryRequest[]>([]);
   const [paymentReceipts, setPaymentReceipts] = useState<PaymentReceipt[]>([]);
   const [analytics, setAnalytics] = useState<LearningAnalytics | null>(null);
-  const [recoveryRequests, setRecoveryRequests] = useState<RecoveryRequest[]>([]);
   const [videoCategories, setVideoCategories] = useState<string[]>([]);
   const [videoOptions, setVideoOptions] = useState<VideoOption[]>([]);
   const [learningCourses, setLearningCourses] = useState<
     Array<{ id: number; title: string; category: string; stages?: string[] }>
   >([]);
+  const [isRefreshingData, setIsRefreshingData] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -423,10 +424,39 @@ export function AdminLearning({
     }
   };
 
-  const [isRefreshingData, setIsRefreshingData] = useState(false);
+  const lastCountsRef = React.useRef<{
+    pendingReceipts: number | null;
+    pendingStudents: number | null;
+    pendingRecovery: number | null;
+  }>({
+    pendingReceipts: null,
+    pendingStudents: null,
+    pendingRecovery: null,
+  });
 
-  const load = async () => {
-    setIsRefreshingData(true);
+  const playAdminNotificationChime = () => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.35);
+    } catch {
+      // Audio autoplay policy fallback
+    }
+  };
+
+  const load = async (silent = false) => {
+    if (!silent) setIsRefreshingData(true);
     try {
       const [s, f, q, a, v, c, analyticsData, recoveryData, receiptsData] = await Promise.all([
         adminApi<Student[]>("/api/admin/students"),
@@ -439,6 +469,41 @@ export function AdminLearning({
         adminApi<RecoveryRequest[]>("/api/admin/recovery-requests"),
         adminApi<PaymentReceipt[]>("/api/admin/payment-receipts").catch(() => []),
       ]);
+
+      const newPendingReceipts = receiptsData.filter((r) => r.status === "pending").length;
+      const newPendingStudents = s.filter((st) => st.status !== "approved" && st.status !== "suspended").length;
+      const newPendingRecovery = recoveryData.filter((r) => r.status === "pending" || r.status === "open").length;
+
+      if (lastCountsRef.current.pendingReceipts !== null) {
+        if (newPendingReceipts > lastCountsRef.current.pendingReceipts) {
+          playAdminNotificationChime();
+          toast({
+            title: "💳 إشعار جديد: إيصال تحويل مرفوع للمراجعة!",
+            description: "قام طالب برفع إيصال تحويل جديد ينتظر موافقتك وتأكيد التفعيل.",
+          });
+        }
+        if (newPendingStudents > lastCountsRef.current.pendingStudents!) {
+          playAdminNotificationChime();
+          toast({
+            title: "👤 إشعار جديد: طالب جديد ينتظر التفعيل!",
+            description: "قام طالب جديد بالتسجيل وينتظر مراجعة حسابه وتفعيله.",
+          });
+        }
+        if (newPendingRecovery > lastCountsRef.current.pendingRecovery!) {
+          playAdminNotificationChime();
+          toast({
+            title: "🔑 إشعار جديد: طلب استرجاع كود!",
+            description: "وصل طلب جديد لاسترجاع كود الدخول من أحد الطلاب.",
+          });
+        }
+      }
+
+      lastCountsRef.current = {
+        pendingReceipts: newPendingReceipts,
+        pendingStudents: newPendingStudents,
+        pendingRecovery: newPendingRecovery,
+      };
+
       setStudents(s);
       setPaymentReceipts(receiptsData);
       setFiles(f);
@@ -458,22 +523,27 @@ export function AdminLearning({
           ),
         ),
       );
-      toast({
-        variant: "success",
-        title: "تم تحديث البيانات",
-        description: "تم تحديث إحصائيات المنصة وقائمة الطلاب بنجاح. 🔄",
-      });
+      if (!silent) {
+        toast({
+          variant: "success",
+          title: "تم تحديث البيانات",
+          description: "تم تحديث إحصائيات المنصة وقائمة الطلاب بنجاح. 🔄",
+        });
+      }
     } catch (e) {
-      toast({
-        variant: "destructive",
-        title: "خطأ في التحديث",
-        description: (e as Error).message,
-      });
+      if (!silent) {
+        toast({
+          variant: "destructive",
+          title: "خطأ في التحديث",
+          description: (e as Error).message,
+        });
+      }
     } finally {
       setLoading(false);
-      setIsRefreshingData(false);
+      if (!silent) setIsRefreshingData(false);
     }
   };
+
   const resolveRecoveryRequest = async (id: number) => {
     try {
       await adminApi(`/api/admin/recovery-requests/${id}`, {
@@ -490,62 +560,17 @@ export function AdminLearning({
       toast({ variant: "destructive", title: "تعذر تحديث الطلب", description: (error as Error).message });
     }
   };
-  const sendBroadcast = async () => {
-    if (!broadcastForm.title.trim() || !broadcastForm.message.trim()) {
-      toast({ variant: "destructive", description: "اكتب العنوان والرسالة قبل الإرسال." });
-      return;
-    }
-    setIsBroadcasting(true);
-    try {
-      const result = await adminApi<{ success: boolean; count: number; message: string }>(
-        "/api/admin/notifications/broadcast",
-        {
-          method: "POST",
-          body: JSON.stringify(broadcastForm),
-        },
-      );
-      toast({ title: "تم الإرسال", description: result.message });
-      setBroadcastForm({ title: "", message: "", type: "info", targetGrade: "all" });
-    } catch (error) {
-      toast({ variant: "destructive", title: "فشل الإرسال", description: (error as Error).message });
-    } finally {
-      setIsBroadcasting(false);
-    }
-  };
+
   useEffect(() => {
-    void load();
-    let es: EventSource | null = null;
-    let retryTimeout: ReturnType<typeof setTimeout> | null = null;
+    void load(false);
 
-    const connect = () => {
-      es = new EventSource("/api/admin/students/stream", { withCredentials: true });
-
-      es.onmessage = (event) => {
-        try {
-          const { students: studentRows, recoveryRequests: recoveryRows } = JSON.parse(event.data) as {
-            students: Student[];
-            recoveryRequests: RecoveryRequest[];
-          };
-          setStudents(studentRows);
-          setRecoveryRequests(recoveryRows);
-        } catch {
-          // malformed frame — ignore
-        }
-      };
-
-      es.onerror = () => {
-        es?.close();
-        es = null;
-        // reconnect after 4 s (server retry hint is 2 s, give a bit more buffer)
-        retryTimeout = setTimeout(connect, 4000);
-      };
-    };
-
-    connect();
+    // Auto-poll every 6 seconds for real-time live notifications & instant count updates
+    const interval = setInterval(() => {
+      void load(true);
+    }, 6000);
 
     return () => {
-      if (retryTimeout) clearTimeout(retryTimeout);
-      es?.close();
+      clearInterval(interval);
     };
   }, []);
   const updateStudent = (id: number, status: string) => {
@@ -1215,7 +1240,7 @@ export function AdminLearning({
             type="button"
             variant="outline"
             disabled={isRefreshingData}
-            onClick={load}
+            onClick={() => void load(false)}
             className="h-10 px-4 rounded-xl border-[#E2E8F0] bg-white hover:bg-[#F6F8FC] text-[#0F172A] text-xs font-semibold transition-all disabled:opacity-75"
           >
             <RefreshCw className={`h-4 w-4 ml-1 text-[#64748B] ${isRefreshingData ? "animate-spin text-[#2563EB]" : ""}`} />
