@@ -1273,7 +1273,7 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
       .limit(1);
     const role = getAdminRole(req);
 
-    if (req.body.status === "approved" && current.status !== "approved") {
+    if (req.body.status === "approved" && current.status !== "approved" && role !== "admin") {
       const [approvedReceipt] = await db
         .select()
         .from(paymentReceiptsTable)

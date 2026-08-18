@@ -291,7 +291,8 @@ export function StudentDrawer({
                   onClick={() => onUpdateStatus?.(student.id, "approved")}
                   className="bg-[#10B981] hover:bg-[#059669] text-white font-semibold h-8 text-xs rounded-xl"
                 >
-                  <UserCheck className="h-3.5 w-3.5 ml-1.5" /> تفعيل وقبول الطالب
+                  <UserCheck className="h-3.5 w-3.5 ml-1.5" />
+                  {student.status === "suspended" ? "إعادة تفعيل حساب الطالب" : "تفعيل وقبول الطالب"}
                 </Button>
               ) : (
                 <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#ECFDF5] border border-[#A7F3D0] px-3 py-1 text-xs font-bold text-[#10B981]">
