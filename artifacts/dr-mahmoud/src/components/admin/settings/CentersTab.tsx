@@ -259,13 +259,14 @@ export const CentersTab: React.FC<CentersTabProps> = ({
                     </button>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div>
                       <label className="block text-[11px] font-bold text-muted-foreground mb-1">اسم السنتر</label>
                       <input
                         type="text"
                         value={editForm.name}
                         onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                        placeholder="مثال: سنتر زاج أكاديمي (Zag Academy)"
                         className="w-full h-9 rounded-xl border border-border bg-background px-3 text-xs font-bold text-foreground focus:border-primary focus:outline-none"
                       />
                     </div>
@@ -273,44 +274,106 @@ export const CentersTab: React.FC<CentersTabProps> = ({
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <label className="block text-[11px] font-bold text-muted-foreground mb-1">المنطقة / المكان</label>
-                        <input
-                          type="text"
-                          value={editForm.area}
-                          onChange={(e) => setEditForm({ ...editForm, area: e.target.value })}
-                          className="w-full h-9 rounded-xl border border-border bg-background px-3 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
-                        />
+                        <select
+                          value={["منطقة الفلل", "حي الزهور - الثانوية العسكرية", "منطقة الحناوي", "حي القومية"].includes(editForm.area) ? editForm.area : "custom"}
+                          onChange={(e) => {
+                            if (e.target.value === "custom") {
+                              setEditForm({ ...editForm, area: "" });
+                            } else {
+                              setEditForm({ ...editForm, area: e.target.value });
+                            }
+                          }}
+                          className="w-full h-9 rounded-xl border border-border bg-background px-2 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
+                        >
+                          <option value="منطقة الفلل">منطقة الفلل</option>
+                          <option value="حي الزهور - الثانوية العسكرية">حي الزهور - الثانوية العسكرية</option>
+                          <option value="منطقة الحناوي">منطقة الحناوي</option>
+                          <option value="حي القومية">حي القومية</option>
+                          <option value="custom">✍️ منطقة أخرى (يدوي)...</option>
+                        </select>
+                        {!["منطقة الفلل", "حي الزهور - الثانوية العسكرية", "منطقة الحناوي", "حي القومية"].includes(editForm.area) && (
+                          <input
+                            type="text"
+                            value={editForm.area}
+                            onChange={(e) => setEditForm({ ...editForm, area: e.target.value })}
+                            placeholder="اكتب اسم المنطقة..."
+                            className="w-full h-8 mt-1 rounded-lg border border-border bg-background px-2 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
+                          />
+                        )}
                       </div>
+
                       <div>
-                        <label className="block text-[11px] font-bold text-muted-foreground mb-1">المرحلة / الملاحظة</label>
-                        <input
-                          type="text"
-                          value={editForm.grade}
+                        <label className="block text-[11px] font-bold text-muted-foreground mb-1">المرحلة الدراسية</label>
+                        <select
+                          value={editForm.grade || "الكل"}
                           onChange={(e) => setEditForm({ ...editForm, grade: e.target.value })}
-                          className="w-full h-9 rounded-xl border border-border bg-background px-3 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
-                        />
+                          className="w-full h-9 rounded-xl border border-border bg-background px-2 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
+                        >
+                          <option value="تانية ثانوي">تانية ثانوي</option>
+                          <option value="أولى ثانوي">أولى ثانوي</option>
+                          <option value="الكل">الكل (جميع المراحل)</option>
+                        </select>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <label className="block text-[11px] font-bold text-muted-foreground mb-1">الأيام المحددة</label>
-                        <input
-                          type="text"
-                          value={editForm.daysStr}
-                          onChange={(e) => setEditForm({ ...editForm, daysStr: e.target.value })}
-                          placeholder="مثال: سبت - اتنين - أربع"
-                          className="w-full h-9 rounded-xl border border-border bg-background px-3 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
-                        />
+                        <select
+                          value={["سبت - اتنين - أربع", "حد - تلات - خميس", "حسب جدول المجموعات بالسنتر"].includes(editForm.daysStr) ? editForm.daysStr : "custom"}
+                          onChange={(e) => {
+                            if (e.target.value === "custom") {
+                              setEditForm({ ...editForm, daysStr: "" });
+                            } else {
+                              setEditForm({ ...editForm, daysStr: e.target.value });
+                            }
+                          }}
+                          className="w-full h-9 rounded-xl border border-border bg-background px-2 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
+                        >
+                          <option value="سبت - اتنين - أربع">سبت - اتنين - أربع</option>
+                          <option value="حد - تلات - خميس">حد - تلات - خميس</option>
+                          <option value="حسب جدول المجموعات بالسنتر">حسب جدول المجموعات بالسنتر</option>
+                          <option value="custom">✍️ أيام أخرى (يدوي)...</option>
+                        </select>
+                        {!["سبت - اتنين - أربع", "حد - تلات - خميس", "حسب جدول المجموعات بالسنتر"].includes(editForm.daysStr) && (
+                          <input
+                            type="text"
+                            value={editForm.daysStr}
+                            onChange={(e) => setEditForm({ ...editForm, daysStr: e.target.value })}
+                            placeholder="مثال: سبت - اتنين - أربع"
+                            className="w-full h-8 mt-1 rounded-lg border border-border bg-background px-2 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
+                          />
+                        )}
                       </div>
+
                       <div>
-                        <label className="block text-[11px] font-bold text-muted-foreground mb-1">وقت وتوقيت الحصة</label>
-                        <input
-                          type="text"
-                          value={editForm.timeStr}
-                          onChange={(e) => setEditForm({ ...editForm, timeStr: e.target.value })}
-                          placeholder="مثال: 5:00 مساءً"
-                          className="w-full h-9 rounded-xl border border-border bg-background px-3 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
-                        />
+                        <label className="block text-[11px] font-bold text-muted-foreground mb-1">وقت الحصة</label>
+                        <select
+                          value={["3:00 عصراً", "3:30 عصراً", "5:00 مساءً", "6:30 مساءً"].includes(editForm.timeStr) ? editForm.timeStr : "custom"}
+                          onChange={(e) => {
+                            if (e.target.value === "custom") {
+                              setEditForm({ ...editForm, timeStr: "" });
+                            } else {
+                              setEditForm({ ...editForm, timeStr: e.target.value });
+                            }
+                          }}
+                          className="w-full h-9 rounded-xl border border-border bg-background px-2 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
+                        >
+                          <option value="3:00 عصراً">3:00 عصراً</option>
+                          <option value="3:30 عصراً">3:30 عصراً</option>
+                          <option value="5:00 مساءً">5:00 مساءً</option>
+                          <option value="6:30 مساءً">6:30 مساءً</option>
+                          <option value="custom">✍️ توقيت آخر (يدوي)...</option>
+                        </select>
+                        {!["3:00 عصراً", "3:30 عصراً", "5:00 مساءً", "6:30 مساءً"].includes(editForm.timeStr) && (
+                          <input
+                            type="text"
+                            value={editForm.timeStr}
+                            onChange={(e) => setEditForm({ ...editForm, timeStr: e.target.value })}
+                            placeholder="مثال: 5:00 مساءً"
+                            className="w-full h-8 mt-1 rounded-lg border border-border bg-background px-2 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
+                          />
+                        )}
                       </div>
                     </div>
 
@@ -319,7 +382,7 @@ export const CentersTab: React.FC<CentersTabProps> = ({
                       onClick={handleSaveItem}
                       className="w-full h-9 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl mt-2 flex items-center justify-center gap-1.5"
                     >
-                      <Check className="h-4 w-4" /> حفظ تعديل هذا السنتر
+                      <Check className="h-4 w-4" /> حفظ وإضافة السنتر
                     </Button>
                   </div>
                 </div>

@@ -467,7 +467,7 @@ export function AdminLearning({
         adminApi<Array<{ id: number; title: string; category: string; stages?: string[] }>>("/api/courses"),
         adminApi<LearningAnalytics>("/api/admin/learning/analytics"),
         adminApi<RecoveryRequest[]>("/api/admin/recovery-requests"),
-        adminApi<PaymentReceipt[]>("/api/admin/payment-receipts").catch(() => []),
+        adminApi<PaymentReceipt[]>("/api/admin/payment-receipts").catch((): PaymentReceipt[] => []),
       ]);
 
       const newPendingReceipts = receiptsData.filter((r) => r.status === "pending").length;

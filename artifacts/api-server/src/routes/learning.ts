@@ -1234,6 +1234,35 @@ router.get("/admin/students", requireAdmin, async (_req, res, next) => {
   }
 });
 
+router.get("/admin/students/stream", requireAdmin, async (req, res, next) => {
+  try {
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache, no-transform");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no");
+    res.flushHeaders();
+    res.write("retry: 10000\n\n");
+
+    const sendUpdate = async () => {
+      try {
+        const students = await db
+          .select()
+          .from(studentsTable)
+          .orderBy(desc(studentsTable.createdAt));
+        res.write(`data: ${JSON.stringify(students)}\n\n`);
+      } catch {
+        res.write(": keep-alive\n\n");
+      }
+    };
+
+    await sendUpdate();
+    const interval = setInterval(sendUpdate, 10000);
+    req.on("close", () => clearInterval(interval));
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/admin/students/analytics (Detailed student activity & watch history report)
 router.get("/admin/students/analytics", requireAdmin, async (_req, res, next) => {
   try {
