@@ -779,7 +779,7 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
 
     // ── Multi-Device Locking & Binding Logic (Strict Maximum: 2 Devices) ──
     if (deviceId) {
-      const maxDevices = Math.min(2, Math.max(1, student.maxDevices || 1));
+      const maxDevices = Math.min(2, Math.max(1, student.maxDevices || 2));
       let boundDevices: string[] = Array.isArray(student.boundDevices) ? [...student.boundDevices] : [];
       if (boundDevices.length === 0 && student.deviceId) {
         boundDevices = [student.deviceId];
