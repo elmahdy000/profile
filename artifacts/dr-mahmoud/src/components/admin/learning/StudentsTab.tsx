@@ -871,32 +871,36 @@ export function StudentsTab({
 
                     {/* Device Lock */}
                     <td className="border-b border-[#E2E8F0] px-2.5 py-2">
-                      <span
-                        className={`inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[10px] font-semibold ${
-                          (s.maxDevices || 1) === 2
-                            ? "bg-purple-50 text-purple-700 border border-purple-200"
-                            : s.deviceId || (s.boundDevices && s.boundDevices.length > 0)
-                            ? "bg-amber-50 text-amber-700 border border-amber-200"
-                            : "bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0]"
-                        }`}
-                      >
-                        {(s.maxDevices || 1) === 2 ? (
-                          <>
-                            <Smartphone className="h-3.5 w-3.5" />
-                            <span>جهازين</span>
-                          </>
-                        ) : s.deviceId ? (
-                          <>
-                            <Smartphone className="h-3.5 w-3.5" />
-                            <span>جهاز واحد</span>
-                          </>
-                        ) : (
-                          <>
-                            <Unlock className="h-3.5 w-3.5" />
-                            <span>بدون ربط</span>
-                          </>
-                        )}
-                      </span>
+                      {(() => {
+                        const activeCount = Array.isArray(s.boundDevices) && s.boundDevices.length > 0
+                          ? s.boundDevices.length
+                          : (s.deviceId ? 1 : 0);
+                        const maxLimit = s.maxDevices || 2;
+                        return (
+                          <span
+                            className={`inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[10px] font-bold ${
+                              activeCount >= maxLimit
+                                ? "bg-purple-50 text-purple-700 border border-purple-200"
+                                : activeCount > 0
+                                ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                : "bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0]"
+                            }`}
+                            title={`الأجهزة المفتوحة والمربوطة حالياً: ${activeCount} من إجمالي المسموح ${maxLimit}`}
+                          >
+                            {activeCount > 0 ? (
+                              <>
+                                <Smartphone className="h-3.5 w-3.5" />
+                                <span>{activeCount} من {maxLimit} جهاز</span>
+                              </>
+                            ) : (
+                              <>
+                                <Unlock className="h-3.5 w-3.5 text-slate-400" />
+                                <span>0 من {maxLimit} جهاز</span>
+                              </>
+                            )}
+                          </span>
+                        );
+                      })()}
                     </td>
 
                     {/* Primary Action + 3-dots Dropdown Menu */}

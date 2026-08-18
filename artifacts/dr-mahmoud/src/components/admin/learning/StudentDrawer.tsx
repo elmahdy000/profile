@@ -554,18 +554,24 @@ export function StudentDrawer({
                     <p className="mt-1 text-[11px] text-[#64748B]">أهم الحالات والصلاحيات الحالية.</p>
                   </div>
                   <div className="overflow-hidden rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC]">
-                    {[
-                      ["حالة الاشتراك", currentStudent.paymentStatus === "paid" ? "مدفوع" : currentStudent.paymentStatus === "pending_review" ? "قيد المراجعة" : "مجاني"],
-                      ["الكورسات المخصصة", (currentStudent.enrolledCourseIds?.length ?? 0) === 0 ? "كل كورسات المرحلة" : `${currentStudent.enrolledCourseIds?.length} كورس`],
-                      ["عدد الأجهزة المسموح", `${currentStudent.maxDevices || 1} جهاز`],
-                      ["الهاتف", currentStudent.phone || "غير مسجل"],
-                      ["كود الوصول", currentStudent.accessCode || "غير متاح"],
-                    ].map(([label, value], index) => (
-                      <div key={label} className={`flex items-center justify-between gap-4 px-4 py-3.5 ${index ? "border-t border-[#E2E8F0]" : ""}`}>
-                        <span className="text-[11px] font-semibold text-[#64748B]">{label}</span>
-                        <strong className="max-w-[180px] truncate text-left text-xs text-[#0F172A]" title={value}>{value}</strong>
-                      </div>
-                    ))}
+                    {(() => {
+                      const activeDevicesCount = Array.isArray(currentStudent.boundDevices) && currentStudent.boundDevices.length > 0
+                        ? currentStudent.boundDevices.length
+                        : (currentStudent.deviceId ? 1 : 0);
+                      const maxAllowed = currentStudent.maxDevices || 2;
+                      return [
+                        ["حالة الاشتراك", currentStudent.paymentStatus === "paid" ? "مدفوع" : currentStudent.paymentStatus === "pending_review" ? "قيد المراجعة" : "مجاني"],
+                        ["الكورسات المخصصة", (currentStudent.enrolledCourseIds?.length ?? 0) === 0 ? "كل كورسات المرحلة" : `${currentStudent.enrolledCourseIds?.length} كورس`],
+                        ["الأجهزة النشطة / المسموحة", `${activeDevicesCount} من ${maxAllowed} جهاز`],
+                        ["الهاتف", currentStudent.phone || "غير مسجل"],
+                        ["كود الوصول", currentStudent.accessCode || "غير متاح"],
+                      ].map(([label, value], index) => (
+                        <div key={label} className={`flex items-center justify-between gap-4 px-4 py-3.5 ${index ? "border-t border-[#E2E8F0]" : ""}`}>
+                          <span className="text-[11px] font-semibold text-[#64748B]">{label}</span>
+                          <strong className="max-w-[180px] truncate text-left text-xs text-[#0F172A]" title={value}>{value}</strong>
+                        </div>
+                      ));
+                    })()}
                   </div>
                   <button type="button" onClick={() => setActiveTab("courses")} className="flex w-full items-center justify-between rounded-2xl border border-[#BFDBFE] bg-[#EFF6FF] p-4 text-right transition hover:bg-[#DBEAFE]">
                     <span><strong className="block text-xs text-[#2563EB]">إدارة كورسات الطالب</strong><small className="mt-1 block text-[10px] text-[#64748B]">عرض وتعديل صلاحيات الكورسات</small></span>

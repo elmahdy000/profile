@@ -220,9 +220,11 @@ export function AdminLearning({
     initialTab,
   );
 
+  const prevInitialTabRef = React.useRef(initialTab);
   useEffect(() => {
-    if (initialTab) {
+    if (initialTab && prevInitialTabRef.current !== initialTab) {
       setTab(initialTab);
+      prevInitialTabRef.current = initialTab;
     }
   }, [initialTab]);
   const [broadcastForm, setBroadcastForm] = useState({
