@@ -201,7 +201,7 @@ router.post("/upload/video/init", requireAdmin, (req, res) => {
 // 2. Query Upload Status (for Resuming)
 router.get("/upload/video/status/:uploadId", requireAdmin, (req, res) => {
   const { uploadId } = req.params;
-  const safeUploadId = path.basename(uploadId);
+  const safeUploadId = path.basename(String(uploadId || ""));
   const uploadTempDir = path.join(chunksBaseDir, safeUploadId);
 
   if (!fs.existsSync(uploadTempDir)) {
