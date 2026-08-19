@@ -66,8 +66,8 @@ export const defaultOfflineCenters: OfflineCenterItem[] = [
     name: "سنتر رافال أكاديمي (Rafal Academy)",
     area: "بجوار الثانوية العسكرية",
     grade: "تانية ثانوي",
-    timeStr: "3:00 عصراً",
-    daysStr: "حسب جدول المجموعات بالسنتر",
+    timeStr: "3:30 عصراً",
+    daysStr: "حد - تلات - خميس",
     color: "emerald",
   },
   {
