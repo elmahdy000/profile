@@ -90,11 +90,42 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
   const [selectedCenter, setSelectedCenter] = useState<string>("");
   const [selectedSlot, setSelectedSlot] = useState<string>("");
 
-  // Live centers fetched from settings (admin-editable via CentersTab)
+  // ── Real-time centers: 30s polling + instant SSE update on admin save ─────
   const [allCards, setAllCards] = useState<UnifiedCenterCard[]>(UNIFIED_CENTER_CARDS);
-  useEffect(() => {
-    fetchCentersFromSettings().then(setAllCards);
+  const [centersUpdated, setCentersUpdated] = useState(false);
+
+  const reloadCenters = React.useCallback(() => {
+    fetchCentersFromSettings().then((cards) => {
+      setAllCards(cards);
+      setCentersUpdated(true);
+      setTimeout(() => setCentersUpdated(false), 2000);
+    });
   }, []);
+
+  useEffect(() => {
+    // Initial load
+    reloadCenters();
+
+    // Polling fallback — refreshes every 30s regardless
+    const poll = setInterval(reloadCenters, 30_000);
+
+    // SSE — instant update the moment admin saves settings
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource("/api/settings/stream");
+      es.addEventListener("settings_changed", reloadCenters);
+      es.onerror = () => es?.close(); // close on error; polling handles recovery
+    } catch {
+      // EventSource not supported — polling covers it
+    }
+
+    return () => {
+      clearInterval(poll);
+      es?.close();
+    };
+  }, [reloadCenters]);
+  // ──────────────────────────────────────────────────────────────────────────
+
 
   // Success Confirmation Modal state
   const [bookingSuccessData, setBookingSuccessData] = useState<{
@@ -498,9 +529,16 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
                     <Building2 className="h-4.5 w-4.5 text-[#1677FF]" />
                     اختر كارت الموعد والسنتر المناسب لك <span className="text-rose-400">*</span>
                   </label>
-                  <span className="text-[11px] font-extrabold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20 self-start sm:self-auto">
-                    المرحلة: {grade} ({languageTrack})
-                  </span>
+                  <div className="flex items-center gap-2 self-start sm:self-auto">
+                    {centersUpdated && (
+                      <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded-lg border border-emerald-500/30 animate-pulse">
+                        🔄 تم التحديث
+                      </span>
+                    )}
+                    <span className="text-[11px] font-extrabold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20">
+                      المرحلة: {grade} ({languageTrack})
+                    </span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

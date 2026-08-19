@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Response } from "express";
 import { db, siteSettingsTable } from "@workspace/db";
 import { requireAdmin } from "../middleware/auth";
 import { eq } from "drizzle-orm";
@@ -6,6 +6,41 @@ import { eq } from "drizzle-orm";
 const router: IRouter = Router();
 
 const SENSITIVE_KEYS = new Set(["admin_password_hash", "subadmin_password_hash"]);
+
+// ── SSE broadcast system ──────────────────────────────────────────────────────
+// Keeps track of all active SSE clients listening to /api/settings/stream.
+const sseClients = new Set<Response>();
+
+function broadcastSettingsChanged() {
+  const data = `event: settings_changed\ndata: ${JSON.stringify({ ts: Date.now() })}\n\n`;
+  for (const client of sseClients) {
+    try { client.write(data); } catch { sseClients.delete(client); }
+  }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Public SSE stream — no auth required (only emits a change signal, no data)
+router.get("/settings/stream", (_req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.flushHeaders();
+  res.write("retry: 5000\n\n");
+  res.write(`event: connected\ndata: {}\n\n`);
+
+  sseClients.add(res);
+
+  // Keep-alive ping every 25 seconds to prevent proxy timeouts
+  const ping = setInterval(() => {
+    try { res.write(": keep-alive\n\n"); } catch { /* ignore */ }
+  }, 25_000);
+
+  _req.on("close", () => {
+    sseClients.delete(res);
+    clearInterval(ping);
+  });
+});
 
 // List all settings — public keys only (no password hashes)
 router.get("/settings", async (_req, res, next) => {
@@ -48,6 +83,7 @@ router.post("/settings", requireAdmin, async (req, res, next) => {
     }
 
     res.json(result);
+    broadcastSettingsChanged();
   } catch (error) {
     next(error);
   }
@@ -82,6 +118,7 @@ router.put("/settings/batch", requireAdmin, async (req, res, next) => {
     }
 
     res.json(results);
+    broadcastSettingsChanged();
   } catch (error) {
     next(error);
   }
