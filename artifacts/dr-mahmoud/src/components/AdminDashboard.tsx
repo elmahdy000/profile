@@ -1075,54 +1075,159 @@ export default function AdminDashboard() {
       remainingSeconds: 0,
     });
 
-    const formData = new FormData();
-    formData.append("video", file);
-
+    const CHUNK_SIZE = 5 * 1024 * 1024; // 5 MB per chunk
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    const resumeKey = `video_upload_${file.name}_${file.size}_${file.lastModified}`;
     const startTime = Date.now();
 
     try {
-      const data = await new Promise<{ url?: string }>((resolve, reject) => {
-        const request = new XMLHttpRequest();
-        request.open("POST", "/api/upload/video");
-        request.withCredentials = true;
-        request.timeout = 60 * 60 * 1000;
-        request.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const percent = Math.round((event.loaded / event.total) * 100);
-            setVideoUploadProgress(percent);
+      let uploadId = localStorage.getItem(resumeKey);
+      let uploadedChunkSet = new Set<number>();
 
-            const elapsedSec = (Date.now() - startTime) / 1000;
-            const speedBytesPerSec = elapsedSec > 0 ? event.loaded / elapsedSec : 0;
-            const speedMBps = Number((speedBytesPerSec / (1024 * 1024)).toFixed(2));
-            const remainingBytes = event.total - event.loaded;
-            const remainingSeconds = speedBytesPerSec > 0 ? Math.ceil(remainingBytes / speedBytesPerSec) : 0;
-
-            setVideoUploadStats({
-              loadedBytes: event.loaded,
-              totalBytes: event.total,
-              speedMBps,
-              remainingSeconds,
-            });
+      // 1. Try to resume existing session if available
+      if (uploadId) {
+        try {
+          const statusRes = await fetch(`/api/upload/video/status/${uploadId}`, {
+            credentials: "include",
+          });
+          if (statusRes.ok) {
+            const statusData = await statusRes.json();
+            if (Array.isArray(statusData.uploadedChunks)) {
+              uploadedChunkSet = new Set(statusData.uploadedChunks);
+            }
+          } else {
+            uploadId = null;
           }
-        };
-        request.onload = () => {
-          let response: { url?: string; error?: string } = {};
+        } catch {
+          uploadId = null;
+        }
+      }
+
+      // 2. Initialize new upload session if not resuming
+      if (!uploadId) {
+        const initRes = await fetch("/api/upload/video/init", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            filename: file.name,
+            fileSize: file.size,
+            totalChunks,
+          }),
+        });
+
+        if (!initRes.ok) {
+          throw new Error("تعذر بدء جلسة رفع الفيديو المقسم");
+        }
+
+        const initData = await initRes.json();
+        uploadId = initData.uploadId;
+        if (!uploadId) throw new Error("تعذر الحصول على معرّف رفع الفيديو");
+        localStorage.setItem(resumeKey, uploadId);
+      }
+
+      let totalUploadedBytes = Array.from(uploadedChunkSet).reduce((sum, chunkIdx) => {
+        const start = chunkIdx * CHUNK_SIZE;
+        const end = Math.min(start + CHUNK_SIZE, file.size);
+        return sum + (end - start);
+      }, 0);
+
+      // 3. Upload chunks sequentially with auto-retry
+      for (let i = 0; i < totalChunks; i++) {
+        if (uploadedChunkSet.has(i)) continue;
+
+        const start = i * CHUNK_SIZE;
+        const end = Math.min(start + CHUNK_SIZE, file.size);
+        const chunkBlob = file.slice(start, end);
+        const chunkSize = end - start;
+
+        let retries = 0;
+        let success = false;
+
+        while (retries < 5 && !success) {
           try {
-            response = JSON.parse(request.responseText || "{}");
-          } catch {
-            // Reverse proxies commonly return an HTML error page for 413/5xx.
+            await new Promise<void>((resolve, reject) => {
+              const formData = new FormData();
+              formData.append("uploadId", uploadId!);
+              formData.append("chunkIndex", String(i));
+              formData.append("chunk", chunkBlob, `chunk-${i}`);
+
+              const req = new XMLHttpRequest();
+              req.open("POST", "/api/upload/video/chunk");
+              req.withCredentials = true;
+              req.timeout = 5 * 60 * 1000;
+
+              req.upload.onprogress = (evt) => {
+                if (evt.lengthComputable) {
+                  const currentTotalLoaded = totalUploadedBytes + evt.loaded;
+                  const percent = Math.min(99, Math.round((currentTotalLoaded / file.size) * 100));
+                  setVideoUploadProgress(percent);
+
+                  const elapsedSec = (Date.now() - startTime) / 1000;
+                  const speedBytesPerSec = elapsedSec > 0 ? currentTotalLoaded / elapsedSec : 0;
+                  const speedMBps = Number((speedBytesPerSec / (1024 * 1024)).toFixed(2));
+                  const remainingBytes = file.size - currentTotalLoaded;
+                  const remainingSeconds = speedBytesPerSec > 0 ? Math.ceil(remainingBytes / speedBytesPerSec) : 0;
+
+                  setVideoUploadStats({
+                    loadedBytes: currentTotalLoaded,
+                    totalBytes: file.size,
+                    speedMBps,
+                    remainingSeconds,
+                  });
+                }
+              };
+
+              req.onload = () => {
+                if (req.status >= 200 && req.status < 300) resolve();
+                else reject(new Error(`Chunk ${i} upload failed (status ${req.status})`));
+              };
+              req.onerror = () => reject(new Error("انقطع الاتصال أثناء رفع جزء الفيديو"));
+              req.ontimeout = () => reject(new Error("انتهت مهلة جزء الفيديو"));
+
+              req.send(formData);
+            });
+
+            success = true;
+            totalUploadedBytes += chunkSize;
+            uploadedChunkSet.add(i);
+          } catch (err) {
+            retries++;
+            if (retries >= 5) {
+              throw err;
+            }
+            await new Promise((r) => setTimeout(r, 1500));
           }
-          if (request.status >= 200 && request.status < 300) resolve(response);
-          else if (request.status === 413)
-            reject(new Error("الفيديو أكبر من الحد المسموح على الخادم. اضغطه إلى MP4 (H.264) أو استخدم رابطًا خارجيًا."));
-          else reject(new Error(response.error || `تعذر رفع الفيديو (رمز ${request.status || "غير معروف"})`));
-        };
-        request.onerror = () => reject(new Error("انقطع الاتصال أثناء رفع الفيديو"));
-        request.ontimeout = () => reject(new Error("انتهت مهلة رفع الفيديو. تحقق من سرعة الاتصال ثم حاول مجددًا."));
-        request.send(formData);
+        }
+      }
+
+      // 4. Finish and assemble chunks
+      setVideoUploadProgress(99);
+      const finishRes = await fetch("/api/upload/video/finish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ uploadId }),
       });
-      if (data.url) {
-        const uploadedUrl = data.url;
+
+      if (!finishRes.ok) {
+        const errData = await finishRes.json().catch(() => ({}));
+        throw new Error(errData.error || "تعذر تجميع أجزاء الفيديو على الخادم");
+      }
+
+      const finishData = await finishRes.json();
+      localStorage.removeItem(resumeKey);
+
+      setVideoUploadProgress(100);
+      setVideoUploadStats({
+        loadedBytes: file.size,
+        totalBytes: file.size,
+        speedMBps: 0,
+        remainingSeconds: 0,
+      });
+
+      if (finishData.url) {
+        const uploadedUrl = finishData.url;
         setVideoForm((prev) => ({
           ...prev,
           youtubeUrl: uploadedUrl,
@@ -1130,10 +1235,10 @@ export default function AdminDashboard() {
         setSelectedVideoFile(null);
         toast({
           variant: "success",
-          title: "تم رفع الفيديو",
-          description: "راجع البيانات وبعدها اضغط حفظ الفيديو.",
+          title: "تم رفع الفيديو بنجاح 🎬",
+          description: "تمت معالجة وتجميع أجزاء الفيديو بنجاح. راجع البيانات واضغط حفظ الفيديو.",
         });
-        return String(data.url);
+        return String(uploadedUrl);
       }
       return null;
     } catch (err) {
