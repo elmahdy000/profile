@@ -232,7 +232,8 @@ export function CenterBookingsTab({
       }
 
       // Center Filter
-      if (centerFilter !== "all" && s.centerName !== centerFilter) return false;
+      if (centerFilter === "بدون سنتر محدد" && s.centerName?.trim()) return false;
+      if (centerFilter !== "all" && centerFilter !== "بدون سنتر محدد" && s.centerName !== centerFilter) return false;
 
       // Slot Filter
       if (slotFilter !== "all" && s.appointmentSlot !== slotFilter) return false;
@@ -259,6 +260,38 @@ export function CenterBookingsTab({
     const paidCount = centerStudents.filter((s) => s.paymentStatus === "paid").length;
     return { total, withSlot, withParentPhone, paidCount };
   }, [centerStudents]);
+
+  const centerCards = useMemo(() => {
+    const names = Array.from(new Set([
+      ...OFFICIAL_CENTERS.map((center) => center.name),
+      ...uniqueCenters,
+    ]));
+
+    const cards = names.map((name) => {
+      const studentsInCenter = centerStudents.filter((student) => student.centerName?.trim() === name);
+      const complete = studentsInCenter.filter((student) => Boolean(student.appointmentSlot?.trim())).length;
+      return {
+        name,
+        location: OFFICIAL_CENTERS.find((center) => center.name === name)?.location || "بيانات مضافة من الإدارة",
+        total: studentsInCenter.length,
+        complete,
+        incomplete: studentsInCenter.length - complete,
+      };
+    });
+
+    const withoutCenter = centerStudents.filter((student) => !student.centerName?.trim());
+    if (withoutCenter.length > 0) {
+      cards.push({
+        name: "بدون سنتر محدد",
+        location: "يحتاج إلى استكمال بيانات الحجز",
+        total: withoutCenter.length,
+        complete: withoutCenter.filter((student) => Boolean(student.appointmentSlot?.trim())).length,
+        incomplete: withoutCenter.length,
+      });
+    }
+
+    return cards;
+  }, [centerStudents, uniqueCenters]);
 
   // Select all checkbox
   const isAllSelected = filteredBookings.length > 0 && filteredBookings.every((s) => selectedIds.includes(s.id));
@@ -390,6 +423,69 @@ export function CenterBookingsTab({
         </div>
       </div>
 
+      {/* 2.5 Center KPI Cards */}
+      <section aria-labelledby="center-kpi-heading" className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 id="center-kpi-heading" className="text-base font-bold text-[#0F172A]">توزيع الطلاب حسب السنتر</h2>
+            <p className="mt-1 text-xs text-[#64748B]">اضغط على أي بطاقة لعرض طلاب السنتر فقط.</p>
+          </div>
+          {centerFilter !== "all" && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setCenterFilter("all")}
+              className="h-9 rounded-lg border-[#BFDBFE] bg-white px-3 text-xs font-semibold text-[#2563EB]"
+            >
+              <X className="h-3.5 w-3.5" /> إظهار كل السناتر
+            </Button>
+          )}
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {centerCards.map((card) => {
+            const isActive = centerFilter === card.name;
+            return (
+              <button
+                key={card.name}
+                type="button"
+                onClick={() => setCenterFilter(isActive ? "all" : card.name)}
+                aria-pressed={isActive}
+                className={`group text-right rounded-2xl border p-4 transition-all focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 ${
+                  isActive
+                    ? "border-[#2563EB] bg-[#EFF6FF] shadow-md"
+                    : "border-[#E2E8F0] bg-white hover:border-[#93C5FD] hover:shadow-sm"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${
+                    card.name === "بدون سنتر محدد"
+                      ? "border-amber-200 bg-amber-50 text-amber-600"
+                      : "border-blue-200 bg-blue-50 text-blue-600"
+                  }`}>
+                    {card.name === "بدون سنتر محدد" ? <AlertCircle className="h-5 w-5" /> : <Building2 className="h-5 w-5" />}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-sm font-bold text-[#0F172A]" title={card.name}>{card.name}</h3>
+                    <p className="mt-1 truncate text-[11px] text-[#64748B]" title={card.location}>{card.location}</p>
+                  </div>
+                </div>
+                <div className="mt-4 flex items-end justify-between gap-3">
+                  <div>
+                    <p className="text-3xl font-black leading-none text-[#0F172A]">{card.total}</p>
+                    <p className="mt-1 text-[11px] font-semibold text-[#64748B]">طالب مسجل</p>
+                  </div>
+                  <div className="space-y-1 text-left text-[11px] font-semibold">
+                    <p className="text-emerald-600"><CheckCircle2 className="ml-1 inline h-3.5 w-3.5" />{card.complete} مكتمل</p>
+                    <p className="text-amber-600"><AlertCircle className="ml-1 inline h-3.5 w-3.5" />{card.incomplete} ناقص</p>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
       {/* 3. Dedicated Filter Bar */}
       <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4 space-y-4 shadow-xs">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -427,6 +523,7 @@ export function CenterBookingsTab({
             {uniqueCenters.filter(c => !OFFICIAL_CENTERS.some(oc => oc.name === c)).map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
+            {centerStudents.some((s) => !s.centerName?.trim()) && <option value="بدون سنتر محدد">بدون سنتر محدد</option>}
           </select>
 
           {/* Slot Filter */}

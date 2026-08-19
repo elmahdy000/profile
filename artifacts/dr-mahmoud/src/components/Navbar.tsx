@@ -6,7 +6,6 @@ import {
   GraduationCap,
   Home,
   Layers3,
-  MapPin,
   Menu,
   MessageCircle,
   MessageSquareQuote,
@@ -24,7 +23,6 @@ type NavStudent = { name: string; status: string };
 const navLinks = [
   { label: "الرئيسية", href: "/#hero", id: "hero", icon: Home },
   { label: "برنامج البكالوريا", href: "/baccalaureate", id: "baccalaureate", icon: BookOpen },
-  { label: "حجز السناتر 📍", href: "/booking", id: "booking", icon: MapPin },
   { label: "مواد حاسبات ومعلومات", href: "/university", id: "university", icon: GraduationCap },
   { label: "الكورسات", href: "/#courses-section", id: "courses-section", icon: Layers3 },
   { label: "عن د. المهدي", href: "/#about", id: "about", icon: UserRound },

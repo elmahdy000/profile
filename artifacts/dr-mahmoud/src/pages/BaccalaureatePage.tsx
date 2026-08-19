@@ -23,7 +23,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { useCreateBooking } from "@workspace/api-client-react";
 import { useSiteSettings, SETTINGS_KEYS } from "@/hooks/useSiteSettings";
-import { CenterBookingForm } from "@/components/booking/CenterBookingForm";
 
 // Curriculum Modules Data
 const curriculumModules = [
@@ -552,10 +551,7 @@ export default function BaccalaureatePage() {
               {/* Hero CTAs */}
               <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                 <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-full px-8 h-12 shadow-lg shadow-primary/25 hover:scale-[1.02] transition-all">
-                  <a href="#booking-form">
-                    <MessageCircle className="w-5 h-5 ml-2" />
-                    ابدأ جلسة تقييم وتوجيه مجانية
-                  </a>
+                  <a href="#curriculum">استكشف البرنامج</a>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="border-border bg-card/50 hover:bg-card text-foreground rounded-full px-8 h-12">
                   <a href="#curriculum">استكشف المنهج كاملاً</a>
@@ -1107,13 +1103,6 @@ export default function BaccalaureatePage() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Dynamic Registration & Center Booking Section */}
-      <section id="booking-form" className="py-16 relative overflow-hidden">
-        <div className="container mx-auto px-4 lg:px-8 relative z-10 max-w-4xl">
-          <CenterBookingForm />
         </div>
       </section>
 

@@ -276,22 +276,6 @@ export function AcademyHome() {
               
               {/* Right Content Column */}
               <div className="lg:col-span-7 space-y-5 text-right">
-                {/* Booking Open Announcement Banner */}
-                <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/15 p-3.5 text-right text-xs sm:text-sm font-black text-emerald-700 dark:text-emerald-300 shadow-md flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white font-black text-xs shadow-sm">
-                      <Sparkles className="h-4 w-4" />
-                    </span>
-                    <span><strong>تم فتح باب حجز السناتر رسمياً الآن</strong> (أولى وتانية بكالوريا 2026 - الزقازيق)</span>
-                  </div>
-                  <a
-                    href="/booking"
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white hover:bg-emerald-700 transition-all shrink-0 shadow-sm"
-                  >
-                    احجز مكانك بالسنتر الآن
-                  </a>
-                </div>
-
                 <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-xs font-bold text-blue-700 border border-blue-100 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-400/35">
                   <GraduationCap className="h-4 w-4 text-blue-600" />
                   برامج البكالوريا المصرية وحاسبات ومعلومات • أونلاين لكل مصر
@@ -319,17 +303,6 @@ export function AcademyHome() {
                     <a href="/university" className="flex items-center justify-center gap-2">
                       <GraduationCap className="h-4 w-4" />
                       <span>حاسبات ومعلومات</span>
-                      <ArrowLeft className="mr-1 h-4 w-4" />
-                    </a>
-                  </Button>
-                </div>
-
-                {/* Prominent Offline Center Booking CTA Button */}
-                <div className="pt-1">
-                  <Button asChild size="lg" className="h-12 w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm shadow-lg shadow-emerald-600/20 border border-emerald-500/30 justify-center">
-                    <a href="/booking" className="flex items-center justify-center gap-2">
-                      <MapPin className="h-5 w-5 text-emerald-200 animate-pulse" />
-                      <span>📍 حجز سناتر الزقازيق (أوفلاين)</span>
                       <ArrowLeft className="mr-1 h-4 w-4" />
                     </a>
                   </Button>
