@@ -141,18 +141,16 @@ export function StudentDrawer({
     action: () => {},
   });
 
-  const prevStudentIdRef = useRef<number | null>(null);
+  const prevStudentIdRef = useRef<number | null>(student?.id ?? null);
 
   useEffect(() => {
     setLocalStudent(student);
-    if (student) {
-      if (student.id !== prevStudentIdRef.current) {
+    if (student?.id) {
+      if (prevStudentIdRef.current !== null && prevStudentIdRef.current !== student.id) {
         setActiveTab("overview");
         setShowMoreActions(false);
-        prevStudentIdRef.current = student.id;
       }
-    } else {
-      prevStudentIdRef.current = null;
+      prevStudentIdRef.current = student.id;
     }
   }, [student]);
 
@@ -661,17 +659,18 @@ export function StudentDrawer({
 
                   <div className="grid grid-cols-1 gap-2 pt-2 sm:grid-cols-2 xl:grid-cols-3">
                     {learningCourses.map((c) => {
-                      const isSelected = (student.enrolledCourseIds ?? []).includes(c.id);
+                      const isSelected = (currentStudent.enrolledCourseIds ?? []).includes(c.id);
                       return (
                         <button
                           key={c.id}
                           type="button"
                           onClick={() => {
-                            const current = student.enrolledCourseIds ?? [];
+                            const current = currentStudent.enrolledCourseIds ?? [];
                             const updated = isSelected
                               ? current.filter((id) => id !== c.id)
                               : [...current, c.id];
-                            onUpdateStudentCourses?.(student, updated);
+                            setLocalStudent((prev) => prev ? { ...prev, enrolledCourseIds: updated } : prev);
+                            onUpdateStudentCourses?.(currentStudent, updated);
                           }}
                           className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold border transition-all ${
                             isSelected

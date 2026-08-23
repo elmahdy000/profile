@@ -599,33 +599,26 @@ export function AdminLearning({
       },
     });
   };
-  const updateStudentCourses = (
+  const updateStudentCourses = async (
     student: Student,
     enrolledCourseIds: number[],
   ) => {
-    confirmAction({
-      title: "تعديل مواد وكورسات الطالب 📚",
-      message: `هل أنت متأكد من تعديل المواد والكورسات المسجلة للطالب (${student.name})؟`,
-      confirmText: "حفظ التغييرات",
-      onConfirm: async () => {
-        try {
-          const enrolledCategories = learningCourses
-            .filter((course) => enrolledCourseIds.includes(course.id))
-            .map((course) => course.title);
-          const updated = await adminApi<Student>(
-            `/api/admin/students/${student.id}`,
-            {
-              method: "PATCH",
-              body: JSON.stringify({ enrolledCourseIds, enrolledCategories }),
-            },
-          );
-          setStudents(prev => prev.map((s) => (s.id === student.id ? updated : s)));
-          toast({ title: "تم تحديث كورسات الطالب" });
-        } catch (e) {
-          toast({ variant: "destructive", description: (e as Error).message });
-        }
-      },
-    });
+    try {
+      const enrolledCategories = learningCourses
+        .filter((course) => enrolledCourseIds.includes(course.id))
+        .map((course) => course.title);
+      const updated = await adminApi<Student>(
+        `/api/admin/students/${student.id}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ enrolledCourseIds, enrolledCategories }),
+        },
+      );
+      setStudents((prev) => prev.map((s) => (s.id === student.id ? updated : s)));
+      toast({ title: "تم تحديث كورسات الطالب" });
+    } catch (e) {
+      toast({ variant: "destructive", description: (e as Error).message });
+    }
   };
   const updateStudentMode = (
     student: Student,
