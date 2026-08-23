@@ -1,5 +1,5 @@
 import React from "react";
-import { X, Download } from "lucide-react";
+import { X, Download, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ACADEMIC_TRACKS, getTrack } from "@/data/academic";
 
@@ -241,16 +241,18 @@ export const FileModal: React.FC<FileModalProps> = ({
               </button>
             </div>
             <iframe
-              src={`/api/learning/files/${previewFile.id}/download`}
+              src={`/api/learning/files/${previewFile.id}/preview`}
               title={`معاينة ${previewFile.title}`}
               className="h-[70vh] w-full rounded-xl border bg-slate-50"
             />
             <a
-              href={`/api/learning/files/${previewFile.id}/download`}
-              className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-primary"
+              href={`/api/learning/files/${previewFile.id}/preview`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline"
             >
-              <Download className="h-4 w-4" />
-              تحميل الملف
+              <Eye className="h-4 w-4" />
+              معاينة الملف (للعرض فقط)
             </a>
           </div>
         </div>

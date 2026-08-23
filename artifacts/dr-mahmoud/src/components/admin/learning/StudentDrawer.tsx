@@ -912,12 +912,13 @@ export function StudentDrawer({
                             </p>
                           </div>
                           <a
-                            href={`/api/files/${file.id}/download`}
+                            href={`/api/learning/files/${file.id}/preview`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-xs font-semibold text-[#0F172A] transition hover:bg-[#EFF6FF] hover:border-[#BFDBFE] hover:text-[#2563EB]"
                           >
-                            <span>تحميل</span>
+                            <Eye className="h-3.5 w-3.5 text-[#2563EB]" />
+                            <span>معاينة للعرض فقط</span>
                           </a>
                         </div>
                       );
