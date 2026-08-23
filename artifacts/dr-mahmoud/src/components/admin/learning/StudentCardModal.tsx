@@ -174,17 +174,21 @@ export function StudentCardModal({ students, isOpen, onClose }: StudentCardModal
           `}</style>
 
           <div className="print-cards-area grid grid-cols-1 md:grid-cols-2 gap-6">
-            {students.map((st) => {
+            {(Array.isArray(students) ? students.filter(Boolean) : []).map((st, index) => {
+              if (!st) return null;
+              const studentId = st.id || index;
+              const studentName = st.name || "طالب";
+              const studentPhone = st.phone || "—";
               const rawSchool = st.schoolName || st.school_name || "";
               const resolvedSchool = (rawSchool && rawSchool !== "arabic" && rawSchool !== "languages") ? rawSchool : "مدارس الزقازيق";
               const resolvedCenter = st.centerName || st.center_name || "حضور أونلاين / السنتر";
               const resolvedSlot = st.appointmentSlot || st.appointment_slot || "موعد المجموعة المتاح";
-              const resolvedParentPhone = st.parentPhone || st.parent_phone || st.phone;
+              const resolvedParentPhone = st.parentPhone || st.parent_phone || studentPhone;
               const resolvedTrack = st.languageTrack || st.language_track || (st.academicTrack === "languages" ? "لغات (إنجليزي)" : "عربي (عام)");
 
               return (
                 <div
-                  key={st.id}
+                  key={studentId}
                   className="print-card-item relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-5 shadow-md transition-all text-right"
                 >
                   {/* Decorative Background Elements */}
@@ -213,13 +217,13 @@ export function StudentCardModal({ students, isOpen, onClose }: StudentCardModal
                     <div className="space-y-2 text-xs">
                       <div>
                         <span className="text-[10px] font-bold text-slate-500 block">اسم الطالب</span>
-                        <h3 className="text-sm font-extrabold text-slate-900 truncate">{st.name}</h3>
+                        <h3 className="text-sm font-extrabold text-slate-900 truncate">{studentName}</h3>
                       </div>
 
                       <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
                         <div className="rounded-xl bg-slate-50 border border-slate-200/60 p-2">
                           <span className="text-[9px] text-slate-500 block">كود الطالب الخاص</span>
-                          <span className="font-mono font-bold text-blue-600 dir-ltr block text-right">{st.accessCode || `STD-${st.id}`}</span>
+                          <span className="font-mono font-bold text-blue-600 dir-ltr block text-right">{st.accessCode || (st as any).access_code || `STD-${studentId}`}</span>
                         </div>
                         <div className="rounded-xl bg-indigo-50/60 border border-indigo-100 p-2">
                           <span className="text-[9px] text-indigo-700/80 block font-medium">المرحلة والمسار</span>
@@ -239,7 +243,7 @@ export function StudentCardModal({ students, isOpen, onClose }: StudentCardModal
                       </div>
 
                       <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1">
-                        <span>📱 تليفون الطالب: <strong className="dir-ltr text-slate-800">{st.phone}</strong></span>
+                        <span>📱 تليفون الطالب: <strong className="dir-ltr text-slate-800">{studentPhone}</strong></span>
                         <span>👨‍👩‍👦 ولي الأمر: <strong className="dir-ltr text-slate-800">{resolvedParentPhone}</strong></span>
                       </div>
                     </div>
@@ -247,10 +251,10 @@ export function StudentCardModal({ students, isOpen, onClose }: StudentCardModal
                     {/* Right: QR Code */}
                     <div className="flex flex-col items-center justify-center space-y-1.5 border-r border-slate-100 pr-3">
                       <div className="rounded-2xl border-2 border-slate-900/10 p-1.5 bg-white shadow-xs">
-                        <QRCodeSVG value={st.accessCode || `STD-${st.id}-${st.phone}`} size={120} />
+                        <QRCodeSVG value={st.accessCode || (st as any).access_code || `STD-${studentId}-${studentPhone}`} size={120} />
                       </div>
                       <span className="text-[9px] font-mono font-bold text-slate-400 tracking-wider">
-                        {st.accessCode || `ID:${st.id}`}
+                        {st.accessCode || (st as any).access_code || `ID:${studentId}`}
                       </span>
                     </div>
                   </div>
