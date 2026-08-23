@@ -141,25 +141,23 @@ export function StudentDrawer({
     action: () => {},
   });
 
-  const prevIsOpenRef = useRef(isOpen);
-  const prevStudentIdRef = useRef<number | null>(student?.id ?? null);
+  const prevStudentIdRef = useRef<number | null>(null);
 
+  // 1. Sync local student state on prop updates without touching activeTab
   useEffect(() => {
     setLocalStudent(student);
+  }, [student]);
 
-    const isJustOpened = isOpen && !prevIsOpenRef.current;
-    const isDifferentStudent = Boolean(student?.id && prevStudentIdRef.current !== null && prevStudentIdRef.current !== student.id);
-
-    if (isJustOpened || isDifferentStudent) {
-      setActiveTab("overview");
-      setShowMoreActions(false);
-    }
-
+  // 2. Reset activeTab ONLY when switching to a different student ID
+  useEffect(() => {
     if (student?.id) {
+      if (prevStudentIdRef.current !== null && prevStudentIdRef.current !== student.id) {
+        setActiveTab("overview");
+        setShowMoreActions(false);
+      }
       prevStudentIdRef.current = student.id;
     }
-    prevIsOpenRef.current = isOpen;
-  }, [student, isOpen]);
+  }, [student?.id]);
 
   if (!isOpen || !student) return null;
 
