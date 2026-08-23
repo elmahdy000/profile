@@ -51,7 +51,7 @@ function HomeHonorWallSection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/baccalaureate/honor-wall")
+    fetch("/api/baccalaureate/honor-wall", {})
       .then((res) => res.json())
       .then((data) => {
         if (data.students) setStudents(data.students);

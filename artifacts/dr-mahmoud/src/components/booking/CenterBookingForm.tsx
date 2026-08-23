@@ -55,7 +55,7 @@ function offlineCenterToCards(items: OfflineCenterItem[]): UnifiedCenterCard[] {
 
 async function fetchCentersFromSettings(): Promise<UnifiedCenterCard[]> {
   try {
-    const res = await fetch("/api/settings");
+    const res = await fetch("/api/settings", {});
     if (!res.ok) return offlineCenterToCards(defaultOfflineCenters);
     const data = await res.json();
     const raw = data?.["offline_centers_list"]?.value;

@@ -10,7 +10,7 @@ export type SiteSettingsMap = Record<string, SiteSettingValue>;
 
 async function fetchSettings(): Promise<SiteSettingsMap> {
   try {
-    const res = await fetch("/api/settings");
+    const res = await fetch("/api/settings", {});
     if (!res.ok) return {};
     const data = await res.json();
     if (!data || typeof data !== "object" || Array.isArray(data)) return {};
