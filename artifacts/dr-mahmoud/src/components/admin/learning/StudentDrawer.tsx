@@ -141,6 +141,68 @@ export function StudentDrawer({
     action: () => {},
   });
 
+  // Live Analytics & Files data
+  const [studentAnalytics, setStudentAnalytics] = useState<{
+    watchDetails: Array<{
+      videoId: number;
+      videoTitle: string;
+      category: string;
+      stage: string;
+      progress: number;
+      currentTimeSeconds: number;
+      durationSeconds: number;
+      completed: boolean;
+      updatedAt: string;
+    }>;
+    quizDetails: Array<{
+      id: number;
+      quizId: number;
+      score: number;
+      passed: boolean;
+      timeSpentSeconds: number;
+      createdAt: string;
+    }>;
+  } | null>(null);
+
+  const [availableFiles, setAvailableFiles] = useState<Array<{
+    id: number;
+    title: string;
+    description: string | null;
+    category: string;
+    stage: string | null;
+    originalName: string;
+    sizeBytes: number;
+    createdAt: string;
+  }>>([]);
+
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen || !student?.id) return;
+    setIsLoadingDetails(true);
+
+    Promise.all([
+      fetch("/api/admin/students/analytics", {}).then((r) => (r.ok ? r.json() : [])),
+      fetch("/api/admin/learning/files", {}).then((r) => (r.ok ? r.json() : [])),
+    ])
+      .then(([analyticsList, filesList]) => {
+        if (Array.isArray(analyticsList)) {
+          const found = analyticsList.find((a: any) => a.id === student.id);
+          if (found) {
+            setStudentAnalytics({
+              watchDetails: found.watchDetails || [],
+              quizDetails: found.quizDetails || [],
+            });
+          }
+        }
+        if (Array.isArray(filesList)) {
+          setAvailableFiles(filesList);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingDetails(false));
+  }, [isOpen, student?.id]);
+
   const prevStudentIdRef = useRef<number | null>(null);
 
   // 1. Sync local student state on prop updates without touching activeTab
@@ -696,20 +758,172 @@ export function StudentDrawer({
             )}
 
             {activeTab === "attendance" && (
-              <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 text-center text-xs text-[#64748B]">
-                متابعة الدروس المشاهدة ونسبة الحضور الأسبوعي متاحة للطالب عبر منصة المتابعة الحية.
+              <div className="space-y-4">
+                <div className="flex items-center justify-between rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+                  <div>
+                    <h4 className="text-xs font-bold text-[#0F172A]">سجل مشاهدة الدروس والحضور</h4>
+                    <p className="text-[11px] text-[#64748B]">إجمالي الدروس والدروس المكتملة ومشاهدات الطالب الأخيرة</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-xl border border-[#BFDBFE] bg-[#EFF6FF] px-3 py-1 text-xs font-semibold text-[#2563EB]">
+                      {studentAnalytics?.watchDetails?.length ?? 0} درس مطلع عليه
+                    </span>
+                    <span className="rounded-xl border border-[#A7F3D0] bg-[#ECFDF5] px-3 py-1 text-xs font-semibold text-[#10B981]">
+                      {studentAnalytics?.watchDetails?.filter((w) => w.completed).length ?? 0} مكتمل
+                    </span>
+                  </div>
+                </div>
+
+                {isLoadingDetails ? (
+                  <div className="flex items-center justify-center py-10 text-xs font-semibold text-[#64748B]">
+                    <Loader2 className="h-5 w-5 animate-spin text-[#2563EB] ml-2" />
+                    جاري تحميل سجل حضور ومشاهدات الطالب...
+                  </div>
+                ) : (studentAnalytics?.watchDetails?.length ?? 0) === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-8 text-center space-y-2">
+                    <BookOpen className="mx-auto h-8 w-8 text-[#94A3B8]" />
+                    <p className="text-xs font-bold text-[#475569]">لا توجد سجلات مشاهدة دروس حتى الآن</p>
+                    <p className="text-[11px] text-[#64748B]">سيظهر هنا تلقائياً أي درس يشاهده الطالب أو يكتمل حضوره فيه.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {studentAnalytics?.watchDetails.map((w, idx) => (
+                      <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between rounded-xl border border-[#E2E8F0] bg-white p-3.5 gap-3 hover:border-[#BFDBFE] transition">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`h-2 w-2 rounded-full ${w.completed ? "bg-[#10B981]" : "bg-[#F59E0B]"}`} />
+                            <h5 className="text-xs font-bold text-[#0F172A]">{w.videoTitle}</h5>
+                          </div>
+                          <div className="flex items-center gap-3 text-[11px] text-[#64748B]">
+                            <span className="rounded bg-[#F1F5F9] px-2 py-0.5 font-medium">{w.stage || w.category || "المنهج"}</span>
+                            <span>آخر مشاهدة: {w.updatedAt ? new Date(w.updatedAt).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "مؤخراً"}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 self-end sm:self-center">
+                          <div className="w-28 space-y-1 text-left dir-ltr">
+                            <div className="flex justify-between text-[10px] font-semibold text-[#64748B]">
+                              <span>{Math.round(w.progress || 0)}%</span>
+                              <span>{w.completed ? "مكتمل" : "جاري"}</span>
+                            </div>
+                            <div className="h-1.5 w-full rounded-full bg-[#E2E8F0] overflow-hidden">
+                              <div className={`h-full rounded-full ${w.completed ? "bg-[#10B981]" : "bg-[#2563EB]"}`} style={{ width: `${Math.min(100, Math.max(0, w.progress || 0))}%` }} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
             {activeTab === "quizzes" && (
-              <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 text-center text-xs text-[#64748B]">
-                نتائج ومحاولات الاختبارات التقييمية المسجلة باسم الطالب.
+              <div className="space-y-4">
+                <div className="flex items-center justify-between rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+                  <div>
+                    <h4 className="text-xs font-bold text-[#0F172A]">نتائج واختبارات الطالب التقييمية</h4>
+                    <p className="text-[11px] text-[#64748B]">محاولات الاختبارات والدرجات التي أحرزها الطالب في المنصة</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-xl border border-[#BFDBFE] bg-[#EFF6FF] px-3 py-1 text-xs font-semibold text-[#2563EB]">
+                      {studentAnalytics?.quizDetails?.length ?? 0} محاولة
+                    </span>
+                    <span className="rounded-xl border border-[#A7F3D0] bg-[#ECFDF5] px-3 py-1 text-xs font-semibold text-[#10B981]">
+                      {studentAnalytics?.quizDetails?.filter((q) => q.passed).length ?? 0} ناجح
+                    </span>
+                  </div>
+                </div>
+
+                {isLoadingDetails ? (
+                  <div className="flex items-center justify-center py-10 text-xs font-semibold text-[#64748B]">
+                    <Loader2 className="h-5 w-5 animate-spin text-[#2563EB] ml-2" />
+                    جاري تحميل نتائج اختبارات الطالب...
+                  </div>
+                ) : (studentAnalytics?.quizDetails?.length ?? 0) === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-8 text-center space-y-2">
+                    <Award className="mx-auto h-8 w-8 text-[#94A3B8]" />
+                    <p className="text-xs font-bold text-[#475569]">لا توجد محاولات اختبارات مسجلة حتى الآن</p>
+                    <p className="text-[11px] text-[#64748B]">ستظهر هنا تلقائياً نتائج ودرجات جميع الاختبارات والتمارين المكتملة.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {studentAnalytics?.quizDetails.map((q, idx) => (
+                      <div key={idx} className="flex items-center justify-between rounded-xl border border-[#E2E8F0] bg-white p-3.5 hover:border-[#BFDBFE] transition">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${q.passed ? "bg-[#ECFDF5] text-[#10B981] border border-[#A7F3D0]" : "bg-red-50 text-red-600 border border-red-200"}`}>
+                              {q.passed ? "تم الاجتياز 🟢" : "لم يجتز 🔴"}
+                            </span>
+                            <h5 className="text-xs font-bold text-[#0F172A]">اختبار تقييمي #{q.quizId}</h5>
+                          </div>
+                          <p className="text-[11px] text-[#64748B]">
+                            التاريخ: {q.createdAt ? new Date(q.createdAt).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "مؤخراً"}
+                            {q.timeSpentSeconds ? ` • المستغرق: ${Math.round(q.timeSpentSeconds / 60)} دقيقة` : ""}
+                          </p>
+                        </div>
+                        <div className="text-left dir-ltr">
+                          <span className={`text-base font-extrabold ${q.passed ? "text-[#10B981]" : "text-red-600"}`}>
+                            {q.score}%
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
             {activeTab === "files" && (
-              <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 text-center text-xs text-[#64748B]">
-                المذكرات والملفات المحملة بواسطة الطالب.
+              <div className="space-y-4">
+                <div className="flex items-center justify-between rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+                  <div>
+                    <h4 className="text-xs font-bold text-[#0F172A]">المذكرات والملفات المتاحة للطالب</h4>
+                    <p className="text-[11px] text-[#64748B]">الملفات التعليمية والشروحات المحملة في مرحلة الطالب</p>
+                  </div>
+                  <span className="rounded-xl border border-[#BFDBFE] bg-[#EFF6FF] px-3 py-1 text-xs font-semibold text-[#2563EB]">
+                    {availableFiles.length} ملف ومذكرة
+                  </span>
+                </div>
+
+                {isLoadingDetails ? (
+                  <div className="flex items-center justify-center py-10 text-xs font-semibold text-[#64748B]">
+                    <Loader2 className="h-5 w-5 animate-spin text-[#2563EB] ml-2" />
+                    جاري تحميل المذكرات والملفات...
+                  </div>
+                ) : availableFiles.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-8 text-center space-y-2">
+                    <FileText className="mx-auto h-8 w-8 text-[#94A3B8]" />
+                    <p className="text-xs font-bold text-[#475569]">لا توجد مذكرات أو ملفات مرفوعة حالياً</p>
+                    <p className="text-[11px] text-[#64748B]">عند رفع مذكرات جديدة من لوحة الإدارة ستظهر هنا فوراً.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {availableFiles.map((file) => {
+                      const fileMb = (file.sizeBytes / (1024 * 1024)).toFixed(1);
+                      return (
+                        <div key={file.id} className="flex items-center justify-between rounded-xl border border-[#E2E8F0] bg-white p-3.5 hover:border-[#BFDBFE] transition">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <FileText className="h-4 w-4 text-[#2563EB]" />
+                              <h5 className="text-xs font-bold text-[#0F172A]">{file.title}</h5>
+                            </div>
+                            <p className="text-[11px] text-[#64748B]">
+                              {file.category} • {fileMb} MB • {file.stage || "عام"}
+                            </p>
+                          </div>
+                          <a
+                            href={`/api/files/${file.id}/download`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-xs font-semibold text-[#0F172A] transition hover:bg-[#EFF6FF] hover:border-[#BFDBFE] hover:text-[#2563EB]"
+                          >
+                            <span>تحميل</span>
+                          </a>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
