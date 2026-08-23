@@ -27,6 +27,7 @@ import {
   parentSessionsTable,
   bookingsTable,
   siteSettingsTable,
+  monthlySubscriptionsTable,
   type QuizQuestion,
 } from "@workspace/db";
 import { getAdminIdentity, getAdminRole, isAdminRequest, requireAdmin, requireSuperAdmin } from "../middleware/auth";
@@ -706,6 +707,7 @@ router.post(
           accessCode,
           approvedAt: new Date(),
           paymentStatus: "unpaid",
+          subscriptionStatus: "active",
           ...(await getAutomaticCourseAssignments({
             grade,
             otherGradeDetail,
@@ -732,8 +734,8 @@ router.post(
         isNewStudent: true,
         accessCode: student.accessCode,
         message: educationSystem === "university"
-          ? "تم إنشاء حسابك بنجاح! احفظ كود الدخول وادخل فوراً لمشاهدة فيديو مجاني واحد من كل مادة. ارفع الإيصال لفتح باقي المحتوى."
-          : "تم إنشاء حسابك بنجاح! احفظ كود الدخول وادخل فوراً لمعاينة أول فيديوهين من كل مادة مجاناً. ارفع الإيصال لفتح باقي المحتوى بعد موافقة الإدارة.",
+          ? "تم إنشاء حسابك بنجاح! احفظ كود الدخول وادخل فوراً لمشاهدة أول فيديو مجاني من كل مادة. ارفع الإيصال لفتح باقي المحتوى."
+          : "تم إنشاء حسابك بنجاح! احفظ كود الدخول وادخل فوراً لمشاهدة أول فيديو مجاني من كل مادة. ارفع الإيصال لفتح باقي المحتوى بعد موافقة الإدارة.",
       });
     } catch (error) {
       next(error);
@@ -1137,19 +1139,46 @@ router.patch("/admin/payment-receipts/:id", requireAdmin, async (req, res, next)
               paymentStatus: "paid",
               accessCode: code,
               approvedAt: student.approvedAt || new Date(),
+              subscriptionStatus: "active",
               updatedAt: new Date(),
             })
             .where(eq(studentsTable.id, receipt.studentId));
 
           // A verified payment confirms any matching pending booking.
           await confirmPendingBookingsForPhone(student.phone);
+
+          // Create first monthly subscription after payment approval
+          const subscriptionStartDate = new Date();
+          const subscriptionEndDate = new Date(subscriptionStartDate);
+          subscriptionEndDate.setDate(subscriptionEndDate.getDate() + 29);
+
+          const [subscription] = await db
+            .insert(monthlySubscriptionsTable)
+            .values({
+              studentId: receipt.studentId,
+              monthStartDate: subscriptionStartDate,
+              monthEndDate: subscriptionEndDate,
+              amountDue: 500,
+              paymentStatus: "paid",
+              paymentDate: new Date(),
+              receiptId: receipt.id,
+            })
+            .returning();
+
+          await db
+            .update(studentsTable)
+            .set({
+              currentSubscriptionId: subscription.id,
+              subscriptionStartDate: subscriptionStartDate,
+            })
+            .where(eq(studentsTable.id, receipt.studentId));
         }
 
         await db.insert(studentNotificationsTable).values({
           studentId: receipt.studentId,
           type: "success",
           title: "تم تأكيد الدفع وتفعيل الحساب",
-          message: "تم تأكيد إيصال الدفع وتفعيل حسابك بنجاح. تقدر دلوقتي تشوف كل الدروس والمحتوى.",
+          message: "تم تأكيد إيصال الدفع وتفعيل حسابك بنجاح. تقدر دلوقتي تشوف كل الدروس والمحتوى. اشتراكك الشهري ينتهي بعد 29 يوم.",
         });
       }
     } else {
@@ -3603,6 +3632,375 @@ router.get(
         totalOffline,
         centerCounts: statsMap,
       });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// ═══════════════════════════════════════════════════════════════════
+// Monthly Subscriptions Management
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * GET /admin/subscriptions
+ * Get all monthly subscriptions with filtering
+ */
+router.get(
+  "/admin/subscriptions",
+  requireAdmin,
+  async (req, res, next) => {
+    try {
+      const { status, expiringSoon } = req.query;
+
+      let conditions = [];
+
+      if (status && status !== "all") {
+        conditions.push(eq(monthlySubscriptionsTable.paymentStatus, status as string));
+      }
+
+      const subscriptions = await db
+        .select({
+          subscription: monthlySubscriptionsTable,
+          student: {
+            id: studentsTable.id,
+            name: studentsTable.name,
+            phone: studentsTable.phone,
+            email: studentsTable.email,
+            grade: studentsTable.grade,
+            subscriptionStatus: studentsTable.subscriptionStatus,
+          },
+        })
+        .from(monthlySubscriptionsTable)
+        .leftJoin(studentsTable, eq(monthlySubscriptionsTable.studentId, studentsTable.id))
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(monthlySubscriptionsTable.monthEndDate));
+
+      let result = subscriptions;
+
+      // Filter expiring soon (within 3 days)
+      if (expiringSoon === "true") {
+        const now = new Date();
+        const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+        result = subscriptions.filter((s) => {
+          const endDate = new Date(s.subscription.monthEndDate);
+          return endDate <= threeDaysFromNow && endDate >= now && s.subscription.paymentStatus === "pending";
+        });
+      }
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * GET /admin/subscriptions/expiring
+ * Get subscriptions expiring within 3 days
+ */
+router.get(
+  "/admin/subscriptions/expiring",
+  requireAdmin,
+  async (_req, res, next) => {
+    try {
+      const now = new Date();
+      const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+      const expiring = await db
+        .select({
+          subscription: monthlySubscriptionsTable,
+          student: {
+            id: studentsTable.id,
+            name: studentsTable.name,
+            phone: studentsTable.phone,
+            email: studentsTable.email,
+          },
+        })
+        .from(monthlySubscriptionsTable)
+        .leftJoin(studentsTable, eq(monthlySubscriptionsTable.studentId, studentsTable.id))
+        .where(
+          and(
+            eq(monthlySubscriptionsTable.paymentStatus, "pending"),
+            sql`${monthlySubscriptionsTable.monthEndDate} >= ${now}`,
+            sql`${monthlySubscriptionsTable.monthEndDate} <= ${threeDaysFromNow}`
+          )
+        )
+        .orderBy(monthlySubscriptionsTable.monthEndDate);
+
+      res.json(expiring);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /admin/subscriptions/:id/mark-paid
+ * Mark subscription as paid and create next subscription automatically
+ */
+router.post(
+  "/admin/subscriptions/:id/mark-paid",
+  requireAdmin,
+  async (req, res, next) => {
+    try {
+      const subscriptionId = parseInt(String(req.params.id));
+      const { adminNotes } = req.body;
+
+      const [subscription] = await db
+        .select()
+        .from(monthlySubscriptionsTable)
+        .where(eq(monthlySubscriptionsTable.id, subscriptionId));
+
+      if (!subscription) {
+        res.status(404).json({ error: "الاشتراك غير موجود" });
+        return;
+      }
+
+      // Update current subscription to paid
+      await db
+        .update(monthlySubscriptionsTable)
+        .set({
+          paymentStatus: "paid",
+          paymentDate: new Date(),
+          adminNotes,
+          updatedAt: new Date(),
+        })
+        .where(eq(monthlySubscriptionsTable.id, subscriptionId));
+
+      // Create next subscription (29 days from end of current)
+      const nextStartDate = new Date(subscription.monthEndDate);
+      nextStartDate.setDate(nextStartDate.getDate() + 1); // Start day after current ends
+      const nextEndDate = new Date(nextStartDate);
+      nextEndDate.setDate(nextEndDate.getDate() + 29);
+
+      const [newSubscription] = await db
+        .insert(monthlySubscriptionsTable)
+        .values({
+          studentId: subscription.studentId,
+          monthStartDate: nextStartDate,
+          monthEndDate: nextEndDate,
+          amountDue: 500,
+          paymentStatus: "pending",
+        })
+        .returning();
+
+      // Update student's current subscription reference
+      await db
+        .update(studentsTable)
+        .set({
+          currentSubscriptionId: newSubscription.id,
+          subscriptionStatus: "active",
+          updatedAt: new Date(),
+        })
+        .where(eq(studentsTable.id, subscription.studentId));
+
+      // Send notification
+      const daysUntilExpiry = Math.ceil((nextEndDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+      await db.insert(studentNotificationsTable).values({
+        studentId: subscription.studentId,
+        title: "تم تأكيد الدفع 💚",
+        message: `تم تأكيد دفع اشتراك الشهر بنجاح. اشتراكك الحالي ينتهي بعد ${daysUntilExpiry} يوم (${nextEndDate.toLocaleDateString("ar-EG")})`,
+        type: "success",
+      });
+
+      // Log admin action
+      await logAudit(
+        req,
+        "CONFIRM_SUBSCRIPTION_PAYMENT",
+        "subscription",
+        subscriptionId.toString(),
+        `تأكيد دفع الاشتراك للطالب ${subscription.studentId}`
+      );
+
+      res.json({
+        success: true,
+        subscription,
+        nextSubscription: newSubscription,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /admin/subscriptions/:id/mark-overdue
+ * Mark subscription as overdue and suspend student
+ */
+router.post(
+  "/admin/subscriptions/:id/mark-overdue",
+  requireAdmin,
+  async (req, res, next) => {
+    try {
+      const subscriptionId = parseInt(String(req.params.id));
+      const { adminNotes } = req.body;
+
+      const [subscription] = await db
+        .select()
+        .from(monthlySubscriptionsTable)
+        .where(eq(monthlySubscriptionsTable.id, subscriptionId));
+
+      if (!subscription) {
+        res.status(404).json({ error: "الاشتراك غير موجود" });
+        return;
+      }
+
+      // Update subscription to overdue
+      await db
+        .update(monthlySubscriptionsTable)
+        .set({
+          paymentStatus: "overdue",
+          adminNotes,
+          updatedAt: new Date(),
+        })
+        .where(eq(monthlySubscriptionsTable.id, subscriptionId));
+
+      // Suspend student account
+      await db
+        .update(studentsTable)
+        .set({
+          subscriptionStatus: "suspended",
+          updatedAt: new Date(),
+        })
+        .where(eq(studentsTable.id, subscription.studentId));
+
+      // Send notification
+      await db.insert(studentNotificationsTable).values({
+        studentId: subscription.studentId,
+        title: "انتهى اشتراكك ⚠️",
+        message: "اشتراكك الشهري انتهى ولم يتم تجديده. يرجى الدفع لإعادة تفعيل حسابك والوصول إلى المحتوى التعليمي.",
+        type: "warning",
+      });
+
+      // Log admin action
+      await logAudit(
+        req,
+        "MARK_SUBSCRIPTION_OVERDUE",
+        "subscription",
+        subscriptionId.toString(),
+        `وضع علامة متأخر على اشتراك الطالب ${subscription.studentId}`
+      );
+
+      res.json({ success: true });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /admin/subscriptions/notify-expiring
+ * Send notifications to students with expiring subscriptions
+ */
+router.post(
+  "/admin/subscriptions/notify-expiring",
+  requireAdmin,
+  async (_req, res, next) => {
+    try {
+      const now = new Date();
+      const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+      const expiring = await db
+        .select()
+        .from(monthlySubscriptionsTable)
+        .where(
+          and(
+            eq(monthlySubscriptionsTable.paymentStatus, "pending"),
+            sql`${monthlySubscriptionsTable.monthEndDate} >= ${now}`,
+            sql`${monthlySubscriptionsTable.monthEndDate} <= ${threeDaysFromNow}`
+          )
+        );
+
+      let notifiedCount = 0;
+
+      for (const sub of expiring) {
+        const daysLeft = Math.ceil((new Date(sub.monthEndDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+        await db.insert(studentNotificationsTable).values({
+          studentId: sub.studentId,
+          title: "تنبيه انتهاء الاشتراك ⏰",
+          message: `اشتراكك الشهري ينتهي خلال ${daysLeft} يوم (${new Date(sub.monthEndDate).toLocaleDateString("ar-EG")}). يرجى تجديد اشتراكك لتجنب توقف الخدمة.`,
+          type: "warning",
+        });
+
+        await db
+          .update(monthlySubscriptionsTable)
+          .set({ notifiedAt: new Date() })
+          .where(eq(monthlySubscriptionsTable.id, sub.id));
+
+        notifiedCount++;
+      }
+
+      res.json({
+        success: true,
+        notifiedCount,
+        message: `تم إرسال ${notifiedCount} إشعار للطلاب`,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * POST /admin/students/:id/create-subscription
+ * Manually create a subscription for a student (used after first payment approval)
+ */
+router.post(
+  "/admin/students/:id/create-subscription",
+  requireAdmin,
+  async (req, res, next) => {
+    try {
+      const studentId = parseInt(String(req.params.id));
+
+      const [student] = await db
+        .select()
+        .from(studentsTable)
+        .where(eq(studentsTable.id, studentId));
+
+      if (!student) {
+        res.status(404).json({ error: "الطالب غير موجود" });
+        return;
+      }
+
+      // Create first subscription (29 days from now)
+      const startDate = new Date();
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 29);
+
+      const [subscription] = await db
+        .insert(monthlySubscriptionsTable)
+        .values({
+          studentId,
+          monthStartDate: startDate,
+          monthEndDate: endDate,
+          amountDue: 500,
+          paymentStatus: "pending",
+        })
+        .returning();
+
+      // Update student
+      await db
+        .update(studentsTable)
+        .set({
+          currentSubscriptionId: subscription.id,
+          subscriptionStartDate: startDate,
+          subscriptionStatus: "active",
+          updatedAt: new Date(),
+        })
+        .where(eq(studentsTable.id, studentId));
+
+      // Send notification
+      await db.insert(studentNotificationsTable).values({
+        studentId,
+        title: "تم تفعيل اشتراكك 🎉",
+        message: `مرحباً بك! تم تفعيل اشتراكك بنجاح. اشتراكك ينتهي بعد 29 يوم (${endDate.toLocaleDateString("ar-EG")})`,
+        type: "success",
+      });
+
+      res.json({ success: true, subscription });
     } catch (error) {
       next(error);
     }

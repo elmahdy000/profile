@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, integer, boolean, jsonb, uniqueIndex, index } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, integer, boolean, jsonb, uniqueIndex, index, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { coursesTable } from "./courses";
 
 export const studentsTable = pgTable("students", {
@@ -29,6 +29,9 @@ export const studentsTable = pgTable("students", {
   paymentStatus: text("payment_status").notNull().default("unpaid"),  // unpaid | pending_review | paid
   subscriptionEndDate: timestamp("subscription_end_date"),  // null = no expiry set
   subscriptionNotifiedAt: timestamp("subscription_notified_at"),  // last time we notified about expiry
+  currentSubscriptionId: integer("current_subscription_id").references((): AnyPgColumn => monthlySubscriptionsTable.id, { onDelete: "set null" }),
+  subscriptionStartDate: timestamp("subscription_start_date"),
+  subscriptionStatus: text("subscription_status").default("active"),  // active | suspended | expired
   deviceId: text("device_id"), // Primary bound device token
   maxDevices: integer("max_devices").notNull().default(2), // Max allowed bound devices (default 2 devices per student)
   boundDevices: jsonb("bound_devices").$type<string[]>().notNull().default([]), // List of all approved bound device IDs
@@ -42,6 +45,7 @@ export const studentsTable = pgTable("students", {
   emailUnique: uniqueIndex("students_email_unique").on(table.email),
   accessCodeUnique: uniqueIndex("students_access_code_unique").on(table.accessCode),
   statusIndex: index("students_status_idx").on(table.status),
+  subscriptionStatusIndex: index("students_subscription_status_idx").on(table.subscriptionStatus),
 }));
 
 export const studentSessionsTable = pgTable("student_sessions", {
@@ -267,4 +271,27 @@ export const parentSessionsTable = pgTable("parent_sessions", {
   tokenUnique: uniqueIndex("parent_sessions_token_unique").on(table.tokenHash),
   parentIndex: index("parent_sessions_parent_idx").on(table.parentId),
 }));
+
+export const monthlySubscriptionsTable = pgTable("monthly_subscriptions", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => studentsTable.id, { onDelete: "cascade" }),
+  monthStartDate: timestamp("month_start_date").notNull(),
+  monthEndDate: timestamp("month_end_date").notNull(),
+  amountDue: integer("amount_due").notNull().default(500),
+  paymentStatus: text("payment_status").notNull().default("pending"),
+  paymentDate: timestamp("payment_date"),
+  receiptId: integer("receipt_id").references(() => paymentReceiptsTable.id, { onDelete: "set null" }),
+  adminNotes: text("admin_notes"),
+  notifiedAt: timestamp("notified_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  studentIndex: index("monthly_subscriptions_student_idx").on(table.studentId),
+  paymentStatusIndex: index("monthly_subscriptions_payment_status_idx").on(table.paymentStatus),
+  monthEndDateIndex: index("monthly_subscriptions_month_end_date_idx").on(table.monthEndDate),
+  studentMonthUnique: uniqueIndex("monthly_subscriptions_student_month_unique").on(table.studentId, table.monthStartDate),
+}));
+
+export type InsertMonthlySubscription = typeof monthlySubscriptionsTable.$inferInsert;
+export type MonthlySubscription = typeof monthlySubscriptionsTable.$inferSelect;
 

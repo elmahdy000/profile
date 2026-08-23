@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import type { Student } from "@/types/platform";
 import { PageHeader, StudentAvatar, ProfileInfoRow, StatusBadge } from "../StudentDashboardUI";
+import { StudentCardModal } from "../../admin/learning/StudentCardModal";
 
 async function cropAvatar(file: File): Promise<Blob> {
   const image = await createImageBitmap(file);
@@ -66,6 +67,7 @@ export function ProfileTab({
   };
 
   const isCenterStudent = student.learningMode === "offline" || Boolean(student.centerName) || Boolean(student.appointmentSlot);
+  const [isCardModalOpen, setIsCardModalOpen] = useState(false);
 
   return (
     <div className="space-y-5 pb-6 text-right" dir="rtl">
@@ -86,6 +88,9 @@ export function ProfileTab({
               <Button type="button" variant="outline" size="sm" disabled={avatarLoading} onClick={() => inputRef.current?.click()}>
                 <Camera className="h-4 w-4" /> {avatarLoading ? "جاري الحفظ..." : "تغيير الصورة"}
               </Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => setIsCardModalOpen(true)} className="border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 font-bold">
+                🎫 بطاقتي بالـ QR Code
+              </Button>
               {student.avatarUrl && (
                 <Button type="button" variant="ghost" size="sm" disabled={avatarLoading} onClick={() => void removeAvatar()} className="text-muted-foreground hover:text-red-600">
                   <Trash2 className="h-4 w-4" /> حذف
@@ -99,9 +104,14 @@ export function ProfileTab({
       {/* Center Booking Banner (for offline/center students) */}
       {isCenterStudent && (
         <article className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/40 via-emerald-900/10 to-transparent p-5 shadow-sm space-y-3">
-          <div className="flex items-center gap-2 text-emerald-400 font-extrabold text-sm">
-            <MapPin className="h-5 w-5 shrink-0" />
-            <span>📍 بيانات حجز السنتر والمواعيد الحضورية بالزقازيق</span>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-emerald-400 font-extrabold text-sm">
+              <MapPin className="h-5 w-5 shrink-0" />
+              <span>📍 بيانات حجز السنتر والمواعيد الحضورية بالزقازيق</span>
+            </div>
+            <Button type="button" size="sm" onClick={() => setIsCardModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-8 rounded-xl gap-1.5 px-3">
+              🎫 استخراج كارت السنتر (QR)
+            </Button>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 text-xs">
             <div className="rounded-xl border border-emerald-500/20 bg-background/60 p-3 space-y-1">
@@ -148,6 +158,12 @@ export function ProfileTab({
           </dl>
         </article>
       </div>
+
+      <StudentCardModal
+        students={[student as any]}
+        isOpen={isCardModalOpen}
+        onClose={() => setIsCardModalOpen(false)}
+      />
     </div>
   );
 }

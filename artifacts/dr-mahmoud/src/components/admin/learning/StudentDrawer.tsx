@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   X,
   UserCheck,
@@ -34,22 +34,23 @@ import { useToast } from "@/hooks/use-toast";
 import type { Student as PlatformStudent } from "@/types/platform";
 import type { PaymentReceipt } from "./PaymentReceiptsPanel";
 import { AdminConfirmDialog } from "../dashboard/AdminConfirmDialog";
+import { defaultOfflineCenters } from "../settings/CentersTab";
+import { StudentCardModal } from "./StudentCardModal";
 
-const OFFICIAL_CENTERS = [
-  { name: "سنتر إديوفيرس أكاديمي (EduVerse) - لغات", location: "منطقة الفلل - الزقازيق" },
-  { name: "سنتر رافال أكاديمي (Rafal Academy) - عربي", location: "بجوار الثانوية العسكرية - الزقازيق" },
-  { name: "سنتر زاج أكاديمي (Zag Academy) - عربي", location: "منطقة الفلل - الزقازيق" },
-  { name: "سنتر حسن صميدة - عربي", location: "منطقة الحناوي - الزقازيق" },
-];
+const centerMap = new Map<string, { name: string; location: string }>();
+defaultOfflineCenters.forEach((c) => {
+  if (!centerMap.has(c.name)) {
+    centerMap.set(c.name, {
+      name: c.name,
+      location: c.area ? `${c.area} - الزقازيق` : "منطقة الفلل - الزقازيق",
+    });
+  }
+});
+export const OFFICIAL_CENTERS = Array.from(centerMap.values());
 
-const OFFICIAL_SLOTS = [
-  "سبت - اتنين - أربع (الساعة 9:00 صباحاً)",
-  "سبت - اتنين - أربع (الساعة 3:00 عصراً)",
-  "سبت - اتنين - أربع (الساعة 9:00 مساءً - أونلاين)",
-  "حد - تلات - خميس (الساعة 3:00 – 4:30 عصراً)",
-  "سبت - اتنين - أربع (الساعة 5:00 مساءً)",
-  "حد - تلات - خميس (الساعة 6:00 مساءً)",
-];
+export const OFFICIAL_SLOTS = Array.from(
+  new Set(defaultOfflineCenters.map((c) => `${c.daysStr} (الساعة ${c.timeStr})`))
+);
 
 export type ExtendedStudent = PlatformStudent & {
   accessCode?: string | null;
@@ -111,6 +112,7 @@ export function StudentDrawer({
   const [copied, setCopied] = useState(false);
   const [showMoreActions, setShowMoreActions] = useState(false);
   const [localStudent, setLocalStudent] = useState<ExtendedStudent | null>(student);
+  const [isCardModalOpen, setIsCardModalOpen] = useState(false);
 
   // Edit center booking modal state
   const [isEditingBooking, setIsEditingBooking] = useState(false);
@@ -139,11 +141,18 @@ export function StudentDrawer({
     action: () => {},
   });
 
+  const prevStudentIdRef = useRef<number | null>(null);
+
   useEffect(() => {
     setLocalStudent(student);
     if (student) {
-      setActiveTab("overview");
-      setShowMoreActions(false);
+      if (student.id !== prevStudentIdRef.current) {
+        setActiveTab("overview");
+        setShowMoreActions(false);
+        prevStudentIdRef.current = student.id;
+      }
+    } else {
+      prevStudentIdRef.current = null;
     }
   }, [student]);
 
@@ -162,12 +171,12 @@ export function StudentDrawer({
 
   const handleOpenEditBooking = () => {
     setEditFormData({
-      centerName: resolvedCenterName || OFFICIAL_CENTERS[0].name,
-      appointmentSlot: resolvedAppointmentSlot || OFFICIAL_SLOTS[0],
+      centerName: resolvedCenterName || "",
+      appointmentSlot: resolvedAppointmentSlot || "",
       schoolName: resolvedSchoolName,
       parentPhone: resolvedParentPhone,
       languageTrack: resolvedLanguageTrack,
-      learningMode: currentStudent.learningMode === "offline" || resolvedCenterName ? "offline" : "online",
+      learningMode: currentStudent.learningMode || (resolvedCenterName ? "offline" : "online"),
     });
     setIsEditingBooking(true);
   };
@@ -300,6 +309,15 @@ export function StudentDrawer({
                   <Check className="h-3.5 w-3.5" /> حساب نشط ومعتمد
                 </span>
               )}
+
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setIsCardModalOpen(true)}
+                className="border-blue-200 bg-blue-50 text-xs font-semibold text-blue-700 hover:bg-blue-100 h-8 rounded-xl"
+              >
+                🎫 بطاقة الطالب (QR Code)
+              </Button>
 
               <Button
                 size="sm"
@@ -781,6 +799,11 @@ export function StudentDrawer({
                       {c.name} ({c.location})
                     </option>
                   ))}
+                  {editFormData.centerName && !OFFICIAL_CENTERS.some((c) => c.name === editFormData.centerName) && (
+                    <option value={editFormData.centerName}>
+                      {editFormData.centerName} (السنتر المخصص الحالي)
+                    </option>
+                  )}
                 </select>
               </div>
 
@@ -798,6 +821,11 @@ export function StudentDrawer({
                       {slot}
                     </option>
                   ))}
+                  {editFormData.appointmentSlot && !OFFICIAL_SLOTS.includes(editFormData.appointmentSlot) && (
+                    <option value={editFormData.appointmentSlot}>
+                      {editFormData.appointmentSlot} (الموعد الحالي)
+                    </option>
+                  )}
                 </select>
               </div>
 
@@ -871,6 +899,13 @@ export function StudentDrawer({
           </div>
         </div>
       )}
+
+      {/* Printable Student Card Modal */}
+      <StudentCardModal
+        students={currentStudent ? [currentStudent] : []}
+        isOpen={isCardModalOpen}
+        onClose={() => setIsCardModalOpen(false)}
+      />
     </>
   );
 }

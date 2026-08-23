@@ -10,6 +10,7 @@ import videosRouter from "./videos";
 import learningRouter from "./learning";
 import adminAuthRouter from "./admin-auth";
 import parentPortalRouter from "./parent-portal";
+import subscriptionsRouter from "./subscriptions";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(videosRouter);
 router.use(learningRouter);
 router.use(adminAuthRouter);
 router.use(parentPortalRouter);
+router.use(subscriptionsRouter);
 
 export default router;

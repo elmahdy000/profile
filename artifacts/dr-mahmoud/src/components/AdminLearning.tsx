@@ -42,6 +42,7 @@ import { StudentsTab } from "./admin/learning/StudentsTab";
 import { CenterBookingsTab } from "./admin/learning/CenterBookingsTab";
 import { PaymentsTab } from "./admin/learning/PaymentsTab";
 import { NotificationsTab } from "./admin/learning/NotificationsTab";
+import { SubscriptionsTab } from "./admin/SubscriptionsTab";
 import { OverviewSection } from "./admin/learning/OverviewSection";
 
 type Student = PlatformStudent & {
@@ -1189,24 +1190,24 @@ export function AdminLearning({
     ["overview", "اللوحة التشغيلية", LayoutDashboard],
     ["center-bookings", "حجوزات السناتر", MapPin],
     ["students", "الطلاب", GraduationCap],
-    ["payments", "إيصالات الدفع", CreditCard],
+    ["subscriptions", "الاشتراكات الشهرية", CreditCard],
+    ["payments", "إيصالات الدفع", FileCheck2],
     ["files", "الملفات", Folder],
     ["quizzes", "الاختبارات", ClipboardCheck],
-    ["results", "النتائج", Check],
     ["notifications", "إرسال إشعار", Bell],
     ["reports", "التقارير", BarChart3],
   ] as const;
-  const tabMeta = {
+  const tabMeta: Record<string, [string, string]> = {
     overview: ["اللوحة التشغيلية وإحصائيات المنصة", "نظرة عامة على أعداد الطلاب، المشتركين، والتوزيع حسب المراحل والكورسات."],
     students: ["إدارة جميع الطلاب", "راجع التسجيلات والصلاحيات والكورسات المخصصة لكل طالب."],
     "center-bookings": ["كشف وإدارة حجوزات السناتر", "جدول تفصيلي مخصص لمتابعة جميع الطلاب المسجلين بالسناتر والمواعيد الحضورية المحددة."],
+    subscriptions: ["متابعة الاشتراكات الشهرية", "راقب حالة الاشتراكات الشهرية للطلاب وتجديدها والمتأخرات."],
     payments: ["إيصالات الدفع", "راجع إيصالات الدفع من الطلاب ووافق أو ارفض."],
     notifications: ["إرسال إشعار للطلاب", "أرسل تنبيهًا أو إشعارًا عامًا لجميع الطلاب أو مرحلة دراسية محددة."],
     files: ["مكتبة الملفات التعليمية", "ارفع الملفات وحدد مكان ظهورها للطلاب أو داخل الدروس."],
     quizzes: ["بناء وإدارة الاختبارات", "أنشئ الاختبارات وحدد الجمهور والإعدادات والأسئلة ثم انشرها."],
-    results: ["نتائج الاختبارات", "تابع محاولات الطلاب ودرجات النجاح من مكان واحد."],
     reports: ["التقارير والمتابعة", "راقب نشاط الطلاب والتقدم ومؤشرات الأداء التعليمية."],
-  } as const;
+  };
   return (
     <div className="admin-learning-workspace space-y-6 text-[#0F172A]" dir="rtl">
       {/* 1. Page Header */}

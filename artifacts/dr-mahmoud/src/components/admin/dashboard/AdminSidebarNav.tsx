@@ -113,7 +113,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
         {
           id: "payments",
-          label: "إيصالات الدفع والاشتراكات",
+          label: "إيصالات الدفع",
           icon: FileCheck2,
           onClick: () => {
             setActiveTab("learning");
@@ -122,6 +122,13 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           active: activeTab === "learning" && learningSubTab === "payments",
           badge: pendingReceiptsCount > 0 ? pendingReceiptsCount : undefined,
           badgeColor: "bg-amber-500 text-slate-950 font-black",
+        },
+        {
+          id: "subscriptions",
+          label: "الاشتراكات الشهرية",
+          icon: Activity,
+          onClick: () => setActiveTab("subscriptions"),
+          active: activeTab === "subscriptions",
         },
         {
           id: "parents",
@@ -184,16 +191,6 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
             setLearningSubTab("quizzes");
           },
           active: activeTab === "learning" && learningSubTab === "quizzes",
-        },
-        {
-          id: "results",
-          label: "نتائج الطلاب والتقييمات",
-          icon: CheckCircle2,
-          onClick: () => {
-            setActiveTab("learning");
-            setLearningSubTab("results");
-          },
-          active: activeTab === "learning" && learningSubTab === "results",
         },
         {
           id: "files",

@@ -10,8 +10,6 @@ import { PricingTab } from "./admin/settings/PricingTab";
 import { TestimonialsTab } from "./admin/settings/TestimonialsTab";
 import { FaqTab } from "./admin/settings/FaqTab";
 import { PortfolioTab } from "./admin/settings/PortfolioTab";
-import { EduverseTab } from "./admin/settings/EduverseTab";
-import { WhyChooseMeTab } from "./admin/settings/WhyChooseMeTab";
 import { ContactSocialTab } from "./admin/settings/ContactSocialTab";
 import { AuditLogsTab } from "./admin/settings/AuditLogsTab";
 import { AdminAccountsTab } from "./admin/settings/AdminAccountsTab";
@@ -468,9 +466,16 @@ export function AdminSettings({ role = "superadmin" }: { role?: "superadmin" | "
     ];
 
     try {
-      await updateSettingsMutation.mutateAsync(payload);
+      const res: any = await updateSettingsMutation.mutateAsync(payload);
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 3000);
+      const summary = res?.notificationSummary;
+      if (summary && summary.notifiedCount > 0) {
+        toast({
+          title: "📢 تم إرسال الإشعارات للطلاب",
+          description: `تم إكتشاف تعديلات بالسناتر وإرسال إشعار تلقائي لـ ${summary.notifiedCount} طالب مسجل بالسنتر.`,
+        });
+      }
     } catch (err) {
       toast({ title: "خطأ", description: "حدث خطأ أثناء حفظ الإعدادات", variant: "destructive" });
     }
@@ -516,8 +521,6 @@ export function AdminSettings({ role = "superadmin" }: { role?: "superadmin" | "
     { id: "testimonials", label: "الآراء (Testimonials)" },
     { id: "faq", label: "الأسئلة الشائعة (FAQ)" },
     { id: "portfolio", label: "الأعمال (Portfolio)" },
-    { id: "eduverse", label: "إيدوفيرس (Eduverse)" },
-    { id: "why-choose-me", label: "ليه تختارني (Why Me)" },
     { id: "contact", label: "بيانات التواصل" },
     { id: "social", label: "مواقع التواصل" },
   ] as const;
@@ -666,24 +669,6 @@ export function AdminSettings({ role = "superadmin" }: { role?: "superadmin" | "
             handleFileUpload={handleFileUpload}
             isUploading={isUploading}
             setIsSaved={setIsSaved}
-          />
-        )}
-
-        {activeTab === "eduverse" && (
-          <EduverseTab
-            formData={formData}
-            handleChange={handleChange}
-            handleFileUpload={handleFileUpload}
-            isUploading={isUploading}
-          />
-        )}
-
-        {activeTab === "why-choose-me" && (
-          <WhyChooseMeTab
-            formData={formData}
-            handleChange={handleChange}
-            handleFileUpload={handleFileUpload}
-            isUploading={isUploading}
           />
         )}
 

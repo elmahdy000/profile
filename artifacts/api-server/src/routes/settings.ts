@@ -1,11 +1,108 @@
 import { Router, type IRouter, type Response } from "express";
-import { db, siteSettingsTable } from "@workspace/db";
+import { db, siteSettingsTable, studentsTable, studentNotificationsTable } from "@workspace/db";
 import { requireAdmin } from "../middleware/auth";
-import { eq } from "drizzle-orm";
+import { eq, or, sql } from "drizzle-orm";
 
 const router: IRouter = Router();
 
 const SENSITIVE_KEYS = new Set(["admin_password_hash", "subadmin_password_hash"]);
+
+interface CenterItem {
+  id?: string;
+  name: string;
+  daysStr?: string;
+  timeStr?: string;
+  grade?: string;
+  area?: string;
+}
+
+/**
+ * Detect changes in center name, days, or time, and notify all registered students automatically.
+ */
+async function processCenterChangeNotifications(oldJson?: string | null, newJson?: string | null) {
+  if (!newJson) return { notifiedCount: 0, changesCount: 0 };
+  try {
+    const oldCenters: CenterItem[] = oldJson ? JSON.parse(oldJson) : [];
+    const newCenters: CenterItem[] = JSON.parse(newJson);
+    if (!Array.isArray(newCenters)) return { notifiedCount: 0, changesCount: 0 };
+
+    let totalNotified = 0;
+    let changesCount = 0;
+
+    const oldMap = new Map<string, CenterItem>();
+    oldCenters.forEach((c, idx) => {
+      const key = c.id || `idx-${idx}`;
+      oldMap.set(key, c);
+      if (c.name) oldMap.set(c.name.trim(), c);
+    });
+
+    for (let i = 0; i < newCenters.length; i++) {
+      const newC = newCenters[i];
+      const key = newC.id || `idx-${i}`;
+      const oldC = oldMap.get(key) || (newC.name ? oldMap.get(newC.name.trim()) : undefined);
+
+      if (!oldC) continue; // New center added, no legacy registered students to notify yet
+
+      const nameChanged = oldC.name && newC.name && oldC.name.trim() !== newC.name.trim();
+      const daysChanged = oldC.daysStr && newC.daysStr && oldC.daysStr.trim() !== newC.daysStr.trim();
+      const timeChanged = oldC.timeStr && newC.timeStr && oldC.timeStr.trim() !== newC.timeStr.trim();
+
+      if (nameChanged || daysChanged || timeChanged) {
+        changesCount++;
+        const oldName = oldC.name.trim();
+        const newName = newC.name.trim();
+        const newSlot = `${newC.daysStr || ""} (الساعة ${newC.timeStr || ""})`.trim();
+
+        // Query students enrolled in this center (matching old or new center name)
+        const matchedStudents = await db
+          .select({ id: studentsTable.id, name: studentsTable.name, centerName: studentsTable.centerName })
+          .from(studentsTable)
+          .where(
+            or(
+              eq(studentsTable.centerName, oldName),
+              eq(studentsTable.centerName, newName),
+              sql`${studentsTable.centerName} LIKE ${`%${oldName}%`}`
+            )
+          );
+
+        for (const student of matchedStudents) {
+          // Update student record with new center name and appointment slot
+          await db
+            .update(studentsTable)
+            .set({
+              centerName: newName,
+              appointmentSlot: newSlot,
+              updatedAt: new Date(),
+            })
+            .where(eq(studentsTable.id, student.id));
+
+          let changeMsg = "";
+          if (nameChanged && (daysChanged || timeChanged)) {
+            changeMsg = `تم تعديل اسم السنتر إلى (${newName}) وتحديث المواعيد لتصبح: ${newC.daysStr || ""} الساعة ${newC.timeStr || ""}.`;
+          } else if (nameChanged) {
+            changeMsg = `تم تحديث اسم سنترك إلى (${newName}). المواعيد ثابتة كما هي.`;
+          } else {
+            changeMsg = `تنبيه هام! تم تحديث مواعيد سنتر (${newName}). المواعيد الجديدة هي: ${newC.daysStr || ""} الساعة ${newC.timeStr || ""}. يرجى الحضور في الموعد الجديد.`;
+          }
+
+          await db.insert(studentNotificationsTable).values({
+            studentId: student.id,
+            title: `تغيير في بيانات/مواعيد سنترك 📢`,
+            message: changeMsg,
+            type: "warning",
+          });
+
+          totalNotified++;
+        }
+      }
+    }
+
+    return { notifiedCount: totalNotified, changesCount };
+  } catch (err) {
+    console.error("Failed to process center change notifications:", err);
+    return { notifiedCount: 0, changesCount: 0 };
+  }
+}
 
 // ── SSE broadcast system ──────────────────────────────────────────────────────
 // Keeps track of all active SSE clients listening to /api/settings/stream.
@@ -72,11 +169,17 @@ router.post("/settings", requireAdmin, async (req, res, next) => {
     
     let result;
     if (existing.length > 0) {
+      if (key === "offline_centers_list") {
+        await processCenterChangeNotifications(existing[0].value, value);
+      }
       [result] = await db.update(siteSettingsTable)
         .set({ value, type: type || existing[0].type })
         .where(eq(siteSettingsTable.key, key))
         .returning();
     } else {
+      if (key === "offline_centers_list") {
+        await processCenterChangeNotifications(null, value);
+      }
       [result] = await db.insert(siteSettingsTable)
         .values({ key, value, type: type || "text" })
         .returning();
@@ -99,17 +202,25 @@ router.put("/settings/batch", requireAdmin, async (req, res, next) => {
     }
 
     const results = [];
+    let notificationSummary = { notifiedCount: 0, changesCount: 0 };
+
     for (const item of settings) {
       if (!item.key) continue;
       
       const existing = await db.select().from(siteSettingsTable).where(eq(siteSettingsTable.key, item.key));
       if (existing.length > 0) {
+        if (item.key === "offline_centers_list") {
+          notificationSummary = await processCenterChangeNotifications(existing[0].value, item.value);
+        }
         const [updated] = await db.update(siteSettingsTable)
           .set({ value: item.value, type: item.type || existing[0].type })
           .where(eq(siteSettingsTable.key, item.key))
           .returning();
         results.push(updated);
       } else {
+        if (item.key === "offline_centers_list") {
+          notificationSummary = await processCenterChangeNotifications(null, item.value);
+        }
         const [inserted] = await db.insert(siteSettingsTable)
           .values({ key: item.key, value: item.value, type: item.type || "text" })
           .returning();
@@ -117,7 +228,7 @@ router.put("/settings/batch", requireAdmin, async (req, res, next) => {
       }
     }
 
-    res.json(results);
+    res.json({ results, notificationSummary });
     broadcastSettingsChanged();
   } catch (error) {
     next(error);
@@ -125,3 +236,4 @@ router.put("/settings/batch", requireAdmin, async (req, res, next) => {
 });
 
 export default router;
+

@@ -62,49 +62,40 @@ export function findScheduleConflicts(centers: OfflineCenterItem[]): { itemA: Of
 
 export const defaultOfflineCenters: OfflineCenterItem[] = [
   {
-    id: "eduverse-languages-9am",
-    name: "سنتر إديوفيرس أكاديمي (EduVerse) - لغات",
-    area: "منطقة الفلل",
-    grade: "تانية ثانوي - لغات",
-    timeStr: "9:00 صباحاً",
-    daysStr: "سبت - اتنين - أربع",
-    color: "indigo",
-  },
-  {
-    id: "eduverse-languages-3pm",
-    name: "سنتر إديوفيرس أكاديمي (EduVerse) - لغات",
-    area: "منطقة الفلل",
-    grade: "تانية ثانوي - لغات",
-    timeStr: "3:00 عصراً",
-    daysStr: "سبت - اتنين - أربع",
-    color: "indigo",
-  },
-  {
-    id: "rafal-academy-3pm",
+    id: "rafal-academy-330pm",
     name: "سنتر رافال أكاديمي (Rafal Academy) - عربي",
     area: "بجوار الثانوية العسكرية",
-    grade: "تانية ثانوي - عربي",
-    timeStr: "3:00 - 4:30 عصراً",
-    daysStr: "حد - تلات - خميس",
+    grade: "تانية بكالوريا - عربي",
+    timeStr: "3:30 - 4:30 عصراً",
+    daysStr: "سبت - اتنين - أربع",
     color: "emerald",
   },
   {
     id: "zag-academy-5pm",
     name: "سنتر زاج أكاديمي (Zag Academy) - عربي",
     area: "منطقة الفلل",
-    grade: "تانية ثانوي - عربي",
-    timeStr: "5:00 مساءً",
+    grade: "تانية بكالوريا - عربي",
+    timeStr: "5:00 - 6:00 مساءً",
     daysStr: "سبت - اتنين - أربع",
     color: "blue",
   },
   {
-    id: "hassan-somida-6pm",
-    name: "سنتر حسن صميدة - عربي",
-    area: "منطقة الحناوي",
-    grade: "تانية ثانوي - عربي",
-    timeStr: "6:00 مساءً",
+    id: "eduverse-languages-10am",
+    name: "سنتر إديوفيرس أكاديمي (EduVerse) - لغات",
+    area: "منطقة الفلل",
+    grade: "تانية بكالوريا - لغات",
+    timeStr: "10:00 صباحاً",
     daysStr: "حد - تلات - خميس",
-    color: "purple",
+    color: "indigo",
+  },
+  {
+    id: "eduverse-languages-4pm",
+    name: "سنتر إديوفيرس أكاديمي (EduVerse) - لغات",
+    area: "منطقة الفلل",
+    grade: "تانية بكالوريا - لغات",
+    timeStr: "4:00 عصراً",
+    daysStr: "حد - تلات - خميس",
+    color: "indigo",
   },
 ];
 
@@ -284,7 +275,7 @@ export const CentersTab: React.FC<CentersTabProps> = ({
                       <div>
                         <label className="block text-[11px] font-bold text-muted-foreground mb-1">المنطقة / المكان</label>
                         <select
-                          value={["منطقة الفلل", "حي الزهور - الثانوية العسكرية", "منطقة الحناوي", "حي القومية"].includes(editForm.area) ? editForm.area : "custom"}
+                          value={["منطقة الفلل", "بجوار الثانوية العسكرية", "حي الزهور - الثانوية العسكرية", "حي القومية"].includes(editForm.area) ? editForm.area : "custom"}
                           onChange={(e) => {
                             if (e.target.value === "custom") {
                               setEditForm({ ...editForm, area: "" });
@@ -295,12 +286,11 @@ export const CentersTab: React.FC<CentersTabProps> = ({
                           className="w-full h-9 rounded-xl border border-border bg-background px-2 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
                         >
                           <option value="منطقة الفلل">منطقة الفلل</option>
-                          <option value="حي الزهور - الثانوية العسكرية">حي الزهور - الثانوية العسكرية</option>
-                          <option value="منطقة الحناوي">منطقة الحناوي</option>
+                          <option value="بجوار الثانوية العسكرية">بجوار الثانوية العسكرية</option>
                           <option value="حي القومية">حي القومية</option>
                           <option value="custom">✍️ منطقة أخرى (يدوي)...</option>
                         </select>
-                        {!["منطقة الفلل", "حي الزهور - الثانوية العسكرية", "منطقة الحناوي", "حي القومية"].includes(editForm.area) && (
+                        {!["منطقة الفلل", "بجوار الثانوية العسكرية", "حي الزهور - الثانوية العسكرية", "حي القومية"].includes(editForm.area) && (
                           <input
                             type="text"
                             value={editForm.area}
@@ -358,7 +348,7 @@ export const CentersTab: React.FC<CentersTabProps> = ({
                       <div>
                         <label className="block text-[11px] font-bold text-muted-foreground mb-1">وقت الحصة</label>
                         <select
-                          value={["3:00 عصراً", "3:30 عصراً", "5:00 مساءً", "6:30 مساءً"].includes(editForm.timeStr) ? editForm.timeStr : "custom"}
+                          value={["10:00 صباحاً", "3:30 - 4:30 عصراً", "4:00 عصراً", "5:00 - 6:00 مساءً", "6:30 مساءً"].includes(editForm.timeStr) ? editForm.timeStr : "custom"}
                           onChange={(e) => {
                             if (e.target.value === "custom") {
                               setEditForm({ ...editForm, timeStr: "" });
@@ -368,13 +358,14 @@ export const CentersTab: React.FC<CentersTabProps> = ({
                           }}
                           className="w-full h-9 rounded-xl border border-border bg-background px-2 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
                         >
-                          <option value="3:00 عصراً">3:00 عصراً</option>
-                          <option value="3:30 عصراً">3:30 عصراً</option>
-                          <option value="5:00 مساءً">5:00 مساءً</option>
+                          <option value="10:00 صباحاً">10:00 صباحاً</option>
+                          <option value="3:30 - 4:30 عصراً">3:30 - 4:30 عصراً</option>
+                          <option value="4:00 عصراً">4:00 عصراً</option>
+                          <option value="5:00 - 6:00 مساءً">5:00 - 6:00 مساءً</option>
                           <option value="6:30 مساءً">6:30 مساءً</option>
                           <option value="custom">✍️ توقيت آخر (يدوي)...</option>
                         </select>
-                        {!["3:00 عصراً", "3:30 عصراً", "5:00 مساءً", "6:30 مساءً"].includes(editForm.timeStr) && (
+                        {!["10:00 صباحاً", "3:30 - 4:30 عصراً", "4:00 عصراً", "5:00 - 6:00 مساءً", "6:30 مساءً"].includes(editForm.timeStr) && (
                           <input
                             type="text"
                             value={editForm.timeStr}

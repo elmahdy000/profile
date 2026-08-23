@@ -31,23 +31,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { StudentDrawer, type ExtendedStudent } from "./StudentDrawer";
-
-const OFFICIAL_CENTERS = [
-  { name: "سنتر إديوفيرس أكاديمي (EduVerse) - لغات", location: "منطقة الفلل - الزقازيق" },
-  { name: "سنتر رافال أكاديمي (Rafal Academy) - عربي", location: "بجوار الثانوية العسكرية - الزقازيق" },
-  { name: "سنتر زاج أكاديمي (Zag Academy) - عربي", location: "منطقة الفلل - الزقازيق" },
-  { name: "سنتر حسن صميدة - عربي", location: "منطقة الحناوي - الزقازيق" },
-];
-
-const OFFICIAL_SLOTS = [
-  "سبت - اتنين - أربع (الساعة 9:00 صباحاً)",
-  "سبت - اتنين - أربع (الساعة 3:00 عصراً)",
-  "سبت - اتنين - أربع (الساعة 9:00 مساءً - أونلاين)",
-  "حد - تلات - خميس (الساعة 3:00 – 4:30 عصراً)",
-  "سبت - اتنين - أربع (الساعة 5:00 مساءً)",
-  "حد - تلات - خميس (الساعة 6:00 مساءً)",
-];
+import { StudentDrawer, type ExtendedStudent, OFFICIAL_CENTERS, OFFICIAL_SLOTS } from "./StudentDrawer";
+import { StudentCardModal } from "./StudentCardModal";
 
 interface CenterBookingsTabProps {
   students: ExtendedStudent[];
@@ -84,6 +69,7 @@ export function CenterBookingsTab({
 
   // Local state for students list to reflect immediate edits
   const [localStudents, setLocalStudents] = useState<ExtendedStudent[]>(students);
+  const [isBatchCardsModalOpen, setIsBatchCardsModalOpen] = useState(false);
 
   // Sync if parent prop updates
   React.useEffect(() => {
@@ -601,9 +587,22 @@ export function CenterBookingsTab({
             )}
           </div>
 
-          <span className="text-[#64748B]">
-            معروض الآن: <strong className="text-[#0F172A]">{filteredBookings.length}</strong> حجز بالسنتر من إجمالي {centerStudents.length}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-[#64748B]">
+              معروض الآن: <strong className="text-[#0F172A]">{filteredBookings.length}</strong> حجز بالسنتر من إجمالي {centerStudents.length}
+            </span>
+
+            {filteredBookings.length > 0 && (
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => setIsBatchCardsModalOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-8 rounded-xl gap-1.5 px-3 shadow-xs"
+              >
+                🎫 طباعة كروت المجموعة (QR Code)
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -1026,6 +1025,12 @@ export function CenterBookingsTab({
           onUpdateStudentCourses={onUpdateStudentCourses}
         />
       )}
+      {/* Printable Batch Cards Modal */}
+      <StudentCardModal
+        students={filteredBookings}
+        isOpen={isBatchCardsModalOpen}
+        onClose={() => setIsBatchCardsModalOpen(false)}
+      />
     </div>
   );
 }

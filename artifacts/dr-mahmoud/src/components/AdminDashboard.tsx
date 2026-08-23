@@ -1,4 +1,5 @@
 import { ParentsTab } from "./admin/dashboard/ParentsTab";
+import { SubscriptionsTab } from "./admin/SubscriptionsTab";
 
 import React, { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -78,7 +79,6 @@ import { AdminSettings } from "./AdminSettings";
 import { AdminLearning } from "./AdminLearning";
 import { StudentAnalyticsTab } from "./admin/learning/StudentAnalyticsTab";
 import { AdminSidebarNav } from "./admin/dashboard/AdminSidebarNav";
-import { BookingsTab } from "./admin/dashboard/BookingsTab";
 import { PodcastsTab } from "./admin/dashboard/PodcastsTab";
 import { CoursesTab } from "./admin/dashboard/CoursesTab";
 import { CurriculumsTab } from "./admin/dashboard/CurriculumsTab";
@@ -147,7 +147,6 @@ export default function AdminDashboard() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [authError, setAuthError] = useState("");
   const [activeTab, setActiveTab] = useState<
-    | "bookings"
     | "courses"
     | "podcasts"
     | "curriculums"
@@ -155,10 +154,11 @@ export default function AdminDashboard() {
     | "upload-video"
     | "learning"
     | "student-analytics"
+    | "subscriptions"
     | "parents"
     | "settings"
   >("learning");
-  const [learningSubTab, setLearningSubTab] = useState<"students" | "center-bookings" | "payments" | "notifications" | "files" | "quizzes" | "results" | "reports">("students");
+  const [learningSubTab, setLearningSubTab] = useState<"students" | "center-bookings" | "payments" | "notifications" | "files" | "quizzes" | "reports">("students");
   const [bookingFilter, setBookingFilter] = useState<"pending" | "confirmed" | "completed" | "all">("pending");
   const [selectedSubjectFilter, setSelectedSubjectFilter] =
     useState<string>("all");
@@ -1663,17 +1663,6 @@ export default function AdminDashboard() {
             </div>
 
             <div key={activeTab} className="animate-[fadeIn_0.2s_ease-in-out]">
-              {activeTab === "bookings" && (
-                <BookingsTab
-                  bookingsQuery={bookingsQuery}
-                  bookingFilter={bookingFilter}
-                  setBookingFilter={setBookingFilter}
-                  handleExportCSV={handleExportCSV}
-                  handleBookingStatusUpdate={handleBookingStatusUpdate}
-                  handleBookingDelete={handleBookingDelete}
-                />
-              )}
-
               {activeTab === "courses" && (
                 <CoursesTab
                   coursesQuery={coursesQuery}
@@ -1740,6 +1729,7 @@ export default function AdminDashboard() {
               {activeTab === "settings" && <AdminSettings role={adminRole} />}
               {activeTab === "learning" && <AdminLearning role={adminRole} initialTab={learningSubTab} />}
               {activeTab === "student-analytics" && <StudentAnalyticsTab />}
+              {activeTab === "subscriptions" && <SubscriptionsTab />}
               {activeTab === "parents" && <ParentsTab role={adminRole} />}
             </div>
           </div>
