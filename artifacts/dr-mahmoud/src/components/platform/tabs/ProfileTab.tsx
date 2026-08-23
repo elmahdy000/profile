@@ -103,26 +103,26 @@ export function ProfileTab({
 
       {/* Center Booking Banner (for offline/center students) */}
       {isCenterStudent && (
-        <article className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/40 via-emerald-900/10 to-transparent p-5 shadow-sm space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-emerald-400 font-extrabold text-sm">
-              <MapPin className="h-5 w-5 shrink-0" />
+        <article className="rounded-2xl border border-emerald-200 bg-emerald-50/60 dark:border-emerald-500/30 dark:bg-emerald-950/30 p-5 shadow-xs space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-400 font-extrabold text-sm">
+              <MapPin className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
               <span>📍 بيانات حجز السنتر والمواعيد الحضورية بالزقازيق</span>
             </div>
-            <Button type="button" size="sm" onClick={() => setIsCardModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-8 rounded-xl gap-1.5 px-3">
+            <Button type="button" size="sm" onClick={() => setIsCardModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-8 rounded-xl gap-1.5 px-3 shadow-xs">
               🎫 استخراج كارت السنتر (QR)
             </Button>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 text-xs">
-            <div className="rounded-xl border border-emerald-500/20 bg-background/60 p-3 space-y-1">
+            <div className="rounded-xl border border-emerald-200/80 dark:border-emerald-500/20 bg-white/80 dark:bg-background/60 p-3 space-y-1">
               <span className="text-muted-foreground text-[11px] block">السنتر المختار:</span>
-              <p className="font-extrabold text-emerald-300 text-sm">
+              <p className="font-extrabold text-emerald-700 dark:text-emerald-300 text-sm">
                 {student.centerName || "حضور بالسنتر (الزقازيق)"}
               </p>
             </div>
-            <div className="rounded-xl border border-emerald-500/20 bg-background/60 p-3 space-y-1">
+            <div className="rounded-xl border border-emerald-200/80 dark:border-emerald-500/20 bg-white/80 dark:bg-background/60 p-3 space-y-1">
               <span className="text-muted-foreground text-[11px] block">الموعد المحدد للحضور:</span>
-              <p className="font-extrabold text-amber-300 text-sm">
+              <p className="font-extrabold text-amber-700 dark:text-amber-300 text-sm">
                 {student.appointmentSlot || "حسب جدول المجموعات بالسنتر"}
               </p>
             </div>

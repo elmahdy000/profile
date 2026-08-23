@@ -180,12 +180,12 @@ export function StudentCardModal({ students, isOpen, onClose }: StudentCardModal
               const resolvedCenter = st.centerName || st.center_name || "حضور أونلاين / السنتر";
               const resolvedSlot = st.appointmentSlot || st.appointment_slot || "موعد المجموعة المتاح";
               const resolvedParentPhone = st.parentPhone || st.parent_phone || st.phone;
-              const resolvedTrack = st.languageTrack || st.language_track || st.academicTrack === "languages" ? "لغات (إنجليزي)" : "عربي (عام)";
+              const resolvedTrack = st.languageTrack || st.language_track || (st.academicTrack === "languages" ? "لغات (إنجليزي)" : "عربي (عام)");
 
               return (
                 <div
                   key={st.id}
-                  className="print-card-item relative overflow-hidden rounded-3xl border border-blue-100 bg-white p-5 shadow-lg transition-all text-right"
+                  className="print-card-item relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-5 shadow-md transition-all text-right"
                 >
                   {/* Decorative Background Elements */}
                   <div className="absolute top-0 right-0 h-28 w-28 -mr-8 -mt-8 rounded-full bg-blue-500/10 blur-xl pointer-events-none" />
@@ -194,7 +194,7 @@ export function StudentCardModal({ students, isOpen, onClose }: StudentCardModal
                   {/* Header Badge */}
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
                     <div className="flex items-center gap-2">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white font-bold text-sm shadow-sm">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white font-bold text-sm shadow-xs">
                         💻
                       </div>
                       <div>
@@ -202,7 +202,7 @@ export function StudentCardModal({ students, isOpen, onClose }: StudentCardModal
                         <span className="text-[10px] text-blue-600 font-semibold block">بطاقة حضور وتطوير كود الطالب 💻</span>
                       </div>
                     </div>
-                    <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[10px] font-bold text-emerald-600">
+                    <span className="rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
                       حساب نشط
                     </span>
                   </div>
@@ -212,18 +212,18 @@ export function StudentCardModal({ students, isOpen, onClose }: StudentCardModal
                     {/* Left: Info */}
                     <div className="space-y-2 text-xs">
                       <div>
-                        <span className="text-[10px] font-bold text-slate-400 block">اسم الطالب</span>
+                        <span className="text-[10px] font-bold text-slate-500 block">اسم الطالب</span>
                         <h3 className="text-sm font-extrabold text-slate-900 truncate">{st.name}</h3>
                       </div>
 
                       <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
-                        <div className="rounded-xl bg-slate-50 border border-slate-100 p-2">
-                          <span className="text-[9px] text-slate-400 block">كود الطالب الخاص</span>
+                        <div className="rounded-xl bg-slate-50 border border-slate-200/60 p-2">
+                          <span className="text-[9px] text-slate-500 block">كود الطالب الخاص</span>
                           <span className="font-mono font-bold text-blue-600 dir-ltr block text-right">{st.accessCode || `STD-${st.id}`}</span>
                         </div>
-                        <div className="rounded-xl bg-slate-50 border border-slate-100 p-2">
-                          <span className="text-[9px] text-slate-400 block">المرحلة والمسار</span>
-                          <span className="font-bold text-purple-700 block truncate">{resolvedTrack}</span>
+                        <div className="rounded-xl bg-indigo-50/60 border border-indigo-100 p-2">
+                          <span className="text-[9px] text-indigo-700/80 block font-medium">المرحلة والمسار</span>
+                          <span className="font-bold text-indigo-900 block truncate">{resolvedTrack}</span>
                         </div>
                       </div>
 
