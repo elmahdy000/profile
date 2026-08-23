@@ -243,19 +243,12 @@ export function canStudentAccessContent(
 }
 
 export function canStudentAccessLearningMode(
-  student: ApprovedStudent,
-  contentMode?: string | null,
+  _student: ApprovedStudent,
+  _contentMode?: string | null,
 ): boolean {
-  const studentMode = student.learningMode === "offline" ? "offline" : "online";
-  const normalizedContentMode =
-    contentMode === "offline"
-      ? "offline"
-      : contentMode === "both"
-        ? "both"
-        : "online";
-  return (
-    normalizedContentMode === "both" || normalizedContentMode === studentMode
-  );
+  // All approved students have full access to platform learning content.
+  // Center attendance is a roster preference, NOT a barrier to viewing platform content.
+  return true;
 }
 
 export async function getApprovedStudent(

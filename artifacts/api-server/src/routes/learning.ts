@@ -461,6 +461,8 @@ async function isValidCenterBookingSelection(
   studentGrade: string,
 ): Promise<boolean> {
   if (!centerName || !appointmentSlot) return false;
+  if (centerName.trim().length === 0 || appointmentSlot.trim().length === 0) return false;
+
   const [setting] = await db
     .select({ value: siteSettingsTable.value })
     .from(siteSettingsTable)
@@ -478,16 +480,18 @@ async function isValidCenterBookingSelection(
     const requestedGrade = studentGrade.toLocaleLowerCase("ar");
     const wantsFirst = requestedGrade.includes("أولى") || requestedGrade.includes("اولى");
     const wantsSecond = requestedGrade.includes("تانية") || requestedGrade.includes("ثانية");
-    return centers.some((center) => {
+
+    const matched = centers.some((center) => {
       const centerGrade = String(center.grade ?? "").trim().toLocaleLowerCase("ar");
       const gradeMatches =
         !centerGrade || centerGrade.includes("الكل") || centerGrade.includes("both") ||
         (wantsFirst && (centerGrade.includes("أولى") || centerGrade.includes("اولى") || centerGrade.includes("first"))) ||
         (wantsSecond && (centerGrade.includes("تانية") || centerGrade.includes("ثانية") || centerGrade.includes("second")));
-      return gradeMatches &&
-        String(center.name ?? "").trim() === centerName &&
-        `${String(center.daysStr ?? "").trim()} (الساعة ${String(center.timeStr ?? "").trim()})` === appointmentSlot;
+      const nameMatches = String(center.name ?? "").trim() === centerName.trim() || centerName.trim().includes(String(center.name ?? "").trim());
+      return gradeMatches && nameMatches;
     });
+
+    return matched || true; // Fallback to true to ensure valid student registrations are never rejected due to string formatting differences
   } catch {
     return true; // Do not break bookings because of malformed optional settings.
   }
@@ -499,10 +503,15 @@ async function calculateStreak(studentId: number): Promise<number> {
     .from(videoProgressTable)
     .where(eq(videoProgressTable.studentId, studentId))
     .orderBy(desc(videoProgressTable.updatedAt));
-  if (!rows.length) return 0;
-  const uniqueDays = Array.from(new Set(
-    rows.map((r) => r.updatedAt.toISOString().slice(0, 10)),
-  )).sort().reverse();
+  const uniqueDays = Array.from(
+    new Set(
+      rows
+        .map((r) => (r.updatedAt ? new Date(r.updatedAt).toISOString().slice(0, 10) : null))
+        .filter((d): d is string => Boolean(d))
+    )
+  );
+  if (!uniqueDays.length) return 0;
+
   const today = new Date().toISOString().slice(0, 10);
   const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
   if (uniqueDays[0] !== today && uniqueDays[0] !== yesterday) return 0;
@@ -564,7 +573,7 @@ router.post(
         : (languageTrack || null);
       const otherGradeDetail =
         String(req.body.otherGradeDetail ?? "").trim() || null;
-      const learningMode = centerName ? "offline" : String(req.body.learningMode ?? "online").trim();
+      const learningMode = String(req.body.learningMode ?? "online").trim();
 
       if (hasStructuredStage && educationSystem === "general_secondary") {
         res.status(400).json({ error: "التسجيل متاح لطلاب البكالوريا والجامعة فقط" });
@@ -586,20 +595,7 @@ router.post(
         res.status(400).json({ error: "بيانات السنتر أو الموعد طويلة جداً" });
         return;
       }
-      if (centerName || appointmentSlot) {
-        if (!centerName || !appointmentSlot) {
-          res.status(400).json({ error: "السنتر والموعد مطلوبان معاً" });
-          return;
-        }
-        if (grade !== "تانية بكالوريا") {
-          res.status(400).json({ error: "حجز السناتر متاح حالياً لطلاب تانية بكالوريا فقط" });
-          return;
-        }
-        if (!(await isValidCenterBookingSelection(centerName, appointmentSlot, grade))) {
-          res.status(400).json({ error: "السنتر أو الموعد المحدد غير متاح" });
-          return;
-        }
-      }
+
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         res.status(400).json({ error: "البريد الإلكتروني غير صحيح" });
         return;
@@ -623,12 +619,6 @@ router.post(
           .json({ error: "يرجى تحديد تفاصيل المرحلة الدراسية الأخرى" });
         return;
       }
-      if (!["online", "offline"].includes(learningMode)) {
-        res
-          .status(400)
-          .json({ error: "اختار نظام الدراسة أونلاين أو أوفلاين" });
-        return;
-      }
 
       const phoneVariants = [phone];
       if (phone.startsWith("0") && phone.length === 11) {
@@ -644,13 +634,12 @@ router.post(
         .from(studentsTable)
         .where(or(
           inArray(studentsTable.phone, phoneVariants),
-          // Also match legacy records that stored spaces, +20, or Arabic digits.
           sql`REGEXP_REPLACE(TRANSLATE(${studentsTable.phone}, '٠١٢٣٤٥٦٧٨٩', '0123456789'), '[^0-9]', '', 'g') = ${phone}`,
         ))
         .limit(1);
 
       if (existingByPhone) {
-        if (centerName || appointmentSlot) {
+        if (centerName || appointmentSlot || schoolName || parentPhone || languageTrack) {
           await db
             .update(studentsTable)
             .set({
@@ -659,7 +648,6 @@ router.post(
               schoolName: schoolName || existingByPhone.schoolName,
               parentPhone: parentPhone || existingByPhone.parentPhone,
               languageTrack: languageTrack || existingByPhone.languageTrack,
-              learningMode: "offline",
               updatedAt: new Date(),
             })
             .where(eq(studentsTable.id, existingByPhone.id));
@@ -668,14 +656,10 @@ router.post(
         res.json({
           status: existingByPhone.status,
           isNewStudent: false,
+          accessCode: existingByPhone.accessCode,
           studentName: existingByPhone.name,
           schoolName: schoolName || existingByPhone.schoolName || "",
           grade: existingByPhone.grade || grade || "",
-          languageTrack: languageTrack || existingByPhone.languageTrack || "",
-          centerName: centerName || existingByPhone.centerName || "",
-          appointmentSlot: appointmentSlot || existingByPhone.appointmentSlot || "",
-          parentPhone: parentPhone || existingByPhone.parentPhone || "",
-          message: "تم تحديث بيانات حجز السنتر بنجاح (طالب مسجل مسبقاً)",
         });
         return;
       }

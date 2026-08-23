@@ -148,19 +148,32 @@ export function CenterBookingForm({ onSuccess, className = "" }: CenterBookingFo
       .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
       .replace(/[^\d]/g, "");
 
-  // Filter cards by selected grade; reset selection when grade changes
+  // Filter cards by selected grade & languageTrack; fallback seamlessly if no cards match strict filters
   const gradeKey: "1st_bac" | "2nd_bac" = grade === "أولى بكالوريا" ? "1st_bac" : "2nd_bac";
   const filteredCards = React.useMemo(() => {
-    return allCards.filter(
+    const gradeCards = allCards.filter(
       (c) => c.forGrade === gradeKey || c.forGrade === "both"
     );
-  }, [allCards, gradeKey]);
+    const baseCards = gradeCards.length > 0 ? gradeCards : (allCards.length > 0 ? allCards : UNIFIED_CENTER_CARDS);
 
-  // Reset card selection whenever the grade changes
+    const trackCards = baseCards.filter((c) => {
+      const cardName = String(c.centerName || "").toLowerCase();
+      const cardBadge = String(c.gradeBadge || "").toLowerCase();
+      const isLanguagesCard = cardName.includes("لغات") || cardBadge.includes("لغات") || cardName.includes("eduverse");
+      if (languageTrack === "لغات") {
+        return isLanguagesCard;
+      }
+      return !isLanguagesCard;
+    });
+
+    return trackCards.length > 0 ? trackCards : baseCards;
+  }, [allCards, gradeKey, languageTrack]);
+
+  // Reset card selection whenever grade or languageTrack changes
   React.useEffect(() => {
     setSelectedCenter("");
     setSelectedSlot("");
-  }, [gradeKey]);
+  }, [gradeKey, languageTrack]);
 
   const validateStep1 = () => {
     if (!studentName.trim() || studentName.trim().length < 3) {
