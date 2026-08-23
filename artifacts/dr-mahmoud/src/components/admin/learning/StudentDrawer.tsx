@@ -141,18 +141,25 @@ export function StudentDrawer({
     action: () => {},
   });
 
+  const prevIsOpenRef = useRef(isOpen);
   const prevStudentIdRef = useRef<number | null>(student?.id ?? null);
 
   useEffect(() => {
     setLocalStudent(student);
+
+    const isJustOpened = isOpen && !prevIsOpenRef.current;
+    const isDifferentStudent = Boolean(student?.id && prevStudentIdRef.current !== null && prevStudentIdRef.current !== student.id);
+
+    if (isJustOpened || isDifferentStudent) {
+      setActiveTab("overview");
+      setShowMoreActions(false);
+    }
+
     if (student?.id) {
-      if (prevStudentIdRef.current !== null && prevStudentIdRef.current !== student.id) {
-        setActiveTab("overview");
-        setShowMoreActions(false);
-      }
       prevStudentIdRef.current = student.id;
     }
-  }, [student]);
+    prevIsOpenRef.current = isOpen;
+  }, [student, isOpen]);
 
   if (!isOpen || !student) return null;
 
