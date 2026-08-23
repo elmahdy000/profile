@@ -5,7 +5,7 @@ import fs from "fs";
 import { requireAdmin } from "../middleware/auth";
 
 const router = Router();
-const MAX_VIDEO_BYTES = 1024 * 1024 * 1024; // 1 GiB — kept in sync with nginx.
+const MAX_VIDEO_BYTES = 5 * 1024 * 1024 * 1024; // 5 GiB — kept in sync with nginx.
 
 // Ensure upload directory exists in public/uploads at workspace root
 const uploadDir = path.join(process.cwd(), "public", "uploads");
@@ -248,6 +248,7 @@ const chunkUpload = multer({
 }).single("chunk");
 
 router.post("/upload/video/chunk", requireAdmin, (req, res) => {
+  req.setTimeout(3600000); // 1 hour timeout for chunk upload
   chunkUpload(req, res, (err) => {
     if (err) {
       return res.status(400).json({ error: err.message || "Failed to save chunk" });
@@ -259,6 +260,7 @@ router.post("/upload/video/chunk", requireAdmin, (req, res) => {
 
 // 4. Stitch Chunks & Finish Upload
 router.post("/upload/video/finish", requireAdmin, async (req, res) => {
+  req.setTimeout(3600000); // 1 hour timeout for stitching
   const uploadId = path.basename(String(req.body.uploadId || ""));
   const uploadTempDir = path.join(chunksBaseDir, uploadId);
 
@@ -287,8 +289,12 @@ router.post("/upload/video/finish", requireAdmin, async (req, res) => {
       if (fs.existsSync(finalFilePath)) fs.unlinkSync(finalFilePath);
       return res.status(400).json({ error: `Missing chunk ${i}` });
     }
-    const chunkBuffer = fs.readFileSync(chunkPath);
-    writeStream.write(chunkBuffer);
+    await new Promise<void>((resolve, reject) => {
+      const readStream = fs.createReadStream(chunkPath);
+      readStream.on("error", reject);
+      readStream.on("end", resolve);
+      readStream.pipe(writeStream, { end: false });
+    });
   }
 
   writeStream.end();
