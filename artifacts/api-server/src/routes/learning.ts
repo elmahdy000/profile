@@ -954,6 +954,45 @@ router.delete("/student/avatar", requireStudent, async (_req, res, next) => {
   }
 });
 
+router.patch("/student/profile", requireStudent, async (req, res, next) => {
+  try {
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    const name = req.body.name ? String(req.body.name).trim() : undefined;
+    const schoolName = req.body.schoolName ? String(req.body.schoolName).trim() : undefined;
+    const parentPhoneRaw = req.body.parentPhone ? String(req.body.parentPhone).trim() : undefined;
+    const parentPhone = parentPhoneRaw
+      ? parentPhoneRaw.replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString()).replace(/[^\d]/g, "")
+      : undefined;
+    const governorate = req.body.governorate ? String(req.body.governorate).trim() : undefined;
+    const city = req.body.city ? String(req.body.city).trim() : undefined;
+    const grade = req.body.grade ? String(req.body.grade).trim() : undefined;
+    const centerName = req.body.centerName ? String(req.body.centerName).trim() : undefined;
+    const appointmentSlot = req.body.appointmentSlot ? String(req.body.appointmentSlot).trim() : undefined;
+
+    const updateData: Record<string, any> = {
+      updatedAt: new Date(),
+    };
+    if (name && name.length >= 2) updateData.name = name;
+    if (schoolName && schoolName !== "null") updateData.schoolName = schoolName;
+    if (parentPhone && parentPhone !== "null" && parentPhone.length >= 10) updateData.parentPhone = parentPhone;
+    if (governorate) updateData.governorate = governorate;
+    if (city) updateData.city = city;
+    if (grade) updateData.grade = grade;
+    if (centerName) updateData.centerName = centerName;
+    if (appointmentSlot) updateData.appointmentSlot = appointmentSlot;
+
+    const [updated] = await db
+      .update(studentsTable)
+      .set(updateData)
+      .where(eq(studentsTable.id, student.id))
+      .returning();
+
+    res.json({ student: publicStudent(updated) });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.post("/student/logout", async (req, res, next) => {
   try {
     const token = req.cookies?.[STUDENT_COOKIE];

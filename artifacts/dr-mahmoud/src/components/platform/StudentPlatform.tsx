@@ -45,6 +45,7 @@ import { FilesTab } from "./tabs/FilesTab";
 import { QuizzesTab } from "./tabs/QuizzesTab";
 import { DashboardTab } from "./tabs/DashboardTab";
 import { AccessScreen } from "./tabs/AccessScreen";
+import { IncompleteProfileModal } from "./tabs/IncompleteProfileModal";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 import type {
@@ -994,6 +995,12 @@ export function StudentPlatform() {
               </Button>
             </motion.div>
           </motion.div>
+        )}
+        {student && (
+          <IncompleteProfileModal
+            student={student}
+            onStudentUpdated={(updatedStudent) => setStudent(updatedStudent)}
+          />
         )}
       </AnimatePresence>
     </main>

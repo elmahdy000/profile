@@ -226,10 +226,9 @@ router.get("/videos", async (req, res, next) => {
     }
 
     // 2b. Build free preview set for unpaid students.
-    // University students get 1 free preview video per course; baccalaureate/other get 2.
-    // This must match the streaming gate in the video-stream endpoint below.
+    // Unpaid students get EXACTLY 1 free preview video per course (video #1 of each course).
     const isUnpaidStudent = approvedStudent.paymentStatus !== "paid";
-    const maxAllowedFreeVideos = approvedStudent.educationSystem === "university" ? 1 : 2;
+    const maxAllowedFreeVideos = 1;
     const freePreviewIds = new Set<number>();
     if (isUnpaidStudent) {
       const videosByCourse: Record<string, typeof videos> = {};
@@ -751,8 +750,7 @@ router.get("/videos/:id/stream", async (req, res, next) => {
     // If student is logged in via session cookie and not paid, check preview limit.
     // Short-lived signed stream tokens (hasValidToken) are pre-validated for authorized/paid users.
     if (approvedStudent && !hasValidToken && approvedStudent.paymentStatus !== "paid") {
-      const isUniv = approvedStudent.educationSystem === "university";
-      const maxAllowedFreeVideos = isUniv ? 1 : 2;
+      const maxAllowedFreeVideos = 1;
       const courseKey = video.courseId ? eq(videosTable.courseId, video.courseId) : eq(videosTable.category, video.category);
       const courseVideos = await db
         .select({ id: videosTable.id, order: videosTable.order })
@@ -762,9 +760,7 @@ router.get("/videos/:id/stream", async (req, res, next) => {
       const videoIndex = courseVideos.findIndex((v) => v.id === video.id);
       if (videoIndex === -1 || videoIndex >= maxAllowedFreeVideos) {
         res.status(403).json({
-          error: isUniv
-            ? "ادفع رسوم الاشتراك لمشاهدة باقي المحاضرات. يُسمح بفيديو معاينة واحد فقط مجاناً لكل مادة."
-            : "ادفع واستلم كل الفيديوهات. أول فيديوهين بس مجانية.",
+          error: "ادفع رسوم الاشتراك لمشاهدة باقي المحاضرات. يُسمح بفيديو معاينة واحد فقط مجاناً لكل مادة.",
           code: "PAYMENT_REQUIRED",
         });
         return;
