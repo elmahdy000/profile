@@ -10,7 +10,6 @@ import {
   Bell,
   RefreshCw,
   Search,
-  Filter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -142,13 +141,13 @@ export function SubscriptionsTab() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "paid":
-        return "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800";
+        return "bg-emerald-50 text-emerald-800 border-emerald-200 font-bold px-2.5 py-0.5 rounded-full text-xs";
       case "pending":
-        return "bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border-amber-300 dark:border-amber-800";
+        return "bg-amber-50 text-amber-800 border-amber-200 font-bold px-2.5 py-0.5 rounded-full text-xs";
       case "overdue":
-        return "bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border-rose-300 dark:border-rose-800";
+        return "bg-rose-50 text-rose-800 border-rose-200 font-bold px-2.5 py-0.5 rounded-full text-xs";
       default:
-        return "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-700";
+        return "bg-slate-50 text-slate-700 border-slate-200 font-bold px-2.5 py-0.5 rounded-full text-xs";
     }
   };
 
@@ -191,20 +190,20 @@ export function SubscriptionsTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-16">
-        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+        <RefreshCw className="h-8 w-8 animate-spin text-[#2563EB]" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 dir-rtl text-right">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border pb-4">
+    <div className="space-y-5 p-4 sm:p-6 dir-rtl text-right font-sans">
+      {/* Top Section Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#E2E8F0] pb-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-black text-[#0F172A] tracking-tight">
             إدارة الاشتراكات الشهرية 💳
           </h2>
-          <p className="text-xs sm:text-sm font-medium text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm font-medium text-[#64748B] mt-1">
             تتبع ومتابعة دفعات الطلاب الشهرية وحالة التفعيل (500 جنيه كل 29 يوم)
           </p>
         </div>
@@ -213,7 +212,7 @@ export function SubscriptionsTab() {
             type="button"
             onClick={notifyExpiring}
             disabled={notifying}
-            className="h-10 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs gap-2 shadow-sm"
+            className="h-10 px-4 rounded-xl bg-[#D97706] hover:bg-[#B45309] text-white font-bold text-xs gap-2 shadow-xs"
           >
             {notifying ? (
               <RefreshCw className="h-4 w-4 animate-spin" />
@@ -227,7 +226,7 @@ export function SubscriptionsTab() {
             type="button"
             onClick={loadSubscriptions}
             variant="outline"
-            className="h-10 px-4 rounded-xl text-xs font-bold gap-2"
+            className="h-10 px-4 rounded-xl border-[#E2E8F0] bg-white hover:bg-[#F8FAFC] text-[#0F172A] text-xs font-bold gap-2"
           >
             <RefreshCw className="h-4 w-4" />
             <span>تحديث</span>
@@ -235,95 +234,95 @@ export function SubscriptionsTab() {
         </div>
       </div>
 
-      {/* High-Contrast Modern Stats Cards */}
+      {/* High-Contrast Modern Stats Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
         {/* Card 1: Total */}
-        <div className="rounded-2xl border border-blue-200 dark:border-blue-900/50 bg-gradient-to-br from-blue-50/80 to-white dark:from-blue-950/40 dark:to-slate-900 p-4 shadow-sm">
+        <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-xs">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold text-blue-900 dark:text-blue-200 block">
+              <span className="text-xs font-bold text-[#64748B] block">
                 إجمالي الاشتراكات
               </span>
-              <strong className="text-2xl font-black text-slate-900 dark:text-white mt-1 block">
+              <strong className="text-2xl font-black text-[#0F172A] mt-1 block">
                 {stats.total}
               </strong>
             </div>
-            <div className="grid h-11 w-11 place-items-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#EFF6FF] text-[#2563EB] border border-[#BFDBFE]">
               <Calendar className="h-5 w-5" />
             </div>
           </div>
         </div>
 
         {/* Card 2: Pending */}
-        <div className="rounded-2xl border border-amber-300 dark:border-amber-900/50 bg-gradient-to-br from-amber-50/80 to-white dark:from-amber-950/40 dark:to-slate-900 p-4 shadow-sm">
+        <div className="rounded-2xl border border-[#FDE68A] bg-[#FEF3C7]/40 p-4 shadow-xs">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold text-amber-900 dark:text-amber-200 block">
+              <span className="text-xs font-bold text-[#92400E] block">
                 معلقة
               </span>
-              <strong className="text-2xl font-black text-amber-950 dark:text-amber-100 mt-1 block">
+              <strong className="text-2xl font-black text-[#78350F] mt-1 block">
                 {stats.pending}
               </strong>
             </div>
-            <div className="grid h-11 w-11 place-items-center rounded-xl bg-amber-500 text-white shadow-md shadow-amber-500/20">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#D97706] text-white shadow-xs">
               <Clock className="h-5 w-5" />
             </div>
           </div>
         </div>
 
         {/* Card 3: Paid */}
-        <div className="rounded-2xl border border-emerald-300 dark:border-emerald-900/50 bg-gradient-to-br from-emerald-50/80 to-white dark:from-emerald-950/40 dark:to-slate-900 p-4 shadow-sm">
+        <div className="rounded-2xl border border-[#A7F3D0] bg-[#ECFDF5]/50 p-4 shadow-xs">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold text-emerald-900 dark:text-emerald-200 block">
+              <span className="text-xs font-bold text-[#065F46] block">
                 مدفوعة
               </span>
-              <strong className="text-2xl font-black text-emerald-950 dark:text-emerald-100 mt-1 block">
+              <strong className="text-2xl font-black text-[#064E3B] mt-1 block">
                 {stats.paid}
               </strong>
             </div>
-            <div className="grid h-11 w-11 place-items-center rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-500/20">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#059669] text-white shadow-xs">
               <CheckCircle2 className="h-5 w-5" />
             </div>
           </div>
         </div>
 
         {/* Card 4: Overdue */}
-        <div className="rounded-2xl border border-rose-300 dark:border-rose-900/50 bg-gradient-to-br from-rose-50/80 to-white dark:from-rose-950/40 dark:to-slate-900 p-4 shadow-sm">
+        <div className="rounded-2xl border border-[#FECDD3] bg-[#FFF1F2]/50 p-4 shadow-xs">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold text-rose-900 dark:text-rose-200 block">
+              <span className="text-xs font-bold text-[#9F1239] block">
                 متأخرة
               </span>
-              <strong className="text-2xl font-black text-rose-950 dark:text-rose-100 mt-1 block">
+              <strong className="text-2xl font-black text-[#881337] mt-1 block">
                 {stats.overdue}
               </strong>
             </div>
-            <div className="grid h-11 w-11 place-items-center rounded-xl bg-rose-600 text-white shadow-md shadow-rose-500/20">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#E11D48] text-white shadow-xs">
               <XCircle className="h-5 w-5" />
             </div>
           </div>
         </div>
 
         {/* Card 5: Expiring Soon */}
-        <div className="rounded-2xl border border-orange-300 dark:border-orange-900/50 bg-gradient-to-br from-orange-50/80 to-white dark:from-orange-950/40 dark:to-slate-900 p-4 shadow-sm">
+        <div className="rounded-2xl border border-[#FED7AA] bg-[#FFEDD5]/50 p-4 shadow-xs">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-xs font-bold text-orange-900 dark:text-orange-200 block">
+              <span className="text-xs font-bold text-[#9A3412] block">
                 تنتهي قريباً
               </span>
-              <strong className="text-2xl font-black text-orange-950 dark:text-orange-100 mt-1 block">
+              <strong className="text-2xl font-black text-[#7C2D12] mt-1 block">
                 {stats.expiringSoon}
               </strong>
             </div>
-            <div className="grid h-11 w-11 place-items-center rounded-xl bg-orange-500 text-white shadow-md shadow-orange-500/20">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#EA580C] text-white shadow-xs">
               <AlertTriangle className="h-5 w-5" />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Filter and Search Controls */}
+      {/* Filter Tabs & Search Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2 flex-wrap">
           {[
@@ -336,10 +335,10 @@ export function SubscriptionsTab() {
               key={f.key}
               type="button"
               onClick={() => setFilter(f.key as any)}
-              className={`px-4 py-2 rounded-xl text-xs font-black transition-all border ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
                 filter === f.key
-                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                  : "bg-card border-border text-foreground hover:bg-muted"
+                  ? "bg-[#2563EB] text-white border-[#2563EB] shadow-xs"
+                  : "bg-[#F8FAFC] border-[#CBD5E1] text-[#475569] hover:bg-white hover:text-[#0F172A]"
               }`}
             >
               {f.label}
@@ -347,24 +346,24 @@ export function SubscriptionsTab() {
           ))}
         </div>
 
-        <div className="relative min-w-[240px]">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="relative min-w-[260px]">
+          <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748B]" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="بحث باسم الطالب أو الهاتف..."
-            className="w-full h-10 rounded-xl border border-border bg-card pr-9 pl-4 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full h-10 rounded-xl border border-[#E2E8F0] bg-white pr-10 pl-4 text-xs font-medium text-[#0F172A] placeholder-[#64748B] focus:border-[#2563EB] focus:outline-none"
           />
         </div>
       </div>
 
-      {/* Subscriptions Table */}
-      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      {/* Modern High-Contrast Subscriptions Table */}
+      <div className="rounded-2xl border border-[#E2E8F0] bg-white shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-right dir-rtl">
             <thead>
-              <tr className="border-b border-border bg-muted/60 text-muted-foreground text-xs font-bold">
+              <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[#475569] text-xs font-bold">
                 <th className="p-4 text-right">الطالب</th>
                 <th className="p-4 text-right">الهاتف</th>
                 <th className="p-4 text-right">تاريخ البداية</th>
@@ -375,10 +374,10 @@ export function SubscriptionsTab() {
                 <th className="p-4 text-center">الإجراءات</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-[#E2E8F0]">
               {filteredSubscriptions.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center p-12 text-xs font-bold text-muted-foreground">
+                  <td colSpan={8} className="text-center p-12 text-xs font-bold text-[#64748B]">
                     لا توجد اشتراكات مطابقة للبحث
                   </td>
                 </tr>
@@ -393,36 +392,32 @@ export function SubscriptionsTab() {
                       key={sub.id}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className={`hover:bg-muted/40 transition-colors ${
-                        isExpiringSoon ? "bg-amber-500/10 dark:bg-amber-950/20" : ""
+                      className={`hover:bg-[#F8FAFC] transition-colors ${
+                        isExpiringSoon ? "bg-[#FFFBEB]" : ""
                       }`}
                     >
-                      <td className="p-4 font-bold text-xs text-foreground">
+                      <td className="p-4 font-bold text-xs text-[#0F172A]">
                         <div className="flex items-center gap-2">
                           <span>{sub.studentName}</span>
                           {isExpiringSoon && (
-                            <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
+                            <AlertTriangle className="h-4 w-4 text-[#D97706] shrink-0" />
                           )}
                         </div>
                       </td>
-                      <td className="p-4 font-mono text-xs text-muted-foreground dir-ltr text-right">
+                      <td className="p-4 font-mono text-xs text-[#475569] dir-ltr text-right">
                         {sub.studentPhone}
                       </td>
-                      <td className="p-4 text-xs text-muted-foreground">
+                      <td className="p-4 text-xs text-[#475569]">
                         {new Date(sub.monthStartDate).toLocaleDateString("ar-EG")}
                       </td>
-                      <td className="p-4 text-xs text-muted-foreground">
+                      <td className="p-4 text-xs text-[#475569]">
                         {new Date(sub.monthEndDate).toLocaleDateString("ar-EG")}
                       </td>
-                      <td className="p-4 text-xs font-black text-emerald-600 dark:text-emerald-400">
+                      <td className="p-4 text-xs font-black text-[#059669]">
                         {sub.amountDue} جنيه
                       </td>
                       <td className="p-4">
-                        <span
-                          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border ${getStatusBadge(
-                            sub.paymentStatus
-                          )}`}
-                        >
+                        <span className={getStatusBadge(sub.paymentStatus)}>
                           {getStatusText(sub.paymentStatus)}
                         </span>
                       </td>
@@ -430,10 +425,10 @@ export function SubscriptionsTab() {
                         <span
                           className={
                             daysRemaining < 0
-                              ? "text-rose-600 dark:text-rose-400"
+                              ? "text-[#E11D48]"
                               : daysRemaining <= 3
-                              ? "text-amber-600 dark:text-amber-400"
-                              : "text-muted-foreground"
+                              ? "text-[#D97706]"
+                              : "text-[#475569]"
                           }
                         >
                           {daysRemaining < 0
@@ -449,7 +444,7 @@ export function SubscriptionsTab() {
                                 size="sm"
                                 type="button"
                                 onClick={() => markAsPaid(sub.id)}
-                                className="h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-1 shadow-xs"
+                                className="h-8 px-3 rounded-lg bg-[#059669] hover:bg-[#047857] text-white font-bold text-xs gap-1 shadow-xs"
                               >
                                 <CheckCircle2 className="h-3.5 w-3.5" />
                                 <span>تأكيد الدفع</span>
@@ -459,7 +454,7 @@ export function SubscriptionsTab() {
                                 type="button"
                                 onClick={() => markAsOverdue(sub.id)}
                                 variant="outline"
-                                className="h-8 px-3 rounded-lg border-rose-300 text-rose-600 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-400 dark:hover:bg-rose-950/50 font-bold text-xs gap-1"
+                                className="h-8 px-3 rounded-lg border-[#FECDD3] bg-white text-[#E11D48] hover:bg-[#FFF1F2] font-bold text-xs gap-1"
                               >
                                 <XCircle className="h-3.5 w-3.5" />
                                 <span>متأخر</span>
@@ -467,7 +462,7 @@ export function SubscriptionsTab() {
                             </>
                           )}
                           {sub.paymentStatus === "paid" && (
-                            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                            <span className="text-xs font-bold text-[#059669] flex items-center gap-1">
                               <CheckCircle2 className="h-3.5 w-3.5" /> تم الدفع
                             </span>
                           )}
