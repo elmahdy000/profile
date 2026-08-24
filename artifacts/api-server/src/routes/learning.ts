@@ -576,17 +576,14 @@ router.post(
         String(req.body.otherGradeDetail ?? "").trim() || null;
       const learningMode = String(req.body.learningMode ?? "online").trim();
 
-      if (hasStructuredStage && educationSystem === "general_secondary") {
-        res.status(400).json({ error: "التسجيل متاح لطلاب البكالوريا والجامعة فقط" });
-        return;
-      }
+      // Clean parentPhone; if invalid or empty, set to null instead of failing registration
+      const validParentPhone =
+        parentPhone && /^(?:01[0125]\d{8}|\+?\d{10,15})$/.test(parentPhone)
+          ? parentPhone
+          : null;
 
       if (name.length < 2 || !/^(?:01[0125]\d{8}|\+?\d{10,15})$/.test(phone)) {
         res.status(400).json({ error: "الاسم ورقم الهاتف مطلوبان بشكل صحيح" });
-        return;
-      }
-      if (parentPhone && !/^(?:01[0125]\d{8}|\+?\d{10,15})$/.test(parentPhone)) {
-        res.status(400).json({ error: "رقم هاتف ولي الأمر غير صحيح" });
         return;
       }
       if (
@@ -694,7 +691,7 @@ router.post(
           academicTrack,
           otherGradeDetail,
           schoolName,
-          parentPhone,
+          parentPhone: validParentPhone,
           languageTrack,
           centerName,
           appointmentSlot,
