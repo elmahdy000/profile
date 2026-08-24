@@ -223,6 +223,7 @@ export const paymentReceiptsTable = pgTable("payment_receipts", {
 export const auditLogsTable = pgTable("audit_logs", {
   id: serial("id").primaryKey(),
   actorRole: text("actor_role").notNull(), // 'superadmin' | 'subadmin'
+  actorName: text("actor_name"),
   action: text("action").notNull(), // e.g. 'APPROVE_STUDENT', 'UPDATE_PAYMENT_STATUS', 'BROADCAST_NOTIFICATION', etc.
   targetType: text("target_type").notNull(), // e.g. 'student', 'receipt', 'notification', 'password'
   targetId: text("target_id"),

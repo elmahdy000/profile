@@ -20,14 +20,14 @@ export async function logAudit(
     // login to the previously signed-in account.
     const identity = actorOverride || getAdminIdentity(req);
     const role = identity?.role || getAdminRole(req) || "unknown";
+    const actorName = identity?.username || (role === "superadmin" ? "د. محمود المهدي" : "مشرف مساعد");
     const ip = req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "";
     await db.insert(auditLogsTable).values({
       actorRole: role,
+      actorName: actorName,
       action,
       targetType,
       targetId: targetId ? String(targetId) : null,
-      // The actor role already has its own column. Keeping identity text here
-      // duplicated the table UI and made old encoding failures much noisier.
       details: details?.trim() || null,
       ipAddress: Array.isArray(ip) ? ip[0] : String(ip),
     });

@@ -4,6 +4,7 @@ import { Loader2, X } from "lucide-react";
 export interface AuditLogItem {
   id: number;
   actorRole: string;
+  actorName?: string | null;
   action: string;
   targetType: string;
   targetId: string | null;
@@ -35,7 +36,7 @@ export const AuditLogsTab: React.FC<AuditLogsTabProps> = ({
             📋 سجل عمليات وإجراءات المشرفين (Audit Logs)
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            تتبع كامل بكل الإجراءات والتعديلات والعمليات التي تمت على المنصة ومُجري كل عملية بالوقت والدقيقة.
+            تتبع كامل بكل الإجراءات والتعديلات والعمليات التي تمت على المنصة ومُجري كل عملية بالاسم والوقت والدقيقة.
           </p>
         </div>
         <button
@@ -70,51 +71,55 @@ export const AuditLogsTab: React.FC<AuditLogsTabProps> = ({
               <thead className="bg-muted/50 text-muted-foreground font-bold border-b border-border">
                 <tr>
                   <th className="p-3">الوقت والتاريخ</th>
-                  <th className="p-3">المُنفِّذ (Role)</th>
+                  <th className="p-3">المُنفِّذ ومسؤول الإجراء</th>
                   <th className="p-3">نوع الإجراء</th>
                   <th className="p-3">التفاصيل والوصف</th>
                   <th className="p-3 text-left">عنوان IP</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {auditLogs.map((log) => (
-                  <tr
-                    key={log.id}
-                    onClick={() => setSelectedAuditLog(log)}
-                    className="hover:bg-primary/5 cursor-pointer transition-colors group"
-                    title="انقر لعرض التفاصيل الكاملة للإجراء في نافذة مخصصة"
-                  >
-                    <td className="p-3 font-semibold text-foreground whitespace-nowrap">
-                      {new Date(log.createdAt).toLocaleDateString("ar-EG")} -{" "}
-                      {new Date(log.createdAt).toLocaleTimeString("ar-EG", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </td>
-                    <td className="p-3 whitespace-nowrap">
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-extrabold border ${
-                          log.actorRole === "superadmin"
-                            ? "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200"
-                            : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-200"
-                        }`}
-                      >
-                        {log.actorRole === "superadmin"
-                          ? "Super Admin"
-                          : "Subadmin"}
-                      </span>
-                    </td>
-                    <td className="p-3 font-bold text-foreground whitespace-nowrap dir-ltr text-right">
-                      {log.action}
-                    </td>
-                    <td className="p-3 text-foreground/80 leading-relaxed max-w-md truncate group-hover:text-primary font-medium">
-                      {log.details || "—"}
-                    </td>
-                    <td className="p-3 text-left font-mono text-[11px] text-muted-foreground whitespace-nowrap dir-ltr">
-                      {log.ipAddress || "—"}
-                    </td>
-                  </tr>
-                ))}
+                {auditLogs.map((log) => {
+                  const displayName = log.actorName || (log.actorRole === "superadmin" ? "د. محمود المهدي (المدير الرئيسي)" : "مشرف مساعد");
+                  return (
+                    <tr
+                      key={log.id}
+                      onClick={() => setSelectedAuditLog(log)}
+                      className="hover:bg-primary/5 cursor-pointer transition-colors group"
+                      title="انقر لعرض التفاصيل الكاملة للإجراء في نافذة مخصصة"
+                    >
+                      <td className="p-3 font-semibold text-foreground whitespace-nowrap">
+                        {new Date(log.createdAt).toLocaleDateString("ar-EG")} -{" "}
+                        {new Date(log.createdAt).toLocaleTimeString("ar-EG", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </td>
+                      <td className="p-3 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-extrabold border ${
+                              log.actorRole === "superadmin"
+                                ? "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-200"
+                                : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-200"
+                            }`}
+                          >
+                            {log.actorRole === "superadmin" ? "Super Admin" : "Subadmin"}
+                          </span>
+                          <span className="font-bold text-foreground text-xs">{displayName}</span>
+                        </div>
+                      </td>
+                      <td className="p-3 font-bold text-foreground whitespace-nowrap dir-ltr text-right">
+                        {log.action}
+                      </td>
+                      <td className="p-3 text-foreground/80 leading-relaxed max-w-md truncate group-hover:text-primary font-medium">
+                        {log.details || "—"}
+                      </td>
+                      <td className="p-3 text-left font-mono text-[11px] text-muted-foreground whitespace-nowrap dir-ltr">
+                        {log.ipAddress || "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
