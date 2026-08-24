@@ -152,24 +152,16 @@ export function AccessScreen({
         method: "POST",
         body: JSON.stringify(payload),
       });
-      setMessage(result.message || "تم تسجيل حسابك بنجاح! احتفظ بكود الدخول أدناه واستخدمه فوراً لدخول المنصة ومتابعة المحتوى.");
-      if (result.accessCode) setRegisteredCode(result.accessCode);
-      setForm({
-        name: "",
-        phone: "",
-        parentPhone: "",
-        schoolName: "",
-        email: "",
-        governorate: "الشرقية",
-        city: "الزقازيق",
-        ...createDefaultRegistrationStage(),
-        otherGradeDetail: "",
-        learningMode: "online",
-        centerName: "سنتر رافال أكاديمي (Rafal Academy)",
-        appointmentSlot: "حسب جدول المجموعات بالسنتر (الساعة 3:00 عصراً)",
-        centerChoice: "أونلاين لكل مصر",
-      });
-      setRegStep(1);
+      if (result.accessCode) {
+        setRegisteredCode(result.accessCode);
+        localStorage.setItem("dr_mahmoud_student_code", result.accessCode.trim().toUpperCase());
+        toast({
+          title: "تم إنشاء حسابك بنجاح! 🎉",
+          description: `كود الدخول الخاص بك هو: ${result.accessCode} (تم الدخول تلقائياً)`,
+        });
+        await enterWithCode(result.accessCode);
+        return;
+      }
     } catch (err) {
       setError((err as Error).message);
     } finally {
