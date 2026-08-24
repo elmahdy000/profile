@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { StudentDrawer, type ExtendedStudent, OFFICIAL_CENTERS, OFFICIAL_SLOTS, normalizeCenterName } from "./StudentDrawer";
+import { StudentDrawer, type ExtendedStudent, OFFICIAL_CENTERS, OFFICIAL_SLOTS, normalizeCenterName, cleanText } from "./StudentDrawer";
 import { StudentCardModal } from "./StudentCardModal";
 
 interface CenterBookingsTabProps {
@@ -779,24 +779,24 @@ export function CenterBookingsTab({
 
                       {/* School Name */}
                       <td className="border-b border-[#E2E8F0] px-3 py-2">
-                        <span className="truncate max-w-[110px] block text-[11px] font-medium text-[#334155]" title={s.schoolName || "غير محدد"}>
-                          {s.schoolName || "غير مسجل"}
+                        <span className="truncate max-w-[110px] block text-[11px] font-medium text-[#334155]" title={cleanText(s.schoolName, "غير محدد")}>
+                          {cleanText(s.schoolName, "غير مسجل")}
                         </span>
                       </td>
 
                       {/* Language Track */}
                       <td className="border-b border-[#E2E8F0] px-3 py-2">
                         <span className="inline-flex rounded-md border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-0.5 text-[10px] font-semibold text-[#334155]">
-                          {s.languageTrack || "عام"}
+                          {cleanText(s.languageTrack, "عام")}
                         </span>
                       </td>
 
                       {/* Center Name */}
                       <td className="border-b border-[#E2E8F0] px-3 py-2">
-                        {s.centerName ? (
+                        {cleanText(s.centerName, "") ? (
                           <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] px-2.5 py-1 text-[11px] font-bold text-[#2563EB]">
                             <MapPin className="h-3.5 w-3.5 text-[#2563EB] shrink-0" />
-                            <span className="truncate max-w-[140px]" title={s.centerName}>{s.centerName}</span>
+                            <span className="truncate max-w-[140px]" title={s.centerName!}>{s.centerName}</span>
                           </span>
                         ) : (
                           <button
@@ -811,10 +811,10 @@ export function CenterBookingsTab({
 
                       {/* Appointment Slot */}
                       <td className="border-b border-[#E2E8F0] px-3 py-2">
-                        {s.appointmentSlot ? (
+                        {cleanText(s.appointmentSlot, "") ? (
                           <span className="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-800">
                             <Clock className="h-3.5 w-3.5 shrink-0 text-amber-600" />
-                            <span className="truncate max-w-[140px]" title={s.appointmentSlot}>{s.appointmentSlot}</span>
+                            <span className="truncate max-w-[140px]" title={s.appointmentSlot!}>{s.appointmentSlot}</span>
                           </span>
                         ) : (
                           <span className="text-[10px] text-[#64748B]">غير محدد</span>
@@ -828,10 +828,10 @@ export function CenterBookingsTab({
 
                       {/* Parent Phone */}
                       <td className="border-b border-[#E2E8F0] px-3 py-2">
-                        {s.parentPhone ? (
+                        {cleanText(s.parentPhone, "") ? (
                           <div className="flex items-center justify-end gap-1.5">
                             <a
-                              href={`https://wa.me/${(s.parentPhone.replace(/[^\d+]/g, "").startsWith("0") ? "2" + s.parentPhone.replace(/[^\d+]/g, "") : s.parentPhone.replace(/[^\d+]/g, ""))}?text=${encodeURIComponent(`مرحباً ولي أمر الطالب ${s.name} 👋، تواصل من إدارة السنتر`)}`}
+                              href={`https://wa.me/${(s.parentPhone!.replace(/[^\d+]/g, "").startsWith("0") ? "2" + s.parentPhone!.replace(/[^\d+]/g, "") : s.parentPhone!.replace(/[^\d+]/g, ""))}?text=${encodeURIComponent(`مرحباً ولي أمر الطالب ${s.name} 👋، تواصل من إدارة السنتر`)}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex p-1 rounded-md bg-[#ECFDF5] hover:bg-[#D1FAE5] text-[#10B981] transition"

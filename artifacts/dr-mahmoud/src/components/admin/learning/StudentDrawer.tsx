@@ -67,6 +67,13 @@ export function normalizeCenterName(rawName?: string | null): string {
   return "بدون سنتر محدد";
 }
 
+export function cleanText(val?: string | null, fallback = "غير مسجل"): string {
+  if (!val) return fallback;
+  const str = String(val).trim();
+  if (!str || str.toLowerCase() === "null" || str.toLowerCase() === "undefined") return fallback;
+  return str;
+}
+
 export type ExtendedStudent = PlatformStudent & {
   accessCode?: string | null;
   deviceId?: string | null;
