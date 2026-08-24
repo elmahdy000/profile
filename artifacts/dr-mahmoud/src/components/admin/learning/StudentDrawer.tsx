@@ -52,6 +52,21 @@ export const OFFICIAL_SLOTS = Array.from(
   new Set(defaultOfflineCenters.map((c) => `${c.daysStr} (الساعة ${c.timeStr})`))
 );
 
+export function normalizeCenterName(rawName?: string | null): string {
+  if (!rawName || !rawName.trim()) return "بدون سنتر محدد";
+  const clean = rawName.trim().toLowerCase();
+  if (clean.includes("رافال") || clean.includes("rafal")) {
+    return "سنتر رافال أكاديمي (Rafal Academy) - عربي";
+  }
+  if (clean.includes("زاج") || clean.includes("zag")) {
+    return "سنتر زاج أكاديمي (Zag Academy) - عربي";
+  }
+  if (clean.includes("إديوفيرس") || clean.includes("اديوفيرس") || clean.includes("eduverse")) {
+    return "سنتر إديوفيرس أكاديمي (EduVerse) - لغات";
+  }
+  return "بدون سنتر محدد";
+}
+
 export type ExtendedStudent = PlatformStudent & {
   accessCode?: string | null;
   deviceId?: string | null;

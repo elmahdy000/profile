@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { StudentDrawer, type ExtendedStudent, OFFICIAL_CENTERS, OFFICIAL_SLOTS } from "./StudentDrawer";
+import { StudentDrawer, type ExtendedStudent, OFFICIAL_CENTERS, OFFICIAL_SLOTS, normalizeCenterName } from "./StudentDrawer";
 import { StudentCardModal } from "./StudentCardModal";
 
 interface CenterBookingsTabProps {
@@ -81,9 +81,7 @@ export function CenterBookingsTab({
     return localStudents.filter((s) => {
       const isOfflineMode = String(s.learningMode || "").trim().toLowerCase() === "offline";
       const hasCenter = Boolean(s.centerName && String(s.centerName).trim());
-      const hasSlot = Boolean(s.appointmentSlot && String(s.appointmentSlot).trim());
-      const hasParentPhone = Boolean(s.parentPhone && String(s.parentPhone).trim());
-      return isOfflineMode || hasCenter || hasSlot || hasParentPhone;
+      return isOfflineMode || hasCenter;
     });
   }, [localStudents]);
 
@@ -219,8 +217,10 @@ export function CenterBookingsTab({
       }
 
       // Center Filter
-      if (centerFilter === "بدون سنتر محدد" && s.centerName?.trim()) return false;
-      if (centerFilter !== "all" && centerFilter !== "بدون سنتر محدد" && s.centerName !== centerFilter) return false;
+      if (centerFilter !== "all") {
+        const normalized = normalizeCenterName(s.centerName);
+        if (normalized !== centerFilter) return false;
+      }
 
       // Slot Filter
       if (slotFilter !== "all" && s.appointmentSlot !== slotFilter) return false;
@@ -249,36 +249,37 @@ export function CenterBookingsTab({
   }, [centerStudents]);
 
   const centerCards = useMemo(() => {
-    const names = Array.from(new Set([
-      ...OFFICIAL_CENTERS.map((center) => center.name),
-      ...uniqueCenters,
-    ]));
+    const cardsMap: Record<string, { name: string; location: string; total: number; complete: number; incomplete: number }> = {};
 
-    const cards = names.map((name) => {
-      const studentsInCenter = centerStudents.filter((student) => student.centerName?.trim() === name);
-      const complete = studentsInCenter.filter((student) => Boolean(student.appointmentSlot?.trim())).length;
-      return {
-        name,
-        location: OFFICIAL_CENTERS.find((center) => center.name === name)?.location || "بيانات مضافة من الإدارة",
-        total: studentsInCenter.length,
-        complete,
-        incomplete: studentsInCenter.length - complete,
+    OFFICIAL_CENTERS.forEach((c) => {
+      cardsMap[c.name] = {
+        name: c.name,
+        location: c.location,
+        total: 0,
+        complete: 0,
+        incomplete: 0,
       };
     });
 
-    const withoutCenter = centerStudents.filter((student) => !student.centerName?.trim());
-    if (withoutCenter.length > 0) {
-      cards.push({
-        name: "بدون سنتر محدد",
-        location: "يحتاج إلى استكمال بيانات الحجز",
-        total: withoutCenter.length,
-        complete: withoutCenter.filter((student) => Boolean(student.appointmentSlot?.trim())).length,
-        incomplete: withoutCenter.length,
-      });
-    }
+    cardsMap["بدون سنتر محدد"] = {
+      name: "بدون سنتر محدد",
+      location: "يحتاج إلى استكمال بيانات الحجز",
+      total: 0,
+      complete: 0,
+      incomplete: 0,
+    };
 
-    return cards;
-  }, [centerStudents, uniqueCenters]);
+    centerStudents.forEach((student) => {
+      const norm = normalizeCenterName(student.centerName);
+      const card = cardsMap[norm] || cardsMap["بدون سنتر محدد"];
+      card.total += 1;
+      const isComplete = Boolean(student.appointmentSlot && student.appointmentSlot.trim());
+      if (isComplete) card.complete += 1;
+      else card.incomplete += 1;
+    });
+
+    return Object.values(cardsMap).filter((card) => card.total > 0 || OFFICIAL_CENTERS.some((c) => c.name === card.name));
+  }, [centerStudents]);
 
   // Select all checkbox
   const isAllSelected = filteredBookings.length > 0 && filteredBookings.every((s) => selectedIds.includes(s.id));
