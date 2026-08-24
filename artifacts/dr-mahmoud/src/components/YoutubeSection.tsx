@@ -811,19 +811,13 @@ export function VideoLessonsSection({
     const enrolledCats = (student as any).enrolledCategories ?? [];
     const norm = (s: string) => String(s ?? "").trim().toLowerCase();
 
+    // Explicitly enrolled courses or categories by admin MUST be visible immediately
     if (item.courseId && enrolledIds.includes(Number(item.courseId))) {
       return true;
     }
     if (item.category && enrolledCats.some((cat: string) => norm(cat) === norm(item.category))) {
       return true;
     }
-
-    // ── KEY FIX ──
-    // If the admin has explicitly assigned courses to this student, ONLY those
-    // courses should be visible. Do NOT fall back to stage/grade matching —
-    // that would silently re-show courses the admin intentionally removed.
-    const hasExplicitEnrollment = enrolledIds.length > 0 || enrolledCats.length > 0;
-    if (hasExplicitEnrollment) return false;
 
     // No explicit enrollment → show content based on student's grade/stage
     const grade = studentGrade || "";

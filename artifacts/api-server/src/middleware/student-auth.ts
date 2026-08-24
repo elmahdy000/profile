@@ -221,18 +221,11 @@ export function canStudentAccessContent(
     if (!stageMatches && !assignedCourseId && !assignedCourse) return false;
   }
 
-  // Accounts with explicit course assignments MUST match their assigned course or category ONLY.
+  // Accounts with explicit course assignments match assigned courses OR any content matching their registered stage
   if (hasExplicitCourseAssignments) {
-    const hasEnrolledCourses = (student.enrolledCourseIds ?? []).length > 0;
-    const hasEnrolledCategories = (student.enrolledCategories ?? []).length > 0;
-
-    if (courseId && hasEnrolledCourses) {
-      return assignedCourseId || assignedCourse;
-    }
-    if (hasEnrolledCategories) {
-      return assignedCourse || assignedCourseId;
-    }
-    return assignedCourseId;
+    if (assignedCourseId || assignedCourse) return true;
+    if (stageMatches && canStudentAccessCategory(student, category)) return true;
+    return false;
   }
 
   if (isGeneralContent || hasCategoryGeneralStage) {
