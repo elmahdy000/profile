@@ -276,7 +276,7 @@ router.get("/videos", async (req, res, next) => {
         isFirstVideo ||
         (v.accessKey && studentKeys.includes(v.accessKey.toLowerCase().trim()));
 
-      // Payment gating: unpaid students only get free preview videos (first 2 per course)
+      // Payment gating: unpaid students only get 1 free preview video (video #1 of each course)
       const paymentLocked = isUnpaidStudent && !freePreviewIds.has(v.id);
 
       const isLocalFile = v.youtubeUrl.startsWith("/uploads/");
