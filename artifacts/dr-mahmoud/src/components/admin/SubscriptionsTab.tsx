@@ -8,9 +8,9 @@ import {
   Clock,
   AlertTriangle,
   Bell,
-  Plus,
   RefreshCw,
-  Download,
+  Search,
+  Filter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -34,10 +34,11 @@ export function SubscriptionsTab() {
   const [subscriptions, setSubscriptions] = useState<MonthlySubscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "pending" | "paid" | "overdue">("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [notifying, setNotifying] = useState(false);
 
   useEffect(() => {
-    loadSubscriptions();
+    void loadSubscriptions();
   }, []);
 
   const loadSubscriptions = async () => {
@@ -48,7 +49,6 @@ export function SubscriptionsTab() {
       });
       if (!response.ok) throw new Error("فشل تحميل الاشتراكات");
       const data = await response.json();
-      // Transform API response to match component interface
       const transformed = data.map((item: any) => ({
         id: item.subscription.id,
         studentId: item.subscription.studentId,
@@ -85,7 +85,7 @@ export function SubscriptionsTab() {
       if (!response.ok) throw new Error("فشل تحديث حالة الدفع");
 
       alert("تم تأكيد الدفع بنجاح");
-      loadSubscriptions();
+      void loadSubscriptions();
     } catch (error: any) {
       alert(error.message || "حدث خطأ أثناء تحديث حالة الدفع");
     }
@@ -104,7 +104,7 @@ export function SubscriptionsTab() {
       if (!response.ok) throw new Error("فشل تحديث حالة الاشتراك");
 
       alert("تم تحديث حالة الاشتراك بنجاح");
-      loadSubscriptions();
+      void loadSubscriptions();
     } catch (error: any) {
       alert(error.message || "حدث خطأ أثناء تحديث حالة الاشتراك");
     }
@@ -124,7 +124,7 @@ export function SubscriptionsTab() {
 
       const result = await response.json();
       alert(result.message);
-      loadSubscriptions();
+      void loadSubscriptions();
     } catch (error: any) {
       alert(error.message || "حدث خطأ أثناء إرسال الإشعارات");
     } finally {
@@ -136,20 +136,19 @@ export function SubscriptionsTab() {
     const end = new Date(endDate);
     const now = new Date();
     const diffTime = end.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "paid":
-        return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+        return "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800";
       case "pending":
-        return "bg-amber-500/15 text-amber-400 border-amber-500/30";
+        return "bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 border-amber-300 dark:border-amber-800";
       case "overdue":
-        return "bg-rose-500/15 text-rose-400 border-rose-500/30";
+        return "bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border-rose-300 dark:border-rose-800";
       default:
-        return "bg-gray-500/15 text-gray-400 border-gray-500/30";
+        return "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-700";
     }
   };
 
@@ -169,8 +168,12 @@ export function SubscriptionsTab() {
   };
 
   const filteredSubscriptions = subscriptions.filter((sub) => {
-    if (filter === "all") return true;
-    return sub.paymentStatus === filter;
+    const matchesFilter = filter === "all" || sub.paymentStatus === filter;
+    const matchesSearch =
+      !searchQuery.trim() ||
+      sub.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      sub.studentPhone.includes(searchQuery);
+    return matchesFilter && matchesSearch;
   });
 
   const stats = {
@@ -187,202 +190,255 @@ export function SubscriptionsTab() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-12">
-        <RefreshCw className="h-8 w-8 animate-spin text-[#1677FF]" />
+      <div className="flex items-center justify-center p-16">
+        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-4 sm:p-6 dir-rtl text-right">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border pb-4">
         <div>
-          <h2 className="text-2xl font-black text-[#F8FAFC]">إدارة الاشتراكات الشهرية</h2>
-          <p className="text-sm text-[#A8B5C7] mt-1">
-            تتبع ومتابعة دفعات الطلاب الشهرية (500 جنيه كل 29 يوم)
+          <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
+            إدارة الاشتراكات الشهرية 💳
+          </h2>
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground mt-1">
+            تتبع ومتابعة دفعات الطلاب الشهرية وحالة التفعيل (500 جنيه كل 29 يوم)
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
           <Button
+            type="button"
             onClick={notifyExpiring}
             disabled={notifying}
-            className="bg-amber-600 hover:bg-amber-700 text-white"
+            className="h-10 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs gap-2 shadow-sm"
           >
             {notifying ? (
-              <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+              <RefreshCw className="h-4 w-4 animate-spin" />
             ) : (
-              <Bell className="h-4 w-4 mr-2" />
+              <Bell className="h-4 w-4" />
             )}
-            إشعار المتأخرين
+            <span>إشعار المتأخرين</span>
           </Button>
-          <Button onClick={loadSubscriptions} variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            تحديث
-          </Button>
-        </div>
-      </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="rounded-2xl border border-[#26364D] bg-[#0B1424] p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-[#A8B5C7]">إجمالي الاشتراكات</p>
-              <p className="text-2xl font-black text-white mt-1">{stats.total}</p>
-            </div>
-            <Calendar className="h-8 w-8 text-[#1677FF]" />
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-amber-300">معلقة</p>
-              <p className="text-2xl font-black text-white mt-1">{stats.pending}</p>
-            </div>
-            <Clock className="h-8 w-8 text-amber-400" />
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-emerald-300">مدفوعة</p>
-              <p className="text-2xl font-black text-white mt-1">{stats.paid}</p>
-            </div>
-            <CheckCircle2 className="h-8 w-8 text-emerald-400" />
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-rose-300">متأخرة</p>
-              <p className="text-2xl font-black text-white mt-1">{stats.overdue}</p>
-            </div>
-            <XCircle className="h-8 w-8 text-rose-400" />
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-orange-500/30 bg-orange-500/10 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-orange-300">تنتهي قريباً</p>
-              <p className="text-2xl font-black text-white mt-1">{stats.expiringSoon}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-orange-400" />
-          </div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {[
-          { key: "all", label: "الكل" },
-          { key: "pending", label: "معلقة" },
-          { key: "paid", label: "مدفوعة" },
-          { key: "overdue", label: "متأخرة" },
-        ].map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setFilter(f.key as any)}
-            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-              filter === f.key
-                ? "bg-[#1677FF] text-white"
-                : "bg-[#131E31] text-[#A8B5C7] hover:bg-[#1a2942]"
-            }`}
+          <Button
+            type="button"
+            onClick={loadSubscriptions}
+            variant="outline"
+            className="h-10 px-4 rounded-xl text-xs font-bold gap-2"
           >
-            {f.label}
-          </button>
-        ))}
+            <RefreshCw className="h-4 w-4" />
+            <span>تحديث</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* High-Contrast Modern Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+        {/* Card 1: Total */}
+        <div className="rounded-2xl border border-blue-200 dark:border-blue-900/50 bg-gradient-to-br from-blue-50/80 to-white dark:from-blue-950/40 dark:to-slate-900 p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs font-bold text-blue-900 dark:text-blue-200 block">
+                إجمالي الاشتراكات
+              </span>
+              <strong className="text-2xl font-black text-slate-900 dark:text-white mt-1 block">
+                {stats.total}
+              </strong>
+            </div>
+            <div className="grid h-11 w-11 place-items-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20">
+              <Calendar className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+
+        {/* Card 2: Pending */}
+        <div className="rounded-2xl border border-amber-300 dark:border-amber-900/50 bg-gradient-to-br from-amber-50/80 to-white dark:from-amber-950/40 dark:to-slate-900 p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs font-bold text-amber-900 dark:text-amber-200 block">
+                معلقة
+              </span>
+              <strong className="text-2xl font-black text-amber-950 dark:text-amber-100 mt-1 block">
+                {stats.pending}
+              </strong>
+            </div>
+            <div className="grid h-11 w-11 place-items-center rounded-xl bg-amber-500 text-white shadow-md shadow-amber-500/20">
+              <Clock className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: Paid */}
+        <div className="rounded-2xl border border-emerald-300 dark:border-emerald-900/50 bg-gradient-to-br from-emerald-50/80 to-white dark:from-emerald-950/40 dark:to-slate-900 p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs font-bold text-emerald-900 dark:text-emerald-200 block">
+                مدفوعة
+              </span>
+              <strong className="text-2xl font-black text-emerald-950 dark:text-emerald-100 mt-1 block">
+                {stats.paid}
+              </strong>
+            </div>
+            <div className="grid h-11 w-11 place-items-center rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-500/20">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: Overdue */}
+        <div className="rounded-2xl border border-rose-300 dark:border-rose-900/50 bg-gradient-to-br from-rose-50/80 to-white dark:from-rose-950/40 dark:to-slate-900 p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs font-bold text-rose-900 dark:text-rose-200 block">
+                متأخرة
+              </span>
+              <strong className="text-2xl font-black text-rose-950 dark:text-rose-100 mt-1 block">
+                {stats.overdue}
+              </strong>
+            </div>
+            <div className="grid h-11 w-11 place-items-center rounded-xl bg-rose-600 text-white shadow-md shadow-rose-500/20">
+              <XCircle className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+
+        {/* Card 5: Expiring Soon */}
+        <div className="rounded-2xl border border-orange-300 dark:border-orange-900/50 bg-gradient-to-br from-orange-50/80 to-white dark:from-orange-950/40 dark:to-slate-900 p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs font-bold text-orange-900 dark:text-orange-200 block">
+                تنتهي قريباً
+              </span>
+              <strong className="text-2xl font-black text-orange-950 dark:text-orange-100 mt-1 block">
+                {stats.expiringSoon}
+              </strong>
+            </div>
+            <div className="grid h-11 w-11 place-items-center rounded-xl bg-orange-500 text-white shadow-md shadow-orange-500/20">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter and Search Controls */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          {[
+            { key: "all", label: "الكل" },
+            { key: "pending", label: "معلقة" },
+            { key: "paid", label: "مدفوعة" },
+            { key: "overdue", label: "متأخرة" },
+          ].map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              onClick={() => setFilter(f.key as any)}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition-all border ${
+                filter === f.key
+                  ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                  : "bg-card border-border text-foreground hover:bg-muted"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative min-w-[240px]">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="بحث باسم الطالب أو الهاتف..."
+            className="w-full h-10 rounded-xl border border-border bg-card pr-9 pl-4 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
       </div>
 
       {/* Subscriptions Table */}
-      <div className="rounded-2xl border border-[#26364D] bg-[#0B1424] overflow-hidden">
+      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full text-right dir-rtl">
             <thead>
-              <tr className="border-b border-[#26364D] bg-[#131E31]">
-                <th className="text-right p-4 text-xs font-black text-[#A8B5C7]">الطالب</th>
-                <th className="text-right p-4 text-xs font-black text-[#A8B5C7]">الهاتف</th>
-                <th className="text-right p-4 text-xs font-black text-[#A8B5C7]">تاريخ البداية</th>
-                <th className="text-right p-4 text-xs font-black text-[#A8B5C7]">تاريخ الانتهاء</th>
-                <th className="text-right p-4 text-xs font-black text-[#A8B5C7]">المبلغ</th>
-                <th className="text-right p-4 text-xs font-black text-[#A8B5C7]">الحالة</th>
-                <th className="text-right p-4 text-xs font-black text-[#A8B5C7]">الأيام المتبقية</th>
-                <th className="text-center p-4 text-xs font-black text-[#A8B5C7]">الإجراءات</th>
+              <tr className="border-b border-border bg-muted/60 text-muted-foreground text-xs font-bold">
+                <th className="p-4 text-right">الطالب</th>
+                <th className="p-4 text-right">الهاتف</th>
+                <th className="p-4 text-right">تاريخ البداية</th>
+                <th className="p-4 text-right">تاريخ الانتهاء</th>
+                <th className="p-4 text-right">المبلغ</th>
+                <th className="p-4 text-right">الحالة</th>
+                <th className="p-4 text-right">الأيام المتبقية</th>
+                <th className="p-4 text-center">الإجراءات</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-border">
               {filteredSubscriptions.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center p-8 text-[#A8B5C7]">
-                    لا توجد اشتراكات
+                  <td colSpan={8} className="text-center p-12 text-xs font-bold text-muted-foreground">
+                    لا توجد اشتراكات مطابقة للبحث
                   </td>
                 </tr>
               ) : (
                 filteredSubscriptions.map((sub) => {
                   const daysRemaining = getDaysRemaining(sub.monthEndDate);
-                  const isExpiringSoon = daysRemaining <= 3 && daysRemaining >= 0 && sub.paymentStatus === "pending";
+                  const isExpiringSoon =
+                    daysRemaining <= 3 && daysRemaining >= 0 && sub.paymentStatus === "pending";
 
                   return (
                     <motion.tr
                       key={sub.id}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className={`border-b border-[#26364D] hover:bg-[#131E31] transition-colors ${
-                        isExpiringSoon ? "bg-orange-500/5" : ""
+                      className={`hover:bg-muted/40 transition-colors ${
+                        isExpiringSoon ? "bg-amber-500/10 dark:bg-amber-950/20" : ""
                       }`}
                     >
-                      <td className="p-4">
+                      <td className="p-4 font-bold text-xs text-foreground">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-white">{sub.studentName}</span>
+                          <span>{sub.studentName}</span>
                           {isExpiringSoon && (
-                            <AlertTriangle className="h-4 w-4 text-orange-400" />
+                            <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
                           )}
                         </div>
                       </td>
-                      <td className="p-4">
-                        <span className="text-sm text-[#A8B5C7] font-mono" dir="ltr">
-                          {sub.studentPhone}
-                        </span>
+                      <td className="p-4 font-mono text-xs text-muted-foreground dir-ltr text-right">
+                        {sub.studentPhone}
                       </td>
-                      <td className="p-4">
-                        <span className="text-sm text-[#A8B5C7]">
-                          {new Date(sub.monthStartDate).toLocaleDateString("ar-EG")}
-                        </span>
+                      <td className="p-4 text-xs text-muted-foreground">
+                        {new Date(sub.monthStartDate).toLocaleDateString("ar-EG")}
                       </td>
-                      <td className="p-4">
-                        <span className="text-sm text-[#A8B5C7]">
-                          {new Date(sub.monthEndDate).toLocaleDateString("ar-EG")}
-                        </span>
+                      <td className="p-4 text-xs text-muted-foreground">
+                        {new Date(sub.monthEndDate).toLocaleDateString("ar-EG")}
                       </td>
-                      <td className="p-4">
-                        <span className="text-sm font-bold text-emerald-400">
-                          {sub.amountDue} جنيه
-                        </span>
+                      <td className="p-4 text-xs font-black text-emerald-600 dark:text-emerald-400">
+                        {sub.amountDue} جنيه
                       </td>
                       <td className="p-4">
                         <span
-                          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(
+                          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border ${getStatusBadge(
                             sub.paymentStatus
                           )}`}
                         >
                           {getStatusText(sub.paymentStatus)}
                         </span>
                       </td>
-                      <td className="p-4">
+                      <td className="p-4 text-xs font-bold">
                         <span
-                          className={`text-sm font-bold ${
+                          className={
                             daysRemaining < 0
-                              ? "text-rose-400"
+                              ? "text-rose-600 dark:text-rose-400"
                               : daysRemaining <= 3
-                              ? "text-orange-400"
-                              : "text-[#A8B5C7]"
-                          }`}
+                              ? "text-amber-600 dark:text-amber-400"
+                              : "text-muted-foreground"
+                          }
                         >
-                          {daysRemaining < 0 ? `متأخر ${Math.abs(daysRemaining)} يوم` : `${daysRemaining} يوم`}
+                          {daysRemaining < 0
+                            ? `متأخر ${Math.abs(daysRemaining)} يوم`
+                            : `${daysRemaining} يوم`}
                         </span>
                       </td>
                       <td className="p-4">
@@ -391,24 +447,28 @@ export function SubscriptionsTab() {
                             <>
                               <Button
                                 size="sm"
+                                type="button"
                                 onClick={() => markAsPaid(sub.id)}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                                className="h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-1 shadow-xs"
                               >
-                                <CheckCircle2 className="h-4 w-4" />
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                <span>تأكيد الدفع</span>
                               </Button>
                               <Button
                                 size="sm"
+                                type="button"
                                 onClick={() => markAsOverdue(sub.id)}
                                 variant="outline"
-                                className="border-rose-500 text-rose-400 hover:bg-rose-500/10"
+                                className="h-8 px-3 rounded-lg border-rose-300 text-rose-600 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-400 dark:hover:bg-rose-950/50 font-bold text-xs gap-1"
                               >
-                                <XCircle className="h-4 w-4" />
+                                <XCircle className="h-3.5 w-3.5" />
+                                <span>متأخر</span>
                               </Button>
                             </>
                           )}
                           {sub.paymentStatus === "paid" && (
-                            <span className="text-xs text-emerald-400">
-                              ✓ تم الدفع
+                            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                              <CheckCircle2 className="h-3.5 w-3.5" /> تم الدفع
                             </span>
                           )}
                         </div>
