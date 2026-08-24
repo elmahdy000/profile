@@ -1103,15 +1103,29 @@ export function VideoLessonsSection({
             </div>
           }
         >
-          <PremiumLessonPlayer
-            item={activePlayer}
-            lessons={visibleItems}
-            files={files}
-            quizzes={quizzes}
-            onStartQuiz={onStartQuiz}
-            onSelectLesson={setActivePlayer}
-            onClose={() => setActivePlayer(null)}
-          />
+          {(() => {
+            const courseLessons = visibleItems.filter((item) => {
+              if (activePlayer.courseId && item.courseId) {
+                return Number(item.courseId) === Number(activePlayer.courseId);
+              }
+              if (item.category && activePlayer.category) {
+                return item.category.trim().toLowerCase() === activePlayer.category.trim().toLowerCase();
+              }
+              return true;
+            });
+            const playerLessons = courseLessons.length > 0 ? courseLessons : [activePlayer];
+            return (
+              <PremiumLessonPlayer
+                item={activePlayer}
+                lessons={playerLessons}
+                files={files}
+                quizzes={quizzes}
+                onStartQuiz={onStartQuiz}
+                onSelectLesson={setActivePlayer}
+                onClose={() => setActivePlayer(null)}
+              />
+            );
+          })()}
         </Suspense>
       )}
 
