@@ -19,7 +19,17 @@ export default function PlatformPage() {
   }, []);
 
   useEffect(() => {
-    const check = () => fetch("/api/student/me", { credentials: "include" }).then((response) => response.ok ? response.json() : null).then((data) => setAuthenticated(Boolean(data?.student))).catch(() => setAuthenticated(false)).finally(() => setAuthChecked(true));
+    const check = () => {
+      const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
+      const headers: Record<string, string> = {};
+      if (deviceId) headers["X-Device-Id"] = deviceId;
+
+      return fetch("/api/student/me", { credentials: "include", headers })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((data) => setAuthenticated(Boolean(data?.student)))
+        .catch(() => setAuthenticated(false))
+        .finally(() => setAuthChecked(true));
+    };
     void check();
     window.addEventListener("student-auth-changed", check);
     return () => window.removeEventListener("student-auth-changed", check);
