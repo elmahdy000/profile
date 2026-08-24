@@ -107,7 +107,7 @@ router.post("/upload", requireAdmin, imageUpload, (req, res) => {
 });
 
 // Audio upload route
-import { exec } from "child_process";
+import { spawn } from "child_process";
 
 function compressVideoInBackground(filePath: string) {
   const ext = path.extname(filePath).toLowerCase();
@@ -115,33 +115,42 @@ function compressVideoInBackground(filePath: string) {
   const base = path.basename(filePath, ext);
   const tempPath = path.join(dir, `${base}-temp${ext}`);
 
-  // FFmpeg H.264 CRF 23 encoding (visually lossless for educational videos)
-  const cmd = `ffmpeg -y -i "${filePath}" -vcodec libx264 -crf 23 -preset fast -acodec copy "${tempPath}"`;
+  try {
+    const child = spawn(
+      "ffmpeg",
+      ["-y", "-i", filePath, "-vcodec", "libx264", "-crf", "23", "-preset", "fast", "-acodec", "copy", tempPath],
+      { stdio: "ignore" }
+    );
 
-  exec(cmd, (error) => {
-    if (error) {
-      console.error(`[Video Compression Error]: ${error.message}`);
+    child.on("close", (code) => {
+      if (code === 0 && fs.existsSync(tempPath)) {
+        try {
+          const origSize = fs.statSync(filePath).size;
+          const compSize = fs.statSync(tempPath).size;
+          if (compSize < origSize && compSize > 0) {
+            fs.renameSync(tempPath, filePath);
+          } else {
+            fs.unlinkSync(tempPath);
+          }
+        } catch (e) {
+          console.error(`[Video Compression Cleanup Error]:`, e);
+        }
+      } else {
+        if (fs.existsSync(tempPath)) {
+          try { fs.unlinkSync(tempPath); } catch (e) {}
+        }
+      }
+    });
+
+    child.on("error", (err) => {
+      console.warn(`[Video Compression Error]: ffmpeg failed or not found:`, err.message);
       if (fs.existsSync(tempPath)) {
         try { fs.unlinkSync(tempPath); } catch (e) {}
       }
-      return;
-    }
-
-    if (fs.existsSync(tempPath)) {
-      const origSize = fs.statSync(filePath).size;
-      const compSize = fs.statSync(tempPath).size;
-
-      if (compSize < origSize && compSize > 0) {
-        try {
-          fs.renameSync(tempPath, filePath);
-        } catch (e) {
-          console.error(`[Video Swap Error]:`, e);
-        }
-      } else {
-        try { fs.unlinkSync(tempPath); } catch (e) {}
-      }
-    }
-  });
+    });
+  } catch (e) {
+    console.warn(`[Video Compression Exception]:`, e);
+  }
 }
 
 router.post("/upload/audio", requireAdmin, audioUpload, (req, res) => {

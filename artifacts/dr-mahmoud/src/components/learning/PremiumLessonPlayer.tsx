@@ -201,7 +201,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
     if (!isProtected || !video || !streamSrc) return;
 
     if (hlsRef.current) {
-      hlsRef.current.destroy();
+      try { hlsRef.current.destroy(); } catch {}
       hlsRef.current = null;
     }
 
@@ -236,7 +236,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
 
     return () => {
       if (hlsRef.current) {
-        hlsRef.current.destroy();
+        try { hlsRef.current.destroy(); } catch {}
         hlsRef.current = null;
       }
     };
