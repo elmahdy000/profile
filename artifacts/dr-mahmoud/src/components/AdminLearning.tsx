@@ -42,7 +42,7 @@ import { StudentsTab } from "./admin/learning/StudentsTab";
 import { CenterBookingsTab } from "./admin/learning/CenterBookingsTab";
 import { PaymentsTab } from "./admin/learning/PaymentsTab";
 import { NotificationsTab } from "./admin/learning/NotificationsTab";
-import { SubscriptionsTab } from "./admin/SubscriptionsTab";
+import { MonthlyPaymentsTab } from "./admin/learning/MonthlyPaymentsTab";
 import { OverviewSection } from "./admin/learning/OverviewSection";
 
 type Student = PlatformStudent & {
@@ -1414,6 +1414,9 @@ export function AdminLearning({
                 setStudents((prev) => prev.map((s) => (s.id === id ? { ...s, ...data } : s)));
               }}
             />
+          )}
+          {tab === "subscriptions" && (
+            <MonthlyPaymentsTab />
           )}
           {tab === "payments" && (
             <PaymentsTab receipts={paymentReceipts} onRefresh={load} />

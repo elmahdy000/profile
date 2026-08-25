@@ -1929,7 +1929,7 @@ router.post("/learning/notifications/read-all", requireStudent, async (_req, res
 
 router.post("/admin/notifications/broadcast", requireAdmin, async (req, res, next) => {
   try {
-    const { title, message, type = "info", targetGrade } = req.body;
+    const { title, message, type = "info", targetGrade, studentIds } = req.body;
     if (!title?.trim() || !message?.trim()) {
       res.status(400).json({ error: "عنوان ونص الإشعار مطلوبان" });
       return;
@@ -1941,7 +1941,11 @@ router.post("/admin/notifications/broadcast", requireAdmin, async (req, res, nex
       .where(eq(studentsTable.status, "approved"));
 
     let targets = allApproved;
-    if (targetGrade && targetGrade !== "all") {
+    // If specific studentIds provided, use them directly
+    if (Array.isArray(studentIds) && studentIds.length > 0) {
+      const ids = studentIds.map(Number).filter(Number.isInteger);
+      targets = allApproved.filter((st) => ids.includes(st.id));
+    } else if (targetGrade && targetGrade !== "all") {
       targets = allApproved.filter((st) => st.grade === targetGrade);
     }
 
@@ -1968,6 +1972,7 @@ router.post("/admin/notifications/broadcast", requireAdmin, async (req, res, nex
     next(error);
   }
 });
+
 
 router.delete("/admin/students/:id", requireAdmin, async (req, res, next) => {
   try {
