@@ -1183,31 +1183,37 @@ router.patch("/admin/payment-receipts/:id", requireAdmin, async (req, res, next)
           // A verified payment confirms any matching pending booking.
           await confirmPendingBookingsForPhone(student.phone);
 
-          // Create first monthly subscription after payment approval
-          const subscriptionStartDate = new Date();
-          const subscriptionEndDate = new Date(subscriptionStartDate);
-          subscriptionEndDate.setDate(subscriptionEndDate.getDate() + 29);
+          // Create first monthly subscription after payment approval defensively
+          try {
+            const subscriptionStartDate = new Date();
+            const subscriptionEndDate = new Date(subscriptionStartDate);
+            subscriptionEndDate.setDate(subscriptionEndDate.getDate() + 29);
 
-          const [subscription] = await db
-            .insert(monthlySubscriptionsTable)
-            .values({
-              studentId: receipt.studentId,
-              monthStartDate: subscriptionStartDate,
-              monthEndDate: subscriptionEndDate,
-              amountDue: 500,
-              paymentStatus: "paid",
-              paymentDate: new Date(),
-              receiptId: receipt.id,
-            })
-            .returning();
+            const [subscription] = await db
+              .insert(monthlySubscriptionsTable)
+              .values({
+                studentId: receipt.studentId,
+                monthStartDate: subscriptionStartDate,
+                monthEndDate: subscriptionEndDate,
+                amountDue: 500,
+                paymentStatus: "paid",
+                paymentDate: new Date(),
+                receiptId: receipt.id,
+              })
+              .returning();
 
-          await db
-            .update(studentsTable)
-            .set({
-              currentSubscriptionId: subscription.id,
-              subscriptionStartDate: subscriptionStartDate,
-            })
-            .where(eq(studentsTable.id, receipt.studentId));
+            if (subscription) {
+              await db
+                .update(studentsTable)
+                .set({
+                  currentSubscriptionId: subscription.id,
+                  subscriptionStartDate: subscriptionStartDate,
+                })
+                .where(eq(studentsTable.id, receipt.studentId));
+            }
+          } catch (subErr) {
+            console.error("Warning: Failed to create monthly subscription record:", subErr);
+          }
         }
 
         await db.insert(studentNotificationsTable).values({
