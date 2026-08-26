@@ -1371,6 +1371,70 @@ router.get("/admin/students", requireAdmin, async (_req, res, next) => {
   }
 });
 
+router.get("/admin/learning/daily-activity", requireAdmin, async (_req, res, next) => {
+  try {
+    const students = await db.select().from(studentsTable).where(eq(studentsTable.status, "approved"));
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    const yesterdayDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const yesterdayStr = yesterdayDate.toISOString().slice(0, 10);
+
+    const dailyMap: Record<string, number> = {};
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+      const dateKey = d.toISOString().slice(0, 10);
+      dailyMap[dateKey] = 0;
+    }
+
+    const todayActiveStudents: Array<{
+      id: number;
+      name: string;
+      phone: string;
+      grade: string;
+      accessCode: string | null;
+      lastActiveAt: string | null;
+    }> = [];
+
+    for (const student of students) {
+      const activeDate = student.lastActiveAt || student.lastLoginAt || student.updatedAt;
+      if (!activeDate) continue;
+      const activeIso = new Date(activeDate).toISOString();
+      const activeDay = activeIso.slice(0, 10);
+
+      if (activeDay in dailyMap) {
+        dailyMap[activeDay] += 1;
+      }
+
+      if (activeDay === todayStr) {
+        todayActiveStudents.push({
+          id: student.id,
+          name: student.name,
+          phone: student.phone || "",
+          grade: student.grade || "",
+          accessCode: student.accessCode || null,
+          lastActiveAt: activeIso,
+        });
+      }
+    }
+
+    todayActiveStudents.sort((a, b) => new Date(b.lastActiveAt || 0).getTime() - new Date(a.lastActiveAt || 0).getTime());
+
+    const dailyHistory = Object.entries(dailyMap).map(([date, count]) => ({ date, count }));
+
+    res.json({
+      summary: {
+        todayActiveCount: dailyMap[todayStr] || 0,
+        yesterdayActiveCount: dailyMap[yesterdayStr] || 0,
+        totalApprovedStudents: students.length,
+      },
+      dailyHistory,
+      todayActiveStudents,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get("/admin/students/stream", requireAdmin, async (req, res, next) => {
   try {
     res.setHeader("Content-Type", "text/event-stream");

@@ -649,6 +649,7 @@ export function StudentsTab({
                 ["الحساب", "min-w-[85px]"],
                 ["السنتر والموعد 📍", "min-w-[165px]"],
                 ["الأجهزة", "min-w-[85px]"],
+                ["آخر ظهور ⏱️", "min-w-[110px]"],
               ].map(([label, width]) => (
                 <th key={label} className={`border-b border-[#E2E8F0] px-2.5 py-2 font-bold ${width}`}>{label}</th>
               ))}
@@ -900,6 +901,41 @@ export function StudentsTab({
                             )}
                           </span>
                         );
+                    </td>
+
+                    {/* Last Active Time */}
+                    <td className="border-b border-[#E2E8F0] px-2.5 py-2">
+                      {(() => {
+                        const activeDate = s.lastActiveAt || s.lastLoginAt || s.updatedAt;
+                        if (!activeDate) {
+                          return <span className="text-[10px] font-semibold text-slate-400">لم يدخل بعد</span>;
+                        }
+                        const date = new Date(activeDate);
+                        const now = new Date();
+                        const diffMins = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+                        const diffHours = Math.floor(diffMins / 60);
+                        const diffDays = Math.floor(diffHours / 24);
+
+                        if (diffMins < 5) {
+                          return (
+                            <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200 animate-pulse">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> نشط الآن 🟢
+                            </span>
+                          );
+                        }
+                        if (diffMins < 60) {
+                          return <span className="text-[10px] font-bold text-emerald-700">منذ {diffMins} دقيقة</span>;
+                        }
+                        if (diffHours < 24) {
+                          return <span className="text-[10px] font-bold text-blue-700">منذ {diffHours} ساعة</span>;
+                        }
+                        if (diffDays === 1) {
+                          return <span className="text-[10px] font-bold text-slate-700">أمس</span>;
+                        }
+                        if (diffDays < 30) {
+                          return <span className="text-[10px] font-semibold text-slate-600">منذ {diffDays} يوم</span>;
+                        }
+                        return <span className="text-[10px] font-medium text-slate-400">{date.toLocaleDateString("ar-EG")}</span>;
                       })()}
                     </td>
 
