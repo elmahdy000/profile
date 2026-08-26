@@ -92,6 +92,9 @@ export type ExtendedStudent = PlatformStudent & {
   center_name?: string | null;
   appointment_slot?: string | null;
   language_track?: string | null;
+  lastActiveAt?: string | null;
+  lastLoginAt?: string | null;
+  updatedAt?: string | null;
 };
 
 interface StudentDrawerProps {

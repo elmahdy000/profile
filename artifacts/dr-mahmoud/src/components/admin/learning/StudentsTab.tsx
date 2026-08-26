@@ -72,6 +72,7 @@ export function StudentsTab({
   learningCourses = [],
   onUpdateStudentCourses,
   onApproveReceipt,
+  onNavigateToReports,
 }: StudentsTabProps) {
   // Read initial parameters from URL Search Params if available
   const getInitialParam = (key: string, fallback: string) => {
@@ -88,7 +89,8 @@ export function StudentsTab({
   const [paymentFilter, setPaymentFilter] = useState(() => getInitialParam("payment", "all"));
   const [statusFilter, setStatusFilter] = useState(() => getInitialParam("status", "all"));
   const [modeFilter, setModeFilter] = useState(() => getInitialParam("mode", "all"));
-  const [sortBy, setSortBy] = useState<"newest" | "name" | "code">(() => getInitialParam("sort", "newest") as any);
+  const [activityFilter, setActivityFilter] = useState<"all" | "inactive_7d" | "inactive_30d" | "never" | "active_now">(() => getInitialParam("activity", "all") as any);
+  const [sortBy, setSortBy] = useState<"newest" | "name" | "code" | "last_active_asc" | "last_active_desc">(() => getInitialParam("sort", "newest") as any);
 
   // Selection & Pagination
   const [selectedStudentIds, setSelectedStudentIds] = useState<number[]>([]);
@@ -128,13 +130,14 @@ export function StudentsTab({
     if (paymentFilter !== "all") params.set("payment", paymentFilter);
     if (statusFilter !== "all") params.set("status", statusFilter);
     if (modeFilter !== "all") params.set("mode", modeFilter);
+    if (activityFilter !== "all") params.set("activity", activityFilter);
     if (sortBy !== "newest") params.set("sort", sortBy);
     if (currentPage > 1) params.set("page", String(currentPage));
 
     const queryString = params.toString();
     const newUrl = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
     window.history.replaceState(null, "", newUrl);
-  }, [debouncedSearch, stageFilter, courseFilter, paymentFilter, statusFilter, modeFilter, sortBy, currentPage]);
+  }, [debouncedSearch, stageFilter, courseFilter, paymentFilter, statusFilter, modeFilter, activityFilter, sortBy, currentPage]);
 
   // Unique stages list
   const uniqueStages = useMemo(() => {
@@ -157,6 +160,7 @@ export function StudentsTab({
       setPaymentFilter(params.get("payment") || "all");
       setStatusFilter(params.get("status") || "all");
       setModeFilter(params.get("mode") || "all");
+      setActivityFilter((params.get("activity") as any) || "all");
       setSortBy((params.get("sort") as any) || "newest");
       setCurrentPage(Number(params.get("page")) || 1);
     };
@@ -166,6 +170,7 @@ export function StudentsTab({
 
   // Filtering Logic
   const filteredStudents = useMemo(() => {
+    const nowTime = Date.now();
     return students
       .filter((s) => {
         // Search Filter
@@ -202,7 +207,7 @@ export function StudentsTab({
         // Status Filter
         if (statusFilter !== "all" && s.status !== statusFilter) return false;
 
-        // Mode Filter (Center bookings: learningMode === "offline" OR has centerName/appointmentSlot)
+        // Mode Filter
         if (modeFilter !== "all") {
           const isOfflineStudent = s.learningMode === "offline" || Boolean(s.centerName && s.centerName.trim()) || Boolean(s.appointmentSlot && s.appointmentSlot.trim());
           if (modeFilter === "offline" && !isOfflineStudent) return false;
@@ -210,14 +215,34 @@ export function StudentsTab({
           if (modeFilter !== "offline" && modeFilter !== "online" && s.learningMode !== modeFilter) return false;
         }
 
+        // Activity Filter
+        const activeDate = s.lastActiveAt || s.lastLoginAt || s.updatedAt;
+        const activeTime = activeDate ? new Date(activeDate).getTime() : 0;
+        const diffDays = activeDate ? (nowTime - activeTime) / (1000 * 60 * 60 * 24) : Infinity;
+
+        if (activityFilter === "never" && activeDate) return false;
+        if (activityFilter === "inactive_7d" && diffDays < 7) return false;
+        if (activityFilter === "inactive_30d" && diffDays < 30) return false;
+        if (activityFilter === "active_now" && (diffDays >= 7 || !activeDate)) return false;
+
         return true;
       })
       .sort((a, b) => {
         if (sortBy === "name") return a.name.localeCompare(b.name, "ar");
         if (sortBy === "code") return (a.accessCode || "").localeCompare(b.accessCode || "");
+        if (sortBy === "last_active_asc") {
+          const timeA = (a.lastActiveAt || a.lastLoginAt || a.updatedAt) ? new Date(a.lastActiveAt || a.lastLoginAt || a.updatedAt!).getTime() : 0;
+          const timeB = (b.lastActiveAt || b.lastLoginAt || b.updatedAt) ? new Date(b.lastActiveAt || b.lastLoginAt || b.updatedAt!).getTime() : 0;
+          return timeA - timeB;
+        }
+        if (sortBy === "last_active_desc") {
+          const timeA = (a.lastActiveAt || a.lastLoginAt || a.updatedAt) ? new Date(a.lastActiveAt || a.lastLoginAt || a.updatedAt!).getTime() : 0;
+          const timeB = (b.lastActiveAt || b.lastLoginAt || b.updatedAt) ? new Date(b.lastActiveAt || b.lastLoginAt || b.updatedAt!).getTime() : 0;
+          return timeB - timeA;
+        }
         return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
       });
-  }, [students, debouncedSearch, stageFilter, courseFilter, paymentFilter, statusFilter, modeFilter, sortBy]);
+  }, [students, debouncedSearch, stageFilter, courseFilter, paymentFilter, statusFilter, modeFilter, activityFilter, sortBy]);
 
   // Check if any filter is active
   const hasActiveFilters = Boolean(
@@ -227,6 +252,7 @@ export function StudentsTab({
       paymentFilter !== "all" ||
       statusFilter !== "all" ||
       modeFilter !== "all" ||
+      activityFilter !== "all" ||
       sortBy !== "newest"
   );
 
@@ -238,6 +264,7 @@ export function StudentsTab({
     setPaymentFilter("all");
     setStatusFilter("all");
     setModeFilter("all");
+    setActivityFilter("all");
     setSortBy("newest");
     setCurrentPage(1);
     if (typeof window !== "undefined") {
@@ -253,15 +280,19 @@ export function StudentsTab({
   }, [filteredStudents, currentPage, pageSize]);
 
   // Checkbox Selection
-  const isAllSelected =
-    paginatedStudents.length > 0 && paginatedStudents.every((s) => selectedStudentIds.includes(s.id));
+  const isAllFilteredSelected =
+    filteredStudents.length > 0 && filteredStudents.every((s) => selectedStudentIds.includes(s.id));
 
   const toggleSelectAll = () => {
-    if (isAllSelected) {
+    if (isAllFilteredSelected) {
       setSelectedStudentIds([]);
     } else {
-      setSelectedStudentIds(paginatedStudents.map((s) => s.id));
+      setSelectedStudentIds(filteredStudents.map((s) => s.id));
     }
+  };
+
+  const selectAllFiltered = () => {
+    setSelectedStudentIds(filteredStudents.map((s) => s.id));
   };
 
   const toggleSelectStudent = (id: number) => {
@@ -277,6 +308,34 @@ export function StudentsTab({
   const handleBulkSuspend = () => {
     selectedStudentIds.forEach((id) => onUpdateStatus(id, "suspended"));
     setSelectedStudentIds([]);
+  };
+
+  const handleSuspendAllFiltered = () => {
+    const targetStudents = filteredStudents.filter((s) => s.status !== "suspended");
+    if (targetStudents.length === 0) {
+      alert("جميع الطلاب المعروضين موقوفون بالفعل.");
+      return;
+    }
+    const confirmed = window.confirm(
+      `هل أنت تأكيد من إيقاف حسابات جميع الطلاب المعروضين وعددهم (${targetStudents.length} طالب)؟\n\nتنويه: يمكنك أنت أو المساعد إعادة تفعيل أي طالب لاحقاً بسهولة.`
+    );
+    if (confirmed) {
+      targetStudents.forEach((s) => onUpdateStatus(s.id, "suspended"));
+    }
+  };
+
+  const handleSuspendAllStudents = () => {
+    const activeStudents = students.filter((s) => s.status !== "suspended");
+    if (activeStudents.length === 0) {
+      alert("جميع الطلاب (الأونلاين والأوفلاين) موقوفون بالفعل حالياً.");
+      return;
+    }
+    const confirmed = window.confirm(
+      `⚠️ إجراء حاسم:\nهل أنت متأكد من إيقاف حسابات كافة الطلاب بالكامل (أونلاين + أوفلاين) وعددهم (${activeStudents.length} طالب)؟\n\nتنويه: لن يتمكن أي طالب من الدخول للمنصة إلا بعد تفعيله يدويًا منك أو من المشرف المساعد.`
+    );
+    if (confirmed) {
+      activeStudents.forEach((s) => onUpdateStatus(s.id, "suspended"));
+    }
   };
 
   const handleExportCSV = () => {
@@ -387,6 +446,51 @@ export function StudentsTab({
             </button>
           )}
 
+          {/* Quick Inactive Filter Button */}
+          <button
+            type="button"
+            onClick={() => {
+              if (activityFilter === "inactive_7d" && sortBy === "last_active_asc") {
+                setActivityFilter("all");
+                setSortBy("newest");
+              } else {
+                setActivityFilter("inactive_7d");
+                setSortBy("last_active_asc");
+              }
+              setCurrentPage(1);
+            }}
+            className={`shrink-0 inline-flex items-center gap-1.5 h-12 rounded-xl px-3.5 text-xs font-bold transition-all shadow-xs ${
+              activityFilter === "inactive_7d"
+                ? "bg-amber-600 text-white ring-2 ring-amber-400"
+                : "bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100"
+            }`}
+          >
+            <Clock className="h-4 w-4 text-amber-600" />
+            <span>المنقطعين (لم يدخلوا من أسبوع) ⚠️</span>
+          </button>
+
+          {activityFilter !== "all" && (
+            <button
+              type="button"
+              onClick={handleSuspendAllFiltered}
+              className="shrink-0 inline-flex items-center gap-1.5 h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white px-3.5 text-xs font-bold transition-all shadow-xs"
+            >
+              <UserX className="h-4 w-4" />
+              <span>إيقاف المنقطعين المعروضين ({filteredStudents.filter((s) => s.status !== "suspended").length}) 🚫</span>
+            </button>
+          )}
+
+          {/* Suspend All Students (Online + Offline) Button */}
+          <button
+            type="button"
+            onClick={handleSuspendAllStudents}
+            className="shrink-0 inline-flex items-center gap-1.5 h-12 rounded-xl bg-rose-700 hover:bg-rose-800 text-white px-3.5 text-xs font-bold transition-all shadow-xs"
+            title="إيقاف جميع الطلاب (أونلاين وأوفلاين) لحين تفعيلهم يدويًا من الأدمن أو المشرف المساعد"
+          >
+            <UserX className="h-4 w-4" />
+            <span>إيقاف كافة الطلاب (أونلاين + أوفلاين) 🛑</span>
+          </button>
+
           {onNavigateToReports && (
             <button
               type="button"
@@ -469,6 +573,19 @@ export function StudentsTab({
             <option value="offline">أوفلاين (السنتر)</option>
           </select>
 
+          {/* Activity Level Filter */}
+          <select
+            value={activityFilter}
+            onChange={(e) => { setActivityFilter(e.target.value as any); setCurrentPage(1); }}
+            className="h-12 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
+          >
+            <option value="all">حالة النشاط بالمنصة</option>
+            <option value="inactive_7d">منقطع من أسبوع (7+ أيام)</option>
+            <option value="inactive_30d">منقطع من شهر (30+ يوم)</option>
+            <option value="never">لم يدخل المنصة أبدًا</option>
+            <option value="active_now">نشط خلال الأسبوع</option>
+          </select>
+
           {/* Sort */}
           <select
             value={sortBy}
@@ -476,6 +593,8 @@ export function StudentsTab({
             className="h-12 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-semibold text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
           >
             <option value="newest">الأحدث تسجيلًا</option>
+            <option value="last_active_asc">المنقطعين أولاً (الأقدم نشاطاً)</option>
+            <option value="last_active_desc">الأكثر نشاطاً مؤخراً</option>
             <option value="name">أبجديًا بالاسم</option>
             <option value="code">حسب كود الطالب</option>
           </select>
@@ -509,6 +628,13 @@ export function StudentsTab({
               <option value="online">أونلاين</option>
               <option value="offline">أوفلاين</option>
             </select>
+            <select value={activityFilter} onChange={(e) => setActivityFilter(e.target.value as any)}
+              className="h-11 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 text-xs font-semibold text-[#0F172A]">
+              <option value="all">كل حالات النشاط</option>
+              <option value="inactive_7d">منقطع أكثر من 7 أيام</option>
+              <option value="inactive_30d">منقطع أكثر من 30 يوم</option>
+              <option value="never">لم يدخل أبدًا</option>
+            </select>
           </div>
         )}
 
@@ -535,6 +661,12 @@ export function StudentsTab({
                 <button type="button" onClick={() => setStatusFilter("all")} className="hover:text-[#0F172A]"><X className="h-3 w-3" /></button>
               </span>
             )}
+            {activityFilter !== "all" && (
+              <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
+                <span>النشاط: {activityFilter === "inactive_7d" ? "منقطع (7+ أيام)" : activityFilter === "inactive_30d" ? "منقطع (30+ يوم)" : activityFilter === "never" ? "لم يدخل أبدًا" : "نشط"}</span>
+                <button type="button" onClick={() => setActivityFilter("all")} className="hover:text-[#0F172A]"><X className="h-3 w-3" /></button>
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -542,11 +674,22 @@ export function StudentsTab({
       {/* 2. Bulk Action Bar (Appears when 1+ selected) */}
       {selectedStudentIds.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#BFDBFE] bg-[#EFF6FF] p-4 shadow-xs">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#2563EB] text-xs font-bold text-white">
               {selectedStudentIds.length}
             </span>
-            <span className="text-xs font-bold text-[#0F172A]">طلاب محددون للإجراء الجماعي</span>
+            <span className="text-xs font-bold text-[#0F172A]">
+              طلاب محددون {filteredStudents.length > selectedStudentIds.length ? `(من أصل ${filteredStudents.length} بالفئة)` : "(جميع طلاب الفئة)"}
+            </span>
+            {selectedStudentIds.length < filteredStudents.length && (
+              <button
+                type="button"
+                onClick={selectAllFiltered}
+                className="text-xs font-bold text-[#2563EB] hover:underline bg-white border border-[#BFDBFE] px-2.5 py-1 rounded-lg mr-2 transition-colors hover:bg-[#DBEAFE]"
+              >
+                📌 تحديد كل طلاب هذه الفئة/النتيجة ({filteredStudents.length})
+              </button>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -556,7 +699,7 @@ export function StudentsTab({
               onClick={handleBulkApprove}
               className="bg-[#10B981] hover:bg-[#059669] text-white font-semibold text-xs h-9 rounded-xl min-h-[44px]"
             >
-              <UserCheck className="h-4 w-4 ml-1" /> قبول وتفعيل المحدد
+              <UserCheck className="h-4 w-4 ml-1" /> قبول وتفعيل المحدد ({selectedStudentIds.length})
             </Button>
 
             <Button
@@ -565,7 +708,7 @@ export function StudentsTab({
               onClick={handleBulkSuspend}
               className="bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs h-9 rounded-xl min-h-[44px]"
             >
-              <UserX className="h-4 w-4 ml-1" /> إيقاف المحدد
+              <UserX className="h-4 w-4 ml-1" /> إيقاف المحدد ({selectedStudentIds.length})
             </Button>
 
             <Button
@@ -647,8 +790,14 @@ export function StudentsTab({
           <thead className="sticky top-0 z-20 bg-[#F8FAFC] text-[#475569]">
             <tr className="h-12">
               <th className="w-10 border-b border-[#E2E8F0] px-2.5 text-center">
-                <button type="button" onClick={toggleSelectAll} aria-label={isAllSelected ? "إلغاء تحديد كل الطلاب" : "تحديد كل الطلاب"} className="inline-grid h-8 w-8 place-items-center rounded-lg text-[#64748B] transition hover:bg-[#F1F5F9]">
-                  {isAllSelected ? <CheckSquare className="h-4 w-4 text-[#2563EB]" /> : <Square className="h-4 w-4" />}
+                <button
+                  type="button"
+                  onClick={toggleSelectAll}
+                  aria-label={isAllFilteredSelected ? "إلغاء تحديد كل الطلاب" : "تحديد كل الطلاب بالفئة"}
+                  title={isAllFilteredSelected ? "إلغاء تحديد الكل" : `تحديد كافة طلاب الفئة الحالية (${filteredStudents.length} طالب)`}
+                  className="inline-grid h-8 w-8 place-items-center rounded-lg text-[#64748B] transition hover:bg-[#F1F5F9]"
+                >
+                  {isAllFilteredSelected ? <CheckSquare className="h-4 w-4 text-[#2563EB]" /> : <Square className="h-4 w-4" />}
                 </button>
               </th>
               {[
@@ -913,6 +1062,7 @@ export function StudentsTab({
                             )}
                           </span>
                         );
+                      })()}
                     </td>
 
                     {/* Last Active Time */}
