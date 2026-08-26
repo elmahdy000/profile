@@ -7,6 +7,7 @@ import {
   Menu,
   X,
   MapPin,
+  BarChart3,
 } from "lucide-react";
 import { AdminLearning } from "./AdminLearning";
 
