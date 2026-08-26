@@ -44,6 +44,7 @@ import { PaymentsTab } from "./admin/learning/PaymentsTab";
 import { NotificationsTab } from "./admin/learning/NotificationsTab";
 import { MonthlyPaymentsTab } from "./admin/learning/MonthlyPaymentsTab";
 import { OverviewSection } from "./admin/learning/OverviewSection";
+import { ReportsTab } from "./admin/learning/ReportsTab";
 
 type Student = PlatformStudent & {
   accessCode?: string | null;
@@ -1442,6 +1443,21 @@ export function AdminLearning({
                   toast({
                     title: `تم إرسال الإشعار بنجاح لـ ${result.count} طالب 🎉`,
                   });
+                } catch (e) {
+                  toast({ variant: "destructive", description: (e as Error).message });
+                }
+              }}
+            />
+          )}
+          {tab === "reports" && (
+            <ReportsTab
+              analytics={analytics as any}
+              recoveryRequests={recoveryRequests}
+              resolveRecoveryRequest={async (id) => {
+                try {
+                  await adminApi(`/api/admin/recovery-requests/${id}/resolve`, { method: "POST" });
+                  toast({ title: "تم تحديث حالة طلب استرجاع الكود" });
+                  void load(true);
                 } catch (e) {
                   toast({ variant: "destructive", description: (e as Error).message });
                 }
