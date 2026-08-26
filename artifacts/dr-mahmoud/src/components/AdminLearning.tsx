@@ -563,12 +563,13 @@ export function AdminLearning({
   };
 
   useEffect(() => {
-    void load(false);
+    // First load: silent (no toast) — user just opened the admin panel
+    void load(true);
 
-    // Auto-poll every 6 seconds for real-time live notifications & instant count updates
+    // Auto-poll every 30 seconds for live notifications (was 6s = 90 API calls/min)
     const interval = setInterval(() => {
       void load(true);
-    }, 6000);
+    }, 30000);
 
     return () => {
       clearInterval(interval);
@@ -1179,7 +1180,8 @@ export function AdminLearning({
   useEffect(() => {
     setFilePage(1);
   }, [fileSearch, fileCourseFilter, fileStageFilter, fileStatusFilter]);
-  const tabs = [
+  type TabEntry = [string, string, React.ComponentType<{ className?: string; strokeWidth?: number }>];
+  const allTabs: TabEntry[] = [
     ["overview", "اللوحة التشغيلية", LayoutDashboard],
     ["center-bookings", "حجوزات السناتر", MapPin],
     ["students", "الطلاب", GraduationCap],
@@ -1189,7 +1191,13 @@ export function AdminLearning({
     ["quizzes", "الاختبارات", ClipboardCheck],
     ["notifications", "إرسال إشعار", Bell],
     ["reports", "التقارير", BarChart3],
-  ] as const;
+  ];
+
+  // Bug 4 fix: subadmin is restricted to student-management tabs only
+  const SUBADMIN_TABS = new Set(["students", "center-bookings", "subscriptions", "payments"]);
+  const tabs = role === "subadmin"
+    ? allTabs.filter(([value]) => SUBADMIN_TABS.has(value))
+    : allTabs;
   const tabMeta: Record<string, [string, string]> = {
     overview: ["اللوحة التشغيلية وإحصائيات المنصة", "نظرة عامة على أعداد الطلاب، المشتركين، والتوزيع حسب المراحل والكورسات."],
     students: ["إدارة جميع الطلاب", "راجع التسجيلات والصلاحيات والكورسات المخصصة لكل طالب."],
@@ -1249,7 +1257,7 @@ export function AdminLearning({
           {tabs.map(([value, label, Icon]) => (
             <button
               key={value}
-              onClick={() => setTab(value)}
+              onClick={() => setTab(value as any)}
               className={`flex-none flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-xs font-semibold transition-all whitespace-nowrap ${
                 tab === value
                   ? "bg-[#2563EB] text-white shadow-xs shadow-blue-500/20"
@@ -1300,6 +1308,7 @@ export function AdminLearning({
           {tab === "overview" && (
             <OverviewSection
               students={students as any}
+              paymentReceipts={paymentReceipts}
               learningCourses={learningCourses}
               onNavigateToTab={(targetTab) => setTab(targetTab as any)}
               onSelectStageFilter={(filter) => {
@@ -1365,7 +1374,7 @@ export function AdminLearning({
                     body: JSON.stringify({ status: "approved" }),
                   });
                   toast({ title: "تم تأكيد الدفع وتفعيل الكورس للطالب 💳" });
-                  void load();
+                  void load(true); // silent refresh — don't show extra "تم تحديث البيانات" toast
                 } catch (err) {
                   toast({ variant: "destructive", description: (err as Error).message });
                 }

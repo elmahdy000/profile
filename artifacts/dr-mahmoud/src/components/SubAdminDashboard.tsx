@@ -14,6 +14,8 @@ export function SubAdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  // Bug 1 fix: store the logged-in subadmin's actual name from the API
+  const [adminUsername, setAdminUsername] = useState<string>("مشرف مساعد");
 
   useEffect(() => {
     localStorage.removeItem("dr_mahmoud_admin_pwd");
@@ -24,8 +26,15 @@ export function SubAdminDashboard() {
           return;
         }
         const data = await response.json();
-        if (data.authenticated && (data.role === "subadmin" || data.role === "superadmin")) {
+        // Bug 2 fix: if superadmin accidentally lands here, redirect to /admin
+        if (data.authenticated && data.role === "superadmin") {
+          window.location.href = "/admin";
+          return;
+        }
+        if (data.authenticated && data.role === "subadmin") {
           setIsAuthenticated(true);
+          // Bug 1 fix: use real username from session token
+          if (data.username) setAdminUsername(data.username);
         } else {
           setIsAuthenticated(false);
         }
@@ -52,27 +61,43 @@ export function SubAdminDashboard() {
   }
 
   if (!isAuthenticated) {
-    return <SubAdminLogin onSuccess={() => setIsAuthenticated(true)} />;
+    return <SubAdminLogin onSuccess={(username) => { setIsAuthenticated(true); if (username) setAdminUsername(username); }} />;
   }
+
+  // Derive initials for the avatar from the real admin name
+  const avatarInitials = adminUsername.trim().slice(0, 2) || "مش";
 
   return (
     <div className="admin-dashboard-shell min-h-screen w-full bg-[#F6F8FC] text-[#0F172A] font-sans dir-rtl">
-      {/* Mobile Drawer Trigger */}
+      {/* Mobile Header */}
       <div className="lg:hidden flex items-center justify-between p-4 bg-white border-b border-border sticky top-0 z-40">
         <div className="flex items-center gap-2">
           <img src="/logo.webp" alt="Logo" className="h-8 w-8 rounded-lg object-cover" />
           <span className="font-bold text-sm">لوحة الإشراف والتواصل</span>
         </div>
+        {/* Bug 3 fix: toggle button actually opens/closes the mobile sidebar */}
         <button
-          onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+          onClick={() => setIsMobileSidebarOpen((prev) => !prev)}
           className="p-2 rounded-xl border border-border bg-muted/40"
         >
           {isMobileSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
-      {/* Desktop Sidebar */}
-      <aside className="fixed top-0 bottom-0 right-0 z-50 hidden w-[288px] border-l border-[#E4EAF2] bg-white lg:flex flex-col">
+      {/* Bug 3 fix: Mobile sidebar overlay — shown when isMobileSidebarOpen is true */}
+      {isMobileSidebarOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar — Desktop: fixed. Mobile: slide-in drawer */}
+      <aside
+        className={`fixed top-0 bottom-0 right-0 z-50 w-[288px] border-l border-[#E4EAF2] bg-white flex flex-col
+          transition-transform duration-300
+          ${isMobileSidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}`}
+      >
         <div className="flex h-full flex-col p-5">
           <div className="mb-6 flex items-center gap-3 border-b border-[#E4EAF2] pb-5">
             <img src="/logo.webp" alt="شعار المنصة" className="h-11 w-11 rounded-xl border border-[#E4EAF2] object-cover" />
@@ -87,6 +112,7 @@ export function SubAdminDashboard() {
             <button
               type="button"
               onClick={() => {
+                setIsMobileSidebarOpen(false);
                 if (typeof window !== "undefined") {
                   const params = new URLSearchParams(window.location.search);
                   params.delete("mode");
@@ -103,6 +129,7 @@ export function SubAdminDashboard() {
             <button
               type="button"
               onClick={() => {
+                setIsMobileSidebarOpen(false);
                 if (typeof window !== "undefined") {
                   const params = new URLSearchParams(window.location.search);
                   params.set("mode", "offline");
@@ -119,13 +146,14 @@ export function SubAdminDashboard() {
           </nav>
 
           <div className="mt-auto border-t border-[#E4EAF2] pt-4 space-y-3">
+            {/* Bug 1 fix: show real admin username instead of hardcoded "مش" */}
             <div className="flex items-center gap-3 rounded-xl bg-amber-50 p-3 border border-amber-200">
-              <div className="grid h-9 w-9 place-items-center rounded-full bg-amber-500/10 text-amber-700 font-black text-xs">
-                مش
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-amber-500/20 text-amber-700 font-black text-xs">
+                {avatarInitials}
               </div>
               <div className="min-w-0 flex-1">
-                <strong className="block text-xs font-bold text-[#0F172A] truncate">مشرف مساعد (Subadmin)</strong>
-                <span className="text-[11px] text-[#64748B] block truncate">إدارة الطلاب والتفعيل</span>
+                <strong className="block text-xs font-bold text-[#0F172A] truncate">{adminUsername}</strong>
+                <span className="text-[11px] text-[#64748B] block truncate">مشرف مساعد</span>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -156,12 +184,13 @@ export function SubAdminDashboard() {
         <div className="w-full max-w-[1400px] mx-auto space-y-6">
           <div className="hidden lg:flex items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black text-sm shadow-md shadow-amber-500/20">
-                مشرف
+              <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black text-sm shadow-md shadow-amber-500/20 shrink-0">
+                {avatarInitials}
               </div>
               <div>
-                <h2 className="text-sm font-black text-slate-900">لوحة المشرف المساعد المخصصة</h2>
-                <p className="text-[11px] text-slate-500 mt-0.5">إدارة تفاعلية للطلاب، الإيصالات، الأجهزة، والإشعارات الجماعية</p>
+                {/* Bug 1 fix: show real name in header too */}
+                <h2 className="text-sm font-black text-slate-900">{adminUsername}</h2>
+                <p className="text-[11px] text-slate-500 mt-0.5">إدارة الطلاب، الإيصالات، الأجهزة، وحجوزات السناتر</p>
               </div>
             </div>
             <a
@@ -174,14 +203,15 @@ export function SubAdminDashboard() {
             </a>
           </div>
 
-          <AdminLearning role="subadmin" />
+          {/* Bug 4 fix: subadmin sees only students, center-bookings, subscriptions, payments */}
+          <AdminLearning role="subadmin" initialTab="students" />
         </div>
       </main>
     </div>
   );
 }
 
-function SubAdminLogin({ onSuccess }: { onSuccess: () => void }) {
+function SubAdminLogin({ onSuccess }: { onSuccess: (username?: string) => void }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -211,7 +241,8 @@ function SubAdminLogin({ onSuccess }: { onSuccess: () => void }) {
         return;
       }
 
-      onSuccess();
+      // Pass the username back so the dashboard can display the real name
+      onSuccess(data.username);
     } catch (err: any) {
       setError(err.message || "فشل تسجيل الدخول");
     } finally {
@@ -227,7 +258,7 @@ function SubAdminLogin({ onSuccess }: { onSuccess: () => void }) {
             🛡️
           </div>
           <h1 className="text-xl font-black text-[#0F172A]">بوابة المشرف المساعد</h1>
-          <p className="text-xs text-[#64748B]">سجل الدخول بحساب المشرف أو كلمة المرور المخصصة لك</p>
+          <p className="text-xs text-[#64748B]">سجل الدخول بحساب المشرف المخصص لك</p>
         </div>
 
         {error && (

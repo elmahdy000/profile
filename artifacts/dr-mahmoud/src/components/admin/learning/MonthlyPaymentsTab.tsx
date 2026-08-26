@@ -7,12 +7,11 @@ import {
   RefreshCw,
   Bell,
   Users,
-  TrendingUp,
-  AlertTriangle,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface PaymentStudent {
   id: number;
@@ -48,6 +47,7 @@ function statusBadge(status: string) {
 }
 
 export function MonthlyPaymentsTab() {
+  const { toast } = useToast();
   const [students, setStudents] = useState<PaymentStudent[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterType>("all");
@@ -100,8 +100,11 @@ export function MonthlyPaymentsTab() {
       setStudents((prev) =>
         prev.map((s) => (s.id === studentId ? { ...s, paymentStatus: newStatus } : s))
       );
+      toast({
+        title: newStatus === "paid" ? "تم تأكيد الدفع ✅" : "تم إلغاء الدفع",
+      });
     } catch (e) {
-      alert((e as Error).message);
+      toast({ variant: "destructive", title: "خطأ", description: (e as Error).message });
     } finally {
       setUpdating((prev) => {
         const next = new Set(prev);
@@ -113,7 +116,7 @@ export function MonthlyPaymentsTab() {
 
   // Reset ALL students to unpaid (start of new month)
   const resetAllToUnpaid = async () => {
-    if (!confirm("هل أنت متأكد؟ سيتم تحويل حالة دفع جميع الطلاب إلى 'لم يدفع' لبداية الشهر الجديد.")) return;
+    if (!window.confirm("هل أنت متأكد؟ سيتم تحويل حالة دفع جميع الطلاب إلى 'لم يدفع' لبداية الشهر الجديد.")) return;
     setResettingAll(true);
     try {
       const paidStudents = students.filter((s) => s.paymentStatus === "paid");
@@ -126,9 +129,11 @@ export function MonthlyPaymentsTab() {
         });
       }
       await load();
-      alert(`تم تحويل ${paidStudents.length} طالب إلى 'لم يدفع' بنجاح ✅`);
+      toast({
+        title: `تم تحويل ${paidStudents.length} طالب إلى 'لم يدفع' بنجاح ✅`,
+      });
     } catch (e) {
-      alert((e as Error).message);
+      toast({ variant: "destructive", title: "خطأ", description: (e as Error).message });
     } finally {
       setResettingAll(false);
     }
@@ -137,8 +142,11 @@ export function MonthlyPaymentsTab() {
   // Notify unpaid students
   const notifyUnpaid = async () => {
     const unpaidStudents = students.filter((s) => s.paymentStatus === "unpaid");
-    if (unpaidStudents.length === 0) { alert("لا يوجد طلاب غير مدفوعين"); return; }
-    if (!confirm(`هل تريد إرسال إشعار تذكير لـ ${unpaidStudents.length} طالب لم يدفعوا؟`)) return;
+    if (unpaidStudents.length === 0) {
+      toast({ title: "لا يوجد طلاب غير مدفوعين" });
+      return;
+    }
+    if (!window.confirm(`هل تريد إرسال إشعار تذكير لـ ${unpaidStudents.length} طالب لم يدفعوا؟`)) return;
     setNotifying(true);
     try {
       const res = await fetch("/api/admin/notifications/broadcast", {
@@ -153,9 +161,11 @@ export function MonthlyPaymentsTab() {
         }),
       });
       const data = await res.json();
-      alert(data.message || `تم إرسال الإشعار لـ ${unpaidStudents.length} طالب 🎉`);
+      toast({
+        title: data.message || `تم إرسال الإشعار لـ ${unpaidStudents.length} طالب 🎉`,
+      });
     } catch (e) {
-      alert((e as Error).message);
+      toast({ variant: "destructive", title: "خطأ", description: (e as Error).message });
     } finally {
       setNotifying(false);
     }

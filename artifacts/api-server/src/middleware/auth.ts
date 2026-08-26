@@ -153,7 +153,10 @@ export function createAdminSessionToken(role: "superadmin" | "subadmin" = "super
   const subAdminPassword = getSubAdminPassword();
   const expiresAt = Math.floor(Date.now() / 1000) + ADMIN_SESSION_SECONDS;
   const name = username || (role === "superadmin" ? "المدير الرئيسي" : "مشرف مساعد");
-  const secret = role === "subadmin" ? (subAdminPassword || adminPassword) : adminPassword;
+  // Security: always derive a role-specific secret so a subadmin token can never
+  // be mistaken for a superadmin token, even when SUBADMIN_PASSWORD is not set.
+  const baseSecret = role === "subadmin" && subAdminPassword ? subAdminPassword : adminPassword;
+  const secret = `${role}:${baseSecret}`;
   const encodedName = Buffer.from(name).toString("base64url");
   const signature = createHmac("sha256", secret).update(`v2.${role}.${expiresAt}.${encodedName}`).digest("base64url");
   return `v2.${role}.${expiresAt}.${encodedName}.${signature}`;
@@ -170,7 +173,8 @@ export function getAdminIdentity(req: Request): { role: "superadmin" | "subadmin
     if (version !== "v2" || (role !== "superadmin" && role !== "subadmin") || !Number.isSafeInteger(expiresAt) || expiresAt <= Math.floor(Date.now() / 1000) || !suppliedSignature) {
       return null;
     }
-    const candidateSecrets: string[] = Array.from(
+    // Build candidate secrets using the role-prefixed scheme (matches createAdminSessionToken)
+    const possibleBases: string[] = Array.from(
       new Set(
         [
           cachedAdminPass,
@@ -182,6 +186,9 @@ export function getAdminIdentity(req: Request): { role: "superadmin" | "subadmin
         ].filter((s): s is string => Boolean(s) && typeof s === "string"),
       ),
     );
+    // For each base, derive the role-prefixed secret (new scheme)
+    const candidateSecrets: string[] = possibleBases.map((base) => `${role}:${base}`);
+
     const payload = `v2.${role}.${expiresRaw}.${encodedName}`;
     const isValid = candidateSecrets.some((secret) => {
       const expectedSignature = createHmac("sha256", secret).update(payload).digest("base64url");

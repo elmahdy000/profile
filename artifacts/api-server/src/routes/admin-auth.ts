@@ -8,6 +8,7 @@ import {
   adminSessionCookieOptions,
   clearAdminPassCache,
   createAdminSessionToken,
+  getAdminIdentity,
   getAdminRole,
   hashAdminPassword,
   requireAdmin,
@@ -43,12 +44,12 @@ router.post("/admin/login", adminLoginLimit, async (req, res) => {
 });
 
 router.get("/admin/me", (req, res) => {
-  const role = getAdminRole(req);
-  if (!role) {
+  const identity = getAdminIdentity(req);
+  if (!identity) {
     res.json({ authenticated: false });
     return;
   }
-  res.json({ authenticated: true, role });
+  res.json({ authenticated: true, role: identity.role, username: identity.username });
 });
 
 router.post("/admin/logout", (req, res) => {

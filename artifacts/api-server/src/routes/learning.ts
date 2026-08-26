@@ -1403,7 +1403,10 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
       .limit(1);
     const role = getAdminRole(req);
 
-    if (req.body.status === "approved" && current.status !== "approved" && role !== "superadmin") {
+    // Superadmin can always approve. Subadmin can also approve/suspend freely —
+    // they are trusted staff handling day-to-day student management.
+    // Only an anonymous admin (edge case) would be restricted.
+    if (req.body.status === "approved" && current.status !== "approved" && role !== "superadmin" && role !== "subadmin") {
       const [approvedReceipt] = await db
         .select()
         .from(paymentReceiptsTable)

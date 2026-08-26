@@ -56,8 +56,19 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh, role = "superad
   };
 
   useEffect(() => {
-    void loadReceipts();
+    // Only fetch independently if the parent didn't pass receipts as props
+    if (!propReceipts) {
+      void loadReceipts();
+    }
   }, []);
+
+  // Sync with parent prop updates (e.g., after admin approves from StudentsTab)
+  useEffect(() => {
+    if (propReceipts) {
+      setReceipts(propReceipts);
+      setLoading(false);
+    }
+  }, [propReceipts]);
 
   const handleAction = async (receiptId: number, status: "approved" | "rejected", adminNotes?: string) => {
     setActionId(receiptId);
