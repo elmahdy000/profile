@@ -53,6 +53,7 @@ interface StudentsTabProps {
   onUpdateStudentCourses?: (student: ExtendedStudent, courseIds: number[]) => void;
   onApproveReceipt?: (receiptId: number) => void;
   onNavigateToReports?: () => void;
+  onUpdateStatusBulk?: (studentIds: number[] | "all", status: "approved" | "suspended" | "pending") => Promise<void> | void;
 }
 
 export function StudentsTab({
@@ -73,6 +74,7 @@ export function StudentsTab({
   onUpdateStudentCourses,
   onApproveReceipt,
   onNavigateToReports,
+  onUpdateStatusBulk,
 }: StudentsTabProps) {
   // Read initial parameters from URL Search Params if available
   const getInitialParam = (key: string, fallback: string) => {
@@ -300,17 +302,25 @@ export function StudentsTab({
   };
 
   // Bulk Actions
-  const handleBulkApprove = () => {
-    selectedStudentIds.forEach((id) => onUpdateStatus(id, "approved"));
+  const handleBulkApprove = async () => {
+    if (onUpdateStatusBulk) {
+      await onUpdateStatusBulk(selectedStudentIds, "approved");
+    } else {
+      selectedStudentIds.forEach((id) => onUpdateStatus(id, "approved"));
+    }
     setSelectedStudentIds([]);
   };
 
-  const handleBulkSuspend = () => {
-    selectedStudentIds.forEach((id) => onUpdateStatus(id, "suspended"));
+  const handleBulkSuspend = async () => {
+    if (onUpdateStatusBulk) {
+      await onUpdateStatusBulk(selectedStudentIds, "suspended");
+    } else {
+      selectedStudentIds.forEach((id) => onUpdateStatus(id, "suspended"));
+    }
     setSelectedStudentIds([]);
   };
 
-  const handleSuspendAllFiltered = () => {
+  const handleSuspendAllFiltered = async () => {
     const targetStudents = filteredStudents.filter((s) => s.status !== "suspended");
     if (targetStudents.length === 0) {
       alert("جميع الطلاب المعروضين موقوفون بالفعل.");
@@ -320,11 +330,16 @@ export function StudentsTab({
       `هل أنت تأكيد من إيقاف حسابات جميع الطلاب المعروضين وعددهم (${targetStudents.length} طالب)؟\n\nتنويه: يمكنك أنت أو المساعد إعادة تفعيل أي طالب لاحقاً بسهولة.`
     );
     if (confirmed) {
-      targetStudents.forEach((s) => onUpdateStatus(s.id, "suspended"));
+      const targetIds = targetStudents.map((s) => s.id);
+      if (onUpdateStatusBulk) {
+        await onUpdateStatusBulk(targetIds, "suspended");
+      } else {
+        targetIds.forEach((id) => onUpdateStatus(id, "suspended"));
+      }
     }
   };
 
-  const handleSuspendAllStudents = () => {
+  const handleSuspendAllStudents = async () => {
     const activeStudents = students.filter((s) => s.status !== "suspended");
     if (activeStudents.length === 0) {
       alert("جميع الطلاب (الأونلاين والأوفلاين) موقوفون بالفعل حالياً.");
@@ -334,7 +349,11 @@ export function StudentsTab({
       `⚠️ إجراء حاسم:\nهل أنت متأكد من إيقاف حسابات كافة الطلاب بالكامل (أونلاين + أوفلاين) وعددهم (${activeStudents.length} طالب)؟\n\nتنويه: لن يتمكن أي طالب من الدخول للمنصة إلا بعد تفعيله يدويًا منك أو من المشرف المساعد.`
     );
     if (confirmed) {
-      activeStudents.forEach((s) => onUpdateStatus(s.id, "suspended"));
+      if (onUpdateStatusBulk) {
+        await onUpdateStatusBulk("all", "suspended");
+      } else {
+        activeStudents.forEach((s) => onUpdateStatus(s.id, "suspended"));
+      }
     }
   };
 

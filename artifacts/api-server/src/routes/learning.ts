@@ -5,7 +5,7 @@ import fs from "fs";
 import path from "path";
 import multer from "multer";
 import mammoth from "mammoth";
-import { and, desc, eq, ilike, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import {
   auditLogsTable,
   codeRecoveryRequestsTable,
@@ -1366,6 +1366,35 @@ router.get("/admin/students", requireAdmin, async (_req, res, next) => {
       .from(studentsTable)
       .orderBy(desc(studentsTable.createdAt));
     res.json(students);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/admin/students/bulk-status", requireAdmin, async (req, res, next) => {
+  try {
+    const { studentIds, target, status } = req.body;
+    if (!status || !["approved", "pending", "suspended"].includes(status)) {
+      return res.status(400).json({ error: "حالة غير صالحة" });
+    }
+
+    if (target === "all" || studentIds === "all") {
+      await db
+        .update(studentsTable)
+        .set({ status })
+        .where(ne(studentsTable.status, status));
+      return res.json({ success: true, message: `تم تحديث حالة كافة الطلاب إلى ${status}` });
+    }
+
+    if (Array.isArray(studentIds) && studentIds.length > 0) {
+      await db
+        .update(studentsTable)
+        .set({ status })
+        .where(inArray(studentsTable.id, studentIds));
+      return res.json({ success: true, count: studentIds.length, message: `تم تحديث حالة ${studentIds.length} طالب` });
+    }
+
+    return res.status(400).json({ error: "لم يتم تحديد طلاب" });
   } catch (error) {
     next(error);
   }

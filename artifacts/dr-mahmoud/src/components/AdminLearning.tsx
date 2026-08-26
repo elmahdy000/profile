@@ -601,6 +601,27 @@ export function AdminLearning({
       },
     });
   };
+  const updateStudentsBulk = async (studentIds: number[] | "all", status: "approved" | "suspended" | "pending") => {
+    try {
+      await adminApi("/api/admin/students/bulk-status", {
+        method: "POST",
+        body: JSON.stringify({ studentIds, status }),
+      });
+      setStudents((prev) =>
+        prev.map((s) =>
+          studentIds === "all" || (Array.isArray(studentIds) && studentIds.includes(s.id))
+            ? { ...s, status: status as any }
+            : s
+        )
+      );
+      toast({
+        title: status === "suspended" ? "تم إيقاف حسابات الطلاب 🔒" : "تم تفعيل حسابات الطلاب 🟢",
+        description: status === "suspended" ? "تم إيقاف وصول الطلاب المحددين للمنصة بنجاح." : "تم التفعيل بنجاح.",
+      });
+    } catch (e) {
+      toast({ variant: "destructive", description: (e as Error).message });
+    }
+  };
   const updateStudentCourses = async (
     student: Student,
     enrolledCourseIds: number[],
@@ -1335,6 +1356,7 @@ export function AdminLearning({
               studentStages={studentStages}
               learningCourses={learningCourses}
               onUpdateStatus={async (id, status) => { await updateStudent(id, status); }}
+              onUpdateStatusBulk={updateStudentsBulk}
               onUpdateMode={async (student, mode) => { await updateStudentMode(student, mode); }}
               onUpdatePaymentStatus={async (student, status) => { await updateStudentPaymentStatus(student, status); }}
               onUpdateStudentCourses={async (student, courseIds) => { await updateStudentCourses(student, courseIds); }}
