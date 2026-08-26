@@ -1193,8 +1193,8 @@ export function AdminLearning({
     ["reports", "التقارير", BarChart3],
   ];
 
-  // Bug 4 fix: subadmin is restricted to student-management tabs only
-  const SUBADMIN_TABS = new Set(["students", "center-bookings", "subscriptions", "payments"]);
+  // Subadmin has access to student management & daily activity reports
+  const SUBADMIN_TABS = new Set(["students", "center-bookings", "subscriptions", "payments", "reports"]);
   const tabs = role === "subadmin"
     ? allTabs.filter(([value]) => SUBADMIN_TABS.has(value))
     : allTabs;
