@@ -213,6 +213,87 @@ async function confirmPendingBookingsForPhone(phone: string): Promise<void> {
     );
 }
 
+/**
+ * Automatically checks all active paid students to see if their 30-day monthly subscription has expired.
+ * 1. If > 30 days elapsed: reverts paymentStatus to "unpaid" (free tier) and notifies student.
+ * 2. If <= 3 days remaining: sends a renewal reminder notification to student.
+ */
+export async function processSubscriptionExpirations(): Promise<{ expiredCount: number; remindedCount: number }> {
+  try {
+    const now = new Date();
+
+    // Fetch all students with paymentStatus === "paid"
+    const paidStudents = await db
+      .select()
+      .from(studentsTable)
+      .where(eq(studentsTable.paymentStatus, "paid"));
+
+    let expiredCount = 0;
+    let remindedCount = 0;
+
+    for (const student of paidStudents) {
+      const startDate = student.subscriptionStartDate || student.approvedAt || student.createdAt;
+      if (!startDate) continue;
+      const startMs = new Date(startDate).getTime();
+      const elapsedDays = (now.getTime() - startMs) / (1000 * 60 * 60 * 24);
+
+      if (elapsedDays >= 30) {
+        // Expired! Revert student to unpaid (free preview mode)
+        await db
+          .update(studentsTable)
+          .set({
+            paymentStatus: "unpaid",
+            subscriptionStatus: "expired",
+            updatedAt: now,
+          })
+          .where(eq(studentsTable.id, student.id));
+
+        await db.insert(studentNotificationsTable).values({
+          studentId: student.id,
+          type: "warning",
+          title: "انتهت فترة الاشتراك الشهري",
+          message: "انتهت فترة الاشتراك الشهري الخاصة بك (30 يوماً). تم تحويل حسابك تلقائياً للباقة المجانية (معاينة أول فيديوهين بدون مذكرات). يرجى دفع الاشتراك ورفع الإيصال لفتح المحتوى بالكامل من جديد.",
+        });
+        expiredCount++;
+      } else if (elapsedDays >= 27) {
+        // Expiring within 3 days — check if we already reminded student today
+        const [existingReminder] = await db
+          .select()
+          .from(studentNotificationsTable)
+          .where(
+            and(
+              eq(studentNotificationsTable.studentId, student.id),
+              eq(studentNotificationsTable.type, "warning"),
+              sql`${studentNotificationsTable.createdAt} >= CURRENT_DATE`
+            )
+          )
+          .limit(1);
+
+        if (!existingReminder) {
+          const daysLeft = Math.max(1, Math.ceil(30 - elapsedDays));
+          await db.insert(studentNotificationsTable).values({
+            studentId: student.id,
+            type: "warning",
+            title: "تذكير: قرب موعد تجديد الاشتراك الشهري",
+            message: `متبقي ${daysLeft} ${daysLeft === 1 ? "يوم واحد" : "أيام"} على انتهاء اشتراكك الشهري. يرجى تجديد الدفع ورفع الإيصال لتجنب توقف المنصة والرجوع للباقة المجانية.`,
+          });
+          remindedCount++;
+        }
+      }
+    }
+
+    return { expiredCount, remindedCount };
+  } catch (err) {
+    console.error("[SUBSCRIPTION_CHECK_ERROR]", err);
+    return { expiredCount: 0, remindedCount: 0 };
+  }
+}
+
+// Automatically check subscription expirations every 30 minutes
+setInterval(() => {
+  void processSubscriptionExpirations();
+}, 30 * 60 * 1000);
+
 function validateQuestions(value: unknown): QuizQuestion[] | null {
   if (!Array.isArray(value) || value.length === 0) return null;
   const questions = value as QuizQuestion[];
@@ -1279,6 +1360,7 @@ router.get("/admin/payment-receipts/:id/image", requireAdmin, async (req, res, n
 
 router.get("/admin/students", requireAdmin, async (_req, res, next) => {
   try {
+    await processSubscriptionExpirations();
     const students = await db
       .select()
       .from(studentsTable)
