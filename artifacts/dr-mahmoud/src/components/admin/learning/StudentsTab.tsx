@@ -27,6 +27,7 @@ import {
   SlidersHorizontal,
   RotateCcw,
   MapPin,
+  BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { PaymentReceipt } from "./PaymentReceiptsPanel";
@@ -383,6 +384,17 @@ export function StudentsTab({
             >
               <RotateCcw className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">مسح الفلاتر</span>
+            </button>
+          )}
+
+          {onNavigateToReports && (
+            <button
+              type="button"
+              onClick={onNavigateToReports}
+              className="shrink-0 inline-flex items-center gap-1.5 h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 text-xs font-bold transition-all shadow-xs"
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span>تقارير الدخول والنشاط 📊</span>
             </button>
           )}
 
