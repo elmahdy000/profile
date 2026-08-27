@@ -133,7 +133,7 @@ export function StudentDrawer({
   onSendNotificationToStudent,
 }: StudentDrawerProps) {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"overview" | "payments" | "courses" | "attendance" | "quizzes" | "files" | "security">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "payments" | "summaries" | "courses" | "attendance" | "quizzes" | "files" | "security">("overview");
   const [copied, setCopied] = useState(false);
   const [showMoreActions, setShowMoreActions] = useState(false);
   const [localStudent, setLocalStudent] = useState<ExtendedStudent | null>(student);
@@ -166,7 +166,29 @@ export function StudentDrawer({
     action: () => {},
   });
 
-  // Live Analytics & Files data
+  const [studentSummaries, setStudentSummaries] = useState<Array<{
+    id: number;
+    lessonTitle: string;
+    courseTitle?: string | null;
+    imageUrls: string[];
+    studentNotes?: string | null;
+    status: "pending" | "reviewed" | "needs_revision";
+    adminFeedback?: string | null;
+    reviewedByName?: string | null;
+    createdAt: string;
+  }>>([]);
+  const [loadingSummaries, setLoadingSummaries] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === "summaries" && student?.id) {
+      setLoadingSummaries(true);
+      fetch(`/api/admin/summaries?studentId=${student.id}`, { credentials: "include" })
+        .then((r) => r.json())
+        .then((data) => setStudentSummaries(Array.isArray(data) ? data : []))
+        .catch(() => {})
+        .finally(() => setLoadingSummaries(false));
+    }
+  }, [activeTab, student?.id]);
   const [studentAnalytics, setStudentAnalytics] = useState<{
     watchDetails: Array<{
       videoId: number;
@@ -513,6 +535,7 @@ export function StudentDrawer({
             {[
               { id: "overview", label: "نظرة عامة" },
               { id: "payments", label: "الاشتراكات والاشتراك 💳" },
+              { id: "summaries", label: "تلخيصات الكشكول 📝" },
               { id: "courses", label: "الكورسات والصلاحيات 📚" },
               { id: "attendance", label: "الحضور والدروس ⏱️" },
               { id: "quizzes", label: "الاختبارات والنتائج 📝" },
@@ -948,6 +971,61 @@ export function StudentDrawer({
                         </div>
                       );
                     })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "summaries" && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
+                  <div>
+                    <h3 className="text-sm font-bold text-[#0F172A]">تلخيصات ومذكرات الطالب الكشكولية 📝</h3>
+                    <p className="text-xs text-[#64748B] mt-0.5">استعرض كافة المذكرات المرفوعة من هذا الطالب وحالة المراجعة.</p>
+                  </div>
+                  <span className="text-xs font-extrabold text-[#2563EB] bg-[#EFF6FF] px-2.5 py-1 rounded-lg">
+                    {studentSummaries.length} ملخص
+                  </span>
+                </div>
+
+                {loadingSummaries ? (
+                  <div className="flex items-center justify-center p-8 text-xs font-bold text-[#64748B]">
+                    <Loader2 className="h-5 w-5 text-[#2563EB] animate-spin ml-2" />
+                    <span>جاري تحميل ملخصات الطالب...</span>
+                  </div>
+                ) : studentSummaries.length === 0 ? (
+                  <div className="text-center p-8 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC]">
+                    <FileText className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+                    <span className="text-xs font-bold text-[#0F172A] block">لم يقم الطالب برفع أي تلخيصات بعد</span>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {studentSummaries.map((s) => (
+                      <div key={s.id} className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-3.5 space-y-2.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="text-xs font-black text-[#0F172A]">{s.lessonTitle}</h4>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            s.status === "reviewed" ? "bg-emerald-100 text-emerald-800" : s.status === "needs_revision" ? "bg-rose-100 text-rose-800" : "bg-amber-100 text-amber-800"
+                          }`}>
+                            {s.status === "reviewed" ? "معتمد ⭐" : s.status === "needs_revision" ? "تعديل ⚠️" : "معلق ⏳"}
+                          </span>
+                        </div>
+                        {s.imageUrls && s.imageUrls.length > 0 && (
+                          <div className="flex gap-1.5 overflow-x-auto">
+                            {s.imageUrls.map((url, i) => (
+                              <a key={i} href={url} target="_blank" rel="noreferrer" className="h-14 w-14 rounded-lg overflow-hidden border border-[#E2E8F0] shrink-0">
+                                <img src={url} alt="" className="h-full w-full object-cover" />
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                        {s.adminFeedback && (
+                          <p className="text-[11px] bg-blue-50 text-blue-900 p-2 rounded-lg font-semibold">
+                            ملاحظة المعلم: {s.adminFeedback}
+                          </p>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

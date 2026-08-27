@@ -44,6 +44,7 @@ export function StudentSummariesTab({
   const { toast } = useToast();
   const [summaries, setSummaries] = useState<StudentSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "reviewed" | "needs_revision">("all");
 
   // Upload Form Modal
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -188,6 +189,33 @@ export function StudentSummariesTab({
         </Button>
       </div>
 
+      {/* Filter Toolbar */}
+      {summaries.length > 0 && (
+        <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl border border-border w-full sm:w-auto overflow-x-auto">
+          {(
+            [
+              ["all", "الكل"],
+              ["pending", "قيد المراجعة ⏳"],
+              ["reviewed", "معتمد ⭐"],
+              ["needs_revision", "تعديل مطلوب ⚠️"],
+            ] as const
+          ).map(([val, label]) => (
+            <button
+              key={val}
+              type="button"
+              onClick={() => setStatusFilter(val as any)}
+              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap ${
+                statusFilter === val
+                  ? "bg-card text-primary shadow-2xs"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Submissions List */}
       {loading ? (
         <div className="flex flex-col items-center justify-center p-12 bg-card rounded-2xl border border-border">
@@ -211,7 +239,9 @@ export function StudentSummariesTab({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {summaries.map((item) => (
+          {summaries
+            .filter((s) => (statusFilter === "all" ? true : s.status === statusFilter))
+            .map((item) => (
             <div
               key={item.id}
               className="flex flex-col justify-between rounded-2xl border border-border bg-card p-4 space-y-3.5 shadow-xs hover:border-primary/40 transition-all"
@@ -307,6 +337,21 @@ export function StudentSummariesTab({
                     </div>
                     <p className="leading-relaxed font-semibold text-foreground">{item.adminFeedback}</p>
                   </div>
+                )}
+
+                {item.status === "needs_revision" && (
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setLessonTitle(item.lessonTitle);
+                      if (item.courseId) setSelectedCourseId(String(item.courseId));
+                      setShowUploadModal(true);
+                    }}
+                    className="w-full h-9 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-2xs flex items-center justify-center gap-1.5"
+                  >
+                    <PlusIcon className="h-3.5 w-3.5" />
+                    <span>إعادة رفع التلخيص بعد التعديل 🔄</span>
+                  </Button>
                 )}
               </div>
             </div>

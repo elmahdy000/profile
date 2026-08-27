@@ -658,7 +658,10 @@ export function StudentPlatform() {
               onStartQuiz={startQuiz}
             />
           ) : tab === "summaries" ? (
-            <StudentSummariesTab student={student} />
+            <StudentSummariesTab
+              student={student}
+              courses={videos.map((v) => ({ id: v.id, title: v.title }))}
+            />
           ) : tab === "compiler" ? (
             <CppCompilerPanel />
           ) : tab === "files" ? (
