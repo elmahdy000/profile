@@ -845,9 +845,10 @@ router.get("/videos/:id/stream", async (req, res, next) => {
     if (range) {
       const parts = range.replace(/bytes=/, "").split("-");
       const start = parseInt(parts[0], 10);
-      let requestedEnd = parts[1] ? parseInt(parts[1], 10) : start + MAX_CHUNK_SIZE - 1;
+      const rawEnd = parts[1] ? parseInt(parts[1], 10) : NaN;
+      let requestedEnd = Number.isSafeInteger(rawEnd) ? rawEnd : start + MAX_CHUNK_SIZE - 1;
 
-      if (!parts[1] || requestedEnd - start >= MAX_CHUNK_SIZE) {
+      if (!Number.isSafeInteger(rawEnd) || requestedEnd - start >= MAX_CHUNK_SIZE) {
         requestedEnd = start + MAX_CHUNK_SIZE - 1;
       }
       const end = Math.min(requestedEnd, fileSize - 1);
