@@ -460,6 +460,69 @@ export function StudentPlatform() {
       // Reading notifications should never interrupt the learning experience.
     }
   };
+
+  const handleNotificationClick = (notification: StudentNotification) => {
+    void markNotificationRead(notification);
+    setShowNotifications(false);
+
+    const type = (notification.type || "").toLowerCase();
+    const titleMsg = (notification.title + " " + notification.message).toLowerCase();
+
+    // 1. Direct type matching
+    if (type === "lesson" || type === "video" || type === "course") {
+      setTab("lessons");
+      return;
+    }
+    if (type === "file" || type === "pdf" || type === "attachment") {
+      setTab("files");
+      return;
+    }
+    if (type === "quiz" || type === "exam" || type === "test") {
+      setTab("quizzes");
+      return;
+    }
+    if (type === "summary" || type === "notebook" || type === "note") {
+      setTab("summaries");
+      return;
+    }
+    if (type === "subscription" || type === "payment" || type === "receipt" || type === "center") {
+      setTab("profile");
+      return;
+    }
+    if (type === "compiler" || type === "code" || type === "cpp") {
+      setTab("compiler");
+      return;
+    }
+
+    // 2. Intelligent Text Fallback matching
+    if (titleMsg.includes("درس") || titleMsg.includes("فيديو") || titleMsg.includes("محاضرة") || titleMsg.includes("شرح") || titleMsg.includes("كورس")) {
+      setTab("lessons");
+      return;
+    }
+    if (titleMsg.includes("ملزمة") || titleMsg.includes("ملف") || titleMsg.includes("مذكرة") || titleMsg.includes("pdf") || titleMsg.includes("مستند")) {
+      setTab("files");
+      return;
+    }
+    if (titleMsg.includes("اختبار") || titleMsg.includes("امتحان") || titleMsg.includes("كويز") || titleMsg.includes("سؤال") || titleMsg.includes("تحدي")) {
+      setTab("quizzes");
+      return;
+    }
+    if (titleMsg.includes("كشكول") || titleMsg.includes("تلخيص") || titleMsg.includes("تلخيصات") || titleMsg.includes("ملاحظة") || titleMsg.includes("تعديل مطلوب")) {
+      setTab("summaries");
+      return;
+    }
+    if (titleMsg.includes("اشتراك") || titleMsg.includes("دفع") || titleMsg.includes("إيصال") || titleMsg.includes("حسابك") || titleMsg.includes("تفعيل") || titleMsg.includes("سنتر")) {
+      setTab("profile");
+      return;
+    }
+    if (titleMsg.includes("محرر") || titleMsg.includes("كود") || titleMsg.includes("برمجة") || titleMsg.includes("c++")) {
+      setTab("compiler");
+      return;
+    }
+
+    setTab("dashboard");
+  };
+
   const unreadNotifications = notifications.filter((item) => !item.readAt).length;
   const nav = [
     ["dashboard", "الرئيسية", Home],
@@ -600,13 +663,7 @@ export function StudentPlatform() {
                           <button
                             key={notification.id}
                             type="button"
-                            onClick={() => {
-                              void markNotificationRead(notification);
-                              if (notification.type === "lesson") setTab("lessons");
-                              if (notification.type === "file") setTab("files");
-                              if (notification.type === "quiz") setTab("quizzes");
-                              setShowNotifications(false);
-                            }}
+                            onClick={() => handleNotificationClick(notification)}
                             className={`mb-0.5 w-full rounded-xl p-3 text-right transition-colors hover:bg-muted ${notification.readAt ? "opacity-60" : "bg-primary/5"}`}
                           >
                             <span className="flex items-start gap-2.5">

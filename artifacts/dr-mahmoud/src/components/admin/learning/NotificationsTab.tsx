@@ -68,11 +68,14 @@ export function NotificationsTab({ students, onSend }: Props) {
                 onChange={(e) => setBroadcastForm((f) => ({ ...f, type: e.target.value }))}
                 className="input-admin"
               >
-                <option value="info">📘 معلومات</option>
-                <option value="success">✅ نجاح / خبر سار</option>
-                <option value="warning">⚠️ تنبيه</option>
-                <option value="lesson">🎬 درس جديد</option>
-                <option value="course">📚 كورس</option>
+                <option value="info">📘 معلومات عامة</option>
+                <option value="lesson">🎬 محاضرة / درس جديد</option>
+                <option value="file">📄 ملزمة / ملف جديد</option>
+                <option value="quiz">📝 اختبار / كويز جديد</option>
+                <option value="summary">📓 كشكول / تلخيص الطالب</option>
+                <option value="subscription">💳 اشتراك / تفعيل الحساب</option>
+                <option value="warning">⚠️ تنبيه هام</option>
+                <option value="success">✅ خبر سار / تكريم</option>
               </select>
             </div>
             <div>
