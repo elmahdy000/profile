@@ -161,7 +161,6 @@ export function AccessScreen({
           title: "تم إنشاء حسابك بنجاح! 🎉",
           description: `كود الدخول الخاص بك هو: ${cleanCode}`,
         });
-        await enterWithCode(cleanCode);
         return;
       }
     } catch (err) {

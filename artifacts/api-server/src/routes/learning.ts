@@ -195,6 +195,7 @@ function publicStudent(student: typeof studentsTable.$inferSelect) {
     enrolledCategories: student.enrolledCategories,
     enrolledCourseIds: student.enrolledCourseIds,
     paymentStatus: student.paymentStatus,
+    accessCode: student.accessCode,
     createdAt: student.createdAt,
   };
 }
