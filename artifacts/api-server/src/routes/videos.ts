@@ -827,10 +827,29 @@ router.get("/videos/:id/stream", async (req, res, next) => {
     const fileSize = stat.size;
     const range = req.headers.range;
 
+    const etag = `W/"${fileSize.toString(16)}-${Math.floor(stat.mtimeMs).toString(16)}"`;
+    const lastModified = stat.mtime.toUTCString();
+
+    const ifNoneMatch = req.headers["if-none-match"];
+    if (ifNoneMatch && ifNoneMatch === etag) {
+      res.status(304).end();
+      return;
+    }
+
+    const contentType =
+      VIDEO_CONTENT_TYPES[path.extname(filename).toLowerCase()] ||
+      "video/mp4";
+    const cacheControl = "private, max-age=86400, stale-while-revalidate=3600";
+    const MAX_CHUNK_SIZE = 3 * 1024 * 1024; // 3MB chunk for smooth progressive buffering
+
     if (range) {
       const parts = range.replace(/bytes=/, "").split("-");
       const start = parseInt(parts[0], 10);
-      const requestedEnd = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      let requestedEnd = parts[1] ? parseInt(parts[1], 10) : start + MAX_CHUNK_SIZE - 1;
+
+      if (!parts[1] || requestedEnd - start >= MAX_CHUNK_SIZE) {
+        requestedEnd = start + MAX_CHUNK_SIZE - 1;
+      }
       const end = Math.min(requestedEnd, fileSize - 1);
 
       if (
@@ -842,9 +861,8 @@ router.get("/videos/:id/stream", async (req, res, next) => {
       ) {
         res
           .status(416)
-          .send(
-            "Requested range not satisfiable\n" + start + " >= " + fileSize,
-          );
+          .setHeader("Content-Range", `bytes */${fileSize}`)
+          .send("Requested range not satisfiable");
         return;
       }
 
@@ -854,10 +872,10 @@ router.get("/videos/:id/stream", async (req, res, next) => {
         "Content-Range": `bytes ${start}-${end}/${fileSize}`,
         "Accept-Ranges": "bytes",
         "Content-Length": chunksize,
-        "Content-Type":
-          VIDEO_CONTENT_TYPES[path.extname(filename).toLowerCase()] ||
-          "application/octet-stream",
-        "Cache-Control": "private, no-store",
+        "Content-Type": contentType,
+        "Cache-Control": cacheControl,
+        "ETag": etag,
+        "Last-Modified": lastModified,
       };
 
       res.writeHead(206, head);
@@ -865,11 +883,11 @@ router.get("/videos/:id/stream", async (req, res, next) => {
     } else {
       const head = {
         "Content-Length": fileSize,
-        "Content-Type":
-          VIDEO_CONTENT_TYPES[path.extname(filename).toLowerCase()] ||
-          "application/octet-stream",
+        "Content-Type": contentType,
         "Accept-Ranges": "bytes",
-        "Cache-Control": "private, no-store",
+        "Cache-Control": cacheControl,
+        "ETag": etag,
+        "Last-Modified": lastModified,
       };
       res.writeHead(200, head);
       fs.createReadStream(filePath).pipe(res);

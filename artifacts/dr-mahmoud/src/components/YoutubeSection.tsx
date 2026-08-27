@@ -356,7 +356,7 @@ function VideoPlayerModal({
                       src={streamUrl || `/api/videos/${item.id}/stream`}
                       controls
                       playsInline
-                      preload="metadata"
+                      preload="auto"
                       controlsList="nodownload noremoteplayback"
                       disablePictureInPicture
                       onContextMenu={(e) => e.preventDefault()}

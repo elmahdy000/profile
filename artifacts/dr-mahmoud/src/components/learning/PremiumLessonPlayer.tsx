@@ -526,7 +526,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                     className="h-full w-full object-contain max-h-full max-w-full select-none pointer-events-auto"
                     src={streamSrc}
                     poster={poster || undefined}
-                    preload="metadata"
+                    preload="auto"
                     playsInline
                     controlsList="nodownload noremoteplayback"
                     disablePictureInPicture

@@ -529,7 +529,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                         <video
                           src={selectedVideoPreviewUrl}
                           controls
-                          preload="metadata"
+                          preload="auto"
                           className="max-h-80 w-full rounded-xl bg-black"
                         />
                         <div className="flex flex-col gap-3 rounded-xl border bg-background p-3 sm:flex-row sm:items-center sm:justify-between">
