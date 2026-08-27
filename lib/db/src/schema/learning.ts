@@ -296,3 +296,26 @@ export const monthlySubscriptionsTable = pgTable("monthly_subscriptions", {
 export type InsertMonthlySubscription = typeof monthlySubscriptionsTable.$inferInsert;
 export type MonthlySubscription = typeof monthlySubscriptionsTable.$inferSelect;
 
+export const studentLessonSummariesTable = pgTable("student_lesson_summaries", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => studentsTable.id, { onDelete: "cascade" }),
+  lessonTitle: text("lesson_title").notNull(),
+  courseId: integer("course_id"),
+  courseTitle: text("course_title"),
+  imageUrls: jsonb("image_urls").notNull().$type<string[]>(),
+  studentNotes: text("student_notes"),
+  status: text("status").notNull().default("pending"), // pending | reviewed | needs_revision
+  adminFeedback: text("admin_feedback"),
+  reviewedByRole: text("reviewed_by_role"),
+  reviewedByName: text("reviewed_by_name"),
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  studentIndex: index("student_summaries_student_idx").on(table.studentId),
+  statusIndex: index("student_summaries_status_idx").on(table.status),
+}));
+
+export type InsertStudentLessonSummary = typeof studentLessonSummariesTable.$inferInsert;
+export type StudentLessonSummary = typeof studentLessonSummariesTable.$inferSelect;
+

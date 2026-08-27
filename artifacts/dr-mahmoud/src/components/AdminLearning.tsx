@@ -45,6 +45,7 @@ import { NotificationsTab } from "./admin/learning/NotificationsTab";
 import { MonthlyPaymentsTab } from "./admin/learning/MonthlyPaymentsTab";
 import { OverviewSection } from "./admin/learning/OverviewSection";
 import { ReportsTab } from "./admin/learning/ReportsTab";
+import { StudentSummariesAdminTab } from "./admin/learning/StudentSummariesAdminTab";
 
 type Student = PlatformStudent & {
   accessCode?: string | null;
@@ -215,10 +216,10 @@ export function AdminLearning({
   initialTab = "students",
 }: {
   role?: "superadmin" | "subadmin";
-  initialTab?: "overview" | "students" | "center-bookings" | "payments" | "notifications" | "files" | "quizzes" | "subscriptions" | "reports";
+  initialTab?: "overview" | "students" | "summaries" | "center-bookings" | "payments" | "notifications" | "files" | "quizzes" | "subscriptions" | "reports";
 }) {
   const { toast } = useToast();
-  const [tab, setTab] = useState<"overview" | "students" | "center-bookings" | "payments" | "notifications" | "files" | "quizzes" | "subscriptions" | "reports">(
+  const [tab, setTab] = useState<"overview" | "students" | "summaries" | "center-bookings" | "payments" | "notifications" | "files" | "quizzes" | "subscriptions" | "reports">(
     initialTab,
   );
 
@@ -1207,6 +1208,7 @@ export function AdminLearning({
     ["overview", "اللوحة التشغيلية", LayoutDashboard],
     ["center-bookings", "حجوزات السناتر", MapPin],
     ["students", "الطلاب", GraduationCap],
+    ["summaries", "تلاخيص الطلاب 📝", FileText],
     ["subscriptions", "الاشتراكات الشهرية", CreditCard],
     ["payments", "إيصالات الدفع", FileCheck2],
     ["files", "الملفات", Folder],
@@ -1216,13 +1218,14 @@ export function AdminLearning({
   ];
 
   // Subadmin has access to student management & daily activity reports
-  const SUBADMIN_TABS = new Set(["students", "center-bookings", "subscriptions", "payments", "reports"]);
+  const SUBADMIN_TABS = new Set(["students", "center-bookings", "summaries", "subscriptions", "payments", "reports"]);
   const tabs = role === "subadmin"
     ? allTabs.filter(([value]) => SUBADMIN_TABS.has(value))
     : allTabs;
   const tabMeta: Record<string, [string, string]> = {
     overview: ["اللوحة التشغيلية وإحصائيات المنصة", "نظرة عامة على أعداد الطلاب، المشتركين، والتوزيع حسب المراحل والكورسات."],
     students: ["إدارة جميع الطلاب", "راجع التسجيلات والصلاحيات والكورسات المخصصة لكل طالب."],
+    summaries: ["مراجعة وتدقيق تلخيصات الدروس", "استعرض صور الكشكول المرفوعة من الطلاب واعتمدها أو أضف ملحوظات معلم."],
     "center-bookings": ["كشف وإدارة حجوزات السناتر", "جدول تفصيلي مخصص لمتابعة جميع الطلاب المسجلين بالسناتر والمواعيد الحضورية المحددة."],
     subscriptions: ["متابعة الاشتراكات الشهرية", "راقب حالة الاشتراكات الشهرية للطلاب وتجديدها والمتأخرات."],
     payments: ["إيصالات الدفع", "راجع إيصالات الدفع من الطلاب ووافق أو ارفض."],
@@ -1404,6 +1407,9 @@ export function AdminLearning({
               }}
             />
             </div>
+          )}
+          {tab === "summaries" && (
+            <StudentSummariesAdminTab role={role} />
           )}
           {tab === "center-bookings" && (
             <CenterBookingsTab

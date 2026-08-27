@@ -45,6 +45,7 @@ import { FilesTab } from "./tabs/FilesTab";
 import { QuizzesTab } from "./tabs/QuizzesTab";
 import { DashboardTab } from "./tabs/DashboardTab";
 import { AccessScreen } from "./tabs/AccessScreen";
+import { StudentSummariesTab } from "./tabs/StudentSummariesTab";
 import { IncompleteProfileModal } from "./tabs/IncompleteProfileModal";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -109,7 +110,7 @@ export function StudentPlatform() {
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<
-    "dashboard" | "lessons" | "compiler" | "files" | "quizzes" | "profile"
+    "dashboard" | "lessons" | "summaries" | "compiler" | "files" | "quizzes" | "profile"
   >("dashboard");
   const [files, setFiles] = useState<LearningFile[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -463,7 +464,8 @@ export function StudentPlatform() {
   const nav = [
     ["dashboard", "الرئيسية", Home],
     ["lessons", "كورساتي", BookOpen],
-    ["compiler", "محرر الكود C++", Code2],
+    ["summaries", "مذكراتي 📝", FileText],
+    ["compiler", "محرر C++", Code2],
     ["files", "الملفات", FolderOpen],
     ["quizzes", "الاختبارات", ClipboardCheck],
     ["profile", "حسابي", User],
@@ -655,6 +657,8 @@ export function StudentPlatform() {
               quizzes={quizzes}
               onStartQuiz={startQuiz}
             />
+          ) : tab === "summaries" ? (
+            <StudentSummariesTab student={student} />
           ) : tab === "compiler" ? (
             <CppCompilerPanel />
           ) : tab === "files" ? (

@@ -28,6 +28,7 @@ import {
   bookingsTable,
   siteSettingsTable,
   monthlySubscriptionsTable,
+  studentLessonSummariesTable,
   type QuizQuestion,
 } from "@workspace/db";
 import { getAdminIdentity, getAdminRole, isAdminRequest, requireAdmin, requireSuperAdmin } from "../middleware/auth";
@@ -97,6 +98,27 @@ const paymentReceiptUpload = multer({
     else cb(new Error("ارفع صورة فقط (JPG أو PNG أو WebP)"));
   },
 }).single("receipt");
+
+const summariesDir = path.join(privateUploadDir, "student-summaries");
+fs.mkdirSync(summariesDir, { recursive: true });
+
+const summaryImagesUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, summariesDir),
+    filename: (_req, file, cb) => {
+      const safeExt = path
+        .extname(file.originalname)
+        .toLowerCase()
+        .replace(/[^.a-z0-9]/g, "");
+      cb(null, `${Date.now()}-${randomBytes(8).toString("hex")}${safeExt}`);
+    },
+  }),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) cb(null, true);
+    else cb(new Error("ارفع صورة فقط (JPG أو PNG أو WebP)"));
+  },
+}).array("images", 10);
 
 const allowedFileTypes = new Set([
   "application/pdf",
@@ -1354,6 +1376,204 @@ router.patch("/admin/payment-receipts/:id", requireAdmin, async (req, res, next)
       receiptId,
       `قام (${reviewerName}) بـ ${status === "approved" ? "قبول وتفعيل" : "رفض"} إيصال الطالب رقم ${receipt.studentId || "غير محدد"}`
     );
+    res.json(updated);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ==========================================
+// STUDENT LESSON SUMMARIES ROUTES (تلاخيص الطلاب)
+// ==========================================
+
+// POST /api/learning/summaries/upload - Student uploads summary photos
+router.post("/learning/summaries/upload", requireStudent, (req, res, next) => {
+  summaryImagesUpload(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({ error: err.message });
+    }
+    try {
+      const studentId = (req as any).student.id;
+      const lessonTitle = String(req.body.lessonTitle ?? "").trim();
+      const courseIdStr = req.body.courseId ? String(req.body.courseId).trim() : null;
+      const courseTitle = req.body.courseTitle ? String(req.body.courseTitle).trim() : null;
+      const studentNotes = req.body.studentNotes ? String(req.body.studentNotes).trim() : null;
+
+      if (!lessonTitle) {
+        return res.status(400).json({ error: "اسم الدرس مطلوب" });
+      }
+
+      const files = req.files as Express.Multer.File[];
+      if (!files || files.length === 0) {
+        return res.status(400).json({ error: "يرجى رفع صورة واحدة على الأقل من كشكول الملخص" });
+      }
+
+      const imageUrls = files.map((f) => `/api/learning/summaries/images/${f.filename}`);
+
+      const [inserted] = await db
+        .insert(studentLessonSummariesTable)
+        .values({
+          studentId,
+          lessonTitle,
+          courseId: courseIdStr ? parseInt(courseIdStr, 10) : null,
+          courseTitle,
+          imageUrls,
+          studentNotes,
+          status: "pending",
+        })
+        .returning();
+
+      // Notify student
+      await db.insert(studentNotificationsTable).values({
+        studentId,
+        type: "info",
+        title: "تم تسليم الملخص بنجاح 📝",
+        message: `تم رفع ملخص درس (${lessonTitle}) بنجاح! ينتظر مراجعة وتدقيق المعلم.`,
+      });
+
+      res.status(201).json(inserted);
+    } catch (error) {
+      next(error);
+    }
+  });
+});
+
+// GET /api/learning/summaries/images/:filename - Serve summary image file
+router.get("/learning/summaries/images/:filename", async (req, res, next) => {
+  try {
+    const filename = path.basename(req.params.filename);
+    const filePath = path.join(summariesDir, filename);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).send("الصورة غير موجودة");
+    }
+    res.sendFile(filePath);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/learning/summaries/my - Student's own summary submissions
+router.get("/learning/summaries/my", requireStudent, async (req, res, next) => {
+  try {
+    const studentId = (req as any).student.id;
+    const summaries = await db
+      .select()
+      .from(studentLessonSummariesTable)
+      .where(eq(studentLessonSummariesTable.studentId, studentId))
+      .orderBy(desc(studentLessonSummariesTable.createdAt));
+    res.json(summaries);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/admin/summaries - Admin/SubAdmin list all student summaries
+router.get("/admin/summaries", requireAdmin, async (req, res, next) => {
+  try {
+    const statusFilter = req.query.status ? String(req.query.status) : "all";
+    const studentIdFilter = req.query.studentId ? parseInt(String(req.query.studentId), 10) : null;
+
+    let query = db
+      .select({
+        id: studentLessonSummariesTable.id,
+        studentId: studentLessonSummariesTable.studentId,
+        studentName: studentsTable.name,
+        studentPhone: studentsTable.phone,
+        studentGrade: studentsTable.grade,
+        accessCode: studentsTable.accessCode,
+        lessonTitle: studentLessonSummariesTable.lessonTitle,
+        courseId: studentLessonSummariesTable.courseId,
+        courseTitle: studentLessonSummariesTable.courseTitle,
+        imageUrls: studentLessonSummariesTable.imageUrls,
+        studentNotes: studentLessonSummariesTable.studentNotes,
+        status: studentLessonSummariesTable.status,
+        adminFeedback: studentLessonSummariesTable.adminFeedback,
+        reviewedByRole: studentLessonSummariesTable.reviewedByRole,
+        reviewedByName: studentLessonSummariesTable.reviewedByName,
+        reviewedAt: studentLessonSummariesTable.reviewedAt,
+        createdAt: studentLessonSummariesTable.createdAt,
+      })
+      .from(studentLessonSummariesTable)
+      .leftJoin(studentsTable, eq(studentLessonSummariesTable.studentId, studentsTable.id));
+
+    const conditions = [];
+    if (statusFilter && statusFilter !== "all") {
+      conditions.push(eq(studentLessonSummariesTable.status, statusFilter));
+    }
+    if (studentIdFilter) {
+      conditions.push(eq(studentLessonSummariesTable.studentId, studentIdFilter));
+    }
+
+    const summaries = conditions.length > 0
+      ? await query.where(and(...conditions)).orderBy(desc(studentLessonSummariesTable.createdAt))
+      : await query.orderBy(desc(studentLessonSummariesTable.createdAt));
+
+    res.json(summaries);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/summaries/:id/review - Admin/SubAdmin reviews a summary
+router.post("/admin/summaries/:id/review", requireAdmin, async (req, res, next) => {
+  try {
+    const summaryId = parseInt(req.params.id, 10);
+    const { status, adminFeedback } = req.body; // status: "reviewed" | "needs_revision" | "pending"
+    if (!status || !["reviewed", "needs_revision", "pending"].includes(status)) {
+      return res.status(400).json({ error: "حالة مراجعة غير صالحة" });
+    }
+
+    const [summary] = await db
+      .select()
+      .from(studentLessonSummariesTable)
+      .where(eq(studentLessonSummariesTable.id, summaryId))
+      .limit(1);
+
+    if (!summary) {
+      return res.status(404).json({ error: "التلخيص غير موجود" });
+    }
+
+    const reviewerRole = getAdminRole(req);
+    const reviewerIdentity = getAdminIdentity(req);
+    const reviewerName = reviewerIdentity.fullName || reviewerIdentity.username || (reviewerRole === "superadmin" ? "د. محمود المهدي" : "المشرف المساعد");
+
+    const [updated] = await db
+      .update(studentLessonSummariesTable)
+      .set({
+        status,
+        adminFeedback: adminFeedback !== undefined ? (String(adminFeedback).trim() || null) : summary.adminFeedback,
+        reviewedByRole: reviewerRole,
+        reviewedByName: reviewerName,
+        reviewedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(studentLessonSummariesTable.id, summaryId))
+      .returning();
+
+    // Send notification to student
+    if (summary.studentId) {
+      const feedbackText = adminFeedback ? ` الملاحظات: ${adminFeedback}` : "";
+      const notifTitle = status === "reviewed" ? "تمت مراجعة تلخيص الدرس ⭐" : status === "needs_revision" ? "تنبيه بشأن تلخيص الدرس 📝" : "تحديث حالة التلخيص";
+      const notifMsg = status === "reviewed"
+        ? `أحسنت! تمت مراجعة واكتفاء ملخص درس (${summary.lessonTitle}) بنجاح.${feedbackText}`
+        : `يرجى تعديل ملخص درس (${summary.lessonTitle}).${feedbackText}`;
+
+      await db.insert(studentNotificationsTable).values({
+        studentId: summary.studentId,
+        type: status === "reviewed" ? "success" : "warning",
+        title: notifTitle,
+        message: notifMsg,
+      });
+    }
+
+    await logAudit(
+      req,
+      `REVIEW_SUMMARY_${status.toUpperCase()}`,
+      "summary",
+      summaryId,
+      `قام (${reviewerName}) بمراجعة تلخيص درس (${summary.lessonTitle}) للطالب #${summary.studentId}`
+    );
+
     res.json(updated);
   } catch (error) {
     next(error);
