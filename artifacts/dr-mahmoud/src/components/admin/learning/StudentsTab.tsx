@@ -423,18 +423,18 @@ export function StudentsTab({
       )}
 
       {/* 1. Integrated Search & Filters Toolbar */}
-      <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4 space-y-3 shadow-xs overflow-hidden">
-        {/* Row 1: Search + Result Count + Clear */}
-        <div className="flex items-center gap-3">
-          {/* Search Input — min-w-[360px] on desktop, full width on mobile */}
+      <div className="rounded-2xl border border-[#E2E8F0] bg-white p-4 space-y-4 shadow-xs overflow-hidden">
+        {/* Row 1: Search Input + Result Counter + Reset Filters */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-[#E2E8F0]">
+          {/* Search Input */}
           <div className="relative min-w-0 flex-1">
             <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748B] pointer-events-none" />
             <input
               type="text"
-              placeholder="ابحث بالاسم أو الهاتف أو الكود أو البريد"
+              placeholder="ابحث بالاسم، رقم الهاتف، كود الطالب، البريد، السنتر..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="h-12 w-full min-w-0 rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] pr-11 pl-10 text-sm font-medium text-[#0F172A] placeholder-[#64748B] focus:border-[#2563EB] focus:bg-white focus:outline-none transition-colors"
+              className="h-11 w-full min-w-0 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] pr-11 pl-10 text-sm font-medium text-[#0F172A] placeholder-[#64748B] focus:border-[#2563EB] focus:bg-white focus:outline-none transition-colors"
             />
             {searchInput && (
               <button
@@ -447,97 +447,42 @@ export function StudentsTab({
             )}
           </div>
 
-          {/* Result Counter */}
-          <span className="shrink-0 text-xs font-medium text-[#64748B] whitespace-nowrap hidden sm:block">
-            عرض <strong className="text-[#0F172A] font-bold">{filteredStudents.length}</strong>{" "}
-            من أصل <strong className="text-[#0F172A] font-bold">{students.length}</strong> طالبًا
-          </span>
+          {/* Result Counter & Clear */}
+          <div className="flex items-center justify-between md:justify-end gap-3 shrink-0">
+            <span className="text-xs font-semibold text-[#64748B] whitespace-nowrap bg-[#F1F5F9] px-3 py-2 rounded-xl border border-[#E2E8F0]">
+              عرض <strong className="text-[#2563EB] font-bold">{filteredStudents.length}</strong> من أصل <strong className="text-[#0F172A] font-bold">{students.length}</strong> طالبًا
+            </span>
 
-          {/* Clear Filters (visible only when active) */}
-          {hasActiveFilters && (
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors whitespace-nowrap"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>مسح الفلاتر</span>
+              </button>
+            )}
+
+            {/* Mobile Filter Toggle Button */}
             <button
               type="button"
-              onClick={clearAllFilters}
-              className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 hover:text-red-700 transition-colors whitespace-nowrap"
+              onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
+              className="lg:hidden shrink-0 flex items-center gap-1.5 h-10 rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-semibold text-[#0F172A]"
             >
-              <RotateCcw className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">مسح الفلاتر</span>
+              <SlidersHorizontal className="h-4 w-4 text-[#2563EB]" />
+              <span>فلاتر</span>
             </button>
-          )}
-
-          {/* Quick Inactive Filter Button */}
-          <button
-            type="button"
-            onClick={() => {
-              if (activityFilter === "inactive_7d" && sortBy === "last_active_asc") {
-                setActivityFilter("all");
-                setSortBy("newest");
-              } else {
-                setActivityFilter("inactive_7d");
-                setSortBy("last_active_asc");
-              }
-              setCurrentPage(1);
-            }}
-            className={`shrink-0 inline-flex items-center gap-1.5 h-12 rounded-xl px-3.5 text-xs font-bold transition-all shadow-xs ${
-              activityFilter === "inactive_7d"
-                ? "bg-amber-600 text-white ring-2 ring-amber-400"
-                : "bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100"
-            }`}
-          >
-            <Clock className="h-4 w-4 text-amber-600" />
-            <span>المنقطعين (لم يدخلوا من أسبوع) ⚠️</span>
-          </button>
-
-          {activityFilter !== "all" && (
-            <button
-              type="button"
-              onClick={handleSuspendAllFiltered}
-              className="shrink-0 inline-flex items-center gap-1.5 h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white px-3.5 text-xs font-bold transition-all shadow-xs"
-            >
-              <UserX className="h-4 w-4" />
-              <span>إيقاف المنقطعين المعروضين ({filteredStudents.filter((s) => s.status !== "suspended").length}) 🚫</span>
-            </button>
-          )}
-
-          {/* Suspend All Students (Online + Offline) Button */}
-          <button
-            type="button"
-            onClick={handleSuspendAllStudents}
-            className="shrink-0 inline-flex items-center gap-1.5 h-12 rounded-xl bg-rose-700 hover:bg-rose-800 text-white px-3.5 text-xs font-bold transition-all shadow-xs"
-            title="إيقاف جميع الطلاب (أونلاين وأوفلاين) لحين تفعيلهم يدويًا من الأدمن أو المشرف المساعد"
-          >
-            <UserX className="h-4 w-4" />
-            <span>إيقاف كافة الطلاب (أونلاين + أوفلاين) 🛑</span>
-          </button>
-
-          {onNavigateToReports && (
-            <button
-              type="button"
-              onClick={onNavigateToReports}
-              className="shrink-0 inline-flex items-center gap-1.5 h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 text-xs font-bold transition-all shadow-xs"
-            >
-              <BarChart3 className="h-4 w-4" />
-              <span>تقارير الدخول والنشاط 📊</span>
-            </button>
-          )}
-
-          {/* Mobile Filter Toggle */}
-          <button
-            type="button"
-            onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-            className="lg:hidden shrink-0 flex items-center gap-1.5 h-12 rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-semibold text-[#0F172A]"
-          >
-            <SlidersHorizontal className="h-4 w-4 text-[#2563EB]" />
-          </button>
+          </div>
         </div>
 
-        {/* Row 2 (Desktop): Filters Grid — auto-fit prevents overflow */}
-        <div className="hidden lg:grid gap-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
+        {/* Row 2 (Desktop): Filters Grid — 7-column responsive grid */}
+        <div className="hidden lg:grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7 gap-2">
           {/* Stage Filter */}
           <select
             value={stageFilter}
             onChange={(e) => { setStageFilter(e.target.value); setCurrentPage(1); }}
-            className="h-12 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
+            className="h-11 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-2.5 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
           >
             <option value="all">كل المراحل</option>
             {uniqueStages.map((stage) => (
@@ -549,7 +494,7 @@ export function StudentsTab({
           <select
             value={courseFilter}
             onChange={(e) => { setCourseFilter(e.target.value); setCurrentPage(1); }}
-            className="h-12 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
+            className="h-11 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-2.5 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
           >
             <option value="all">كل الكورسات</option>
             {learningCourses.map((c) => (
@@ -561,7 +506,7 @@ export function StudentsTab({
           <select
             value={paymentFilter}
             onChange={(e) => { setPaymentFilter(e.target.value); setCurrentPage(1); }}
-            className="h-12 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
+            className="h-11 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-2.5 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
           >
             <option value="all">كل الاشتراكات</option>
             <option value="paid">مدفوع (وصول كامل)</option>
@@ -573,7 +518,7 @@ export function StudentsTab({
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-            className="h-12 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
+            className="h-11 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-2.5 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
           >
             <option value="all">كل الحسابات</option>
             <option value="approved">حساب نشط</option>
@@ -585,7 +530,7 @@ export function StudentsTab({
           <select
             value={modeFilter}
             onChange={(e) => { setModeFilter(e.target.value); setCurrentPage(1); }}
-            className="h-12 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
+            className="h-11 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-2.5 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
           >
             <option value="all">كل الأنظمة</option>
             <option value="online">أونلاين</option>
@@ -596,7 +541,7 @@ export function StudentsTab({
           <select
             value={activityFilter}
             onChange={(e) => { setActivityFilter(e.target.value as any); setCurrentPage(1); }}
-            className="h-12 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
+            className="h-11 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-2.5 text-xs font-medium text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
           >
             <option value="all">حالة النشاط بالمنصة</option>
             <option value="inactive_7d">منقطع من أسبوع (7+ أيام)</option>
@@ -609,7 +554,7 @@ export function StudentsTab({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="h-12 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-3 text-xs font-semibold text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
+            className="h-11 w-full rounded-xl border border-[#E2E8F0] bg-[#F6F8FC] px-2.5 text-xs font-semibold text-[#0F172A] focus:border-[#2563EB] focus:bg-white focus:outline-none"
           >
             <option value="newest">الأحدث تسجيلًا</option>
             <option value="last_active_asc">المنقطعين أولاً (الأقدم نشاطاً)</option>
@@ -619,40 +564,108 @@ export function StudentsTab({
           </select>
         </div>
 
+        {/* Row 3: Quick Action Buttons Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-[#E2E8F0]">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Quick Inactive Filter Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (activityFilter === "inactive_7d" && sortBy === "last_active_asc") {
+                  setActivityFilter("all");
+                  setSortBy("newest");
+                } else {
+                  setActivityFilter("inactive_7d");
+                  setSortBy("last_active_asc");
+                }
+                setCurrentPage(1);
+              }}
+              className={`shrink-0 inline-flex items-center gap-1.5 h-10 rounded-xl px-3 text-xs font-bold transition-all shadow-xs ${
+                activityFilter === "inactive_7d"
+                  ? "bg-amber-600 text-white ring-2 ring-amber-400"
+                  : "bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100"
+              }`}
+            >
+              <Clock className="h-3.5 w-3.5 text-amber-600" />
+              <span>المنقطعين (لم يدخلوا من أسبوع) ⚠️</span>
+            </button>
+
+            {activityFilter !== "all" && (
+              <button
+                type="button"
+                onClick={handleSuspendAllFiltered}
+                className="shrink-0 inline-flex items-center gap-1.5 h-10 rounded-xl bg-red-600 hover:bg-red-700 text-white px-3 text-xs font-bold transition-all shadow-xs"
+              >
+                <UserX className="h-3.5 w-3.5" />
+                <span>إيقاف المنقطعين المعروضين ({filteredStudents.filter((s) => s.status !== "suspended").length}) 🚫</span>
+              </button>
+            )}
+
+            {/* Suspend All Students (Online + Offline) Button */}
+            <button
+              type="button"
+              onClick={handleSuspendAllStudents}
+              className="shrink-0 inline-flex items-center gap-1.5 h-10 rounded-xl bg-rose-700 hover:bg-rose-800 text-white px-3 text-xs font-bold transition-all shadow-xs"
+              title="إيقاف جميع الطلاب (أونلاين وأوفلاين) لحين تفعيلهم يدويًا من الأدمن أو المشرف المساعد"
+            >
+              <UserX className="h-3.5 w-3.5" />
+              <span>إيقاف كافة الطلاب (أونلاين + أوفلاين) 🛑</span>
+            </button>
+          </div>
+
+          {onNavigateToReports && (
+            <button
+              type="button"
+              onClick={onNavigateToReports}
+              className="shrink-0 inline-flex items-center gap-1.5 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3 text-xs font-bold transition-all shadow-xs"
+            >
+              <BarChart3 className="h-3.5 w-3.5" />
+              <span>تقارير الدخول والنشاط 📊</span>
+            </button>
+          )}
+        </div>
+
         {/* Mobile Filters Collapsible (2-col grid) */}
         {isMobileFilterOpen && (
           <div className="lg:hidden grid grid-cols-2 gap-2 pt-3 border-t border-[#E2E8F0]">
             <select value={stageFilter} onChange={(e) => setStageFilter(e.target.value)}
-              className="h-11 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 text-xs font-semibold text-[#0F172A]">
+              className="h-10 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 text-xs font-semibold text-[#0F172A]">
               <option value="all">كل المراحل</option>
               {uniqueStages.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
             <select value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value)}
-              className="h-11 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 text-xs font-semibold text-[#0F172A]">
+              className="h-10 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 text-xs font-semibold text-[#0F172A]">
               <option value="all">كل الاشتراكات</option>
               <option value="paid">مدفوع</option>
               <option value="pending_review">مراجعة</option>
               <option value="unpaid">مجاني</option>
             </select>
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-11 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 text-xs font-semibold text-[#0F172A]">
+              className="h-10 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 text-xs font-semibold text-[#0F172A]">
               <option value="all">كل الحسابات</option>
               <option value="approved">نشط</option>
               <option value="pending">معلق</option>
               <option value="suspended">موقوف</option>
             </select>
             <select value={modeFilter} onChange={(e) => setModeFilter(e.target.value)}
-              className="h-11 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 text-xs font-semibold text-[#0F172A]">
+              className="h-10 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 text-xs font-semibold text-[#0F172A]">
               <option value="all">كل الأنظمة</option>
               <option value="online">أونلاين</option>
               <option value="offline">أوفلاين</option>
             </select>
             <select value={activityFilter} onChange={(e) => setActivityFilter(e.target.value as any)}
-              className="h-11 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 text-xs font-semibold text-[#0F172A]">
+              className="h-10 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 text-xs font-semibold text-[#0F172A]">
               <option value="all">كل حالات النشاط</option>
               <option value="inactive_7d">منقطع أكثر من 7 أيام</option>
               <option value="inactive_30d">منقطع أكثر من 30 يوم</option>
               <option value="never">لم يدخل أبدًا</option>
+            </select>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)}
+              className="h-10 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 text-xs font-semibold text-[#0F172A]">
+              <option value="newest">الأحدث تسجيلًا</option>
+              <option value="last_active_asc">المنقطعين أولاً</option>
+              <option value="last_active_desc">الأكثر نشاطاً</option>
+              <option value="name">أبجديًا</option>
             </select>
           </div>
         )}
