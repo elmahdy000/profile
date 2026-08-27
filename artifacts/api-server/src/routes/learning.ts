@@ -2834,8 +2834,25 @@ router.get(["/learning/files/:id/preview", "/learning/files/:id/download"], asyn
       return;
     }
     if (student && student.paymentStatus !== "paid") {
-      res.status(403).json({ error: "الملفات المرفقة متاحة فقط للمشتركين المدفوعين", code: "PAYMENT_REQUIRED" });
-      return;
+      const linkedVideos = (
+        await db
+          .select({ video: videosTable })
+          .from(videoFileAttachmentsTable)
+          .innerJoin(videosTable, eq(videoFileAttachmentsTable.videoId, videosTable.id))
+          .where(eq(videoFileAttachmentsTable.fileId, file.id))
+      ).map((row) => row.video);
+
+      const isFreePreviewAttachment = linkedVideos.some(
+        (v) => v.isPublished && (v.order === 0 || v.order === 1)
+      );
+
+      if (!isFreePreviewAttachment) {
+        res.status(403).json({
+          error: "الملفات والملازم متاحة للمشتركين المدفوعين، أو لملازم المحاضرات المجانية.",
+          code: "PAYMENT_REQUIRED",
+        });
+        return;
+      }
     }
     const filePath = path.join(
       privateUploadDir,
