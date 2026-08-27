@@ -494,7 +494,20 @@ export function StudentPlatform() {
             />
             <div><strong className="block text-[13px] font-bold text-white">بوابة الطالب</strong><span className="text-[10px] text-slate-400">د. محمود المهدي</span></div>
           </div>
-          <div className="mx-3 mt-3 flex items-center gap-2.5 rounded-xl border border-slate-800/80 bg-[#14233A] p-2.5"><StudentAvatar name={student.name} src={student.avatarUrl} size="sm" /><div className="min-w-0"><strong className="block truncate text-[12px] font-bold text-white">{student.name}</strong><span className="text-[10px] text-slate-400">طالب متفعّل</span></div></div>
+          <div className="mx-3 mt-3 flex items-center gap-2.5 rounded-xl border border-slate-800/80 bg-[#14233A] p-2.5">
+            <StudentAvatar name={student.name} src={student.avatarUrl} size="sm" />
+            <div className="min-w-0">
+              <strong className="block truncate text-[12px] font-bold text-white">{student.name}</strong>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-slate-400">طالب متفعّل</span>
+                {student.accessCode && (
+                  <span className="font-mono text-[11px] font-extrabold text-[#60A5FA] bg-blue-950/60 px-1.5 py-0.5 rounded border border-blue-800/50 dir-ltr">
+                    {student.accessCode}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
           <nav className="mt-4 space-y-1 px-2.5">
             {nav.map(([value, label, Icon]) => (
               <button

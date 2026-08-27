@@ -153,13 +153,15 @@ export function AccessScreen({
         body: JSON.stringify(payload),
       });
       if (result.accessCode) {
-        setRegisteredCode(result.accessCode);
-        localStorage.setItem("dr_mahmoud_student_code", result.accessCode.trim().toUpperCase());
+        const cleanCode = result.accessCode.trim().toUpperCase();
+        setRegisteredCode(cleanCode);
+        setAccessCode(cleanCode);
+        localStorage.setItem("dr_mahmoud_student_code", cleanCode);
         toast({
           title: "تم إنشاء حسابك بنجاح! 🎉",
-          description: `كود الدخول الخاص بك هو: ${result.accessCode} (تم الدخول تلقائياً)`,
+          description: `كود الدخول الخاص بك هو: ${cleanCode}`,
         });
-        await enterWithCode(result.accessCode);
+        await enterWithCode(cleanCode);
         return;
       }
     } catch (err) {
@@ -179,7 +181,6 @@ export function AccessScreen({
         body: JSON.stringify({ accessCode: code.trim(), deviceId }),
       });
       setMessage("");
-      setRegisteredCode("");
       onLogin(result.student);
     } catch (err) {
       // Fall back to the login screen with the code pre-filled so the student
@@ -187,7 +188,6 @@ export function AccessScreen({
       setAccessCode(code.trim().toUpperCase());
       setMode("login");
       setMessage("");
-      setRegisteredCode("");
       setError((err as Error).message);
     } finally {
       setLoading(false);
@@ -569,6 +569,49 @@ export function AccessScreen({
                 </p>
               </div>
             </form>
+          ) : registeredCode ? (
+            <div className={`rounded-[24px] border p-6 text-center space-y-4 shadow-xl ${
+              isLight ? "border-emerald-200 bg-white text-slate-900" : "border-emerald-500/30 bg-[#062016] text-[#F8FAFC]"
+            }`}>
+              <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/30">
+                <CheckCircle2 className="h-8 w-8" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-black text-emerald-600 dark:text-emerald-400">تم إنشاء حسابك بنجاح! 🎉</h2>
+                <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-300 font-semibold leading-relaxed">
+                  احتفظ بكود الدخول الشخصي الخاص بك للاستخدام في أي وقت للدخول من أي جهاز:
+                </p>
+              </div>
+
+              <div className="mx-auto max-w-sm rounded-2xl border border-emerald-500/40 bg-emerald-50 dark:bg-[#0B1A28] p-4 shadow-inner space-y-2">
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">كود الدخول الشخصي</span>
+                <div className="flex items-center justify-between gap-3 bg-white dark:bg-[#06121E] p-3 rounded-xl border border-emerald-500/30">
+                  <span className="font-mono text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-widest dir-ltr">
+                    {registeredCode}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(registeredCode);
+                      toast({ title: "تم نسخ كود الدخول بنجاح! 📋" });
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3.5 py-2 text-xs font-black text-white shadow-xs transition-colors"
+                  >
+                    <Copy className="h-4 w-4" />
+                    <span>نسخ الكود</span>
+                  </button>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                onClick={() => enterWithCode(registeredCode)}
+                disabled={loading}
+                className="w-full h-12 rounded-xl bg-[#0866D9] hover:bg-[#0654B3] text-white font-extrabold text-sm shadow-md transition-all flex items-center justify-center gap-2"
+              >
+                {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <span>الدخول المباشر إلى المنصة 🚀</span>}
+              </Button>
+            </div>
           ) : (
             <form onSubmit={submitRegistration} className="space-y-5" noValidate dir="rtl">
               <div className={`relative overflow-hidden rounded-[20px] border p-4 sm:p-5 ${

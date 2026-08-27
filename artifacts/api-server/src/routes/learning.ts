@@ -222,6 +222,24 @@ export async function processSubscriptionExpirations(): Promise<{ expiredCount: 
   try {
     const now = new Date();
 
+    // Auto-generate missing access codes for legacy/imported students lacking one
+    try {
+      const studentsWithoutCode = await db
+        .select({ id: studentsTable.id })
+        .from(studentsTable)
+        .where(isNull(studentsTable.accessCode));
+      for (const s of studentsWithoutCode) {
+        try {
+          const code = await generateAccessCode();
+          await db.update(studentsTable).set({ accessCode: code }).where(eq(studentsTable.id, s.id));
+        } catch {
+          // ignore duplicate race
+        }
+      }
+    } catch {
+      // ignore
+    }
+
     // Fetch all students with paymentStatus === "paid"
     const paidStudents = await db
       .select()
@@ -718,6 +736,15 @@ router.post(
         .limit(1);
 
       if (existingByPhone) {
+        let code = existingByPhone.accessCode;
+        if (!code) {
+          code = await generateAccessCode();
+          await db
+            .update(studentsTable)
+            .set({ accessCode: code, updatedAt: new Date() })
+            .where(eq(studentsTable.id, existingByPhone.id));
+        }
+
         if (centerName || appointmentSlot || schoolName || parentPhone || languageTrack) {
           await db
             .update(studentsTable)
@@ -735,7 +762,7 @@ router.post(
         res.json({
           status: existingByPhone.status,
           isNewStudent: false,
-          accessCode: existingByPhone.accessCode,
+          accessCode: code,
           studentName: existingByPhone.name,
           schoolName: schoolName || existingByPhone.schoolName || "",
           grade: existingByPhone.grade || grade || "",

@@ -4,6 +4,7 @@ export type Student = {
   phone: string;
   email?: string | null;
   avatarUrl?: string | null;
+  accessCode?: string | null;
   status: string;
   governorate?: string | null;
   city?: string | null;
