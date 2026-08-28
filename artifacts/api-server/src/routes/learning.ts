@@ -1440,9 +1440,9 @@ router.post("/learning/summaries/upload", requireStudent, (req, res, next) => {
         message: `تم رفع ملخص درس (${lessonTitle}) بنجاح! ينتظر مراجعة وتدقيق المعلم.`,
       });
 
-      res.status(201).json(inserted);
+      return res.status(201).json(inserted);
     } catch (error) {
-      next(error);
+      return next(error);
     }
   });
 });
@@ -1455,9 +1455,9 @@ router.get("/learning/summaries/images/:filename", async (req, res, next) => {
     if (!fs.existsSync(filePath)) {
       return res.status(404).send("الصورة غير موجودة");
     }
-    res.sendFile(filePath);
+    return res.sendFile(filePath);
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
@@ -1583,9 +1583,9 @@ router.post("/admin/summaries/:id/review", requireAdmin, async (req, res, next) 
       `قام (${reviewerName}) بمراجعة تلخيص درس (${summary.lessonTitle}) للطالب #${summary.studentId}`
     );
 
-    res.json(updated);
+    return res.json(updated);
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
@@ -1652,7 +1652,7 @@ router.post("/admin/students/bulk-status", requireAdmin, async (req, res, next) 
 
     return res.status(400).json({ error: "لم يتم تحديد طلاب" });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
