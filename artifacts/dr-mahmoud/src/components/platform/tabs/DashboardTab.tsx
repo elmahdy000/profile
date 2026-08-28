@@ -66,10 +66,12 @@ export function DashboardHeader({
   student,
   academicTrackTitle,
   onContinue,
+  onOpenSummaries,
 }: {
   student: Student;
   academicTrackTitle?: string;
   onContinue: () => void;
+  onOpenSummaries?: () => void;
 }) {
   return (
     <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 dark:border-[#26364D] pb-4" dir="rtl">
@@ -107,14 +109,27 @@ export function DashboardHeader({
         </p>
       </div>
 
-      <Button
-        type="button"
-        onClick={onContinue}
-        className="h-10 px-5 rounded-xl bg-[#2583F7] hover:bg-[#1470DB] text-white text-xs font-bold shadow-2xs transition-all flex items-center justify-center gap-2 shrink-0 self-start sm:self-auto cursor-pointer"
-      >
-        <span>متابعة التعلم</span>
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
+      <div className="flex flex-wrap items-center gap-2 shrink-0 self-start sm:self-auto">
+        {onOpenSummaries && (
+          <Button
+            type="button"
+            onClick={onOpenSummaries}
+            variant="outline"
+            className="h-10 px-4 rounded-xl border-border hover:border-primary/40 text-foreground text-xs font-bold shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <FileText className="h-4 w-4 text-primary" />
+            <span>رفع ملخص كشكول 📝</span>
+          </Button>
+        )}
+        <Button
+          type="button"
+          onClick={onContinue}
+          className="h-10 px-5 rounded-xl bg-[#2583F7] hover:bg-[#1470DB] text-white text-xs font-bold shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <span>متابعة التعلم</span>
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+      </div>
     </header>
   );
 }
@@ -513,7 +528,7 @@ export function DashboardTab({
   dataLoading: boolean;
   dataError: string;
   onRetry: () => void;
-  onOpen: (tab: "lessons" | "compiler" | "files" | "quizzes") => void;
+  onOpen: (tab: "lessons" | "compiler" | "files" | "quizzes" | "summaries") => void;
 }) {
   const academicTrack = getTrackForStage(student.grade);
   const safeFiles = Array.isArray(files) ? files : [];
@@ -584,6 +599,7 @@ export function DashboardTab({
         student={student}
         academicTrackTitle={academicTrack?.title}
         onContinue={() => onOpen("lessons")}
+        onOpenSummaries={() => onOpen("summaries")}
       />
 
       {/* Error Retry Alert */}

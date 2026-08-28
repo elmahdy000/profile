@@ -4,7 +4,7 @@ import {
   Captions, Check, ChevronLeft, ChevronRight, Clock3, Download, Eye,
   FileText, Gauge, ListVideo, Loader2, Lock, Maximize, MessageCircle,
   Minimize, Pause, PictureInPicture, Play, RefreshCw, RotateCcw, RotateCw, StickyNote,
-  Volume2, VolumeX, X,
+  UploadCloud, Volume2, VolumeX, X,
 } from "lucide-react";
 import { getYouTubePlaylistId, getYouTubeVideoId, getYoutubeThumbnail, type VideoItem } from "@/lib/video";
 
@@ -22,6 +22,150 @@ type Props = {
   onStartQuiz?: (quiz: any) => void;
   onClose: () => void;
 };
+
+function LessonSummaryUploadPanel({ videoItem }: { videoItem: VideoItem }) {
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [studentNotes, setStudentNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
+
+  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const arr = Array.from(e.target.files);
+      if (arr.length + selectedFiles.length > 10) {
+        alert("يمكنك رفع 10 صور كحد أقصى لكشكول الدرس.");
+        return;
+      }
+      const combined = [...selectedFiles, ...arr];
+      setSelectedFiles(combined);
+      setPreviewUrls(combined.map((f) => URL.createObjectURL(f)));
+    }
+  };
+
+  const removeFile = (idx: number) => {
+    const next = selectedFiles.filter((_, i) => i !== idx);
+    setSelectedFiles(next);
+    setPreviewUrls(next.map((f) => URL.createObjectURL(f)));
+  };
+
+  const handleUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedFiles.length === 0) return;
+    setSubmitting(true);
+    setSuccessMsg("");
+    try {
+      const formData = new FormData();
+      formData.append("lessonTitle", videoItem.title);
+      if (videoItem.courseId) formData.append("courseId", String(videoItem.courseId));
+      if (studentNotes.trim()) formData.append("studentNotes", studentNotes.trim());
+      selectedFiles.forEach((file) => formData.append("images", file));
+
+      const res = await fetch("/api/learning/summaries/upload", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "تعذر رفع التلخيص");
+      }
+
+      setSuccessMsg("تم رفع ملخص الدرس بنجاح! 📝 ينتظر مراجعة واكتفاء المعلم.");
+      setSelectedFiles([]);
+      setPreviewUrls([]);
+      setStudentNotes("");
+    } catch (err: any) {
+      alert(err.message || "حدث خطأ أثناء رفع التلخيص");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4 rounded-xl border border-white/10 bg-white/5 p-4 text-right" dir="rtl">
+      <div>
+        <h4 className="text-sm font-extrabold text-white flex items-center gap-2">
+          <UploadCloud className="h-4 w-4 text-sky-400" />
+          <span>رفع تلخيص كشكول هذا الدرس ({videoItem.title})</span>
+        </h4>
+        <p className="text-xs text-slate-400 mt-1">
+          صوّر كشكول ملخص الدرس واختيار الصور لرفعها للمعلم/المشرف لمراجعتها واكتفائها.
+        </p>
+      </div>
+
+      {successMsg ? (
+        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/15 p-4 text-xs font-bold text-emerald-300 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Check className="h-4 w-4 text-emerald-400" />
+            <span>{successMsg}</span>
+          </div>
+          <button type="button" onClick={() => setSuccessMsg("")} className="text-xs underline text-emerald-200 cursor-pointer">
+            رفع ملخص آخر
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={handleUpload} className="space-y-3">
+          <div className="relative rounded-xl border-2 border-dashed border-white/15 bg-slate-950 p-4 text-center hover:border-sky-500 transition-colors">
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              onChange={handleFiles}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
+            <FileText className="mx-auto h-7 w-7 text-sky-400/80 mb-1" />
+            <span className="block text-xs font-bold text-slate-200">اضغط هنا لاختيار صور كشكول الملخص</span>
+            <span className="block text-[10px] text-slate-400 mt-0.5">يمكنك اختيار عدة صور دفعة واحدة (JPG, PNG, WebP)</span>
+          </div>
+
+          {previewUrls.length > 0 && (
+            <div className="space-y-1.5">
+              <span className="text-xs font-bold text-slate-300">الصور المختارة ({previewUrls.length}):</span>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {previewUrls.map((url, idx) => (
+                  <div key={idx} className="relative h-16 w-16 shrink-0 rounded-lg overflow-hidden border border-white/15 group">
+                    <img src={url} alt={`صفحة ${idx + 1}`} className="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeFile(idx)}
+                      className="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <textarea
+            value={studentNotes}
+            onChange={(e) => setStudentNotes(e.target.value)}
+            placeholder="أضف أية ملاحظات للمعلم (اختياري)..."
+            className="w-full min-h-16 rounded-xl border border-white/10 bg-slate-950 p-2.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500"
+          />
+
+          <button
+            type="submit"
+            disabled={submitting || selectedFiles.length === 0}
+            className="w-full h-11 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-2 disabled:opacity-40 cursor-pointer"
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>جارٍ رفع صور الملخص...</span>
+              </>
+            ) : (
+              <span>إرسال ملخص الدرس للمعلم 🚀</span>
+            )}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
 
 function readJson<T>(key: string, fallback: T): T {
   try { return JSON.parse(localStorage.getItem(key) || "") as T; } catch { return fallback; }
@@ -107,7 +251,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
   const [showSpeed, setShowSpeed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [playlistOpen, setPlaylistOpen] = useState(false);
-  const [tab, setTab] = useState<"overview" | "files" | "notes" | "questions">("overview");
+  const [tab, setTab] = useState<"overview" | "summary" | "files" | "notes" | "questions">("overview");
   const [noteText, setNoteText] = useState("");
   const [notes, setNotes] = useState<LessonNote[]>([]);
   const [progress, setProgress] = useState(0);
@@ -700,9 +844,10 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                 <div className="mr-auto flex items-center gap-3"><span className="text-xs font-bold text-slate-400">{progress}% مكتمل</span><button disabled={progress >= 100 || saving} onClick={() => void markComplete()} className="inline-flex h-11 min-w-36 items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 text-sm font-extrabold text-slate-950 hover:bg-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 disabled:bg-emerald-500/20 disabled:text-emerald-300">{saving ? <Loader2 className="h-4 w-4 animate-spin"/> : <Check className="h-4 w-4"/>}{progress >= 100 ? "تم إكمال الدرس" : "تحديد كمكتمل"}</button></div>
               </div>
 
-              <div className="border-b border-white/10 px-3 sm:px-5"><div className="flex overflow-x-auto">{([['overview','نظرة عامة',FileText],['files','ملفات الدرس',Download],['notes','ملاحظاتي',StickyNote],['questions','الأسئلة',MessageCircle]] as const).map(([id,label,Icon]) => <button key={id} onClick={() => setTab(id)} className={`flex h-12 shrink-0 items-center gap-2 border-b-2 px-3 text-sm font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500 ${tab===id ? "border-sky-400 text-sky-400" : "border-transparent text-slate-400 hover:text-slate-200"}`}><Icon className="h-4 w-4"/>{label}</button>)}</div></div>
+              <div className="border-b border-white/10 px-3 sm:px-5"><div className="flex overflow-x-auto">{([['overview','نظرة عامة',FileText],['summary','رفع التلخيص 📝',UploadCloud],['files','ملفات الدرس',Download],['notes','ملاحظاتي',StickyNote],['questions','الأسئلة',MessageCircle]] as const).map(([id,label,Icon]) => <button key={id} onClick={() => setTab(id)} className={`flex h-12 shrink-0 items-center gap-2 border-b-2 px-3 text-sm font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500 ${tab===id ? "border-sky-400 text-sky-400" : "border-transparent text-slate-400 hover:text-slate-200"}`}><Icon className="h-4 w-4"/>{label}</button>)}</div></div>
               <div className="min-h-44 p-4 sm:p-6">
                 {tab === "overview" && <div><h3 className="font-extrabold text-white">عن هذا الدرس</h3><p className="mt-2 max-w-3xl text-sm leading-7 text-slate-300">{item.description || "شاهد الدرس بالكامل، واستخدم الملفات والملاحظات لتثبيت المعلومات. يتم حفظ تقدمك تلقائيًا."}</p><div className="mt-4 flex flex-wrap gap-2 text-xs"><span className="rounded-lg bg-white/10 px-3 py-2 text-slate-200">{item.category}</span>{item.stage && <span className="rounded-lg bg-white/10 px-3 py-2 text-slate-200">{item.stage}</span>}</div></div>}
+                {tab === "summary" && <LessonSummaryUploadPanel videoItem={item} />}
                 {tab === "files" && <div className="grid gap-2 sm:grid-cols-2">{resources.length ? resources.map(file => <a key={file.id} href={`/api/learning/files/${file.id}/preview?deviceId=${encodeURIComponent(localStorage.getItem("dr_mahmoud_device_id") || "")}`} target="_blank" rel="noreferrer" className="flex min-h-14 items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 hover:border-sky-400/40 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"><FileText className="h-5 w-5 text-sky-400"/><span className="min-w-0 flex-1 truncate text-sm font-bold text-white">{file.title}</span><Eye className="h-4 w-4 text-slate-400"/></a>) : <p className="text-sm text-slate-400">لا توجد ملفات مرفقة بهذا الدرس.</p>}</div>}
                 {tab === "notes" && <div><div className="flex gap-2"><textarea value={noteText} onChange={event => setNoteText(event.target.value)} placeholder="اكتب ملاحظة مرتبطة بالوقت الحالي..." className="min-h-20 flex-1 resize-none rounded-xl border border-white/10 bg-slate-950 p-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500"/><button onClick={addNote} disabled={!noteText.trim()} className="h-11 self-end rounded-xl bg-sky-500 px-4 text-sm font-bold text-slate-950 hover:bg-sky-400 disabled:opacity-40">حفظ</button></div><div className="mt-4 space-y-2">{notes.map(note => <button key={note.id} onClick={() => { if(videoRef.current){ videoRef.current.currentTime=note.at; void videoRef.current.play(); } }} className="flex w-full gap-3 rounded-xl border border-white/10 bg-white/5 p-3 text-right hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"><span className="font-mono text-xs font-bold text-sky-400">{formatTime(note.at)}</span><span className="text-sm text-white">{note.text}</span></button>)}</div></div>}
                 {tab === "questions" && <div>{quiz ? <button disabled={quiz.locked} onClick={() => onStartQuiz?.(quiz)} className="inline-flex h-11 items-center gap-2 rounded-xl bg-sky-500 px-5 text-sm font-bold text-slate-950 hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600"><Captions className="h-4 w-4"/>{quiz.locked ? quiz.lockedReason || "أكمل الدرس أولًا" : "ابدأ اختبار الدرس"}</button> : <p className="text-sm text-slate-400">لا يوجد اختبار مرتبط بهذا الدرس حاليًا.</p>}</div>}
