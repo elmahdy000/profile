@@ -7,17 +7,39 @@ import { Redirect, Route, Switch, useLocation } from "wouter";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
-const ScrollProgress = lazy(() => import("@/components/ScrollProgress").then(m => ({ default: m.ScrollProgress })));
-const AcademyHome = lazy(() => import("@/components/AcademyHome").then(m => ({ default: m.AcademyHome })));
+function safeLazy<T extends React.ComponentType<any>>(
+  factory: () => Promise<{ default: T } | T>
+) {
+  return lazy(() =>
+    factory()
+      .then((module) => ("default" in module ? module : { default: module as T }))
+      .catch((error) => {
+        const isChunkError = /Failed to fetch dynamically imported module|Loading chunk|Importing a module script failed/i.test(
+          error?.message || ""
+        );
+        if (isChunkError) {
+          const hasReloaded = sessionStorage.getItem("chunk_reload_retry");
+          if (!hasReloaded) {
+            sessionStorage.setItem("chunk_reload_retry", "true");
+            window.location.reload();
+          }
+        }
+        throw error;
+      })
+  );
+}
 
-const AdminDashboard = lazy(() => import("@/components/AdminDashboard"));
-const SubAdminDashboard = lazy(() => import("@/components/SubAdminDashboard").then(m => ({ default: m.SubAdminDashboard })));
-const BaccalaureatePage = lazy(() => import("@/pages/BaccalaureatePage"));
-const UniversityPage = lazy(() => import("@/pages/UniversityPage"));
-const CurriculumPage = lazy(() => import("@/pages/CurriculumPage"));
-const PlatformPage = lazy(() => import("@/pages/PlatformPage"));
-const ParentPortalPage = lazy(() => import("@/pages/ParentPortalPage"));
-const NotFound = lazy(() => import("@/pages/not-found"));
+const ScrollProgress = safeLazy(() => import("@/components/ScrollProgress").then(m => ({ default: m.ScrollProgress })));
+const AcademyHome = safeLazy(() => import("@/components/AcademyHome").then(m => ({ default: m.AcademyHome })));
+
+const AdminDashboard = safeLazy(() => import("@/components/AdminDashboard"));
+const SubAdminDashboard = safeLazy(() => import("@/components/SubAdminDashboard").then(m => ({ default: m.SubAdminDashboard })));
+const BaccalaureatePage = safeLazy(() => import("@/pages/BaccalaureatePage"));
+const UniversityPage = safeLazy(() => import("@/pages/UniversityPage"));
+const CurriculumPage = safeLazy(() => import("@/pages/CurriculumPage"));
+const PlatformPage = safeLazy(() => import("@/pages/PlatformPage"));
+const ParentPortalPage = safeLazy(() => import("@/pages/ParentPortalPage"));
+const NotFound = safeLazy(() => import("@/pages/not-found"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,6 +77,10 @@ function PageLoader() {
 function App() {
   const [location] = useLocation();
   const pageAlreadyHasThemeToggle = location === "/" || location === "/platform";
+
+  useEffect(() => {
+    sessionStorage.removeItem("chunk_reload_retry");
+  }, []);
 
   return (
     <ErrorBoundary>

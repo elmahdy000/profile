@@ -12,6 +12,16 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): Partial<State> {
+    const isChunkError = /Failed to fetch dynamically imported module|Loading chunk|Importing a module script failed/i.test(
+      error?.message || ""
+    );
+    if (isChunkError) {
+      const hasReloaded = sessionStorage.getItem("chunk_reload_retry");
+      if (!hasReloaded) {
+        sessionStorage.setItem("chunk_reload_retry", "true");
+        window.location.reload();
+      }
+    }
     return { hasError: true, message: error.message || "حدث خطأ غير متوقع" };
   }
 
