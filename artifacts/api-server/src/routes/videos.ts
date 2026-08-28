@@ -227,7 +227,7 @@ router.get("/videos", async (req, res, next) => {
 
     // 2b. Build free preview set for unpaid students.
     // Unpaid students get EXACTLY 1 free preview video per course (video #1 of each course).
-    const isUnpaidStudent = approvedStudent.paymentStatus !== "paid";
+    const isUnpaidStudent = approvedStudent.status !== "approved" && approvedStudent.paymentStatus !== "paid";
     const maxAllowedFreeVideos = 1;
     const freePreviewIds = new Set<number>();
     if (isUnpaidStudent) {
@@ -380,7 +380,7 @@ router.get("/videos/:id/stream-url", async (req, res, next) => {
         return;
       }
 
-      if (student.paymentStatus !== "paid") {
+      if (student.status !== "approved" && student.paymentStatus !== "paid") {
         const maxFree = student.educationSystem === "university" ? 1 : 2;
         const courseKey = video.courseId ? eq(videosTable.courseId, video.courseId) : eq(videosTable.category, video.category);
         const courseVideos = await db.select({ id: videosTable.id }).from(videosTable)
@@ -749,7 +749,7 @@ router.get("/videos/:id/stream", async (req, res, next) => {
     // ── Payment gating on stream ──
     // If student is logged in via session cookie and not paid, check preview limit.
     // Short-lived signed stream tokens (hasValidToken) are pre-validated for authorized/paid users.
-    if (approvedStudent && !hasValidToken && approvedStudent.paymentStatus !== "paid") {
+    if (approvedStudent && !hasValidToken && approvedStudent.status !== "approved" && approvedStudent.paymentStatus !== "paid") {
       const maxAllowedFreeVideos = 1;
       const courseKey = video.courseId ? eq(videosTable.courseId, video.courseId) : eq(videosTable.category, video.category);
       const courseVideos = await db

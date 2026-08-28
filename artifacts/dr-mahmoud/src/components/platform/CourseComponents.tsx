@@ -568,7 +568,7 @@ export function RedesignedLessonCard({
                 {attachedFiles.map((file) => (
                   <a
                     key={file.id}
-                    href={`/api/learning/files/${file.id}/preview`}
+                    href={`/api/learning/files/${file.id}/preview?deviceId=${encodeURIComponent(localStorage.getItem("dr_mahmoud_device_id") || "")}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-between rounded-lg bg-white p-2 font-bold text-[#1769FF] border border-[#E4EAF2] hover:bg-[#E8EEFA] dark:bg-[#111C2E] dark:border-[#26364D]"

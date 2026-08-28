@@ -269,7 +269,7 @@ export async function getApprovedStudent(
   const student = row?.student ?? null;
   if (student) {
     const approvedDevices = Array.isArray(student.boundDevices) ? student.boundDevices : (student.deviceId ? [student.deviceId] : []);
-    if (approvedDevices.length > 0 && (!reqDeviceId || !approvedDevices.includes(reqDeviceId))) {
+    if (approvedDevices.length > 0 && reqDeviceId && !approvedDevices.includes(reqDeviceId)) {
       return null;
     }
   }
