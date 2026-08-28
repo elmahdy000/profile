@@ -1526,7 +1526,7 @@ router.get("/admin/summaries", requireAdmin, async (req, res, next) => {
 // POST /api/admin/summaries/:id/review - Admin/SubAdmin reviews a summary
 router.post("/admin/summaries/:id/review", requireAdmin, async (req, res, next) => {
   try {
-    const summaryId = parseInt(req.params.id, 10);
+    const summaryId = parseInt(req.params.id as string, 10);
     const { status, adminFeedback } = req.body; // status: "reviewed" | "needs_revision" | "pending"
     if (!status || !["reviewed", "needs_revision", "pending"].includes(status)) {
       return res.status(400).json({ error: "حالة مراجعة غير صالحة" });
@@ -1544,7 +1544,7 @@ router.post("/admin/summaries/:id/review", requireAdmin, async (req, res, next) 
 
     const reviewerRole = getAdminRole(req);
     const reviewerIdentity = getAdminIdentity(req);
-    const reviewerName = reviewerIdentity.fullName || reviewerIdentity.username || (reviewerRole === "superadmin" ? "د. محمود المهدي" : "المشرف المساعد");
+    const reviewerName = (reviewerIdentity as any)?.fullName || reviewerIdentity?.username || (reviewerRole === "superadmin" ? "د. محمود المهدي" : "المشرف المساعد");
 
     const [updated] = await db
       .update(studentLessonSummariesTable)
