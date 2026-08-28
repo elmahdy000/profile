@@ -1402,7 +1402,11 @@ router.post("/learning/summaries/upload", requireStudent, (req, res, next) => {
       return res.status(400).json({ error: err.message });
     }
     try {
-      const studentId = (req as any).student.id;
+      const student = res.locals.student || (req as any).student;
+      if (!student?.id) {
+        return res.status(401).json({ error: "الرجاء تسجيل الدخول أولاً" });
+      }
+      const studentId = student.id;
       const lessonTitle = String(req.body.lessonTitle ?? "").trim();
       const courseIdStr = req.body.courseId ? String(req.body.courseId).trim() : null;
       const courseTitle = req.body.courseTitle ? String(req.body.courseTitle).trim() : null;
@@ -1464,7 +1468,12 @@ router.get("/learning/summaries/images/:filename", async (req, res, next) => {
 // GET /api/learning/summaries/my - Student's own summary submissions
 router.get("/learning/summaries/my", requireStudent, async (req, res, next) => {
   try {
-    const studentId = (req as any).student.id;
+    const student = res.locals.student || (req as any).student;
+    if (!student?.id) {
+      res.status(401).json({ error: "الرجاء تسجيل الدخول أولاً" });
+      return;
+    }
+    const studentId = student.id;
     const summaries = await db
       .select()
       .from(studentLessonSummariesTable)
