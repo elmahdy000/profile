@@ -273,8 +273,15 @@ export async function processSubscriptionExpirations(): Promise<{ expiredCount: 
     let remindedCount = 0;
 
     for (const student of paidStudents) {
-      const startDate = student.subscriptionStartDate || student.approvedAt || student.createdAt;
-      if (!startDate) continue;
+      let startDate = student.subscriptionStartDate || student.approvedAt;
+      if (!startDate) {
+        // If student is marked paid but lacks subscriptionStartDate, set it now so they get 30 days starting from activation instead of reverting to old createdAt
+        startDate = now;
+        await db
+          .update(studentsTable)
+          .set({ subscriptionStartDate: now, approvedAt: student.approvedAt || now, subscriptionStatus: "active" })
+          .where(eq(studentsTable.id, student.id));
+      }
       const startMs = new Date(startDate).getTime();
       const elapsedDays = (now.getTime() - startMs) / (1000 * 60 * 60 * 24);
 
@@ -1305,7 +1312,8 @@ router.patch("/admin/payment-receipts/:id", requireAdmin, async (req, res, next)
               status: "approved",
               paymentStatus: "paid",
               accessCode: code,
-              approvedAt: student.approvedAt || new Date(),
+              approvedAt: new Date(),
+              subscriptionStartDate: new Date(),
               subscriptionStatus: "active",
               updatedAt: new Date(),
             })
@@ -1891,10 +1899,6 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
           status === "approved"
             ? current.accessCode || await generateAccessCode()
             : current.accessCode,
-        approvedAt:
-          status === "approved"
-            ? current.approvedAt || new Date()
-            : current.approvedAt,
         enrolledCategories: requestedCategories,
         enrolledCourseIds: requestedCourseIds,
         learningMode:
@@ -1926,7 +1930,23 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
           req.body.paymentStatus !== undefined &&
           ["paid", "pending_review", "unpaid"].includes(String(req.body.paymentStatus))
             ? String(req.body.paymentStatus)
+            : status === "approved"
+            ? "paid"
             : current.paymentStatus,
+        subscriptionStartDate:
+          req.body.paymentStatus === "paid" || status === "approved"
+            ? new Date()
+            : current.subscriptionStartDate,
+        subscriptionStatus:
+          req.body.paymentStatus === "paid" || status === "approved"
+            ? "active"
+            : req.body.paymentStatus === "unpaid"
+            ? "expired"
+            : current.subscriptionStatus,
+        approvedAt:
+          status === "approved" || req.body.paymentStatus === "paid"
+            ? (current.approvedAt || new Date())
+            : current.approvedAt,
         notes:
           req.body.notes !== undefined ? String(req.body.notes) : current.notes,
         updatedAt: new Date(),

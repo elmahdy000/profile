@@ -17,7 +17,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import type { Student } from "@/types/platform";
-import type { PaymentReceipt } from "./PaymentReceiptsPanel";
+import type { PaymentReceipt } from "./PaymentsTab";
 
 interface OverviewSectionProps {
   students: Student[];

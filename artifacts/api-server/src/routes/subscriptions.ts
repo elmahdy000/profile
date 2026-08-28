@@ -149,6 +149,7 @@ router.post("/admin/subscriptions/:id/mark-paid", requireAdmin, async (req, res,
       .set({
         paymentStatus: "paid",
         subscriptionStatus: "active",
+        subscriptionStartDate: new Date(),
         updatedAt: new Date(),
       })
       .where(eq(studentsTable.id, subscription.studentId));

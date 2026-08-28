@@ -28,11 +28,12 @@ import {
   Loader2,
   MapPin,
   Sparkles,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import type { Student as PlatformStudent } from "@/types/platform";
-import type { PaymentReceipt } from "./PaymentReceiptsPanel";
+import type { PaymentReceipt } from "./PaymentsTab";
 import { AdminConfirmDialog } from "../dashboard/AdminConfirmDialog";
 import { defaultOfflineCenters } from "../settings/CentersTab";
 import { StudentCardModal } from "./StudentCardModal";
@@ -733,7 +734,17 @@ export function StudentDrawer({
 
                 {receipt ? (
                   <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-5 space-y-4">
-                    <h4 className="text-xs font-bold text-[#0F172A]">إيصال الدفع البنكي / المحفظة الإلكترونية</h4>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold text-[#0F172A]">إيصال الدفع البنكي / المحفظة الإلكترونية</h4>
+                      <a
+                        href={`/api/admin/payment-receipts/${receipt.id}/image`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-[#2563EB] hover:underline font-semibold"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" /> فتح الصورة في نافذة جديدة
+                      </a>
+                    </div>
                     <div className="overflow-hidden rounded-xl border border-[#E2E8F0] bg-white p-2 text-center">
                       <img
                         src={`/api/admin/payment-receipts/${receipt.id}/image`}

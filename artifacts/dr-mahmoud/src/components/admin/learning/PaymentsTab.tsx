@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { RefreshCw, Loader2, FileCheck2, Eye, Check, X, ShieldCheck, User } from "lucide-react";
+import { RefreshCw, Loader2, FileCheck2, Eye, Check, X, User, ExternalLink, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
@@ -39,6 +39,7 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh, role = "superad
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [actionId, setActionId] = useState<number | null>(null);
   const [previewId, setPreviewId] = useState<number | null>(null);
+  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
   const [rejectNotes, setRejectNotes] = useState("");
   const [showRejectForm, setShowRejectForm] = useState<number | null>(null);
 
@@ -56,13 +57,11 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh, role = "superad
   };
 
   useEffect(() => {
-    // Only fetch independently if the parent didn't pass receipts as props
     if (!propReceipts) {
       void loadReceipts();
     }
   }, []);
 
-  // Sync with parent prop updates (e.g., after admin approves from StudentsTab)
   useEffect(() => {
     if (propReceipts) {
       setReceipts(propReceipts);
@@ -273,12 +272,32 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh, role = "superad
                   {previewId === receipt.id && (
                     <tr>
                       <td colSpan={6} className="bg-[#F8FAFC] p-4 border-b border-[#E2E8F0]">
-                        <div className="max-w-md mx-auto rounded-2xl border border-[#E2E8F0] bg-white p-3 text-center shadow-xs">
-                          <img
-                            src={`/api/admin/payment-receipts/${receipt.id}/image`}
-                            alt={`إيصال ${receipt.studentName}`}
-                            className="max-h-80 w-full object-contain rounded-xl"
-                          />
+                        <div className="max-w-lg mx-auto rounded-2xl border border-[#E2E8F0] bg-white p-4 space-y-3 shadow-xs text-center">
+                          <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-2 text-xs">
+                            <span className="font-bold text-[#0F172A]">إيصال الطالب: {receipt.studentName}</span>
+                            <a
+                              href={`/api/admin/payment-receipts/${receipt.id}/image`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-[#2563EB] hover:underline font-semibold"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" /> فتح الصورة في نافذة جديدة
+                            </a>
+                          </div>
+
+                          {imageErrors[receipt.id] ? (
+                            <div className="p-8 text-center bg-red-50 rounded-xl border border-red-200 text-red-700 text-xs space-y-2">
+                              <AlertCircle className="h-6 w-6 mx-auto text-red-500" />
+                              <p className="font-bold">تعذر فتح ملف صورة الإيصال أو أن الملف غير موجود على السيرفر.</p>
+                            </div>
+                          ) : (
+                            <img
+                              src={`/api/admin/payment-receipts/${receipt.id}/image`}
+                              alt={`إيصال ${receipt.studentName}`}
+                              onError={() => setImageErrors((prev) => ({ ...prev, [receipt.id]: true }))}
+                              className="max-h-96 w-full object-contain rounded-xl border border-[#E2E8F0]"
+                            />
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -320,3 +339,4 @@ export function PaymentsTab({ receipts: propReceipts, onRefresh, role = "superad
     </div>
   );
 }
+

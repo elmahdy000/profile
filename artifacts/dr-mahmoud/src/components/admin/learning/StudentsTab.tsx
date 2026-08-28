@@ -30,7 +30,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { PaymentReceipt } from "./PaymentReceiptsPanel";
+import type { PaymentReceipt } from "./PaymentsTab";
 import { StudentDrawer, type ExtendedStudent } from "./StudentDrawer";
 
 interface StudentsTabProps {
