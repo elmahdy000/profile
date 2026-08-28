@@ -122,6 +122,7 @@ export function StudentPlatform() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
   const [dataError, setDataError] = useState("");
+  const [autoOpenSummaryUpload, setAutoOpenSummaryUpload] = useState(false);
   const latestNotificationIdRef = useRef(0);
 
   // Quiz active states & Timer
@@ -704,7 +705,10 @@ export function StudentPlatform() {
               dataLoading={dataLoading}
               dataError={dataError}
               onRetry={loadLearningData}
-              onOpen={setTab}
+              onOpen={(newTab) => {
+                if (newTab === "summaries") setAutoOpenSummaryUpload(true);
+                setTab(newTab);
+              }}
             />
           ) : tab === "lessons" ? (
             <VideoLessonsSection
@@ -718,6 +722,9 @@ export function StudentPlatform() {
             <StudentSummariesTab
               student={student}
               courses={videos.map((v) => ({ id: v.id, title: v.title }))}
+              lessons={videos.map((v) => ({ id: v.id, title: v.title, courseId: v.courseId }))}
+              autoOpenUpload={autoOpenSummaryUpload}
+              onModalClosed={() => setAutoOpenSummaryUpload(false)}
             />
           ) : tab === "compiler" ? (
             <CppCompilerPanel />

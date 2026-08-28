@@ -37,9 +37,15 @@ export interface StudentSummary {
 export function StudentSummariesTab({
   student,
   courses = [],
+  lessons = [],
+  autoOpenUpload = false,
+  onModalClosed,
 }: {
   student: Student;
   courses?: Array<{ id: number; title: string }>;
+  lessons?: Array<{ id: number; title: string; courseId?: number | null }>;
+  autoOpenUpload?: boolean;
+  onModalClosed?: () => void;
 }) {
   const { toast } = useToast();
   const [summaries, setSummaries] = useState<StudentSummary[]>([]);
@@ -58,6 +64,12 @@ export function StudentSummariesTab({
   // Lightbox Preview
   const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (autoOpenUpload) {
+      setShowUploadModal(true);
+    }
+  }, [autoOpenUpload]);
 
   const loadMySummaries = async () => {
     setLoading(true);
@@ -370,14 +382,41 @@ export function StudentSummariesTab({
               </div>
               <button
                 type="button"
-                onClick={() => setShowUploadModal(false)}
-                className="text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  setShowUploadModal(false);
+                  onModalClosed?.();
+                }}
+                className="text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 <XIcon className="h-5 w-5" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Quick Select Lesson Dropdown */}
+              {lessons.length > 0 && (
+                <div className="space-y-1.5 bg-primary/5 p-3 rounded-xl border border-primary/20">
+                  <label className="block text-xs font-bold text-primary">
+                    اختر الدرس المراد رفع تلخيصه (اختياري لتعبئة الاسم تلقائياً):
+                  </label>
+                  <select
+                    onChange={(e) => {
+                      const selectedLesson = lessons.find((l) => String(l.id) === e.target.value);
+                      if (selectedLesson) {
+                        setLessonTitle(selectedLesson.title);
+                        if (selectedLesson.courseId) setSelectedCourseId(String(selectedLesson.courseId));
+                      }
+                    }}
+                    className="h-10 w-full rounded-lg border border-primary/30 bg-background px-2.5 text-xs font-bold text-foreground focus:border-primary focus:outline-none cursor-pointer"
+                  >
+                    <option value="">-- اختر الدرس من قائمة دروسك --</option>
+                    {lessons.map((l) => (
+                      <option key={l.id} value={l.id}>{l.title}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               {/* Lesson Title */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-foreground">
