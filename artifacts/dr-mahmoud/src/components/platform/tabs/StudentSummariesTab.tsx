@@ -460,14 +460,14 @@ export function StudentSummariesTab({
                 <div className="relative border-2 border-dashed border-border rounded-xl p-4 text-center hover:border-primary transition-colors bg-background/50">
                   <input
                     type="file"
-                    accept="image/jpeg,image/png,image/webp"
+                    accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp"
                     multiple
                     onChange={handleFileChange}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
                   <ImageIcon className="mx-auto h-8 w-8 text-muted-foreground/60 mb-2" />
-                  <span className="block text-xs font-bold text-foreground">اضغط هنا لاختيار صور كشكول الملخص</span>
-                  <span className="block text-[11px] text-muted-foreground mt-0.5">يمكنك اختيار عدة صور دفعة واحدة (JPG, PNG, WebP)</span>
+                  <span className="block text-xs font-bold text-foreground">اضغط هنا لاختيار صور كشكول/مذكرة الدرس</span>
+                  <span className="block text-[11px] text-muted-foreground mt-0.5">يمكنك اختيار عدة صور دفعة واحدة (صور الموبايل والـ HEIC و JPG و PNG)</span>
                 </div>
 
                 {/* Thumbnails */}

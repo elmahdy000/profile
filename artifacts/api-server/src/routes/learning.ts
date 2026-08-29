@@ -81,21 +81,33 @@ fs.mkdirSync(privateUploadDir, { recursive: true });
 const paymentReceiptsDir = path.join(privateUploadDir, "payment-receipts");
 fs.mkdirSync(paymentReceiptsDir, { recursive: true });
 
+const allowedImageExtensions = new Set([
+  ".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".gif", ".bmp", ".jfif", ".tiff"
+]);
+
 const paymentReceiptUpload = multer({
   storage: multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, paymentReceiptsDir),
     filename: (_req, file, cb) => {
-      const safeExt = path
-        .extname(file.originalname)
-        .toLowerCase()
-        .replace(/[^.a-z0-9]/g, "");
-      cb(null, `${Date.now()}-${randomBytes(8).toString("hex")}${safeExt}`);
+      const originalExt = path.extname(file.originalname || "").toLowerCase();
+      const safeExt = originalExt.replace(/[^.a-z0-9]/g, "");
+      const ext = safeExt || ".jpg";
+      cb(null, `${Date.now()}-${randomBytes(8).toString("hex")}${ext}`);
     },
   }),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 15 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    if (["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) cb(null, true);
-    else cb(new Error("ارفع صورة فقط (JPG أو PNG أو WebP)"));
+    const ext = path.extname(file.originalname || "").toLowerCase();
+    const mime = (file.mimetype || "").toLowerCase();
+    const isImageOrPdf =
+      mime.startsWith("image/") ||
+      mime === "application/pdf" ||
+      mime === "application/octet-stream" ||
+      allowedImageExtensions.has(ext) ||
+      ext === ".pdf";
+
+    if (isImageOrPdf) cb(null, true);
+    else cb(new Error("ارفع صورة فقط (JPG أو PNG أو WebP أو HEIC) أو ملف PDF"));
   },
 }).single("receipt");
 
@@ -106,17 +118,23 @@ const summaryImagesUpload = multer({
   storage: multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, summariesDir),
     filename: (_req, file, cb) => {
-      const safeExt = path
-        .extname(file.originalname)
-        .toLowerCase()
-        .replace(/[^.a-z0-9]/g, "");
-      cb(null, `${Date.now()}-${randomBytes(8).toString("hex")}${safeExt}`);
+      const originalExt = path.extname(file.originalname || "").toLowerCase();
+      const safeExt = originalExt.replace(/[^.a-z0-9]/g, "");
+      const ext = safeExt || ".jpg";
+      cb(null, `${Date.now()}-${randomBytes(8).toString("hex")}${ext}`);
     },
   }),
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 25 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    if (["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) cb(null, true);
-    else cb(new Error("ارفع صورة فقط (JPG أو PNG أو WebP)"));
+    const ext = path.extname(file.originalname || "").toLowerCase();
+    const mime = (file.mimetype || "").toLowerCase();
+    const isImage =
+      mime.startsWith("image/") ||
+      mime === "application/octet-stream" ||
+      allowedImageExtensions.has(ext);
+
+    if (isImage) cb(null, true);
+    else cb(new Error("ارفع صورة فقط (JPG أو PNG أو WebP أو HEIC)"));
   },
 }).array("images", 10);
 
@@ -1399,7 +1417,14 @@ router.patch("/admin/payment-receipts/:id", requireAdmin, async (req, res, next)
 router.post("/learning/summaries/upload", requireStudent, (req, res, next) => {
   summaryImagesUpload(req, res, async (err) => {
     if (err) {
-      return res.status(400).json({ error: err.message });
+      const multerErr = err as any;
+      if (multerErr.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json({ error: "حجم الصورة كبير جداً (الحد الأقصى 25 ميجابايت لكل صورة)" });
+      }
+      if (multerErr.code === "LIMIT_UNEXPECTED_FILE") {
+        return res.status(400).json({ error: "يمكنك رفع 10 صور كحد أقصى لكل درس" });
+      }
+      return res.status(400).json({ error: err.message || "حدث خطأ أثناء رفع صور المذكرة" });
     }
     try {
       const student = res.locals.student || (req as any).student;

@@ -500,16 +500,12 @@ export function StudentPlatform() {
       setTab("lessons");
       return;
     }
-    if (titleMsg.includes("ملزمة") || titleMsg.includes("ملف") || titleMsg.includes("مذكرة") || titleMsg.includes("pdf") || titleMsg.includes("مستند")) {
-      setTab("files");
-      return;
-    }
-    if (titleMsg.includes("اختبار") || titleMsg.includes("امتحان") || titleMsg.includes("كويز") || titleMsg.includes("سؤال") || titleMsg.includes("تحدي")) {
-      setTab("quizzes");
-      return;
-    }
-    if (titleMsg.includes("كشكول") || titleMsg.includes("تلخيص") || titleMsg.includes("تلخيصات") || titleMsg.includes("ملاحظة") || titleMsg.includes("تعديل مطلوب")) {
+    if (titleMsg.includes("كشكول") || titleMsg.includes("تلخيص") || titleMsg.includes("تلخيصات") || titleMsg.includes("مذكرة") || titleMsg.includes("مذكراتي") || titleMsg.includes("ملاحظة") || titleMsg.includes("تعديل مطلوب")) {
       setTab("summaries");
+      return;
+    }
+    if (titleMsg.includes("ملزمة") || titleMsg.includes("ملف") || titleMsg.includes("pdf") || titleMsg.includes("مستند")) {
+      setTab("files");
       return;
     }
     if (titleMsg.includes("اشتراك") || titleMsg.includes("دفع") || titleMsg.includes("إيصال") || titleMsg.includes("حسابك") || titleMsg.includes("تفعيل") || titleMsg.includes("سنتر")) {
