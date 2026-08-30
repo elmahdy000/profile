@@ -707,7 +707,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
 
                   {/* Portrait: pause/play overlay with seek buttons */}
                   {playerReady && !playing && !playerError && !isLandscapeMobile && (
-                    <div className="absolute inset-0 z-20 flex items-center justify-center gap-5 bg-black/40 backdrop-blur-[2px] transition-all">
+                    <div className="absolute inset-0 z-20 flex items-center justify-center gap-5 bg-black/40 transition-all">
                       <button
                         onClick={() => seekRelative(-10)}
                         className="group grid h-12 w-12 place-items-center rounded-full bg-slate-900/80 border border-white/20 text-white shadow-xl backdrop-blur-md transition hover:scale-110 active:scale-95 hover:bg-slate-800"

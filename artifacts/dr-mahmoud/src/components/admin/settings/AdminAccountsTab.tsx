@@ -95,18 +95,12 @@ export const AdminAccountsTab: React.FC<AdminAccountsTabProps> = ({
               </div>
               {lastUpdatedInfo.pass && (
                 <p className="dir-rtl">
-                  • كلمة مرور المدير الرئيسي الجديدة:{" "}
-                  <code className="bg-emerald-200/60 dark:bg-emerald-900/60 px-2 py-0.5 rounded-md font-mono text-emerald-950 dark:text-emerald-100 font-bold">
-                    {lastUpdatedInfo.pass}
-                  </code>
+                  • تم تحديث كلمة مرور المدير الرئيسي بنجاح.
                 </p>
               )}
               {lastUpdatedInfo.subPass && (
                 <p className="dir-rtl">
-                  • كلمة مرور المشرف المساعد الجديدة:{" "}
-                  <code className="bg-emerald-200/60 dark:bg-emerald-900/60 px-2 py-0.5 rounded-md font-mono text-emerald-950 dark:text-emerald-100 font-bold">
-                    {lastUpdatedInfo.subPass}
-                  </code>
+                  • تم تحديث كلمة مرور المشرف المساعد بنجاح.
                 </p>
               )}
               <span className="block text-[11px] text-emerald-700/80 dark:text-emerald-400/80 mt-1">
@@ -385,12 +379,12 @@ export const AdminAccountsTab: React.FC<AdminAccountsTabProps> = ({
 
               <div>
                 <label className="block font-bold text-foreground mb-1">
-                  كلمة المرور (لا تقل عن 6 أحرف)
+                  كلمة المرور (لا تقل عن 8 أحرف)
                 </label>
                 <input
                   type="password"
                   required
-                  minLength={6}
+                  minLength={8}
                   value={newSubAdminPassword}
                   onChange={(e) => setNewSubAdminPassword(e.target.value)}
                   placeholder="أدخل كلمة مرور قوية..."

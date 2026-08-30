@@ -102,8 +102,8 @@ const paymentReceiptUpload = multer({
     const isImageOrPdf =
       mime.startsWith("image/") ||
       mime === "application/pdf" ||
-      mime === "application/octet-stream" ||
-      allowedImageExtensions.has(ext) ||
+      (mime === "application/octet-stream" && (allowedImageExtensions.has(ext) || ext === ".pdf")) ||
+      (mime === "" && (allowedImageExtensions.has(ext) || ext === ".pdf")) ||
       ext === ".pdf";
 
     if (isImageOrPdf) cb(null, true);
@@ -120,18 +120,24 @@ const summaryImagesUpload = multer({
     filename: (_req, file, cb) => {
       const originalExt = path.extname(file.originalname || "").toLowerCase();
       const safeExt = originalExt.replace(/[^.a-z0-9]/g, "");
-      const ext = safeExt || ".jpg";
+      // Infer extension from MIME if original has none
+      const mimeExt: Record<string, string> = {
+        "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp",
+        "image/heic": ".heic", "image/heif": ".heif", "image/gif": ".gif",
+      };
+      const ext = safeExt || mimeExt[(file.mimetype || "").toLowerCase()] || ".jpg";
       cb(null, `${Date.now()}-${randomBytes(8).toString("hex")}${ext}`);
     },
   }),
-  limits: { fileSize: 25 * 1024 * 1024 },
+  limits: { fileSize: 25 * 1024 * 1024, files: 10 },
   fileFilter: (_req, file, cb) => {
     const ext = path.extname(file.originalname || "").toLowerCase();
     const mime = (file.mimetype || "").toLowerCase();
     const isImage =
       mime.startsWith("image/") ||
-      mime === "application/octet-stream" ||
-      allowedImageExtensions.has(ext);
+      // application/octet-stream is sent by some iOS/HEIC uploads — only accept if extension is an image
+      (mime === "application/octet-stream" && allowedImageExtensions.has(ext)) ||
+      (mime === "" && allowedImageExtensions.has(ext));
 
     if (isImage) cb(null, true);
     else cb(new Error("ارفع صورة فقط (JPG أو PNG أو WebP أو HEIC)"));
@@ -1476,19 +1482,51 @@ router.post("/learning/summaries/upload", requireStudent, (req, res, next) => {
   });
 });
 
-// GET /api/learning/summaries/images/:filename - Serve summary image file
+// GET /api/learning/summaries/images/:filename - Serve summary image file (auth required)
 router.get("/learning/summaries/images/:filename", async (req, res, next) => {
   try {
+    // Allow admin access
+    const isAdmin = getAdminRole(req) !== null;
+    // Allow student access (verify session)
+    const student = res.locals.student || (req as any).student;
+    let studentId: number | null = null;
+    if (!isAdmin) {
+      if (!student?.id) {
+        // Resolve student from cookie for this endpoint
+        const { getApprovedStudent } = await import("../middleware/student-auth");
+        const resolved = await getApprovedStudent(req);
+        if (!resolved) return res.status(401).json({ error: "يجب تسجيل الدخول لعرض صور المذكرات" });
+        studentId = resolved.id;
+      } else {
+        studentId = student.id as number;
+      }
+    }
+
     const filename = path.basename(req.params.filename);
     const filePath = path.join(summariesDir, filename);
     if (!fs.existsSync(filePath)) {
       return res.status(404).send("الصورة غير موجودة");
     }
+
+    // If student, verify they own a summary with this image
+    if (!isAdmin && studentId) {
+      const imageUrl = `/api/learning/summaries/images/${filename}`;
+      const rows = await db
+        .select({ imageUrls: studentLessonSummariesTable.imageUrls })
+        .from(studentLessonSummariesTable)
+        .where(eq(studentLessonSummariesTable.studentId, studentId));
+      const hasAccess = rows.some((r) => Array.isArray(r.imageUrls) && r.imageUrls.includes(imageUrl));
+      if (!hasAccess) {
+        return res.status(403).json({ error: "غير مصرح لك بالوصول لهذه الصورة" });
+      }
+    }
+
     return res.sendFile(filePath);
   } catch (error) {
     return next(error);
   }
 });
+
 
 // GET /api/learning/summaries/my - Student's own summary submissions
 router.get("/learning/summaries/my", requireStudent, async (req, res, next) => {

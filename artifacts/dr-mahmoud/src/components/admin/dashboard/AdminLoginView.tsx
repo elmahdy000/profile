@@ -147,6 +147,7 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({
           </button>
         </form>
 
+
         {/* Footer Security Notice & Return to Main Site */}
         <div className="mt-8 pt-5 border-t border-[#223552] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
           <a
@@ -156,11 +157,21 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({
             <ChevronRight className="h-4 w-4" />
             <span>العودة إلى الموقع</span>
           </a>
-          <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#64748B]">
-            <ShieldCheck className="h-3.5 w-3.5 text-[#2563EB]" />
-            <span>اتصال آمن ومشفّر</span>
+          <div className="flex flex-col items-center gap-2 sm:items-end">
+            <a
+              href="/subadmin"
+              className="flex items-center gap-1.5 font-bold text-[#60A5FA]/70 hover:text-[#60A5FA] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3B82F6] rounded-md px-1 py-0.5"
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              <span>بوابة المشرف المساعد</span>
+            </a>
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-[#64748B]">
+              <ShieldCheck className="h-3.5 w-3.5 text-[#2563EB]" />
+              <span>اتصال آمن ومشفّر</span>
+            </div>
           </div>
         </div>
+
       </div>
     </main>
   );

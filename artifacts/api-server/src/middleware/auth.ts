@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 let cachedAdminPass: string | null = null;
 let cachedSubAdminPass: string | null = null;
 let lastPassFetch = 0;
+let lastSubPassFetch = 0;
 
 export async function getDynamicAdminPassword(): Promise<string> {
   const now = Date.now();
@@ -32,6 +33,10 @@ export async function getDynamicAdminPassword(): Promise<string> {
 }
 
 export async function getDynamicSubAdminPassword(): Promise<string> {
+  const now = Date.now();
+  if (cachedSubAdminPass !== null && now - lastSubPassFetch < 5000) {
+    return cachedSubAdminPass;
+  }
   try {
     const [row] = await db
       .select({ value: siteSettingsTable.value })
@@ -39,18 +44,23 @@ export async function getDynamicSubAdminPassword(): Promise<string> {
       .where(eq(siteSettingsTable.key, "subadmin_password_hash"))
       .limit(1);
     if (row?.value) {
+      cachedSubAdminPass = row.value;
+      lastSubPassFetch = now;
       return row.value;
     }
   } catch (e) {
     // DB fallback
   }
-  return process.env.SUBADMIN_PASSWORD ?? "";
+  cachedSubAdminPass = process.env.SUBADMIN_PASSWORD ?? "";
+  lastSubPassFetch = now;
+  return cachedSubAdminPass;
 }
 
 export function clearAdminPassCache() {
   cachedAdminPass = null;
   cachedSubAdminPass = null;
   lastPassFetch = 0;
+  lastSubPassFetch = 0;
 }
 
 const getAdminPassword = () => cachedAdminPass ?? process.env.ADMIN_PASSWORD ?? "";
