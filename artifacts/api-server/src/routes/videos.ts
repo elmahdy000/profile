@@ -225,9 +225,8 @@ router.get("/videos", async (req, res, next) => {
       }
     }
 
-    // 2b. Build free preview set for unpaid students.
-    // Unpaid students get EXACTLY 1 free preview video per course (video #1 of each course).
-    const isUnpaidStudent = approvedStudent.status !== "approved" && approvedStudent.paymentStatus !== "paid";
+    // Unpaid/Pending students get EXACTLY 1 free preview video per course (video #1 of each course).
+    const isUnpaidStudent = approvedStudent.status !== "approved" || approvedStudent.paymentStatus !== "paid";
     const maxAllowedFreeVideos = 1;
     const freePreviewIds = new Set<number>();
     if (isUnpaidStudent) {

@@ -858,15 +858,13 @@ router.post(
           centerName,
           appointmentSlot,
           learningMode,
-          // Both baccalaureate and university students are approved on signup so
-          // they can log in with their access code and watch the free preview
-          // videos immediately. Full content stays gated behind paymentStatus
-          // until an admin/subadmin approves their payment receipt.
-          status: "approved",
+          // New registered students require admin activation (status: pending).
+          // They can view only 1 free preview video per course until activated & paid.
+          status: "pending",
           accessCode,
-          approvedAt: new Date(),
+          approvedAt: null,
           paymentStatus: "unpaid",
-          subscriptionStatus: "active",
+          subscriptionStatus: "inactive",
           ...(await getAutomaticCourseAssignments({
             grade,
             otherGradeDetail,
@@ -892,9 +890,7 @@ router.post(
         status: student.status,
         isNewStudent: true,
         accessCode: student.accessCode,
-        message: educationSystem === "university"
-          ? "تم إنشاء حسابك بنجاح! احفظ كود الدخول وادخل فوراً لمشاهدة أول فيديو مجاني من كل مادة. ارفع الإيصال لفتح باقي المحتوى."
-          : "تم إنشاء حسابك بنجاح! احفظ كود الدخول وادخل فوراً لمشاهدة أول فيديو مجاني من كل مادة. ارفع الإيصال لفتح باقي المحتوى بعد موافقة الإدارة.",
+        message: "تم إنشاء حسابك بنجاح! كود الدخول الخاص بك هو: " + student.accessCode + " - حسابك قيد التفعيل من الإدارة. يمكنك الدخول لمشاهدة فيديو المعاينة المجاني ورفع إيصال الدفع للتفعيل.",
       });
     } catch (error) {
       next(error);
