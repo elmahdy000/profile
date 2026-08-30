@@ -17,6 +17,7 @@ import {
   quizzesTable,
   questionBankTable,
   studentSessionsTable,
+  studentLoginLogsTable,
   studentNotificationsTable,
   studentsTable,
   videoProgressTable,
@@ -943,6 +944,20 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
         } else {
           // Limit reached (default 1 device, or absolute max 2 devices)
           const isSingleDevice = maxDevices === 1;
+          const rawIp = (req.headers["x-forwarded-for"] as string || req.ip || "").split(",")[0].trim();
+          const userAgentStr = (req.headers["user-agent"] as string || "").slice(0, 500);
+
+          try {
+            await db.insert(studentLoginLogsTable).values({
+              studentId: student.id,
+              deviceId: deviceId || null,
+              ipAddress: rawIp || null,
+              userAgent: userAgentStr || null,
+              status: "blocked",
+              createdAt: new Date(),
+            });
+          } catch {}
+
           res.status(403).json({
             error: isSingleDevice
               ? "عذراً، هذا الحساب مرتبط بجهاز آخر. استخدم خيار «نسيت كود الدخول؟» أو تواصل مع الأدمن لإعادة ضبط جهازك."
@@ -959,6 +974,9 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
     const tokenHash = createHash("sha256").update(token).digest("hex");
     const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
     const now = new Date();
+    const rawIp = (req.headers["x-forwarded-for"] as string || req.ip || "").split(",")[0].trim();
+    const userAgentStr = (req.headers["user-agent"] as string || "").slice(0, 500);
+
     await db.transaction(async (tx) => {
       await tx
         .delete(studentSessionsTable)
@@ -970,6 +988,16 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
         .update(studentsTable)
         .set({ lastLoginAt: now, lastActiveAt: now, updatedAt: now })
         .where(eq(studentsTable.id, student.id));
+      await tx
+        .insert(studentLoginLogsTable)
+        .values({
+          studentId: student.id,
+          deviceId: deviceId || student.deviceId || null,
+          ipAddress: rawIp || null,
+          userAgent: userAgentStr || null,
+          status: "success",
+          createdAt: now,
+        });
     });
     res.cookie(STUDENT_COOKIE, token, {
       httpOnly: true,
@@ -2516,6 +2544,25 @@ router.delete("/admin/students/:id", requireAdmin, async (req, res, next) => {
     } else {
       res.json({ success: true, message: "تم حذف حساب الطالب بالكامل وتفريغ بريده وهاتفه ورقم جهازه للتسجيل مجددًا" });
     }
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/admin/students/:id/login-logs", requireAdmin, async (req, res, next) => {
+  try {
+    const studentId = Number(req.params.id);
+    if (!Number.isInteger(studentId) || studentId <= 0) {
+      res.status(400).json({ error: "ID طالب غير صالح" });
+      return;
+    }
+    const logs = await db
+      .select()
+      .from(studentLoginLogsTable)
+      .where(eq(studentLoginLogsTable.studentId, studentId))
+      .orderBy(desc(studentLoginLogsTable.createdAt))
+      .limit(100);
+    res.json(logs);
   } catch (error) {
     next(error);
   }

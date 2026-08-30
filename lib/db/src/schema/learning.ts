@@ -319,3 +319,19 @@ export const studentLessonSummariesTable = pgTable("student_lesson_summaries", {
 export type InsertStudentLessonSummary = typeof studentLessonSummariesTable.$inferInsert;
 export type StudentLessonSummary = typeof studentLessonSummariesTable.$inferSelect;
 
+export const studentLoginLogsTable = pgTable("student_login_logs", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => studentsTable.id, { onDelete: "cascade" }),
+  deviceId: text("device_id"),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  status: text("status").notNull().default("success"), // success | failed | blocked
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  studentIndex: index("student_login_logs_student_idx").on(table.studentId),
+  createdAtIndex: index("student_login_logs_created_at_idx").on(table.createdAt),
+}));
+
+export type InsertStudentLoginLog = typeof studentLoginLogsTable.$inferInsert;
+export type StudentLoginLog = typeof studentLoginLogsTable.$inferSelect;
+

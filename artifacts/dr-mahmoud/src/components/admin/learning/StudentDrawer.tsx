@@ -17,6 +17,7 @@ import {
   Award,
   FileText,
   ShieldCheck,
+  Shield,
   Clock,
   Send,
   Plus,
@@ -66,6 +67,21 @@ export function normalizeCenterName(rawName?: string | null): string {
     return "سنتر إديوفيرس أكاديمي (EduVerse) - لغات";
   }
   return "بدون سنتر محدد";
+}
+
+function formatDate(dateStr?: string | null): string {
+  if (!dateStr) return "غير متاح";
+  try {
+    return new Date(dateStr).toLocaleDateString("ar-EG", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return String(dateStr);
+  }
 }
 
 export function cleanText(val?: string | null, fallback = "غير مسجل"): string {
@@ -180,6 +196,17 @@ export function StudentDrawer({
   }>>([]);
   const [loadingSummaries, setLoadingSummaries] = useState(false);
 
+  const [loginLogs, setLoginLogs] = useState<Array<{
+    id: number;
+    studentId: number;
+    deviceId?: string | null;
+    ipAddress?: string | null;
+    userAgent?: string | null;
+    status: string;
+    createdAt: string;
+  }>>([]);
+  const [loadingLoginLogs, setLoadingLoginLogs] = useState(false);
+
   useEffect(() => {
     if (activeTab === "summaries" && student?.id) {
       setLoadingSummaries(true);
@@ -188,6 +215,17 @@ export function StudentDrawer({
         .then((data) => setStudentSummaries(Array.isArray(data) ? data : []))
         .catch(() => {})
         .finally(() => setLoadingSummaries(false));
+    }
+  }, [activeTab, student?.id]);
+
+  useEffect(() => {
+    if (activeTab === "security" && student?.id) {
+      setLoadingLoginLogs(true);
+      fetch(`/api/admin/students/${student.id}/login-logs`, { credentials: "include" })
+        .then((r) => r.json())
+        .then((data) => setLoginLogs(Array.isArray(data) ? data : []))
+        .catch(() => {})
+        .finally(() => setLoadingLoginLogs(false));
     }
   }, [activeTab, student?.id]);
   const [studentAnalytics, setStudentAnalytics] = useState<{
@@ -1043,22 +1081,125 @@ export function StudentDrawer({
             )}
 
             {activeTab === "security" && (
-              <div className="space-y-3">
-                <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 flex items-center justify-between">
-                  <div>
-                    <h4 className="text-xs font-bold text-[#0F172A]">معرف الجهاز المقترن (Device Lock)</h4>
-                    <p className="text-xs text-[#64748B] font-mono dir-ltr pt-1">
+              <div className="space-y-4 text-right" dir="rtl">
+                {/* 1. Device Lock Card */}
+                <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-[#2563EB]" />
+                      <h4 className="text-xs font-bold text-[#0F172A]">الأجهزة المربوطة بالحساب (Device Lock)</h4>
+                    </div>
+                    <p className="text-xs text-[#64748B] font-mono dir-ltr text-right">
                       {student.deviceId || student.boundDevices?.[0] || "لا يوجد جهاز مقترن حالياً"}
                     </p>
+                    <div className="flex items-center gap-2 pt-1">
+                      <span className="text-[11px] font-semibold text-[#475569]">
+                        الحد الأقصى للأجهزة: <strong className="text-[#2563EB]">{student.maxDevices || 2} أجهزة</strong>
+                      </span>
+                      {student.boundDevices && student.boundDevices.length > 0 && (
+                        <span className="text-[10px] font-bold text-slate-500 bg-slate-200/60 px-2 py-0.5 rounded-full">
+                          مسجل {student.boundDevices.length} جهاز
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onResetDevice?.(student)}
-                    className="border-[#E2E8F0] bg-white text-xs font-semibold text-[#0F172A] hover:bg-[#F6F8FC]"
-                  >
-                    <RefreshCw className="h-3.5 w-3.5 ml-1 text-[#2563EB]" /> فك القفل
-                  </Button>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onResetDevice?.(student)}
+                      className="w-full sm:w-auto border-[#E2E8F0] bg-white text-xs font-bold text-[#0F172A] hover:bg-[#F6F8FC] cursor-pointer"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5 ml-1 text-[#2563EB]" /> فك قفل الجهاز
+                    </Button>
+                  </div>
+                </div>
+
+                {/* 2. Login Activity Stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-[#E2E8F0] bg-white p-3.5 space-y-1">
+                    <span className="text-[11px] font-bold text-[#64748B]">تاريخ آخر دخول (Last Login):</span>
+                    <p className="text-xs font-extrabold text-[#0F172A]">
+                      {student.lastLoginAt ? formatDate(student.lastLoginAt) : "لم يسجل دخول من قبل"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-[#E2E8F0] bg-white p-3.5 space-y-1">
+                    <span className="text-[11px] font-bold text-[#64748B]">آخر نشاط بالمنصة (Last Active):</span>
+                    <p className="text-xs font-extrabold text-[#0F172A]">
+                      {student.lastActiveAt ? formatDate(student.lastActiveAt) : "غير متاح"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 3. Detailed Student Login History Log */}
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-[#2563EB]" />
+                      <h4 className="text-xs font-bold text-[#0F172A]">سجل حركات تسجيل الدخول (Login Audit History)</h4>
+                    </div>
+                    <span className="text-xs font-extrabold text-[#2563EB] bg-[#EFF6FF] px-2.5 py-0.5 rounded-lg border border-[#BFDBFE]">
+                      {loginLogs.length} محاولة دخول
+                    </span>
+                  </div>
+
+                  {loadingLoginLogs ? (
+                    <div className="flex items-center justify-center p-8 text-xs font-bold text-[#64748B]">
+                      <Loader2 className="h-5 w-5 text-[#2563EB] animate-spin ml-2" />
+                      <span>جاري تحميل سجل عمليات الدخول...</span>
+                    </div>
+                  ) : loginLogs.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-[#F8FAFC] p-6 text-center space-y-1">
+                      <Clock className="mx-auto h-7 w-7 text-[#94A3B8]" />
+                      <p className="text-xs font-bold text-[#475569]">لا توجد عمليات دخول مسجلة مؤخراً</p>
+                      <p className="text-[11px] text-[#64748B]">ستظهر هنا كافة حركات الدخول القادمة بهذا الحساب تلقائياً.</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto rounded-xl border border-[#E2E8F0] bg-white">
+                      <table className="w-full text-right text-xs">
+                        <thead className="bg-[#F8FAFC] text-[#475569] border-b border-[#E2E8F0] font-bold">
+                          <tr>
+                            <th className="p-3 text-right">التاريخ والوقت</th>
+                            <th className="p-3 text-right">عنوان الـ IP</th>
+                            <th className="p-3 text-right">معرف الجهاز</th>
+                            <th className="p-3 text-right">المتصفح / النظام</th>
+                            <th className="p-3 text-center">الحالة</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#E2E8F0]">
+                          {loginLogs.map((log) => (
+                            <tr key={log.id} className="hover:bg-[#F8FAFC] transition-colors">
+                              <td className="p-3 font-semibold text-[#0F172A] whitespace-nowrap">
+                                {formatDate(log.createdAt)}
+                              </td>
+                              <td className="p-3 font-mono dir-ltr text-right text-[#475569] font-bold">
+                                {log.ipAddress || "غير متاح"}
+                              </td>
+                              <td className="p-3 font-mono dir-ltr text-right text-[#64748B] text-[11px] truncate max-w-[140px]" title={log.deviceId || ""}>
+                                {log.deviceId ? `${log.deviceId.slice(0, 14)}...` : "غير متاح"}
+                              </td>
+                              <td className="p-3 text-[#64748B] text-[11px] truncate max-w-[180px]" title={log.userAgent || ""}>
+                                {log.userAgent ? (
+                                  log.userAgent.includes("Chrome") ? "Chrome" : log.userAgent.includes("Safari") ? "Safari" : log.userAgent.includes("Firefox") ? "Firefox" : "متصفح الويب"
+                                ) : "عام"}
+                              </td>
+                              <td className="p-3 text-center">
+                                {log.status === "blocked" ? (
+                                  <span className="inline-flex items-center gap-1 rounded-md bg-rose-50 px-2 py-0.5 text-[10px] font-extrabold text-rose-700 border border-rose-200">
+                                    محظورة 🚫
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-extrabold text-emerald-700 border border-emerald-200">
+                                    ناجحة ✓
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
