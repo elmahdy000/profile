@@ -748,7 +748,7 @@ router.get("/videos/:id/stream", async (req, res, next) => {
     // ── Payment gating on stream ──
     // If student is logged in via session cookie and not paid, check preview limit.
     // Short-lived signed stream tokens (hasValidToken) are pre-validated for authorized/paid users.
-    if (approvedStudent && !hasValidToken && approvedStudent.status !== "approved" && approvedStudent.paymentStatus !== "paid") {
+    if (approvedStudent && !hasValidToken && (approvedStudent.status !== "approved" || approvedStudent.paymentStatus !== "paid")) {
       const maxAllowedFreeVideos = 1;
       const courseKey = video.courseId ? eq(videosTable.courseId, video.courseId) : eq(videosTable.category, video.category);
       const courseVideos = await db

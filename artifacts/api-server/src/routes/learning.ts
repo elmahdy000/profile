@@ -2921,7 +2921,7 @@ router.get(["/learning/files/:id/preview", "/learning/files/:id/download"], asyn
       res.status(403).json({ error: "الملف غير متاح لحسابك أو مرحلتك الدراسية" });
       return;
     }
-    if (student && student.status !== "approved" && student.paymentStatus !== "paid") {
+    if (student && (student.status !== "approved" || student.paymentStatus !== "paid")) {
       const linkedVideos = (
         await db
           .select({ video: videosTable })
@@ -2936,7 +2936,7 @@ router.get(["/learning/files/:id/preview", "/learning/files/:id/download"], asyn
 
       if (!isFreePreviewAttachment) {
         res.status(403).json({
-          error: "الملفات والملازم متاحة للمشتركين المدفوعين، أو لملازم المحاضرات المجانية.",
+          error: "الملفات والملازم متاحة للمشتركين المدفوعين فقط بعد تفعيل الحساب من الأدمن.",
           code: "PAYMENT_REQUIRED",
         });
         return;
