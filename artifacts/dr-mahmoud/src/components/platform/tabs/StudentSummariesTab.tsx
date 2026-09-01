@@ -84,6 +84,18 @@ export function StudentSummariesTab({
     };
   }, [selectedFiles]);
 
+  // Lock body scroll when upload modal is open so the background page doesn't scroll on mobile touch
+  useEffect(() => {
+    if (showUploadModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showUploadModal]);
+
   // Lightbox Keyboard navigation (Esc, Arrow Keys)
   useEffect(() => {
     if (activeImageIndex === null) return;
@@ -407,9 +419,9 @@ export function StudentSummariesTab({
       {showUploadModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-xs"
           onClick={(e) => e.target === e.currentTarget && closeModal()}>
-          <div className="w-full sm:max-w-lg bg-card rounded-t-3xl sm:rounded-3xl shadow-2xl border border-border text-right max-h-[95dvh] overflow-y-auto" dir="rtl">
+          <div className="w-full sm:max-w-lg bg-card rounded-t-3xl sm:rounded-3xl shadow-2xl border border-border text-right max-h-[85dvh] sm:max-h-[90dvh] flex flex-col overflow-hidden" dir="rtl">
 
-            <div className="sticky top-0 z-10 bg-card flex items-center justify-between px-5 pt-5 pb-3 border-b border-border">
+            <div className="shrink-0 bg-card flex items-center justify-between px-5 pt-5 pb-3 border-b border-border z-10">
               <div className="flex items-center gap-2">
                 <UploadCloudIcon className="h-5 w-5 text-primary" />
                 <h3 className="text-base font-black text-foreground">رفع ملخص / كشكول الدرس</h3>
@@ -420,141 +432,145 @@ export function StudentSummariesTab({
             </div>
 
             {uploadSuccess ? (
-              <div className="flex flex-col items-center justify-center gap-4 px-5 py-12 text-center">
+              <div className="flex flex-col items-center justify-center gap-4 px-5 py-12 text-center overflow-y-auto">
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/15 border-2 border-emerald-500/30">
                   <CheckCircle2Icon className="h-10 w-10 text-emerald-500" />
                 </div>
                 <div className="space-y-1.5">
                   <h4 className="text-lg font-black text-foreground">تم تسليم الملخص بنجاح! 🎉</h4>
                   <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
-                    تم إرسال {selectedFiles.length} {selectedFiles.length === 1 ? "صورة" : "صور"} للمعلم/المشرف. ستصلك إشعار عند الاكتفاء.
+                    تم إرسال {selectedFiles.length} {selectedFiles.length === 1 ? "ملف/صورة" : "ملفات/صور"} للمعلم/المشرف. ستصلك إشعار عند الاكتفاء.
                   </p>
                 </div>
                 <p className="text-[11px] text-muted-foreground animate-pulse">سيتم الإغلاق تلقائياً...</p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="p-5 space-y-5">
+              <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0">
+                <div className="flex-1 overflow-y-auto p-5 space-y-4">
 
-                {/* Step 1 */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-white text-[10px] font-black">١</span>
-                    <label className="text-xs font-black text-foreground">اختر الدرس</label>
-                  </div>
-                  {lessons.length > 0 ? (
-                    <div className="space-y-2">
-                      <select
-                        value={lessons.find((l) => l.title === lessonTitle) ? String(lessons.find((l) => l.title === lessonTitle)!.id) : ""}
-                        onChange={(e) => {
-                          const sel = lessons.find((l) => String(l.id) === e.target.value);
-                          if (sel) { setLessonTitle(sel.title); if (sel.courseId) setSelectedCourseId(String(sel.courseId)); }
-                        }}
-                        className="h-11 w-full rounded-xl border border-primary/30 bg-primary/5 px-3 text-xs font-bold text-foreground focus:border-primary focus:outline-none cursor-pointer"
-                      >
-                        <option value="" disabled>-- اختر من قائمة دروسك --</option>
-                        {lessons.map((l) => <option key={l.id} value={l.id}>{l.title}</option>)}
-                      </select>
-                      <input type="text" placeholder="أو اكتب اسم الدرس يدوياً..." value={lessonTitle} onChange={(e) => setLessonTitle(e.target.value)}
-                        className="h-10 w-full rounded-xl border border-border bg-background px-3 text-xs font-semibold text-foreground focus:border-primary focus:outline-none" />
+                  {/* Step 1 */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-white text-[10px] font-black">١</span>
+                      <label className="text-xs font-black text-foreground">اختر الدرس</label>
                     </div>
-                  ) : (
-                    <input type="text" required placeholder="مثال: ملخص الدرس الأول - التحليل الكهربي" value={lessonTitle} onChange={(e) => setLessonTitle(e.target.value)}
-                      className="h-11 w-full rounded-xl border border-border bg-background px-3 text-xs font-semibold text-foreground focus:border-primary focus:outline-none" />
-                  )}
-                </div>
-
-                {/* Step 2 */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-1.5">
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-white text-[10px] font-black">٢</span>
-                      <label className="text-xs font-black text-foreground">صور الكشكول / المذكرة <span className="text-rose-500">*</span></label>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground font-bold">{selectedFiles.length}/10</span>
-                  </div>
-
-                  <div ref={dropZoneRef} onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}
-                    className={`relative rounded-2xl border-2 border-dashed p-6 text-center transition-all ${
-                      isDragging ? "border-primary bg-primary/10 scale-[1.01]"
-                      : selectedFiles.length > 0 ? "border-emerald-400/50 bg-emerald-500/5"
-                      : "border-border bg-background/50 hover:border-primary/50"
-                    }`}>
-                    <input type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.txt" multiple onChange={handleFileChange}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                    {selectedFiles.length === 0 ? (
-                      <div className="pointer-events-none space-y-2">
-                        <ImageIcon className="mx-auto h-10 w-10 text-muted-foreground/50" />
-                        <p className="text-sm font-black text-foreground">اسحب الصور أو الملفات هنا أو اضغط للاختيار</p>
-                        <p className="text-[11px] text-muted-foreground">صور (JPG, PNG, HEIC) • ملفات (PDF, Word, TXT) • حتى 10 ملفات</p>
+                    {lessons.length > 0 ? (
+                      <div className="space-y-2">
+                        <select
+                          value={lessons.find((l) => l.title === lessonTitle) ? String(lessons.find((l) => l.title === lessonTitle)!.id) : ""}
+                          onChange={(e) => {
+                            const sel = lessons.find((l) => String(l.id) === e.target.value);
+                            if (sel) { setLessonTitle(sel.title); if (sel.courseId) setSelectedCourseId(String(sel.courseId)); }
+                          }}
+                          className="h-11 w-full rounded-xl border border-primary/30 bg-primary/5 px-3 text-xs font-bold text-foreground focus:border-primary focus:outline-none cursor-pointer"
+                        >
+                          <option value="" disabled>-- اختر من قائمة دروسك --</option>
+                          {lessons.map((l) => <option key={l.id} value={l.id}>{l.title}</option>)}
+                        </select>
+                        <input type="text" placeholder="أو اكتب اسم الدرس يدوياً..." value={lessonTitle} onChange={(e) => setLessonTitle(e.target.value)}
+                          className="h-10 w-full rounded-xl border border-border bg-background px-3 text-xs font-semibold text-foreground focus:border-primary focus:outline-none" />
                       </div>
                     ) : (
-                      <p className="pointer-events-none text-xs font-bold text-emerald-600 dark:text-emerald-400">✅ {selectedFiles.length} ملفات/صور محددة — اضغط لإضافة المزيد</p>
+                      <input type="text" required placeholder="مثال: ملخص الدرس الأول - التحليل الكهربي" value={lessonTitle} onChange={(e) => setLessonTitle(e.target.value)}
+                        className="h-11 w-full rounded-xl border border-border bg-background px-3 text-xs font-semibold text-foreground focus:border-primary focus:outline-none" />
                     )}
                   </div>
 
-                  <label className="relative flex items-center justify-center gap-2 w-full h-10 rounded-xl border border-border bg-muted/40 hover:bg-muted text-xs font-bold text-foreground cursor-pointer transition-colors">
-                    <input type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.txt" capture="environment" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
-                    <CameraIcon className="h-4 w-4 text-primary" />
-                    التقط صورة الكشكول الآن بالكاميرا 📷
-                  </label>
+                  {/* Step 2 */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-white text-[10px] font-black">٢</span>
+                        <label className="text-xs font-black text-foreground">صور الكشكول / المذكرة <span className="text-rose-500">*</span></label>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground font-bold">{selectedFiles.length}/10</span>
+                    </div>
 
-                  {previewUrls.length > 0 && (
-                    <div>
-                      <span className="text-[11px] font-bold text-muted-foreground block mb-2">الملفات المختارة — يمكنك ترتيبها أو حذفها:</span>
-                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                        {previewUrls.map((url, idx) => {
-                          const fileObj = selectedFiles[idx];
-                          const isDoc = fileObj && (fileObj.type.includes("pdf") || fileObj.type.includes("word") || fileObj.name.match(/\.(pdf|doc|docx|txt)$/i));
-                          return (
-                            <div key={idx} className="relative group rounded-xl overflow-hidden border border-border aspect-square bg-slate-100 dark:bg-slate-800">
-                              {isDoc ? (
-                                <div className="flex flex-col items-center justify-center h-full p-2 text-center bg-primary/10 text-primary">
-                                  <FileTextIcon className="h-7 w-7 mb-1 shrink-0" />
-                                  <span className="text-[9px] font-bold truncate max-w-full dir-ltr">{fileObj?.name}</span>
+                    <div ref={dropZoneRef} onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}
+                      className={`relative rounded-2xl border-2 border-dashed p-5 text-center transition-all ${
+                        isDragging ? "border-primary bg-primary/10 scale-[1.01]"
+                        : selectedFiles.length > 0 ? "border-emerald-400/50 bg-emerald-500/5"
+                        : "border-border bg-background/50 hover:border-primary/50"
+                      }`}>
+                      <input type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.txt" multiple onChange={handleFileChange}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                      {selectedFiles.length === 0 ? (
+                        <div className="pointer-events-none space-y-1.5">
+                          <ImageIcon className="mx-auto h-9 w-9 text-muted-foreground/50" />
+                          <p className="text-sm font-black text-foreground">اسحب الصور أو الملفات هنا أو اضغط للاختيار</p>
+                          <p className="text-[11px] text-muted-foreground">صور (JPG, PNG, HEIC) • ملفات (PDF, Word, TXT) • حتى 10 ملفات</p>
+                        </div>
+                      ) : (
+                        <p className="pointer-events-none text-xs font-bold text-emerald-600 dark:text-emerald-400">✅ {selectedFiles.length} ملفات/صور محددة — اضغط لإضافة المزيد</p>
+                      )}
+                    </div>
+
+                    <label className="relative flex items-center justify-center gap-2 w-full h-10 rounded-xl border border-border bg-muted/40 hover:bg-muted text-xs font-bold text-foreground cursor-pointer transition-colors">
+                      <input type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.txt" capture="environment" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+                      <CameraIcon className="h-4 w-4 text-primary" />
+                      التقط صورة الكشكول الآن بالكاميرا 📷
+                    </label>
+
+                    {previewUrls.length > 0 && (
+                      <div>
+                        <span className="text-[11px] font-bold text-muted-foreground block mb-2">الملفات المختارة — يمكنك ترتيبها أو حذفها:</span>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                          {previewUrls.map((url, idx) => {
+                            const fileObj = selectedFiles[idx];
+                            const isDoc = fileObj && (fileObj.type.includes("pdf") || fileObj.type.includes("word") || fileObj.name.match(/\.(pdf|doc|docx|txt)$/i));
+                            return (
+                              <div key={idx} className="relative group rounded-xl overflow-hidden border border-border aspect-square bg-slate-100 dark:bg-slate-800">
+                                {isDoc ? (
+                                  <div className="flex flex-col items-center justify-center h-full p-2 text-center bg-primary/10 text-primary">
+                                    <FileTextIcon className="h-7 w-7 mb-1 shrink-0" />
+                                    <span className="text-[9px] font-bold truncate max-w-full dir-ltr">{fileObj?.name}</span>
+                                  </div>
+                                ) : (
+                                  <img src={url} alt={`معاينة ${idx + 1}`} className="h-full w-full object-cover" />
+                                )}
+                                <div className="absolute inset-0 bg-black/65 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1">
+                                  <div className="flex gap-1">
+                                    <button type="button" onClick={() => moveFile(idx, -1)} disabled={idx === 0} className="h-6 w-6 rounded-lg bg-white/20 text-white flex items-center justify-center disabled:opacity-30 hover:bg-white/30"><ChevronRightIcon className="h-3.5 w-3.5" /></button>
+                                    <button type="button" onClick={() => moveFile(idx, 1)} disabled={idx === selectedFiles.length - 1} className="h-6 w-6 rounded-lg bg-white/20 text-white flex items-center justify-center disabled:opacity-30 hover:bg-white/30"><ChevronLeftIcon className="h-3.5 w-3.5" /></button>
+                                  </div>
+                                  <button type="button" onClick={() => removeFile(idx)} className="h-6 px-2 rounded-lg bg-rose-500/80 text-white text-[10px] font-bold flex items-center gap-0.5 hover:bg-rose-600"><XIcon className="h-3 w-3" />حذف</button>
                                 </div>
-                              ) : (
-                                <img src={url} alt={`معاينة ${idx + 1}`} className="h-full w-full object-cover" />
-                              )}
-                              <div className="absolute inset-0 bg-black/65 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1">
-                                <div className="flex gap-1">
-                                  <button type="button" onClick={() => moveFile(idx, -1)} disabled={idx === 0} className="h-6 w-6 rounded-lg bg-white/20 text-white flex items-center justify-center disabled:opacity-30 hover:bg-white/30"><ChevronRightIcon className="h-3.5 w-3.5" /></button>
-                                  <button type="button" onClick={() => moveFile(idx, 1)} disabled={idx === selectedFiles.length - 1} className="h-6 w-6 rounded-lg bg-white/20 text-white flex items-center justify-center disabled:opacity-30 hover:bg-white/30"><ChevronLeftIcon className="h-3.5 w-3.5" /></button>
-                                </div>
-                                <button type="button" onClick={() => removeFile(idx)} className="h-6 px-2 rounded-lg bg-rose-500/80 text-white text-[10px] font-bold flex items-center gap-0.5 hover:bg-rose-600"><XIcon className="h-3 w-3" />حذف</button>
+                                <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-black/60 text-white text-[9px] font-black flex items-center justify-center pointer-events-none">{idx + 1}</span>
                               </div>
-                              <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-black/60 text-white text-[9px] font-black flex items-center justify-center pointer-events-none">{idx + 1}</span>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground text-[10px] font-black border border-border">٣</span>
+                      <label className="text-xs font-bold text-muted-foreground">ملاحظة للمعلم (اختياري):</label>
+                    </div>
+                    <textarea rows={2} placeholder="أي أسئلة أو تعليقات للمعلم..." value={studentNotes} onChange={(e) => setStudentNotes(e.target.value)}
+                      className="w-full rounded-xl border border-border bg-background p-3 text-xs font-semibold text-foreground focus:border-primary focus:outline-none resize-none" />
+                  </div>
+
+                  {/* Progress */}
+                  {submitting && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] font-bold">
+                        <span className="text-primary flex items-center gap-1.5"><Loader2Icon className="h-3.5 w-3.5 animate-spin" />جارٍ رفع {selectedFiles.length} {selectedFiles.length === 1 ? "ملف" : "ملفات"}...</span>
+                        <span className="text-muted-foreground">{uploadProgress}%</span>
+                      </div>
+                      <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
+                        <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
                       </div>
                     </div>
                   )}
+
                 </div>
 
-                {/* Step 3 */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground text-[10px] font-black border border-border">٣</span>
-                    <label className="text-xs font-bold text-muted-foreground">ملاحظة للمعلم (اختياري):</label>
-                  </div>
-                  <textarea rows={2} placeholder="أي أسئلة أو تعليقات للمعلم..." value={studentNotes} onChange={(e) => setStudentNotes(e.target.value)}
-                    className="w-full rounded-xl border border-border bg-background p-3 text-xs font-semibold text-foreground focus:border-primary focus:outline-none resize-none" />
-                </div>
-
-                {/* Progress */}
-                {submitting && (
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-[11px] font-bold">
-                      <span className="text-primary flex items-center gap-1.5"><Loader2Icon className="h-3.5 w-3.5 animate-spin" />جارٍ رفع {selectedFiles.length} {selectedFiles.length === 1 ? "صورة" : "صور"}...</span>
-                      <span className="text-muted-foreground">{uploadProgress}%</span>
-                    </div>
-                    <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-2 pt-1 border-t border-border">
+                {/* Sticky Submit Footer */}
+                <div className="shrink-0 bg-card p-4 border-t border-border sticky bottom-0 shadow-lg z-20 flex items-center gap-2">
                   <Button type="submit" disabled={submitting || selectedFiles.length === 0 || !lessonTitle.trim()}
                     className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-black text-sm shadow-md flex items-center justify-center gap-2 disabled:opacity-40">
                     {submitting ? <><Loader2Icon className="h-4 w-4 animate-spin" /><span>جارٍ الرفع...</span></> : <><SendIcon className="h-4 w-4" /><span>تسليم الملخص للتدقيق 📤</span></>}
