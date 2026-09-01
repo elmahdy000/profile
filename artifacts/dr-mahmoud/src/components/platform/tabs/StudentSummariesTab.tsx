@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertTriangle as AlertTriangleIcon,
   BookOpen as BookOpenIcon,
@@ -175,7 +175,10 @@ export function StudentSummariesTab({
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault(); setIsDragging(false);
     const files = Array.from(e.dataTransfer.files).filter((f) =>
-      f.type.startsWith("image/") || /\.(heic|heif|jpg|jpeg|png|webp|gif|bmp|jfif|tiff)$/i.test(f.name)
+      f.type.startsWith("image/") ||
+      f.type === "application/pdf" ||
+      f.type.includes("word") ||
+      /\.(heic|heif|jpg|jpeg|png|webp|gif|bmp|jfif|tiff|pdf|doc|docx|txt)$/i.test(f.name)
     );
     if (files.length) addFiles(files);
   };
@@ -355,15 +358,27 @@ export function StudentSummariesTab({
                 <span className="text-[10px] text-muted-foreground block">{new Date(item.createdAt).toLocaleDateString("ar-EG")} • {new Date(item.createdAt).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}</span>
                 {item.imageUrls?.length > 0 && (
                   <div>
-                    <span className="text-[11px] font-bold text-muted-foreground block mb-1.5">صور الكشكول ({item.imageUrls.length} صورة):</span>
+                    <span className="text-[11px] font-bold text-muted-foreground block mb-1.5">الملفات والملخصات المرفوعة ({item.imageUrls.length}):</span>
                     <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                      {item.imageUrls.map((imgUrl, imgIdx) => (
-                        <button key={imgIdx} type="button" onClick={() => { setPreviewImages(item.imageUrls); setActiveImageIndex(imgIdx); }}
-                          className="relative group shrink-0 h-16 w-16 rounded-xl overflow-hidden border border-border bg-slate-100 dark:bg-slate-800 ring-2 ring-transparent hover:ring-primary transition-all focus:outline-none">
-                          <img src={imgUrl} alt={`صفحة ${imgIdx + 1}`} className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
-                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white"><EyeIcon className="h-4 w-4" /></div>
-                        </button>
-                      ))}
+                      {item.imageUrls.map((imgUrl, imgIdx) => {
+                        const isDoc = /\.(pdf|doc|docx|txt)$/i.test(imgUrl);
+                        if (isDoc) {
+                          return (
+                            <a key={imgIdx} href={imgUrl} target="_blank" rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 h-16 px-3 rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-all shrink-0">
+                              <FileTextIcon className="h-5 w-5" />
+                              <span className="truncate max-w-[100px]">ملف #{imgIdx + 1}</span>
+                            </a>
+                          );
+                        }
+                        return (
+                          <button key={imgIdx} type="button" onClick={() => { setPreviewImages(item.imageUrls); setActiveImageIndex(imgIdx); }}
+                            className="relative group shrink-0 h-16 w-16 rounded-xl overflow-hidden border border-border bg-slate-100 dark:bg-slate-800 ring-2 ring-transparent hover:ring-primary transition-all focus:outline-none">
+                            <img src={imgUrl} alt={`صفحة ${imgIdx + 1}`} className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
+                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white"><EyeIcon className="h-4 w-4" /></div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -464,42 +479,53 @@ export function StudentSummariesTab({
                       : selectedFiles.length > 0 ? "border-emerald-400/50 bg-emerald-500/5"
                       : "border-border bg-background/50 hover:border-primary/50"
                     }`}>
-                    <input type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp" multiple onChange={handleFileChange}
+                    <input type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.txt" multiple onChange={handleFileChange}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                     {selectedFiles.length === 0 ? (
                       <div className="pointer-events-none space-y-2">
                         <ImageIcon className="mx-auto h-10 w-10 text-muted-foreground/50" />
-                        <p className="text-sm font-black text-foreground">اسحب الصور هنا أو اضغط للاختيار</p>
-                        <p className="text-[11px] text-muted-foreground">JPG • PNG • HEIC (صور الآيفون) • حتى 10 صور</p>
+                        <p className="text-sm font-black text-foreground">اسحب الصور أو الملفات هنا أو اضغط للاختيار</p>
+                        <p className="text-[11px] text-muted-foreground">صور (JPG, PNG, HEIC) • ملفات (PDF, Word, TXT) • حتى 10 ملفات</p>
                       </div>
                     ) : (
-                      <p className="pointer-events-none text-xs font-bold text-emerald-600 dark:text-emerald-400">✅ {selectedFiles.length} صور محددة — اضغط لإضافة المزيد</p>
+                      <p className="pointer-events-none text-xs font-bold text-emerald-600 dark:text-emerald-400">✅ {selectedFiles.length} ملفات/صور محددة — اضغط لإضافة المزيد</p>
                     )}
                   </div>
 
                   <label className="relative flex items-center justify-center gap-2 w-full h-10 rounded-xl border border-border bg-muted/40 hover:bg-muted text-xs font-bold text-foreground cursor-pointer transition-colors">
-                    <input type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+                    <input type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.txt" capture="environment" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
                     <CameraIcon className="h-4 w-4 text-primary" />
                     التقط صورة الكشكول الآن بالكاميرا 📷
                   </label>
 
                   {previewUrls.length > 0 && (
                     <div>
-                      <span className="text-[11px] font-bold text-muted-foreground block mb-2">الصور المختارة — يمكنك ترتيبها أو حذفها:</span>
+                      <span className="text-[11px] font-bold text-muted-foreground block mb-2">الملفات المختارة — يمكنك ترتيبها أو حذفها:</span>
                       <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                        {previewUrls.map((url, idx) => (
-                          <div key={idx} className="relative group rounded-xl overflow-hidden border border-border aspect-square bg-slate-100 dark:bg-slate-800">
-                            <img src={url} alt={`معاينة ${idx + 1}`} className="h-full w-full object-cover" />
-                            <div className="absolute inset-0 bg-black/65 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1">
-                              <div className="flex gap-1">
-                                <button type="button" onClick={() => moveFile(idx, -1)} disabled={idx === 0} className="h-6 w-6 rounded-lg bg-white/20 text-white flex items-center justify-center disabled:opacity-30 hover:bg-white/30"><ChevronRightIcon className="h-3.5 w-3.5" /></button>
-                                <button type="button" onClick={() => moveFile(idx, 1)} disabled={idx === selectedFiles.length - 1} className="h-6 w-6 rounded-lg bg-white/20 text-white flex items-center justify-center disabled:opacity-30 hover:bg-white/30"><ChevronLeftIcon className="h-3.5 w-3.5" /></button>
+                        {previewUrls.map((url, idx) => {
+                          const fileObj = selectedFiles[idx];
+                          const isDoc = fileObj && (fileObj.type.includes("pdf") || fileObj.type.includes("word") || fileObj.name.match(/\.(pdf|doc|docx|txt)$/i));
+                          return (
+                            <div key={idx} className="relative group rounded-xl overflow-hidden border border-border aspect-square bg-slate-100 dark:bg-slate-800">
+                              {isDoc ? (
+                                <div className="flex flex-col items-center justify-center h-full p-2 text-center bg-primary/10 text-primary">
+                                  <FileTextIcon className="h-7 w-7 mb-1 shrink-0" />
+                                  <span className="text-[9px] font-bold truncate max-w-full dir-ltr">{fileObj?.name}</span>
+                                </div>
+                              ) : (
+                                <img src={url} alt={`معاينة ${idx + 1}`} className="h-full w-full object-cover" />
+                              )}
+                              <div className="absolute inset-0 bg-black/65 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1">
+                                <div className="flex gap-1">
+                                  <button type="button" onClick={() => moveFile(idx, -1)} disabled={idx === 0} className="h-6 w-6 rounded-lg bg-white/20 text-white flex items-center justify-center disabled:opacity-30 hover:bg-white/30"><ChevronRightIcon className="h-3.5 w-3.5" /></button>
+                                  <button type="button" onClick={() => moveFile(idx, 1)} disabled={idx === selectedFiles.length - 1} className="h-6 w-6 rounded-lg bg-white/20 text-white flex items-center justify-center disabled:opacity-30 hover:bg-white/30"><ChevronLeftIcon className="h-3.5 w-3.5" /></button>
+                                </div>
+                                <button type="button" onClick={() => removeFile(idx)} className="h-6 px-2 rounded-lg bg-rose-500/80 text-white text-[10px] font-bold flex items-center gap-0.5 hover:bg-rose-600"><XIcon className="h-3 w-3" />حذف</button>
                               </div>
-                              <button type="button" onClick={() => removeFile(idx)} className="h-6 px-2 rounded-lg bg-rose-500/80 text-white text-[10px] font-bold flex items-center gap-0.5 hover:bg-rose-600"><XIcon className="h-3 w-3" />حذف</button>
+                              <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-black/60 text-white text-[9px] font-black flex items-center justify-center pointer-events-none">{idx + 1}</span>
                             </div>
-                            <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-black/60 text-white text-[9px] font-black flex items-center justify-center pointer-events-none">{idx + 1}</span>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   )}

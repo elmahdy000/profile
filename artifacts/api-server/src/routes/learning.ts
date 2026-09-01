@@ -86,28 +86,41 @@ const allowedImageExtensions = new Set([
   ".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".gif", ".bmp", ".jfif", ".tiff"
 ]);
 
+const allowedSummaryExtensions = new Set([
+  ".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".gif", ".bmp", ".jfif", ".tiff",
+  ".pdf", ".doc", ".docx", ".txt"
+]);
+
 const paymentReceiptUpload = multer({
   storage: multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, paymentReceiptsDir),
     filename: (_req, file, cb) => {
       const originalExt = path.extname(file.originalname || "").toLowerCase();
       const safeExt = originalExt.replace(/[^.a-z0-9]/g, "");
-      const ext = safeExt || ".jpg";
+      const mimeExt: Record<string, string> = {
+        "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp",
+        "image/heic": ".heic", "image/heif": ".heif", "image/gif": ".gif",
+        "application/pdf": ".pdf",
+      };
+      const ext = safeExt || mimeExt[(file.mimetype || "").toLowerCase()] || ".jpg";
       cb(null, `${Date.now()}-${randomBytes(8).toString("hex")}${ext}`);
     },
   }),
-  limits: { fileSize: 15 * 1024 * 1024 },
+  limits: { fileSize: 30 * 1024 * 1024 }, // 30MB limit per receipt
   fileFilter: (_req, file, cb) => {
     const ext = path.extname(file.originalname || "").toLowerCase();
     const mime = (file.mimetype || "").toLowerCase();
-    const isImageOrPdf =
+    const isAllowed =
       mime.startsWith("image/") ||
       mime === "application/pdf" ||
-      (mime === "application/octet-stream" && (allowedImageExtensions.has(ext) || ext === ".pdf")) ||
-      (mime === "" && (allowedImageExtensions.has(ext) || ext === ".pdf")) ||
-      ext === ".pdf";
+      mime === "application/x-pdf" ||
+      mime.includes("octet-stream") ||
+      mime === "" ||
+      allowedImageExtensions.has(ext) ||
+      ext === ".pdf" ||
+      !ext;
 
-    if (isImageOrPdf) cb(null, true);
+    if (isAllowed) cb(null, true);
     else cb(new Error("ارفع صورة فقط (JPG أو PNG أو WebP أو HEIC) أو ملف PDF"));
   },
 }).single("receipt");
@@ -121,27 +134,36 @@ const summaryImagesUpload = multer({
     filename: (_req, file, cb) => {
       const originalExt = path.extname(file.originalname || "").toLowerCase();
       const safeExt = originalExt.replace(/[^.a-z0-9]/g, "");
-      // Infer extension from MIME if original has none
       const mimeExt: Record<string, string> = {
         "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp",
         "image/heic": ".heic", "image/heif": ".heif", "image/gif": ".gif",
+        "application/pdf": ".pdf",
+        "application/msword": ".doc",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+        "text/plain": ".txt",
       };
       const ext = safeExt || mimeExt[(file.mimetype || "").toLowerCase()] || ".jpg";
       cb(null, `${Date.now()}-${randomBytes(8).toString("hex")}${ext}`);
     },
   }),
-  limits: { fileSize: 25 * 1024 * 1024, files: 10 },
+  limits: { fileSize: 50 * 1024 * 1024, files: 10 }, // 50MB per file, up to 10 files
   fileFilter: (_req, file, cb) => {
     const ext = path.extname(file.originalname || "").toLowerCase();
     const mime = (file.mimetype || "").toLowerCase();
-    const isImage =
+    const isAllowed =
       mime.startsWith("image/") ||
-      // application/octet-stream is sent by some iOS/HEIC uploads — only accept if extension is an image
-      (mime === "application/octet-stream" && allowedImageExtensions.has(ext)) ||
-      (mime === "" && allowedImageExtensions.has(ext));
+      mime === "application/pdf" ||
+      mime === "application/x-pdf" ||
+      mime.includes("msword") ||
+      mime.includes("wordprocessingml") ||
+      mime === "text/plain" ||
+      mime.includes("octet-stream") ||
+      mime === "" ||
+      allowedSummaryExtensions.has(ext) ||
+      !ext;
 
-    if (isImage) cb(null, true);
-    else cb(new Error("ارفع صورة فقط (JPG أو PNG أو WebP أو HEIC)"));
+    if (isAllowed) cb(null, true);
+    else cb(new Error("صيغة الملف غير مدعومة. ارفع صورة (JPG, PNG, HEIC) أو ملف (PDF, Word, TXT)."));
   },
 }).array("images", 10);
 
@@ -988,7 +1010,10 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
         .update(studentsTable)
         .set({ lastLoginAt: now, lastActiveAt: now, updatedAt: now })
         .where(eq(studentsTable.id, student.id));
-      await tx
+    });
+    // Log login attempt separately — non-critical, must not break login if table is missing
+    try {
+      await db
         .insert(studentLoginLogsTable)
         .values({
           studentId: student.id,
@@ -998,7 +1023,9 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
           status: "success",
           createdAt: now,
         });
-    });
+    } catch {
+      // Intentionally ignored: login log is optional, login should always succeed
+    }
     res.cookie(STUDENT_COOKIE, token, {
       httpOnly: true,
       sameSite: "lax",

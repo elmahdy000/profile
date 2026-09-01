@@ -168,7 +168,7 @@ export function PaymentBanner({ paymentStatus, onUploaded }: { paymentStatus: st
           <input
             ref={fileRef}
             type="file"
-            accept="image/*"
+            accept="image/*,.pdf,.heic,.heif,.jpg,.jpeg,.png,.webp"
             className="hidden"
             onChange={(e) => {
               if (e.target.files?.[0]) handleFileSelect(e.target.files[0]);

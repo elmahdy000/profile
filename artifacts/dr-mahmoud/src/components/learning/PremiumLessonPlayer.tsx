@@ -110,14 +110,14 @@ function LessonSummaryUploadPanel({ videoItem }: { videoItem: VideoItem }) {
           <div className="relative rounded-xl border-2 border-dashed border-white/15 bg-slate-950 p-4 text-center hover:border-sky-500 transition-colors">
             <input
               type="file"
-              accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp"
+              accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.txt"
               multiple
               onChange={handleFiles}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             />
             <FileText className="mx-auto h-7 w-7 text-sky-400/80 mb-1" />
-            <span className="block text-xs font-bold text-slate-200">اضغط هنا لاختيار صور كشكول/مذكرة الملخص</span>
-            <span className="block text-[10px] text-slate-400 mt-0.5">يمكنك اختيار عدة صور دفعة واحدة (صور الموبايل والـ HEIC و JPG و PNG)</span>
+            <span className="block text-xs font-bold text-slate-200">اضغط هنا لاختيار صور أو ملفات كشكول/مذكرة الملخص</span>
+            <span className="block text-[10px] text-slate-400 mt-0.5">يمكنك اختيار عدة صور أو ملفات دفعة واحدة (صور، HEIC, PDF, Word, TXT)</span>
           </div>
 
           {previewUrls.length > 0 && (
