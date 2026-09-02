@@ -209,15 +209,9 @@ const learningFileUpload = multer({
 
 const quizImportUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 30 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => {
-    const extension = path.extname(file.originalname).toLowerCase();
-    const isGeneric = !extension || file.mimetype.includes("octet-stream") || file.mimetype === "";
-    if ([".pdf", ".docx", ".doc", ".txt", ".md", ".rtf", ".pages"].includes(extension) || isGeneric) {
-      cb(null, true);
-    } else {
-      cb(new Error("يمكن استيراد ملفات PDF أو Word (DOCX/DOC) أو TXT فقط."));
-    }
+  limits: { fileSize: 50 * 1024 * 1024 },
+  fileFilter: (_req, _file, cb) => {
+    cb(null, true);
   },
 }).single("file");
 
@@ -425,11 +419,24 @@ function optionIndex(value: string): number | null {
 }
 
 function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; warnings: string[] } {
-  const lines = rawText
-    .replace(/\r/g, "")
+  // 1. Clean invisible RTL markers & normalize newlines
+  let cleanedText = rawText
+    .replace(/[\u200B-\u200F\u202A-\u202E\uFEFF\u061C]/g, "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .replace(/[\u2028\u2029]/g, "\n");
+
+  // 2. Preprocess inline text without newlines (force newlines before headers/choices/answers/explanations if missing)
+  cleanedText = cleanedText.replace(/([^\n])\s*(سؤال\s*\d+|س\d+|Question\s*\d+|#\d+)/gi, "$1\n$2");
+  cleanedText = cleanedText.replace(/([^\n])\s+([A-Fa-fأابجده]|هـ|[1-6])\)\s+/g, "$1\n$2) ");
+  cleanedText = cleanedText.replace(/([^\n])\s*(الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|correct\s*answer|answer)\s*[:：\-]?\s*/gi, "$1\nالإجابة الصحيحة: ");
+  cleanedText = cleanedText.replace(/([^\n])\s*(التوضيح|التفسير|الشرح|تفسير|شرح|explanation|note)\s*[:：\-]?\s*/gi, "$1\nالتوضيح: ");
+
+  const lines = cleanedText
     .split("\n")
     .map((line) => line.replace(/\s+/g, " ").trim())
     .filter((line) => Boolean(line) && !line.match(/^[\_\-\*]{3,}$/));
+
   const questions: QuizQuestion[] = [];
   const warnings: string[] = [];
 
@@ -469,16 +476,16 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   const isArabicLine = (line: string) => /[\u0600-\u06FF]/.test(line);
 
   // Helper: detect if line looks like an option prefix (A), B), 1., etc.)
-  const CHOICE_RE = /^(?:\(?([A-Fa-fأابجده]|هـ|[1-6])\)?[.):\-\s]\s*)(.+)$/;
+  const CHOICE_RE = /^\s*(?:\(?([A-Fa-fأابجده]|هـ|[1-6])\)?[.):\-\s]\s*)(.+)$/;
 
   // Helper: detect "Correct Answer: X)" or "Answer: B) main()" — flexible
-  const ANSWER_RE = /^(?:correct\s*answer|answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة)\s*[:：\-]?\s*(.+)$/i;
+  const ANSWER_RE = /^\s*(?:correct\s*answer|answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة)\s*[:：\-]?\s*(.+)$/i;
 
   // Helper: detect explanation line — handles ":التوضيح" (RTL colon first) and "التوضيح:" and "الشرح" etc.
-  const EXPLANATION_HEADER_RE = /^(?::?\s*(?:explanation|note|التوضيح|التفسير|الشرح|تفسير|شرح|ملاحظة)\s*:?\s*)(.*)$/i;
+  const EXPLANATION_HEADER_RE = /^\s*(?::?\s*(?:explanation|note|التوضيح|التفسير|الشرح|تفسير|شرح|ملاحظة)\s*:?\s*)(.*)$/i;
 
   // Helper: detect standalone question header line like "Question 1" or "Question 1:" or "1." or "سؤال 1"
-  const QUESTION_HEADER_RE = /^(?:(?:س(?:ؤال)?\s*)?\d+|Q(?:uestion)?\s*\d+|#\d+)(?:\s*[.):\-]\s*(.*))?$/i;
+  const QUESTION_HEADER_RE = /^\s*(?:(?:س(?:ؤال)?\s*)?\d+|Q(?:uestion)?\s*\d+|#\d+)(?:\s*[.):\-]\s*(.*))?$/i;
 
   let collectingExplanation = false;
   let hasFoundAnswer = false;
@@ -489,7 +496,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
     // 1. Check if standalone Question header (e.g. "Question 1" or "1. What is...")
     const questionHeaderMatch = line.match(QUESTION_HEADER_RE);
     // Ensure it's not matching choice lines like "A)" or single letters
-    if (questionHeaderMatch && !line.match(/^[A-Fa-fأابجده]\s*[.):\-]/)) {
+    if (questionHeaderMatch && !line.match(/^\s*[A-Fa-fأابجده]\s*[.):\-]/)) {
       // Check if it's "Question 1" with text inline vs just "Question 1" heading
       const inlinePrompt = questionHeaderMatch[1]?.trim();
       finishCurrent();
