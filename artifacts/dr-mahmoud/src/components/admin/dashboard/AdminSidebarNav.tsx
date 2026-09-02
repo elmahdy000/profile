@@ -25,6 +25,7 @@ import {
   Bell,
   Activity,
   FileDown,
+  FileSpreadsheet,
   MapPin,
 } from "lucide-react";
 
@@ -191,6 +192,16 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
             setLearningSubTab("quizzes");
           },
           active: activeTab === "learning" && learningSubTab === "quizzes",
+        },
+        {
+          id: "grades-sheet",
+          label: "شيت درجات الاختبارات 📊",
+          icon: FileSpreadsheet,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("grades-sheet");
+          },
+          active: activeTab === "learning" && learningSubTab === "grades-sheet",
         },
         {
           id: "files",

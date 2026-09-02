@@ -76,7 +76,7 @@ import {
   FileCheck2,
 } from "lucide-react";
 import { AdminSettings } from "./AdminSettings";
-import { AdminLearning } from "./AdminLearning";
+import { AdminLearning, type AdminLearningTab } from "./AdminLearning";
 import { StudentAnalyticsTab } from "./admin/learning/StudentAnalyticsTab";
 import { AdminSidebarNav } from "./admin/dashboard/AdminSidebarNav";
 import { PodcastsTab } from "./admin/dashboard/PodcastsTab";
@@ -158,7 +158,7 @@ export default function AdminDashboard() {
     | "parents"
     | "settings"
   >("learning");
-  const [learningSubTab, setLearningSubTab] = useState<"students" | "center-bookings" | "payments" | "notifications" | "files" | "quizzes" | "reports">("students");
+  const [learningSubTab, setLearningSubTab] = useState<AdminLearningTab>("students");
   const [bookingFilter, setBookingFilter] = useState<"pending" | "confirmed" | "completed" | "all">("pending");
   const [selectedSubjectFilter, setSelectedSubjectFilter] =
     useState<string>("all");

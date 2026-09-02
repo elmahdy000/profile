@@ -213,15 +213,28 @@ async function optimizeLearningImage(file: File): Promise<File> {
   });
 }
 
+export type AdminLearningTab =
+  | "overview"
+  | "students"
+  | "summaries"
+  | "grades-sheet"
+  | "center-bookings"
+  | "payments"
+  | "notifications"
+  | "files"
+  | "quizzes"
+  | "subscriptions"
+  | "reports";
+
 export function AdminLearning({
   role = "superadmin",
   initialTab = "students",
 }: {
   role?: "superadmin" | "subadmin";
-  initialTab?: "overview" | "students" | "summaries" | "center-bookings" | "payments" | "notifications" | "files" | "quizzes" | "subscriptions" | "reports";
+  initialTab?: AdminLearningTab;
 }) {
   const { toast } = useToast();
-  const [tab, setTab] = useState<"overview" | "students" | "summaries" | "center-bookings" | "payments" | "notifications" | "files" | "quizzes" | "subscriptions" | "reports">(
+  const [tab, setTab] = useState<AdminLearningTab>(
     initialTab,
   );
 
