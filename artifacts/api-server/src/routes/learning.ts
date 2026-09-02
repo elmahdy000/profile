@@ -209,11 +209,15 @@ const learningFileUpload = multer({
 
 const quizImportUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 20 * 1024 * 1024 },
+  limits: { fileSize: 30 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const extension = path.extname(file.originalname).toLowerCase();
-    if ([".pdf", ".docx", ".txt", ".md"].includes(extension)) cb(null, true);
-    else cb(new Error("يمكن استيراد ملفات PDF أو Word (DOCX) أو TXT فقط."));
+    const isGeneric = !extension || file.mimetype.includes("octet-stream") || file.mimetype === "";
+    if ([".pdf", ".docx", ".doc", ".txt", ".md", ".rtf", ".pages"].includes(extension) || isGeneric) {
+      cb(null, true);
+    } else {
+      cb(new Error("يمكن استيراد ملفات PDF أو Word (DOCX/DOC) أو TXT فقط."));
+    }
   },
 }).single("file");
 
@@ -3484,9 +3488,20 @@ router.post("/admin/learning/quizzes/import", requireAdmin, (req, res, next) => 
       const extension = path.extname(req.file.originalname).toLowerCase();
       let extractedText = "";
       if (extension === ".pdf") {
-        extractedText = (await pdfParse(req.file.buffer)).text;
-      } else if (extension === ".docx") {
-        extractedText = (await mammoth.extractRawText({ buffer: req.file.buffer })).value;
+        try {
+          extractedText = (await pdfParse(req.file.buffer)).text;
+        } catch {
+          extractedText = req.file.buffer.toString("utf8");
+        }
+      } else if (extension === ".docx" || extension === ".doc") {
+        try {
+          extractedText = (await mammoth.extractRawText({ buffer: req.file.buffer })).value;
+        } catch {
+          extractedText = req.file.buffer.toString("utf8");
+        }
+        if (!extractedText.trim()) {
+          extractedText = req.file.buffer.toString("utf8");
+        }
       } else {
         extractedText = req.file.buffer.toString("utf8");
       }
