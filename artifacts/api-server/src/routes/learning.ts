@@ -425,7 +425,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
     .replace(/\r/g, "")
     .split("\n")
     .map((line) => line.replace(/\s+/g, " ").trim())
-    .filter(Boolean);
+    .filter((line) => Boolean(line) && !line.match(/^[\_\-\*]{3,}$/));
   const questions: QuizQuestion[] = [];
   const warnings: string[] = [];
 
@@ -526,7 +526,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
       collectingExplanation = false;
       hasFoundAnswer = true;
       const answerVal = answerMatch[1].trim();
-      const leadingToken = answerVal.match(/^([A-Fa-fأابجده]|هـ|[1-6])\b/)?.[1];
+      const leadingToken = answerVal.match(/^([A-Fa-fأابجده]|هـ|[1-6])(?=[\s\)\.\:\-]|$)/)?.[1];
       const byIndex = leadingToken ? optionIndex(leadingToken) : null;
       const byText = current.options.findIndex((o) => o.toLowerCase().trim() === answerVal.toLowerCase().trim());
       if (byIndex !== null && byIndex < current.options.length) {
