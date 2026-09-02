@@ -426,7 +426,11 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
     .replace(/\r/g, "\n")
     .replace(/[\u2028\u2029]/g, "\n");
 
-  // 2. Preprocess inline text without newlines (force newlines before headers/choices/answers/explanations if missing)
+  // 2. Preprocess inline text & Word table cell merges (force newlines before headers/choices/answers/explanations if missing)
+  // Fix merged "الإجابة الصحيحة: بالتوضيح:" where answer 'ب' is glued to 'التوضيح:'
+  cleanedText = cleanedText.replace(/(الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة)\s*[:：\-]?\s*([أابجدهA-Da-d1-6])(التوضيح|التفسير|الشرح|تفسير|شرح|explanation|note)\s*[:：\-]?/gi, "$1: $2\n$3: ");
+  // Fix merged choices without space e.g. "فقطب) " -> "فقط\nب) " or "نفسهج) " -> "نفسه\nج) "
+  cleanedText = cleanedText.replace(/([^\s\n])([A-Fa-fأابجده]|هـ|[1-6])\)\s*/g, "$1\n$2) ");
   cleanedText = cleanedText.replace(/([^\n])\s*(سؤال\s*\d+|س\d+|Question\s*\d+|#\d+)/gi, "$1\n$2");
   cleanedText = cleanedText.replace(/([^\n])\s+([A-Fa-fأابجده]|هـ|[1-6])\)\s+/g, "$1\n$2) ");
   cleanedText = cleanedText.replace(/([^\n])\s*(الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|correct\s*answer|answer)\s*[:：\-]?\s*/gi, "$1\nالإجابة الصحيحة: ");
@@ -4010,11 +4014,23 @@ router.get(
       const attempts = await db
         .select({
           id: quizAttemptsTable.id,
+          quizId: quizAttemptsTable.quizId,
+          studentId: quizAttemptsTable.studentId,
           score: quizAttemptsTable.score,
           passed: quizAttemptsTable.passed,
+          timeSpentSeconds: quizAttemptsTable.timeSpentSeconds,
           createdAt: quizAttemptsTable.createdAt,
           studentName: studentsTable.name,
+          studentPhone: studentsTable.phone,
+          parentPhone: studentsTable.parentPhone,
+          studentCode: studentsTable.accessCode,
+          studentGrade: studentsTable.grade,
+          studentCenter: studentsTable.centerName,
           quizTitle: quizzesTable.title,
+          quizStage: quizzesTable.stage,
+          quizStages: quizzesTable.stages,
+          passingScore: quizzesTable.passingScore,
+          questions: quizzesTable.questions,
         })
         .from(quizAttemptsTable)
         .innerJoin(
@@ -4023,7 +4039,34 @@ router.get(
         )
         .innerJoin(quizzesTable, eq(quizAttemptsTable.quizId, quizzesTable.id))
         .orderBy(desc(quizAttemptsTable.createdAt));
-      res.json(attempts);
+
+      const formattedAttempts = attempts.map((a) => {
+        const questionsList = Array.isArray(a.questions) ? a.questions : [];
+        const totalQuestions = questionsList.length || 1;
+        const percentage = Math.round((a.score / totalQuestions) * 100);
+        return {
+          id: a.id,
+          quizId: a.quizId,
+          studentId: a.studentId,
+          studentName: a.studentName || "طالب",
+          studentPhone: a.studentPhone || "",
+          parentPhone: a.parentPhone || "",
+          studentCode: a.studentCode || "",
+          studentGrade: a.studentGrade || "غير محدد",
+          studentCenter: a.studentCenter || "",
+          quizTitle: a.quizTitle || "اختبار",
+          quizStage: a.quizStage || (Array.isArray(a.quizStages) && a.quizStages[0]) || "غير محدد",
+          score: a.score,
+          totalQuestions,
+          passingScore: a.passingScore,
+          percentage,
+          passed: a.passed,
+          timeSpentSeconds: a.timeSpentSeconds || 0,
+          createdAt: a.createdAt,
+        };
+      });
+
+      res.json(formattedAttempts);
     } catch (error) {
       next(error);
     }

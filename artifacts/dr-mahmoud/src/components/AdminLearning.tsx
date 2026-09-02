@@ -32,6 +32,7 @@ import {
   Folder,
   Bell,
   CreditCard,
+  FileSpreadsheet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -46,6 +47,7 @@ import { MonthlyPaymentsTab } from "./admin/learning/MonthlyPaymentsTab";
 import { OverviewSection } from "./admin/learning/OverviewSection";
 import { ReportsTab } from "./admin/learning/ReportsTab";
 import { StudentSummariesAdminTab } from "./admin/learning/StudentSummariesAdminTab";
+import { StudentQuizGradesSheet } from "./platform/tabs/StudentQuizGradesSheet";
 
 type Student = PlatformStudent & {
   accessCode?: string | null;
@@ -1209,6 +1211,7 @@ export function AdminLearning({
     ["center-bookings", "حجوزات السناتر", MapPin],
     ["students", "الطلاب", GraduationCap],
     ["summaries", "تلاخيص الطلاب 📝", FileText],
+    ["grades-sheet", "شيت الدرجات 📊", FileSpreadsheet],
     ["subscriptions", "الاشتراكات الشهرية", CreditCard],
     ["payments", "إيصالات الدفع", FileCheck2],
     ["files", "الملفات", Folder],
@@ -1218,7 +1221,7 @@ export function AdminLearning({
   ];
 
   // Subadmin has access to student management & daily activity reports
-  const SUBADMIN_TABS = new Set(["students", "center-bookings", "summaries", "subscriptions", "payments", "reports"]);
+  const SUBADMIN_TABS = new Set(["students", "center-bookings", "summaries", "grades-sheet", "subscriptions", "payments", "reports"]);
   const tabs = role === "subadmin"
     ? allTabs.filter(([value]) => SUBADMIN_TABS.has(value))
     : allTabs;
@@ -1226,6 +1229,7 @@ export function AdminLearning({
     overview: ["اللوحة التشغيلية وإحصائيات المنصة", "نظرة عامة على أعداد الطلاب، المشتركين، والتوزيع حسب المراحل والكورسات."],
     students: ["إدارة جميع الطلاب", "راجع التسجيلات والصلاحيات والكورسات المخصصة لكل طالب."],
     summaries: ["مراجعة وتدقيق تلخيصات الدروس", "استعرض صور الكشكول المرفوعة من الطلاب واعتمدها أو أضف ملحوظات معلم."],
+    "grades-sheet": ["شيت وقوائم درجات الطلاب في الاختبارات", "شيت تفاعلي كامل لعرض نتائج درجات الطلاب والفلترة الحية وتصدير شيت Excel."],
     "center-bookings": ["كشف وإدارة حجوزات السناتر", "جدول تفصيلي مخصص لمتابعة جميع الطلاب المسجلين بالسناتر والمواعيد الحضورية المحددة."],
     subscriptions: ["متابعة الاشتراكات الشهرية", "راقب حالة الاشتراكات الشهرية للطلاب وتجديدها والمتأخرات."],
     payments: ["إيصالات الدفع", "راجع إيصالات الدفع من الطلاب ووافق أو ارفض."],
@@ -1410,6 +1414,14 @@ export function AdminLearning({
           )}
           {tab === "summaries" && (
             <StudentSummariesAdminTab role={role} />
+          )}
+          {tab === "grades-sheet" && (
+            <StudentQuizGradesSheet
+              attempts={attempts as any}
+              stages={studentStages}
+              quizzes={quizzes}
+              onRefresh={load}
+            />
           )}
           {tab === "center-bookings" && (
             <CenterBookingsTab
