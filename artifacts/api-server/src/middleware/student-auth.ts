@@ -11,6 +11,7 @@ export type ApprovedStudent = typeof studentsTable.$inferSelect;
 function normalizeCategory(value: string | null | undefined) {
   return String(value ?? "")
     .trim()
+    .replace(/ى/g, "ي")
     .toLocaleLowerCase("ar");
 }
 
@@ -116,7 +117,7 @@ export function isGradeMatch(
   };
   const getSchoolType = (value: string) => {
     if (value.includes("لغات") || value.includes("languages")) return "languages";
-    if (value.includes("عربي") || value.includes("arabic")) return "arabic";
+    if (value.includes("عربي") || value.includes("عربى") || value.includes("arabic")) return "arabic";
     return null;
   };
 
