@@ -14,6 +14,7 @@ import {
   learningFilesTable,
   paymentReceiptsTable,
   quizAttemptsTable,
+  quizExtraAttemptsTable,
   quizzesTable,
   questionBankTable,
   studentSessionsTable,
@@ -3058,10 +3059,11 @@ router.get(["/learning/files/:id/preview", "/learning/files/:id/download"], asyn
 router.get("/learning/quizzes", requireStudent, async (_req, res, next) => {
   try {
     const student = res.locals.student as typeof studentsTable.$inferSelect;
-    const [quizzes, attempts, progress] = await Promise.all([
+    const [quizzes, attempts, progress, extraGrants] = await Promise.all([
       db.select().from(quizzesTable).where(eq(quizzesTable.isPublished, true)).orderBy(desc(quizzesTable.createdAt)),
       db.select({ id: quizAttemptsTable.id, quizId: quizAttemptsTable.quizId, score: quizAttemptsTable.score }).from(quizAttemptsTable).where(eq(quizAttemptsTable.studentId, student.id)),
       db.select({ videoId: videoProgressTable.videoId, progress: videoProgressTable.progress }).from(videoProgressTable).where(eq(videoProgressTable.studentId, student.id)),
+      db.select().from(quizExtraAttemptsTable).where(eq(quizExtraAttemptsTable.studentId, student.id)),
     ]);
     const attemptsByQuiz = new Map<number, { count: number; bestScore: number }>();
     for (const attempt of attempts) {
@@ -3071,6 +3073,7 @@ router.get("/learning/quizzes", requireStudent, async (_req, res, next) => {
         bestScore: Math.max(current.bestScore, attempt.score ?? 0),
       });
     }
+    const extraGrantsMap = new Map(extraGrants.map((row) => [row.quizId, row.extraAttempts]));
     const progressByVideo = new Map(progress.map((row) => [row.videoId, row.progress]));
     res.json(
       quizzes
@@ -3081,13 +3084,16 @@ router.get("/learning/quizzes", requireStudent, async (_req, res, next) => {
           const quizAttempts = attemptsByQuiz.get(quiz.id);
           const attemptsUsed = quizAttempts?.count ?? 0;
           const bestScore = quizAttempts?.bestScore ?? null;
+          const extraGranted = extraGrantsMap.get(quiz.id) ?? 0;
           const progressLocked = quiz.scope === "lesson" && quiz.videoId !== null &&
             (progressByVideo.get(quiz.videoId) ?? 0) < quiz.requiredProgress;
           const unlimitedAttempts = !quiz.maxAttempts || quiz.maxAttempts <= 0;
-          const attemptsLocked = !unlimitedAttempts && attemptsUsed >= quiz.maxAttempts;
+          const effectiveMaxAttempts = unlimitedAttempts ? null : quiz.maxAttempts + extraGranted;
+          const attemptsLocked = !unlimitedAttempts && attemptsUsed >= (effectiveMaxAttempts ?? 0);
           return {
             ...quiz,
-            maxAttempts: unlimitedAttempts ? null : quiz.maxAttempts,
+            maxAttempts: effectiveMaxAttempts,
+            extraAttemptsGranted: extraGranted,
             attemptsUsed,
             bestScore,
             locked: progressLocked || attemptsLocked,
@@ -4011,34 +4017,39 @@ router.get(
   requireAdmin,
   async (_req, res, next) => {
     try {
-      const attempts = await db
-        .select({
-          id: quizAttemptsTable.id,
-          quizId: quizAttemptsTable.quizId,
-          studentId: quizAttemptsTable.studentId,
-          score: quizAttemptsTable.score,
-          passed: quizAttemptsTable.passed,
-          timeSpentSeconds: quizAttemptsTable.timeSpentSeconds,
-          createdAt: quizAttemptsTable.createdAt,
-          studentName: studentsTable.name,
-          studentPhone: studentsTable.phone,
-          parentPhone: studentsTable.parentPhone,
-          studentCode: studentsTable.accessCode,
-          studentGrade: studentsTable.grade,
-          studentCenter: studentsTable.centerName,
-          quizTitle: quizzesTable.title,
-          quizStage: quizzesTable.stage,
-          quizStages: quizzesTable.stages,
-          passingScore: quizzesTable.passingScore,
-          questions: quizzesTable.questions,
-        })
-        .from(quizAttemptsTable)
-        .innerJoin(
-          studentsTable,
-          eq(quizAttemptsTable.studentId, studentsTable.id),
-        )
-        .innerJoin(quizzesTable, eq(quizAttemptsTable.quizId, quizzesTable.id))
-        .orderBy(desc(quizAttemptsTable.createdAt));
+      const [attempts, extraGrants] = await Promise.all([
+        db
+          .select({
+            id: quizAttemptsTable.id,
+            quizId: quizAttemptsTable.quizId,
+            studentId: quizAttemptsTable.studentId,
+            score: quizAttemptsTable.score,
+            passed: quizAttemptsTable.passed,
+            timeSpentSeconds: quizAttemptsTable.timeSpentSeconds,
+            createdAt: quizAttemptsTable.createdAt,
+            studentName: studentsTable.name,
+            studentPhone: studentsTable.phone,
+            parentPhone: studentsTable.parentPhone,
+            studentCode: studentsTable.accessCode,
+            studentGrade: studentsTable.grade,
+            studentCenter: studentsTable.centerName,
+            quizTitle: quizzesTable.title,
+            quizStage: quizzesTable.stage,
+            quizStages: quizzesTable.stages,
+            passingScore: quizzesTable.passingScore,
+            questions: quizzesTable.questions,
+          })
+          .from(quizAttemptsTable)
+          .innerJoin(
+            studentsTable,
+            eq(quizAttemptsTable.studentId, studentsTable.id),
+          )
+          .innerJoin(quizzesTable, eq(quizAttemptsTable.quizId, quizzesTable.id))
+          .orderBy(desc(quizAttemptsTable.createdAt)),
+        db.select().from(quizExtraAttemptsTable),
+      ]);
+
+      const extraGrantsMap = new Map(extraGrants.map((g) => [`${g.quizId}_${g.studentId}`, g.extraAttempts]));
 
       const formattedAttempts = attempts.map((a) => {
         const questionsList = Array.isArray(a.questions) ? a.questions : [];
@@ -4062,6 +4073,7 @@ router.get(
           percentage,
           passed: a.passed,
           timeSpentSeconds: a.timeSpentSeconds || 0,
+          extraAttemptsGranted: extraGrantsMap.get(`${a.quizId}_${a.studentId}`) || 0,
           createdAt: a.createdAt,
         };
       });
@@ -4072,6 +4084,81 @@ router.get(
     }
   },
 );
+
+// ── Admin: Grant Extra Attempts for specific student(s) ──
+
+router.post("/admin/learning/quizzes/:quizId/extra-attempts", requireAdmin, async (req, res, next) => {
+  try {
+    const quizId = Number(req.params.quizId);
+    const { studentId, studentIds, extraAttempts = 1, reason } = req.body;
+
+    const targetStudentIds: number[] = Array.isArray(studentIds)
+      ? studentIds.map(Number).filter(Boolean)
+      : (studentId ? [Number(studentId)] : []);
+
+    if (targetStudentIds.length === 0) {
+      res.status(400).json({ error: "يرجى تحديد الطالب أو الطلاب لمنح المحاولة الإضافية" });
+      return;
+    }
+
+    const [quiz] = await db.select().from(quizzesTable).where(eq(quizzesTable.id, quizId)).limit(1);
+    if (!quiz) {
+      res.status(404).json({ error: "الاختبار غير موجود" });
+      return;
+    }
+
+    const numExtra = Math.max(1, Number(extraAttempts) || 1);
+    const adminName = (res.locals as any)?.admin?.username || "المعلم";
+
+    for (const sId of targetStudentIds) {
+      const [existing] = await db
+        .select()
+        .from(quizExtraAttemptsTable)
+        .where(and(eq(quizExtraAttemptsTable.quizId, quizId), eq(quizExtraAttemptsTable.studentId, sId)))
+        .limit(1);
+
+      if (existing) {
+        await db
+          .update(quizExtraAttemptsTable)
+          .set({
+            extraAttempts: existing.extraAttempts + numExtra,
+            reason: reason || existing.reason,
+            grantedBy: adminName,
+            updatedAt: new Date(),
+          })
+          .where(eq(quizExtraAttemptsTable.id, existing.id));
+      } else {
+        await db.insert(quizExtraAttemptsTable).values({
+          quizId,
+          studentId: sId,
+          extraAttempts: numExtra,
+          reason: reason || "منح محاولة إضافية لإعادة الاختبار بواسطة الأدمن",
+          grantedBy: adminName,
+        });
+      }
+
+      // Send notification to student
+      await db.insert(studentNotificationsTable).values({
+        studentId: sId,
+        title: "محاولة إضافية للاختبار 🎓",
+        message: `تم منحك محاولة إضافية لإعادة اختبار: "${quiz.title}". يمكنك الدخول وإعادة الاختبار الآن!`,
+        type: "quiz",
+      });
+    }
+
+    await logAudit(
+      req,
+      "GRANT_EXTRA_QUIZ_ATTEMPT",
+      "quizzes",
+      String(quizId),
+      `منح محاولة إضافية لاختبار ${quiz.title} لعدد ${targetStudentIds.length} طالب`,
+    );
+
+    res.json({ success: true, count: targetStudentIds.length });
+  } catch (error) {
+    next(error);
+  }
+});
 
 // ── Student Notes CRUD ──
 

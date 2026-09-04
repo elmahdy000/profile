@@ -149,6 +149,21 @@ export const quizAttemptsTable = pgTable("quiz_attempts", {
   studentIndex: index("quiz_attempts_student_idx").on(table.studentId),
 }));
 
+export const quizExtraAttemptsTable = pgTable("quiz_extra_attempts", {
+  id: serial("id").primaryKey(),
+  quizId: integer("quiz_id").notNull().references(() => quizzesTable.id, { onDelete: "cascade" }),
+  studentId: integer("student_id").notNull().references(() => studentsTable.id, { onDelete: "cascade" }),
+  extraAttempts: integer("extra_attempts").notNull().default(1),
+  reason: text("reason"),
+  grantedBy: text("granted_by"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  quizStudentUnique: uniqueIndex("quiz_extra_attempts_unique").on(table.quizId, table.studentId),
+  quizIdx: index("quiz_extra_attempts_quiz_idx").on(table.quizId),
+  studentIdx: index("quiz_extra_attempts_student_idx").on(table.studentId),
+}));
+
 export const videoProgressTable = pgTable("video_progress", {
   id: serial("id").primaryKey(),
   studentId: integer("student_id").notNull().references(() => studentsTable.id, { onDelete: "cascade" }),

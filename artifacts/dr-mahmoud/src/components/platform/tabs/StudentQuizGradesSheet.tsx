@@ -36,6 +36,7 @@ export type ExtendedAttempt = {
   percentage: number;
   passed: boolean;
   timeSpentSeconds: number;
+  extraAttemptsGranted?: number;
   createdAt: string;
 };
 
@@ -50,12 +51,59 @@ export const StudentQuizGradesSheet: React.FC<StudentQuizGradesSheetProps> = ({
   attempts,
   stages = [],
   quizzes = [],
+  onRefresh,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStage, setSelectedStage] = useState<string>("all");
   const [selectedQuiz, setSelectedQuiz] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all"); // all, passed, failed
   const [sortBy, setSortBy] = useState<"latest" | "scoreDesc" | "scoreAsc" | "name">("latest");
+  const [grantingStudentId, setGrantingStudentId] = useState<number | null>(null);
+
+  const handleGrantExtraAttempt = async (attempt: ExtendedAttempt) => {
+    try {
+      setGrantingStudentId(attempt.studentId);
+      const res = await fetch(`/api/admin/learning/quizzes/${attempt.quizId}/extra-attempts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId: attempt.studentId, extraAttempts: 1 }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "فشل منح المحاولة الإضافية");
+      alert(`تم منح الطالب (${attempt.studentName}) محاولة إضافية بنجاح 🎓`);
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      alert((err as Error).message);
+    } finally {
+      setGrantingStudentId(null);
+    }
+  };
+
+  const handleBulkGrantFailed = async () => {
+    const failedStudents = filteredAttempts.filter((a) => !a.passed);
+    if (failedStudents.length === 0) {
+      alert("لا يوجد طلاب راسبين في نتائج الفلتر الحالية.");
+      return;
+    }
+
+    if (!confirm(`هل أنت محقق من منح محاولة إضافية لعدد ${failedStudents.length} طالب راسب؟`)) return;
+
+    try {
+      let count = 0;
+      for (const attempt of failedStudents) {
+        await fetch(`/api/admin/learning/quizzes/${attempt.quizId}/extra-attempts`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ studentId: attempt.studentId, extraAttempts: 1 }),
+        });
+        count++;
+      }
+      alert(`تم منح محاولة إضافية لعدد ${count} طالب راسب بنجاح 🎓`);
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      alert((err as Error).message);
+    }
+  };
 
   // Extract unique stages & quizzes from attempts if not provided
   const availableStages = useMemo(() => {
@@ -374,24 +422,34 @@ export const StudentQuizGradesSheet: React.FC<StudentQuizGradesSheetProps> = ({
         </div>
 
         {/* Active Filters Display & Count */}
-        <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-slate-500 pt-1">
           <div>
             عرض <span className="font-bold text-slate-900 dark:text-white">{filteredAttempts.length}</span> من إجمالي{" "}
             <span className="font-bold">{attempts.length}</span> محاولة
           </div>
-          {(selectedStage !== "all" || selectedQuiz !== "all" || selectedStatus !== "all" || searchQuery) && (
-            <button
-              onClick={() => {
-                setSelectedStage("all");
-                setSelectedQuiz("all");
-                setSelectedStatus("all");
-                setSearchQuery("");
-              }}
-              className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 font-semibold text-xs"
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleBulkGrantFailed}
+              className="h-8 text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30"
             >
-              إلغاء كل الفلاتر
-            </button>
-          )}
+              🎓 منح محاولة إضافية للطلاب الراسبين
+            </Button>
+            {(selectedStage !== "all" || selectedQuiz !== "all" || selectedStatus !== "all" || searchQuery) && (
+              <button
+                onClick={() => {
+                  setSelectedStage("all");
+                  setSelectedQuiz("all");
+                  setSelectedStatus("all");
+                  setSearchQuery("");
+                }}
+                className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 font-semibold text-xs"
+              >
+                إلغاء كل الفلاتر
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -418,6 +476,7 @@ export const StudentQuizGradesSheet: React.FC<StudentQuizGradesSheetProps> = ({
                   <th className="py-3.5 px-4 text-center">الحالة</th>
                   <th className="py-3.5 px-4 text-center">الوقت المستغرق</th>
                   <th className="py-3.5 px-4">التاريخ والوقت</th>
+                  <th className="py-3.5 px-4 text-center">إعادة الاختبار</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -484,6 +543,24 @@ export const StudentQuizGradesSheet: React.FC<StudentQuizGradesSheetProps> = ({
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-xs text-slate-500 dir-ltr text-right">{formatDate(item.createdAt)}</td>
+                    <td className="py-3.5 px-4 text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={grantingStudentId === item.studentId}
+                          onClick={() => handleGrantExtraAttempt(item)}
+                          className="h-7 text-xs font-bold bg-primary/10 hover:bg-primary/20 text-primary border-primary/20 whitespace-nowrap"
+                        >
+                          {grantingStudentId === item.studentId ? "جاري المنح..." : "➕ منح محاولة إضافية"}
+                        </Button>
+                        {Boolean(item.extraAttemptsGranted && item.extraAttemptsGranted > 0) && (
+                          <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                            +{item.extraAttemptsGranted} محاولة إضافية 🟢
+                          </span>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>

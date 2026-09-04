@@ -958,10 +958,48 @@ export function StudentDrawer({
                             {q.timeSpentSeconds ? ` • المستغرق: ${Math.round(q.timeSpentSeconds / 60)} دقيقة` : ""}
                           </p>
                         </div>
-                        <div className="text-left dir-ltr">
-                          <span className={`text-base font-extrabold ${q.passed ? "text-[#10B981]" : "text-red-600"}`}>
-                            {q.score}%
-                          </span>
+                        <div className="flex items-center gap-3">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={async () => {
+                              try {
+                                const res = await fetch(`/api/admin/learning/quizzes/${q.quizId}/extra-attempts`, {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ studentId: student.id, extraAttempts: 1 }),
+                                });
+                                if (!res.ok) throw new Error("فشل منح المحاولة الإضافية");
+                                toast({ title: "تم بنجاح 🎓", description: `تم منح الطالب محاولة إضافية للاختبار #${q.quizId}` });
+                                setIsLoadingDetails(true);
+                                Promise.all([
+                                  fetch("/api/admin/students/analytics", {}).then((r) => (r.ok ? r.json() : [])),
+                                ])
+                                  .then(([analyticsList]) => {
+                                    if (Array.isArray(analyticsList)) {
+                                      const found = analyticsList.find((a: any) => a.id === student.id);
+                                      if (found) {
+                                        setStudentAnalytics({
+                                          watchDetails: found.watchDetails || [],
+                                          quizDetails: found.quizDetails || [],
+                                        });
+                                      }
+                                    }
+                                  })
+                                  .finally(() => setIsLoadingDetails(false));
+                              } catch (err) {
+                                toast({ variant: "destructive", title: "خطأ", description: (err as Error).message });
+                              }
+                            }}
+                            className="h-7 text-[11px] font-bold bg-[#EFF6FF] text-[#2563EB] border-[#BFDBFE] hover:bg-[#DBEAFE] whitespace-nowrap"
+                          >
+                            ➕ منح محاولة إضافية
+                          </Button>
+                          <div className="text-left dir-ltr">
+                            <span className={`text-base font-extrabold ${q.passed ? "text-[#10B981]" : "text-red-600"}`}>
+                              {q.score}%
+                            </span>
+                          </div>
                         </div>
                       </div>
                     ))}
