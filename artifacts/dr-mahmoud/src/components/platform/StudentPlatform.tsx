@@ -146,6 +146,8 @@ export function StudentPlatform() {
   // Synchronous re-entrancy guard: setState is async, so a second trigger in the
   // same tick could slip past the state-based checks. This ref blocks that.
   const quizSubmitInFlightRef = useRef(false);
+  const quizScrollContainerRef = useRef<HTMLDivElement>(null);
+  const playNotificationSound = useNotificationSound();
 
   // Anti-cheat: detect tab/window switching during active quiz
   useEffect(() => {
@@ -271,6 +273,20 @@ export function StudentPlatform() {
       );
       setQuizResult(res);
       setQuizTimeRemaining(null);
+
+      // Play completion chime & trigger instant notification toast
+      try { playNotificationSound(); } catch (e) {}
+      toast({
+        title: res.passed ? "مبروك! تم اجتياز الاختبار بنجاح 🎓" : "تم تسليم الاختبار وتوثيق محاولتك 📝",
+        description: `النتيجة النهائية: ${res.score}% (${res.correct} من ${res.total} إجابة صحيحة) — ${
+          res.passed ? "أداء ممتاز جداً! تم تسجيل النتيجة بنجاح." : "لم تتخطَ درجة النجاح، يمكنك مراجعة الإجابات بالأسفل."
+        }`,
+      });
+
+      // Auto-scroll to top to reveal result card immediately
+      setTimeout(() => {
+        quizScrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+      }, 50);
       setQuizzes((current) =>
         current.map((quiz) =>
           quiz.id === activeQuiz.id
@@ -328,7 +344,7 @@ export function StudentPlatform() {
   useEffect(() => {
     void loadLearningData();
   }, [student]);
-  const playNotificationSound = useNotificationSound();
+
   useEffect(() => {
     if (!student) return;
     const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
@@ -779,17 +795,17 @@ export function StudentPlatform() {
               exit={{ scale: 0.95, opacity: 0 }}
             >
               {/* Sticky Timer Bar */}
-              <div className="sticky top-0 z-10 -mx-5 -mt-5 md:-mx-6 md:-mt-6 mb-0">
-                <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3.5 md:px-6 rounded-t-3xl border-b border-border transition-colors duration-500 ${
+              <div className="sticky top-0 z-20 -mx-5 -mt-5 md:-mx-6 md:-mt-6 mb-0">
+                <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3.5 md:px-6 rounded-t-3xl border-b border-border shadow-xs transition-colors duration-500 bg-background/95 backdrop-blur-md ${
                   quizResult
-                    ? "bg-muted/80"
+                    ? "border-emerald-500/30"
                     : quizTimeRemaining !== null
                       ? quizTimeRemaining < 30
-                        ? "bg-red-500/15 border-red-500/30"
+                        ? "bg-red-500/10 border-red-500/30"
                         : quizTimeRemaining < 60
-                        ? "bg-amber-500/12 border-amber-500/25"
-                        : "bg-card"
-                      : "bg-card"
+                        ? "bg-amber-500/10 border-amber-500/25"
+                        : "bg-background/95"
+                      : "bg-background/95"
                 }`} dir="rtl">
                   {/* Right side (RTL): Quiz title & Stats */}
                   <div className="min-w-0 flex-1 space-y-1">
@@ -863,10 +879,87 @@ export function StudentPlatform() {
                 )}
               </div>
 
-              <div className="border-b border-border mt-4 mb-4" />
+              <div className="border-b border-border mt-3 mb-3" />
 
+              <div ref={quizScrollContainerRef} className="mt-2 space-y-5 max-h-[60vh] overflow-y-auto px-1 scroll-smooth" dir="ltr">
+                {/* Result Card: Placed at TOP when exam is finished */}
+                {quizResult && (
+                  <div
+                    className={`mb-6 rounded-2xl p-5 md:p-6 text-center shadow-xl transition-all border relative overflow-hidden ${
+                      quizResult.passed
+                        ? "bg-emerald-500/10 dark:bg-emerald-950/40 border-emerald-500/30 text-emerald-900 dark:text-emerald-200"
+                        : "bg-red-500/10 dark:bg-red-950/40 border-red-500/30 text-red-900 dark:text-red-200"
+                    }`}
+                    dir="rtl"
+                  >
+                    <div className={`absolute -top-10 -right-10 h-32 w-32 rounded-full blur-2xl opacity-20 ${quizResult.passed ? "bg-emerald-500" : "bg-red-500"}`} />
 
-              <div className="mt-4 space-y-5 max-h-[60vh] overflow-y-auto px-1" dir="ltr">
+                    <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-background/90 shadow-md mb-3 border border-current/10">
+                      {quizResult.passed ? (
+                        <Sparkles className="h-8 w-8 text-emerald-500 animate-bounce" />
+                      ) : (
+                        <AlertCircle className="h-8 w-8 text-red-500" />
+                      )}
+                    </div>
+
+                    <strong className="block text-2xl md:text-3xl font-black tracking-tight">
+                      {quizResult.passed ? "مبروك! تم الاجتياز بنجاح 🎉" : "للأسف لم تتخطَ درجة النجاح 💔"}
+                    </strong>
+
+                    <p className="mt-1 text-xs md:text-sm font-semibold opacity-90">
+                      {quizResult.passed
+                        ? "أداء ممتاز! تم توثيق نتيجتك وحفظ المحاولة بنجاح."
+                        : `درجة النجاح المطلوبة هي ${activeQuiz?.passingScore}%، ادرس الأسئلة الموضحة بالأسفل وحاول مجدداً.`}
+                    </p>
+
+                    {/* Progress Bar for Score */}
+                    <div className="mt-4 mb-2 space-y-1.5" dir="rtl">
+                      <div className="flex justify-between items-center text-xs font-extrabold px-1">
+                        <span>الدرجة المكتسبة</span>
+                        <span className="font-mono text-sm font-black text-primary">{quizResult.score}%</span>
+                      </div>
+                      <div className="h-3 w-full bg-background/80 rounded-full overflow-hidden p-0.5 border border-current/15 shadow-inner">
+                        <div
+                          className={`h-full rounded-full transition-all duration-1000 ${
+                            quizResult.passed
+                              ? "bg-gradient-to-r from-emerald-500 to-teal-400"
+                              : "bg-gradient-to-r from-red-500 to-amber-500"
+                          }`}
+                          style={{ width: `${quizResult.score}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Stats Grid: RTL with explicit LTR number handling */}
+                    <div className="grid grid-cols-3 gap-2 md:gap-3 mt-4 pt-4 border-t border-current/15" dir="rtl">
+                      <div className="rounded-xl bg-background/80 p-2.5 text-center shadow-xs border border-current/5">
+                        <span className="block text-[10px] md:text-xs font-bold text-muted-foreground">النسبة</span>
+                        <strong className="block text-sm md:text-base font-black text-primary">{quizResult.score}%</strong>
+                      </div>
+
+                      <div className="rounded-xl bg-background/80 p-2.5 text-center shadow-xs border border-current/5">
+                        <span className="block text-[10px] md:text-xs font-bold text-muted-foreground">الإجابات الصحيحة</span>
+                        <div dir="ltr" className="inline-block whitespace-nowrap">
+                          <strong className="block text-xs md:text-sm font-black text-emerald-600 dark:text-emerald-400">
+                            {quizResult.correct} / {quizResult.total}
+                          </strong>
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl bg-background/80 p-2.5 text-center shadow-xs border border-current/5">
+                        <span className="block text-[10px] md:text-xs font-bold text-muted-foreground">المحاولات المتبقية</span>
+                        <strong className="block text-xs md:text-sm font-black text-amber-600 dark:text-amber-400">
+                          {quizResult.attemptsRemaining === null ? "بلا حدود" : quizResult.attemptsRemaining}
+                        </strong>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2 text-center text-xs font-bold text-muted-foreground">
+                      <span>↓ مرر لأسفل لمراجعة الأسئلة والشروحات</span>
+                    </div>
+                  </div>
+                )}
+
                 {activeQuiz.questions.map((q, qi) => {
                   const origIdx = (q as any)._originalIndex !== undefined ? (q as any)._originalIndex : qi;
                   const details = (quizResult as any)?.details as Array<{ questionIndex: number; selectedOption: number; correctOption: number; isCorrect: boolean }> | undefined;
@@ -999,55 +1092,7 @@ export function StudentPlatform() {
                 })}
               </div>
 
-              {quizResult ? (
-                <div
-                  className={`mt-5 rounded-2xl p-6 text-center shadow-lg transition-all border ${
-                    quizResult.passed
-                      ? "bg-emerald-500/10 dark:bg-emerald-950/40 border-emerald-500/30 text-emerald-900 dark:text-emerald-200"
-                      : "bg-red-500/10 dark:bg-red-950/40 border-red-500/30 text-red-900 dark:text-red-200"
-                  }`}
-                  dir="rtl"
-                >
-                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-background/80 shadow-md mb-3">
-                    {quizResult.passed ? (
-                      <Sparkles className="h-8 w-8 text-emerald-500 animate-bounce" />
-                    ) : (
-                      <AlertCircle className="h-8 w-8 text-red-500" />
-                    )}
-                  </div>
-
-                  <strong className="block text-3xl font-black tracking-tight">
-                    {quizResult.passed ? "مبروك! تم الاجتياز بنجاح 🎉" : "للأسف لم تتخطَ درجة النجاح 💔"}
-                  </strong>
-
-                  <p className="mt-1 text-xs md:text-sm font-semibold opacity-90">
-                    {quizResult.passed
-                      ? "أداء ممتاز! تم توثيق نتيجتك وحفظ المحاولة بنجاح."
-                      : `درجة النجاح المطلوبة هي ${activeQuiz?.passingScore}%، ادرس الأسئلة الموضحة بالأسفل وحاول مجدداً.`}
-                  </p>
-
-                  <div className="grid grid-cols-3 gap-2.5 mt-4 pt-4 border-t border-current/10" dir="ltr">
-                    <div className="rounded-xl bg-background/60 p-2.5 text-center shadow-2xs">
-                      <span className="block text-[10px] font-bold text-muted-foreground">النسبة</span>
-                      <strong className="block text-base font-black text-primary">{quizResult.score}%</strong>
-                    </div>
-
-                    <div className="rounded-xl bg-background/60 p-2.5 text-center shadow-2xs">
-                      <span className="block text-[10px] font-bold text-muted-foreground">الإجابات الصحيحة</span>
-                      <strong className="block text-base font-black text-emerald-600 dark:text-emerald-400">
-                        {quizResult.correct} / {quizResult.total}
-                      </strong>
-                    </div>
-
-                    <div className="rounded-xl bg-background/60 p-2.5 text-center shadow-2xs">
-                      <span className="block text-[10px] font-bold text-muted-foreground">المحاولات المتبقية</span>
-                      <strong className="block text-base font-black text-amber-600 dark:text-amber-400">
-                        {quizResult.attemptsRemaining === null ? "بلا حدود" : quizResult.attemptsRemaining}
-                      </strong>
-                    </div>
-                  </div>
-                </div>
-              ) : (
+              {!quizResult && (
                 <Button
                   onClick={submitQuiz}
                   disabled={quizSubmitting}
@@ -1064,14 +1109,18 @@ export function StudentPlatform() {
                 </Button>
               )}
               <Button
-                variant="ghost"
+                variant={quizResult ? "default" : "ghost"}
                 onClick={() => {
                   setActiveQuiz(null);
                   setQuizResult(null);
                 }}
-                className="mt-2 w-full font-bold text-xs text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
+                className={`mt-3 w-full font-bold rounded-xl transition-all ${
+                  quizResult
+                    ? "bg-primary hover:bg-primary/90 text-primary-foreground h-11 shadow-md"
+                    : "text-xs text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
               >
-                إغلاق نافذة الاختبار ✕
+                {quizResult ? "إغلاق النافذة ومتابعة الدرس ✕" : "إغلاق نافذة الاختبار ✕"}
               </Button>
             </motion.div>
           </motion.div>
