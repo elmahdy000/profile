@@ -795,8 +795,8 @@ export function StudentPlatform() {
               exit={{ scale: 0.95, opacity: 0 }}
             >
               {/* Sticky Timer Bar */}
-              <div className="sticky top-0 z-20 -mx-5 -mt-5 md:-mx-6 md:-mt-6 mb-0">
-                <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3.5 md:px-6 rounded-t-3xl border-b border-border shadow-xs transition-colors duration-500 bg-background/95 backdrop-blur-md ${
+              <div className="sticky top-0 z-30 -mx-5 -mt-5 md:-mx-6 md:-mt-6 mb-0">
+                <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3.5 md:px-6 rounded-t-3xl border-b border-border shadow-xs transition-colors duration-300 bg-background ${
                   quizResult
                     ? "border-emerald-500/30"
                     : quizTimeRemaining !== null
@@ -804,8 +804,8 @@ export function StudentPlatform() {
                         ? "bg-red-500/10 border-red-500/30"
                         : quizTimeRemaining < 60
                         ? "bg-amber-500/10 border-amber-500/25"
-                        : "bg-background/95"
-                      : "bg-background/95"
+                        : "bg-background"
+                      : "bg-background"
                 }`} dir="rtl">
                   {/* Right side (RTL): Quiz title & Stats */}
                   <div className="min-w-0 flex-1 space-y-1">
@@ -931,24 +931,24 @@ export function StudentPlatform() {
                     </div>
 
                     {/* Stats Grid: RTL with explicit LTR number handling */}
-                    <div className="grid grid-cols-3 gap-2 md:gap-3 mt-4 pt-4 border-t border-current/15" dir="rtl">
-                      <div className="rounded-xl bg-background/80 p-2.5 text-center shadow-xs border border-current/5">
-                        <span className="block text-[10px] md:text-xs font-bold text-muted-foreground">النسبة</span>
+                    <div className="grid grid-cols-3 gap-1.5 md:gap-3 mt-4 pt-4 border-t border-current/15" dir="rtl">
+                      <div className="rounded-xl bg-background/80 p-2 md:p-2.5 text-center shadow-xs border border-current/5 flex flex-col items-center justify-center">
+                        <span className="block text-[10px] md:text-xs font-bold text-muted-foreground whitespace-nowrap">النسبة</span>
                         <strong className="block text-sm md:text-base font-black text-primary">{quizResult.score}%</strong>
                       </div>
 
-                      <div className="rounded-xl bg-background/80 p-2.5 text-center shadow-xs border border-current/5">
-                        <span className="block text-[10px] md:text-xs font-bold text-muted-foreground">الإجابات الصحيحة</span>
-                        <div dir="ltr" className="inline-block whitespace-nowrap">
-                          <strong className="block text-xs md:text-sm font-black text-emerald-600 dark:text-emerald-400">
+                      <div className="rounded-xl bg-background/80 p-2 md:p-2.5 text-center shadow-xs border border-current/5 flex flex-col items-center justify-center min-w-0">
+                        <span className="block text-[10px] md:text-xs font-bold text-muted-foreground whitespace-nowrap truncate w-full">الإجابات الصحيحة</span>
+                        <div dir="ltr" className="flex items-center justify-center gap-0.5 whitespace-nowrap font-mono w-full">
+                          <span className="text-xs md:text-sm font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                             {quizResult.correct} / {quizResult.total}
-                          </strong>
+                          </span>
                         </div>
                       </div>
 
-                      <div className="rounded-xl bg-background/80 p-2.5 text-center shadow-xs border border-current/5">
-                        <span className="block text-[10px] md:text-xs font-bold text-muted-foreground">المحاولات المتبقية</span>
-                        <strong className="block text-xs md:text-sm font-black text-amber-600 dark:text-amber-400">
+                      <div className="rounded-xl bg-background/80 p-2 md:p-2.5 text-center shadow-xs border border-current/5 flex flex-col items-center justify-center">
+                        <span className="block text-[10px] md:text-xs font-bold text-muted-foreground whitespace-nowrap">المحاولات المتبقية</span>
+                        <strong className="block text-xs md:text-sm font-black text-amber-600 dark:text-amber-400 whitespace-nowrap">
                           {quizResult.attemptsRemaining === null ? "بلا حدود" : quizResult.attemptsRemaining}
                         </strong>
                       </div>
