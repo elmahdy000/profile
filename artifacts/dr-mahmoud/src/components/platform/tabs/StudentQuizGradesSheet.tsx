@@ -472,11 +472,10 @@ export const StudentQuizGradesSheet: React.FC<StudentQuizGradesSheetProps> = ({
                   <th className="py-3.5 px-4">المرحلة الدراسية</th>
                   <th className="py-3.5 px-4">اسم الاختبار</th>
                   <th className="py-3.5 px-4 text-center">الدرجة النهائية</th>
-                  <th className="py-3.5 px-4 text-center">النسبة المئوية</th>
+                  <th className="py-3.5 px-4 text-center">النسبة / إعادة الاختبار</th>
                   <th className="py-3.5 px-4 text-center">الحالة</th>
                   <th className="py-3.5 px-4 text-center">الوقت المستغرق</th>
                   <th className="py-3.5 px-4">التاريخ والوقت</th>
-                  <th className="py-3.5 px-4 text-center">إعادة الاختبار</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -513,17 +512,19 @@ export const StudentQuizGradesSheet: React.FC<StudentQuizGradesSheetProps> = ({
                       {item.score} <span className="text-xs font-normal text-slate-400">/ {item.totalQuestions}</span>
                     </td>
                     <td className="py-3.5 px-4 text-center">
-                      <span
-                        className={`inline-block font-extrabold text-sm px-2 py-0.5 rounded-full ${
-                          item.percentage >= 85
-                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                            : item.percentage >= 60
-                            ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300"
-                            : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
-                        }`}
-                      >
-                        {item.percentage}%
-                      </span>
+                      <div className="flex flex-col items-center gap-1.5">
+                        <span className={`inline-block font-extrabold text-sm px-2.5 py-0.5 rounded-full ${item.percentage >= 85 ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300" : item.percentage >= 60 ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300" : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"}`}>
+                          {item.percentage}%
+                        </span>
+                        <Button size="sm" variant="outline" disabled={grantingStudentId === item.studentId} onClick={() => handleGrantExtraAttempt(item)} className="h-6 text-[11px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 dark:text-amber-400 dark:border-amber-700/50 whitespace-nowrap px-2 rounded-lg">
+                          {grantingStudentId === item.studentId ? "⏳ جاري..." : "↺ إعادة الاختبار"}
+                        </Button>
+                        {Boolean(item.extraAttemptsGranted && item.extraAttemptsGranted > 0) && (
+                          <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-500/20">
+                            +{item.extraAttemptsGranted} 🟢
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3.5 px-4 text-center">
                       {item.passed ? (
@@ -543,24 +544,6 @@ export const StudentQuizGradesSheet: React.FC<StudentQuizGradesSheetProps> = ({
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-xs text-slate-500 dir-ltr text-right">{formatDate(item.createdAt)}</td>
-                    <td className="py-3.5 px-4 text-center">
-                      <div className="flex flex-col items-center gap-1">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={grantingStudentId === item.studentId}
-                          onClick={() => handleGrantExtraAttempt(item)}
-                          className="h-7 text-xs font-bold bg-primary/10 hover:bg-primary/20 text-primary border-primary/20 whitespace-nowrap"
-                        >
-                          {grantingStudentId === item.studentId ? "جاري المنح..." : "➕ منح محاولة إضافية"}
-                        </Button>
-                        {Boolean(item.extraAttemptsGranted && item.extraAttemptsGranted > 0) && (
-                          <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                            +{item.extraAttemptsGranted} محاولة إضافية 🟢
-                          </span>
-                        )}
-                      </div>
-                    </td>
                   </tr>
                 ))}
               </tbody>
