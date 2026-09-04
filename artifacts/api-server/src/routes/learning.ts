@@ -4026,6 +4026,7 @@ router.get(
             score: quizAttemptsTable.score,
             passed: quizAttemptsTable.passed,
             timeSpentSeconds: quizAttemptsTable.timeSpentSeconds,
+            details: quizAttemptsTable.details,
             createdAt: quizAttemptsTable.createdAt,
             studentName: studentsTable.name,
             studentPhone: studentsTable.phone,
@@ -4038,6 +4039,7 @@ router.get(
             quizStages: quizzesTable.stages,
             passingScore: quizzesTable.passingScore,
             questions: quizzesTable.questions,
+            questionsToShow: quizzesTable.questionsToShow,
           })
           .from(quizAttemptsTable)
           .innerJoin(
@@ -4053,8 +4055,30 @@ router.get(
 
       const formattedAttempts = attempts.map((a) => {
         const questionsList = Array.isArray(a.questions) ? a.questions : [];
-        const totalQuestions = questionsList.length || 1;
-        const percentage = Math.round((a.score / totalQuestions) * 100);
+        const totalQuestions =
+          a.questionsToShow && a.questionsToShow > 0 && a.questionsToShow < questionsList.length
+            ? a.questionsToShow
+            : (questionsList.length || 1);
+
+        // Count correct answers:
+        // Priority 1: Check attempt details if stored
+        // Priority 2: Derive from stored score percentage (which is 0-100)
+        let correctCount = 0;
+        if (Array.isArray(a.details) && a.details.length > 0) {
+          correctCount = a.details.filter((d: any) => d && d.isCorrect === true).length;
+        } else {
+          correctCount = Math.round(((Number(a.score) || 0) / 100) * totalQuestions);
+        }
+        correctCount = Math.min(totalQuestions, Math.max(0, correctCount));
+
+        // a.score in DB is already stored as a percentage (0-100)
+        // Ensure percentage is strictly clamped between 0% and 100%
+        const computedPct =
+          totalQuestions > 0
+            ? Math.round((correctCount / totalQuestions) * 100)
+            : Math.round(Number(a.score) || 0);
+        const percentage = Math.min(100, Math.max(0, computedPct));
+
         return {
           id: a.id,
           quizId: a.quizId,
@@ -4067,10 +4091,13 @@ router.get(
           studentCenter: a.studentCenter || "",
           quizTitle: a.quizTitle || "اختبار",
           quizStage: a.quizStage || (Array.isArray(a.quizStages) && a.quizStages[0]) || "غير محدد",
-          score: a.score,
-          totalQuestions,
+          score: correctCount, // Raw correct count (e.g. 48 out of 50)
+          correctCount,
+          rawScore: correctCount,
+          percentageScore: percentage,
+          totalQuestions,      // Actual number of questions answered
           passingScore: a.passingScore,
-          percentage,
+          percentage,          // Strictly 0-100%
           passed: a.passed,
           timeSpentSeconds: a.timeSpentSeconds || 0,
           extraAttemptsGranted: extraGrantsMap.get(`${a.quizId}_${a.studentId}`) || 0,

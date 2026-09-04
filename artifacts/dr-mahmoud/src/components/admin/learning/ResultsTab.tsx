@@ -7,6 +7,7 @@ interface Attempt {
   studentName: string;
   quizTitle: string;
   score: number;
+  percentage?: number;
   passed: boolean;
   createdAt: string;
 }
@@ -74,7 +75,9 @@ export const ResultsTab: React.FC<ResultsTabProps> = ({
               <tr key={a.id} className="border-t hover:bg-slate-50/70">
                 <td className="p-4 font-bold">{a.studentName}</td>
                 <td className="p-4">{a.quizTitle}</td>
-                <td className="p-4 text-center font-black">{a.score}%</td>
+                <td className="p-4 text-center font-black">
+                  {Math.min(100, Math.max(0, a.percentage ?? a.score))}%
+                </td>
                 <td className="p-4 text-center">
                   <span
                     className={`rounded-full px-2.5 py-1 text-xs font-bold ${

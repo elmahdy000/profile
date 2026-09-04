@@ -186,7 +186,10 @@ export const StudentQuizGradesSheet: React.FC<StudentQuizGradesSheetProps> = ({
     }
     const passedCount = filteredAttempts.filter((a) => a.passed).length;
     const passRate = Math.round((passedCount / total) * 100);
-    const sumPercentage = filteredAttempts.reduce((acc, a) => acc + (a.percentage || 0), 0);
+    const sumPercentage = filteredAttempts.reduce((acc, a) => {
+      const pct = Math.min(100, Math.max(0, a.percentage ?? 0));
+      return acc + pct;
+    }, 0);
     const avgScore = Math.round(sumPercentage / total);
     const uniqueStudents = new Set(filteredAttempts.map((a) => a.studentId)).size;
 
@@ -242,20 +245,27 @@ export const StudentQuizGradesSheet: React.FC<StudentQuizGradesSheetProps> = ({
       "تاريخ الإجراء",
     ];
 
-    const rows = filteredAttempts.map((item) => [
-      `"${item.studentName.replace(/"/g, '""')}"`,
-      `"${item.studentCode || "-"}"`,
-      `"${item.studentPhone || "-"}"`,
-      `"${item.parentPhone || "-"}"`,
-      `"${item.studentGrade || "-"}"`,
-      `"${item.quizTitle.replace(/"/g, '""')}"`,
-      item.score,
-      item.totalQuestions,
-      `"${item.percentage}%"`,
-      item.passed ? "ناجح" : "راسب",
-      `"${formatTimeSpent(item.timeSpentSeconds)}"`,
-      `"${formatDate(item.createdAt)}"`,
-    ]);
+    const rows = filteredAttempts.map((item) => {
+      const safePct = Math.min(100, Math.max(0, item.percentage ?? 0));
+      const safeScore =
+        item.score > item.totalQuestions && item.totalQuestions > 0
+          ? Math.round(((item.score || 0) / 100) * item.totalQuestions)
+          : item.score;
+      return [
+        `"${item.studentName.replace(/"/g, '""')}"`,
+        `"${item.studentCode || "-"}"`,
+        `"${item.studentPhone || "-"}"`,
+        `"${item.parentPhone || "-"}"`,
+        `"${item.studentGrade || "-"}"`,
+        `"${item.quizTitle.replace(/"/g, '""')}"`,
+        safeScore,
+        item.totalQuestions,
+        `"${safePct}%"`,
+        item.passed ? "ناجح" : "راسب",
+        `"${formatTimeSpent(item.timeSpentSeconds)}"`,
+        `"${formatDate(item.createdAt)}"`,
+      ];
+    });
 
     const csvContent = "\uFEFF" + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -509,13 +519,29 @@ export const StudentQuizGradesSheet: React.FC<StudentQuizGradesSheetProps> = ({
                       {item.quizTitle}
                     </td>
                     <td className="py-3.5 px-4 text-center font-bold text-base">
-                      {item.score} <span className="text-xs font-normal text-slate-400">/ {item.totalQuestions}</span>
+                      {item.score > item.totalQuestions && item.totalQuestions > 0
+                        ? Math.round(((item.score || 0) / 100) * item.totalQuestions)
+                        : item.score}{" "}
+                      <span className="text-xs font-normal text-slate-400">/ {item.totalQuestions}</span>
                     </td>
                     <td className="py-3.5 px-4 text-center">
                       <div className="flex flex-col items-center gap-1.5">
-                        <span className={`inline-block font-extrabold text-sm px-2.5 py-0.5 rounded-full ${item.percentage >= 85 ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300" : item.percentage >= 60 ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300" : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"}`}>
-                          {item.percentage}%
-                        </span>
+                        {(() => {
+                          const displayPct = Math.min(100, Math.max(0, item.percentage ?? 0));
+                          return (
+                            <span
+                              className={`inline-block font-extrabold text-sm px-2.5 py-0.5 rounded-full ${
+                                displayPct >= 85
+                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+                                  : displayPct >= 60
+                                  ? "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300"
+                                  : "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
+                              }`}
+                            >
+                              {displayPct}%
+                            </span>
+                          );
+                        })()}
                         <Button size="sm" variant="outline" disabled={grantingStudentId === item.studentId} onClick={() => handleGrantExtraAttempt(item)} className="h-6 text-[11px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 dark:text-amber-400 dark:border-amber-700/50 whitespace-nowrap px-2 rounded-lg">
                           {grantingStudentId === item.studentId ? "⏳ جاري..." : "↺ إعادة الاختبار"}
                         </Button>
