@@ -3991,6 +3991,19 @@ router.post(
         return;
       }
 
+      // Automatically create a notification for student and parent tracking
+      try {
+        const passText = passed ? "اجتاز الاختبار بنجاح ✓" : "لم يجتز الاختبار هذه المرة ✕";
+        await db.insert(studentNotificationsTable).values({
+          studentId: student.id,
+          title: `🎯 نتيجة اختبار: ${quiz.title}`,
+          message: `أنهى الطالب ${student.name} اختبار "${quiz.title}" وحصل على درجة ${correct} من ${effectiveTotal} (${score}%) - ${passText}.`,
+          type: passed ? "success" : "warning",
+        });
+      } catch (notifErr) {
+        console.error("Failed to insert quiz completion notification:", notifErr);
+      }
+
       // Return correctIndex per question so frontend can highlight right/wrong
       const showExplanations = quiz.showExplanations !== false;
       res.json({

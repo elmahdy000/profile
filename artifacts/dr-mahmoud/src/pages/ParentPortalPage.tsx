@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Users, Phone, KeyRound, ArrowRight, ShieldCheck, CheckCircle2, Video, Award, Clock, LogOut, RefreshCw, AlertCircle, FileText, Bell, BellRing, Volume2 } from "lucide-react";
+import { Users, Phone, KeyRound, ArrowRight, ShieldCheck, CheckCircle2, Video, Award, Clock, LogOut, RefreshCw, AlertCircle, FileText, Bell, BellRing, Volume2, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 function normalizeArabicDigits(str: string): string {
@@ -121,6 +121,36 @@ export function ParentPortal() {
   const [isLoading, setIsLoading] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const prevNotificationCountRef = useRef<number | null>(null);
+  const prevLatestAttemptIdRef = useRef<number | null>(null);
+  const [browserNotifPermission, setBrowserNotifPermission] = useState<string>("default");
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setBrowserNotifPermission(Notification.permission);
+    }
+  }, []);
+
+  const requestBrowserNotification = async () => {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    try {
+      const perm = await Notification.requestPermission();
+      setBrowserNotifPermission(perm);
+      if (perm === "granted") {
+        toast({
+          title: "تم تفعيل إشعارات المتصفح بنجاح! 🔔",
+          description: "ستصلك التنبيهات الفورية بدرجات ابنك في الاختبارات حتى لو كان المتصفح في الخلفية.",
+        });
+        try {
+          new Notification("أكاديمية د. محمود المهدي", {
+            body: "تم تفعيل التنبيهات الفورية بنجاح لولي الأمر!",
+            icon: "/favicon.ico",
+          });
+        } catch {}
+      }
+    } catch (e) {
+      console.error("Failed to request notification permission:", e);
+    }
+  };
 
   // Register form state
   const [regName, setRegName] = useState("");
@@ -146,16 +176,60 @@ export function ParentPortal() {
       if (res.ok) {
         const json: ParentReportData = await res.json();
 
-        // Detect new admin notifications & trigger sound chime + toast
+        // 1. Detect newly completed quiz in real-time
+        if (json.quizHistory && json.quizHistory.length > 0) {
+          const latestQuiz = json.quizHistory[0];
+          if (
+            prevLatestAttemptIdRef.current !== null &&
+            latestQuiz.id !== prevLatestAttemptIdRef.current
+          ) {
+            if (soundEnabled) playNotificationChime();
+            const scoreText = latestQuiz.totalQuestions
+              ? `${latestQuiz.score} من ${latestQuiz.totalQuestions} (${latestQuiz.percentage ?? latestQuiz.score}%)`
+              : `${latestQuiz.percentage ?? latestQuiz.score}%`;
+            const statusText = latestQuiz.passed ? "اجتاز الاختبار بنجاح ✓" : "لم يجتز الاختبار ✕";
+            const qTitle = latestQuiz.quizTitle || `اختبار تقييمي #${latestQuiz.quizId}`;
+
+            toast({
+              title: `🎯 إشعار فوري: أنهى الطالب ${qTitle}`,
+              description: `النتيجة: ${scoreText} - ${statusText}`,
+            });
+
+            if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+              try {
+                new Notification(`🎯 نتيجة اختبار: ${qTitle}`, {
+                  body: `أنهى الطالب الاختبار بنتيجة: ${scoreText} (${statusText})`,
+                  icon: "/favicon.ico",
+                });
+              } catch (e) {
+                console.error("Browser notification error:", e);
+              }
+            }
+          }
+          prevLatestAttemptIdRef.current = latestQuiz.id;
+        }
+
+        // 2. Detect new admin & system notifications
         if (json.notifications && json.notifications.length > 0) {
           const currentCount = json.notifications.length;
           if (prevNotificationCountRef.current !== null && currentCount > prevNotificationCountRef.current) {
             const latest = json.notifications[0];
             if (soundEnabled) playNotificationChime();
             toast({
-              title: `تنبيه جديد من الإدارة: ${latest.title}`,
+              title: latest.title,
               description: latest.message,
             });
+
+            if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+              try {
+                new Notification(latest.title, {
+                  body: latest.message,
+                  icon: "/favicon.ico",
+                });
+              } catch (e) {
+                console.error("Browser notification error:", e);
+              }
+            }
           }
           prevNotificationCountRef.current = currentCount;
         }
@@ -353,7 +427,19 @@ export function ParentPortal() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2.5 self-start sm:self-auto">
+                <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+                  {typeof window !== "undefined" && "Notification" in window && browserNotifPermission !== "granted" && (
+                    <button
+                      type="button"
+                      onClick={requestBrowserNotification}
+                      className="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shadow-2xs bg-blue-50 text-[#0B63CE] border-blue-200 hover:bg-blue-100"
+                      title="استلام إشعارات الاختبارات على الهاتف أو المتصفح"
+                    >
+                      <BellRing className="w-4 h-4 text-[#0B63CE]" />
+                      <span>تفعيل إشعارات الهاتف / المتصفح</span>
+                    </button>
+                  )}
+
                   <button
                     type="button"
                     onClick={() => {
@@ -497,14 +583,20 @@ export function ParentPortal() {
 
             {/* Quiz History */}
             <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-              <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                <Award className="w-4.5 h-4.5 text-purple-600" />
-                <span>نتائج وتقييمات الكويزات والاختبارات ({reportData.quizHistory.length})</span>
-              </h3>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                  <Award className="w-4.5 h-4.5 text-purple-600" />
+                  <span>نتائج وتقييمات الكويزات والاختبارات ({reportData.quizHistory.length})</span>
+                </h3>
+                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full self-start sm:self-auto flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                  <span>متابعة وتحديث فوري للدرجات</span>
+                </span>
+              </div>
 
               {reportData.quizHistory.length === 0 ? (
                 <div className="p-8 text-center bg-slate-50 rounded-2xl text-xs text-slate-500 font-medium">
-                  لم يؤدِّ الطالب أية اختبارات حتى الآن.
+                  لم يؤدِّ الطالب أية اختبارات حتى الآن. سيصلك إشعار فوري هنا وتنبيه صوتي بمجرد انتهاء الطالب من أول اختبار.
                 </div>
               ) : (
                 <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
@@ -515,7 +607,14 @@ export function ParentPortal() {
                     return (
                       <div key={idx} className="p-4 bg-slate-50/80 hover:bg-slate-100/80 transition-colors rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                         <div className="space-y-1">
-                          <span className="font-bold text-slate-900 text-sm block">{title}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-900 text-sm">{title}</span>
+                            {idx === 0 && (
+                              <span className="bg-amber-100 text-amber-900 text-[10px] font-extrabold px-2 py-0.5 rounded-md border border-amber-300">
+                                أحدث اختبار 🌟
+                              </span>
+                            )}
+                          </div>
                           <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
                             <span>تاريخ الاختبار: {formatDate(quiz.createdAt)}</span>
                             {quiz.timeSpentSeconds > 0 && (
@@ -532,6 +631,18 @@ export function ParentPortal() {
                           <span className={`px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-2xs ${quiz.passed ? "bg-emerald-100 text-emerald-800 border border-emerald-300" : "bg-rose-100 text-rose-800 border border-rose-300"}`}>
                             {pct}% ({quiz.passed ? "ناجح ومجتاز ✓" : "لم يجتز ✕"})
                           </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const scoreStr = quiz.totalQuestions ? `${quiz.score} من ${quiz.totalQuestions}` : `${quiz.score}%`;
+                              const text = `📊 تقرير اختبار - أكاديمية د. محمود المهدي للبرمجة:\nالطالب: ${reportData.student.name}\nالاختبار: ${title}\nالنتيجة: ${scoreStr} (${pct}%)\nالحالة: ${quiz.passed ? "اجتاز الاختبار بنجاح ✓" : "يحتاج لمراجعة ✕"}\nالتاريخ: ${formatDate(quiz.createdAt)}`;
+                              window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+                            }}
+                            className="p-2 rounded-xl bg-white hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200 hover:border-emerald-300 transition-all shadow-2xs"
+                            title="مشاركة النتيجة عبر واتساب"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
                     );
