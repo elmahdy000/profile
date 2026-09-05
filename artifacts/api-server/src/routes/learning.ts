@@ -420,8 +420,10 @@ function optionIndex(value: string): number | null {
 }
 
 function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; warnings: string[] } {
-  // 1. Clean invisible RTL markers & normalize newlines
+  // 1. Clean invisible RTL markers, normalize Arabic digits, & normalize newlines
   let cleanedText = rawText
+    .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
+    .replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))
     .replace(/[\u200B-\u200F\u202A-\u202E\uFEFF\u061C]/g, "")
     .replace(/\r\n/g, "\n")
     .replace(/\r/g, "\n")
@@ -432,7 +434,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   cleanedText = cleanedText.replace(/(الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة)\s*[:：\-]?\s*([أابجدهA-Da-d1-6])(التوضيح|التفسير|الشرح|تفسير|شرح|explanation|note)\s*[:：\-]?/gi, "$1: $2\n$3: ");
   // Fix merged choices without space e.g. "فقطب) " -> "فقط\nب) " or "نفسهج) " -> "نفسه\nج) "
   cleanedText = cleanedText.replace(/([^\s\n])([A-Fa-fأابجده]|هـ|[1-6])\)\s*/g, "$1\n$2) ");
-  cleanedText = cleanedText.replace(/([^\n])\s*(سؤال\s*\d+|س\d+|Question\s*\d+|#\d+)/gi, "$1\n$2");
+  cleanedText = cleanedText.replace(/([^\n])\s*((?:ال)?س(?:ؤال)?(?:\s*رقم)?\s*[:：\-]?\s*\d+|Question\s*[:：\-]?\s*\d+|#\d+)/gi, "$1\n$2");
   cleanedText = cleanedText.replace(/([^\n])\s+([A-Fa-fأابجده]|هـ|[1-6])\)\s+/g, "$1\n$2) ");
   cleanedText = cleanedText.replace(/([^\n])\s*(الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|correct\s*answer|answer)\s*[:：\-]?\s*/gi, "$1\nالإجابة الصحيحة: ");
   cleanedText = cleanedText.replace(/([^\n])\s*(التوضيح|التفسير|الشرح|تفسير|شرح|explanation|note)\s*[:：\-]?\s*/gi, "$1\nالتوضيح: ");
@@ -457,10 +459,17 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
 
   const finishCurrent = () => {
     if (!current) return;
+    // Strip leading "سؤال :1" or "سؤال 1:" if prompt still has it
+    let cleanedPrompt = current.prompt
+      .replace(/^(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-]?\s*\d+\s*[:：\-.]?\s*/i, "")
+      .trim();
+    if (!cleanedPrompt && current.prompt) {
+      cleanedPrompt = current.prompt;
+    }
     // Merge English prompt + Arabic translation if both exist
     const finalPrompt = current.arabicTranslation
-      ? `${current.prompt}\n${current.arabicTranslation}`
-      : current.prompt;
+      ? `${cleanedPrompt}\n${current.arabicTranslation}`
+      : cleanedPrompt;
     if (finalPrompt && current.options.length >= 2) {
       questions.push({
         prompt: finalPrompt,
@@ -489,8 +498,8 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   // Helper: detect explanation line — handles ":التوضيح" (RTL colon first) and "التوضيح:" and "الشرح" etc.
   const EXPLANATION_HEADER_RE = /^\s*(?::?\s*(?:explanation|note|التوضيح|التفسير|الشرح|تفسير|شرح|ملاحظة)\s*:?\s*)(.*)$/i;
 
-  // Helper: detect standalone question header line like "Question 1" or "Question 1:" or "1." or "سؤال 1"
-  const QUESTION_HEADER_RE = /^\s*(?:(?:س(?:ؤال)?\s*)?\d+|Q(?:uestion)?\s*\d+|#\d+)(?:\s*[.):\-]\s*(.*))?$/i;
+  // Helper: detect standalone question header line like "Question 1" or "Question 1:" or "1." or "سؤال :1" or "سؤال 1"
+  const QUESTION_HEADER_RE = /^\s*(?:(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-]?\s*\d+|\(?\d+\)?|#\d+)(?:\s*[:：\-\.\)]\s*(.*))?$/i;
 
   let collectingExplanation = false;
   let hasFoundAnswer = false;
@@ -498,7 +507,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
 
-    // 1. Check if standalone Question header (e.g. "Question 1" or "1. What is...")
+    // 1. Check if standalone Question header (e.g. "Question 1" or "سؤال :1" or "1. What is...")
     const questionHeaderMatch = line.match(QUESTION_HEADER_RE);
     // Ensure it's not matching choice lines like "A)" or single letters
     if (questionHeaderMatch && !line.match(/^\s*[A-Fa-fأابجده]\s*[.):\-]/)) {
