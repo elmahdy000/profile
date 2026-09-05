@@ -2,6 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
 import { Users, Phone, KeyRound, ArrowRight, ShieldCheck, CheckCircle2, Video, Award, Clock, LogOut, RefreshCw, AlertCircle, FileText, Bell, BellRing, Volume2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+function normalizeArabicDigits(str: string): string {
+  const arabicDigits = "٠١٢٣٤٥٦٧٨٩";
+  const easternDigits = "۰۱۲۳۴۵۶۷۸۹";
+  return str
+    .replace(/[٠-٩]/g, (d) => String(arabicDigits.indexOf(d)))
+    .replace(/[۰-۹]/g, (d) => String(easternDigits.indexOf(d)));
+}
+
 type ParentReportData = {
   parent: {
     name: string;
@@ -39,7 +47,10 @@ type ParentReportData = {
   quizHistory: Array<{
     id: number;
     quizId: number;
+    quizTitle?: string;
     score: number;
+    totalQuestions?: number;
+    percentage?: number;
     passed: boolean;
     timeSpentSeconds: number;
     createdAt: string;
@@ -178,7 +189,9 @@ export function ParentPortal() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!regName.trim() || !regPhone.trim() || !regStudentQuery.trim()) {
+    const cleanPhone = normalizeArabicDigits(regPhone).trim();
+    const cleanQuery = normalizeArabicDigits(regStudentQuery).trim();
+    if (!regName.trim() || !cleanPhone || !cleanQuery) {
       toast({ title: "بيانات غير مكتملة", description: "يرجى ملء جميع الحقول المطلوبة", variant: "destructive" });
       return;
     }
@@ -190,9 +203,9 @@ export function ParentPortal() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          name: regName,
-          phone: regPhone,
-          studentIdentifier: regStudentQuery,
+          name: regName.trim(),
+          phone: cleanPhone,
+          studentIdentifier: cleanQuery,
         }),
       });
       const data = await res.json();
@@ -213,8 +226,11 @@ export function ParentPortal() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loginPhone.trim() || !loginCode.trim()) {
-      toast({ title: "بيانات غير مكتملة", description: "يرجى إدخال رقم الهاتف وكود ولي الأمر", variant: "destructive" });
+    const cleanPhone = normalizeArabicDigits(loginPhone).trim();
+    const cleanCode = normalizeArabicDigits(loginCode).trim();
+
+    if (!cleanPhone || !cleanCode) {
+      toast({ title: "بيانات غير مكتملة", description: "يرجى إدخال رقم الهاتف وكود ولي الأمر أو كود الطالب", variant: "destructive" });
       return;
     }
 
@@ -225,8 +241,8 @@ export function ParentPortal() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          phone: loginPhone,
-          parentCode: loginCode,
+          phone: cleanPhone,
+          parentCode: cleanCode,
         }),
       });
       const data = await res.json();
@@ -235,7 +251,7 @@ export function ParentPortal() {
       toast({ title: "مرحباً بك", description: `أهلاً بك يا ${data.parentName}` });
       fetchReport();
     } catch (err: any) {
-      toast({ title: "فشل الدخول", description: err.message || "كود ولي الأمر أو رقم الهاتف غير صحيح", variant: "destructive" });
+      toast({ title: "فشل الدخول", description: err.message || "كود ولي الأمر أو كود الطالب ورقم الهاتف غير صحيح", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -243,7 +259,10 @@ export function ParentPortal() {
 
   const handleRecoverCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!recoverPhone.trim() || !recoverStudentQuery.trim()) {
+    const cleanPhone = normalizeArabicDigits(recoverPhone).trim();
+    const cleanQuery = normalizeArabicDigits(recoverStudentQuery).trim();
+
+    if (!cleanPhone || !cleanQuery) {
       toast({ title: "بيانات غير مكتملة", description: "يرجى كتابة رقم هاتفك ورقم هاتف الطالب/كوده", variant: "destructive" });
       return;
     }
@@ -255,8 +274,8 @@ export function ParentPortal() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          parentPhone: recoverPhone,
-          studentPhone: recoverStudentQuery,
+          parentPhone: cleanPhone,
+          studentPhone: cleanQuery,
         }),
       });
       const data = await res.json();
@@ -264,7 +283,7 @@ export function ParentPortal() {
 
       setRecoveredCode(data.parentCode);
       setLoginCode(data.parentCode);
-      setLoginPhone(recoverPhone);
+      setLoginPhone(cleanPhone);
       toast({
         title: "تم استرداد الكود بنجاح! 🎉",
         description: `كود تتبع ولي الأمر الخاص بك هو: ${data.parentCode}`,
@@ -488,18 +507,35 @@ export function ParentPortal() {
                   لم يؤدِّ الطالب أية اختبارات حتى الآن.
                 </div>
               ) : (
-                <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
-                  {reportData.quizHistory.map((quiz, idx) => (
-                    <div key={idx} className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/80 flex items-center justify-between text-xs">
-                      <div>
-                        <span className="font-bold text-slate-900 text-sm block mb-1">اختبار كويز #{quiz.quizId}</span>
-                        <span className="text-[11px] text-slate-500">{formatDate(quiz.createdAt)}</span>
+                <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                  {reportData.quizHistory.map((quiz, idx) => {
+                    const title = quiz.quizTitle || `اختبار تقييمي #${quiz.quizId}`;
+                    const pct = quiz.percentage !== undefined ? quiz.percentage : quiz.score;
+                    const scoreOutOfTotal = quiz.totalQuestions ? `${quiz.score} من ${quiz.totalQuestions}` : null;
+                    return (
+                      <div key={idx} className="p-4 bg-slate-50/80 hover:bg-slate-100/80 transition-colors rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                        <div className="space-y-1">
+                          <span className="font-bold text-slate-900 text-sm block">{title}</span>
+                          <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+                            <span>تاريخ الاختبار: {formatDate(quiz.createdAt)}</span>
+                            {quiz.timeSpentSeconds > 0 && (
+                              <span>• المدة: {formatSeconds(quiz.timeSpentSeconds)}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {scoreOutOfTotal && (
+                            <span className="px-2.5 py-1 bg-white text-slate-700 rounded-xl text-xs font-bold border border-slate-200 shadow-2xs">
+                              {scoreOutOfTotal}
+                            </span>
+                          )}
+                          <span className={`px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-2xs ${quiz.passed ? "bg-emerald-100 text-emerald-800 border border-emerald-300" : "bg-rose-100 text-rose-800 border border-rose-300"}`}>
+                            {pct}% ({quiz.passed ? "ناجح ومجتاز ✓" : "لم يجتز ✕"})
+                          </span>
+                        </div>
                       </div>
-                      <span className={`px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-2xs ${quiz.passed ? "bg-emerald-100 text-emerald-800 border border-emerald-300" : "bg-rose-100 text-rose-800 border border-rose-300"}`}>
-                        النتيجة: {quiz.score}% ({quiz.passed ? "ناجح ومجتاز ✓" : "لم يجتز ✕"})
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -542,6 +578,13 @@ export function ParentPortal() {
 
             {activeMode === "login" ? (
               <form onSubmit={handleLogin} className="space-y-4">
+                <div className="p-3 bg-blue-50/70 border border-blue-200/80 rounded-2xl text-xs text-blue-900 space-y-0.5">
+                  <span className="font-bold block text-[12px]">💡 مرونة في تسجيل الدخول:</span>
+                  <p className="text-[11px] text-blue-800 leading-relaxed">
+                    يمكنك الدخول مباشرةً بـ <strong>كود ولي الأمر (PAR-...)</strong> أو بـ <strong>كود الطالب</strong> مع رقم هاتف ولي الأمر.
+                  </p>
+                </div>
+
                 <div className="space-y-1.5">
                   <label className="block text-xs font-bold text-slate-800">رقم هاتف ولي الأمر:</label>
                   <div className="relative">
@@ -551,7 +594,7 @@ export function ParentPortal() {
                       required
                       placeholder="أدخل رقم هاتفك المسجل..."
                       value={loginPhone}
-                      onChange={(e) => setLoginPhone(e.target.value)}
+                      onChange={(e) => setLoginPhone(normalizeArabicDigits(e.target.value))}
                       className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B63CE]"
                     />
                   </div>
@@ -559,7 +602,7 @@ export function ParentPortal() {
 
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="block text-xs font-bold text-slate-800">كود ولي الأمر (Parent Code):</label>
+                    <label className="block text-xs font-bold text-slate-800">كود الدخول (كود ولي الأمر أو كود الطالب):</label>
                     <button
                       type="button"
                       onClick={() => setActiveMode("recover")}
@@ -573,9 +616,9 @@ export function ParentPortal() {
                     <input
                       type="text"
                       required
-                      placeholder="مثال: PAR-839201"
+                      placeholder="مثال: PAR-839201 أو كود الطالب"
                       value={loginCode}
-                      onChange={(e) => setLoginCode(e.target.value)}
+                      onChange={(e) => setLoginCode(normalizeArabicDigits(e.target.value))}
                       className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B63CE] font-mono tracking-wider"
                     />
                   </div>
@@ -623,7 +666,7 @@ export function ParentPortal() {
                           required
                           placeholder="أدخل رقم هاتفك..."
                           value={recoverPhone}
-                          onChange={(e) => setRecoverPhone(e.target.value)}
+                          onChange={(e) => setRecoverPhone(normalizeArabicDigits(e.target.value))}
                           className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
                         />
                       </div>
@@ -636,9 +679,9 @@ export function ParentPortal() {
                         <input
                           type="text"
                           required
-                          placeholder="أدخل رقم هاتف الطالب..."
+                          placeholder="أدخل رقم هاتف أو كود الطالب..."
                           value={recoverStudentQuery}
-                          onChange={(e) => setRecoverStudentQuery(e.target.value)}
+                          onChange={(e) => setRecoverStudentQuery(normalizeArabicDigits(e.target.value))}
                           className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
                         />
                       </div>
@@ -677,7 +720,7 @@ export function ParentPortal() {
                       required
                       placeholder="أدخل رقم هاتفك..."
                       value={regPhone}
-                      onChange={(e) => setRegPhone(e.target.value)}
+                      onChange={(e) => setRegPhone(normalizeArabicDigits(e.target.value))}
                       className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B63CE]"
                     />
                   </div>
@@ -690,9 +733,9 @@ export function ParentPortal() {
                     <input
                       type="text"
                       required
-                      placeholder="أدخل رقم هاتف ابنك المسجل في المنصة..."
+                      placeholder="أدخل رقم هاتف أو كود ابنك المسجل في المنصة..."
                       value={regStudentQuery}
-                      onChange={(e) => setRegStudentQuery(e.target.value)}
+                      onChange={(e) => setRegStudentQuery(normalizeArabicDigits(e.target.value))}
                       className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B63CE]"
                     />
                   </div>
