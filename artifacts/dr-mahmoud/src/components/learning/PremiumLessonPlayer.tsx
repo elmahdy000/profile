@@ -481,7 +481,21 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
       });
       if (response.ok) {
         const data = await response.json() as { url: string };
-        if (data?.url) { setStreamSrc(data.url); setPlayerError(false); return; }
+        if (data?.url) {
+          const currentPos = videoRef.current?.currentTime || currentTime || 0;
+          setStreamSrc(data.url);
+          setPlayerError(false);
+          refreshAttempted.current = false;
+          if (currentPos > 0) {
+            setTimeout(() => {
+              if (videoRef.current && currentPos > 0) {
+                videoRef.current.currentTime = currentPos;
+                void videoRef.current.play().catch(() => {});
+              }
+            }, 250);
+          }
+          return;
+        }
       }
       setPlayerErrorMessage("رابط الفيديو غير صالح أو الملف غير موجود على السيرفر.");
     } catch {

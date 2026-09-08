@@ -37,9 +37,8 @@ const streamTokenSecret = (() => {
     "STREAM_TOKEN_SECRET is required (or a non-default ADMIN_PASSWORD) to sign video stream tokens.",
   );
 })();
-// Short TTL: long enough to begin playback, short enough to limit the window in
-// which a leaked/shared stream URL is usable.
-const STREAM_TOKEN_TTL_SECONDS = 60 * 3;
+// Token TTL: 8 hours (long enough for full lesson viewing and study session without mid-playback expiry)
+const STREAM_TOKEN_TTL_SECONDS = 60 * 60 * 8;
 const VIDEO_CONTENT_TYPES: Record<string, string> = {
   ".mp4": "video/mp4",
   ".webm": "video/webm",
@@ -796,21 +795,29 @@ router.get("/videos/:id/stream", async (req, res, next) => {
       const range = req.headers.range;
       const isNewPlaySession = !range || range.startsWith("bytes=0-");
       if (isNewPlaySession) {
-        await db
-          .insert(videoProgressTable)
-          .values({
-            studentId: approvedStudent.id,
-            videoId: video.id,
-            viewCount: 1,
-            updatedAt: new Date(),
-          })
-          .onConflictDoUpdate({
-            target: [videoProgressTable.studentId, videoProgressTable.videoId],
-            set: {
-              viewCount: (progressRow?.viewCount ?? 0) + 1,
+        // Prevent burning views when browsers send rapid probe requests on bytes=0-
+        const lastUpdatedMs = progressRow?.updatedAt ? new Date(progressRow.updatedAt).getTime() : 0;
+        const nowMs = Date.now();
+        const debounceWindowMs = 15 * 60 * 1000; // 15-minute grace window for the same session
+        const shouldIncrement = !progressRow || (nowMs - lastUpdatedMs > debounceWindowMs);
+
+        if (shouldIncrement) {
+          await db
+            .insert(videoProgressTable)
+            .values({
+              studentId: approvedStudent.id,
+              videoId: video.id,
+              viewCount: 1,
               updatedAt: new Date(),
-            },
-          });
+            })
+            .onConflictDoUpdate({
+              target: [videoProgressTable.studentId, videoProgressTable.videoId],
+              set: {
+                viewCount: (progressRow?.viewCount ?? 0) + 1,
+                updatedAt: new Date(),
+              },
+            });
+        }
       }
     }
 
@@ -839,7 +846,7 @@ router.get("/videos/:id/stream", async (req, res, next) => {
       VIDEO_CONTENT_TYPES[path.extname(filename).toLowerCase()] ||
       "video/mp4";
     const cacheControl = "private, max-age=86400, stale-while-revalidate=3600";
-    const MAX_CHUNK_SIZE = 3 * 1024 * 1024; // 3MB chunk for smooth progressive buffering
+    const MAX_CHUNK_SIZE = 12 * 1024 * 1024; // 12MB chunk for smooth buffering without micro-stuttering
 
     if (range) {
       const parts = range.replace(/bytes=/, "").split("-");
