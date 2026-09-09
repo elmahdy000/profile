@@ -119,6 +119,13 @@ export function SubAdminDashboard() {
               onClick={() => {
                 setIsMobileSidebarOpen(false);
                 setCurrentTab("attendance");
+                if (typeof window !== "undefined") {
+                  const params = new URLSearchParams(window.location.search);
+                  params.delete("mode");
+                  params.delete("status");
+                  window.history.replaceState(null, "", `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`);
+                  window.dispatchEvent(new Event("popstate"));
+                }
               }}
               className={`w-full flex items-center gap-3 rounded-xl px-3.5 py-3 text-xs font-bold transition-all shadow-xs ${
                 currentTab === "attendance"
@@ -238,7 +245,7 @@ export function SubAdminDashboard() {
           </div>
 
           {/* Subadmin has full access to attendance, students, center-bookings, subscriptions, payments */}
-          <AdminLearning role="subadmin" initialTab={currentTab} />
+          <AdminLearning role="subadmin" initialTab={currentTab} onTabChange={(t) => setCurrentTab(t)} />
         </div>
       </main>
     </div>

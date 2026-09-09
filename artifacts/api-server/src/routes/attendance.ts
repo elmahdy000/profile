@@ -229,7 +229,12 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
         centerName,
         paymentStatus: student.paymentStatus,
       },
-      attendance: attendanceRecord,
+      attendance: {
+        ...attendanceRecord,
+        checkInTime: attendanceRecord?.attendedAt
+          ? new Intl.DateTimeFormat("ar-EG", { timeZone: "Africa/Cairo", hour: "numeric", minute: "numeric", hour12: true }).format(new Date(attendanceRecord.attendedAt))
+          : getCairoTimeFormatted(),
+      },
       parentNotified,
       parent: parent ? { id: parent.id, name: parent.name, phone: parent.phone, parentCode: parent.parentCode } : null,
       message: alreadyRecorded
@@ -332,18 +337,29 @@ router.get("/admin/attendance/daily", requireAdmin, async (req: Request, res, ne
     const unmarkedCount = records.filter((r) => r.status === "unmarked").length;
     const attendanceRate = totalStudents > 0 ? Math.round(((presentCount + lateCount) / totalStudents) * 100) : 0;
 
+    const statsObj = {
+      totalStudents,
+      presentCount,
+      absentCount,
+      lateCount,
+      unmarkedCount,
+      attendanceRate,
+    };
+
     res.json({
       success: true,
       date,
-      summary: {
-        totalStudents,
-        presentCount,
-        absentCount,
-        lateCount,
-        unmarkedCount,
-        attendanceRate,
-      },
-      records,
+      summary: statsObj,
+      stats: statsObj,
+      records: records.map((r) => ({
+        ...r,
+        id: r.studentId,
+        center: r.centerName,
+        checkInTime: r.attendedAt
+          ? new Intl.DateTimeFormat("ar-EG", { timeZone: "Africa/Cairo", hour: "numeric", minute: "numeric", hour12: true }).format(new Date(r.attendedAt))
+          : null,
+        hasParentAccount: r.parentRegistered,
+      })),
     });
   } catch (error) {
     next(error);
@@ -527,6 +543,8 @@ router.post("/admin/attendance/bulk-absent", requireAdmin, async (req: Request, 
     res.json({
       success: true,
       markedCount: unmarkedStudents.length,
+      markedAbsentCount: unmarkedStudents.length,
+      parentsNotifiedCount: notifyParents ? unmarkedStudents.length : 0,
       message: `تم تسجيل غياب ${unmarkedStudents.length} طالب بنجاح!`,
     });
   } catch (error) {

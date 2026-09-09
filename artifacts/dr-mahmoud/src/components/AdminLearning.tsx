@@ -232,19 +232,27 @@ export type AdminLearningTab =
 export function AdminLearning({
   role = "superadmin",
   initialTab = "students",
+  onTabChange,
 }: {
   role?: "superadmin" | "subadmin";
   initialTab?: AdminLearningTab;
+  onTabChange?: (tab: AdminLearningTab) => void;
 }) {
   const { toast } = useToast();
-  const [tab, setTab] = useState<AdminLearningTab>(
-    initialTab,
+  const [tab, setTabState] = useState<AdminLearningTab>(initialTab);
+
+  const setTab = React.useCallback(
+    (newTab: AdminLearningTab) => {
+      setTabState(newTab);
+      onTabChange?.(newTab);
+    },
+    [onTabChange],
   );
 
   const prevInitialTabRef = React.useRef(initialTab);
   useEffect(() => {
     if (initialTab && prevInitialTabRef.current !== initialTab) {
-      setTab(initialTab);
+      setTabState(initialTab);
       prevInitialTabRef.current = initialTab;
     }
   }, [initialTab]);

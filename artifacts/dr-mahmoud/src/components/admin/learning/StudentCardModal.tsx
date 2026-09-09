@@ -1,94 +1,48 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { X, Printer, Download, Sparkles, Building2, User, Phone, BookOpen, ShieldCheck, Check } from "lucide-react";
+import QRCode from "qrcode";
 import { Button } from "@/components/ui/button";
 import type { ExtendedStudent } from "./StudentDrawer";
 
-// Simple, self-contained SVG QR Code Generator for student access codes
+// Real ISO/IEC 18004 Standard QR Code Generator for student access codes
 function QRCodeSVG({ value, size = 140 }: { value: string; size?: number }) {
-  // Simple deterministic visual QR matrix generator based on text hashing & code encoding
-  // Encodes student accessCode / ID in clean, scannable SVG grid format with quiet zone & finder patterns
-  const modules: boolean[][] = React.useMemo(() => {
-    const gridSize = 25; // 25x25 QR grid
-    const grid: boolean[][] = Array(gridSize).fill(false).map(() => Array(gridSize).fill(false));
+  const [dataUrl, setDataUrl] = useState<string>("");
 
-    // Helper to draw 7x7 Finder Patterns
-    const drawFinderPattern = (row: number, col: number) => {
-      for (let r = 0; r < 7; r++) {
-        for (let c = 0; c < 7; c++) {
-          if (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4)) {
-            if (row + r < gridSize && col + c < gridSize) {
-              grid[row + r][col + c] = true;
-            }
-          }
-        }
-      }
+  useEffect(() => {
+    let active = true;
+    QRCode.toDataURL(String(value || "STUDENT"), {
+      errorCorrectionLevel: "M",
+      margin: 1,
+      width: size * 2,
+      color: {
+        dark: "#0F172A",
+        light: "#FFFFFF",
+      },
+    })
+      .then((url) => {
+        if (active) setDataUrl(url);
+      })
+      .catch((err) => {
+        console.error("QR Code generation error:", err);
+      });
+
+    return () => {
+      active = false;
     };
+  }, [value, size]);
 
-    // Draw 3 Finder Patterns at corners
-    drawFinderPattern(0, 0); // Top-Left
-    drawFinderPattern(0, gridSize - 7); // Top-Right
-    drawFinderPattern(gridSize - 7, 0); // Bottom-Left
-
-    // Draw timing patterns
-    for (let i = 8; i < gridSize - 8; i++) {
-      grid[6][i] = i % 2 === 0;
-      grid[i][6] = i % 2 === 0;
-    }
-
-    // Seed hash algorithm for data payload
-    let hash = 5381;
-    const str = String(value || "STUDENT-ACCESS");
-    for (let i = 0; i < str.length; i++) {
-      hash = (hash * 33) ^ str.charCodeAt(i);
-    }
-
-    // Fill remaining data modules deterministically
-    for (let r = 0; r < gridSize; r++) {
-      for (let c = 0; c < gridSize; c++) {
-        // Skip finder patterns areas
-        const isTopLeft = r < 8 && c < 8;
-        const isTopRight = r < 8 && c >= gridSize - 8;
-        const isBottomLeft = r >= gridSize - 8 && c < 8;
-        const isTiming = r === 6 || c === 6;
-
-        if (!isTopLeft && !isTopRight && !isBottomLeft && !isTiming) {
-          const bitIndex = (r * gridSize + c);
-          const charCode = str.charCodeAt(bitIndex % str.length) || 65;
-          const bit = ((hash ^ (bitIndex * 31) ^ (charCode * 17)) >>> (bitIndex % 16)) & 1;
-          grid[r][c] = bit === 1;
-        }
-      }
-    }
-
-    return grid;
-  }, [value]);
-
-  const gridSize = modules.length;
-  const cellSize = size / gridSize;
+  if (!dataUrl) {
+    return <div style={{ width: size, height: size }} className="rounded-lg bg-slate-100 animate-pulse" />;
+  }
 
   return (
-    <svg
+    <img
+      src={dataUrl}
+      alt="QR Code"
       width={size}
       height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      className="rounded-lg bg-white p-1.5 shadow-sm"
-    >
-      <rect width={size} height={size} fill="#FFFFFF" />
-      {modules.map((row, r) =>
-        row.map((cell, c) =>
-          cell ? (
-            <rect
-              key={`${r}-${c}`}
-              x={c * cellSize}
-              y={r * cellSize}
-              width={cellSize + 0.3}
-              height={cellSize + 0.3}
-              fill="#0F172A"
-            />
-          ) : null
-        )
-      )}
-    </svg>
+      className="rounded-lg bg-white p-1 shadow-sm object-contain"
+    />
   );
 }
 

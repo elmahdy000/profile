@@ -128,13 +128,14 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
   // Mode: "scanner" or "sheet"
   const [activeTab, setActiveTab] = useState<"scanner" | "sheet">("scanner");
 
-  // Date Selection (defaults to local today YYYY-MM-DD)
+  // Date Selection (defaults to Africa/Cairo today YYYY-MM-DD)
   const todayStr = useMemo(() => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Africa/Cairo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
   }, []);
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
 
@@ -203,7 +204,7 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
       }
       const data = await res.json();
       setRecords(data.records || []);
-      setStats(data.stats || {
+      setStats(data.stats || data.summary || {
         totalStudents: 0,
         presentCount: 0,
         absentCount: 0,
@@ -1244,6 +1245,25 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
                             >
                               غائب
                             </button>
+
+                            {(record.parentPhone || record.phone) && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const raw = record.parentPhone || record.phone;
+                                  const clean = (raw || "").replace(/\D/g, "");
+                                  const phoneWithCountry = clean.startsWith("20") ? clean : clean.startsWith("0") ? `20${clean.slice(1)}` : `20${clean}`;
+                                  const statusText = record.status === "present" ? "حاضر ✓" : record.status === "absent" ? "غائب ✕" : record.status === "late" ? "متأخر ⏳" : "لم يُسجل بعد";
+                                  const msg = `السلام عليكم ورحمة الله، من أكاديمية د. محمود المهدي:\nنحيطكم علماً بحالة حضور الطالب (${record.name}) لحصة اليوم (${selectedDate}): [${statusText}].\nنتمنى له دوام التوفيق والتميز.`;
+                                  window.open(`https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(msg)}`, "_blank");
+                                }}
+                                title="إرسال إشعار مباشر لولي الأمر عبر واتساب"
+                                className="px-2 py-1 rounded-lg font-bold text-[11px] text-emerald-700 hover:bg-emerald-50 transition-all flex items-center gap-1"
+                              >
+                                <Phone className="h-3 w-3 text-emerald-600" />
+                                <span>واتساب</span>
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
