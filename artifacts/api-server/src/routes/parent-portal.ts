@@ -9,6 +9,7 @@ import {
   quizzesTable,
   studentNotificationsTable,
   studentsTable,
+  studentAttendanceTable,
   videoProgressTable,
   videosTable,
 } from "@workspace/db";
@@ -388,7 +389,7 @@ router.get("/parent/report", async (req, res, next) => {
       return;
     }
 
-    const [progressRecords, videos, attempts, quizRows, notifications] = await Promise.all([
+    const [progressRecords, videos, attempts, quizRows, notifications, attendanceRecords] = await Promise.all([
       db.select().from(videoProgressTable).where(eq(videoProgressTable.studentId, student.id)),
       db.select({ id: videosTable.id, title: videosTable.title, category: videosTable.category, stage: videosTable.stage }).from(videosTable),
       db.select().from(quizAttemptsTable).where(eq(quizAttemptsTable.studentId, student.id)).orderBy(desc(quizAttemptsTable.createdAt)),
@@ -399,6 +400,7 @@ router.get("/parent/report", async (req, res, next) => {
         questionsToShow: quizzesTable.questionsToShow,
       }).from(quizzesTable),
       db.select().from(studentNotificationsTable).where(eq(studentNotificationsTable.studentId, student.id)).orderBy(desc(studentNotificationsTable.createdAt)),
+      db.select().from(studentAttendanceTable).where(eq(studentAttendanceTable.studentId, student.id)).orderBy(desc(studentAttendanceTable.date)),
     ]);
 
     const videoMap = new Map(videos.map((v) => [v.id, v]));
@@ -490,6 +492,15 @@ router.get("/parent/report", async (req, res, next) => {
         type: n.type,
         readAt: n.readAt,
         createdAt: n.createdAt,
+      })),
+      attendanceHistory: attendanceRecords.map((a) => ({
+        id: a.id,
+        date: a.date,
+        status: a.status,
+        checkInTime: a.attendedAt ? new Date(a.attendedAt).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" }) : null,
+        center: a.centerName,
+        notes: a.notes,
+        createdAt: a.createdAt,
       })),
     });
   } catch (error) {

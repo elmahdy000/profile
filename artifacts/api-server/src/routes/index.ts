@@ -11,6 +11,7 @@ import learningRouter from "./learning";
 import adminAuthRouter from "./admin-auth";
 import parentPortalRouter from "./parent-portal";
 import subscriptionsRouter from "./subscriptions";
+import attendanceRouter from "./attendance";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(learningRouter);
 router.use(adminAuthRouter);
 router.use(parentPortalRouter);
 router.use(subscriptionsRouter);
+router.use(attendanceRouter);
 
 export default router;

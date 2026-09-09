@@ -8,8 +8,9 @@ import {
   X,
   MapPin,
   BarChart3,
+  QrCode,
 } from "lucide-react";
-import { AdminLearning } from "./AdminLearning";
+import { AdminLearning, type AdminLearningTab } from "./AdminLearning";
 
 export function SubAdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -17,6 +18,7 @@ export function SubAdminDashboard() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   // Bug 1 fix: store the logged-in subadmin's actual name from the API
   const [adminUsername, setAdminUsername] = useState<string>("مشرف مساعد");
+  const [currentTab, setCurrentTab] = useState<AdminLearningTab>("attendance");
 
   useEffect(() => {
     localStorage.removeItem("dr_mahmoud_admin_pwd");
@@ -109,11 +111,31 @@ export function SubAdminDashboard() {
           </div>
 
           <nav className="flex-1 space-y-2">
-            <span className="block px-3 pb-1 pt-1 text-[11px] font-bold tracking-wider text-[#64748B]">إدارة الطلاب والخدمات</span>
+            <span className="block px-3 pb-1 pt-1 text-[11px] font-bold tracking-wider text-[#64748B]">الخدمات والعمليات السريعة</span>
+
+            {/* Attendance QR Scanner Button */}
             <button
               type="button"
               onClick={() => {
                 setIsMobileSidebarOpen(false);
+                setCurrentTab("attendance");
+              }}
+              className={`w-full flex items-center gap-3 rounded-xl px-3.5 py-3 text-xs font-bold transition-all shadow-xs ${
+                currentTab === "attendance"
+                  ? "bg-purple-600 text-white shadow-purple-600/30"
+                  : "bg-purple-50 text-purple-700 hover:bg-purple-100/80 border border-purple-200/60"
+              }`}
+            >
+              <QrCode className="h-4 w-4" />
+              <span>تسجيل الحضور والـ Scan 📷</span>
+            </button>
+
+            {/* Students & Subscriptions */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileSidebarOpen(false);
+                setCurrentTab("students");
                 if (typeof window !== "undefined") {
                   const params = new URLSearchParams(window.location.search);
                   params.delete("mode");
@@ -122,15 +144,22 @@ export function SubAdminDashboard() {
                   window.dispatchEvent(new Event("popstate"));
                 }
               }}
-              className="w-full flex items-center gap-3 rounded-xl bg-[#0866D9] text-white px-3.5 py-3 text-xs font-bold shadow-xs hover:bg-[#0756B8] transition-colors"
+              className={`w-full flex items-center gap-3 rounded-xl px-3.5 py-3 text-xs font-bold transition-all shadow-xs ${
+                currentTab === "students"
+                  ? "bg-[#0866D9] text-white shadow-blue-600/30"
+                  : "bg-white text-[#0F172A] hover:bg-[#F6F8FC] border border-[#E4EAF2]"
+              }`}
             >
               <Users className="h-4 w-4" />
               <span>إدارة الطلاب والاشتراكات</span>
             </button>
+
+            {/* Center Bookings */}
             <button
               type="button"
               onClick={() => {
                 setIsMobileSidebarOpen(false);
+                setCurrentTab("center-bookings");
                 if (typeof window !== "undefined") {
                   const params = new URLSearchParams(window.location.search);
                   params.set("mode", "offline");
@@ -139,7 +168,11 @@ export function SubAdminDashboard() {
                   window.dispatchEvent(new Event("popstate"));
                 }
               }}
-              className="w-full flex items-center gap-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-3 text-xs font-bold shadow-xs transition-colors"
+              className={`w-full flex items-center gap-3 rounded-xl px-3.5 py-3 text-xs font-bold transition-all shadow-xs ${
+                currentTab === "center-bookings"
+                  ? "bg-emerald-600 text-white shadow-emerald-600/30"
+                  : "bg-white text-[#0F172A] hover:bg-[#F6F8FC] border border-[#E4EAF2]"
+              }`}
             >
               <MapPin className="h-4 w-4" />
               <span>حجوزات السناتر والمواعيد 📍</span>
@@ -204,8 +237,8 @@ export function SubAdminDashboard() {
             </a>
           </div>
 
-          {/* Bug 4 fix: subadmin sees only students, center-bookings, subscriptions, payments */}
-          <AdminLearning role="subadmin" initialTab="students" />
+          {/* Subadmin has full access to attendance, students, center-bookings, subscriptions, payments */}
+          <AdminLearning role="subadmin" initialTab={currentTab} />
         </div>
       </main>
     </div>

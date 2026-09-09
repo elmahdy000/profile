@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, integer, boolean, jsonb, uniqueIndex, index, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, integer, boolean, jsonb, uniqueIndex, index, varchar, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { coursesTable } from "./courses";
 
 export const studentsTable = pgTable("students", {
@@ -349,4 +349,27 @@ export const studentLoginLogsTable = pgTable("student_login_logs", {
 
 export type InsertStudentLoginLog = typeof studentLoginLogsTable.$inferInsert;
 export type StudentLoginLog = typeof studentLoginLogsTable.$inferSelect;
+
+export const studentAttendanceTable = pgTable("student_attendance", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => studentsTable.id, { onDelete: "cascade" }),
+  date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD
+  status: varchar("status", { length: 20 }).notNull().default("present"), // present | absent | late
+  attendedAt: timestamp("attended_at"),
+  centerName: varchar("center_name", { length: 100 }),
+  academicStage: varchar("academic_stage", { length: 100 }),
+  recordedBy: varchar("recorded_by", { length: 100 }),
+  notes: text("notes"),
+  parentNotified: boolean("parent_notified").notNull().default(false),
+  parentNotifiedAt: timestamp("parent_notified_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  dateIndex: index("idx_student_attendance_date").on(table.date),
+  studentIndex: index("idx_student_attendance_student_id").on(table.studentId),
+  studentDateUnique: uniqueIndex("idx_student_attendance_student_date").on(table.studentId, table.date),
+}));
+
+export type InsertStudentAttendance = typeof studentAttendanceTable.$inferInsert;
+export type StudentAttendance = typeof studentAttendanceTable.$inferSelect;
 

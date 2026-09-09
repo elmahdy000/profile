@@ -33,6 +33,7 @@ import {
   Bell,
   CreditCard,
   FileSpreadsheet,
+  QrCode,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -48,6 +49,7 @@ import { OverviewSection } from "./admin/learning/OverviewSection";
 import { ReportsTab } from "./admin/learning/ReportsTab";
 import { StudentSummariesAdminTab } from "./admin/learning/StudentSummariesAdminTab";
 import { StudentQuizGradesSheet } from "./platform/tabs/StudentQuizGradesSheet";
+import { AttendanceScannerTab } from "./admin/attendance/AttendanceScannerTab";
 
 type Student = PlatformStudent & {
   accessCode?: string | null;
@@ -215,6 +217,7 @@ async function optimizeLearningImage(file: File): Promise<File> {
 
 export type AdminLearningTab =
   | "overview"
+  | "attendance"
   | "students"
   | "summaries"
   | "grades-sheet"
@@ -1221,6 +1224,7 @@ export function AdminLearning({
   type TabEntry = [string, string, React.ComponentType<{ className?: string; strokeWidth?: number }>];
   const allTabs: TabEntry[] = [
     ["overview", "اللوحة التشغيلية", LayoutDashboard],
+    ["attendance", "تسجيل الحضور والـ Scan 📷", QrCode],
     ["center-bookings", "حجوزات السناتر", MapPin],
     ["students", "الطلاب", GraduationCap],
     ["summaries", "تلاخيص الطلاب 📝", FileText],
@@ -1233,13 +1237,14 @@ export function AdminLearning({
     ["reports", "التقارير", BarChart3],
   ];
 
-  // Subadmin has access to student management & daily activity reports
-  const SUBADMIN_TABS = new Set(["students", "center-bookings", "summaries", "grades-sheet", "subscriptions", "payments", "reports"]);
+  // Subadmin has access to student management, attendance scanner & daily activity reports
+  const SUBADMIN_TABS = new Set(["attendance", "students", "center-bookings", "summaries", "grades-sheet", "subscriptions", "payments", "reports"]);
   const tabs = role === "subadmin"
     ? allTabs.filter(([value]) => SUBADMIN_TABS.has(value))
     : allTabs;
   const tabMeta: Record<string, [string, string]> = {
     overview: ["اللوحة التشغيلية وإحصائيات المنصة", "نظرة عامة على أعداد الطلاب، المشتركين، والتوزيع حسب المراحل والكورسات."],
+    attendance: ["تسجيل الحضور والغياب اليومي (QR Code)", "مسح سريع لكود الطالب بالكاميرا، تسجيل الحضور فورياً، إشعار ولي الأمر، ويومية كاملة بالغياب."],
     students: ["إدارة جميع الطلاب", "راجع التسجيلات والصلاحيات والكورسات المخصصة لكل طالب."],
     summaries: ["مراجعة وتدقيق تلخيصات الدروس", "استعرض صور الكشكول المرفوعة من الطلاب واعتمدها أو أضف ملحوظات معلم."],
     "grades-sheet": ["شيت وقوائم درجات الطلاب في الاختبارات", "شيت تفاعلي كامل لعرض نتائج درجات الطلاب والفلترة الحية وتصدير شيت Excel."],
@@ -1424,6 +1429,9 @@ export function AdminLearning({
               }}
             />
             </div>
+          )}
+          {tab === "attendance" && (
+            <AttendanceScannerTab role={role} />
           )}
           {tab === "summaries" && (
             <StudentSummariesAdminTab role={role} />
