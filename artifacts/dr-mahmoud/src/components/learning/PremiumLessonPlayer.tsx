@@ -193,9 +193,11 @@ async function saveProgress(item: VideoItem, progress: number, currentTime: numb
   const progressMap = readJson<Record<number, number>>("dr_mahmoud_watch_progress", {});
   progressMap[item.id] = Math.max(progressMap[item.id] || 0, progress);
   localStorage.setItem("dr_mahmoud_watch_progress", JSON.stringify(progressMap));
-  const positionMap = readJson<Record<number, number>>("dr_mahmoud_watch_positions", {});
-  positionMap[item.id] = Math.floor(currentTime);
-  localStorage.setItem("dr_mahmoud_watch_positions", JSON.stringify(positionMap));
+  if (currentTime > 0) {
+    const positionMap = readJson<Record<number, number>>("dr_mahmoud_watch_positions", {});
+    positionMap[item.id] = Math.floor(currentTime);
+    localStorage.setItem("dr_mahmoud_watch_positions", JSON.stringify(positionMap));
+  }
   window.dispatchEvent(new Event("watch_progress_updated"));
   const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
   await fetch(`/api/learning/progress/${item.id}`, {
@@ -467,13 +469,15 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
     return () => document.removeEventListener("fullscreenchange", onFsChange);
   }, []);
 
-  const refreshStreamUrl = async () => {
-    if (refreshAttempted.current) {
+  const refreshStreamUrl = async (retryCount = 0) => {
+    if (refreshAttempted.current && retryCount === 0) {
       setPlayerErrorMessage("الفيديو مش متاح دلوقتي. حاول تاني بعد شوية.");
       setPlayerError(true);
       return;
     }
-    refreshAttempted.current = true;
+    if (retryCount === 0) {
+      refreshAttempted.current = true;
+    }
     try {
       const savedStored = item.id ? (readJson<Record<number, number>>("dr_mahmoud_watch_positions", {})[item.id] || 0) : 0;
       const currentPos = Math.max(
@@ -502,9 +506,17 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
           return;
         }
       }
+      if (retryCount < 2) {
+        setTimeout(() => void refreshStreamUrl(retryCount + 1), 1200);
+        return;
+      }
       setPlayerErrorMessage("رابط الفيديو غير صالح أو الملف غير موجود على السيرفر.");
     } catch {
-      setPlayerErrorMessage("رابط الفيديو غير صالح أو الملف غير موجود على السيرفر.");
+      if (retryCount < 2) {
+        setTimeout(() => void refreshStreamUrl(retryCount + 1), 1200);
+        return;
+      }
+      setPlayerErrorMessage("تعذر الاتصال بالسيرفر. تأكد من اتصال الإنترنت وحاول ثانية.");
     }
     setPlayerError(true);
   };

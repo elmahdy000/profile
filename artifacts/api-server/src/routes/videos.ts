@@ -833,11 +833,12 @@ router.get("/videos/:id/stream", async (req, res, next) => {
     const fileSize = stat.size;
     const range = req.headers.range;
 
-    const etag = `W/"${fileSize.toString(16)}-${Math.floor(stat.mtimeMs).toString(16)}"`;
+    const etag = `"${fileSize.toString(16)}-${Math.floor(stat.mtimeMs).toString(16)}"`;
     const lastModified = stat.mtime.toUTCString();
 
+    // 304 Not Modified is ONLY valid for full non-range GET requests (RFC 7233)
     const ifNoneMatch = req.headers["if-none-match"];
-    if (ifNoneMatch && ifNoneMatch === etag) {
+    if (!range && ifNoneMatch && (ifNoneMatch === etag || ifNoneMatch === `W/${etag}`)) {
       res.status(304).end();
       return;
     }
@@ -849,27 +850,49 @@ router.get("/videos/:id/stream", async (req, res, next) => {
     const MAX_CHUNK_SIZE = 3 * 1024 * 1024; // 3MB chunk for smooth progressive buffering
 
     if (range) {
-      const parts = range.replace(/bytes=/, "").split("-");
-      const start = parseInt(parts[0], 10);
-      const rawEnd = parts[1] ? parseInt(parts[1], 10) : NaN;
-      let requestedEnd = Number.isSafeInteger(rawEnd) ? rawEnd : start + MAX_CHUNK_SIZE - 1;
-
-      if (!Number.isSafeInteger(rawEnd) || requestedEnd - start >= MAX_CHUNK_SIZE) {
-        requestedEnd = start + MAX_CHUNK_SIZE - 1;
-      }
-      const end = Math.min(requestedEnd, fileSize - 1);
-
-      if (
-        !Number.isSafeInteger(start) ||
-        start < 0 ||
-        !Number.isSafeInteger(end) ||
-        end < start ||
-        start >= fileSize
-      ) {
+      const match = range.match(/^bytes=(\d*)-(\d*)$/);
+      if (!match) {
         res
           .status(416)
           .setHeader("Content-Range", `bytes */${fileSize}`)
           .send("Requested range not satisfiable");
+        return;
+      }
+
+      let start: number;
+      let end: number;
+
+      const rawStart = match[1];
+      const rawEnd = match[2];
+
+      if (rawStart === "" && rawEnd !== "") {
+        // Suffix byte range (used by iOS/Safari to read MP4 moov atom at end of file): bytes=-500000
+        const suffixLength = parseInt(rawEnd, 10);
+        if (isNaN(suffixLength) || suffixLength <= 0) {
+          res.status(416).setHeader("Content-Range", `bytes */${fileSize}`).end();
+          return;
+        }
+        start = Math.max(0, fileSize - suffixLength);
+        end = fileSize - 1;
+      } else if (rawStart !== "" && rawEnd === "") {
+        // Open-ended range: bytes=1000-
+        start = parseInt(rawStart, 10);
+        if (isNaN(start) || start >= fileSize || start < 0) {
+          res.status(416).setHeader("Content-Range", `bytes */${fileSize}`).end();
+          return;
+        }
+        end = Math.min(start + MAX_CHUNK_SIZE - 1, fileSize - 1);
+      } else if (rawStart !== "" && rawEnd !== "") {
+        // Explicit range: bytes=0-1000
+        start = parseInt(rawStart, 10);
+        const requestedEnd = parseInt(rawEnd, 10);
+        if (isNaN(start) || isNaN(requestedEnd) || start > requestedEnd || start >= fileSize || start < 0) {
+          res.status(416).setHeader("Content-Range", `bytes */${fileSize}`).end();
+          return;
+        }
+        end = Math.min(requestedEnd, start + MAX_CHUNK_SIZE - 1, fileSize - 1);
+      } else {
+        res.status(416).setHeader("Content-Range", `bytes */${fileSize}`).end();
         return;
       }
 
