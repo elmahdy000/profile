@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Users, Phone, KeyRound, ArrowRight, ShieldCheck, CheckCircle2, Video, Award, Clock, LogOut, RefreshCw, AlertCircle, FileText, Bell, BellRing, Volume2, Share2, CalendarCheck, XCircle, MapPin } from "lucide-react";
+import { Users, Phone, KeyRound, ArrowRight, ShieldCheck, CheckCircle2, Video, Award, Clock, LogOut, RefreshCw, AlertCircle, AlertTriangle, FileText, Bell, BellRing, Volume2, Share2, CalendarCheck, XCircle, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 function normalizeArabicDigits(str: string): string {
@@ -535,15 +535,41 @@ export function ParentPortal() {
                 </div>
 
                 <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
-                  {reportData.notifications.map((notif) => (
-                    <div key={notif.id} className="p-4 bg-white rounded-2xl border border-slate-200/80 space-y-1.5 text-xs shadow-2xs">
-                      <div className="flex items-center justify-between">
-                        <strong className="font-bold text-slate-900 text-sm">{notif.title}</strong>
-                        <span className="text-[10px] text-slate-400 font-semibold">{formatDate(notif.createdAt)}</span>
+                  {reportData.notifications.map((notif) => {
+                    const isAbsent = notif.type === "attendance_absent" || notif.title.includes("غياب");
+                    const isLate = notif.title.includes("متأخر");
+                    return (
+                      <div
+                        key={notif.id}
+                        className={`p-4 rounded-2xl border space-y-1.5 text-xs shadow-2xs transition-all ${
+                          isAbsent
+                            ? "bg-red-50/90 border-red-200 text-red-950 ring-1 ring-red-300/40"
+                            : isLate
+                            ? "bg-amber-50/90 border-amber-200 text-amber-950"
+                            : "bg-white border-slate-200/80 text-slate-700"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            {isAbsent ? (
+                              <AlertTriangle className="h-4 w-4 text-red-600 shrink-0" />
+                            ) : isLate ? (
+                              <Clock className="h-4 w-4 text-amber-600 shrink-0" />
+                            ) : (
+                              <Bell className="h-4 w-4 text-blue-600 shrink-0" />
+                            )}
+                            <strong className={`font-bold text-sm ${isAbsent ? "text-red-900" : isLate ? "text-amber-900" : "text-slate-900"}`}>
+                              {notif.title}
+                            </strong>
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-semibold">{formatDate(notif.createdAt)}</span>
+                        </div>
+                        <p className={`text-xs leading-relaxed font-medium ${isAbsent ? "text-red-800" : isLate ? "text-amber-800" : "text-slate-700"}`}>
+                          {notif.message}
+                        </p>
                       </div>
-                      <p className="text-slate-700 text-xs leading-relaxed font-medium">{notif.message}</p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

@@ -85,7 +85,7 @@ router.post("/parent/register", parentRegisterLimit, async (req, res, next) => {
       .where(
         and(
           eq(studentsTable.status, "approved"),
-          sql`(${studentsTable.phone} = ${parentPhone} OR REPLACE(TRANSLATE(${studentsTable.phone}, '٠١٢٣٤٥٦٧٨٩', '0123456789'), ' ', '') = ${cleanStudentPhone} OR UPPER(${studentsTable.accessCode}) = UPPER(${normalizedStudentQuery}))`
+          sql`(${studentsTable.phone} = ${parentPhone} OR REPLACE(TRANSLATE(${studentsTable.phone}, '٠١٢٣٤٥٦٧٨٩', '0123456789'), ' ', '') = ${cleanStudentPhone} OR REPLACE(TRANSLATE(COALESCE(${studentsTable.parentPhone}, ''), '٠١٢٣٤٥٦٧٨٩', '0123456789'), ' ', '') = ${cleanStudentPhone} OR REPLACE(TRANSLATE(COALESCE(${studentsTable.parentPhone}, ''), '٠١٢٣٤٥٦٧٨٩', '0123456789'), ' ', '') = ${parentPhone} OR UPPER(${studentsTable.accessCode}) = UPPER(${normalizedStudentQuery}))`
         )
       )
       .limit(1);
@@ -169,7 +169,7 @@ router.post("/parent/recover-code", parentLoginLimit, async (req, res, next) => 
       .where(
         and(
           eq(studentsTable.status, "approved"),
-          sql`(${studentsTable.phone} = ${studentQueryRaw} OR REPLACE(TRANSLATE(${studentsTable.phone}, '٠١٢٣٤٥٦٧٨٩', '0123456789'), ' ', '') = ${cleanStudentPhone} OR UPPER(${studentsTable.accessCode}) = UPPER(${normalizedStudentQuery}))`
+          sql`(${studentsTable.phone} = ${studentQueryRaw} OR REPLACE(TRANSLATE(${studentsTable.phone}, '٠١٢٣٤٥٦٧٨٩', '0123456789'), ' ', '') = ${cleanStudentPhone} OR REPLACE(TRANSLATE(COALESCE(${studentsTable.parentPhone}, ''), '٠١٢٣٤٥٦٧٨٩', '0123456789'), ' ', '') = ${cleanStudentPhone} OR UPPER(${studentsTable.accessCode}) = UPPER(${normalizedStudentQuery}))`
         )
       )
       .limit(1);

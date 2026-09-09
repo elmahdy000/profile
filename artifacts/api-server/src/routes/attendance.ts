@@ -638,10 +638,16 @@ router.post("/admin/attendance/bulk-absent", requireAdmin, async (req: Request, 
       students = students.filter((s) => s.grade?.toLowerCase().includes(stageFilter.toLowerCase()));
     }
     if (centerFilter && centerFilter !== "all") {
-      students = students.filter((s) => s.centerName?.toLowerCase().includes(centerFilter.toLowerCase()));
+      const cFilter = centerFilter.toLowerCase();
+      students = students.filter((s) => {
+        if (!s.centerName) return false;
+        const cName = s.centerName.toLowerCase();
+        return cName === cFilter || cName.includes(cFilter) || cFilter.includes(cName);
+      });
     }
     if (slotFilter && slotFilter !== "all") {
-      students = students.filter((s) => s.appointmentSlot === slotFilter);
+      const targetSlot = normalizeSlot(slotFilter);
+      students = students.filter((s) => normalizeSlot(s.appointmentSlot) === targetSlot);
     }
 
     // Get all students with an existing record today
@@ -676,7 +682,7 @@ router.post("/admin/attendance/bulk-absent", requireAdmin, async (req: Request, 
       parentNotifiedAt: notifyParents ? now : null,
     }));
 
-    await db.insert(studentAttendanceTable).values(insertValues);
+    await db.insert(studentAttendanceTable).values(insertValues).onConflictDoNothing();
 
     if (notifyParents) {
       const notifs = unmarkedStudents.map((s) => ({
