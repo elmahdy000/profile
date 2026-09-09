@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/RegistrationStageSelector";
 import type { Student } from "@/types/platform";
 import { useAppTheme } from "@/lib/theme";
+import { defaultOfflineCenters } from "@/components/admin/settings/CentersTab";
 
 async function api<T>(url: string, options?: RequestInit): Promise<T> {
   const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
@@ -924,46 +925,19 @@ export function AccessScreen({
                           </div>
 
                           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                            {[
-                              {
-                                id: "rafal-academy-330pm",
-                                title: "سنتر رافال أكاديمي (Rafal Academy) - عربي",
-                                area: "بجوار الثانوية العسكرية",
-                                time: "سبت - اتنين - أربع (3:30 - 4:30 عصراً)",
-                                badge: "تانية بكالوريا - عربي",
-                              },
-                              {
-                                id: "zag-academy-5pm",
-                                title: "سنتر زاج أكاديمي (Zag Academy) - عربي",
-                                area: "منطقة الفلل",
-                                time: "سبت - اتنين - أربع (5:00 - 6:00 مساءً)",
-                                badge: "تانية بكالوريا - عربي",
-                              },
-                              {
-                                id: "eduverse-languages-10am",
-                                title: "سنتر إديوفيرس أكاديمي (EduVerse) - لغات (10 صباحاً)",
-                                area: "منطقة الفلل",
-                                time: "حد - تلات - خميس (10:00 صباحاً)",
-                                badge: "تانية بكالوريا - لغات",
-                              },
-                              {
-                                id: "eduverse-languages-4pm",
-                                title: "سنتر إديوفيرس أكاديمي (EduVerse) - لغات (4 عصراً)",
-                                area: "منطقة الفلل",
-                                time: "حد - تلات - خميس (4:00 عصراً)",
-                                badge: "تانية بكالوريا - لغات",
-                              },
-                            ].map((center) => {
-                              const isSelected = form.centerChoice === center.id;
+                            {defaultOfflineCenters.map((center) => {
+                              const slotStr = `${center.daysStr} (${center.timeStr})`;
+                              const choiceKey = `${center.name} - ${slotStr}`;
+                              const isSelected = form.centerChoice === choiceKey || form.centerChoice === center.id;
                               return (
                                 <div
                                   key={center.id}
                                   onClick={() =>
                                     setForm({
                                       ...form,
-                                      centerName: center.title,
-                                      appointmentSlot: center.time,
-                                      centerChoice: `${center.title} - ${center.time}`,
+                                      centerName: center.name,
+                                      appointmentSlot: slotStr,
+                                      centerChoice: choiceKey,
                                     })
                                   }
                                   className={`relative cursor-pointer rounded-[14px] border p-3 transition-all text-right ${
@@ -974,14 +948,14 @@ export function AccessScreen({
                                 >
                                   <div className="flex items-center justify-between gap-1 mb-1">
                                     <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-[#0866D9]/10 text-[#0866D9]">
-                                      {center.badge}
+                                      {center.grade || "ثانوية عامة"}
                                     </span>
                                     <span className="text-[11px] font-semibold text-[#64748B] flex items-center gap-1">
                                       <Clock className="h-3 w-3 text-[#0866D9]" /> {center.area}
                                     </span>
                                   </div>
-                                  <strong className="block text-xs font-extrabold text-[#0F172A]">{center.title}</strong>
-                                  <span className="mt-1 block text-[11px] font-semibold text-[#0866D9]">{center.time}</span>
+                                  <strong className="block text-xs font-extrabold text-[#0F172A]">{center.name}</strong>
+                                  <span className="mt-1 block text-[11px] font-semibold text-[#0866D9]">{slotStr}</span>
                                 </div>
                               );
                             })}
