@@ -57,6 +57,12 @@ export const OFFICIAL_SLOTS = Array.from(
 export function normalizeCenterName(rawName?: string | null): string {
   if (!rawName || !rawName.trim()) return "بدون سنتر محدد";
   const clean = rawName.trim().toLowerCase();
+  if (clean.includes("فيوتشر") || clean.includes("future")) {
+    return "سنتر فيوتشر (Future) - عربي";
+  }
+  if (clean.includes("مجد") || clean.includes("magd")) {
+    return "سنتر المجد (El-Magd) - لغات";
+  }
   if (clean.includes("رافال") || clean.includes("rafal")) {
     return "سنتر رافال أكاديمي (Rafal Academy) - عربي";
   }
@@ -66,7 +72,7 @@ export function normalizeCenterName(rawName?: string | null): string {
   if (clean.includes("إديوفيرس") || clean.includes("اديوفيرس") || clean.includes("eduverse")) {
     return "سنتر إديوفيرس أكاديمي (EduVerse) - لغات";
   }
-  return "بدون سنتر محدد";
+  return rawName.trim();
 }
 
 function formatDate(dateStr?: string | null): string {
