@@ -54,6 +54,7 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
 
     const date = String(req.body.date || getTodayCairoDate()).trim();
     const centerOverride = req.body.centerName ? String(req.body.centerName).trim() : null;
+    const slotOverride = req.body.appointmentSlot ? String(req.body.appointmentSlot).trim() : null;
     const notes = req.body.notes ? String(req.body.notes).trim() : null;
     const notifyParent = req.body.notifyParent !== false;
 
@@ -115,8 +116,24 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
 
     const adminIdentity = getAdminIdentity(req);
     const recordedBy = adminIdentity?.username || (adminIdentity?.role === "superadmin" ? "د. محمود المهدي" : "مشرف مساعد");
-    const centerName = centerOverride || (student as any).centerName || (student as any).center || "السنتر الرئيسي";
+    const centerName = (centerOverride && centerOverride !== "all") ? centerOverride : (student as any).centerName || (student as any).center || "السنتر الرئيسي";
+    const appointmentSlot = (slotOverride && slotOverride !== "all") ? slotOverride : ((student as any).appointmentSlot || null);
     const academicStage = student.grade || "عام";
+
+    const enrolledSlot = (student as any).appointmentSlot || null;
+    const enrolledCenter = (student as any).centerName || (student as any).center || null;
+    const isCrossGroup = Boolean(
+      slotOverride &&
+      slotOverride !== "all" &&
+      enrolledSlot &&
+      slotOverride !== enrolledSlot
+    );
+    const isCrossCenter = Boolean(
+      centerOverride &&
+      centerOverride !== "all" &&
+      enrolledCenter &&
+      centerOverride !== enrolledCenter
+    );
 
     // Check if attendance already recorded today for this student
     const [existingRecord] = await db
@@ -146,8 +163,9 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
             attendedAt: now,
             recordedBy,
             centerName,
+            appointmentSlot,
             academicStage,
-            notes: notes || existingRecord.notes,
+            notes: notes || (isCrossGroup ? `حضور تعويضي (الموعد الأصلي: ${enrolledSlot})` : existingRecord.notes),
             updatedAt: now,
           })
           .where(eq(studentAttendanceTable.id, existingRecord.id))
@@ -164,8 +182,9 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
             attendedAt: now,
             recordedBy,
             centerName,
+            appointmentSlot,
             academicStage,
-            notes,
+            notes: notes || (isCrossGroup ? `حضور تعويضي (الموعد الأصلي: ${enrolledSlot})` : null),
             parentNotified: false,
           })
           .returning();
@@ -215,9 +234,21 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
       `تسجيل حضور الطالب ${student.name} (كود: ${student.accessCode || student.id}) في تاريخ ${date}`
     );
 
+    let scanMessage = `تم تسجيل حضور (${student.name}) بنجاح!`;
+    if (alreadyRecorded) {
+      scanMessage = `الطالب (${student.name}) مسجل حضوره مسبقاً اليوم الساعة ${new Date(existingRecord.attendedAt || "").toLocaleTimeString("ar-EG", { hour: "numeric", minute: "numeric", hour12: true })}`;
+    } else if (isCrossGroup) {
+      scanMessage = `تم تسجيل حضور (${student.name}) بنجاح كـ تعويض! (موعده الأصلي: ${enrolledSlot})`;
+    }
+
     res.json({
       success: true,
       alreadyRecorded,
+      isCrossGroup,
+      isCrossCenter,
+      enrolledSlot,
+      enrolledCenter,
+      activeSlot: appointmentSlot,
       student: {
         id: student.id,
         name: student.name,
@@ -227,6 +258,7 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
         accessCode: student.accessCode,
         avatarUrl: student.avatarUrl,
         centerName,
+        appointmentSlot: (student as any).appointmentSlot,
         paymentStatus: student.paymentStatus,
       },
       attendance: {
@@ -237,9 +269,7 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
       },
       parentNotified,
       parent: parent ? { id: parent.id, name: parent.name, phone: parent.phone, parentCode: parent.parentCode } : null,
-      message: alreadyRecorded
-        ? `الطالب (${student.name}) مسجل حضوره مسبقاً اليوم الساعة ${new Date(existingRecord.attendedAt || "").toLocaleTimeString("ar-EG", { hour: "numeric", minute: "numeric", hour12: true })}`
-        : `تم تسجيل حضور (${student.name}) بنجاح!`,
+      message: scanMessage,
     });
   } catch (error) {
     next(error);
@@ -247,12 +277,13 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
 });
 
 // ─── 2. GET /api/admin/attendance/daily ────────────────────────────────────────
-// Full Daily Attendance Sheet with Filtering & Real-time Counts
+// Full Daily Attendance Sheet with Filtering & Real-time Counts & Group Breakdown
 router.get("/admin/attendance/daily", requireAdmin, async (req: Request, res, next) => {
   try {
     const date = String(req.query.date || getTodayCairoDate()).trim();
     const stageFilter = req.query.stage ? String(req.query.stage).trim() : null;
     const centerFilter = req.query.center ? String(req.query.center).trim() : null;
+    const slotFilter = req.query.slot ? String(req.query.slot).trim() : null;
     const statusFilter = req.query.status ? String(req.query.status).trim() : null;
     const searchFilter = req.query.search ? String(req.query.search).trim() : null;
 
@@ -268,6 +299,7 @@ router.get("/admin/attendance/daily", requireAdmin, async (req: Request, res, ne
         paymentStatus: studentsTable.paymentStatus,
         status: studentsTable.status,
         centerName: (studentsTable as any).centerName,
+        appointmentSlot: (studentsTable as any).appointmentSlot,
       })
       .from(studentsTable)
       .where(eq(studentsTable.status, "approved"))
@@ -285,10 +317,92 @@ router.get("/admin/attendance/daily", requireAdmin, async (req: Request, res, ne
     const parentRows = await db.select({ studentId: parentsTable.studentId, parentName: parentsTable.name }).from(parentsTable);
     const parentMap = new Map(parentRows.map((p) => [p.studentId, p.parentName]));
 
-    // Build unified records
+    // Calculate Group Breakdown across all students and attendance records
+    // Key: `${centerName}:::${appointmentSlot}`
+    const groupStatsMap = new Map<string, {
+      centerName: string;
+      appointmentSlot: string;
+      totalEnrolled: number;
+      presentCount: number;
+      absentCount: number;
+      lateCount: number;
+      unmarkedCount: number;
+      makeupCount: number;
+      attendanceRate: number;
+    }>();
+
+    const getGroupKey = (c?: string | null, s?: string | null) => {
+      const center = (c && c.trim()) || "بدون سنتر محدد";
+      const slot = (s && s.trim()) || "بدون موعد محدد";
+      return `${center}:::${slot}`;
+    };
+
+    const getOrCreateGroupEntry = (center: string, slot: string) => {
+      const key = getGroupKey(center, slot);
+      if (!groupStatsMap.has(key)) {
+        groupStatsMap.set(key, {
+          centerName: (center && center.trim()) || "بدون سنتر محدد",
+          appointmentSlot: (slot && slot.trim()) || "بدون موعد محدد",
+          totalEnrolled: 0,
+          presentCount: 0,
+          absentCount: 0,
+          lateCount: 0,
+          unmarkedCount: 0,
+          makeupCount: 0,
+          attendanceRate: 0,
+        });
+      }
+      return groupStatsMap.get(key)!;
+    };
+
+    // 1. Tally enrolled students
+    students.forEach((st) => {
+      if (st.centerName || st.appointmentSlot) {
+        const entry = getOrCreateGroupEntry(st.centerName || "بدون سنتر محدد", st.appointmentSlot || "بدون موعد محدد");
+        entry.totalEnrolled += 1;
+      }
+    });
+
+    // 2. Tally attendance records
+    attendanceRows.forEach((att) => {
+      const attCenter = att.centerName || "بدون سنتر محدد";
+      const attSlot = att.appointmentSlot || "بدون موعد محدد";
+      const entry = getOrCreateGroupEntry(attCenter, attSlot);
+      if (att.status === "present") entry.presentCount += 1;
+      else if (att.status === "absent") entry.absentCount += 1;
+      else if (att.status === "late") entry.lateCount += 1;
+
+      // Check if student was enrolled in another group (makeup session)
+      const st = students.find((s) => s.id === att.studentId);
+      if (st && st.appointmentSlot && att.appointmentSlot && st.appointmentSlot !== att.appointmentSlot) {
+        entry.makeupCount += 1;
+      }
+    });
+
+    // 3. Finalize rates and unmarked
+    groupStatsMap.forEach((g) => {
+      const marked = g.presentCount + g.absentCount + g.lateCount;
+      g.unmarkedCount = Math.max(0, g.totalEnrolled - marked);
+      g.attendanceRate = g.totalEnrolled > 0
+        ? Math.round(((g.presentCount + g.lateCount) / g.totalEnrolled) * 100)
+        : (g.presentCount > 0 ? 100 : 0);
+    });
+
+    const groupBreakdown = Array.from(groupStatsMap.values()).sort((a, b) => {
+      if (a.centerName !== b.centerName) return a.centerName.localeCompare(b.centerName, "ar");
+      return a.appointmentSlot.localeCompare(b.appointmentSlot, "ar");
+    });
+
+    // Build unified student records
     let records = students.map((st) => {
       const att = attendanceMap.get(st.id);
       const parentRegistered = parentMap.has(st.id);
+      const enrolledSlot = st.appointmentSlot || null;
+      const actualSlot = att?.appointmentSlot || enrolledSlot || null;
+      const enrolledCenter = st.centerName || null;
+      const actualCenter = att?.centerName || enrolledCenter || "السنتر الرئيسي";
+      const isCrossGroup = Boolean(actualSlot && enrolledSlot && actualSlot !== enrolledSlot);
+
       return {
         studentId: st.id,
         name: st.name,
@@ -297,7 +411,11 @@ router.get("/admin/attendance/daily", requireAdmin, async (req: Request, res, ne
         grade: st.grade || "عام",
         accessCode: st.accessCode || `STD-${st.id}`,
         paymentStatus: st.paymentStatus,
-        centerName: att?.centerName || st.centerName || "السنتر الرئيسي",
+        centerName: actualCenter,
+        appointmentSlot: actualSlot,
+        enrolledSlot,
+        enrolledCenter,
+        isCrossGroup,
         status: att?.status || "unmarked", // "present" | "absent" | "late" | "unmarked"
         attendedAt: att?.attendedAt || null,
         recordedBy: att?.recordedBy || null,
@@ -313,7 +431,10 @@ router.get("/admin/attendance/daily", requireAdmin, async (req: Request, res, ne
       records = records.filter((r) => r.grade?.toLowerCase().includes(stageFilter.toLowerCase()));
     }
     if (centerFilter && centerFilter !== "all") {
-      records = records.filter((r) => r.centerName?.toLowerCase().includes(centerFilter.toLowerCase()));
+      records = records.filter((r) => r.centerName?.toLowerCase().includes(centerFilter.toLowerCase()) || r.enrolledCenter?.toLowerCase().includes(centerFilter.toLowerCase()));
+    }
+    if (slotFilter && slotFilter !== "all") {
+      records = records.filter((r) => r.appointmentSlot === slotFilter || r.enrolledSlot === slotFilter);
     }
     if (statusFilter && statusFilter !== "all") {
       records = records.filter((r) => r.status === statusFilter);
@@ -351,6 +472,7 @@ router.get("/admin/attendance/daily", requireAdmin, async (req: Request, res, ne
       date,
       summary: statsObj,
       stats: statsObj,
+      groupBreakdown,
       records: records.map((r) => ({
         ...r,
         id: r.studentId,
@@ -374,6 +496,8 @@ router.post("/admin/attendance/manual-status", requireAdmin, async (req: Request
     const date = String(req.body.date || getTodayCairoDate()).trim();
     const status = String(req.body.status || "present").trim(); // "present" | "absent" | "late"
     const notes = req.body.notes ? String(req.body.notes).trim() : null;
+    const centerOverride = req.body.centerName ? String(req.body.centerName).trim() : null;
+    const slotOverride = req.body.appointmentSlot ? String(req.body.appointmentSlot).trim() : null;
     const notifyParent = req.body.notifyParent !== false;
 
     if (!Number.isSafeInteger(studentId) || studentId <= 0) {
@@ -390,6 +514,8 @@ router.post("/admin/attendance/manual-status", requireAdmin, async (req: Request
     const adminIdentity = getAdminIdentity(req);
     const recordedBy = adminIdentity?.username || "مشرف مساعد";
     const now = new Date();
+    const centerName = (centerOverride && centerOverride !== "all") ? centerOverride : (student as any).centerName || "السنتر الرئيسي";
+    const appointmentSlot = (slotOverride && slotOverride !== "all") ? slotOverride : (student as any).appointmentSlot || null;
 
     const [existing] = await db
       .select()
@@ -405,6 +531,8 @@ router.post("/admin/attendance/manual-status", requireAdmin, async (req: Request
           status,
           attendedAt: status === "present" || status === "late" ? now : null,
           recordedBy,
+          centerName: centerName || existing.centerName,
+          appointmentSlot: appointmentSlot || existing.appointmentSlot,
           notes: notes || existing.notes,
           updatedAt: now,
         })
@@ -420,6 +548,8 @@ router.post("/admin/attendance/manual-status", requireAdmin, async (req: Request
           status,
           attendedAt: status === "present" || status === "late" ? now : null,
           recordedBy,
+          centerName,
+          appointmentSlot,
           academicStage: student.grade,
           notes,
         })
@@ -472,22 +602,35 @@ router.post("/admin/attendance/manual-status", requireAdmin, async (req: Request
 });
 
 // ─── 4. POST /api/admin/attendance/bulk-absent ────────────────────────────────
-// Bulk mark all remaining unmarked students as absent
+// Bulk mark all remaining unmarked students as absent (optionally scoped to stage, center, or slot)
 router.post("/admin/attendance/bulk-absent", requireAdmin, async (req: Request, res, next) => {
   try {
     const date = String(req.body.date || getTodayCairoDate()).trim();
-    const stageFilter = req.body.stage ? String(req.body.stage).trim() : null;
-    const centerFilter = req.body.center ? String(req.body.center).trim() : null;
+    const stageFilter = req.body.stage || req.body.grade ? String(req.body.stage || req.body.grade).trim() : null;
+    const centerFilter = req.body.center || req.body.centerName ? String(req.body.center || req.body.centerName).trim() : null;
+    const slotFilter = req.body.slot || req.body.appointmentSlot ? String(req.body.slot || req.body.appointmentSlot).trim() : null;
     const notifyParents = req.body.notifyParents === true;
 
     // Get all approved students
     let students = await db
-      .select({ id: studentsTable.id, name: studentsTable.name, grade: studentsTable.grade })
+      .select({
+        id: studentsTable.id,
+        name: studentsTable.name,
+        grade: studentsTable.grade,
+        centerName: (studentsTable as any).centerName,
+        appointmentSlot: (studentsTable as any).appointmentSlot,
+      })
       .from(studentsTable)
       .where(eq(studentsTable.status, "approved"));
 
     if (stageFilter && stageFilter !== "all") {
       students = students.filter((s) => s.grade?.toLowerCase().includes(stageFilter.toLowerCase()));
+    }
+    if (centerFilter && centerFilter !== "all") {
+      students = students.filter((s) => s.centerName?.toLowerCase().includes(centerFilter.toLowerCase()));
+    }
+    if (slotFilter && slotFilter !== "all") {
+      students = students.filter((s) => s.appointmentSlot === slotFilter);
     }
 
     // Get all students with an existing record today
@@ -500,7 +643,7 @@ router.post("/admin/attendance/bulk-absent", requireAdmin, async (req: Request, 
     const unmarkedStudents = students.filter((s) => !markedIds.has(s.id));
 
     if (unmarkedStudents.length === 0) {
-      res.json({ success: true, markedCount: 0, message: "لا يوجد طلاب متبقين لتسجيل غيابهم" });
+      res.json({ success: true, markedCount: 0, markedAbsentCount: 0, message: "لا يوجد طلاب متبقين لتسجيل غيابهم ضمن هذا النطاق" });
       return;
     }
 
@@ -514,8 +657,10 @@ router.post("/admin/attendance/bulk-absent", requireAdmin, async (req: Request, 
       status: "absent",
       attendedAt: null,
       recordedBy,
+      centerName: s.centerName || centerFilter || "السنتر الرئيسي",
+      appointmentSlot: s.appointmentSlot || slotFilter || null,
       academicStage: s.grade,
-      notes: "غياب تلقائي للطلاب المتبقين في كشف اليومية",
+      notes: slotFilter ? `غياب تلقائي لمجموعة: ${slotFilter}` : "غياب تلقائي للطلاب المتبقين في كشف اليومية",
       parentNotified: notifyParents,
       parentNotifiedAt: notifyParents ? now : null,
     }));
@@ -537,7 +682,7 @@ router.post("/admin/attendance/bulk-absent", requireAdmin, async (req: Request, 
       "ATTENDANCE_BULK_ABSENT",
       "attendance",
       null,
-      `تسجيل غياب جماعي لـ ${unmarkedStudents.length} طالب لتاريخ ${date}`
+      `تسجيل غياب جماعي لـ ${unmarkedStudents.length} طالب لتاريخ ${date} (سنتر: ${centerFilter || "الكل"} - موعد: ${slotFilter || "الكل"})`
     );
 
     res.json({

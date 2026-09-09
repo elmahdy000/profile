@@ -357,6 +357,7 @@ export const studentAttendanceTable = pgTable("student_attendance", {
   status: varchar("status", { length: 20 }).notNull().default("present"), // present | absent | late
   attendedAt: timestamp("attended_at"),
   centerName: varchar("center_name", { length: 100 }),
+  appointmentSlot: text("appointment_slot"),
   academicStage: varchar("academic_stage", { length: 100 }),
   recordedBy: varchar("recorded_by", { length: 100 }),
   notes: text("notes"),
@@ -367,6 +368,7 @@ export const studentAttendanceTable = pgTable("student_attendance", {
 }, (table) => ({
   dateIndex: index("idx_student_attendance_date").on(table.date),
   studentIndex: index("idx_student_attendance_student_id").on(table.studentId),
+  centerSlotIndex: index("idx_student_attendance_center_slot").on(table.centerName, table.appointmentSlot),
   studentDateUnique: uniqueIndex("idx_student_attendance_student_date").on(table.studentId, table.date),
 }));
 
