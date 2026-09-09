@@ -28,7 +28,7 @@ import {
   FileSpreadsheet,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { OFFICIAL_CENTERS, OFFICIAL_SLOTS } from "../learning/StudentDrawer";
+import { OFFICIAL_CENTERS, OFFICIAL_SLOTS, normalizeSlotName } from "../learning/StudentDrawer";
 import { defaultOfflineCenters } from "../settings/CentersTab";
 
 export interface GroupBreakdownItem {
@@ -231,7 +231,7 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
     if (selectedCenter !== "all") {
       defaultOfflineCenters
         .filter((c) => c.name.includes(selectedCenter) || selectedCenter.includes(c.name))
-        .forEach((c) => set.add(`${c.daysStr} (الساعة ${c.timeStr})`));
+        .forEach((c) => set.add(`${c.daysStr} (${c.timeStr})`));
       groupBreakdown
         .filter((g) => g.centerName.includes(selectedCenter) || selectedCenter.includes(g.centerName))
         .forEach((g) => {
@@ -259,7 +259,7 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
     if (selectedCenter !== "all" || selectedSlot !== "all") {
       const matchingGroups = groupBreakdown.filter((g) => {
         const matchesCenter = selectedCenter === "all" || g.centerName.includes(selectedCenter) || selectedCenter.includes(g.centerName);
-        const matchesSlot = selectedSlot === "all" || g.appointmentSlot === selectedSlot;
+        const matchesSlot = selectedSlot === "all" || normalizeSlotName(g.appointmentSlot) === normalizeSlotName(selectedSlot);
         return matchesCenter && matchesSlot;
       });
 
@@ -691,8 +691,10 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
       }
 
       // Slot
-      if (slotFilter !== "all" && r.appointmentSlot !== slotFilter && r.enrolledSlot !== slotFilter) {
-        return false;
+      if (slotFilter !== "all") {
+        const targetSlot = normalizeSlotName(slotFilter);
+        const slotMatches = normalizeSlotName(r.appointmentSlot) === targetSlot || normalizeSlotName(r.enrolledSlot) === targetSlot;
+        if (!slotMatches) return false;
       }
 
       return true;

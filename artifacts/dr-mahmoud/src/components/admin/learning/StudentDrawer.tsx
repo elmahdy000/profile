@@ -51,8 +51,17 @@ defaultOfflineCenters.forEach((c) => {
 export const OFFICIAL_CENTERS = Array.from(centerMap.values());
 
 export const OFFICIAL_SLOTS = Array.from(
-  new Set(defaultOfflineCenters.map((c) => `${c.daysStr} (الساعة ${c.timeStr})`))
+  new Set(defaultOfflineCenters.map((c) => `${c.daysStr} (${c.timeStr})`))
 );
+
+export function normalizeSlotName(rawSlot?: string | null): string {
+  if (!rawSlot) return "";
+  return String(rawSlot)
+    .replace(/\(الساعة\s+/g, "(")
+    .replace(/الساعة\s+/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 export function normalizeCenterName(rawName?: string | null): string {
   if (!rawName || !rawName.trim()) return "بدون سنتر محدد";

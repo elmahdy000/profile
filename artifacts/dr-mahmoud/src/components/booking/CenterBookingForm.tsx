@@ -49,7 +49,7 @@ function offlineCenterToCards(items: OfflineCenterItem[]): UnifiedCenterCard[] {
       if (grade.includes("تانية") || grade.includes("ثانية") || grade.includes("second")) return "2nd_bac" as const;
       return "both" as const;
     })(),
-    slotText: `${c.daysStr} (الساعة ${c.timeStr})`,
+    slotText: `${c.daysStr} (${c.timeStr})`,
   }));
 }
 

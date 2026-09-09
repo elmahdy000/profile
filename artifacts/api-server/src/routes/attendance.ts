@@ -42,6 +42,15 @@ function getCairoTimeFormatted(): string {
   }).format(new Date());
 }
 
+function normalizeSlot(s?: string | null): string {
+  if (!s) return "";
+  return String(s)
+    .replace(/\(الساعة\s+/g, "(")
+    .replace(/الساعة\s+/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 // ─── 1. POST /api/admin/attendance/scan ───────────────────────────────────────
 // Rapid QR Code Scanner Attendance Endpoint
 router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, next) => {
@@ -126,13 +135,15 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
       slotOverride &&
       slotOverride !== "all" &&
       enrolledSlot &&
-      slotOverride !== enrolledSlot
+      normalizeSlot(slotOverride) !== normalizeSlot(enrolledSlot)
     );
     const isCrossCenter = Boolean(
       centerOverride &&
       centerOverride !== "all" &&
       enrolledCenter &&
-      centerOverride !== enrolledCenter
+      centerOverride.trim() !== enrolledCenter.trim() &&
+      !centerOverride.includes(enrolledCenter.trim()) &&
+      !enrolledCenter.includes(centerOverride.trim())
     );
 
     // Check if attendance already recorded today for this student
@@ -374,7 +385,7 @@ router.get("/admin/attendance/daily", requireAdmin, async (req: Request, res, ne
 
       // Check if student was enrolled in another group (makeup session)
       const st = students.find((s) => s.id === att.studentId);
-      if (st && st.appointmentSlot && att.appointmentSlot && st.appointmentSlot !== att.appointmentSlot) {
+      if (st && st.appointmentSlot && att.appointmentSlot && normalizeSlot(st.appointmentSlot) !== normalizeSlot(att.appointmentSlot)) {
         entry.makeupCount += 1;
       }
     });
@@ -401,7 +412,7 @@ router.get("/admin/attendance/daily", requireAdmin, async (req: Request, res, ne
       const actualSlot = att?.appointmentSlot || enrolledSlot || null;
       const enrolledCenter = st.centerName || null;
       const actualCenter = att?.centerName || enrolledCenter || "السنتر الرئيسي";
-      const isCrossGroup = Boolean(actualSlot && enrolledSlot && actualSlot !== enrolledSlot);
+      const isCrossGroup = Boolean(actualSlot && enrolledSlot && normalizeSlot(actualSlot) !== normalizeSlot(enrolledSlot));
 
       return {
         studentId: st.id,

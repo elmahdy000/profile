@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { StudentDrawer, type ExtendedStudent, OFFICIAL_CENTERS, OFFICIAL_SLOTS, normalizeCenterName, cleanText } from "./StudentDrawer";
+import { StudentDrawer, type ExtendedStudent, OFFICIAL_CENTERS, OFFICIAL_SLOTS, normalizeCenterName, normalizeSlotName, cleanText } from "./StudentDrawer";
 import { StudentCardModal } from "./StudentCardModal";
 
 interface CenterBookingsTabProps {
@@ -223,7 +223,7 @@ export function CenterBookingsTab({
       }
 
       // Slot Filter
-      if (slotFilter !== "all" && s.appointmentSlot !== slotFilter) return false;
+      if (slotFilter !== "all" && normalizeSlotName(s.appointmentSlot) !== normalizeSlotName(slotFilter)) return false;
 
       // Stage Filter
       const effectiveStage = s.grade === "أخرى" ? s.otherGradeDetail || s.grade : s.grade;
