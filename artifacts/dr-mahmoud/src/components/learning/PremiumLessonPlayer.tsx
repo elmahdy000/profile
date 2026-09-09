@@ -242,6 +242,9 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
   const [playerErrorMessage, setPlayerErrorMessage] = useState("");
   const [streamSrc, setStreamSrc] = useState(item.youtubeUrl);
   const refreshAttempted = useRef(false);
+  const latestPositionRef = useRef<number>(0);
+  const pendingResumeTimeRef = useRef<number>(0);
+  const lastLocalSavedPos = useRef<number>(0);
   const [youtubeStarted, setYoutubeStarted] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -316,6 +319,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
   }, [playing, isLandscapeMobile]);
 
   const isProtected = item.youtubeUrl?.startsWith("/api/videos/") || item.youtubeUrl?.startsWith("/uploads/") || item.youtubeUrl?.includes(".m3u8");
+  const isHlsSource = Boolean(streamSrc?.includes(".m3u8"));
   const videoId = getYouTubeVideoId(item.youtubeUrl);
   const playlistId = getYouTubePlaylistId(item.youtubeUrl);
   const currentIndex = Math.max(0, lessons.findIndex((lesson) => lesson.id === item.id));
@@ -374,8 +378,6 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
         // Native HLS support (Safari iOS / Mac)
         video.src = streamSrc;
       }
-    } else {
-      video.src = streamSrc;
     }
 
     return () => {
@@ -388,6 +390,9 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
 
   useEffect(() => {
     setPlayerReady(false); setPlayerError(false); setPlayerErrorMessage(""); setStreamSrc(item.youtubeUrl); refreshAttempted.current = false; setYoutubeStarted(false); setCurrentTime(0); setDuration(0); setPlaying(false);
+    latestPositionRef.current = 0;
+    pendingResumeTimeRef.current = 0;
+    lastLocalSavedPos.current = 0;
     const storedProgress = item.id ? readJson<Record<number, number>>("dr_mahmoud_watch_progress", {})[item.id] || 0 : 0;
     setProgress(storedProgress);
     setNotes(readJson<LessonNote[]>(noteKey, []));
@@ -470,6 +475,15 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
     }
     refreshAttempted.current = true;
     try {
+      const savedStored = item.id ? (readJson<Record<number, number>>("dr_mahmoud_watch_positions", {})[item.id] || 0) : 0;
+      const currentPos = Math.max(
+        latestPositionRef.current,
+        currentTime,
+        savedStored
+      );
+      if (currentPos > 0) {
+        pendingResumeTimeRef.current = currentPos;
+      }
       const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
       const unlockKeys = localStorage.getItem("dr_mahmoud_unlock_keys") || "";
       const response = await fetch(`/api/videos/${item.id}/stream-url`, {
@@ -482,18 +496,9 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
       if (response.ok) {
         const data = await response.json() as { url: string };
         if (data?.url) {
-          const currentPos = videoRef.current?.currentTime || currentTime || 0;
           setStreamSrc(data.url);
           setPlayerError(false);
           refreshAttempted.current = false;
-          if (currentPos > 0) {
-            setTimeout(() => {
-              if (videoRef.current && currentPos > 0) {
-                videoRef.current.currentTime = currentPos;
-                void videoRef.current.play().catch(() => {});
-              }
-            }, 250);
-          }
           return;
         }
       }
@@ -682,7 +687,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                   <video
                     ref={videoRef}
                     className="h-full w-full object-contain max-h-full max-w-full select-none pointer-events-auto"
-                    src={streamSrc}
+                    src={isHlsSource ? undefined : streamSrc}
                     poster={poster || undefined}
                     preload="auto"
                     playsInline
@@ -694,16 +699,46 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                       setDuration(video.duration);
                       setPlayerReady(true);
                       setPlayerError(false);
-                      const position = item.id ? readJson<Record<number, number>>("dr_mahmoud_watch_positions", {})[item.id] || 0 : 0;
-                      if (position < video.duration - 5) video.currentTime = position;
+                      const savedPos = item.id ? (readJson<Record<number, number>>("dr_mahmoud_watch_positions", {})[item.id] || 0) : 0;
+                      const targetPos = pendingResumeTimeRef.current > 0 ? pendingResumeTimeRef.current : savedPos;
+                      pendingResumeTimeRef.current = 0;
+                      if (targetPos > 0 && video.duration && targetPos < video.duration - 3) {
+                        try {
+                          video.currentTime = targetPos;
+                          setCurrentTime(targetPos);
+                        } catch {}
+                      }
                     }}
-                    onError={() => { void refreshStreamUrl(); }}
+                    onError={(event) => {
+                      const err = event.currentTarget.error;
+                      if (err && err.code === 1) return; // MEDIA_ERR_ABORTED: ignore user seeks
+                      void refreshStreamUrl();
+                    }}
                     onPlay={() => setPlaying(true)}
-                    onPause={() => setPlaying(false)}
+                    onPause={() => {
+                      setPlaying(false);
+                      if (videoRef.current && item.id) {
+                        const video = videoRef.current;
+                        if (video.duration && video.currentTime > 0) {
+                          const percent = Math.min(100, Math.round((video.currentTime / video.duration) * 100));
+                          void saveProgress(item, percent >= 90 ? 100 : percent, video.currentTime, video.duration);
+                        }
+                      }
+                    }}
                     onTimeUpdate={(event) => {
                       const video = event.currentTarget;
-                      setCurrentTime(video.currentTime);
-                      const percent = video.duration ? Math.round((video.currentTime / video.duration) * 100) : 0;
+                      const cur = video.currentTime;
+                      setCurrentTime(cur);
+                      if (cur > 0) {
+                        latestPositionRef.current = Math.floor(cur);
+                        if (item.id && Math.abs(cur - lastLocalSavedPos.current) >= 3) {
+                          lastLocalSavedPos.current = cur;
+                          const posMap = readJson<Record<number, number>>("dr_mahmoud_watch_positions", {});
+                          posMap[item.id] = Math.floor(cur);
+                          localStorage.setItem("dr_mahmoud_watch_positions", JSON.stringify(posMap));
+                        }
+                      }
+                      const percent = video.duration ? Math.round((cur / video.duration) * 100) : 0;
                       setProgress((old) => Math.max(old, percent >= 90 ? 100 : percent));
                     }}
                     onEnded={() => { void markComplete(); }}

@@ -846,7 +846,7 @@ router.get("/videos/:id/stream", async (req, res, next) => {
       VIDEO_CONTENT_TYPES[path.extname(filename).toLowerCase()] ||
       "video/mp4";
     const cacheControl = "private, max-age=86400, stale-while-revalidate=3600";
-    const MAX_CHUNK_SIZE = 12 * 1024 * 1024; // 12MB chunk for smooth buffering without micro-stuttering
+    const MAX_CHUNK_SIZE = 3 * 1024 * 1024; // 3MB chunk for smooth progressive buffering
 
     if (range) {
       const parts = range.replace(/bytes=/, "").split("-");
@@ -887,6 +887,9 @@ router.get("/videos/:id/stream", async (req, res, next) => {
 
       res.writeHead(206, head);
       file.pipe(res);
+      const cleanup = () => { file.destroy(); };
+      req.on("close", cleanup);
+      res.on("close", cleanup);
     } else {
       const head = {
         "Content-Length": fileSize,
@@ -897,7 +900,11 @@ router.get("/videos/:id/stream", async (req, res, next) => {
         "Last-Modified": lastModified,
       };
       res.writeHead(200, head);
-      fs.createReadStream(filePath).pipe(res);
+      const file = fs.createReadStream(filePath);
+      file.pipe(res);
+      const cleanup = () => { file.destroy(); };
+      req.on("close", cleanup);
+      res.on("close", cleanup);
     }
   } catch (error) {
     next(error);
