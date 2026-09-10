@@ -459,6 +459,49 @@ router.get("/parent/report", async (req, res, next) => {
       };
     });
 
+    // Tuition / Monthly payment status calculation
+    const currentDate = new Date();
+    const currentDayOfMonth = currentDate.getDate();
+    const isUpcomingNewMonth = currentDayOfMonth >= 25; // Last days of month before next month begins
+    const isBeginningOfMonth = currentDayOfMonth <= 7;  // First week of current month
+    const isUnpaid = student.paymentStatus !== "paid";
+    
+    let paymentNotice: {
+      isDue: boolean;
+      status: "paid" | "due" | "upcoming" | "pending_review";
+      title: string;
+      message: string;
+      dueDateText?: string;
+    } = {
+      isDue: false,
+      status: student.paymentStatus === "paid" ? "paid" : (student.paymentStatus === "pending_review" ? "pending_review" : "due"),
+      title: "حالة الشهرية والمصاريف",
+      message: "تم سداد المصاريف للشهر الحالي بنجاح.",
+    };
+
+    if (student.paymentStatus === "pending_review") {
+      paymentNotice = {
+        isDue: false,
+        status: "pending_review",
+        title: "طلب سداد الشهرية قيد المراجعة ⏳",
+        message: "تم تسجيل إيصال السداد وجارٍ مراجعته وتأكيده من قبل الإدارة.",
+      };
+    } else if (isUnpaid) {
+      paymentNotice = {
+        isDue: true,
+        status: "due",
+        title: "تنبيه هام: سداد الشهرية مطلوب ⚠️",
+        message: "نحيطكم علماً بأن مصاريف الشهر الحالي مستحقة السداد. يُرجى سدادها للإدارة أو بالسنتر لضمان استمرار متابعة الطالب وحضوره بالمجموعة.",
+      };
+    } else if (isUpcomingNewMonth) {
+      paymentNotice = {
+        isDue: false,
+        status: "upcoming",
+        title: "تذكير: اقتراب موعد الشهرية الجديدة 📅",
+        message: "نحيطكم علماً باقتراب بداية الشهر الجديد. نرجو التجهيز لسداد الشهرية مع بداية الشهر.",
+      };
+    }
+
     res.json({
       parent: {
         name: parent.name,
@@ -470,8 +513,11 @@ router.get("/parent/report", async (req, res, next) => {
         name: student.name,
         phone: student.phone,
         grade: student.grade,
+        centerName: student.centerName,
+        appointmentSlot: student.appointmentSlot,
         learningMode: student.learningMode,
-        paymentStatus: student.paymentStatus,
+        paymentStatus: student.paymentStatus || "unpaid",
+        notes: student.notes,
         lastLoginAt: student.lastLoginAt,
         lastActiveAt: student.lastActiveAt,
         createdAt: student.createdAt,
@@ -483,6 +529,7 @@ router.get("/parent/report", async (req, res, next) => {
         passedQuizzesCount: passedQuizIds.size,
         attemptsCount: attempts.length,
       },
+      paymentNotice,
       watchHistory,
       quizHistory: formattedQuizHistory,
       notifications: notifications.map((n) => ({
@@ -499,7 +546,9 @@ router.get("/parent/report", async (req, res, next) => {
         status: a.status,
         checkInTime: a.attendedAt ? new Date(a.attendedAt).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" }) : null,
         center: a.centerName,
+        appointmentSlot: a.appointmentSlot,
         notes: a.notes,
+        recordedBy: a.recordedBy,
         createdAt: a.createdAt,
       })),
     });

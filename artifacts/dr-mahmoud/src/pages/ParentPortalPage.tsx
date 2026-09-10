@@ -1,5 +1,29 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Users, Phone, KeyRound, ArrowRight, ShieldCheck, CheckCircle2, Video, Award, Clock, LogOut, RefreshCw, AlertCircle, AlertTriangle, FileText, Bell, BellRing, Volume2, Share2, CalendarCheck, XCircle, MapPin } from "lucide-react";
+import {
+  Users,
+  Phone,
+  KeyRound,
+  ArrowRight,
+  ShieldCheck,
+  CheckCircle2,
+  Award,
+  Clock,
+  LogOut,
+  RefreshCw,
+  AlertCircle,
+  AlertTriangle,
+  FileText,
+  Bell,
+  BellRing,
+  Volume2,
+  Share2,
+  CalendarCheck,
+  XCircle,
+  MapPin,
+  CreditCard,
+  MessageSquareQuote,
+  Sparkles,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 function normalizeArabicDigits(str: string): string {
@@ -21,19 +45,29 @@ type ParentReportData = {
     name: string;
     phone: string;
     grade?: string | null;
+    centerName?: string | null;
+    appointmentSlot?: string | null;
     learningMode: string;
     paymentStatus: string;
+    notes?: string | null;
     lastLoginAt?: string | null;
     lastActiveAt?: string | null;
     createdAt: string;
     daysInactive: number;
     isInactive: boolean;
-    watchedCount: number;
-    completedCount: number;
+    watchedCount?: number;
+    completedCount?: number;
     quizzesCount: number;
     passedQuizzesCount: number;
   };
-  watchHistory: Array<{
+  paymentNotice?: {
+    isDue: boolean;
+    status: "paid" | "due" | "upcoming" | "pending_review";
+    title: string;
+    message: string;
+    dueDateText?: string;
+  };
+  watchHistory?: Array<{
     videoId: number;
     videoTitle: string;
     category: string;
@@ -69,7 +103,9 @@ type ParentReportData = {
     status: "present" | "absent" | "late";
     checkInTime?: string | null;
     center?: string | null;
+    appointmentSlot?: string | null;
     notes?: string | null;
+    recordedBy?: string | null;
     createdAt: string;
   }>;
 };
@@ -399,7 +435,7 @@ export function ParentPortal() {
           </div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">أكاديمية د. محمود المهدي للبرمجة</h1>
           <p className="text-sm text-slate-500 max-w-lg mx-auto">
-            متابعة دقيقة ومستمرة لنسبة إنجاز ابنك، الدروس المسموعة بالدقيقة والتاريخ، وتنبيهات صوتية فورية للإدارة.
+            متابعة مباشرة لنتائج اختبارات الطالب، سجل الحضور والغياب، ملاحظات السلوك من المشرفين، وحالة المصاريف الشهرية.
           </p>
         </div>
 
@@ -479,45 +515,116 @@ export function ParentPortal() {
 
               {/* Status Banner Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-                <div className={`p-4 rounded-2xl border transition-all ${
-                  reportData.student.isInactive 
-                    ? "bg-rose-50/80 border-rose-200 text-rose-900" 
-                    : "bg-emerald-50/80 border-emerald-200 text-emerald-900"
-                }`}>
-                  <span className="text-[11px] font-bold text-slate-500 block mb-1">حالة نشاط الطالب</span>
-                  {reportData.student.isInactive ? (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-rose-700">
-                      <AlertCircle className="w-4 h-4 shrink-0" />
-                      منقطع ({reportData.student.daysInactive} أيام)
+                <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80">
+                  <span className="text-[11px] font-bold text-slate-500 block mb-1">حضور المحاضرات</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-lg font-black text-emerald-700">
+                      {reportData.attendanceHistory?.filter((a) => a.status === "present").length || 0}
                     </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-emerald-700">
-                      <CheckCircle2 className="w-4 h-4 shrink-0" />
-                      نشاط طبيعي ومتابع
-                    </span>
-                  )}
+                    <span className="text-xs text-slate-500 font-semibold">حصة تم حضورها</span>
+                  </div>
                 </div>
 
-                <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80">
-                  <span className="text-[11px] font-bold text-slate-500 block mb-1">الدروس المكتملة والمشاهدة</span>
+                <div className={`p-4 rounded-2xl border transition-all ${
+                  (reportData.attendanceHistory?.filter((a) => a.status === "absent").length || 0) > 0
+                    ? "bg-rose-50/80 border-rose-200 text-rose-900"
+                    : "bg-slate-50/80 border-slate-200/80 text-slate-700"
+                }`}>
+                  <span className="text-[11px] font-bold text-slate-500 block mb-1">غياب المحاضرات</span>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-lg font-black text-slate-900">{reportData.student.completedCount}</span>
-                    <span className="text-xs text-slate-500 font-semibold">من {reportData.student.watchedCount} درس</span>
+                    <span className={`text-lg font-black ${
+                      (reportData.attendanceHistory?.filter((a) => a.status === "absent").length || 0) > 0
+                        ? "text-rose-700"
+                        : "text-slate-900"
+                    }`}>
+                      {reportData.attendanceHistory?.filter((a) => a.status === "absent").length || 0}
+                    </span>
+                    <span className="text-xs text-slate-500 font-semibold">حصة غياب</span>
                   </div>
                 </div>
 
                 <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80">
-                  <span className="text-[11px] font-bold text-slate-500 block mb-1">اختبارات تم اجتيازها</span>
+                  <span className="text-[11px] font-bold text-slate-500 block mb-1">الاختبارات والكويزات</span>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-lg font-black text-slate-900">{reportData.student.passedQuizzesCount}</span>
+                    <span className="text-lg font-black text-blue-600">{reportData.student.passedQuizzesCount}</span>
                     <span className="text-xs text-slate-500 font-semibold">من {reportData.student.quizzesCount} كويز</span>
                   </div>
                 </div>
 
-                <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80">
-                  <span className="text-[11px] font-bold text-slate-500 block mb-1">آخر موعد لتواجد الطالب</span>
-                  <span className="text-xs font-bold text-slate-900 block truncate">{formatDate(reportData.student.lastLoginAt)}</span>
+                <div className={`p-4 rounded-2xl border transition-all ${
+                  reportData.paymentNotice?.isDue || reportData.student.paymentStatus === "unpaid"
+                    ? "bg-rose-50/80 border-rose-200 text-rose-900"
+                    : reportData.student.paymentStatus === "pending_review"
+                    ? "bg-amber-50/80 border-amber-200 text-amber-900"
+                    : "bg-emerald-50/80 border-emerald-200 text-emerald-900"
+                }`}>
+                  <span className="text-[11px] font-bold text-slate-500 block mb-1">حالة الشهرية</span>
+                  <span className="text-xs font-bold block truncate">
+                    {reportData.student.paymentStatus === "paid" ? (
+                      <span className="inline-flex items-center gap-1 text-emerald-700 font-bold">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> مسددة بالكامل ✓
+                      </span>
+                    ) : reportData.student.paymentStatus === "pending_review" ? (
+                      <span className="inline-flex items-center gap-1 text-amber-700 font-bold">
+                        <Clock className="w-3.5 h-3.5" /> قيد المراجعة ⏳
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-rose-700 font-bold">
+                        <AlertTriangle className="w-3.5 h-3.5" /> مستحقة السداد ⚠️
+                      </span>
+                    )}
+                  </span>
                 </div>
+              </div>
+            </div>
+
+            {/* Monthly Tuition & Payment Notice */}
+            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                  <CreditCard className="w-4.5 h-4.5 text-blue-600" />
+                  <span>حالة المصاريف الشهرية والاشتراك</span>
+                </h3>
+                <span className={`text-[11px] font-bold px-3 py-1 rounded-full border shadow-2xs ${
+                  reportData.student.paymentStatus === "paid"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : reportData.student.paymentStatus === "pending_review"
+                    ? "bg-amber-50 text-amber-800 border-amber-200"
+                    : "bg-rose-50 text-rose-700 border-rose-200"
+                }`}>
+                  {reportData.student.paymentStatus === "paid"
+                    ? "مسددة بالكامل ✓"
+                    : reportData.student.paymentStatus === "pending_review"
+                    ? "قيد المراجعة والتأكيد ⏳"
+                    : "مستحقة السداد ⚠️"}
+                </span>
+              </div>
+
+              <div className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs ${
+                reportData.paymentNotice?.isDue || reportData.student.paymentStatus === "unpaid"
+                  ? "bg-rose-50/80 border-rose-200 text-rose-950"
+                  : reportData.paymentNotice?.status === "upcoming"
+                  ? "bg-blue-50/80 border-blue-200 text-blue-950"
+                  : reportData.student.paymentStatus === "pending_review"
+                  ? "bg-amber-50/80 border-amber-200 text-amber-950"
+                  : "bg-emerald-50/60 border-emerald-200 text-emerald-950"
+              }`}>
+                <div className="space-y-1">
+                  <strong className="block font-bold text-sm">
+                    {reportData.paymentNotice?.title || (reportData.student.paymentStatus === "paid" ? "تم سداد المصاريف للشهر الحالي بنجاح" : "تنبيه سداد المصاريف الشهرية")}
+                  </strong>
+                  <p className="text-xs leading-relaxed opacity-90">
+                    {reportData.paymentNotice?.message || "نحيطكم علماً بأن اشتراك ومصاريف الشهر مسجلة بالإدارة."}
+                  </p>
+                </div>
+
+                {(reportData.paymentNotice?.isDue || reportData.student.paymentStatus === "unpaid") && (
+                  <div className="shrink-0 flex items-center gap-2">
+                    <span className="text-[11px] font-bold text-rose-800 bg-white px-3 py-1.5 rounded-xl border border-rose-200 shadow-2xs">
+                      يُرجى السداد بالسنتر أو عبر الإدارة
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -623,7 +730,10 @@ export function ParentPortal() {
                           )}
                         </div>
                         {att.notes && (
-                          <p className="text-[11px] text-slate-500 font-medium">{att.notes}</p>
+                          <div className="inline-flex items-center gap-1 text-[11px] text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100 font-medium">
+                            <MessageSquareQuote className="w-3 h-3 text-blue-600" />
+                            <span>ملاحظة المشرف: {att.notes}</span>
+                          </div>
                         )}
                       </div>
 
@@ -655,46 +765,87 @@ export function ParentPortal() {
               )}
             </div>
 
-            {/* Watch History */}
+            {/* Subadmin Behavior & Observations */}
             <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                  <Video className="w-4.5 h-4.5 text-blue-600" />
-                  <span>سجل مشاهدة واستماع المحاضرات بالتفصيل ({reportData.watchHistory.length})</span>
+                  <MessageSquareQuote className="w-4.5 h-4.5 text-blue-600" />
+                  <span>ملاحظات المشرفين (Subadmin) وسلوك الطالب</span>
                 </h3>
+                <span className="text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-3 py-1 rounded-full shadow-2xs">
+                  تقييم ومتابعة الحصص
+                </span>
               </div>
 
-              {reportData.watchHistory.length === 0 ? (
-                <div className="p-8 text-center bg-slate-50 rounded-2xl text-xs text-slate-500 font-medium">
-                  لم يقم الطالب بمشاهدة أية دروس حتى الآن.
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
-                  {reportData.watchHistory.map((watch, idx) => (
-                    <div key={idx} className="p-4 bg-slate-50/80 hover:bg-slate-100/80 transition-colors rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                      <div className="space-y-1">
-                        <strong className="block font-bold text-slate-900 text-sm">{watch.videoTitle}</strong>
-                        <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
-                          <span className="bg-slate-200/70 text-slate-700 px-2.5 py-0.5 rounded-md font-bold">{watch.category}</span>
-                          {watch.stage && <span className="bg-slate-200/50 text-slate-600 px-2 py-0.5 rounded font-semibold">{watch.stage}</span>}
-                          <span>تاريخ المشاهدة: {formatDate(watch.updatedAt)}</span>
-                        </div>
-                      </div>
+              {(() => {
+                const sessionNotes = (reportData.attendanceHistory || []).filter((a) => a.notes && a.notes.trim() !== "");
+                const studentGeneralNotes = reportData.student.notes && reportData.student.notes.trim() !== "";
+                const behavioralNotifs = (reportData.notifications || []).filter(
+                  (n) => n.type === "warning" || n.title.includes("سلوك") || n.title.includes("تنبيه") || n.title.includes("ملاحظة")
+                );
 
-                      <div className="sm:text-left flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60">
-                        <div className="flex items-center gap-2 justify-between sm:justify-end mb-1.5">
-                          <span className="text-[11px] text-slate-500 font-mono">التقدم:</span>
-                          <span className="font-extrabold text-blue-600 text-xs">{watch.progress}%</span>
-                          <span className="text-[11px] text-slate-400 font-mono">({formatSeconds(watch.currentTimeSeconds)})</span>
-                        </div>
-                        <div className="w-full sm:w-36 h-2 bg-slate-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-blue-600 rounded-full transition-all duration-500" style={{ width: `${watch.progress}%` }} />
-                        </div>
+                const hasAnyNotes = sessionNotes.length > 0 || studentGeneralNotes || behavioralNotifs.length > 0;
+
+                if (!hasAnyNotes) {
+                  return (
+                    <div className="p-6 text-center bg-slate-50/80 rounded-2xl text-xs text-slate-600 font-medium space-y-1">
+                      <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 mb-1">
+                        <CheckCircle2 className="w-4 h-4" />
                       </div>
+                      <p className="font-bold text-slate-800">سلوك الطالب ممتاز ومنتظم ✓</p>
+                      <p className="text-[11px] text-slate-500">
+                        لا توجد أية ملاحظات سلبية أو تنبيهات سلوكية مسجلة من المشرفين حتى الآن.
+                      </p>
                     </div>
-                  ))}
-                </div>
-              )}
+                  );
+                }
+
+                return (
+                  <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                    {sessionNotes.map((att) => (
+                      <div key={att.id} className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-1.5 text-xs">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-900">حصة {att.date}</span>
+                            {att.center && (
+                              <span className="text-[10px] text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200 font-semibold">
+                                {att.center}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                            {att.recordedBy ? `المشرف: ${att.recordedBy}` : "مشرف السنتر"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-700 leading-relaxed font-medium bg-white p-2.5 rounded-xl border border-slate-100">
+                          "{att.notes}"
+                        </p>
+                      </div>
+                    ))}
+
+                    {behavioralNotifs.map((notif) => (
+                      <div key={notif.id} className="p-4 bg-amber-50/60 rounded-2xl border border-amber-200 space-y-1.5 text-xs">
+                        <div className="flex items-center justify-between">
+                          <strong className="text-amber-950 font-bold">{notif.title}</strong>
+                          <span className="text-[10px] text-amber-800 font-semibold">{formatDate(notif.createdAt)}</span>
+                        </div>
+                        <p className="text-xs text-amber-900 leading-relaxed font-medium">
+                          {notif.message}
+                        </p>
+                      </div>
+                    ))}
+
+                    {studentGeneralNotes && (
+                      <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-1.5 text-xs">
+                        <span className="text-[10px] font-bold text-slate-500 block">ملاحظة عامة من الإدارة:</span>
+                        <p className="text-xs text-slate-700 leading-relaxed font-medium">
+                          {reportData.student.notes}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Quiz History */}
