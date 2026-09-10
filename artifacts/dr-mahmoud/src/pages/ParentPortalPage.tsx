@@ -392,8 +392,8 @@ export function ParentPortal() {
         {/* Portal Header */}
         <div className="text-center space-y-3">
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-[#0B63CE] text-xs font-bold">
-              <ShieldCheck className="w-4 h-4" />
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-blue-600 text-xs font-bold">
+              <ShieldCheck className="w-4 h-4 text-blue-600" />
               <span>بوابة ولي الأمر الرسمية لمتابعة الطالب</span>
             </div>
           </div>
@@ -408,17 +408,17 @@ export function ParentPortal() {
           <div className="space-y-6">
             
             {/* Parent & Student Overview Card */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-md space-y-6">
+            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-black flex items-center justify-center text-xl shadow-lg shadow-blue-500/20 shrink-0">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 text-white font-black flex items-center justify-center text-xl shadow-md shadow-blue-500/20 shrink-0">
                     {reportData.student.name.substring(0, 2)}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="text-xl font-black text-slate-900">{reportData.student.name}</h2>
                       {reportData.student.grade && (
-                        <span className="text-xs bg-blue-50 text-blue-700 font-bold px-2.5 py-0.5 rounded-full border border-blue-200">
+                        <span className="text-xs bg-slate-100 text-slate-700 font-bold px-2.5 py-0.5 rounded-full border border-slate-200">
                           {reportData.student.grade}
                         </span>
                       )}
@@ -428,7 +428,7 @@ export function ParentPortal() {
                       <span>•</span>
                       <span className="flex items-center gap-1">
                         كود التتبع: 
-                        <strong className="font-mono bg-slate-900 text-amber-400 px-2.5 py-0.5 rounded-lg font-bold text-xs">
+                        <strong className="font-mono bg-slate-100 text-slate-800 border border-slate-200 px-2.5 py-0.5 rounded-lg font-bold text-xs">
                           {reportData.parent.parentCode}
                         </strong>
                       </span>
@@ -441,10 +441,10 @@ export function ParentPortal() {
                     <button
                       type="button"
                       onClick={requestBrowserNotification}
-                      className="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shadow-2xs bg-blue-50 text-[#0B63CE] border-blue-200 hover:bg-blue-100"
+                      className="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shadow-2xs bg-white text-blue-600 border-slate-200 hover:bg-blue-50 hover:border-blue-200"
                       title="استلام إشعارات الاختبارات على الهاتف أو المتصفح"
                     >
-                      <BellRing className="w-4 h-4 text-[#0B63CE]" />
+                      <BellRing className="w-4 h-4 text-blue-600" />
                       <span>تفعيل إشعارات الهاتف / المتصفح</span>
                     </button>
                   )}
@@ -459,19 +459,19 @@ export function ParentPortal() {
                     }}
                     className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shadow-2xs ${
                       soundEnabled
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
-                        : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"
+                        ? "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                     }`}
                   >
-                    {soundEnabled ? <BellRing className="w-4 h-4 text-emerald-600 animate-pulse" /> : <Bell className="w-4 h-4" />}
+                    {soundEnabled ? <BellRing className="w-4 h-4 text-blue-600 animate-pulse" /> : <Bell className="w-4 h-4" />}
                     <span>{soundEnabled ? "التنبيهات مفعّلة" : "التنبيهات مكتومة"}</span>
                   </button>
 
                   <button
                     onClick={handleLogout}
-                    className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 border border-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs"
+                    className="px-3.5 py-2 rounded-xl bg-white hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 border border-slate-200 text-slate-600 text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs"
                   >
-                    <LogOut className="w-4 h-4 text-slate-500" />
+                    <LogOut className="w-4 h-4 text-slate-400" />
                     <span>تسجيل الخروج</span>
                   </button>
                 </div>
@@ -498,7 +498,7 @@ export function ParentPortal() {
                   )}
                 </div>
 
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
+                <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80">
                   <span className="text-[11px] font-bold text-slate-500 block mb-1">الدروس المكتملة والمشاهدة</span>
                   <div className="flex items-baseline gap-1">
                     <span className="text-lg font-black text-slate-900">{reportData.student.completedCount}</span>
@@ -506,15 +506,15 @@ export function ParentPortal() {
                   </div>
                 </div>
 
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
+                <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80">
                   <span className="text-[11px] font-bold text-slate-500 block mb-1">اختبارات تم اجتيازها</span>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-lg font-black text-purple-700">{reportData.student.passedQuizzesCount}</span>
+                    <span className="text-lg font-black text-slate-900">{reportData.student.passedQuizzesCount}</span>
                     <span className="text-xs text-slate-500 font-semibold">من {reportData.student.quizzesCount} كويز</span>
                   </div>
                 </div>
 
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
+                <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80">
                   <span className="text-[11px] font-bold text-slate-500 block mb-1">آخر موعد لتواجد الطالب</span>
                   <span className="text-xs font-bold text-slate-900 block truncate">{formatDate(reportData.student.lastLoginAt)}</span>
                 </div>
@@ -523,14 +523,14 @@ export function ParentPortal() {
 
             {/* Admin Notifications Alert Box */}
             {reportData.notifications && reportData.notifications.length > 0 && (
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-3xl p-6 space-y-4 shadow-sm">
-                <div className="flex items-center justify-between">
+              <div className="bg-white border border-slate-200/80 rounded-3xl p-6 space-y-4 shadow-xs">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                    <Bell className="w-4.5 h-4.5 text-[#0B63CE]" />
+                    <Bell className="w-4.5 h-4.5 text-blue-600" />
                     <span>إشعارات وتنبيهات المحاضر والإدارة ({reportData.notifications.length})</span>
                   </h3>
-                  <span className="text-[11px] font-bold text-[#0B63CE] bg-white border border-blue-200 px-3 py-1 rounded-full shadow-2xs">
-                    🔔 جرس التنبيه مفعل
+                  <span className="text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-3 py-1 rounded-full shadow-2xs">
+                    🔔 التنبيهات مفعّلة
                   </span>
                 </div>
 
@@ -543,28 +543,28 @@ export function ParentPortal() {
                         key={notif.id}
                         className={`p-4 rounded-2xl border space-y-1.5 text-xs shadow-2xs transition-all ${
                           isAbsent
-                            ? "bg-red-50/90 border-red-200 text-red-950 ring-1 ring-red-300/40"
+                            ? "bg-rose-50/80 border-rose-200 text-rose-950"
                             : isLate
-                            ? "bg-amber-50/90 border-amber-200 text-amber-950"
-                            : "bg-white border-slate-200/80 text-slate-700"
+                            ? "bg-amber-50/80 border-amber-200 text-amber-950"
+                            : "bg-slate-50/80 border-slate-200 text-slate-800"
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5">
                             {isAbsent ? (
-                              <AlertTriangle className="h-4 w-4 text-red-600 shrink-0" />
+                              <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
                             ) : isLate ? (
                               <Clock className="h-4 w-4 text-amber-600 shrink-0" />
                             ) : (
                               <Bell className="h-4 w-4 text-blue-600 shrink-0" />
                             )}
-                            <strong className={`font-bold text-sm ${isAbsent ? "text-red-900" : isLate ? "text-amber-900" : "text-slate-900"}`}>
+                            <strong className={`font-bold text-sm ${isAbsent ? "text-rose-900" : isLate ? "text-amber-900" : "text-slate-900"}`}>
                               {notif.title}
                             </strong>
                           </div>
                           <span className="text-[10px] text-slate-400 font-semibold">{formatDate(notif.createdAt)}</span>
                         </div>
-                        <p className={`text-xs leading-relaxed font-medium ${isAbsent ? "text-red-800" : isLate ? "text-amber-800" : "text-slate-700"}`}>
+                        <p className={`text-xs leading-relaxed font-medium ${isAbsent ? "text-rose-800" : isLate ? "text-amber-800" : "text-slate-600"}`}>
                           {notif.message}
                         </p>
                       </div>
@@ -575,10 +575,10 @@ export function ParentPortal() {
             )}
 
             {/* Attendance & Absence Record */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
                 <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                  <CalendarCheck className="w-4.5 h-4.5 text-emerald-600" />
+                  <CalendarCheck className="w-4.5 h-4.5 text-blue-600" />
                   <span>سجل الحضور والغياب في السناتر والمحاضرات ({reportData.attendanceHistory?.length || 0})</span>
                 </h3>
                 {reportData.attendanceHistory && reportData.attendanceHistory.length > 0 && (
@@ -586,7 +586,7 @@ export function ParentPortal() {
                     <span className="text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200">
                       حاضر: {reportData.attendanceHistory.filter((a) => a.status === "present").length}
                     </span>
-                    <span className="text-red-700 bg-red-50 px-2.5 py-0.5 rounded-md border border-red-200">
+                    <span className="text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-md border border-rose-200">
                       غائب: {reportData.attendanceHistory.filter((a) => a.status === "absent").length}
                     </span>
                   </div>
@@ -604,10 +604,10 @@ export function ParentPortal() {
                       key={att.id}
                       className={`p-4 rounded-2xl border transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs ${
                         att.status === "present"
-                          ? "bg-emerald-50/50 border-emerald-200/80"
+                          ? "bg-slate-50/80 hover:bg-slate-100/80 border-slate-200/80"
                           : att.status === "absent"
-                          ? "bg-red-50/50 border-red-200/80"
-                          : "bg-amber-50/50 border-amber-200/80"
+                          ? "bg-rose-50/40 hover:bg-rose-50/70 border-rose-200/80"
+                          : "bg-amber-50/40 hover:bg-amber-50/70 border-amber-200/80"
                       }`}
                     >
                       <div className="space-y-1">
@@ -617,7 +617,7 @@ export function ParentPortal() {
                           </strong>
                           {att.center && (
                             <span className="inline-flex items-center gap-1 text-[11px] text-slate-600 bg-white px-2 py-0.5 rounded-md border border-slate-200 font-semibold">
-                              <MapPin className="w-3 h-3 text-emerald-600" />
+                              <MapPin className="w-3 h-3 text-slate-500" />
                               {att.center}
                             </span>
                           )}
@@ -629,22 +629,22 @@ export function ParentPortal() {
 
                       <div className="flex items-center gap-2">
                         {att.checkInTime && (
-                          <span className="text-[11px] font-mono text-slate-500 bg-white px-2 py-1 rounded-lg border border-slate-200">
+                          <span className="text-[11px] font-mono text-slate-600 bg-white px-2 py-1 rounded-lg border border-slate-200">
                             وقت المسح: {att.checkInTime}
                           </span>
                         )}
                         {att.status === "present" && (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-emerald-100 text-emerald-800 font-bold border border-emerald-300">
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
                             <CheckCircle2 className="w-3.5 h-3.5" /> حاضر ✓
                           </span>
                         )}
                         {att.status === "absent" && (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-red-100 text-red-800 font-bold border border-red-300">
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-rose-50 text-rose-700 font-bold border border-rose-200">
                             <XCircle className="w-3.5 h-3.5" /> غائب ✕
                           </span>
                         )}
                         {att.status === "late" && (
-                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-amber-100 text-amber-800 font-bold border border-amber-300">
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-amber-50 text-amber-800 font-bold border border-amber-200">
                             <Clock className="w-3.5 h-3.5" /> متأخر ⏳
                           </span>
                         )}
@@ -656,10 +656,10 @@ export function ParentPortal() {
             </div>
 
             {/* Watch History */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
+            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                  <Video className="w-4.5 h-4.5 text-[#0B63CE]" />
+                  <Video className="w-4.5 h-4.5 text-blue-600" />
                   <span>سجل مشاهدة واستماع المحاضرات بالتفصيل ({reportData.watchHistory.length})</span>
                 </h3>
               </div>
@@ -675,8 +675,8 @@ export function ParentPortal() {
                       <div className="space-y-1">
                         <strong className="block font-bold text-slate-900 text-sm">{watch.videoTitle}</strong>
                         <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
-                          <span className="bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-md font-bold">{watch.category}</span>
-                          {watch.stage && <span className="bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-semibold">{watch.stage}</span>}
+                          <span className="bg-slate-200/70 text-slate-700 px-2.5 py-0.5 rounded-md font-bold">{watch.category}</span>
+                          {watch.stage && <span className="bg-slate-200/50 text-slate-600 px-2 py-0.5 rounded font-semibold">{watch.stage}</span>}
                           <span>تاريخ المشاهدة: {formatDate(watch.updatedAt)}</span>
                         </div>
                       </div>
@@ -684,11 +684,11 @@ export function ParentPortal() {
                       <div className="sm:text-left flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60">
                         <div className="flex items-center gap-2 justify-between sm:justify-end mb-1.5">
                           <span className="text-[11px] text-slate-500 font-mono">التقدم:</span>
-                          <span className="font-extrabold text-emerald-600 text-xs">{watch.progress}%</span>
+                          <span className="font-extrabold text-blue-600 text-xs">{watch.progress}%</span>
                           <span className="text-[11px] text-slate-400 font-mono">({formatSeconds(watch.currentTimeSeconds)})</span>
                         </div>
                         <div className="w-full sm:w-36 h-2 bg-slate-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${watch.progress}%` }} />
+                          <div className="h-full bg-blue-600 rounded-full transition-all duration-500" style={{ width: `${watch.progress}%` }} />
                         </div>
                       </div>
                     </div>
@@ -698,14 +698,14 @@ export function ParentPortal() {
             </div>
 
             {/* Quiz History */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
                 <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                  <Award className="w-4.5 h-4.5 text-purple-600" />
+                  <Award className="w-4.5 h-4.5 text-blue-600" />
                   <span>نتائج وتقييمات الكويزات والاختبارات ({reportData.quizHistory.length})</span>
                 </h3>
-                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full self-start sm:self-auto flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                <span className="text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-3 py-1 rounded-full self-start sm:self-auto flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-blue-600 animate-ping" />
                   <span>متابعة وتحديث فوري للدرجات</span>
                 </span>
               </div>
@@ -726,8 +726,8 @@ export function ParentPortal() {
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-slate-900 text-sm">{title}</span>
                             {idx === 0 && (
-                              <span className="bg-amber-100 text-amber-900 text-[10px] font-extrabold px-2 py-0.5 rounded-md border border-amber-300">
-                                أحدث اختبار 🌟
+                              <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-md border border-blue-200">
+                                أحدث اختبار
                               </span>
                             )}
                           </div>
@@ -744,7 +744,7 @@ export function ParentPortal() {
                               {scoreOutOfTotal}
                             </span>
                           )}
-                          <span className={`px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-2xs ${quiz.passed ? "bg-emerald-100 text-emerald-800 border border-emerald-300" : "bg-rose-100 text-rose-800 border border-rose-300"}`}>
+                          <span className={`px-3.5 py-1.5 rounded-xl text-xs font-bold shadow-2xs ${quiz.passed ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-rose-50 text-rose-700 border border-rose-200"}`}>
                             {pct}% ({quiz.passed ? "ناجح ومجتاز ✓" : "لم يجتز ✕"})
                           </span>
                           <button
@@ -754,7 +754,7 @@ export function ParentPortal() {
                               const text = `📊 تقرير اختبار - أكاديمية د. محمود المهدي للبرمجة:\nالطالب: ${reportData.student.name}\nالاختبار: ${title}\nالنتيجة: ${scoreStr} (${pct}%)\nالحالة: ${quiz.passed ? "اجتاز الاختبار بنجاح ✓" : "يحتاج لمراجعة ✕"}\nالتاريخ: ${formatDate(quiz.createdAt)}`;
                               window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
                             }}
-                            className="p-2 rounded-xl bg-white hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200 hover:border-emerald-300 transition-all shadow-2xs"
+                            className="p-2 rounded-xl bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 transition-all shadow-2xs"
                             title="مشاركة النتيجة عبر واتساب"
                           >
                             <Share2 className="w-3.5 h-3.5" />
@@ -770,7 +770,7 @@ export function ParentPortal() {
           </div>
         ) : (
           /* Login / Register / Recover Toggle Card */
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md max-w-lg mx-auto space-y-6">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs max-w-lg mx-auto space-y-6">
             
             {/* Form Mode Selector */}
             <div className="flex items-center bg-slate-100 p-1 rounded-2xl">
@@ -778,7 +778,7 @@ export function ParentPortal() {
                 type="button"
                 onClick={() => { setActiveMode("login"); setRecoveredCode(null); }}
                 className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                  activeMode === "login" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-900"
+                  activeMode === "login" ? "bg-white text-blue-600 shadow-xs" : "text-slate-500 hover:text-slate-900"
                 }`}
               >
                 تسجيل الدخول
@@ -787,7 +787,7 @@ export function ParentPortal() {
                 type="button"
                 onClick={() => { setActiveMode("register"); setRecoveredCode(null); }}
                 className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                  activeMode === "register" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-900"
+                  activeMode === "register" ? "bg-white text-blue-600 shadow-xs" : "text-slate-500 hover:text-slate-900"
                 }`}
               >
                 تسجيل جديد
@@ -796,7 +796,7 @@ export function ParentPortal() {
                 type="button"
                 onClick={() => { setActiveMode("recover"); setRecoveredCode(null); }}
                 className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                  activeMode === "recover" ? "bg-white text-amber-900 font-black shadow-xs" : "text-slate-500 hover:text-slate-900"
+                  activeMode === "recover" ? "bg-white text-blue-600 shadow-xs" : "text-slate-500 hover:text-slate-900"
                 }`}
               >
                 نسيت الكود؟
@@ -805,7 +805,7 @@ export function ParentPortal() {
 
             {activeMode === "login" ? (
               <form onSubmit={handleLogin} className="space-y-4">
-                <div className="p-3 bg-blue-50/70 border border-blue-200/80 rounded-2xl text-xs text-blue-900 space-y-0.5">
+                <div className="p-3.5 bg-blue-50/60 border border-blue-200/70 rounded-2xl text-xs text-blue-900 space-y-0.5">
                   <span className="font-bold block text-[12px]">💡 مرونة في تسجيل الدخول:</span>
                   <p className="text-[11px] text-blue-800 leading-relaxed">
                     يمكنك الدخول مباشرةً بـ <strong>كود ولي الأمر (PAR-...)</strong> أو بـ <strong>كود الطالب</strong> مع رقم هاتف ولي الأمر.
@@ -822,7 +822,7 @@ export function ParentPortal() {
                       placeholder="أدخل رقم هاتفك المسجل..."
                       value={loginPhone}
                       onChange={(e) => setLoginPhone(normalizeArabicDigits(e.target.value))}
-                      className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B63CE]"
+                      className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                     />
                   </div>
                 </div>
@@ -833,7 +833,7 @@ export function ParentPortal() {
                     <button
                       type="button"
                       onClick={() => setActiveMode("recover")}
-                      className="text-[11px] text-[#0B63CE] hover:underline font-bold"
+                      className="text-[11px] text-blue-600 hover:underline font-bold"
                     >
                       نسيت كودك؟
                     </button>
@@ -846,7 +846,7 @@ export function ParentPortal() {
                       placeholder="مثال: PAR-839201 أو كود الطالب"
                       value={loginCode}
                       onChange={(e) => setLoginCode(normalizeArabicDigits(e.target.value))}
-                      className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B63CE] font-mono tracking-wider"
+                      className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono tracking-wider transition-all"
                     />
                   </div>
                 </div>
@@ -854,30 +854,30 @@ export function ParentPortal() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3.5 rounded-xl bg-[#0B63CE] hover:bg-[#0952AC] text-white text-xs font-black transition-all shadow-md flex items-center justify-center gap-2"
+                  className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <span>الدخول لبوابة المتابعة</span>}
                 </button>
               </form>
             ) : activeMode === "recover" ? (
               <form onSubmit={handleRecoverCode} className="space-y-4">
-                <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-900 space-y-1">
-                  <strong className="font-bold block">استرداد كود ولي الأمر المفقود:</strong>
-                  <p className="text-[11px] text-amber-800 leading-relaxed">
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-700 space-y-1">
+                  <strong className="font-bold block text-slate-900">استرداد كود ولي الأمر المفقود:</strong>
+                  <p className="text-[11px] text-slate-600 leading-relaxed">
                     اكتب رقم هاتفك ورقم هاتف ابنك المسجل في المنصة وسيقوم النظام باستعادة الكود لك فوراً.
                   </p>
                 </div>
 
                 {recoveredCode ? (
-                  <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-2xl text-center space-y-2">
-                    <span className="text-xs font-bold text-emerald-800 block">تم استرداد الكود الخاص بك بنجاح:</span>
-                    <strong className="font-mono text-xl text-slate-900 bg-white border border-emerald-300 px-4 py-1.5 rounded-xl inline-block shadow-2xs font-extrabold text-amber-600">
+                  <div className="p-4 bg-blue-50/50 border border-blue-200 rounded-2xl text-center space-y-2">
+                    <span className="text-xs font-bold text-blue-900 block">تم استرداد الكود الخاص بك بنجاح:</span>
+                    <strong className="font-mono text-xl text-blue-700 bg-white border border-blue-200 px-4 py-1.5 rounded-xl inline-block shadow-2xs font-extrabold">
                       {recoveredCode}
                     </strong>
                     <button
                       type="button"
                       onClick={() => setActiveMode("login")}
-                      className="w-full py-2.5 mt-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-2xs block"
+                      className="w-full py-2.5 mt-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-2xs block cursor-pointer"
                     >
                       الانتقال والدخول للبوابة الآن ✓
                     </button>
@@ -894,7 +894,7 @@ export function ParentPortal() {
                           placeholder="أدخل رقم هاتفك..."
                           value={recoverPhone}
                           onChange={(e) => setRecoverPhone(normalizeArabicDigits(e.target.value))}
-                          className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+                          className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                         />
                       </div>
                     </div>
@@ -909,7 +909,7 @@ export function ParentPortal() {
                           placeholder="أدخل رقم هاتف أو كود الطالب..."
                           value={recoverStudentQuery}
                           onChange={(e) => setRecoverStudentQuery(normalizeArabicDigits(e.target.value))}
-                          className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+                          className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                         />
                       </div>
                     </div>
@@ -917,7 +917,7 @@ export function ParentPortal() {
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="w-full py-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black transition-all shadow-md flex items-center justify-center gap-2"
+                      className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
                     >
                       {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <span>استرداد الكود الخاص بي 🔑</span>}
                     </button>
@@ -934,7 +934,7 @@ export function ParentPortal() {
                     placeholder="أدخل اسمك الكامل..."
                     value={regName}
                     onChange={(e) => setRegName(e.target.value)}
-                    className="w-full px-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B63CE]"
+                    className="w-full px-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                   />
                 </div>
 
@@ -948,7 +948,7 @@ export function ParentPortal() {
                       placeholder="أدخل رقم هاتفك..."
                       value={regPhone}
                       onChange={(e) => setRegPhone(normalizeArabicDigits(e.target.value))}
-                      className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B63CE]"
+                      className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                     />
                   </div>
                 </div>
@@ -963,7 +963,7 @@ export function ParentPortal() {
                       placeholder="أدخل رقم هاتف أو كود ابنك المسجل في المنصة..."
                       value={regStudentQuery}
                       onChange={(e) => setRegStudentQuery(normalizeArabicDigits(e.target.value))}
-                      className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0B63CE]"
+                      className="w-full pr-10 pl-4 py-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                     />
                   </div>
                 </div>
@@ -971,7 +971,7 @@ export function ParentPortal() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3.5 rounded-xl bg-[#0B63CE] hover:bg-[#0952AC] text-white text-xs font-black transition-all shadow-md flex items-center justify-center gap-2"
+                  className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <span>تسجيل وتوليد كود ولي الأمر</span>}
                 </button>
