@@ -445,7 +445,8 @@ router.get("/admin/attendance/daily", requireAdmin, async (req: Request, res, ne
       records = records.filter((r) => r.centerName?.toLowerCase().includes(centerFilter.toLowerCase()) || r.enrolledCenter?.toLowerCase().includes(centerFilter.toLowerCase()));
     }
     if (slotFilter && slotFilter !== "all") {
-      records = records.filter((r) => r.appointmentSlot === slotFilter || r.enrolledSlot === slotFilter);
+      const targetSlot = normalizeSlot(slotFilter);
+      records = records.filter((r) => normalizeSlot(r.appointmentSlot) === targetSlot || normalizeSlot(r.enrolledSlot) === targetSlot);
     }
     if (statusFilter && statusFilter !== "all") {
       records = records.filter((r) => r.status === statusFilter);
@@ -622,7 +623,7 @@ router.post("/admin/attendance/bulk-absent", requireAdmin, async (req: Request, 
     const slotFilter = req.body.slot || req.body.appointmentSlot ? String(req.body.slot || req.body.appointmentSlot).trim() : null;
     const notifyParents = req.body.notifyParents === true;
 
-    // Get all approved students
+    // Get all approved students assigned to offline centers (never mark online students absent)
     let students = await db
       .select({
         id: studentsTable.id,
@@ -632,7 +633,12 @@ router.post("/admin/attendance/bulk-absent", requireAdmin, async (req: Request, 
         appointmentSlot: (studentsTable as any).appointmentSlot,
       })
       .from(studentsTable)
-      .where(eq(studentsTable.status, "approved"));
+      .where(
+        and(
+          eq(studentsTable.status, "approved"),
+          sql`(${studentsTable.centerName} IS NOT NULL AND TRIM(${studentsTable.centerName}) != '' AND LOWER(${studentsTable.centerName}) != 'null')`
+        )
+      );
 
     if (stageFilter && stageFilter !== "all") {
       students = students.filter((s) => s.grade?.toLowerCase().includes(stageFilter.toLowerCase()));
