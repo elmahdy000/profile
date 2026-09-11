@@ -608,10 +608,10 @@ export function DashboardTab({
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-black text-sm">
               <MapPin className="h-4 w-4 text-amber-600 shrink-0" />
-              <span>تنبيه إلزامي لتثبيت مقعدك واستخراج كارت الـ ID:</span>
+              <span>تنبيه إلزامي لتثبيت مقعدك واعتماد قيدك بالسنتر:</span>
             </div>
             <p className="text-xs text-amber-800 dark:text-amber-300 font-medium leading-relaxed">
-              لم تقم بتأكيد السنتر والميعاد الحضوري حتى الآن. يرجى التوجه لصفحة "حسابي" لاختيار السنتر والميعاد المناسب لمسارك لمرة واحدة فقط لتأكيد القيد واستخراج كارت الـ ID.
+              لم تقم بتأكيد السنتر والميعاد الحضوري حتى الآن. يرجى التوجه لصفحة "حسابي" لاختيار السنتر والميعاد المناسب لمسارك لمرة واحدة فقط لتثبيت مقعدك ولتتمكن الإدارة من تجهيز وطباعة كارنيه السنتر الخاص بك.
             </p>
           </div>
           <Button

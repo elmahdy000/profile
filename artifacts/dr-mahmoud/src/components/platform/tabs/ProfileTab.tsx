@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import type { Student } from "@/types/platform";
 import { PageHeader, StudentAvatar, ProfileInfoRow, StatusBadge } from "../StudentDashboardUI";
-import { StudentCardModal } from "../../admin/learning/StudentCardModal";
 import { defaultOfflineCenters } from "@/components/admin/settings/CentersTab";
 
 async function cropAvatar(file: File): Promise<Blob> {
@@ -27,9 +26,6 @@ export function ProfileTab({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [avatarLoading, setAvatarLoading] = useState(false);
-  const [isCardModalOpen, setIsCardModalOpen] = useState(false);
-
-  // Center confirmation states
   const [selectedCenter, setSelectedCenter] = useState<string>(student.centerName || "");
   const [selectedSlot, setSelectedSlot] = useState<string>(student.appointmentSlot || "");
   const [confirmingCenter, setConfirmingCenter] = useState(false);
@@ -82,7 +78,7 @@ export function ProfileTab({
       });
       toast({
         title: "تم تأكيد السنتر والميعاد بنجاح! 🔒",
-        description: "تم تثبيت مقعدك ويمكنك الآن استخراج وطباعة كارت السنتر (ID).",
+        description: "تم تثبيت مقعدك وسيتم تجهيز وطباعة كارنيه السنتر (ID) الخاص بك بواسطة الإدارة.",
       });
     } catch (err: any) {
       toast({
@@ -137,18 +133,6 @@ export function ProfileTab({
     }
   };
 
-  const handleOpenCardModal = () => {
-    if (student.learningMode === "offline" && !isConfirmed) {
-      toast({
-        variant: "destructive",
-        title: "⚠️ مطلوب تأكيد السنتر أولاً",
-        description: "يجب اختيار وتأكيد السنتر والميعاد الحضوري أدناه لمرة واحدة قبل استخراج كارت الـ ID.",
-      });
-      return;
-    }
-    setIsCardModalOpen(true);
-  };
-
   return (
     <div className="space-y-5 pb-6 text-right" dir="rtl">
       <PageHeader title="حسابي" description="بياناتك الشخصية والتعليمية وإعدادات الحساب وحجز السنتر." />
@@ -167,19 +151,6 @@ export function ProfileTab({
               <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => void uploadAvatar(event.target.files?.[0])} />
               <Button type="button" variant="outline" size="sm" disabled={avatarLoading} onClick={() => inputRef.current?.click()}>
                 <Camera className="h-4 w-4" /> {avatarLoading ? "جاري الحفظ..." : "تغيير الصورة"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleOpenCardModal}
-                className={`font-bold ${
-                  student.learningMode === "offline" && !isConfirmed
-                    ? "border-amber-500/30 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20"
-                    : "border-blue-500/30 bg-blue-500/10 text-blue-500 hover:bg-blue-500/20"
-                }`}
-              >
-                {student.learningMode === "offline" && !isConfirmed ? "🔒 كارت الـ ID (يتطلب تأكيد السنتر)" : "🎫 بطاقتي بالـ QR Code (ID)"}
               </Button>
               {student.avatarUrl && (
                 <Button type="button" variant="ghost" size="sm" disabled={avatarLoading} onClick={() => void removeAvatar()} className="text-muted-foreground hover:text-red-600">
@@ -200,18 +171,10 @@ export function ProfileTab({
               <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-extrabold text-sm">
                 <MapPin className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
                 <span>📍 بيانات حجز السنتر والمواعيد الحضورية بالزقازيق</span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-900/60 px-2.5 py-0.5 text-[11px] font-black text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700">
-                  <ShieldCheck className="h-3.5 w-3.5" /> مؤكد نهائياً 🔒
-                </span>
               </div>
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => setIsCardModalOpen(true)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-9 rounded-xl gap-1.5 px-4 shadow-sm"
-              >
-                🎫 استخراج كارت السنتر (QR) / الـ ID
-              </Button>
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-900/60 px-3 py-1 text-xs font-black text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700">
+                <ShieldCheck className="h-4 w-4" /> تم التأكيد النهائي 🔒
+              </span>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 text-xs">
               <div className="rounded-xl border border-emerald-200/80 dark:border-emerald-500/20 bg-white/80 dark:bg-background/60 p-3.5 space-y-1">
@@ -227,8 +190,8 @@ export function ProfileTab({
                 </p>
               </div>
             </div>
-            <p className="text-[11px] text-muted-foreground bg-emerald-100/50 dark:bg-emerald-950/40 p-2.5 rounded-xl border border-emerald-200/50 dark:border-emerald-800/30 leading-relaxed">
-              🔒 <strong>تنبيه الإدارة:</strong> تم تأكيد السنتر والموعد الخاص بك بنجاح ولا يمكن تعديل الاختيار مباشرة. إذا احتجت لتغيير السنتر أو الموعد لأسباب طارئة، يرجى التواصل مع <strong>د. محمود المهدي</strong> أو <strong>مساعد الأدمن</strong> لاعتماد التعديل.
+            <p className="text-[11px] text-muted-foreground bg-emerald-100/50 dark:bg-emerald-950/40 p-3 rounded-xl border border-emerald-200/50 dark:border-emerald-800/30 leading-relaxed">
+              ✅ <strong>تم تثبيت مقعدك بالسنتر بنجاح:</strong> ستقوم إدارة د. محمود المهدي بتجهيز وطباعة كارنيه السنتر (ID Card) الخاص بك لتسليمه لك في أول حصة حضورية بالسنتر. ولا يمكن تعديل السنتر أو الميعاد إلا بالرجوع للإدارة أو مساعد الأدمن.
             </p>
           </article>
         ) : (
@@ -246,12 +209,12 @@ export function ProfileTab({
 
             <div className="rounded-xl bg-white/90 dark:bg-background/80 p-3.5 border border-amber-200 dark:border-amber-800/40 space-y-1.5 text-xs">
               <p className="font-bold text-amber-900 dark:text-amber-200">
-                📌 تنبيه إلزامي لتثبيت مقعدك واستخراج كارت الـ ID:
+                📌 تنبيه إلزامي لتثبيت مقعدك واعتماد قيدك بالسنتر:
               </p>
               <p className="text-muted-foreground leading-relaxed text-[11px]">
-                نظراً لقرب بدء الحصص الحضورية، يرجى اختيار السنتر والميعاد المناسب لك من المجموعات الرسمية أدناه، ثم الضغط على <strong>"تأكيد السنتر والميعاد النهائي"</strong>.
+                نظراً لقرب بدء الحصص الحضورية، يرجى اختيار السنتر والميعاد المناسب لك من المجموعات الرسمية أدناه، ثم الضغط على <strong>"تأكيد السنتر والميعاد النهائي"</strong> لتثبيت مقعدك حتى تتمكن الإدارة من إدراجك في كشوف السنتر وتجهيز وطباعة كارنيه الـ ID الخاص بك لتستلمه في أول حصة.
                 <br />
-                <span className="text-red-600 dark:text-red-400 font-bold">ملاحظة:</span> بمجرد الضغط على التأكيد يتم تثبيت مقعدك فوراً وقفل الاختيار ولا يمكنك تعديله إلا بالرجوع للإدارة أو مساعد الأدمن.
+                <span className="text-red-600 dark:text-red-400 font-bold">ملاحظة:</span> بمجرد الضغط على التأكيد يتم قفل الاختيار نهائياً ولا يمكنك تعديله إلا بالرجوع للإدارة أو مساعد الأدمن.
               </p>
             </div>
 
@@ -356,12 +319,6 @@ export function ProfileTab({
           </dl>
         </article>
       </div>
-
-      <StudentCardModal
-        students={[student as any]}
-        isOpen={isCardModalOpen}
-        onClose={() => setIsCardModalOpen(false)}
-      />
     </div>
   );
 }
