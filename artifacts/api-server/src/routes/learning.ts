@@ -542,20 +542,34 @@ async function extractTextFromUpload(buffer: Buffer, originalname: string): Prom
       text = smartDecodeText(buffer);
     }
   } else if (extension === ".docx") {
+    let mdText = "";
     try {
       const mdResult = await mammoth.convertToMarkdown({ buffer });
       if (mdResult.value && mdResult.value.trim()) {
-        const testParsed = parseImportedQuestions(mdResult.value);
+        mdText = mdResult.value;
+        const testParsed = parseImportedQuestions(mdText);
         if (testParsed.questions.length > 0) {
-          text = mdResult.value;
+          text = mdText;
         }
       }
     } catch {}
 
     if (!text.trim()) {
       try {
-        text = (await mammoth.extractRawText({ buffer })).value || "";
+        const raw = (await mammoth.extractRawText({ buffer })).value || "";
+        if (raw.trim()) {
+          const testRaw = parseImportedQuestions(raw);
+          if (testRaw.questions.length > 0) {
+            text = raw;
+          } else {
+            text = mdText || raw;
+          }
+        }
       } catch {}
+    }
+
+    if (!text.trim() && mdText) {
+      text = mdText;
     }
 
     if (!text.trim()) {
@@ -565,10 +579,12 @@ async function extractTextFromUpload(buffer: Buffer, originalname: string): Prom
       } catch {}
     }
   } else if (extension === ".doc") {
+    let mdText = "";
     try {
       const mdResult = await mammoth.convertToMarkdown({ buffer });
       if (mdResult.value && mdResult.value.trim()) {
-        const testParsed = parseImportedQuestions(mdResult.value);
+        mdText = mdResult.value;
+        const testParsed = parseImportedQuestions(mdText);
         if (testParsed.questions.length > 0) {
           text = mdResult.value;
         }
@@ -577,8 +593,20 @@ async function extractTextFromUpload(buffer: Buffer, originalname: string): Prom
 
     if (!text.trim()) {
       try {
-        text = (await mammoth.extractRawText({ buffer })).value || "";
+        const raw = (await mammoth.extractRawText({ buffer })).value || "";
+        if (raw.trim()) {
+          const testRaw = parseImportedQuestions(raw);
+          if (testRaw.questions.length > 0) {
+            text = raw;
+          } else {
+            text = mdText || raw;
+          }
+        }
       } catch {}
+    }
+
+    if (!text.trim() && mdText) {
+      text = mdText;
     }
 
     if (!text.trim()) {
@@ -596,14 +624,17 @@ async function extractTextFromUpload(buffer: Buffer, originalname: string): Prom
 }
 
 function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; warnings: string[] } {
-  // 1. Clean invisible RTL markers, normalize Arabic digits, & normalize newlines
+  // 1. Clean invisible RTL markers, normalize Arabic digits, normalize newlines, & strip markdown artifacts
   let cleanedText = rawText
     .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
     .replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))
     .replace(/[\u200B-\u200F\u202A-\u202E\uFEFF\u061C]/g, "")
     .replace(/\r\n/g, "\n")
     .replace(/\r/g, "\n")
-    .replace(/[\u2028\u2029]/g, "\n");
+    .replace(/[\u2028\u2029]/g, "\n")
+    .replace(/\\([()[\] .\-+*_#~`>!\\])/g, "$1")
+    .replace(/\*\*|__/g, "")
+    .replace(/^#{1,6}\s+/gm, "");
 
   // Check for Table rows (lines with \t that have 3+ cells)
   const rawLines = cleanedText.split("\n");
