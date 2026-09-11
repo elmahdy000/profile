@@ -903,8 +903,6 @@ router.get("/videos/:id/stream", async (req, res, next) => {
         "Accept-Ranges": "bytes",
         "Content-Length": chunksize,
         "Content-Type": contentType,
-        "Content-Disposition": "inline",
-        "X-Content-Type-Options": "nosniff",
         "Cache-Control": cacheControl,
         "ETag": etag,
         "Last-Modified": lastModified,
@@ -919,8 +917,6 @@ router.get("/videos/:id/stream", async (req, res, next) => {
       const head = {
         "Content-Length": fileSize,
         "Content-Type": contentType,
-        "Content-Disposition": "inline",
-        "X-Content-Type-Options": "nosniff",
         "Accept-Ranges": "bytes",
         "Cache-Control": cacheControl,
         "ETag": etag,
