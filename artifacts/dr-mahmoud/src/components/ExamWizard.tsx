@@ -1324,22 +1324,22 @@ export function ExamWizard({
                           <div
                             key={oIdx}
                             dir={isEnglish ? "ltr" : "rtl"}
-                            className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-2 border ${
+                            className={`p-2 rounded-xl text-xs font-semibold flex items-start gap-2 border ${
                               isCorrect
                                 ? "bg-emerald-50 border-emerald-300 text-emerald-900 font-bold"
                                 : "bg-white border-slate-200 text-slate-800"
                             }`}
                           >
-                            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-black ${
+                            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-black mt-0.5 ${
                               isCorrect ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-600"
                             }`}>
                               {letter}
                             </span>
-                            <span className={`truncate flex-1 ${isEnglish ? "text-left font-sans" : "text-right"}`}>
+                            <span className={`flex-1 whitespace-normal break-words leading-relaxed ${isEnglish ? "text-left font-sans" : "text-right"}`}>
                               {opt}
                             </span>
                             {isCorrect && (
-                              <Check className={`h-3.5 w-3.5 text-emerald-600 shrink-0 ${isEnglish ? "ml-auto" : "mr-auto"}`} />
+                              <Check className={`h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5 ${isEnglish ? "ml-auto" : "mr-auto"}`} />
                             )}
                           </div>
                         );

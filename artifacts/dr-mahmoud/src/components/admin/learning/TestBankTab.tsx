@@ -1338,14 +1338,14 @@ export function TestBankTab({
                                   <div
                                     key={optIdx}
                                     dir={isEnglish ? "ltr" : "rtl"}
-                                    className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-2 border ${
+                                    className={`p-2 rounded-xl text-xs font-semibold flex items-start gap-2 border ${
                                       isCorrect
                                         ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-800 dark:text-emerald-300 font-bold"
                                         : "bg-muted/40 border-border text-foreground"
                                     }`}
                                   >
                                     <span
-                                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-black ${
+                                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-black mt-0.5 ${
                                         isCorrect
                                           ? "bg-emerald-600 text-white"
                                           : "bg-muted text-muted-foreground"
@@ -1353,11 +1353,11 @@ export function TestBankTab({
                                     >
                                       {letter}
                                     </span>
-                                    <span className={`truncate flex-1 ${isEnglish ? "text-left font-sans font-medium" : "text-right font-medium"}`}>
+                                    <span className={`flex-1 whitespace-normal break-words leading-relaxed ${isEnglish ? "text-left font-sans font-medium" : "text-right font-medium"}`}>
                                       {opt}
                                     </span>
                                     {isCorrect && (
-                                      <Check className={`h-3.5 w-3.5 text-emerald-600 shrink-0 ${isEnglish ? "ml-auto" : "mr-auto"}`} />
+                                      <Check className={`h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5 ${isEnglish ? "ml-auto" : "mr-auto"}`} />
                                     )}
                                   </div>
                                 );
@@ -1853,21 +1853,21 @@ export function TestBankTab({
                                   return updated;
                                 });
                               }}
-                              className={`p-2 rounded-xl flex items-center gap-2 border cursor-pointer transition-all ${
+                              className={`p-2 rounded-xl flex items-start gap-2 border cursor-pointer transition-all ${
                                 isCorrect
                                   ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-800 dark:text-emerald-300 font-bold ring-2 ring-emerald-500/20 shadow-xs"
                                   : "bg-background border-border text-foreground hover:border-emerald-500/40 hover:bg-muted/40"
                               }`}
                               title="اضغط لتحديد هذا الخيار كإجابة صحيحة لهذا السؤال"
                             >
-                              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-black bg-muted">
+                              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-black bg-muted mt-0.5">
                                 {letter}
                               </span>
-                              <span className={`truncate flex-1 ${isEnglish ? "text-left font-sans font-medium" : "text-right font-medium"}`}>
+                              <span className={`flex-1 whitespace-normal break-words leading-relaxed ${isEnglish ? "text-left font-sans font-medium" : "text-right font-medium"}`}>
                                 {opt}
                               </span>
                               {isCorrect && (
-                                <Check className={`h-3.5 w-3.5 text-emerald-600 shrink-0 ${isEnglish ? "ml-auto" : "mr-auto"}`} />
+                                <Check className={`h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5 ${isEnglish ? "ml-auto" : "mr-auto"}`} />
                               )}
                             </div>
                           );
@@ -3286,24 +3286,24 @@ export function TestBankTab({
                                 <div
                                   key={oIdx}
                                   dir={isEnglish ? "ltr" : "rtl"}
-                                  className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-2 border ${
+                                  className={`p-2 rounded-xl text-xs font-semibold flex items-start gap-2 border ${
                                     isCorrect
                                       ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-800 dark:text-emerald-300 font-bold"
                                       : "bg-muted/40 border-border text-foreground"
                                   }`}
                                 >
                                   <span
-                                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-black ${
+                                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-black mt-0.5 ${
                                       isCorrect ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground"
                                     }`}
                                   >
                                     {letter}
                                   </span>
-                                  <span className={`truncate flex-1 ${isEnglish ? "text-left font-sans font-medium" : "text-right font-medium"}`}>
+                                  <span className={`flex-1 whitespace-normal break-words leading-relaxed ${isEnglish ? "text-left font-sans font-medium" : "text-right font-medium"}`}>
                                     {opt}
                                   </span>
                                   {isCorrect && (
-                                    <Check className={`h-3.5 w-3.5 text-emerald-600 shrink-0 ${isEnglish ? "ml-auto" : "mr-auto"}`} />
+                                    <Check className={`h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5 ${isEnglish ? "ml-auto" : "mr-auto"}`} />
                                   )}
                                 </div>
                               );
@@ -3495,23 +3495,23 @@ export function TestBankTab({
                           return (
                             <div
                               key={optIdx}
-                              className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-2 border ${
+                              className={`p-2 rounded-xl text-xs font-semibold flex items-start gap-2 border ${
                                 isCorr
                                   ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-800 dark:text-emerald-300 font-bold"
                                   : "bg-background border-border text-foreground"
                               }`}
                             >
                               <span
-                                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-black ${
+                                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-black mt-0.5 ${
                                   isCorr ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground"
                                 }`}
                               >
                                 {lbl}
                               </span>
-                              <span className={`truncate flex-1 ${isEng ? "text-left font-sans" : "text-right"}`}>
+                              <span className={`flex-1 whitespace-normal break-words leading-relaxed ${isEng ? "text-left font-sans" : "text-right"}`}>
                                 {opt}
                               </span>
-                              {isCorr && <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />}
+                              {isCorr && <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />}
                             </div>
                           );
                         })}
