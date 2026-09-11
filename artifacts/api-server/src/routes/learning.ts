@@ -411,7 +411,19 @@ function validateQuestions(value: unknown): QuizQuestion[] | null {
 
 const optionLabels: Record<string, number> = {
   a: 0, b: 1, c: 2, d: 3, e: 4, f: 5,
-  "أ": 0, "ا": 0, "ب": 1, "ج": 2, "د": 3, "ه": 4, "هـ": 4,
+  "أ": 0, "ا": 0, "إ": 0, "آ": 0, "ء": 0,
+  "ب": 1,
+  "ج": 2,
+  "د": 3,
+  "ه": 4, "هـ": 4,
+  "و": 5,
+  "ز": 6,
+  "الأول": 0, "الاول": 0,
+  "الثاني": 1, "الثانى": 1,
+  "الثالث": 2,
+  "الرابع": 3,
+  "الخامس": 4,
+  "السادس": 5,
 };
 
 function optionIndex(value: string): number | null {
@@ -432,12 +444,10 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
     .replace(/[\u2028\u2029]/g, "\n");
 
   // 2. Preprocess inline text & Word table cell merges (force newlines before headers/choices/answers/explanations if missing)
-  // Fix merged "الإجابة الصحيحة: بالتوضيح:" where answer 'ب' is glued to 'التوضيح:'
-  cleanedText = cleanedText.replace(/(الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة)\s*[:：\-]?\s*([أابجدهA-Da-d1-6])(التوضيح|التفسير|الشرح|تفسير|شرح|explanation|note)\s*[:：\-]?/gi, "$1: $2\n$3: ");
-  // Fix merged choices without space e.g. "فقطب) " -> "فقط\nب) " or "نفسهج) " -> "نفسه\nج) "
-  cleanedText = cleanedText.replace(/([^\s\n])([A-Fa-fأابجده]|هـ|[1-6])\)\s*/g, "$1\n$2) ");
+  cleanedText = cleanedText.replace(/(الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة)\s*[:：\-]?\s*([أابجدهإآA-Da-d1-6])(التوضيح|التفسير|الشرح|تفسير|شرح|explanation|note)\s*[:：\-]?/gi, "$1: $2\n$3: ");
+  // Separate words glued to choice letters, but NEVER break '(', '[', '*', '-', '•'
+  cleanedText = cleanedText.replace(/([a-zA-Z\u0600-\u06FF])\s*([A-Fa-fأابجدهإآ]|هـ|[1-6])\)\s+/g, "$1\n$2) ");
   cleanedText = cleanedText.replace(/([^\n])\s*((?:ال)?س(?:ؤال)?(?:\s*رقم)?\s*[:：\-]?\s*\d+|Question\s*[:：\-]?\s*\d+|#\d+)/gi, "$1\n$2");
-  cleanedText = cleanedText.replace(/([^\n])\s+([A-Fa-fأابجده]|هـ|[1-6])\)\s+/g, "$1\n$2) ");
   cleanedText = cleanedText.replace(/([^\n])\s*(الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|correct\s*answer|answer)\s*[:：\-]?\s*/gi, "$1\nالإجابة الصحيحة: ");
   cleanedText = cleanedText.replace(/([^\n])\s*(التوضيح|التفسير|الشرح|تفسير|شرح|explanation|note)\s*[:：\-]?\s*/gi, "$1\nالتوضيح: ");
 
@@ -461,9 +471,10 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
 
   const finishCurrent = () => {
     if (!current) return;
-    // Strip leading "سؤال :1" or "سؤال 1:" if prompt still has it
+    // Strip leading question numbers like "1- ", "1. ", "سؤال :1", "Q1:"
     let cleanedPrompt = current.prompt
       .replace(/^(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-]?\s*\d+\s*[:：\-.]?\s*/i, "")
+      .replace(/^\(?\d+\)?[\s\.\)\-:]+\s*/, "")
       .trim();
     if (!cleanedPrompt && current.prompt) {
       cleanedPrompt = current.prompt;
@@ -473,35 +484,46 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
       ? `${cleanedPrompt}\n${current.arabicTranslation}`
       : cleanedPrompt;
     if (finalPrompt && current.options.length >= 2) {
+      // Ensure correctIndex is valid integer within bounds
+      const validIndex =
+        typeof current.correctIndex === "number" &&
+        current.correctIndex >= 0 &&
+        current.correctIndex < current.options.length
+          ? current.correctIndex
+          : 0;
+
       questions.push({
         prompt: finalPrompt,
         options: current.options,
-        correctIndex: current.correctIndex ?? 0,
-        explanation: current.explanation,
+        correctIndex: validIndex,
+        explanation: current.explanation ? current.explanation.trim() : undefined,
       });
       if (current.correctIndex === null) {
-        warnings.push(`لم يتم العثور على سطر إجابة صريح للسؤال: «${current.prompt.slice(0, 60)}». تم تعيين الاختيار الأول افتراضيًا.`);
+        warnings.push(`لم يتم العثور على إجابة صريحة للسؤال: «${finalPrompt.slice(0, 50)}...». تم تعيين الخيار الأول افتراضيًا.`);
       }
     } else if (current.prompt) {
-      warnings.push(`تم تجاوز السؤال: «${current.prompt.slice(0, 60)}» لأنه يحتاج اختيارين على الأقل (يحتوي على ${current.options.length}).`);
+      warnings.push(`تم تجاوز: «${current.prompt.slice(0, 50)}...» لأنه يحتاج اختيارين على الأقل (يحتوي على ${current.options.length}).`);
     }
     current = null;
   };
 
-  // Helper: detect if a line is Arabic (contains Arabic Unicode chars)
   const isArabicLine = (line: string) => /[\u0600-\u06FF]/.test(line);
 
-  // Helper: detect if line looks like an option prefix (A), B), 1., etc.)
-  const CHOICE_RE = /^\s*(?:\(?([A-Fa-fأابجده]|هـ|[1-6])\)?[.):\-\s]\s*)(.+)$/;
+  // Helper: detect choice lines with support for prefixes like "* أ)", "(أ)", "A.", "1-", etc.
+  const CHOICE_RE = /^\s*(?:(?:[\*\•\-\[\(]|\[x\]|\[✓\]|\(✓\))?\s*([A-Fa-fأابجدهإآ]|هـ|[1-6]|الأول|الاول|الثاني|الثانى|الثالث|الرابع)\s*[\)\.\:\-\]]\s*)(.+)$/i;
 
-  // Helper: detect "Correct Answer: X)" or "Answer: B) main()" — flexible
+  // Helper: detect answer line
   const ANSWER_RE = /^\s*(?:correct\s*answer|answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة)\s*[:：\-]?\s*(.+)$/i;
 
-  // Helper: detect explanation line — handles ":التوضيح" (RTL colon first) and "التوضيح:" and "الشرح" etc.
+  // Helper: detect explanation header
   const EXPLANATION_HEADER_RE = /^\s*(?::?\s*(?:explanation|note|التوضيح|التفسير|الشرح|تفسير|شرح|ملاحظة)\s*:?\s*)(.*)$/i;
 
-  // Helper: detect standalone question header line like "Question 1" or "Question 1:" or "1." or "سؤال :1" or "سؤال 1"
+  // Helper: detect question header e.g. "Question 1", "1.", "سؤال 1"
   const QUESTION_HEADER_RE = /^\s*(?:(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-]?\s*\d+|\(?\d+\)?|#\d+)(?:\s*[:：\-\.\)]\s*(.*))?$/i;
+
+  const isNextLineChoice = (idx: number) => {
+    return idx + 1 < lines.length && Boolean(lines[idx + 1].match(CHOICE_RE));
+  };
 
   let collectingExplanation = false;
   let hasFoundAnswer = false;
@@ -509,11 +531,9 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
 
-    // 1. Check if standalone Question header (e.g. "Question 1" or "سؤال :1" or "1. What is...")
+    // 1. Standalone Question Header ("Question 1" or "سؤال 1:" or "1. ...")
     const questionHeaderMatch = line.match(QUESTION_HEADER_RE);
-    // Ensure it's not matching choice lines like "A)" or single letters
-    if (questionHeaderMatch && !line.match(/^\s*[A-Fa-fأابجده]\s*[.):\-]/)) {
-      // Check if it's "Question 1" with text inline vs just "Question 1" heading
+    if (questionHeaderMatch && !line.match(/^\s*[A-Fa-fأابجدهإآ]\s*[.):\-]/)) {
       const inlinePrompt = questionHeaderMatch[1]?.trim();
       finishCurrent();
       collectingExplanation = false;
@@ -526,7 +546,21 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
       continue;
     }
 
-    // 2. Explanation header
+    // 2. If current has an answer or explanation, and this line is NOT a choice,
+    // and next line is a choice, this line is the PROMPT of the next question!
+    if ((hasFoundAnswer || collectingExplanation) && !line.match(CHOICE_RE) && !line.match(ANSWER_RE) && !line.match(EXPLANATION_HEADER_RE) && isNextLineChoice(i)) {
+      finishCurrent();
+      collectingExplanation = false;
+      hasFoundAnswer = false;
+      current = {
+        prompt: line,
+        options: [],
+        correctIndex: null,
+      };
+      continue;
+    }
+
+    // 3. Explanation Header
     const explanationHeaderMatch = line.match(EXPLANATION_HEADER_RE);
     if (explanationHeaderMatch && current) {
       collectingExplanation = true;
@@ -537,7 +571,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
       continue;
     }
 
-    // 2b. Multi-line explanation collection
+    // 3b. Multi-line explanation collection
     if (collectingExplanation && current) {
       if (line.match(QUESTION_HEADER_RE) || line.match(ANSWER_RE) || line.match(CHOICE_RE)) {
         collectingExplanation = false;
@@ -547,13 +581,13 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
       }
     }
 
-    // 3. Answer line — "Correct Answer: B) main()"
+    // 4. Answer Line (e.g. "الإجابة الصحيحة: ب" or "Answer: B")
     const answerMatch = line.match(ANSWER_RE);
     if (answerMatch && current) {
       collectingExplanation = false;
       hasFoundAnswer = true;
       const answerVal = answerMatch[1].trim();
-      const leadingToken = answerVal.match(/^([A-Fa-fأابجده]|هـ|[1-6])(?=[\s\)\.\:\-]|$)/)?.[1];
+      const leadingToken = answerVal.match(/^([A-Fa-fأابجدهإآ]|هـ|[1-6]|الأول|الاول|الثاني|الثانى|الثالث|الرابع)(?=[\s\)\.\:\-]|$)/i)?.[1];
       const byIndex = leadingToken ? optionIndex(leadingToken) : null;
       const byText = current.options.findIndex((o) => o.toLowerCase().trim() === answerVal.toLowerCase().trim());
       if (byIndex !== null && byIndex < current.options.length) {
@@ -561,7 +595,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
       } else if (byText >= 0) {
         current.correctIndex = byText;
       } else {
-        const afterLetter = answerVal.replace(/^([A-Fa-fأابجده]|هـ|[1-6])\)?[.):\-\s]+/, "").trim();
+        const afterLetter = answerVal.replace(/^([A-Fa-fأابجدهإآ]|هـ|[1-6]|الأول|الاول|الثاني|الثانى|الثالث|الرابع)\)?[.):\-\s]+/, "").trim();
         const byTextAfter = current.options.findIndex((o) =>
           o.toLowerCase().replace(/[()]/g, "").trim().includes(afterLetter.toLowerCase().replace(/[()]/g, "").trim())
         );
@@ -574,12 +608,44 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
       continue;
     }
 
-    // 4. Choice line: "A) start()"
+    // 4. Choice Line (e.g. "أ) باريس" or "*ب) لندن" or "A) London")
     const choiceMatch = line.match(CHOICE_RE);
-    if (choiceMatch && current && current.options.length < 8 && !hasFoundAnswer) {
-      collectingExplanation = false;
-      current.options.push(choiceMatch[2].trim());
-      continue;
+    if (choiceMatch && current) {
+      const optionToken = choiceMatch[1];
+      const optIdx = optionIndex(optionToken);
+
+      // If we see Option 0 ("A" or "أ") while current already has choices,
+      // it means the previous question has finished without an explicit header!
+      if (optIdx === 0 && current.options.length >= 2) {
+        finishCurrent();
+        hasFoundAnswer = false;
+        collectingExplanation = false;
+        current = { prompt: "", options: [], correctIndex: null };
+      }
+
+      if (current && current.options.length < 8) {
+        collectingExplanation = false;
+
+        // Check if choice has an asterisk or checkmark indicating it is correct
+        const isMarkedCorrect =
+          /^\s*(?:\*|\[x\]|\[✓\]|\(✓\))\s*/i.test(line) ||
+          /(?:\*|\[x\]|\[✓\]|\(✓\)|\(صح\)|\(صحيحة\)|\(الإجابة الصحيحة\)|\(الاجابة الصحيحة\))\s*$/i.test(line) ||
+          /\s+\*\s*$/.test(line) ||
+          /^\s*[\*\•]\s*/.test(choiceMatch[2]);
+
+        let cleanOption = choiceMatch[2]
+          .replace(/^[\*\•\s]+/, "")
+          .replace(/\s*(?:\*|\[x\]|\[✓\]|\(✓\)|\(صح\)|\(صحيحة\)|\(الإجابة الصحيحة\)|\(الاجابة الصحيحة\))\s*$/i, "")
+          .trim();
+
+        current.options.push(cleanOption);
+
+        if (isMarkedCorrect) {
+          current.correctIndex = current.options.length - 1;
+          hasFoundAnswer = true;
+        }
+        continue;
+      }
     }
 
     // 5. Fallback line handling
@@ -592,10 +658,19 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
       collectingExplanation = false;
       hasFoundAnswer = false;
     } else if (!current.prompt) {
-      // First line after a header like "Question 1"
       current.prompt = line;
+    } else if (hasFoundAnswer && !collectingExplanation) {
+      // Line appears after the previous question's answer line, and is not an explanation.
+      // This is the prompt of a new unnumbered question!
+      finishCurrent();
+      current = {
+        prompt: line,
+        options: [],
+        correctIndex: null,
+      };
+      hasFoundAnswer = false;
+      collectingExplanation = false;
     } else if (current.options.length === 0 && !current.arabicTranslation) {
-      // Arabic translation of English prompt (line immediately after English question)
       if (isArabicLine(line) && !isArabicLine(current.prompt)) {
         current.arabicTranslation = line;
       } else {
@@ -603,11 +678,10 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
       }
     } else if (current.options.length === 0) {
       current.prompt += `\n${line}`;
-    } else if (hasFoundAnswer || collectingExplanation) {
-      // Any extra lines after the answer line belong to explanation
+    } else if (collectingExplanation) {
       current.explanation = (current.explanation ? current.explanation + "\n" : "") + line;
-    } else if (!collectingExplanation && current.options.length > 0) {
-      // Continuation of last option before answer line
+    } else if (current.options.length > 0) {
+      // Continuation line for the last choice
       current.options[current.options.length - 1] += `\n${line}`;
     }
   }
@@ -4025,11 +4099,42 @@ router.post("/admin/learning/test-bank/upload", requireAdmin, (req, res, next) =
         });
       }
 
-      // Insert into question bank
+      // Deduplicate against existing questions in this stage/unit/lesson
+      const existingRows = await db
+        .select({
+          id: questionBankTable.id,
+          prompt: sql<string>`${questionBankTable.question}->>'prompt'`,
+        })
+        .from(questionBankTable)
+        .where(
+          and(
+            eq(questionBankTable.stage, stage || "عام"),
+            eq(questionBankTable.unit, unit || "الوحدة العامة"),
+            eq(questionBankTable.lesson, lesson || "الدرس العام")
+          )
+        );
+
+      const existingPrompts = new Set(existingRows.map((r) => (r.prompt || "").trim().toLowerCase()));
+      const nonDuplicates = validQuestions.filter(
+        (q) => !existingPrompts.has(String(q.prompt).trim().toLowerCase())
+      );
+
+      if (nonDuplicates.length === 0) {
+        return res.status(200).json({
+          success: true,
+          count: 0,
+          warnings: [...warnings, "جميع الأسئلة كانت موجودة بالفعل في بنك هذا الدرس (تم تخطي التكرار)."],
+          stage,
+          unit,
+          lesson,
+        });
+      }
+
+      // Insert non-duplicate questions into question bank
       const inserted = await db
         .insert(questionBankTable)
         .values(
-          validQuestions.map((q) => ({
+          nonDuplicates.map((q) => ({
             courseId,
             category: "عام",
             stage: stage || "عام",
@@ -4055,6 +4160,7 @@ router.post("/admin/learning/test-bank/upload", requireAdmin, (req, res, next) =
       return res.status(201).json({
         success: true,
         count: inserted.length,
+        skippedDuplicates: validQuestions.length - nonDuplicates.length,
         warnings,
         stage,
         unit,
@@ -4085,6 +4191,7 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
       maxAttempts,
       shuffleQuestions,
       showExplanations,
+      requiredProgress,
       isPublished,
     } = req.body;
 
@@ -4113,11 +4220,16 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
     }
 
     let selectedRows: typeof availableQuestions = [];
+    let targetCount = qCount;
 
     if (difficultyDistribution && typeof difficultyDistribution === "object") {
-      const easyCount = Number(difficultyDistribution.easy) || 0;
-      const medCount = Number(difficultyDistribution.medium) || 0;
-      const hardCount = Number(difficultyDistribution.hard) || 0;
+      const easyCount = Math.max(0, Number(difficultyDistribution.easy) || 0);
+      const medCount = Math.max(0, Number(difficultyDistribution.medium) || 0);
+      const hardCount = Math.max(0, Number(difficultyDistribution.hard) || 0);
+      const sum = easyCount + medCount + hardCount;
+      if (sum > 0) {
+        targetCount = sum;
+      }
 
       const easyPool = availableQuestions.filter((q) => q.difficulty === "easy").sort(() => Math.random() - 0.5);
       const medPool = availableQuestions.filter((q) => q.difficulty === "medium").sort(() => Math.random() - 0.5);
@@ -4129,14 +4241,14 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
 
       selectedRows = [...pickedEasy, ...pickedMed, ...pickedHard];
 
-      if (selectedRows.length < qCount) {
+      if (selectedRows.length < targetCount) {
         const selectedIds = new Set(selectedRows.map((r) => r.id));
         const remaining = availableQuestions.filter((r) => !selectedIds.has(r.id)).sort(() => Math.random() - 0.5);
-        selectedRows.push(...remaining.slice(0, qCount - selectedRows.length));
+        selectedRows.push(...remaining.slice(0, targetCount - selectedRows.length));
       }
     } else {
       const shuffled = [...availableQuestions].sort(() => Math.random() - 0.5);
-      selectedRows = shuffled.slice(0, qCount);
+      selectedRows = shuffled.slice(0, targetCount);
     }
 
     if (selectedRows.length === 0) {
@@ -4152,8 +4264,27 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
       points: r.points || r.question.points || 1,
     }));
 
-    const resolvedCourseId = Number(courseId) || null;
+    let resolvedCourseId = Number(courseId) || null;
     const resolvedVideoId = Number(videoId) || null;
+    let quizCategory = stage || "عام";
+    let isLessonScope = scope === "lesson" && Boolean(resolvedVideoId);
+
+    if (resolvedVideoId) {
+      const [video] = await db.select().from(videosTable).where(eq(videosTable.id, resolvedVideoId)).limit(1);
+      if (video) {
+        resolvedCourseId = video.courseId ?? resolvedCourseId;
+        quizCategory = video.category || quizCategory;
+        isLessonScope = true;
+      }
+    }
+
+    if (resolvedCourseId && quizCategory === (stage || "عام")) {
+      const [course] = await db.select().from(coursesTable).where(eq(coursesTable.id, resolvedCourseId)).limit(1);
+      if (course) {
+        quizCategory = course.title;
+      }
+    }
+
     const targetStages = Array.isArray(stages) && stages.length ? stages : (stage ? [stage] : []);
 
     const [newQuiz] = await db
@@ -4161,10 +4292,10 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
       .values({
         title: title.trim(),
         courseId: resolvedCourseId,
-        videoId: resolvedVideoId,
-        scope: scope === "lesson" && resolvedVideoId ? "lesson" : "course",
+        videoId: isLessonScope ? resolvedVideoId : null,
+        scope: isLessonScope ? "lesson" : "course",
         description: `اختبار تم توليده آلياً من بنك الأسئلة (${stage || ""} - ${unit || ""} - ${lesson || ""})`.trim(),
-        category: stage || "عام",
+        category: quizCategory,
         stage: targetStages[0] || null,
         stages: targetStages,
         durationMinutes: durationMinutes ? Number(durationMinutes) : null,
@@ -4172,13 +4303,25 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
         maxAttempts: Math.max(0, Math.min(20, Number(maxAttempts ?? 3))),
         shuffleQuestions: shuffleQuestions !== false,
         showExplanations: showExplanations !== false,
-        requiredProgress: 0,
+        requiredProgress: isLessonScope ? Math.max(0, Math.min(100, Number(requiredProgress ?? 80))) : 0,
         questions: finalQuestions,
         isPublished: isPublished !== false,
       })
       .returning();
 
-    return res.status(201).json(newQuiz);
+    // CRITICAL: Link the newly generated quiz directly to the video lesson so students see it immediately!
+    if (isLessonScope && resolvedVideoId) {
+      await db.update(videosTable).set({ quizId: newQuiz.id }).where(eq(videosTable.id, resolvedVideoId));
+    }
+
+    return res.status(201).json({
+      ...newQuiz,
+      requestedCount: targetCount,
+      actualCount: finalQuestions.length,
+      note: finalQuestions.length < targetCount
+        ? `تم توليد الاختبار بـ ${finalQuestions.length} سؤالاً نظراً لاكتمال الأسئلة المتاحة بالبنك لهذا النطاق.`
+        : undefined,
+    });
   } catch (error) {
     next(error);
   }
@@ -4288,7 +4431,7 @@ router.delete("/admin/learning/test-bank/clear-lesson", requireSuperAdmin, async
 
 router.post("/admin/learning/question-bank/batch-import", requireAdmin, async (req, res, next) => {
   try {
-    const { questions, courseId, category, stage, stages, unit, lesson, difficulty } = req.body;
+    const { questions, courseId, category, stage, stages, unit, lesson, difficulty, points } = req.body;
     if (!Array.isArray(questions) || questions.length === 0) {
       res.status(400).json({ error: "قائمة الأسئلة فارغة" });
       return;
@@ -4303,33 +4446,68 @@ router.post("/admin/learning/question-bank/batch-import", requireAdmin, async (r
       return;
     }
 
+    // Deduplicate against existing questions in this stage/unit/lesson
+    const targetStage = String(stage || "عام").trim();
+    const targetUnit = String(unit || "الوحدة العامة").trim();
+    const targetLesson = String(lesson || "الدرس العام").trim();
+
+    const existingRows = await db
+      .select({
+        id: questionBankTable.id,
+        prompt: sql<string>`${questionBankTable.question}->>'prompt'`,
+      })
+      .from(questionBankTable)
+      .where(
+        and(
+          eq(questionBankTable.stage, targetStage),
+          eq(questionBankTable.unit, targetUnit),
+          eq(questionBankTable.lesson, targetLesson)
+        )
+      );
+
+    const existingPrompts = new Set(existingRows.map((r) => (r.prompt || "").trim().toLowerCase()));
+    const nonDuplicates = validQuestions.filter(
+      (q) => !existingPrompts.has(String(q.prompt).trim().toLowerCase())
+    );
+
+    if (nonDuplicates.length === 0) {
+      return res.status(200).json({
+        count: 0,
+        skippedDuplicates: validQuestions.length,
+        message: "جميع هذه الأسئلة موجودة بالفعل في بنك هذا الدرس (تم تخطي التكرار)",
+      });
+    }
+
     const inserted = await db
       .insert(questionBankTable)
       .values(
-        validQuestions.map((q) => ({
+        nonDuplicates.map((q) => ({
           courseId: Number(courseId) || null,
           category: String(category || "عام"),
-          stage: String(stage || "عام"),
+          stage: targetStage,
           stages: Array.isArray(stages) ? stages : (stage ? [stage] : []),
-          unit: String(unit || "الوحدة العامة"),
-          lesson: String(lesson || "الدرس العام"),
+          unit: targetUnit,
+          lesson: targetLesson,
           difficulty: String(q.difficulty || difficulty || "medium"),
-          points: Number(q.points) || 1,
+          points: Number(q.points || points) || 1,
           subject: "",
-          tags: [stage, unit, lesson].filter(Boolean),
+          tags: [targetStage, targetUnit, targetLesson].filter(Boolean),
           question: {
             prompt: String(q.prompt).trim(),
             options: q.options.map((o: unknown) => String(o).trim()),
             correctIndex: Math.max(0, Math.min(q.options.length - 1, Number(q.correctIndex) || 0)),
             explanation: String(q.explanation || "").trim() || undefined,
             imageUrl: String(q.imageUrl || "").trim() || undefined,
-            points: Number(q.points) || 1,
+            points: Number(q.points || points) || 1,
           },
         }))
       )
       .returning();
 
-    res.status(201).json({ count: inserted.length });
+    res.status(201).json({
+      count: inserted.length,
+      skippedDuplicates: validQuestions.length - nonDuplicates.length,
+    });
   } catch (error) {
     next(error);
   }

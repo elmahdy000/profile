@@ -125,6 +125,8 @@ export function TestBankTab({
   const [genStage, setGenStage] = useState<string>("الصف الأول الثانوي");
   const [genUnit, setGenUnit] = useState<string>("all");
   const [genLesson, setGenLesson] = useState<string>("all");
+  const [genScope, setGenScope] = useState<"course" | "lesson">("course");
+  const [genVideoId, setGenVideoId] = useState<string>("");
   const [genCourseId, setGenCourseId] = useState<string>("");
   const [genTitle, setGenTitle] = useState<string>("");
   const [genCount, setGenCount] = useState<number>(15);
@@ -426,6 +428,8 @@ export function TestBankTab({
         unit: genUnit === "all" ? undefined : genUnit,
         lesson: genLesson === "all" ? undefined : genLesson,
         courseId: genCourseId ? Number(genCourseId) : undefined,
+        scope: genScope,
+        videoId: genScope === "lesson" && genVideoId ? Number(genVideoId) : undefined,
         count: genCount,
         durationMinutes: genDuration || null,
         passingScore: genPassingScore,
@@ -456,6 +460,20 @@ export function TestBankTab({
     }
   };
 
+  // Units suggestions for upload tab based on uploadStage
+  const suggestedUnits = useMemo(() => {
+    const st = treeData.find((s) => s.stage === uploadStage);
+    return st ? st.units.map((u) => u.unit) : [];
+  }, [treeData, uploadStage]);
+
+  // Lessons suggestions for upload tab based on uploadUnit
+  const suggestedLessons = useMemo(() => {
+    const st = treeData.find((s) => s.stage === uploadStage);
+    if (!st) return [];
+    const u = st.units.find((unit) => unit.unit === uploadUnit);
+    return u ? u.lessons.map((l) => l.lesson) : [];
+  }, [treeData, uploadStage, uploadUnit]);
+
   // Units list for currently selected generator stage
   const generatorUnits = useMemo(() => {
     const st = treeData.find((s) => s.stage === genStage);
@@ -468,6 +486,29 @@ export function TestBankTab({
     const u = generatorUnits.find((unit) => unit.unit === genUnit);
     return u ? u.lessons : [];
   }, [generatorUnits, genUnit]);
+
+  // Count available questions for selected generator scope
+  const availableCountInfo = useMemo(() => {
+    const st = treeData.find((s) => s.stage === genStage);
+    if (!st) return { total: 0, easy: 0, medium: 0, hard: 0 };
+    if (genUnit === "all") {
+      let easy = 0, medium = 0, hard = 0;
+      for (const u of st.units) {
+        easy += u.difficulty?.easy || 0;
+        medium += u.difficulty?.medium || 0;
+        hard += u.difficulty?.hard || 0;
+      }
+      return { total: st.totalQuestions, easy, medium, hard };
+    }
+    const u = st.units.find((unit) => unit.unit === genUnit);
+    if (!u) return { total: 0, easy: 0, medium: 0, hard: 0 };
+    if (genLesson === "all") {
+      return { total: u.totalQuestions, ...u.difficulty };
+    }
+    const l = u.lessons.find((les) => les.lesson === genLesson);
+    if (!l) return { total: 0, easy: 0, medium: 0, hard: 0 };
+    return { total: l.totalQuestions, ...l.difficulty };
+  }, [treeData, genStage, genUnit, genLesson]);
 
   return (
     <div className="space-y-6 text-right" dir="rtl">
@@ -937,30 +978,75 @@ export function TestBankTab({
                 </select>
               </div>
 
-              {/* Unit Input / Select */}
+              {/* Unit Input with Suggestions */}
               <div className="space-y-1.5">
                 <label className="text-xs font-black text-foreground">الوحدة (Unit) *</label>
                 <input
                   type="text"
+                  list="upload-unit-suggestions"
                   placeholder="مثال: الوحدة الأولى: الكيمياء والقياس"
                   value={uploadUnit}
                   onChange={(e) => setUploadUnit(e.target.value)}
                   className="w-full h-11 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 />
+                <datalist id="upload-unit-suggestions">
+                  {suggestedUnits.map((u, i) => (
+                    <option key={i} value={u} />
+                  ))}
+                </datalist>
               </div>
 
-              {/* Lesson Input / Select */}
+              {/* Lesson Input with Suggestions */}
               <div className="space-y-1.5">
                 <label className="text-xs font-black text-foreground">الدرس (Lesson) *</label>
                 <input
                   type="text"
+                  list="upload-lesson-suggestions"
                   placeholder="مثال: الدرس الأول: أدوات القياس"
                   value={uploadLesson}
                   onChange={(e) => setUploadLesson(e.target.value)}
                   className="w-full h-11 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 />
+                <datalist id="upload-lesson-suggestions">
+                  {suggestedLessons.map((l, i) => (
+                    <option key={i} value={l} />
+                  ))}
+                </datalist>
               </div>
             </div>
+
+            {/* Quick Pick From Platform Videos */}
+            {videos.filter((v) => !v.stage || v.stage === uploadStage).length > 0 && (
+              <div className="p-3 bg-muted/40 rounded-2xl border border-border/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="text-xs">
+                  <span className="font-bold text-foreground">💡 اختصار سريع: </span>
+                  <span className="text-muted-foreground">يمكنك اختيار درس فيديو موجود بالفعل على المنصة لتعبئة الوحدة والدرس تلقائياً:</span>
+                </div>
+                <select
+                  defaultValue=""
+                  onChange={(e) => {
+                    const vid = videos.find((v) => String(v.id) === e.target.value);
+                    if (vid) {
+                      setUploadLesson(vid.title);
+                      if (vid.courseId) {
+                        const crs = courses.find((c) => c.id === vid.courseId);
+                        if (crs) setUploadUnit(crs.title);
+                      }
+                    }
+                  }}
+                  className="h-9 px-3 rounded-xl border border-border bg-background text-xs font-bold text-primary focus:outline-none cursor-pointer shrink-0"
+                >
+                  <option value="">-- اختر درساً من دروس المنصة --</option>
+                  {videos
+                    .filter((v) => !v.stage || v.stage === uploadStage)
+                    .map((v) => (
+                      <option key={v.id} value={v.id}>
+                        🎥 {v.title}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            )}
 
             {/* File Upload Zone */}
             <div className="space-y-3">
@@ -1112,16 +1198,27 @@ export function TestBankTab({
                       {q.options.map((opt, oIdx) => (
                         <div
                           key={oIdx}
-                          className={`p-2 rounded-xl flex items-center gap-2 border ${
+                          onClick={() => {
+                            setPreviewQuestions((prev) => {
+                              const updated = [...prev];
+                              updated[idx] = { ...updated[idx], correctIndex: oIdx };
+                              return updated;
+                            });
+                          }}
+                          className={`p-2 rounded-xl flex items-center gap-2 border cursor-pointer transition-all ${
                             oIdx === q.correctIndex
-                              ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-800 dark:text-emerald-300 font-bold"
-                              : "bg-background border-border text-foreground"
+                              ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-800 dark:text-emerald-300 font-bold ring-2 ring-emerald-500/20 shadow-xs"
+                              : "bg-background border-border text-foreground hover:border-emerald-500/40 hover:bg-muted/40"
                           }`}
+                          title="اضغط لتحديد هذا الخيار كإجابة صحيحة لهذا السؤال"
                         >
                           <span className="flex h-4 w-4 items-center justify-center rounded text-[9px] font-black bg-muted">
                             {["أ", "ب", "ج", "د", "هـ"][oIdx] || oIdx + 1}
                           </span>
-                          <span className="truncate">{opt}</span>
+                          <span className="truncate flex-1">{opt}</span>
+                          {oIdx === q.correctIndex && (
+                            <Check className="h-3.5 w-3.5 text-emerald-600 mr-auto shrink-0" />
+                          )}
                         </div>
                       ))}
                     </div>
@@ -1258,6 +1355,27 @@ export function TestBankTab({
                     </select>
                   </div>
                 </div>
+
+                {/* Available Questions Live Breakdown Badge */}
+                <div className="p-3 bg-card rounded-xl border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                  <span className="font-bold text-foreground">
+                    📊 رصيد الأسئلة المتوفرة في هذا النطاق:
+                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-black text-primary bg-primary/10 px-2.5 py-0.5 rounded-lg">
+                      {availableCountInfo.total} سؤال
+                    </span>
+                    <span className="text-[11px] text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-md font-bold">
+                      سهل: {availableCountInfo.easy}
+                    </span>
+                    <span className="text-[11px] text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded-md font-bold">
+                      متوسط: {availableCountInfo.medium}
+                    </span>
+                    <span className="text-[11px] text-rose-600 bg-rose-500/10 px-2 py-0.5 rounded-md font-bold">
+                      صعب: {availableCountInfo.hard}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* Exam Metadata */}
@@ -1266,6 +1384,47 @@ export function TestBankTab({
                   <Award className="h-4 w-4 text-primary" />
                   <span>٢. بيانات وإعدادات الاختبار:</span>
                 </h4>
+
+                {/* Exam Scope & Video Linking */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-muted-foreground">نطاق ظهور الاختبار</label>
+                    <select
+                      value={genScope}
+                      onChange={(e) => setGenScope(e.target.value as "course" | "lesson")}
+                      className="w-full h-10 px-3 rounded-xl border border-border bg-card text-xs font-bold text-foreground focus:outline-none cursor-pointer"
+                    >
+                      <option value="course">امتحان عام للمرحلة والكورس 🌐</option>
+                      <option value="lesson">اختبار مرتبط بدرس فيديو محدد 🎥</option>
+                    </select>
+                  </div>
+
+                  {genScope === "lesson" && (
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-primary">اختر درس الفيديو لربط الاختبار به *</label>
+                      <select
+                        value={genVideoId}
+                        onChange={(e) => {
+                          setGenVideoId(e.target.value);
+                          const v = videos.find((vid) => String(vid.id) === e.target.value);
+                          if (v && !genTitle.trim()) {
+                            setGenTitle(`اختبار ${v.title}`);
+                          }
+                        }}
+                        className="w-full h-10 px-3 rounded-xl border border-primary/40 bg-card text-xs font-bold text-foreground focus:outline-none cursor-pointer"
+                      >
+                        <option value="">-- اختر درس الفيديو --</option>
+                        {videos
+                          .filter((v) => !v.stage || v.stage === genStage)
+                          .map((v) => (
+                            <option key={v.id} value={v.id}>
+                              🎥 {v.title}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-foreground">عنوان الاختبار *</label>
