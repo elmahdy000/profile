@@ -4757,7 +4757,7 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
 
       if (!stage) stage = "عام";
       if (!unit) unit = "الوحدة العامة";
-      if (!lesson) lesson = "الدرس العام";
+      if (!lesson) lesson = "شامل الوحدة";
 
       let questionsToProcess: QuizQuestion[] = [];
       let warnings: string[] = [];
@@ -5344,19 +5344,21 @@ router.put("/admin/learning/question-bank/:id", requireAdmin, async (req, res, n
 router.delete("/admin/learning/test-bank/clear-lesson", requireAdmin, async (req, res, next) => {
   try {
     const { stage, unit, lesson } = req.body;
-    if (!stage || !unit || !lesson) {
-      return res.status(400).json({ error: "المرحلة والوحدة والدرس مطلوبة للحذف" });
+    if (!stage || !unit) {
+      return res.status(400).json({ error: "المرحلة والوحدة مطلوبة للحذف" });
+    }
+
+    const conditions = [
+      eq(questionBankTable.stage, stage),
+      eq(questionBankTable.unit, unit),
+    ];
+    if (lesson && lesson !== "all") {
+      conditions.push(eq(questionBankTable.lesson, lesson));
     }
 
     const deleted = await db
       .delete(questionBankTable)
-      .where(
-        and(
-          eq(questionBankTable.stage, stage),
-          eq(questionBankTable.unit, unit),
-          eq(questionBankTable.lesson, lesson)
-        )
-      )
+      .where(and(...conditions))
       .returning();
 
     res.json({ success: true, count: deleted.length });

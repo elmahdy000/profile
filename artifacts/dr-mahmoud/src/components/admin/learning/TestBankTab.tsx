@@ -154,6 +154,7 @@ export function TestBankTab({
   const [savingQuestion, setSavingQuestion] = useState<boolean>(false);
 
   // Upload Tab State
+  const [uploadScope, setUploadScope] = useState<"unit" | "lesson">("unit");
   const [uploadMode, setUploadMode] = useState<"from_course" | "manual">("from_course");
   const [uploadStage, setUploadStage] = useState<string>("");
   const [uploadCourseId, setUploadCourseId] = useState<string>("");
@@ -252,12 +253,15 @@ export function TestBankTab({
     return treeData.find((s) => s.stage === selectedStage) || null;
   }, [treeData, selectedStage]);
 
-  // Load questions for selected lesson
+  // Load questions for selected lesson or entire unit
   const loadQuestions = async (stage: string, unit: string, lesson: string) => {
-    if (!stage || !unit || !lesson) return;
+    if (!stage || !unit) return;
     setLoadingQuestions(true);
     try {
-      const params = new URLSearchParams({ stage, unit, lesson });
+      const params = new URLSearchParams({ stage, unit });
+      if (lesson && lesson !== "all") {
+        params.append("lesson", lesson);
+      }
       const res = await adminApi<any[]>(`/api/admin/learning/test-bank/questions?${params.toString()}`);
       setLessonQuestions(res || []);
     } catch (err: any) {
@@ -287,10 +291,13 @@ export function TestBankTab({
     });
   }, [lessonQuestions, diffFilter, searchQuery]);
 
-  // Clear entire lesson questions
+  // Clear entire lesson questions or entire unit
   const handleClearLesson = async () => {
     if (!selectedStage || !selectedUnit || !selectedLesson) return;
-    const confirmMsg = `هل أنت متأكد من تفريغ وحذف جميع أسئلة (${selectedLesson})؟ لا يمكن التراجع.`;
+    const isAll = selectedLesson === "all";
+    const confirmMsg = isAll
+      ? `هل أنت متأكد من تفريغ وحذف جميع أسئلة الوحدة بالكامل (${selectedUnit})؟ لا يمكن التراجع.`
+      : `هل أنت متأكد من تفريغ وحذف جميع أسئلة (${selectedLesson})؟ لا يمكن التراجع.`;
     if (!window.confirm(confirmMsg)) return;
 
     try {
@@ -302,7 +309,7 @@ export function TestBankTab({
           lesson: selectedLesson,
         }),
       });
-      toast({ title: `تم تفريغ أسئلة (${selectedLesson}) بنجاح` });
+      toast({ title: isAll ? `تم تفريغ جميع أسئلة الوحدة (${selectedUnit}) بنجاح` : `تم تفريغ أسئلة (${selectedLesson}) بنجاح` });
       setLessonQuestions([]);
       loadTree();
     } catch (err: any) {
@@ -418,6 +425,20 @@ export function TestBankTab({
       return;
     }
 
+    if (!uploadStage.trim() || !uploadUnit.trim()) {
+      toast({ variant: "destructive", description: "يرجى تحديد المرحلة والوحدة أولاً" });
+      return;
+    }
+
+    const targetLesson = uploadScope === "unit"
+      ? (uploadLesson.trim() || "شامل الوحدة")
+      : uploadLesson.trim();
+
+    if (uploadScope === "lesson" && !targetLesson) {
+      toast({ variant: "destructive", description: "يرجى اختيار أو كتابة اسم الدرس" });
+      return;
+    }
+
     setIsAnalyzing(true);
     setPreviewQuestions([]);
     setPreviewWarnings([]);
@@ -430,12 +451,12 @@ export function TestBankTab({
         formData.append("previewOnly", "true");
         formData.append("stage", uploadStage);
         formData.append("unit", uploadUnit);
-        formData.append("lesson", uploadLesson);
+        formData.append("lesson", targetLesson);
         formData.append("difficulty", uploadDifficulty);
         formData.append("points", String(uploadPoints));
         if (uploadMode === "from_course") {
           if (uploadCourseId) formData.append("courseId", uploadCourseId);
-          if (uploadLessonId) formData.append("lessonId", uploadLessonId);
+          if (uploadScope === "lesson" && uploadLessonId) formData.append("lessonId", uploadLessonId);
         }
 
         res = await adminApi<any>("/api/admin/learning/test-bank/upload", {
@@ -450,11 +471,11 @@ export function TestBankTab({
             previewOnly: true,
             stage: uploadStage,
             unit: uploadUnit,
-            lesson: uploadLesson,
+            lesson: targetLesson,
             difficulty: uploadDifficulty,
             points: uploadPoints,
             courseId: uploadMode === "from_course" && uploadCourseId ? Number(uploadCourseId) : undefined,
-            lessonId: uploadMode === "from_course" && uploadLessonId ? Number(uploadLessonId) : undefined,
+            lessonId: uploadMode === "from_course" && uploadScope === "lesson" && uploadLessonId ? Number(uploadLessonId) : undefined,
           }),
         });
       }
@@ -499,8 +520,17 @@ export function TestBankTab({
       return;
     }
 
-    if (!uploadStage.trim() || !uploadUnit.trim() || !uploadLesson.trim()) {
-      toast({ variant: "destructive", description: "يرجى التأكد من تحديد المرحلة والوحدة والدرس" });
+    if (!uploadStage.trim() || !uploadUnit.trim()) {
+      toast({ variant: "destructive", description: "يرجى التأكد من تحديد المرحلة والوحدة" });
+      return;
+    }
+
+    const targetLesson = uploadScope === "unit"
+      ? (uploadLesson.trim() || "شامل الوحدة")
+      : uploadLesson.trim();
+
+    if (uploadScope === "lesson" && !targetLesson) {
+      toast({ variant: "destructive", description: "يرجى التأكد من تحديد اسم الدرس" });
       return;
     }
 
@@ -512,23 +542,25 @@ export function TestBankTab({
           rawQuestions: previewQuestions,
           stage: uploadStage,
           unit: uploadUnit,
-          lesson: uploadLesson,
+          lesson: targetLesson,
           difficulty: uploadDifficulty,
           points: uploadPoints,
           courseId: uploadMode === "from_course" && uploadCourseId ? Number(uploadCourseId) : undefined,
-          lessonId: uploadMode === "from_course" && uploadLessonId ? Number(uploadLessonId) : undefined,
+          lessonId: uploadMode === "from_course" && uploadScope === "lesson" && uploadLessonId ? Number(uploadLessonId) : undefined,
         }),
       });
 
       toast({
-        title: `تم حفظ ${res.count} سؤالاً في بنك درس (${uploadLesson}) بنجاح! 🎉`,
+        title: uploadScope === "unit"
+          ? `تم حفظ ${res.count} سؤالاً في بنك الوحدة (${uploadUnit}) بنجاح! 🎉`
+          : `تم حفظ ${res.count} سؤالاً في بنك درس (${targetLesson}) بنجاح! 🎉`,
       });
 
       setRecentSavedLesson({
         stage: uploadStage,
         unit: uploadUnit,
-        lesson: uploadLesson,
-        lessonId: uploadMode === "from_course" ? uploadLessonId : undefined,
+        lesson: targetLesson,
+        lessonId: uploadMode === "from_course" && uploadScope === "lesson" ? uploadLessonId : undefined,
         count: res.count,
       });
 
@@ -1093,6 +1125,31 @@ export function TestBankTab({
                       </div>
 
                       <div className="p-2 space-y-1">
+                        {/* Unit-wide all questions button */}
+                        <button
+                          type="button"
+                          onClick={() => handleSelectLesson(unitObj.unit, "all")}
+                          className={`w-full text-right p-2.5 rounded-xl text-xs font-black flex items-center justify-between transition-all cursor-pointer border mb-1.5 ${
+                            selectedUnit === unitObj.unit && selectedLesson === "all"
+                              ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                              : "bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/25 hover:bg-emerald-500/20"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <FolderOpen className="h-4 w-4 shrink-0 text-current" />
+                            <span className="truncate">شامل الوحدة (جميع الأسئلة)</span>
+                          </div>
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[10px] ${
+                              selectedUnit === unitObj.unit && selectedLesson === "all"
+                                ? "bg-white/20 text-white"
+                                : "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-extrabold"
+                            }`}
+                          >
+                            {unitObj.totalQuestions} سؤال
+                          </span>
+                        </button>
+
                         {unitObj.lessons.map((lessonObj, lIdx) => {
                           const isSelected =
                             selectedUnit === unitObj.unit && selectedLesson === lessonObj.lesson;
@@ -1141,7 +1198,19 @@ export function TestBankTab({
                       <div className="text-[11px] text-muted-foreground font-bold">
                         {selectedStage} • {selectedUnit}
                       </div>
-                      <h4 className="text-base font-black text-foreground">{selectedLesson}</h4>
+                      <h4 className="text-base font-black text-foreground flex items-center gap-2">
+                        {selectedLesson === "all" ? (
+                          <>
+                            <FolderOpen className="h-4 w-4 text-emerald-600" />
+                            <span>كل أسئلة الوحدة: {selectedUnit}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Video className="h-4 w-4 text-primary" />
+                            <span>{selectedLesson}</span>
+                          </>
+                        )}
+                      </h4>
                       <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
                         <span>إجمالي الأسئلة: {lessonQuestions.length}</span>
                       </div>
@@ -1160,19 +1229,25 @@ export function TestBankTab({
                         onClick={() => {
                           setGenStage(selectedStage);
                           setGenUnit(selectedUnit);
-                          setGenLesson(selectedLesson);
                           setIsTitleCustomized(false);
-                          setGenTitle(`اختبار على (${selectedLesson})`);
-                          const v = videos.find((vid) => vid.title.trim() === selectedLesson.trim());
-                          if (v) {
-                            setGenScope("lesson");
-                            setGenLessonMode("video");
-                            setGenVideoId(String(v.id));
-                            if (v.courseId) setGenCourseId(String(v.courseId));
+                          if (selectedLesson === "all") {
+                            setGenScope("unit");
+                            setGenLesson("");
+                            setGenTitle(`اختبار شامل على (${selectedUnit})`);
                           } else {
-                            setGenScope("lesson");
-                            setGenLessonMode("bank");
-                            setGenVideoId("");
+                            setGenLesson(selectedLesson);
+                            setGenTitle(`اختبار على (${selectedLesson})`);
+                            const v = videos.find((vid) => vid.title.trim() === selectedLesson.trim());
+                            if (v) {
+                              setGenScope("lesson");
+                              setGenLessonMode("video");
+                              setGenVideoId(String(v.id));
+                              if (v.courseId) setGenCourseId(String(v.courseId));
+                            } else {
+                              setGenScope("lesson");
+                              setGenLessonMode("bank");
+                              setGenVideoId("");
+                            }
                           }
                           setActiveTab("generate");
                         }}
@@ -1186,15 +1261,22 @@ export function TestBankTab({
                         onClick={() => {
                           setUploadStage(selectedStage);
                           setUploadUnit(selectedUnit);
-                          setUploadLesson(selectedLesson);
-                          const v = videos.find((vid) => vid.title.trim() === selectedLesson.trim());
-                          if (v) {
-                            setUploadCourseId(String(v.courseId));
-                            setUploadLessonId(String(v.id));
+                          if (selectedLesson === "all") {
+                            setUploadScope("unit");
+                            setUploadLesson("شامل الوحدة");
+                            setUploadLessonId("");
+                          } else {
+                            setUploadScope("lesson");
+                            setUploadLesson(selectedLesson);
+                            const v = videos.find((vid) => vid.title.trim() === selectedLesson.trim());
+                            if (v) {
+                              setUploadCourseId(String(v.courseId));
+                              setUploadLessonId(String(v.id));
+                            }
                           }
                           setActiveTab("upload");
                         }}
-                        title="رفع المزيد من الأسئلة لهذا الدرس"
+                        title={selectedLesson === "all" ? "رفع المزيد من الأسئلة لهذه الوحدة" : "رفع المزيد من الأسئلة لهذا الدرس"}
                         className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 h-9 px-2.5 text-xs font-bold cursor-pointer"
                       >
                         <UploadCloud className="h-4 w-4 ml-1" /> رفع المزيد
@@ -1454,39 +1536,99 @@ export function TestBankTab({
             <div className="border-b border-border pb-4">
               <h3 className="text-lg font-black text-foreground flex items-center gap-2">
                 <UploadCloud className="h-5 w-5 text-emerald-600" />
-                <span>رفع بنك أسئلة للدرس (Word / PDF / JSON / نص)</span>
+                <span>رفع واستيراد بنك أسئلة (Word / PDF / JSON / نص)</span>
               </h3>
               <p className="text-xs text-muted-foreground mt-1">
-                اختر طريقة تحديد الدرس (من الكورسات المسجلة أو إدخال يدوي)، ثم ارفع الملف أو الصق الأسئلة.
+                يمكنك رفع أسئلة على مستوى وحدة دراسية كاملة أو على مستوى درس محدد داخل الوحدة.
               </p>
             </div>
 
-            {/* Mode Selector */}
-            <div className="flex gap-2 p-1.5 bg-muted/40 rounded-2xl border border-border/70 max-w-md">
-              <button
-                type="button"
-                onClick={() => setUploadMode("from_course")}
-                className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                  uploadMode === "from_course"
-                    ? "bg-card text-foreground shadow-xs border border-border"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <PlaySquare className="h-3.5 w-3.5 text-primary" />
-                <span>اختيار من دروس الكورسات (مباشر)</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setUploadMode("manual")}
-                className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                  uploadMode === "manual"
-                    ? "bg-card text-foreground shadow-xs border border-border"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <FolderOpen className="h-3.5 w-3.5 text-emerald-600" />
-                <span>إدخال يدوي (مرحلة ⬅️ وحدة ⬅️ درس)</span>
-              </button>
+            {/* 1. Scope Selector: Unit vs Specific Lesson */}
+            <div className="space-y-2">
+              <label className="text-xs font-black text-foreground block">
+                ١. اختر نطاق الأسئلة المراد رفعها:
+              </label>
+              <div className="grid grid-cols-2 gap-3 max-w-lg">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUploadScope("unit");
+                    setUploadLessonId("");
+                    if (!uploadLesson || uploadLesson === "شامل الوحدة") {
+                      setUploadLesson("شامل الوحدة");
+                    }
+                  }}
+                  className={`p-3.5 rounded-2xl border text-xs font-black flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                    uploadScope === "unit"
+                      ? "bg-emerald-600 text-white border-emerald-600 shadow-md ring-2 ring-emerald-500/20"
+                      : "bg-card border-border text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <FolderOpen className="h-4 w-4 shrink-0" />
+                  <div className="text-right">
+                    <div className="font-black">وحدة كاملة 📚</div>
+                    <div className={`text-[10px] font-normal ${uploadScope === "unit" ? "text-emerald-100" : "text-muted-foreground"}`}>
+                      شاملة لكل دروس الوحدة
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUploadScope("lesson");
+                    if (uploadLesson === "شامل الوحدة") {
+                      setUploadLesson("");
+                    }
+                  }}
+                  className={`p-3.5 rounded-2xl border text-xs font-black flex items-center justify-center gap-2.5 transition-all cursor-pointer ${
+                    uploadScope === "lesson"
+                      ? "bg-emerald-600 text-white border-emerald-600 shadow-md ring-2 ring-emerald-500/20"
+                      : "bg-card border-border text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Video className="h-4 w-4 shrink-0" />
+                  <div className="text-right">
+                    <div className="font-black">درس محدد داخل الوحدة 🎥</div>
+                    <div className={`text-[10px] font-normal ${uploadScope === "lesson" ? "text-emerald-100" : "text-muted-foreground"}`}>
+                      مرتبط بدرس أو فيديو معين
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* 2. Mode Selector: Course vs Manual */}
+            <div className="space-y-2 pt-2 border-t border-border/60">
+              <label className="text-xs font-black text-foreground block">
+                ٢. طريقة تحديد البيانات:
+              </label>
+              <div className="flex gap-2 p-1.5 bg-muted/40 rounded-2xl border border-border/70 max-w-md">
+                <button
+                  type="button"
+                  onClick={() => setUploadMode("from_course")}
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    uploadMode === "from_course"
+                      ? "bg-card text-foreground shadow-xs border border-border"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <PlaySquare className="h-3.5 w-3.5 text-primary" />
+                  <span>اختيار من الكورسات المسجلة</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUploadMode("manual")}
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    uploadMode === "manual"
+                      ? "bg-card text-foreground shadow-xs border border-border"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <FolderOpen className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>إدخال يدوي</span>
+                </button>
+              </div>
             </div>
 
             {/* Mode 1: From Existing Course & Lesson */}
@@ -1494,7 +1636,9 @@ export function TestBankTab({
               <div className="p-4 bg-muted/20 rounded-2xl border border-border space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-black text-foreground">اختر الكورس / المادة *</label>
+                    <label className="text-xs font-black text-foreground">
+                      اختر الكورس / الوحدة الدراسية *
+                    </label>
                     <select
                       value={uploadCourseId}
                       onChange={(e) => {
@@ -1505,11 +1649,12 @@ export function TestBankTab({
                         if (crs) {
                           setUploadUnit(crs.title);
                           if (crs.stages?.length) setUploadStage(crs.stages[0]);
+                          if (uploadScope === "unit") setUploadLesson("شامل الوحدة");
                         }
                       }}
                       className="w-full h-11 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
                     >
-                      <option value="">-- اختر الكورس --</option>
+                      <option value="">-- اختر الكورس / الوحدة --</option>
                       {courses.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.title}
@@ -1518,40 +1663,57 @@ export function TestBankTab({
                     </select>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-black text-foreground">اختر الدرس (الفيديو) المطلوب *</label>
-                    <select
-                      value={uploadLessonId}
-                      disabled={!uploadCourseId}
-                      onChange={(e) => {
-                        const lid = e.target.value;
-                        setUploadLessonId(lid);
-                        const vid = videos.find((v) => String(v.id) === lid);
-                        if (vid) {
-                          setUploadLesson(vid.title);
-                          if (vid.stage) setUploadStage(vid.stage);
-                        }
-                      }}
-                      className="w-full h-11 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer disabled:opacity-50"
-                    >
-                      <option value="">-- اختر درس الفيديو --</option>
-                      {uploadCourseLessons.map((v) => (
-                        <option key={v.id} value={v.id}>
-                          🎥 {v.title}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {uploadScope === "lesson" ? (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-black text-foreground">
+                        اختر الدرس (الفيديو) المطلوب *
+                      </label>
+                      <select
+                        value={uploadLessonId}
+                        disabled={!uploadCourseId}
+                        onChange={(e) => {
+                          const lid = e.target.value;
+                          setUploadLessonId(lid);
+                          const vid = videos.find((v) => String(v.id) === lid);
+                          if (vid) {
+                            setUploadLesson(vid.title);
+                            if (vid.stage) setUploadStage(vid.stage);
+                          }
+                        }}
+                        className="w-full h-11 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer disabled:opacity-50"
+                      >
+                        <option value="">-- اختر درس الفيديو --</option>
+                        {uploadCourseLessons.map((v) => (
+                          <option key={v.id} value={v.id}>
+                            🎥 {v.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-muted-foreground">
+                        التصنيف أو الفرع داخل الوحدة (اختياري):
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="شامل الوحدة"
+                        value={uploadLesson === "شامل الوحدة" ? "" : uploadLesson}
+                        onChange={(e) => setUploadLesson(e.target.value || "شامل الوحدة")}
+                        className="w-full h-11 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
+                  )}
                 </div>
 
-                {uploadLessonId && (
-                  <div className="grid gap-3 sm:grid-cols-3 pt-1 border-t border-border/60">
+                {uploadUnit && (
+                  <div className="grid gap-3 sm:grid-cols-3 pt-2 border-t border-border/60">
                     <div className="text-xs">
                       <span className="text-muted-foreground block text-[11px]">المرحلة التابعة لها:</span>
                       <span className="font-bold text-foreground">{uploadStage || "عام"}</span>
                     </div>
                     <div className="text-xs">
-                      <span className="text-muted-foreground block text-[11px]">اسم الوحدة التقديري:</span>
+                      <span className="text-muted-foreground block text-[11px]">اسم الوحدة:</span>
                       <input
                         type="text"
                         value={uploadUnit}
@@ -1560,8 +1722,12 @@ export function TestBankTab({
                       />
                     </div>
                     <div className="text-xs">
-                      <span className="text-muted-foreground block text-[11px]">اسم الدرس المسجل:</span>
-                      <span className="font-bold text-primary truncate block">{uploadLesson}</span>
+                      <span className="text-muted-foreground block text-[11px]">نطاق الحفظ:</span>
+                      <span className="font-bold text-emerald-600 block">
+                        {uploadScope === "unit"
+                          ? `📚 بنك الوحدة بالكامل (${uploadLesson || "شامل الوحدة"})`
+                          : `🎥 درس: ${uploadLesson || "لم يُحدد بعد"}`}
+                      </span>
                     </div>
                   </div>
                 )}
@@ -1604,13 +1770,15 @@ export function TestBankTab({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-black text-foreground">الدرس (Lesson) *</label>
+                  <label className="text-xs font-black text-foreground">
+                    {uploadScope === "unit" ? "التصنيف داخل الوحدة (اختياري)" : "الدرس (Lesson) *"}
+                  </label>
                   <input
                     type="text"
                     list="upload-lesson-suggestions"
-                    placeholder="مثال: الدرس الأول: التحويلات العددية"
-                    value={uploadLesson}
-                    onChange={(e) => setUploadLesson(e.target.value)}
+                    placeholder={uploadScope === "unit" ? "شامل الوحدة (افتراضي)" : "مثال: الدرس الأول: التحويلات العددية"}
+                    value={uploadScope === "unit" && uploadLesson === "شامل الوحدة" ? "" : uploadLesson}
+                    onChange={(e) => setUploadLesson(e.target.value || (uploadScope === "unit" ? "شامل الوحدة" : ""))}
                     className="w-full h-11 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                   <datalist id="upload-lesson-suggestions">
@@ -1758,7 +1926,9 @@ export function TestBankTab({
                   ) : (
                     <>
                       <Check className="h-4 w-4" />
-                      <span>تأكيد وحفظ كل الأسئلة في بنك الدرس ({uploadLesson}) 💾</span>
+                      <span>
+                        تأكيد وحفظ كل الأسئلة في {uploadScope === "unit" ? `بنك الوحدة (${uploadUnit || "العامة"})` : `بنك الدرس (${uploadLesson || "المحدد"})`} 💾
+                      </span>
                     </>
                   )}
                 </Button>
