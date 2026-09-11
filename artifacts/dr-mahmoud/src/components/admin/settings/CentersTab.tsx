@@ -375,7 +375,7 @@ export const CentersTab: React.FC<CentersTabProps> = ({
                       <div>
                         <label className="block text-[11px] font-bold text-muted-foreground mb-1">وقت الحصة</label>
                         <select
-                          value={["10:00 صباحاً", "3:30 - 4:30 عصراً", "4:00 عصراً", "5:00 - 6:00 مساءً", "6:30 مساءً"].includes(editForm.timeStr) ? editForm.timeStr : "custom"}
+                          value={["10:00 صباحاً", "11:00 صباحاً", "1:30 ظهراً", "3:00 عصراً", "4:00 عصراً", "5:00 مساءً"].includes(editForm.timeStr) ? editForm.timeStr : "custom"}
                           onChange={(e) => {
                             if (e.target.value === "custom") {
                               setEditForm({ ...editForm, timeStr: "" });
@@ -386,13 +386,14 @@ export const CentersTab: React.FC<CentersTabProps> = ({
                           className="w-full h-9 rounded-xl border border-border bg-background px-2 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
                         >
                           <option value="10:00 صباحاً">10:00 صباحاً</option>
-                          <option value="3:30 - 4:30 عصراً">3:30 - 4:30 عصراً</option>
+                          <option value="11:00 صباحاً">11:00 صباحاً</option>
+                          <option value="1:30 ظهراً">1:30 ظهراً</option>
+                          <option value="3:00 عصراً">3:00 عصراً</option>
                           <option value="4:00 عصراً">4:00 عصراً</option>
-                          <option value="5:00 - 6:00 مساءً">5:00 - 6:00 مساءً</option>
-                          <option value="6:30 مساءً">6:30 مساءً</option>
+                          <option value="5:00 مساءً">5:00 مساءً</option>
                           <option value="custom">✍️ توقيت آخر (يدوي)...</option>
                         </select>
-                        {!["10:00 صباحاً", "3:30 - 4:30 عصراً", "4:00 عصراً", "5:00 - 6:00 مساءً", "6:30 مساءً"].includes(editForm.timeStr) && (
+                        {!["10:00 صباحاً", "11:00 صباحاً", "1:30 ظهراً", "3:00 عصراً", "4:00 عصراً", "5:00 مساءً"].includes(editForm.timeStr) && (
                           <input
                             type="text"
                             value={editForm.timeStr}
