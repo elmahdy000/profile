@@ -543,8 +543,20 @@ async function extractTextFromUpload(buffer: Buffer, originalname: string): Prom
     }
   } else if (extension === ".docx") {
     try {
-      text = (await mammoth.extractRawText({ buffer })).value || "";
+      const mdResult = await mammoth.convertToMarkdown({ buffer });
+      if (mdResult.value && mdResult.value.trim()) {
+        const testParsed = parseImportedQuestions(mdResult.value);
+        if (testParsed.questions.length > 0) {
+          text = mdResult.value;
+        }
+      }
     } catch {}
+
+    if (!text.trim()) {
+      try {
+        text = (await mammoth.extractRawText({ buffer })).value || "";
+      } catch {}
+    }
 
     if (!text.trim()) {
       try {
@@ -554,8 +566,20 @@ async function extractTextFromUpload(buffer: Buffer, originalname: string): Prom
     }
   } else if (extension === ".doc") {
     try {
-      text = (await mammoth.extractRawText({ buffer })).value || "";
+      const mdResult = await mammoth.convertToMarkdown({ buffer });
+      if (mdResult.value && mdResult.value.trim()) {
+        const testParsed = parseImportedQuestions(mdResult.value);
+        if (testParsed.questions.length > 0) {
+          text = mdResult.value;
+        }
+      }
     } catch {}
+
+    if (!text.trim()) {
+      try {
+        text = (await mammoth.extractRawText({ buffer })).value || "";
+      } catch {}
+    }
 
     if (!text.trim()) {
       text = extractTextFromDocBinary(buffer);
@@ -642,7 +666,13 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   // Preprocess inline text & Word table cell merges
   cleanedText = cleanedText.replace(/(الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|الجواب|الحل|الاختيار\s+الصحيح)\s*[:：\-]?\s*([أابجدهإآA-Da-d1-6])(التوضيح|التفسير|الشرح|تفسير|شرح|explanation|note)\s*[:：\-]?/gi, "$1: $2\n$3: ");
   // Split inline choices e.g. "أ) باريس  ب) لندن" or "A. Paris  B. London" or "(1) القاهرة (2) الجيزة" or "أ/ باريس ب/ لندن"
-  cleanedText = cleanedText.replace(/([^\n])\s+((?:[\*\•\-\[\(]|\[x\]|\[✓\]|\(✓\))?\s*(?:[A-Fa-fأابجدهإآ]|هـ|[1-6])\s*[\)\.\:\-\]\/]\s+)/g, "$1\n$2");
+  // Never split headers like "Question 1:" or "سؤال 1:"
+  cleanedText = cleanedText.replace(/([^\n\s]+)\s+((?:[\*\•\-\[\(]|\[x\]|\[✓\]|\(✓\))?\s*(?:[A-Fa-fأابجدهإآ]|هـ)\s*[\)\.\:\-\]\/]\s+|(?:[\*\•\-\[\(]|\[x\]|\[✓\]|\(✓\))?\s*[1-6]\s*[\)\.\-\]\/]\s+)/gi, (match, p1, p2) => {
+    if (/^(?:Question|سؤال|س|Q|السؤال|item|ex|no|num)$/i.test(p1.trim())) {
+      return match;
+    }
+    return `${p1}\n${p2}`;
+  });
   cleanedText = cleanedText.replace(/([^\n])\s*((?:ال)?س(?:ؤال)?(?:\s*رقم)?\s*[:：\-\/]?\s*\(?\d+\)?|Question\s*[:：\-]?\s*\d+|#\d+)/gi, "$1\n$2");
   cleanedText = cleanedText.replace(/([^\n])\s*(الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|الجواب(?:\s+الصحيح)?|جواب|الحل(?:\s+الصحيح)?|حل|الاختيار(?:\s+الصحيح)?|اختيار|correct\s*answer|answer)\s*(?:هو|هي)?\s*[:：\-]?\s*/gi, "$1\nالإجابة الصحيحة: ");
   cleanedText = cleanedText.replace(/([^\n])\s*(التوضيح|التفسير|الشرح|تفسير|شرح|explanation|note)\s*[:：\-]?\s*/gi, "$1\nالتوضيح: ");
