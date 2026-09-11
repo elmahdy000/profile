@@ -3013,6 +3013,13 @@ router.delete(
 
 router.get(["/learning/files/:id/preview", "/learning/files/:id/download"], async (req, res, next) => {
   try {
+    if (req.path.endsWith("/download") && !isAdminRequest(req)) {
+      res.status(403).json({
+        error: "عفواً: غير مسموح بتحميل الملفات، يمكنك فقط معاينتها وقراءتها داخل المنصة.",
+        code: "DOWNLOAD_NOT_ALLOWED",
+      });
+      return;
+    }
     const student = await getApprovedStudent(req);
     if (!student && !isAdminRequest(req)) {
       res.status(401).json({ error: "Student login is required" });

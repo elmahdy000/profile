@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Youtube, Play, ExternalLink, Tv, ChevronLeft, Loader2, Lock, Unlock,
   Search, SlidersHorizontal, Bookmark, Share2, Clock, BookOpen, Award, ArrowUpDown,
-  FileText, ClipboardCheck, Download, X, MonitorPlay, Layers3, Signal,
+  FileText, ClipboardCheck, X, MonitorPlay, Layers3, Signal,
   Info, Paperclip, ShieldCheck, Eye, Laptop, RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";

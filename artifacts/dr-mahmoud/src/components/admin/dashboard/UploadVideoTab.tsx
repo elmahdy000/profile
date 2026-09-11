@@ -388,7 +388,7 @@ export const UploadVideoTab: React.FC<UploadVideoTabProps> = ({
             {/* Premium Lesson Attachments Selection */}
             <div className="md:col-span-2 border-t border-border/40 pt-4 mt-2">
               <label className="block text-sm font-bold text-foreground mb-1">الملفات المرفقة مع هذا الدرس (PDF / Word / ملخصات)</label>
-              <span className="block text-xs text-muted-foreground mb-3">اختر الملفات المرفقة التي يستطيع الطالب تحميلها مباشرة عند فتح هذا الدرس</span>
+              <span className="block text-xs text-muted-foreground mb-3">اختر الملفات المرفقة التي يستطيع الطالب معاينتها وقراءتها مباشرة عند فتح هذا الدرس</span>
               
               {learningFiles.length === 0 ? (
                 <div className="p-4 rounded-2xl border border-dashed border-border bg-muted/30 text-center">

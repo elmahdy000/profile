@@ -606,7 +606,7 @@ export function AcademyHome() {
               {[
                 [BookOpen, "مشاهدة الدروس", "عرض الفيديوهات المخصصة لمرحلة الطالب بدون تشتت."],
                 [Layers, "تنظيم الكورسات", "تقسيم المواد والمحاضرات حسب المرحلة الدراسية."],
-                [FileText, "المذكرات والملفات", "تحميل الملازم وأكواد التدريب والتمارين المرفقة."],
+                [FileText, "المذكرات والملفات", "معاينة وقراءة الملازم وأكواد التدريب والتمارين مباشرة داخل المنصة."],
                 [ClipboardCheck, "حل الاختبارات", "اختبارات تفاعلية تقيم فهم الطالب فوراً."],
                 [Code, "بنك الأسئلة", "تدريبات وتطبيقات شاملة متدرجة الصعوبة."],
                 [UserCheck, "متابعة التقدم", "استكمال آخر درس وتتبع نسبة الإنجاز والدرجات."],
@@ -657,8 +657,10 @@ export function AcademyHome() {
                   <video
                     src="/preview/cpp-intro.mp4"
                     controls
-                    controlsList="nodownload"
-                    className="w-full h-full object-contain"
+                    controlsList="nodownload noremoteplayback"
+                    disablePictureInPicture
+                    onContextMenu={(e) => e.preventDefault()}
+                    className="w-full h-full object-contain select-none"
                     poster="/dr-mahmoud-hero-classroom.webp"
                   >
                     متصفحك لا يدعم تشغيل الفيديو المباشر.

@@ -4,7 +4,6 @@ import {
   Loader2,
   Terminal,
   Copy,
-  Download,
   Maximize2,
   Minimize2,
   RotateCcw,
@@ -751,16 +750,6 @@ export function CppCompilerPanel() {
     toast({ title: "✅ Copied!", description: "Output copied to clipboard" });
   }, [outputContent, errorOutput]);
 
-  const downloadCode = useCallback(() => {
-    const blob = new Blob([code], { type: "text/x-c++src" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "main.cpp";
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [code]);
-
   // ─── Resizable Split ─────────────────────────────────────────────────────
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -879,16 +868,6 @@ export function CppCompilerPanel() {
             title="Copy Code"
           >
             <Copy className="h-3.5 w-3.5" />
-          </button>
-
-          {/* Download */}
-          <button
-            type="button"
-            onClick={downloadCode}
-            className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/60 transition-colors"
-            title="Download .cpp"
-          >
-            <Download className="h-3.5 w-3.5" />
           </button>
 
           {/* Reset to template */}

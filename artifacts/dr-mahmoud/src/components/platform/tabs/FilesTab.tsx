@@ -8,7 +8,6 @@ import {
   Layers,
   FileCode,
   FileArchive,
-  Download
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LearningFile } from "@/types/platform";

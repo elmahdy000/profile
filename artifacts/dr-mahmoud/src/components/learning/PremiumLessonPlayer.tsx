@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Captions, Check, ChevronLeft, ChevronRight, Clock3, Download, Eye,
-  FileText, Gauge, ListVideo, Loader2, Lock, Maximize, MessageCircle,
+  Captions, Check, ChevronLeft, ChevronRight, Clock3, Eye,
+  FileText, FolderOpen, Gauge, ListVideo, Loader2, Lock, Maximize, MessageCircle,
   Minimize, Pause, PictureInPicture, Play, RefreshCw, RotateCcw, RotateCw, StickyNote,
   UploadCloud, Volume2, VolumeX, X,
 } from "lucide-react";
@@ -905,7 +905,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                 <div className="mr-auto flex items-center gap-3"><span className="text-xs font-bold text-slate-400">{progress}% مكتمل</span><button disabled={progress >= 100 || saving} onClick={() => void markComplete()} className="inline-flex h-11 min-w-36 items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 text-sm font-extrabold text-slate-950 hover:bg-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 disabled:bg-emerald-500/20 disabled:text-emerald-300">{saving ? <Loader2 className="h-4 w-4 animate-spin"/> : <Check className="h-4 w-4"/>}{progress >= 100 ? "تم إكمال الدرس" : "تحديد كمكتمل"}</button></div>
               </div>
 
-              <div className="border-b border-white/10 px-3 sm:px-5"><div className="flex overflow-x-auto">{([['overview','نظرة عامة',FileText],['summary','رفع التلخيص 📝',UploadCloud],['files','ملفات الدرس',Download],['notes','ملاحظاتي',StickyNote],['questions','الأسئلة',MessageCircle]] as const).map(([id,label,Icon]) => <button key={id} onClick={() => setTab(id)} className={`flex h-12 shrink-0 items-center gap-2 border-b-2 px-3 text-sm font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500 ${tab===id ? "border-sky-400 text-sky-400" : "border-transparent text-slate-400 hover:text-slate-200"}`}><Icon className="h-4 w-4"/>{label}</button>)}</div></div>
+              <div className="border-b border-white/10 px-3 sm:px-5"><div className="flex overflow-x-auto">{([['overview','نظرة عامة',FileText],['summary','رفع التلخيص 📝',UploadCloud],['files','ملفات الدرس',FolderOpen],['notes','ملاحظاتي',StickyNote],['questions','الأسئلة',MessageCircle]] as const).map(([id,label,Icon]) => <button key={id} onClick={() => setTab(id)} className={`flex h-12 shrink-0 items-center gap-2 border-b-2 px-3 text-sm font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500 ${tab===id ? "border-sky-400 text-sky-400" : "border-transparent text-slate-400 hover:text-slate-200"}`}><Icon className="h-4 w-4"/>{label}</button>)}</div></div>
               <div className="min-h-44 p-4 sm:p-6">
                 {tab === "overview" && <div><h3 className="font-extrabold text-white">عن هذا الدرس</h3><p className="mt-2 max-w-3xl text-sm leading-7 text-slate-300">{item.description || "شاهد الدرس بالكامل، واستخدم الملفات والملاحظات لتثبيت المعلومات. يتم حفظ تقدمك تلقائيًا."}</p><div className="mt-4 flex flex-wrap gap-2 text-xs"><span className="rounded-lg bg-white/10 px-3 py-2 text-slate-200">{item.category}</span>{item.stage && <span className="rounded-lg bg-white/10 px-3 py-2 text-slate-200">{item.stage}</span>}</div></div>}
                 {tab === "summary" && <LessonSummaryUploadPanel videoItem={item} />}
