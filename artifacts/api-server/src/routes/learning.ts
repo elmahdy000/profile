@@ -844,7 +844,11 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
 
     // 2. Check if this is a Choice line
     const choiceMatch = line.match(CHOICE_RE);
-    if (choiceMatch && !isQuestionLike) {
+    const isLetterChoice = choiceMatch ? /^[A-Fa-fأابجدهإآهـ]$/.test(choiceMatch[1]) : false;
+    const isSequentialChoice = Boolean(current && current.options.length > 0);
+    const isChoice = Boolean(choiceMatch && (isLetterChoice || isSequentialChoice || !isQuestionLike));
+
+    if (isChoice && choiceMatch) {
       const optionToken = choiceMatch[1];
       const optIdx = optionIndex(optionToken);
 
