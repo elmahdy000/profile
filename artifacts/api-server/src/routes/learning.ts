@@ -476,7 +476,7 @@ function isCompleteValidQuestion(q: QuizQuestion | undefined | null): boolean {
   const prompt = q.prompt.trim();
   if (prompt.length < 8) return false;
   if (/\b(?:ما فائدة|سؤال|Question)\b\s*$/.test(prompt)) return false;
-  if (/[\n\s]+[A-Da-dأابجده]\)\s*$/.test(prompt)) return false;
+  if (/\r?\n\s*[A-Da-dأابجده]\)\s*$/.test(prompt)) return false;
   if (!Array.isArray(q.options) || q.options.length < 2) return false;
   for (const rawOpt of q.options) {
     if (!rawOpt || typeof rawOpt !== "string") return false;
@@ -637,6 +637,8 @@ function extractTextFromDocxXml(xml: string): string {
     .replace(/<w:tab\s*\/?>/g, "\t")
     .replace(/<w:br\s*\/?>/g, "\n")
     .replace(/<[^>]+>/g, "")
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
@@ -656,41 +658,51 @@ async function extractTextFromUpload(buffer: Buffer, originalname: string): Prom
       text = smartDecodeText(buffer);
     }
   } else if (extension === ".docx") {
-    let mdText = "";
+    // 1. Direct Word XML extraction first: preserves <w:br/> as newlines, table cells as tabs, and avoids mangling
     try {
-      const mdResult = await mammoth.convertToMarkdown({ buffer });
-      if (mdResult.value && mdResult.value.trim()) {
-        mdText = mdResult.value;
-        const testParsed = parseImportedQuestions(mdText);
-        if (testParsed.questions.length > 0) {
-          text = mdText;
+      const xml = extractFromZip(buffer, "word/document.xml");
+      if (xml) {
+        const xmlText = extractTextFromDocxXml(xml);
+        if (xmlText && xmlText.trim().length > 30) {
+          const testParsed = parseImportedQuestions(xmlText);
+          if (testParsed.questions.length > 0) {
+            text = xmlText;
+          }
         }
       }
     } catch {}
 
+    // 2. Mammoth fallback if XML extraction yielded no valid questions
     if (!text.trim()) {
+      let mdText = "";
       try {
-        const raw = (await mammoth.extractRawText({ buffer })).value || "";
-        if (raw.trim()) {
-          const testRaw = parseImportedQuestions(raw);
-          if (testRaw.questions.length > 0) {
-            text = raw;
-          } else {
-            text = mdText || raw;
+        const mdResult = await mammoth.convertToMarkdown({ buffer });
+        if (mdResult.value && mdResult.value.trim()) {
+          mdText = mdResult.value;
+          const testParsed = parseImportedQuestions(mdText);
+          if (testParsed.questions.length > 0) {
+            text = mdText;
           }
         }
       } catch {}
-    }
 
-    if (!text.trim() && mdText) {
-      text = mdText;
-    }
+      if (!text.trim()) {
+        try {
+          const raw = (await mammoth.extractRawText({ buffer })).value || "";
+          if (raw.trim()) {
+            const testRaw = parseImportedQuestions(raw);
+            if (testRaw.questions.length > 0) {
+              text = raw;
+            } else {
+              text = mdText || raw;
+            }
+          }
+        } catch {}
+      }
 
-    if (!text.trim()) {
-      try {
-        const xml = extractFromZip(buffer, "word/document.xml");
-        if (xml) text = extractTextFromDocxXml(xml);
-      } catch {}
+      if (!text.trim() && mdText) {
+        text = mdText;
+      }
     }
   } else if (extension === ".doc") {
     let mdText = "";
@@ -817,11 +829,12 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   }
 
   // Preprocess inline text & Word table cell merges
+  // Only split when an explicit answer pattern (e.g. "الإجابة الصحيحة: أ") is IMMEDIATELY followed by an explicit explanation header
   cleanedText = cleanedText.replace(/(?:^|\s)((?:الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|الجواب|الحل|الاختيار\s+الصحيح)\s*[:：\-]?\s*[أابجدهإآA-Da-d1-6])\s*((?:explanation(?:\s*[\/\-]\s*steps)?|solution|reason|note|التوضيح(?:\s*[\/\-]\s*(?:خطوات|طريقة)\s*(?:الحل|الإجابة))?|التفسير(?:\s*[\/\-]\s*(?:خطوات|طريقة)\s*(?:الحل|الإجابة))?|(?:خطوات|طريقة)\s*(?:الحل|الإجابة)|تفسير(?:\s+الإجابة)?|توضيح(?:\s+الإجابة)?|الشرح(?:\s+والتوضيح)?|شرح(?:\s+الحل|\s+الإجابة)?|سبب(?:\s+الإجابة)?|ملاحظة)\s*[:：\-])/gi, "$1\n$2");
 
-  // Split inline choices e.g. "أ) باريس    ب) لندن"
-  // Require at least 2 spaces or tab before another choice letter so we never split normal Arabic text
-  cleanedText = cleanedText.replace(/([^\n\s]+)(?:\s{2,}|\t)((?:[\*\•\-\[\(]|\[x\]|\[✓\]|\(✓\))?\s*(?:[A-Fa-fأابجدهإآ]|هـ|[1-6])\s*[\)\.\:\-\]\/]\s+)/gi, (match, p1, p2) => {
+  // Split inline choices e.g. "أ) باريس    ب) لندن" or "A) Final — B) const" or "أ) كذا - ب) كذا"
+  // Separator can be multiple spaces, tabs, or dashes/slashes/pipes with spaces
+  cleanedText = cleanedText.replace(/([^\n\s]+)(?:\s*(?:[\—\–\-\|\/]|[\,\;])\s*|\s{2,}|\t)((?:[\*\•\-\[\(]|\[x\]|\[✓\]|\(✓\))?\s*(?:[A-Fa-fأابجدهإآ]|هـ|[1-6])\s*[\)\.\:\-\]\/]\s+)/gi, (match, p1, p2) => {
     if (/^(?:Question|سؤال|س|Q|السؤال|item|ex|no|num)$/i.test(p1.trim())) {
       return match;
     }
@@ -830,12 +843,6 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
 
   // Split question headers if accidentally on same line after previous content
   cleanedText = cleanedText.replace(/([^\n])\s+((?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?\s*[:：\-\/]?\s*\(?\d+\)|(?:ال)?س(?:ؤال)?(?:\s*رقم)?\s*[:：\-\/]?\s*\d+|Question\s*[:：\-]?\s*\d+|#\d+)\s*[:：\-\.\/])/gi, "$1\n$2");
-
-  // Only split answer headers when there is a MANDATORY colon/dash or "هو/هي" AND preceded by space
-  cleanedText = cleanedText.replace(/([^\n])\s+((?:الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|الجواب(?:\s+الصحيح)?|الحل(?:\s+الصحيح)?|الاختيار\s+الصحيح|Correct\s*Answer|Answer)\s*(?:[:：\-]|(?:هو|هي)\s*[:：\-]?)\s*.*)$/gim, "$1\n$2");
-
-  // Only split explanation headers when preceded by space AND followed by a MANDATORY colon/dash
-  cleanedText = cleanedText.replace(/([^\n])\s+((?:explanation(?:\s*[\/\-]\s*steps)?|solution|reason|note|التوضيح(?:\s*[\/\-]\s*(?:خطوات|طريقة)\s*(?:الحل|الإجابة))?|التفسير(?:\s*[\/\-]\s*(?:خطوات|طريقة)\s*(?:الحل|الإجابة))?|(?:خطوات|طريقة)\s*(?:الحل|الإجابة)|تفسير(?:\s+الإجابة)?|توضيح(?:\s+الإجابة)?|الشرح(?:\s+والتوضيح)?|شرح(?:\s+الحل|\s+الإجابة)?|سبب(?:\s+الإجابة)?|ملاحظة)\s*[:：\-]\s*.*)$/gim, "$1\n$2");
 
   const lines = cleanedText
     .split("\n")
@@ -863,8 +870,9 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
       .replace(/^\(?\d+\)?[\s\.\)\-\/:]+\s*/, "")
       .trim();
 
-    // Clean inline answers from prompt end e.g. "ما هي عاصمة فرنسا؟ (أ)" or "[الإجابة: ب]"
-    const inlineAnsMatch = cleanedPrompt.match(/[\(\[]\s*(?:(?:الإجابة|الاجابة|الجواب|الحل|Answer)\s*[:：\-]?\s*)?([أابجدهإآA-Da-d1-6]|صواب|صح|خطأ)\s*[\)\]]\s*$/i);
+    // Clean inline answers from prompt end ONLY when preceded by an explicit label (e.g. "[الإجابة: ب]")
+    // Do NOT strip bare parenthesized characters like "(A)" or "(أ)" because they are often part of the question itself!
+    const inlineAnsMatch = cleanedPrompt.match(/[\(\[]\s*(?:(?:الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|الجواب|الحل|Answer)\s*[:：\-]\s*)([أابجدهإآA-Da-d1-6]|صواب|صح|خطأ)\s*[\)\]]\s*$/i);
     if (inlineAnsMatch) {
       if (current.correctIndex === null) {
         const token = inlineAnsMatch[1];
@@ -875,7 +883,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
           if (idx !== null) current.correctIndex = idx;
         }
       }
-      cleanedPrompt = cleanedPrompt.replace(/[\(\[]\s*(?:(?:الإجابة|الاجابة|الجواب|الحل|Answer)\s*[:：\-]?\s*)?([أابجدهإآA-Da-d1-6]|صواب|صح|خطأ)\s*[\)\]]\s*$/i, "").trim();
+      cleanedPrompt = cleanedPrompt.replace(/[\(\[]\s*(?:(?:الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|الجواب|الحل|Answer)\s*[:：\-]\s*)([أابجدهإآA-Da-d1-6]|صواب|صح|خطأ)\s*[\)\]]\s*$/i, "").trim();
     }
 
     if (!cleanedPrompt && current.prompt) {
@@ -921,8 +929,8 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   // ANSWER_RE: MUST have explicit colon or "هو/هي"
   const ANSWER_RE = /^\s*(?:correct\s*answer|answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|الجواب(?:\s+الصحيح)?|الحل(?:\s+الصحيح)?|الاختيار\s+الصحيح)\s*(?:[:：\-]|(?:هو|هي)\s*[:：\-]?)\s*(.+)$/i;
 
-  // EXPLANATION_HEADER_RE: MUST have explicit colon or dash
-  const EXPLANATION_HEADER_RE = /^\s*(?:explanation(?:\s*[\/\-]\s*steps)?|solution|reason|note|التوضيح(?:\s*[\/\-]\s*(?:خطوات|طريقة)\s*(?:الحل|الإجابة))?|التفسير(?:\s*[\/\-]\s*(?:خطوات|طريقة)\s*(?:الحل|الإجابة))?|(?:خطوات|طريقة)\s*(?:الحل|الإجابة)|تفسير(?:\s+الإجابة)?|توضيح(?:\s+الإجابة)?|الشرح(?:\s+والتوضيح)?|شرح(?:\s+الحل|\s+الإجابة)?|سبب(?:\s+الإجابة)?|ملاحظة)\s*[:：\-]\s*(.*)$/i;
+  // EXPLANATION_HEADER_RE: MUST have explicit colon or dash and explicit definite keyword or composite phrase
+  const EXPLANATION_HEADER_RE = /^\s*(?:explanation(?:\s*[\/\-]\s*steps)?|solution|reason|note|التوضيح(?:\s*[\/\-]\s*(?:خطوات|طريقة)\s*(?:الحل|الإجابة))?|التفسير(?:\s*[\/\-]\s*(?:خطوات|طريقة)\s*(?:الحل|الإجابة))?|(?:خطوات|طريقة)\s*(?:الحل|الإجابة)|تفسير\s+(?:الإجابة|الحل|السؤال)|توضيح\s+(?:الإجابة|الحل|السؤال)|الشرح(?:\s+والتوضيح)?|شرح\s+(?:الحل|الإجابة|السؤال)|سبب\s+(?:الإجابة|الحل|الاختيار)|ملاحظة)\s*[:：\-]\s*(.*)$/i;
 
   // EXPLICIT_QUESTION_RE: "سؤال 1", "س1:", "س1 /", "السؤال الأول", "Q1:"
   const EXPLICIT_QUESTION_RE = /^\s*(?:(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-\/]?\s*\(?\d+\)?|السؤال\s+(?:الأول|الاول|الثاني|الثانى|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر)|#\d+)(?:\s*[:：\-\.\)\/]\s*(.*))?$/i;
@@ -4998,7 +5006,7 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
         ...q,
         question: {
           ...q.question,
-          prompt: q.question.prompt.replace(/[\n\s]+[A-Da-dأابجده]\)\s*$/, "").trim(),
+          prompt: q.question.prompt.replace(/\r?\n\s*[A-Da-dأابجده]\)\s*$/, "").trim(),
           options: (q.question.options || []).map(cleanOptionString),
         },
       });
