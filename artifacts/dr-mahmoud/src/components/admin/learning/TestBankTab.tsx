@@ -76,6 +76,20 @@ type TreeResponse = {
   stages?: string[];
 };
 
+export const isEnglishQuestion = (prompt?: string, options?: string[]): boolean => {
+  const allText = ((prompt || "") + " " + (options || []).join(" ")).trim();
+  const arabicMatches = allText.match(/[\u0600-\u06FF]/g) || [];
+  const latinMatches = allText.match(/[a-zA-Z]/g) || [];
+  return latinMatches.length > arabicMatches.length;
+};
+
+export const getOptionLabel = (index: number, isEnglish: boolean): string => {
+  if (isEnglish) {
+    return ["A", "B", "C", "D", "E", "F"][index] || String.fromCharCode(65 + index);
+  }
+  return ["أ", "ب", "ج", "د", "هـ", "و"][index] || String(index + 1);
+};
+
 export function TestBankTab({
   adminApi,
   onNavigateToQuizzes,
@@ -1067,6 +1081,7 @@ export function TestBankTab({
                     <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
                       {filteredQuestions.map((q, qIndex) => {
                         const questionData = q.question || {};
+                        const isEnglish = isEnglishQuestion(questionData.prompt, questionData.options);
                         const diffBadge =
                           q.difficulty === "easy"
                             ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
@@ -1090,6 +1105,15 @@ export function TestBankTab({
                                   className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${diffBadge}`}
                                 >
                                   {diffLabel}
+                                </span>
+                                <span
+                                  className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
+                                    isEnglish
+                                      ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+                                      : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                                  }`}
+                                >
+                                  {isEnglish ? "EN (LTR)" : "عربي (RTL)"}
                                 </span>
                                 <span className="text-[10px] text-muted-foreground font-bold">
                                   {q.points || 1} درجة
@@ -1116,7 +1140,12 @@ export function TestBankTab({
                               </div>
                             </div>
 
-                            <p className="text-xs font-bold text-foreground leading-relaxed whitespace-pre-line">
+                            <p
+                              dir={isEnglish ? "ltr" : "rtl"}
+                              className={`text-xs font-bold text-foreground leading-relaxed whitespace-pre-line ${
+                                isEnglish ? "text-left font-sans" : "text-right font-sans"
+                              }`}
+                            >
                               {questionData.prompt}
                             </p>
 
@@ -1131,13 +1160,14 @@ export function TestBankTab({
                             )}
 
                             {/* Choices Grid */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1" dir={isEnglish ? "ltr" : "rtl"}>
                               {(questionData.options || []).map((opt: string, optIdx: number) => {
                                 const isCorrect = optIdx === questionData.correctIndex;
-                                const letter = ["أ", "ب", "ج", "د", "هـ"][optIdx] || String(optIdx + 1);
+                                const letter = getOptionLabel(optIdx, isEnglish);
                                 return (
                                   <div
                                     key={optIdx}
+                                    dir={isEnglish ? "ltr" : "rtl"}
                                     className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-2 border ${
                                       isCorrect
                                         ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-800 dark:text-emerald-300 font-bold"
@@ -1153,9 +1183,11 @@ export function TestBankTab({
                                     >
                                       {letter}
                                     </span>
-                                    <span className="truncate">{opt}</span>
+                                    <span className={`truncate flex-1 ${isEnglish ? "text-left font-sans font-medium" : "text-right font-medium"}`}>
+                                      {opt}
+                                    </span>
                                     {isCorrect && (
-                                      <Check className="h-3.5 w-3.5 text-emerald-600 mr-auto shrink-0" />
+                                      <Check className={`h-3.5 w-3.5 text-emerald-600 shrink-0 ${isEnglish ? "ml-auto" : "mr-auto"}`} />
                                     )}
                                   </div>
                                 );
@@ -1164,8 +1196,15 @@ export function TestBankTab({
 
                             {/* Explanation / Notes */}
                             {questionData.explanation && (
-                              <div className="p-2.5 rounded-xl bg-primary/5 border border-primary/15 text-[11px] text-primary space-y-0.5">
-                                <span className="font-bold block">التفسير / خطوات الإجابة:</span>
+                              <div
+                                dir={isEnglish ? "ltr" : "rtl"}
+                                className={`p-2.5 rounded-xl bg-primary/5 border border-primary/15 text-[11px] text-primary space-y-0.5 ${
+                                  isEnglish ? "text-left font-sans" : "text-right font-sans"
+                                }`}
+                              >
+                                <span className="font-bold block">
+                                  {isEnglish ? "Explanation / Steps:" : "التفسير / خطوات الإجابة:"}
+                                </span>
                                 <p className="text-foreground">{questionData.explanation}</p>
                               </div>
                             )}
@@ -1569,83 +1608,115 @@ export function TestBankTab({
 
               {/* Preview Cards */}
               <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
-                {previewQuestions.map((q, idx) => (
-                  <div
-                    key={idx}
-                    className="p-4 rounded-2xl border border-border bg-muted/20 space-y-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-600 text-white text-xs font-black">
-                        {idx + 1}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <select
-                          value={q.difficulty || "medium"}
-                          onChange={(e) => {
-                            const val = e.target.value as "easy" | "medium" | "hard";
-                            setPreviewQuestions((prev) => {
-                              const updated = [...prev];
-                              updated[idx] = { ...updated[idx], difficulty: val };
-                              return updated;
-                            });
-                          }}
-                          className="h-7 px-2 rounded-lg border border-border bg-card text-[11px] font-bold cursor-pointer"
-                        >
-                          <option value="easy">سهل 🟢</option>
-                          <option value="medium">متوسط 🟡</option>
-                          <option value="hard">صعب 🔴</option>
-                        </select>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPreviewQuestions((prev) => prev.filter((_, i) => i !== idx));
-                          }}
-                          title="استبعاد هذا السؤال من الاستيراد"
-                          className="text-slate-400 hover:text-rose-600 p-1 cursor-pointer"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <p className="text-xs font-bold text-foreground whitespace-pre-line">{q.prompt}</p>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                      {q.options.map((opt, oIdx) => (
-                        <div
-                          key={oIdx}
-                          onClick={() => {
-                            setPreviewQuestions((prev) => {
-                              const updated = [...prev];
-                              updated[idx] = { ...updated[idx], correctIndex: oIdx };
-                              return updated;
-                            });
-                          }}
-                          className={`p-2 rounded-xl flex items-center gap-2 border cursor-pointer transition-all ${
-                            oIdx === q.correctIndex
-                              ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-800 dark:text-emerald-300 font-bold ring-2 ring-emerald-500/20 shadow-xs"
-                              : "bg-background border-border text-foreground hover:border-emerald-500/40 hover:bg-muted/40"
-                          }`}
-                          title="اضغط لتحديد هذا الخيار كإجابة صحيحة لهذا السؤال"
-                        >
-                          <span className="flex h-4 w-4 items-center justify-center rounded text-[9px] font-black bg-muted">
-                            {["أ", "ب", "ج", "د", "هـ"][oIdx] || oIdx + 1}
+                {previewQuestions.map((q, idx) => {
+                  const isEnglish = isEnglishQuestion(q.prompt, q.options);
+                  return (
+                    <div
+                      key={idx}
+                      className="p-4 rounded-2xl border border-border bg-muted/20 space-y-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-600 text-white text-xs font-black">
+                          {idx + 1}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
+                              isEnglish
+                                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+                                : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                            }`}
+                          >
+                            {isEnglish ? "EN (LTR)" : "عربي (RTL)"}
                           </span>
-                          <span className="truncate flex-1">{opt}</span>
-                          {oIdx === q.correctIndex && (
-                            <Check className="h-3.5 w-3.5 text-emerald-600 mr-auto shrink-0" />
-                          )}
+                          <select
+                            value={q.difficulty || "medium"}
+                            onChange={(e) => {
+                              const val = e.target.value as "easy" | "medium" | "hard";
+                              setPreviewQuestions((prev) => {
+                                const updated = [...prev];
+                                updated[idx] = { ...updated[idx], difficulty: val };
+                                return updated;
+                              });
+                            }}
+                            className="h-7 px-2 rounded-lg border border-border bg-card text-[11px] font-bold cursor-pointer"
+                          >
+                            <option value="easy">سهل 🟢</option>
+                            <option value="medium">متوسط 🟡</option>
+                            <option value="hard">صعب 🔴</option>
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPreviewQuestions((prev) => prev.filter((_, i) => i !== idx));
+                            }}
+                            title="استبعاد هذا السؤال من الاستيراد"
+                            className="text-slate-400 hover:text-rose-600 p-1 cursor-pointer"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
-                      ))}
-                    </div>
+                      </div>
 
-                    {q.explanation && (
-                      <p className="text-[11px] text-muted-foreground pt-1">
-                        <strong className="text-primary">التفسير:</strong> {q.explanation}
+                      <p
+                        dir={isEnglish ? "ltr" : "rtl"}
+                        className={`text-xs font-bold text-foreground whitespace-pre-line leading-relaxed ${
+                          isEnglish ? "text-left font-sans" : "text-right font-sans"
+                        }`}
+                      >
+                        {q.prompt}
                       </p>
-                    )}
-                  </div>
-                ))}
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs" dir={isEnglish ? "ltr" : "rtl"}>
+                        {q.options.map((opt, oIdx) => {
+                          const isCorrect = oIdx === q.correctIndex;
+                          const letter = getOptionLabel(oIdx, isEnglish);
+                          return (
+                            <div
+                              key={oIdx}
+                              dir={isEnglish ? "ltr" : "rtl"}
+                              onClick={() => {
+                                setPreviewQuestions((prev) => {
+                                  const updated = [...prev];
+                                  updated[idx] = { ...updated[idx], correctIndex: oIdx };
+                                  return updated;
+                                });
+                              }}
+                              className={`p-2 rounded-xl flex items-center gap-2 border cursor-pointer transition-all ${
+                                isCorrect
+                                  ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-800 dark:text-emerald-300 font-bold ring-2 ring-emerald-500/20 shadow-xs"
+                                  : "bg-background border-border text-foreground hover:border-emerald-500/40 hover:bg-muted/40"
+                              }`}
+                              title="اضغط لتحديد هذا الخيار كإجابة صحيحة لهذا السؤال"
+                            >
+                              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-black bg-muted">
+                                {letter}
+                              </span>
+                              <span className={`truncate flex-1 ${isEnglish ? "text-left font-sans font-medium" : "text-right font-medium"}`}>
+                                {opt}
+                              </span>
+                              {isCorrect && (
+                                <Check className={`h-3.5 w-3.5 text-emerald-600 shrink-0 ${isEnglish ? "ml-auto" : "mr-auto"}`} />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {q.explanation && (
+                        <p
+                          dir={isEnglish ? "ltr" : "rtl"}
+                          className={`text-[11px] text-muted-foreground pt-1 ${isEnglish ? "text-left font-sans" : "text-right"}`}
+                        >
+                          <strong className="text-primary font-bold">
+                            {isEnglish ? "Explanation:" : "التفسير:"}
+                          </strong>{" "}
+                          <span>{q.explanation}</span>
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -2392,142 +2463,165 @@ export function TestBankTab({
               </button>
             </div>
 
-            <form onSubmit={handleSaveQuestion} className="flex-1 overflow-y-auto p-5 space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-foreground">نص السؤال *</label>
-                <textarea
-                  rows={3}
-                  required
-                  value={editingQuestion.prompt}
-                  onChange={(e) =>
-                    setEditingQuestion({ ...editingQuestion, prompt: e.target.value })
-                  }
-                  placeholder="اكتب نص السؤال هنا..."
-                  className="w-full rounded-xl border border-border bg-background p-3 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-
-              {/* Choices */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-foreground">
-                  الاختيارات (حدد الدائرة بجانب الإجابة الصحيحة):
-                </label>
-                {editingQuestion.options.map((opt: string, i: number) => {
-                  const letter = ["أ", "ب", "ج", "د", "هـ"][i] || String(i + 1);
-                  const isChecked = editingQuestion.correctIndex === i;
-                  return (
-                    <div key={i} className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="correctIndex"
-                        checked={isChecked}
-                        onChange={() =>
-                          setEditingQuestion({ ...editingQuestion, correctIndex: i })
-                        }
-                        className="h-4 w-4 accent-emerald-600 cursor-pointer"
-                      />
-                      <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted text-[11px] font-black">
-                        {letter}
-                      </span>
-                      <input
-                        type="text"
-                        required
-                        value={opt}
-                        onChange={(e) => {
-                          const next = [...editingQuestion.options];
-                          next[i] = e.target.value;
-                          setEditingQuestion({ ...editingQuestion, options: next });
-                        }}
-                        placeholder={`الاختيار (${letter})`}
-                        className={`flex-1 h-9 px-3 rounded-xl border text-xs font-bold text-foreground focus:outline-none ${
-                          isChecked
-                            ? "border-emerald-500/50 bg-emerald-500/5"
-                            : "border-border bg-background"
+            {(() => {
+              const isEnglish = isEnglishQuestion(editingQuestion.prompt, editingQuestion.options);
+              return (
+                <form onSubmit={handleSaveQuestion} className="flex-1 overflow-y-auto p-5 space-y-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-foreground">نص السؤال *</label>
+                      <span
+                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
+                          isEnglish
+                            ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+                            : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
                         }`}
+                      >
+                        {isEnglish ? "EN (LTR)" : "عربي (RTL)"}
+                      </span>
+                    </div>
+                    <textarea
+                      rows={3}
+                      required
+                      dir={isEnglish ? "ltr" : "rtl"}
+                      value={editingQuestion.prompt}
+                      onChange={(e) =>
+                        setEditingQuestion({ ...editingQuestion, prompt: e.target.value })
+                      }
+                      placeholder={isEnglish ? "Type question prompt here..." : "اكتب نص السؤال هنا..."}
+                      className={`w-full rounded-xl border border-border bg-background p-3 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${
+                        isEnglish ? "text-left font-sans" : "text-right font-sans"
+                      }`}
+                    />
+                  </div>
+
+                  {/* Choices */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-foreground">
+                      الاختيارات (حدد الدائرة بجانب الإجابة الصحيحة):
+                    </label>
+                    {editingQuestion.options.map((opt: string, i: number) => {
+                      const letter = getOptionLabel(i, isEnglish);
+                      const isChecked = editingQuestion.correctIndex === i;
+                      return (
+                        <div key={i} dir={isEnglish ? "ltr" : "rtl"} className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="correctIndex"
+                            checked={isChecked}
+                            onChange={() =>
+                              setEditingQuestion({ ...editingQuestion, correctIndex: i })
+                            }
+                            className="h-4 w-4 accent-emerald-600 cursor-pointer shrink-0"
+                          />
+                          <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted text-[11px] font-black shrink-0">
+                            {letter}
+                          </span>
+                          <input
+                            type="text"
+                            required
+                            dir={isEnglish ? "ltr" : "rtl"}
+                            value={opt}
+                            onChange={(e) => {
+                              const next = [...editingQuestion.options];
+                              next[i] = e.target.value;
+                              setEditingQuestion({ ...editingQuestion, options: next });
+                            }}
+                            placeholder={isEnglish ? `Option (${letter})` : `الاختيار (${letter})`}
+                            className={`flex-1 h-9 px-3 rounded-xl border text-xs font-bold text-foreground focus:outline-none ${
+                              isChecked
+                                ? "border-emerald-500/50 bg-emerald-500/5"
+                                : "border-border bg-background"
+                            } ${isEnglish ? "text-left font-sans" : "text-right font-sans"}`}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-muted-foreground">مستوى الصعوبة</label>
+                      <select
+                        value={editingQuestion.difficulty || "medium"}
+                        onChange={(e) =>
+                          setEditingQuestion({ ...editingQuestion, difficulty: e.target.value })
+                        }
+                        className="w-full h-9 px-3 rounded-xl border border-border bg-background text-xs font-bold cursor-pointer"
+                      >
+                        <option value="easy">سهل 🟢</option>
+                        <option value="medium">متوسط 🟡</option>
+                        <option value="hard">صعب 🔴</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-muted-foreground">درجة السؤال</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={10}
+                        value={editingQuestion.points || 1}
+                        onChange={(e) =>
+                          setEditingQuestion({ ...editingQuestion, points: Number(e.target.value) })
+                        }
+                        className="w-full h-9 px-3 rounded-xl border border-border bg-background text-xs font-bold text-center"
                       />
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-muted-foreground">مستوى الصعوبة</label>
-                  <select
-                    value={editingQuestion.difficulty || "medium"}
-                    onChange={(e) =>
-                      setEditingQuestion({ ...editingQuestion, difficulty: e.target.value })
-                    }
-                    className="w-full h-9 px-3 rounded-xl border border-border bg-background text-xs font-bold cursor-pointer"
-                  >
-                    <option value="easy">سهل 🟢</option>
-                    <option value="medium">متوسط 🟡</option>
-                    <option value="hard">صعب 🔴</option>
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-muted-foreground">درجة السؤال</label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={10}
-                    value={editingQuestion.points || 1}
-                    onChange={(e) =>
-                      setEditingQuestion({ ...editingQuestion, points: Number(e.target.value) })
-                    }
-                    className="w-full h-9 px-3 rounded-xl border border-border bg-background text-xs font-bold text-center"
-                  />
-                </div>
-              </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-muted-foreground">
+                      {isEnglish ? "Explanation / Steps (Optional)" : "التفسير وخطوات الإجابة (اختياري)"}
+                    </label>
+                    <textarea
+                      rows={2}
+                      dir={isEnglish ? "ltr" : "rtl"}
+                      value={editingQuestion.explanation || ""}
+                      onChange={(e) =>
+                        setEditingQuestion({ ...editingQuestion, explanation: e.target.value })
+                      }
+                      placeholder={isEnglish ? "Explain why this answer is correct..." : "شرح سبب صحة هذا الاختيار..."}
+                      className={`w-full rounded-xl border border-border bg-background p-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary ${
+                        isEnglish ? "text-left font-sans" : "text-right font-sans"
+                      }`}
+                    />
+                  </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-muted-foreground">
-                  التفسير وخطوات الإجابة (اختياري)
-                </label>
-                <textarea
-                  rows={2}
-                  value={editingQuestion.explanation || ""}
-                  onChange={(e) =>
-                    setEditingQuestion({ ...editingQuestion, explanation: e.target.value })
-                  }
-                  placeholder="شرح سبب صحة هذا الاختيار..."
-                  className="w-full rounded-xl border border-border bg-background p-2.5 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-muted-foreground">
+                      رابط صورة السؤال (اختياري)
+                    </label>
+                    <input
+                      type="text"
+                      value={editingQuestion.imageUrl || ""}
+                      onChange={(e) =>
+                        setEditingQuestion({ ...editingQuestion, imageUrl: e.target.value })
+                      }
+                      placeholder="https://... أو /api/..."
+                      className="w-full h-9 px-3 rounded-xl border border-border bg-background text-xs font-mono text-foreground focus:outline-none"
+                    />
+                  </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-muted-foreground">
-                  رابط صورة السؤال (اختياري)
-                </label>
-                <input
-                  type="text"
-                  value={editingQuestion.imageUrl || ""}
-                  onChange={(e) =>
-                    setEditingQuestion({ ...editingQuestion, imageUrl: e.target.value })
-                  }
-                  placeholder="https://... أو /api/..."
-                  className="w-full h-9 px-3 rounded-xl border border-border bg-background text-xs font-mono text-foreground focus:outline-none"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 pt-3 border-t border-border">
-                <Button
-                  type="submit"
-                  disabled={savingQuestion}
-                  className="flex-1 h-11 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-xs cursor-pointer"
-                >
-                  {savingQuestion ? "جارٍ الحفظ..." : "حفظ السؤال في البنك 💾"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowQuestionModal(false)}
-                  className="h-11 rounded-xl text-xs cursor-pointer"
-                >
-                  إلغاء
-                </Button>
-              </div>
-            </form>
+                  <div className="flex items-center gap-2 pt-3 border-t border-border">
+                    <Button
+                      type="submit"
+                      disabled={savingQuestion}
+                      className="flex-1 h-11 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-xs cursor-pointer"
+                    >
+                      {savingQuestion ? "جارٍ الحفظ..." : "حفظ السؤال في البنك 💾"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowQuestionModal(false)}
+                      className="h-11 rounded-xl text-xs cursor-pointer"
+                    >
+                      إلغاء
+                    </Button>
+                  </div>
+                </form>
+              );
+            })()}
           </div>
         </div>
       )}
