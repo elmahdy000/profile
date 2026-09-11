@@ -74,6 +74,21 @@ async function api<T>(url: string, options?: RequestInit): Promise<T> {
   if (!response.ok) throw new Error(data.error || "تعذر إتمام الطلب");
   return data as T;
 }
+
+const isEnglishQuestion = (prompt?: string, options?: string[]): boolean => {
+  const allText = ((prompt || "") + " " + (options || []).join(" ")).trim();
+  const arabicMatches = allText.match(/[\u0600-\u06FF]/g) || [];
+  const latinMatches = allText.match(/[a-zA-Z]/g) || [];
+  return latinMatches.length > arabicMatches.length;
+};
+
+const getOptionLetter = (index: number, isEng: boolean): string => {
+  if (isEng) {
+    return ["A", "B", "C", "D", "E", "F"][index] || String.fromCharCode(65 + index);
+  }
+  return ["أ", "ب", "ج", "د", "هـ", "و"][index] || String(index + 1);
+};
+
 function AppFilePreviewModal({ file, onClose }: { file: LearningFile | null; onClose: () => void }) {
   if (!file) return null;
   const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
@@ -930,9 +945,10 @@ export function StudentPlatform() {
                   const isSelected = quizAnswers[qi] !== undefined && quizAnswers[qi] >= 0;
                   const isCorrect = detail ? detail.isCorrect : Boolean(quizResult && quizAnswers[qi] === q.correctIndex);
                   const isWrong = quizResult && isSelected && !isCorrect;
+                  const isEng = isEnglishQuestion(q.prompt, q.options);
 
                   return (
-                    <div key={qi} className={`space-y-4 rounded-2xl border p-5 transition-all shadow-xs text-left ${
+                    <div key={qi} className={`space-y-4 rounded-2xl border p-5 transition-all shadow-xs ${isEng ? "text-left" : "text-right"} ${
                       quizResult
                         ? isCorrect
                           ? "border-emerald-500/40 bg-emerald-500/5"
@@ -943,25 +959,30 @@ export function StudentPlatform() {
                     }`}>
                       {/* Question Header & Prompt */}
                       <div className="w-full space-y-2.5">
-                        <div className="flex items-start justify-between gap-3 w-full">
+                        <div className={`flex items-start justify-between gap-3 w-full ${isEng ? "flex-row" : "flex-row-reverse"}`}>
                           <div className="flex-1 space-y-2">
                             {(() => {
+                              if (!isEng) {
+                                return (
+                                  <h3 dir="rtl" className="text-base md:text-lg font-bold text-foreground text-right leading-snug">
+                                    {qi + 1}. {q.prompt}
+                                  </h3>
+                                );
+                              }
+
                               const lines = q.prompt.split('\n').map((l) => l.trim()).filter(Boolean);
                               const arLines = lines.filter((l) => /[\u0600-\u06FF]/.test(l));
                               const enLines = lines.filter((l) => !/[\u0600-\u06FF]/.test(l));
 
-                              // Detect if English lines contain code (variables, cout, cin, braces, semicolons)
-                              const titleLine = enLines[0] || "";
+                              const titleLine = enLines[0] || q.prompt;
                               const codeLines = enLines.slice(1);
 
                               return (
                                 <>
                                   {/* English Title Line */}
-                                  {titleLine && (
-                                    <h3 dir="ltr" className="text-base md:text-lg font-bold text-foreground leading-snug">
-                                      {qi + 1}. {titleLine}
-                                    </h3>
-                                  )}
+                                  <h3 dir="ltr" className="text-base md:text-lg font-bold text-foreground text-left leading-snug">
+                                    {qi + 1}. {titleLine}
+                                  </h3>
 
                                   {/* Code Block if lines look like C++/Code */}
                                   {codeLines.length > 0 && (
@@ -999,7 +1020,7 @@ export function StudentPlatform() {
                         </div>
                       )}
 
-                      <div className="space-y-2.5 pt-1" dir="ltr">
+                      <div className="space-y-2.5 pt-1" dir={isEng ? "ltr" : "rtl"}>
                         {q.options.map((option, oi) => {
                           const optionSelected = quizAnswers[qi] === oi;
                           const correctOptionIndex = detail ? detail.correctOption : q.correctIndex;
@@ -1018,10 +1039,12 @@ export function StudentPlatform() {
                             optionStyle = "border-primary bg-primary/10 text-primary font-bold ring-2 ring-primary/20 shadow-xs";
                           }
 
+                          const letter = getOptionLetter(oi, isEng);
+
                           return (
                             <label
                               key={oi}
-                              dir="auto"
+                              dir={isEng ? "ltr" : "rtl"}
                               className={`flex min-h-12 cursor-pointer items-center gap-3.5 rounded-xl border px-4 py-3 transition-all ${optionStyle}`}
                             >
                               <input
@@ -1036,7 +1059,16 @@ export function StudentPlatform() {
                                 }
                                 className="text-primary focus:ring-primary h-4 w-4 shrink-0 cursor-pointer"
                               />
-                              <span dir="auto" className="text-sm md:text-base font-medium flex-1 leading-normal">
+                              <span
+                                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-black ${
+                                  optionSelected
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-muted text-muted-foreground"
+                                }`}
+                              >
+                                {letter}
+                              </span>
+                              <span dir={isEng ? "ltr" : "rtl"} className={`text-sm md:text-base font-medium flex-1 leading-normal ${isEng ? "text-left" : "text-right"}`}>
                                 {option}
                               </span>
                             </label>
@@ -1044,12 +1076,24 @@ export function StudentPlatform() {
                         })}
                       </div>
 
-                      {quizResult && activeQuiz.showExplanations !== false && q.explanation && (
-                        <div className="mt-3 rounded-xl border border-primary/20 bg-primary/10 p-3.5 text-xs text-foreground text-right" dir="rtl">
-                          <strong className="block font-bold mb-1 text-primary">الشرح:</strong>
-                          <span className="text-muted-foreground" dir="auto">{q.explanation}</span>
-                        </div>
-                      )}
+                      {quizResult && activeQuiz.showExplanations !== false && q.explanation && (() => {
+                        const isExplAr = /[\u0600-\u06FF]/.test(q.explanation);
+                        return (
+                          <div
+                            className={`mt-3 rounded-xl border border-primary/20 bg-primary/10 p-3.5 text-xs text-foreground ${
+                              isExplAr ? "text-right" : "text-left"
+                            }`}
+                            dir={isExplAr ? "rtl" : "ltr"}
+                          >
+                            <strong className="block font-bold mb-1 text-primary">
+                              {isExplAr ? "الشرح:" : "Explanation:"}
+                            </strong>
+                            <span className="text-muted-foreground" dir={isExplAr ? "rtl" : "ltr"}>
+                              {q.explanation}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </div>
                   );
                 })}

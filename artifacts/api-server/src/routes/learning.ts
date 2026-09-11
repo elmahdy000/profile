@@ -466,7 +466,7 @@ export function normalizeQuestionPrompt(p?: string | null): string {
 
 function cleanOptionString(opt: string): string {
   return opt
-    .replace(/\s*\n\s*[A-Da-dأابجده]\)\s*$/g, "")
+    .replace(/\s*[\r\n]+\s*[\(\[]?[A-Fa-fأابجدهإآهـ1-6][\)\.\:\-\]\/]?\s*$/g, "")
     .replace(/^[\*\•\s]+/, "")
     .trim();
 }
@@ -631,6 +631,8 @@ function extractFromZip(buffer: Buffer, targetName: string): string | null {
 
 function extractTextFromDocxXml(xml: string): string {
   return xml
+    .replace(/<\/w:tc>/g, "\t")
+    .replace(/<\/w:tr>/g, "\n")
     .replace(/<w:p[ >]/g, "\n")
     .replace(/<w:tab\s*\/?>/g, "\t")
     .replace(/<w:br\s*\/?>/g, "\n")
@@ -746,7 +748,15 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
     .replace(/[\u2028\u2029]/g, "\n")
     .replace(/\\([()[\] .\-+*_#~`>!\\])/g, "$1")
     .replace(/\*\*|__/g, "")
-    .replace(/^#{1,6}\s+/gm, "");
+    .replace(/^#{1,6}\s+/gm, "")
+    // Normalize markdown tables (from Mammoth / Word)
+    .replace(/^\s*\|?\s*[-:]{2,}(?:\s*\|\s*[-:]{2,})*\s*\|?\s*$/gm, "")
+    .replace(/^\s*\|(.*)\|\s*$/gm, (_, inner) =>
+      inner
+        .split("|")
+        .map((c: string) => c.trim())
+        .join("\t")
+    );
 
   // Check for Table rows (lines with \t that have 3+ cells)
   const rawLines = cleanedText.split("\n");
@@ -807,7 +817,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   }
 
   // Preprocess inline text & Word table cell merges
-  cleanedText = cleanedText.replace(/(?:^|\s)((?:الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|الجواب|الحل|الاختيار\s+الصحيح)\s*[:：\-]?\s*[أابجدهإآA-Da-d1-6])\s*((?:التوضيح|التفسير|الشرح|explanation|note)\s*[:：\-])/gi, "$1\n$2");
+  cleanedText = cleanedText.replace(/(?:^|\s)((?:الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|الجواب|الحل|الاختيار\s+الصحيح)\s*[:：\-]?\s*[أابجدهإآA-Da-d1-6])\s*((?:explanation(?:\s*[\/\-]\s*steps)?|solution|reason|note|التوضيح(?:\s*[\/\-]\s*(?:خطوات|طريقة)\s*(?:الحل|الإجابة))?|التفسير(?:\s*[\/\-]\s*(?:خطوات|طريقة)\s*(?:الحل|الإجابة))?|(?:خطوات|طريقة)\s*(?:الحل|الإجابة)|تفسير(?:\s+الإجابة)?|توضيح(?:\s+الإجابة)?|الشرح(?:\s+والتوضيح)?|شرح(?:\s+الحل|\s+الإجابة)?|سبب(?:\s+الإجابة)?|ملاحظة)\s*[:：\-])/gi, "$1\n$2");
 
   // Split inline choices e.g. "أ) باريس    ب) لندن"
   // Require at least 2 spaces or tab before another choice letter so we never split normal Arabic text
@@ -825,7 +835,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   cleanedText = cleanedText.replace(/([^\n])\s+((?:الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|الجواب(?:\s+الصحيح)?|الحل(?:\s+الصحيح)?|الاختيار\s+الصحيح|Correct\s*Answer|Answer)\s*(?:[:：\-]|(?:هو|هي)\s*[:：\-]?)\s*.*)$/gim, "$1\n$2");
 
   // Only split explanation headers when preceded by space AND followed by a MANDATORY colon/dash
-  cleanedText = cleanedText.replace(/([^\n])\s+((?:التوضيح|التفسير|الشرح|Explanation|Note|ملاحظة)\s*[:：\-]\s*.*)$/gim, "$1\n$2");
+  cleanedText = cleanedText.replace(/([^\n])\s+((?:explanation(?:\s*[\/\-]\s*steps)?|solution|reason|note|التوضيح(?:\s*[\/\-]\s*(?:خطوات|طريقة)\s*(?:الحل|الإجابة))?|التفسير(?:\s*[\/\-]\s*(?:خطوات|طريقة)\s*(?:الحل|الإجابة))?|(?:خطوات|طريقة)\s*(?:الحل|الإجابة)|تفسير(?:\s+الإجابة)?|توضيح(?:\s+الإجابة)?|الشرح(?:\s+والتوضيح)?|شرح(?:\s+الحل|\s+الإجابة)?|سبب(?:\s+الإجابة)?|ملاحظة)\s*[:：\-]\s*.*)$/gim, "$1\n$2");
 
   const lines = cleanedText
     .split("\n")
@@ -912,7 +922,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   const ANSWER_RE = /^\s*(?:correct\s*answer|answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|الجواب(?:\s+الصحيح)?|الحل(?:\s+الصحيح)?|الاختيار\s+الصحيح)\s*(?:[:：\-]|(?:هو|هي)\s*[:：\-]?)\s*(.+)$/i;
 
   // EXPLANATION_HEADER_RE: MUST have explicit colon or dash
-  const EXPLANATION_HEADER_RE = /^\s*(?:explanation|note|التوضيح|التفسير|الشرح|تفسير|شرح|ملاحظة)\s*[:：\-]\s*(.*)$/i;
+  const EXPLANATION_HEADER_RE = /^\s*(?:explanation(?:\s*[\/\-]\s*steps)?|solution|reason|note|التوضيح(?:\s*[\/\-]\s*(?:خطوات|طريقة)\s*(?:الحل|الإجابة))?|التفسير(?:\s*[\/\-]\s*(?:خطوات|طريقة)\s*(?:الحل|الإجابة))?|(?:خطوات|طريقة)\s*(?:الحل|الإجابة)|تفسير(?:\s+الإجابة)?|توضيح(?:\s+الإجابة)?|الشرح(?:\s+والتوضيح)?|شرح(?:\s+الحل|\s+الإجابة)?|سبب(?:\s+الإجابة)?|ملاحظة)\s*[:：\-]\s*(.*)$/i;
 
   // EXPLICIT_QUESTION_RE: "سؤال 1", "س1:", "س1 /", "السؤال الأول", "Q1:"
   const EXPLICIT_QUESTION_RE = /^\s*(?:(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-\/]?\s*\(?\d+\)?|السؤال\s+(?:الأول|الاول|الثاني|الثانى|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر)|#\d+)(?:\s*[:：\-\.\)\/]\s*(.*))?$/i;
@@ -944,7 +954,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
 
     // 1b. Check if line looks like a question
     const numMatch = line.match(NUMBERED_LINE_RE);
-    const isQuestionLike = /[\؟\?]|\b(?:ما|ماذا|من|أين|اين|متى|كيف|لماذا|علل|فسر|اذكر|قارن|اختر|هل|كم|أي|اي)\b/.test(line);
+    const isQuestionLike = /[\؟\?]|\b(?:ما|ماذا|من|أين|اين|متى|كيف|لماذا|علل|فسر|اذكر|قارن|اختر|هل|كم|أي|اي|وضح|بين|what|which|why|how|when|where|who|whose|whom)\b/i.test(line);
     const isNextSequentialChoice = current && numMatch && (parseInt(numMatch[1], 10) === current.options.length + 1) && !isQuestionLike && current.options.length < 6;
 
     if (numMatch && !isNextSequentialChoice && (!current || current.options.length >= 2 || hasFoundAnswer || isQuestionLike)) {
@@ -994,7 +1004,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
           .replace(/\s*(?:\*|\[x\]|\[✓\]|\(✓\)|\(صح\)|\(صحيحة\)|\(الإجابة الصحيحة\)|\(الاجابة الصحيحة\))\s*$/i, "")
           .trim();
 
-        current.options.push(cleanOption);
+        current.options.push(cleanOptionString(cleanOption));
         if (isMarkedCorrect) {
           current.correctIndex = current.options.length - 1;
           hasFoundAnswer = true;
@@ -1064,7 +1074,14 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
 
     // 5. Multi-line explanation collection
     if (collectingExplanation && current) {
-      if (line.match(EXPLICIT_QUESTION_RE) || line.match(ANSWER_RE) || line.match(CHOICE_RE)) {
+      const isNewQ =
+        line.match(EXPLICIT_QUESTION_RE) ||
+        line.match(ANSWER_RE) ||
+        line.match(CHOICE_RE) ||
+        (line.match(NUMBERED_LINE_RE) && isQuestionLike) ||
+        (isQuestionLike && (current.options.length >= 2 || hasFoundAnswer));
+
+      if (isNewQ) {
         collectingExplanation = false;
       } else {
         current.explanation = (current.explanation ? current.explanation + "\n" : "") + line;
@@ -4431,6 +4448,64 @@ router.post("/admin/learning/quizzes/:id/replace-question", requireAdmin, async 
       quiz: updatedQuiz,
       questionIndex: idx,
       newQuestion,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/admin/learning/quizzes/:id/replacement-candidates - Get clean replacement candidate questions from question bank
+router.get("/admin/learning/quizzes/:id/replacement-candidates", requireAdmin, async (req, res, next) => {
+  try {
+    const quizId = Number(req.params.id);
+    const [quiz] = await db.select().from(quizzesTable).where(eq(quizzesTable.id, quizId)).limit(1);
+    if (!quiz) {
+      res.status(404).json({ error: "الاختبار غير موجود" });
+      return;
+    }
+
+    const currentQuestions = (quiz.questions || []) as QuizQuestion[];
+    const currentPrompts = new Set(currentQuestions.map((q) => normalizeQuestionPrompt(q.prompt)));
+
+    const conditions = [];
+    if (quiz.courseId) {
+      conditions.push(or(eq(questionBankTable.courseId, quiz.courseId), isNull(questionBankTable.courseId)));
+    }
+    if (quiz.stage) {
+      conditions.push(
+        or(
+          eq(questionBankTable.stage, quiz.stage),
+          eq(questionBankTable.stage, "عام"),
+          sql`${questionBankTable.stages}::jsonb @> ${JSON.stringify([quiz.stage])}::jsonb`
+        )
+      );
+    }
+
+    const rows = await db
+      .select()
+      .from(questionBankTable)
+      .where(conditions.length ? and(...conditions) : undefined)
+      .orderBy(desc(questionBankTable.id));
+
+    const candidates = rows
+      .filter((bq) => isCompleteValidQuestion(bq.question) && !currentPrompts.has(normalizeQuestionPrompt(bq.question.prompt)))
+      .slice(0, 60)
+      .map((bq) => ({
+        id: bq.id,
+        lesson: bq.lesson,
+        unit: bq.unit,
+        stage: bq.stage,
+        difficulty: bq.difficulty,
+        question: {
+          ...bq.question,
+          prompt: bq.question.prompt.replace(/[\n\s]+[A-Da-dأابجده]\)\s*$/, "").trim(),
+          options: (bq.question.options || []).map(cleanOptionString),
+        },
+      }));
+
+    res.json({
+      success: true,
+      candidates,
     });
   } catch (error) {
     next(error);
