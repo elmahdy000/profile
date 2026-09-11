@@ -237,6 +237,8 @@ function publicStudent(student: typeof studentsTable.$inferSelect) {
     languageTrack: student.languageTrack,
     centerName: student.centerName,
     appointmentSlot: student.appointmentSlot,
+    centerConfirmed: Boolean(student.centerConfirmed),
+    centerConfirmedAt: student.centerConfirmedAt,
     learningMode: student.learningMode,
     enrolledCategories: student.enrolledCategories,
     enrolledCourseIds: student.enrolledCourseIds,
@@ -1203,6 +1205,18 @@ router.patch("/student/profile", requireStudent, async (req, res, next) => {
     const grade = req.body.grade ? String(req.body.grade).trim() : undefined;
     const centerName = req.body.centerName ? String(req.body.centerName).trim() : undefined;
     const appointmentSlot = req.body.appointmentSlot ? String(req.body.appointmentSlot).trim() : undefined;
+    const confirmCenter = Boolean(req.body.confirmCenter);
+
+    if (
+      student.centerConfirmed &&
+      ((centerName !== undefined && centerName !== student.centerName) ||
+        (appointmentSlot !== undefined && appointmentSlot !== student.appointmentSlot))
+    ) {
+      res.status(403).json({
+        error: "تم تأكيد السنتر والميعاد مسبقاً، ولا يمكن تعديل السنتر إلا بعد موافقة د. محمود أو مساعد الأدمن.",
+      });
+      return;
+    }
 
     const updateData: Record<string, any> = {
       updatedAt: new Date(),
@@ -1215,6 +1229,10 @@ router.patch("/student/profile", requireStudent, async (req, res, next) => {
     if (grade) updateData.grade = grade;
     if (centerName) updateData.centerName = centerName;
     if (appointmentSlot) updateData.appointmentSlot = appointmentSlot;
+    if (confirmCenter || (centerName && appointmentSlot && !student.centerConfirmed)) {
+      updateData.centerConfirmed = true;
+      updateData.centerConfirmedAt = new Date();
+    }
 
     const [updated] = await db
       .update(studentsTable)
@@ -2062,6 +2080,14 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
           req.body.appointmentSlot !== undefined
             ? (String(req.body.appointmentSlot).trim() || null)
             : current.appointmentSlot,
+        centerConfirmed:
+          req.body.centerConfirmed !== undefined
+            ? Boolean(req.body.centerConfirmed)
+            : current.centerConfirmed,
+        centerConfirmedAt:
+          req.body.centerConfirmed !== undefined
+            ? (req.body.centerConfirmed ? new Date() : null)
+            : current.centerConfirmedAt,
         schoolName:
           req.body.schoolName !== undefined
             ? (String(req.body.schoolName).trim() || null)

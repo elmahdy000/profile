@@ -602,6 +602,28 @@ export function DashboardTab({
         onOpenSummaries={() => onOpen("summaries")}
       />
 
+      {/* Offline Center Confirmation Warning Banner */}
+      {student.learningMode === "offline" && !student.centerConfirmed && (
+        <div className="rounded-2xl border-2 border-amber-400 bg-amber-50/90 dark:border-amber-500/50 dark:bg-amber-950/40 p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-right">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-black text-sm">
+              <MapPin className="h-4 w-4 text-amber-600 shrink-0" />
+              <span>تنبيه إلزامي لتثبيت مقعدك واستخراج كارت الـ ID:</span>
+            </div>
+            <p className="text-xs text-amber-800 dark:text-amber-300 font-medium leading-relaxed">
+              لم تقم بتأكيد السنتر والميعاد الحضوري حتى الآن. يرجى التوجه لصفحة "حسابي" لاختيار السنتر والميعاد المناسب لمسارك لمرة واحدة فقط لتأكيد القيد واستخراج كارت الـ ID.
+            </p>
+          </div>
+          <Button
+            type="button"
+            onClick={() => onOpen("profile" as any)}
+            className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs h-9 px-4 rounded-xl shrink-0 cursor-pointer shadow-xs flex items-center gap-1.5"
+          >
+            <MapPin className="h-3.5 w-3.5" /> تأكيد السنتر الآن
+          </Button>
+        </div>
+      )}
+
       {/* Error Retry Alert */}
       {dataError && (
         <div

@@ -19,6 +19,8 @@ export type Student = {
   languageTrack?: string | null;
   centerName?: string | null;
   appointmentSlot?: string | null;
+  centerConfirmed?: boolean;
+  centerConfirmedAt?: string | null;
   learningMode?: "online" | "offline";
   enrolledCourseIds?: number[];
   paymentStatus?: string;

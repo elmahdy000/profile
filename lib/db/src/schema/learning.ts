@@ -23,6 +23,8 @@ export const studentsTable = pgTable("students", {
   languageTrack: text("language_track"),
   centerName: text("center_name"),
   appointmentSlot: text("appointment_slot"),
+  centerConfirmed: boolean("center_confirmed").notNull().default(false),
+  centerConfirmedAt: timestamp("center_confirmed_at"),
   learningMode: text("learning_mode").notNull().default("online"),
   enrolledCourseIds: jsonb("enrolled_course_ids").$type<number[]>().notNull().default([]),
   enrolledCategories: jsonb("enrolled_categories").$type<string[]>().notNull().default([]),

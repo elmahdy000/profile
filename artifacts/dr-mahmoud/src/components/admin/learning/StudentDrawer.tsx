@@ -123,6 +123,8 @@ export type ExtendedStudent = PlatformStudent & {
   parent_phone?: string | null;
   center_name?: string | null;
   appointment_slot?: string | null;
+  centerConfirmed?: boolean;
+  center_confirmed?: boolean;
   language_track?: string | null;
   lastActiveAt?: string | null;
   lastLoginAt?: string | null;
@@ -362,6 +364,7 @@ export function StudentDrawer({
           schoolName: editFormData.schoolName.trim() || null,
           languageTrack: editFormData.languageTrack.trim() || null,
           learningMode: editFormData.learningMode,
+          centerConfirmed: Boolean(editFormData.centerName.trim() && editFormData.appointmentSlot.trim()),
         }),
       });
 
@@ -370,10 +373,10 @@ export function StudentDrawer({
       }
 
       const updated = await res.json();
-      setLocalStudent((prev) => (prev ? { ...prev, ...updated } : updated));
+      setLocalStudent((prev) => (prev ? { ...prev, ...updated, centerConfirmed: true } : updated));
       toast({
-        title: "تم تحديث بيانات السنتر والمدرسة بنجاح 📍",
-        description: `تم ربط الطالب ${currentStudent.name} بـ ${editFormData.centerName || "السنتر المختار"}`,
+        title: "تم تحديث بيانات السنتر بنجاح 📍",
+        description: `تم ربط الطالب وتأكيد سنتره بـ ${editFormData.centerName || "السنتر المختار"}`,
       });
       setIsEditingBooking(false);
     } catch (err: any) {
@@ -384,6 +387,33 @@ export function StudentDrawer({
       });
     } finally {
       setIsSavingBooking(false);
+    }
+  };
+
+  const handleUnlockCenter = async () => {
+    try {
+      const res = await fetch(`/api/admin/students/${currentStudent.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          centerConfirmed: false,
+        }),
+      });
+      if (!res.ok) throw new Error("تعذر فك قفل السنتر");
+      const updated = { ...currentStudent, centerConfirmed: false, center_confirmed: false };
+      setLocalStudent(updated);
+      onStudentUpdated?.(updated);
+      toast({
+        title: "تم فك قفل السنتر للطالب بنجاح 🔓",
+        description: "يستطيع الطالب الآن اختيار وتأكيد سنتره وميعاده مجدداً من حسابه.",
+      });
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "خطأ في فك القفل",
+        description: err.message || "حدث خطأ أثناء فك القفل",
+      });
     }
   };
 
@@ -706,6 +736,28 @@ export function StudentDrawer({
                       <p className="text-xs font-bold text-[#0F172A]">
                         {currentStudent.governorate ? `${currentStudent.governorate} - ${currentStudent.city || ""}` : "الشرقية - الزقازيق"}
                       </p>
+                    </div>
+                    <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 space-y-1.5">
+                      <span className="text-[11px] text-[#64748B]">تأكيد السنتر للطالب</span>
+                      <div className="flex items-center justify-between gap-1 pt-0.5">
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black ${
+                          currentStudent.centerConfirmed || (currentStudent as any).center_confirmed
+                            ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                            : "bg-amber-100 text-amber-800 border border-amber-300"
+                        }`}>
+                          {currentStudent.centerConfirmed || (currentStudent as any).center_confirmed ? "مؤكد نهائياً 🔒" : "غير مؤكد ⚠️"}
+                        </span>
+                        {(currentStudent.centerConfirmed || (currentStudent as any).center_confirmed) && (
+                          <button
+                            type="button"
+                            onClick={handleUnlockCenter}
+                            className="text-[10px] font-bold text-blue-600 hover:text-blue-800 hover:underline"
+                            title="السماح للطالب باختيار السنتر مجدداً من حسابه"
+                          >
+                            🔓 فك القفل
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 space-y-1.5">
                       <span className="text-[11px] text-[#64748B]">تاريخ التسجيل</span>
