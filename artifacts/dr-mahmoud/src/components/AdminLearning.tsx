@@ -50,6 +50,7 @@ import { ReportsTab } from "./admin/learning/ReportsTab";
 import { StudentSummariesAdminTab } from "./admin/learning/StudentSummariesAdminTab";
 import { StudentQuizGradesSheet } from "./platform/tabs/StudentQuizGradesSheet";
 import { AttendanceScannerTab } from "./admin/attendance/AttendanceScannerTab";
+import { TestBankTab } from "./admin/learning/TestBankTab";
 
 type Student = PlatformStudent & {
   accessCode?: string | null;
@@ -225,6 +226,7 @@ export type AdminLearningTab =
   | "payments"
   | "notifications"
   | "files"
+  | "testbank"
   | "quizzes"
   | "subscriptions"
   | "reports";
@@ -1240,6 +1242,7 @@ export function AdminLearning({
     ["subscriptions", "الاشتراكات الشهرية", CreditCard],
     ["payments", "إيصالات الدفع", FileCheck2],
     ["files", "الملفات", Folder],
+    ["testbank", "بنك الأسئلة الشامل 📚", BookOpen],
     ["quizzes", "الاختبارات", ClipboardCheck],
     ["notifications", "إرسال إشعار", Bell],
     ["reports", "التقارير", BarChart3],
@@ -1261,6 +1264,7 @@ export function AdminLearning({
     payments: ["إيصالات الدفع", "راجع إيصالات الدفع من الطلاب ووافق أو ارفض."],
     notifications: ["إرسال إشعار للطلاب", "أرسل تنبيهًا أو إشعارًا عامًا لجميع الطلاب أو مرحلة دراسية محددة."],
     files: ["مكتبة الملفات التعليمية", "ارفع الملفات وحدد مكان ظهورها للطلاب أو داخل الدروس."],
+    testbank: ["بنك الأسئلة الشامل وتوليد الامتحانات", "تنظيم الأسئلة هرمياً: المرحلة ⬅️ الوحدة ⬅️ الدرس، رفع الملفات (Word/PDF/نص) وتوليد الامتحانات تلقائياً."],
     quizzes: ["بناء وإدارة الاختبارات", "أنشئ الاختبارات وحدد الجمهور والإعدادات والأسئلة ثم انشرها."],
     reports: ["التقارير والمتابعة", "راقب نشاط الطلاب والتقدم ومؤشرات الأداء التعليمية."],
   };
@@ -2191,6 +2195,12 @@ export function AdminLearning({
                 </div>
               )}
             </div>
+          )}
+          {tab === "testbank" && (
+            <TestBankTab
+              adminApi={adminApi}
+              onNavigateToQuizzes={() => setTab("quizzes")}
+            />
           )}
           {tab === "quizzes" && (
             <ExamWizard

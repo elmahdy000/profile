@@ -121,7 +121,11 @@ export const questionBankTable = pgTable("question_bank", {
   stage: text("stage"),
   stages: jsonb("stages").$type<string[]>().notNull().default([]),
   category: text("category").notNull().default("عام"),
+  unit: text("unit"), // Unit / Chapter name, e.g. "الوحدة الأولى: بنية الذرة"
+  lesson: text("lesson"), // Lesson name, e.g. "الدرس الأول: نموذج طومسون وبور"
+  lessonId: integer("lesson_id"), // Optional reference to lesson / video
   difficulty: text("difficulty").notNull().default("medium"), // easy, medium, hard
+  points: integer("points").notNull().default(1),
   tags: jsonb("tags").$type<string[]>().notNull().default([]),
   question: jsonb("question").$type<QuizQuestion>().notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -129,6 +133,7 @@ export const questionBankTable = pgTable("question_bank", {
 }, (table) => ({
   courseIdx: index("question_bank_course_idx").on(table.courseId),
   categoryIdx: index("question_bank_category_idx").on(table.category),
+  stageUnitLessonIdx: index("question_bank_stage_unit_lesson_idx").on(table.stage, table.unit, table.lesson),
 }));
 
 export const quizAttemptsTable = pgTable("quiz_attempts", {

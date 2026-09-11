@@ -3797,21 +3797,397 @@ router.delete(
 
 // ── Question Bank CRUD Endpoints ──
 
-router.get("/admin/learning/question-bank", requireAdmin, async (_req, res, next) => {
+router.get("/admin/learning/question-bank", requireAdmin, async (req, res, next) => {
   try {
-    const questions = await db
-      .select()
-      .from(questionBankTable)
-      .orderBy(desc(questionBankTable.createdAt));
+    const stage = req.query.stage ? String(req.query.stage).trim() : undefined;
+    const unit = req.query.unit ? String(req.query.unit).trim() : undefined;
+    const lesson = req.query.lesson ? String(req.query.lesson).trim() : undefined;
+    const difficulty = req.query.difficulty ? String(req.query.difficulty).trim() : undefined;
+
+    let query = db.select().from(questionBankTable);
+    const conditions = [];
+    if (stage && stage !== "all") conditions.push(eq(questionBankTable.stage, stage));
+    if (unit && unit !== "all") conditions.push(eq(questionBankTable.unit, unit));
+    if (lesson && lesson !== "all") conditions.push(eq(questionBankTable.lesson, lesson));
+    if (difficulty && difficulty !== "all") conditions.push(eq(questionBankTable.difficulty, difficulty));
+
+    const questions = await (conditions.length ? query.where(and(...conditions)) : query).orderBy(desc(questionBankTable.createdAt));
     res.json(questions);
   } catch (error) {
     next(error);
   }
 });
 
+// GET /api/admin/learning/test-bank/tree - Hierarchical structure Stage -> Unit -> Lesson with stats
+router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, next) => {
+  try {
+    const all = await db
+      .select({
+        id: questionBankTable.id,
+        stage: questionBankTable.stage,
+        unit: questionBankTable.unit,
+        lesson: questionBankTable.lesson,
+        difficulty: questionBankTable.difficulty,
+        points: questionBankTable.points,
+        courseId: questionBankTable.courseId,
+      })
+      .from(questionBankTable);
+
+    const stagesMap: Record<string, {
+      stage: string;
+      totalQuestions: number;
+      units: Record<string, {
+        unit: string;
+        totalQuestions: number;
+        difficulty: { easy: number; medium: number; hard: number };
+        lessons: Record<string, {
+          lesson: string;
+          totalQuestions: number;
+          difficulty: { easy: number; medium: number; hard: number };
+        }>;
+      }>;
+    }> = {};
+
+    for (const row of all) {
+      const stage = String(row.stage || "عام").trim();
+      const unit = String(row.unit || "الوحدة العامة").trim();
+      const lesson = String(row.lesson || "الدرس العام").trim();
+      const diff = (row.difficulty === "easy" || row.difficulty === "hard") ? row.difficulty : "medium";
+
+      if (!stagesMap[stage]) {
+        stagesMap[stage] = { stage, totalQuestions: 0, units: {} };
+      }
+      stagesMap[stage].totalQuestions++;
+
+      if (!stagesMap[stage].units[unit]) {
+        stagesMap[stage].units[unit] = {
+          unit,
+          totalQuestions: 0,
+          difficulty: { easy: 0, medium: 0, hard: 0 },
+          lessons: {},
+        };
+      }
+      stagesMap[stage].units[unit].totalQuestions++;
+      stagesMap[stage].units[unit].difficulty[diff]++;
+
+      if (!stagesMap[stage].units[unit].lessons[lesson]) {
+        stagesMap[stage].units[unit].lessons[lesson] = {
+          lesson,
+          totalQuestions: 0,
+          difficulty: { easy: 0, medium: 0, hard: 0 },
+        };
+      }
+      stagesMap[stage].units[unit].lessons[lesson].totalQuestions++;
+      stagesMap[stage].units[unit].lessons[lesson].difficulty[diff]++;
+    }
+
+    const tree = Object.values(stagesMap).map((st) => ({
+      stage: st.stage,
+      totalQuestions: st.totalQuestions,
+      units: Object.values(st.units).map((u) => ({
+        unit: u.unit,
+        totalQuestions: u.totalQuestions,
+        difficulty: u.difficulty,
+        lessons: Object.values(u.lessons),
+      })),
+    }));
+
+    const courses = await db.select({ id: coursesTable.id, title: coursesTable.title, stages: coursesTable.stages }).from(coursesTable);
+    const videos = await db.select({ id: videosTable.id, title: videosTable.title, courseId: videosTable.courseId, stage: videosTable.stage }).from(videosTable);
+
+    res.json({ tree, totalQuestions: all.length, courses, videos });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/admin/learning/test-bank/questions - Filtered list of questions with search
+router.get("/admin/learning/test-bank/questions", requireAdmin, async (req, res, next) => {
+  try {
+    const stage = req.query.stage ? String(req.query.stage).trim() : undefined;
+    const unit = req.query.unit ? String(req.query.unit).trim() : undefined;
+    const lesson = req.query.lesson ? String(req.query.lesson).trim() : undefined;
+    const difficulty = req.query.difficulty ? String(req.query.difficulty).trim() : undefined;
+    const search = req.query.search ? String(req.query.search).trim().toLowerCase() : undefined;
+
+    let query = db.select().from(questionBankTable);
+    const conditions = [];
+    if (stage && stage !== "all") conditions.push(eq(questionBankTable.stage, stage));
+    if (unit && unit !== "all") conditions.push(eq(questionBankTable.unit, unit));
+    if (lesson && lesson !== "all") conditions.push(eq(questionBankTable.lesson, lesson));
+    if (difficulty && difficulty !== "all") conditions.push(eq(questionBankTable.difficulty, difficulty));
+
+    let rows = await (conditions.length ? query.where(and(...conditions)) : query).orderBy(desc(questionBankTable.id));
+
+    if (search) {
+      rows = rows.filter((r) => {
+        const prompt = (r.question?.prompt || "").toLowerCase();
+        const opts = (r.question?.options || []).join(" ").toLowerCase();
+        return prompt.includes(search) || opts.includes(search);
+      });
+    }
+
+    res.json(rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/learning/test-bank/upload - Upload file or raw text to create questions for a specific Lesson
+router.post("/admin/learning/test-bank/upload", requireAdmin, (req, res, next) => {
+  quizImportUpload(req, res, async (uploadError) => {
+    if (uploadError) {
+      return res.status(400).json({ error: uploadError.message || "تعذر رفع الملف" });
+    }
+    try {
+      const stage = String(req.body.stage || "").trim();
+      const unit = String(req.body.unit || "").trim();
+      const lesson = String(req.body.lesson || "").trim();
+      const courseId = Number(req.body.courseId) || null;
+      const lessonId = Number(req.body.lessonId) || null;
+      const defaultDifficulty = String(req.body.difficulty || "medium").trim();
+      const defaultPoints = Number(req.body.points) || 1;
+      const previewOnly = req.body.previewOnly === "true" || req.body.previewOnly === true;
+
+      let questionsToProcess: QuizQuestion[] = [];
+      let warnings: string[] = [];
+
+      if (req.file) {
+        const extension = path.extname(req.file.originalname).toLowerCase();
+        let extractedText = "";
+        if (extension === ".pdf") {
+          try {
+            extractedText = (await pdfParse(req.file.buffer)).text;
+          } catch {
+            extractedText = req.file.buffer.toString("utf8");
+          }
+        } else if (extension === ".docx" || extension === ".doc") {
+          try {
+            extractedText = (await mammoth.extractRawText({ buffer: req.file.buffer })).value;
+          } catch {
+            extractedText = req.file.buffer.toString("utf8");
+          }
+          if (!extractedText.trim()) {
+            extractedText = req.file.buffer.toString("utf8");
+          }
+        } else if (extension === ".json") {
+          try {
+            const parsedJson = JSON.parse(req.file.buffer.toString("utf8"));
+            if (Array.isArray(parsedJson)) {
+              questionsToProcess = parsedJson;
+            } else if (parsedJson.questions && Array.isArray(parsedJson.questions)) {
+              questionsToProcess = parsedJson.questions;
+            }
+          } catch {
+            return res.status(400).json({ error: "ملف JSON غير صالح" });
+          }
+        } else {
+          extractedText = req.file.buffer.toString("utf8");
+        }
+
+        if (!questionsToProcess.length) {
+          if (!extractedText.trim()) {
+            return res.status(422).json({ error: "لم نتمكن من استخراج نص صالح من الملف" });
+          }
+          const parsed = parseImportedQuestions(extractedText);
+          questionsToProcess = parsed.questions;
+          warnings = parsed.warnings;
+        }
+      } else if (req.body.rawQuestions) {
+        try {
+          const raw = typeof req.body.rawQuestions === "string" ? JSON.parse(req.body.rawQuestions) : req.body.rawQuestions;
+          if (Array.isArray(raw)) questionsToProcess = raw;
+        } catch {
+          return res.status(400).json({ error: "بيانات الأسئلة غير صالحة" });
+        }
+      } else if (req.body.text) {
+        const parsed = parseImportedQuestions(String(req.body.text));
+        questionsToProcess = parsed.questions;
+        warnings = parsed.warnings;
+      } else {
+        return res.status(400).json({ error: "يرجى اختيار ملف أو إرسال نص الأسئلة" });
+      }
+
+      const validQuestions = questionsToProcess.filter(
+        (q) => q && typeof q.prompt === "string" && q.prompt.trim() && Array.isArray(q.options) && q.options.length >= 2
+      );
+
+      if (validQuestions.length === 0) {
+        return res.status(422).json({ error: "لم يتم التعرف على أي أسئلة صالحة. تأكد من وجود نص السؤال والخيارات والإجابة الصحيحة." });
+      }
+
+      if (previewOnly) {
+        return res.json({
+          preview: true,
+          totalDetected: validQuestions.length,
+          warnings,
+          questions: validQuestions,
+        });
+      }
+
+      // Insert into question bank
+      const inserted = await db
+        .insert(questionBankTable)
+        .values(
+          validQuestions.map((q) => ({
+            courseId,
+            category: "عام",
+            stage: stage || "عام",
+            stages: stage ? [stage] : [],
+            unit: unit || "الوحدة العامة",
+            lesson: lesson || "الدرس العام",
+            lessonId: lessonId || null,
+            difficulty: (q as any).difficulty || defaultDifficulty,
+            points: q.points || defaultPoints,
+            tags: [stage, unit, lesson].filter(Boolean),
+            question: {
+              prompt: String(q.prompt).trim(),
+              options: q.options.map((o: unknown) => String(o).trim()),
+              correctIndex: Math.max(0, Math.min(q.options.length - 1, Number(q.correctIndex) || 0)),
+              explanation: String(q.explanation || "").trim() || undefined,
+              imageUrl: String(q.imageUrl || "").trim() || undefined,
+              points: q.points || defaultPoints,
+            },
+          }))
+        )
+        .returning();
+
+      return res.status(201).json({
+        success: true,
+        count: inserted.length,
+        warnings,
+        stage,
+        unit,
+        lesson,
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+});
+
+// POST /api/admin/learning/test-bank/generate-exam - Generate full quiz directly from Test Bank
+router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req, res, next) => {
+  try {
+    const {
+      title,
+      stage,
+      stages,
+      unit,
+      lesson,
+      courseId,
+      videoId,
+      scope,
+      count,
+      difficultyDistribution,
+      durationMinutes,
+      passingScore,
+      maxAttempts,
+      shuffleQuestions,
+      showExplanations,
+      isPublished,
+    } = req.body;
+
+    if (!title || !title.trim()) {
+      return res.status(400).json({ error: "عنوان الاختبار مطلوب" });
+    }
+
+    const qCount = Math.max(1, Math.min(100, Number(count || 10)));
+    let query = db.select().from(questionBankTable);
+    const conditions = [];
+
+    if (stage && stage !== "all") {
+      conditions.push(eq(questionBankTable.stage, stage));
+    }
+    if (unit && unit !== "all") {
+      conditions.push(eq(questionBankTable.unit, unit));
+    }
+    if (lesson && lesson !== "all") {
+      conditions.push(eq(questionBankTable.lesson, lesson));
+    }
+
+    const availableQuestions = await (conditions.length ? query.where(and(...conditions)) : query);
+
+    if (availableQuestions.length === 0) {
+      return res.status(404).json({ error: "لا توجد أسئلة متوفرة في بنك الأسئلة لهذا النطاق (المرحلة/الوحدة/الدرس)" });
+    }
+
+    let selectedRows: typeof availableQuestions = [];
+
+    if (difficultyDistribution && typeof difficultyDistribution === "object") {
+      const easyCount = Number(difficultyDistribution.easy) || 0;
+      const medCount = Number(difficultyDistribution.medium) || 0;
+      const hardCount = Number(difficultyDistribution.hard) || 0;
+
+      const easyPool = availableQuestions.filter((q) => q.difficulty === "easy").sort(() => Math.random() - 0.5);
+      const medPool = availableQuestions.filter((q) => q.difficulty === "medium").sort(() => Math.random() - 0.5);
+      const hardPool = availableQuestions.filter((q) => q.difficulty === "hard").sort(() => Math.random() - 0.5);
+
+      const pickedEasy = easyPool.slice(0, easyCount);
+      const pickedMed = medPool.slice(0, medCount);
+      const pickedHard = hardPool.slice(0, hardCount);
+
+      selectedRows = [...pickedEasy, ...pickedMed, ...pickedHard];
+
+      if (selectedRows.length < qCount) {
+        const selectedIds = new Set(selectedRows.map((r) => r.id));
+        const remaining = availableQuestions.filter((r) => !selectedIds.has(r.id)).sort(() => Math.random() - 0.5);
+        selectedRows.push(...remaining.slice(0, qCount - selectedRows.length));
+      }
+    } else {
+      const shuffled = [...availableQuestions].sort(() => Math.random() - 0.5);
+      selectedRows = shuffled.slice(0, qCount);
+    }
+
+    if (selectedRows.length === 0) {
+      return res.status(404).json({ error: "تعذر اختيار أسئلة للاختبار" });
+    }
+
+    const finalQuestions: QuizQuestion[] = selectedRows.map((r) => ({
+      prompt: r.question.prompt,
+      options: r.question.options,
+      correctIndex: r.question.correctIndex,
+      explanation: r.question.explanation,
+      imageUrl: r.question.imageUrl,
+      points: r.points || r.question.points || 1,
+    }));
+
+    const resolvedCourseId = Number(courseId) || null;
+    const resolvedVideoId = Number(videoId) || null;
+    const targetStages = Array.isArray(stages) && stages.length ? stages : (stage ? [stage] : []);
+
+    const [newQuiz] = await db
+      .insert(quizzesTable)
+      .values({
+        title: title.trim(),
+        courseId: resolvedCourseId,
+        videoId: resolvedVideoId,
+        scope: scope === "lesson" && resolvedVideoId ? "lesson" : "course",
+        description: `اختبار تم توليده آلياً من بنك الأسئلة (${stage || ""} - ${unit || ""} - ${lesson || ""})`.trim(),
+        category: stage || "عام",
+        stage: targetStages[0] || null,
+        stages: targetStages,
+        durationMinutes: durationMinutes ? Number(durationMinutes) : null,
+        passingScore: Math.max(0, Math.min(100, Number(passingScore ?? 60))),
+        maxAttempts: Math.max(0, Math.min(20, Number(maxAttempts ?? 3))),
+        shuffleQuestions: shuffleQuestions !== false,
+        showExplanations: showExplanations !== false,
+        requiredProgress: 0,
+        questions: finalQuestions,
+        isPublished: isPublished !== false,
+      })
+      .returning();
+
+    return res.status(201).json(newQuiz);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Single question insert
 router.post("/admin/learning/question-bank", requireAdmin, async (req, res, next) => {
   try {
-    const { prompt, options, correctIndex, explanation, imageUrl, courseId, category, stage, stages, difficulty, subject, tags } = req.body;
+    const { prompt, options, correctIndex, explanation, imageUrl, courseId, category, stage, stages, unit, lesson, lessonId, difficulty, points, subject, tags } = req.body;
     if (!prompt || !Array.isArray(options) || options.length < 2 || typeof correctIndex !== "number") {
       res.status(400).json({ error: "بيانات السؤال غير كاملة" });
       return;
@@ -3821,9 +4197,13 @@ router.post("/admin/learning/question-bank", requireAdmin, async (req, res, next
       .values({
         courseId: Number(courseId) || null,
         category: String(category || "عام"),
-        stage: String(stage || ""),
-        stages: Array.isArray(stages) ? stages : [],
+        stage: String(stage || "عام"),
+        stages: Array.isArray(stages) ? stages : (stage ? [stage] : []),
+        unit: String(unit || "الوحدة العامة"),
+        lesson: String(lesson || "الدرس العام"),
+        lessonId: Number(lessonId) || null,
         difficulty: String(difficulty || "medium"),
+        points: Number(points) || 1,
         subject: String(subject || ""),
         tags: Array.isArray(tags) ? tags : [],
         question: {
@@ -3832,6 +4212,7 @@ router.post("/admin/learning/question-bank", requireAdmin, async (req, res, next
           correctIndex: Math.max(0, Math.min(options.length - 1, correctIndex)),
           explanation: String(explanation || "").trim() || undefined,
           imageUrl: String(imageUrl || "").trim() || undefined,
+          points: Number(points) || 1,
         },
       })
       .returning();
@@ -3841,9 +4222,73 @@ router.post("/admin/learning/question-bank", requireAdmin, async (req, res, next
   }
 });
 
+// PUT /api/admin/learning/question-bank/:id - Update question in Test Bank
+router.put("/admin/learning/question-bank/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    const { prompt, options, correctIndex, explanation, imageUrl, unit, lesson, difficulty, points } = req.body;
+
+    const [existing] = await db.select().from(questionBankTable).where(eq(questionBankTable.id, id)).limit(1);
+    if (!existing) {
+      return res.status(404).json({ error: "السؤال غير موجود" });
+    }
+
+    const updatedQuestion = {
+      prompt: prompt ? String(prompt).trim() : existing.question.prompt,
+      options: Array.isArray(options) ? options.map((o: any) => String(o).trim()) : existing.question.options,
+      correctIndex: typeof correctIndex === "number" ? correctIndex : existing.question.correctIndex,
+      explanation: explanation !== undefined ? (String(explanation).trim() || undefined) : existing.question.explanation,
+      imageUrl: imageUrl !== undefined ? (String(imageUrl).trim() || undefined) : existing.question.imageUrl,
+      points: points !== undefined ? Number(points) : (existing.points || 1),
+    };
+
+    const [updated] = await db
+      .update(questionBankTable)
+      .set({
+        unit: unit !== undefined ? String(unit).trim() : existing.unit,
+        lesson: lesson !== undefined ? String(lesson).trim() : existing.lesson,
+        difficulty: difficulty || existing.difficulty,
+        points: points !== undefined ? Number(points) : existing.points,
+        question: updatedQuestion,
+        updatedAt: new Date(),
+      })
+      .where(eq(questionBankTable.id, id))
+      .returning();
+
+    res.json(updated);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// DELETE /api/admin/learning/test-bank/clear-lesson - Delete all questions of a specific lesson
+router.delete("/admin/learning/test-bank/clear-lesson", requireSuperAdmin, async (req, res, next) => {
+  try {
+    const { stage, unit, lesson } = req.body;
+    if (!stage || !unit || !lesson) {
+      return res.status(400).json({ error: "المرحلة والوحدة والدرس مطلوبة للحذف" });
+    }
+
+    const deleted = await db
+      .delete(questionBankTable)
+      .where(
+        and(
+          eq(questionBankTable.stage, stage),
+          eq(questionBankTable.unit, unit),
+          eq(questionBankTable.lesson, lesson)
+        )
+      )
+      .returning();
+
+    res.json({ success: true, count: deleted.length });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.post("/admin/learning/question-bank/batch-import", requireAdmin, async (req, res, next) => {
   try {
-    const { questions, courseId, category, stage, stages } = req.body;
+    const { questions, courseId, category, stage, stages, unit, lesson, difficulty } = req.body;
     if (!Array.isArray(questions) || questions.length === 0) {
       res.status(400).json({ error: "قائمة الأسئلة فارغة" });
       return;
@@ -3864,17 +4309,21 @@ router.post("/admin/learning/question-bank/batch-import", requireAdmin, async (r
         validQuestions.map((q) => ({
           courseId: Number(courseId) || null,
           category: String(category || "عام"),
-          stage: String(stage || ""),
-          stages: Array.isArray(stages) ? stages : [],
-          difficulty: "medium",
+          stage: String(stage || "عام"),
+          stages: Array.isArray(stages) ? stages : (stage ? [stage] : []),
+          unit: String(unit || "الوحدة العامة"),
+          lesson: String(lesson || "الدرس العام"),
+          difficulty: String(q.difficulty || difficulty || "medium"),
+          points: Number(q.points) || 1,
           subject: "",
-          tags: [],
+          tags: [stage, unit, lesson].filter(Boolean),
           question: {
             prompt: String(q.prompt).trim(),
             options: q.options.map((o: unknown) => String(o).trim()),
             correctIndex: Math.max(0, Math.min(q.options.length - 1, Number(q.correctIndex) || 0)),
             explanation: String(q.explanation || "").trim() || undefined,
             imageUrl: String(q.imageUrl || "").trim() || undefined,
+            points: Number(q.points) || 1,
           },
         }))
       )
