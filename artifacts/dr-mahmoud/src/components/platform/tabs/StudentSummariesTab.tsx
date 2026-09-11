@@ -121,8 +121,9 @@ export function StudentSummariesTab({
     setUploadSuccess(false);
     setUploadProgress(0);
     setSubmitting(false);
-    setLessonTitle(title);
-    setSelectedCourseId(courseId);
+    const defaultLesson = !title && lessons.length > 0 ? lessons[0] : null;
+    setLessonTitle(title || defaultLesson?.title || "");
+    setSelectedCourseId(courseId || (defaultLesson?.courseId ? String(defaultLesson.courseId) : ""));
     setStudentNotes("");
     setSelectedFiles([]);
     setShowUploadModal(true);
@@ -429,9 +430,9 @@ export function StudentSummariesTab({
 
       {/* ===== Upload Modal ===== */}
       {showUploadModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-xs"
+        <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm p-0 sm:p-4"
           onClick={(e) => e.target === e.currentTarget && closeModal()}>
-          <div className="w-full sm:max-w-lg bg-card rounded-t-3xl sm:rounded-3xl shadow-2xl border border-border text-right max-h-[85dvh] sm:max-h-[90dvh] flex flex-col overflow-hidden" dir="rtl">
+          <div className="w-full sm:max-w-lg bg-card rounded-t-3xl sm:rounded-3xl shadow-2xl border border-border text-right max-h-[92dvh] sm:max-h-[90dvh] flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom,0px)]" dir="rtl">
 
             <div className="shrink-0 bg-card flex items-center justify-between px-5 pt-5 pb-3 border-b border-border z-10">
               <div className="flex items-center gap-2">
@@ -524,8 +525,15 @@ export function StudentSummariesTab({
                     </label>
 
                     {previewUrls.length > 0 && (
-                      <div>
-                        <span className="text-[11px] font-bold text-muted-foreground block mb-2">الملفات المختارة — يمكنك ترتيبها أو حذفها:</span>
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-black text-foreground block">
+                            الملفات والصور المختارة ({previewUrls.length}):
+                          </span>
+                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                            جاهزة للرفع 🚀
+                          </span>
+                        </div>
                         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                           {previewUrls.map((url, idx) => {
                             const fileObj = selectedFiles[idx];
@@ -552,6 +560,25 @@ export function StudentSummariesTab({
                             );
                           })}
                         </div>
+
+                        {/* Direct Prominent Button Under Photos */}
+                        <Button
+                          type="submit"
+                          disabled={submitting}
+                          className="w-full h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-lg flex items-center justify-center gap-2 cursor-pointer transition-transform active:scale-95"
+                        >
+                          {submitting ? (
+                            <>
+                              <Loader2Icon className="h-4 w-4 animate-spin" />
+                              <span>جارٍ تجهيز ورفع الملخص...</span>
+                            </>
+                          ) : (
+                            <>
+                              <UploadCloudIcon className="h-4 w-4" />
+                              <span>اضغط هنا لتأكيد ورفع ملخص الدرس الآن ({selectedFiles.length} صور) 🚀</span>
+                            </>
+                          )}
+                        </Button>
                       </div>
                     )}
                   </div>
@@ -582,12 +609,36 @@ export function StudentSummariesTab({
                 </div>
 
                 {/* Sticky Submit Footer */}
-                <div className="shrink-0 bg-card p-4 border-t border-border sticky bottom-0 shadow-lg z-20 flex items-center gap-2">
-                  <Button type="submit" disabled={submitting || selectedFiles.length === 0 || !lessonTitle.trim()}
-                    className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-black text-sm shadow-md flex items-center justify-center gap-2 disabled:opacity-40">
-                    {submitting ? <><Loader2Icon className="h-4 w-4 animate-spin" /><span>جارٍ الرفع...</span></> : <><SendIcon className="h-4 w-4" /><span>تسليم الملخص للتدقيق 📤</span></>}
-                  </Button>
-                  <Button type="button" variant="outline" onClick={closeModal} disabled={submitting} className="h-12 rounded-xl text-xs font-semibold px-4">إلغاء</Button>
+                <div className="shrink-0 bg-card p-4 border-t border-border sticky bottom-0 shadow-lg z-20 flex flex-col gap-2">
+                  {!lessonTitle.trim() && (
+                    <p className="text-[11px] font-bold text-amber-500 flex items-center gap-1">
+                      <span>⚠️ تنبيه: يرجى اختيار اسم الدرس من الخطوة (١) لتأكيد الرفع.</span>
+                    </p>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="submit"
+                      disabled={submitting || selectedFiles.length === 0}
+                      className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-black text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 disabled:opacity-40 cursor-pointer"
+                    >
+                      {submitting ? (
+                        <>
+                          <Loader2Icon className="h-4 w-4 animate-spin" />
+                          <span>جارٍ الرفع ({uploadProgress}%)...</span>
+                        </>
+                      ) : (
+                        <>
+                          <SendIcon className="h-4 w-4" />
+                          <span>
+                            {selectedFiles.length === 0
+                              ? "اختر صور الكشكول أولاً للرفع"
+                              : `تأكيد ورفع الملخص للمعلم (${selectedFiles.length} صور) 🚀`}
+                          </span>
+                        </>
+                      )}
+                    </Button>
+                    <Button type="button" variant="outline" onClick={closeModal} disabled={submitting} className="h-12 rounded-xl text-xs font-semibold px-4">إلغاء</Button>
+                  </div>
                 </div>
               </form>
             )}

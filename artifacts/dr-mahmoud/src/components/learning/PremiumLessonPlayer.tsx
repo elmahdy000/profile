@@ -170,8 +170,11 @@ function LessonSummaryUploadPanel({ videoItem }: { videoItem: VideoItem }) {
           </div>
 
           {previewUrls.length > 0 && (
-            <div className="space-y-1.5">
-              <span className="text-xs font-bold text-slate-300">الملفات المختارة ({previewUrls.length}):</span>
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-300">الملفات المختارة ({previewUrls.length}):</span>
+                <span className="text-[11px] font-bold text-emerald-400">جاهزة للرفع 🚀</span>
+              </div>
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {previewUrls.map((url, idx) => (
                   <div key={idx} className="relative h-16 w-16 shrink-0 rounded-lg overflow-hidden border border-white/15 group">
@@ -188,6 +191,25 @@ function LessonSummaryUploadPanel({ videoItem }: { videoItem: VideoItem }) {
                   </div>
                 ))}
               </div>
+
+              {/* Direct Instant Upload Button immediately visible right after selecting photos! */}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full h-12 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg cursor-pointer transition-all active:scale-95"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>{statusText || "جارٍ رفع صور الملخص..."}</span>
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud className="h-5 w-5" />
+                    <span>اضغط هنا لرفع كشكول الدرس الآن ({selectedFiles.length} صور) 🚀</span>
+                  </>
+                )}
+              </button>
             </div>
           )}
 
@@ -228,7 +250,11 @@ function LessonSummaryUploadPanel({ videoItem }: { videoItem: VideoItem }) {
                 <span>{statusText || "جارٍ المعالجة والرفع..."}</span>
               </>
             ) : (
-              <span>إرسال ملخص الدرس للمعلم 🚀</span>
+              <span>
+                {selectedFiles.length === 0
+                  ? "اختر صور الكشكول أولاً لتفعيل الرفع"
+                  : `تأكيد وإرسال ملخص الدرس للمعلم (${selectedFiles.length} صور) 🚀`}
+              </span>
             )}
           </button>
         </form>
