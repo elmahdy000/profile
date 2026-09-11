@@ -242,7 +242,13 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
   const [playerReady, setPlayerReady] = useState(false);
   const [playerError, setPlayerError] = useState(false);
   const [playerErrorMessage, setPlayerErrorMessage] = useState("");
-  const [streamSrc, setStreamSrc] = useState(item.youtubeUrl);
+  const resolveInitialStreamSrc = (url?: string, id?: number) => {
+    if (!url) return "";
+    if (url.startsWith("/api/videos/")) return url;
+    if (url.startsWith("/uploads/") && id) return `/api/videos/${id}/stream`;
+    return url;
+  };
+  const [streamSrc, setStreamSrc] = useState(() => resolveInitialStreamSrc(item.youtubeUrl, item.id));
   const refreshAttempted = useRef(false);
   const latestPositionRef = useRef<number>(0);
   const pendingResumeTimeRef = useRef<number>(0);
@@ -391,14 +397,18 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
   }, [streamSrc, isProtected]);
 
   useEffect(() => {
-    setPlayerReady(false); setPlayerError(false); setPlayerErrorMessage(""); setStreamSrc(item.youtubeUrl); refreshAttempted.current = false; setYoutubeStarted(false); setCurrentTime(0); setDuration(0); setPlaying(false);
+    setPlayerReady(false); setPlayerError(false); setPlayerErrorMessage(""); setStreamSrc(resolveInitialStreamSrc(item.youtubeUrl, item.id)); refreshAttempted.current = false; setYoutubeStarted(false); setCurrentTime(0); setDuration(0); setPlaying(false);
     latestPositionRef.current = 0;
     pendingResumeTimeRef.current = 0;
     lastLocalSavedPos.current = 0;
     const storedProgress = item.id ? readJson<Record<number, number>>("dr_mahmoud_watch_progress", {})[item.id] || 0 : 0;
     setProgress(storedProgress);
     setNotes(readJson<LessonNote[]>(noteKey, []));
-  }, [item.id, item.title, noteKey]);
+
+    if (isProtected && (!item.youtubeUrl || item.youtubeUrl.startsWith("/uploads/") || (item.youtubeUrl.startsWith("/api/videos/") && !item.youtubeUrl.includes("token=")))) {
+      void refreshStreamUrl();
+    }
+  }, [item.id, item.title, noteKey, isProtected]);
 
   useEffect(() => {
     const oldOverflow = document.body.style.overflow;

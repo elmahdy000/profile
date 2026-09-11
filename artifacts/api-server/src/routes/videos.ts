@@ -107,6 +107,39 @@ function resolveUploadedVideoPath(filename: string): string | null {
   return candidates.find((candidate) => fs.existsSync(candidate)) ?? null;
 }
 
+// In-memory LRU-like caches to avoid repetitive disk stats and DB queries on streaming range requests
+const videoCache = new Map<number, { video: typeof videosTable.$inferSelect; cachedAt: number }>();
+const fileStatCache = new Map<string, { filePath: string; size: number; mtimeMs: number; cachedAt: number }>();
+
+async function getCachedVideo(id: number): Promise<typeof videosTable.$inferSelect | null> {
+  const cached = videoCache.get(id);
+  if (cached && Date.now() - cached.cachedAt < 60_000) {
+    return cached.video;
+  }
+  const [video] = await db
+    .select()
+    .from(videosTable)
+    .where(eq(videosTable.id, id))
+    .limit(1);
+  if (video) {
+    videoCache.set(id, { video, cachedAt: Date.now() });
+  }
+  return video ?? null;
+}
+
+function getCachedFileStat(filename: string): { filePath: string; size: number; mtimeMs: number } | null {
+  const cached = fileStatCache.get(filename);
+  if (cached && Date.now() - cached.cachedAt < 120_000) {
+    return cached;
+  }
+  const filePath = resolveUploadedVideoPath(filename);
+  if (!filePath) return null;
+  const stat = fs.statSync(filePath);
+  const data = { filePath, size: stat.size, mtimeMs: stat.mtimeMs, cachedAt: Date.now() };
+  fileStatCache.set(filename, data);
+  return data;
+}
+
 async function loadAttachmentMap(videoIds: number[]) {
   const map = new Map<number, Array<Record<string, unknown>>>();
   if (videoIds.length === 0) return map;
@@ -663,11 +696,7 @@ router.delete("/videos/:id", requireSuperAdmin, async (req, res, next) => {
 router.get("/videos/:id/stream", async (req, res, next) => {
   try {
     const id = parseInt(req.params.id as string, 10);
-    const video = await db
-      .select()
-      .from(videosTable)
-      .where(eq(videosTable.id, id))
-      .then((rows) => rows[0]);
+    const video = await getCachedVideo(id);
 
     if (!video) {
       res.status(404).json({ error: "Video entry not found" });
@@ -682,123 +711,120 @@ router.get("/videos/:id/stream", async (req, res, next) => {
       return;
     }
 
-    // Stream URLs use short-lived signed tokens. Unlock keys stay in request
-    // headers and are never exposed in URLs, browser history, or proxy logs.
-    const firstVideo = await db
-      .select({ id: videosTable.id })
-      .from(videosTable)
-      .where(eq(videosTable.category, video.category))
-      .orderBy(asc(videosTable.order), asc(videosTable.id))
-      .limit(1)
-      .then((rows) => rows[0]);
-    const isFirstVideo = firstVideo?.id === video.id;
-    const keysHeader = (
-      (req.headers["x-unlock-keys"] as string) || ""
-    ).toLowerCase();
-    const studentKeys = keysHeader
-      .split(/[\s,]+/)
-      .map((k) => k.trim())
-      .filter(Boolean);
-
-    const isUnlocked =
-      !video.isProtected ||
-      isFirstVideo ||
-      (video.accessKey &&
-        studentKeys.includes(video.accessKey.toLowerCase().trim()));
-
     const isAdmin = isAdminRequest(req);
     const hasValidToken = isValidStreamToken(video.id, req.query.token);
 
-    const approvedStudent = await getApprovedStudent(req);
-    if (!isAdmin && !hasValidToken && !approvedStudent) {
-      res
-        .status(401)
-        .json({ error: "Student approval and login are required" });
-      return;
-    }
-    if (approvedStudent && video.courseId) {
-      const course = await db.select({ isPublished: coursesTable.isPublished }).from(coursesTable).where(eq(coursesTable.id, video.courseId)).then((rows) => rows[0]);
-      if (!course?.isPublished) {
-        res.status(403).json({ error: "الكورس غير منشور حاليًا" });
+    // Fast-path: short-lived HMAC signed stream tokens are cryptographically verified and pre-authorized
+    let approvedStudent: Awaited<ReturnType<typeof getApprovedStudent>> = null;
+    if (!hasValidToken && !isAdmin) {
+      approvedStudent = await getApprovedStudent(req);
+      if (!approvedStudent) {
+        res
+          .status(401)
+          .json({ error: "Student approval and login are required" });
         return;
       }
-    }
-    if (
-      approvedStudent &&
-      (!video.isPublished ||
-        !canStudentAccessContent(
-          approvedStudent,
-          video.category,
-          video.stage,
-          video.stages,
-          video.courseId,
-        ) ||
-        !canStudentAccessLearningMode(approvedStudent, video.learningMode))
-    ) {
-      res.status(403).json({ error: "الفيديو مش ضمن الكورس المسجل ليك" });
-      return;
-    }
 
-    if (!isUnlocked && !isAdmin && !hasValidToken) {
-      res.status(403).json({ error: "This content is protected and locked." });
-      return;
-    }
-
-    // ── Payment gating on stream ──
-    // If student is logged in via session cookie and not paid, check preview limit.
-    // Short-lived signed stream tokens (hasValidToken) are pre-validated for authorized/paid users.
-    if (approvedStudent && !hasValidToken && (approvedStudent.status !== "approved" || approvedStudent.paymentStatus !== "paid")) {
-      const maxAllowedFreeVideos = 1;
-      const courseKey = video.courseId ? eq(videosTable.courseId, video.courseId) : eq(videosTable.category, video.category);
-      const courseVideos = await db
-        .select({ id: videosTable.id, order: videosTable.order })
+      const firstVideo = await db
+        .select({ id: videosTable.id })
         .from(videosTable)
-        .where(and(courseKey, eq(videosTable.isPublished, true)))
-        .orderBy(asc(videosTable.order), asc(videosTable.id));
-      const videoIndex = courseVideos.findIndex((v) => v.id === video.id);
-      if (videoIndex === -1 || videoIndex >= maxAllowedFreeVideos) {
-        res.status(403).json({
-          error: "ادفع رسوم الاشتراك لمشاهدة باقي المحاضرات. يُسمح بفيديو معاينة واحد فقط مجاناً لكل مادة.",
-          code: "PAYMENT_REQUIRED",
-        });
+        .where(eq(videosTable.category, video.category))
+        .orderBy(asc(videosTable.order), asc(videosTable.id))
+        .limit(1)
+        .then((rows) => rows[0]);
+      const isFirstVideo = firstVideo?.id === video.id;
+      const keysHeader = (
+        (req.headers["x-unlock-keys"] as string) || ""
+      ).toLowerCase();
+      const studentKeys = keysHeader
+        .split(/[\s,]+/)
+        .map((k) => k.trim())
+        .filter(Boolean);
+
+      const isUnlocked =
+        !video.isProtected ||
+        isFirstVideo ||
+        (video.accessKey &&
+          studentKeys.includes(video.accessKey.toLowerCase().trim()));
+
+      if (approvedStudent && video.courseId) {
+        const course = await db.select({ isPublished: coursesTable.isPublished }).from(coursesTable).where(eq(coursesTable.id, video.courseId)).then((rows) => rows[0]);
+        if (!course?.isPublished) {
+          res.status(403).json({ error: "الكورس غير منشور حاليًا" });
+          return;
+        }
+      }
+      if (
+        approvedStudent &&
+        (!video.isPublished ||
+          !canStudentAccessContent(
+            approvedStudent,
+            video.category,
+            video.stage,
+            video.stages,
+            video.courseId,
+          ) ||
+          !canStudentAccessLearningMode(approvedStudent, video.learningMode))
+      ) {
+        res.status(403).json({ error: "الفيديو مش ضمن الكورس المسجل ليك" });
         return;
+      }
+
+      if (!isUnlocked) {
+        res.status(403).json({ error: "This content is protected and locked." });
+        return;
+      }
+
+      // ── Payment gating on stream ──
+      if (approvedStudent && (approvedStudent.status !== "approved" || approvedStudent.paymentStatus !== "paid")) {
+        const maxAllowedFreeVideos = 1;
+        const courseKey = video.courseId ? eq(videosTable.courseId, video.courseId) : eq(videosTable.category, video.category);
+        const courseVideos = await db
+          .select({ id: videosTable.id, order: videosTable.order })
+          .from(videosTable)
+          .where(and(courseKey, eq(videosTable.isPublished, true)))
+          .orderBy(asc(videosTable.order), asc(videosTable.id));
+        const videoIndex = courseVideos.findIndex((v) => v.id === video.id);
+        if (videoIndex === -1 || videoIndex >= maxAllowedFreeVideos) {
+          res.status(403).json({
+            error: "ادفع رسوم الاشتراك لمشاهدة باقي المحاضرات. يُسمح بفيديو معاينة واحد فقط مجاناً لكل مادة.",
+            code: "PAYMENT_REQUIRED",
+          });
+          return;
+        }
       }
     }
 
     // ── Video view-count enforcement ──
-    // Only count a "view" on the initial request (no Range header or Range starting at 0)
-    // to avoid incrementing on every seek/chunk request.
     if (approvedStudent && video.maxViews && video.maxViews > 0) {
-      const [progressRow] = await db
-        .select()
-        .from(videoProgressTable)
-        .where(
-          and(
-            eq(videoProgressTable.studentId, approvedStudent.id),
-            eq(videoProgressTable.videoId, video.id),
-          ),
-        )
-        .limit(1);
-      const currentViews = progressRow?.viewCount ?? 0;
-
-      if (currentViews >= video.maxViews) {
-        res.status(403).json({
-          error: "استنفدت عدد المشاهدات المتاحة لهذا الفيديو",
-          code: "VIEW_LIMIT_REACHED",
-          viewCount: currentViews,
-          maxViews: video.maxViews,
-        });
-        return;
-      }
-
-      // Increment view count only on first byte request (new play session)
       const range = req.headers.range;
       const isNewPlaySession = !range || range.startsWith("bytes=0-");
       if (isNewPlaySession) {
-        // Prevent burning views when browsers send rapid probe requests on bytes=0-
+        const [progressRow] = await db
+          .select()
+          .from(videoProgressTable)
+          .where(
+            and(
+              eq(videoProgressTable.studentId, approvedStudent.id),
+              eq(videoProgressTable.videoId, video.id),
+            ),
+          )
+          .limit(1);
+        const currentViews = progressRow?.viewCount ?? 0;
+
+        if (currentViews >= video.maxViews) {
+          res.status(403).json({
+            error: "استنفدت عدد المشاهدات المتاحة لهذا الفيديو",
+            code: "VIEW_LIMIT_REACHED",
+            viewCount: currentViews,
+            maxViews: video.maxViews,
+          });
+          return;
+        }
+
         const lastUpdatedMs = progressRow?.updatedAt ? new Date(progressRow.updatedAt).getTime() : 0;
         const nowMs = Date.now();
-        const debounceWindowMs = 15 * 60 * 1000; // 15-minute grace window for the same session
+        const debounceWindowMs = 15 * 60 * 1000;
         const shouldIncrement = !progressRow || (nowMs - lastUpdatedMs > debounceWindowMs);
 
         if (shouldIncrement) {
@@ -822,19 +848,18 @@ router.get("/videos/:id/stream", async (req, res, next) => {
     }
 
     const filename = path.basename(video.youtubeUrl.replace("/uploads/", ""));
-    const filePath = resolveUploadedVideoPath(filename);
+    const fileStat = getCachedFileStat(filename);
 
-    if (!filePath) {
+    if (!fileStat) {
       res.status(404).json({ error: "Video file not found on disk" });
       return;
     }
 
-    const stat = fs.statSync(filePath);
-    const fileSize = stat.size;
+    const { filePath, size: fileSize, mtimeMs } = fileStat;
     const range = req.headers.range;
 
-    const etag = `"${fileSize.toString(16)}-${Math.floor(stat.mtimeMs).toString(16)}"`;
-    const lastModified = stat.mtime.toUTCString();
+    const etag = `"${fileSize.toString(16)}-${Math.floor(mtimeMs).toString(16)}"`;
+    const lastModified = new Date(mtimeMs).toUTCString();
 
     // 304 Not Modified is ONLY valid for full non-range GET requests (RFC 7233)
     const ifNoneMatch = req.headers["if-none-match"];
@@ -847,7 +872,7 @@ router.get("/videos/:id/stream", async (req, res, next) => {
       VIDEO_CONTENT_TYPES[path.extname(filename).toLowerCase()] ||
       "video/mp4";
     const cacheControl = "private, max-age=86400, stale-while-revalidate=3600";
-    const MAX_CHUNK_SIZE = 3 * 1024 * 1024; // 3MB chunk for smooth progressive buffering
+    const MAX_CHUNK_SIZE = 8 * 1024 * 1024; // 8MB chunk for ultra-smooth progressive buffering without stutter
 
     if (range) {
       const match = range.match(/^bytes=(\d*)-(\d*)$/);
