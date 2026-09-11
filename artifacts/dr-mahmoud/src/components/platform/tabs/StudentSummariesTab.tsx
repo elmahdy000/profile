@@ -20,6 +20,7 @@ import {
 import type { Student } from "@/types/platform";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { compressMultipleFiles } from "@/lib/image-compression";
 
 export interface StudentSummary {
   id: number;
@@ -221,6 +222,9 @@ export function StudentSummariesTab({
     setSubmitting(true);
     setUploadProgress(0);
     try {
+      // Compress files client-side before upload to speed up transmission and prevent mobile timeouts
+      const readyFiles = await compressMultipleFiles(selectedFiles);
+
       const formData = new FormData();
       formData.append("lessonTitle", lessonTitle.trim());
       if (selectedCourseId) {
@@ -229,12 +233,18 @@ export function StudentSummariesTab({
         if (mc) formData.append("courseTitle", mc.title);
       }
       if (studentNotes.trim()) formData.append("studentNotes", studentNotes.trim());
-      selectedFiles.forEach((file) => formData.append("images", file));
+      readyFiles.forEach((file) => formData.append("images", file));
 
       const created = await new Promise<StudentSummary>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open("POST", "/api/learning/summaries/upload");
         xhr.withCredentials = true;
+
+        const deviceId = localStorage.getItem("drelmahdy_device_id");
+        if (deviceId) {
+          xhr.setRequestHeader("X-Device-Id", deviceId);
+        }
+
         xhr.upload.onprogress = (ev) => {
           if (ev.lengthComputable) setUploadProgress(Math.round((ev.loaded / ev.total) * 100));
         };
@@ -246,6 +256,8 @@ export function StudentSummariesTab({
           }
         };
         xhr.onerror = () => reject(new Error("خطأ في الاتصال، يرجى الفحص وإعادة المحاولة"));
+        xhr.timeout = 180000;
+        xhr.ontimeout = () => reject(new Error("انتهت مهلة الرفع، يرجى المحاولة مرة أخرى أو فحص سرعة الإنترنت."));
         xhr.send(formData);
       });
 

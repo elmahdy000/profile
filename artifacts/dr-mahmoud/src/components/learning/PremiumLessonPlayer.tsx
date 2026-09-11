@@ -7,6 +7,7 @@ import {
   UploadCloud, Volume2, VolumeX, X,
 } from "lucide-react";
 import { getYouTubePlaylistId, getYouTubeVideoId, getYoutubeThumbnail, type VideoItem } from "@/lib/video";
+import { compressMultipleFiles } from "@/lib/image-compression";
 
 import Hls from "hls.js";
 
@@ -28,6 +29,8 @@ function LessonSummaryUploadPanel({ videoItem }: { videoItem: VideoItem }) {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [studentNotes, setStudentNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [statusText, setStatusText] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,32 +57,77 @@ function LessonSummaryUploadPanel({ videoItem }: { videoItem: VideoItem }) {
     if (selectedFiles.length === 0) return;
     setSubmitting(true);
     setSuccessMsg("");
+    setUploadProgress(0);
+    setStatusText("جارٍ فحص وضغط الصور لسرعة الرفع...");
+
     try {
+      // 1. Client-side compression to prevent timeouts and reduce file sizes by ~90%
+      const readyFiles = await compressMultipleFiles(selectedFiles, (current, total) => {
+        setStatusText(`جارٍ فحص وتجهيز الصور (${current}/${total})...`);
+      });
+
+      setStatusText("جارٍ بدء رفع الملخص...");
+
       const formData = new FormData();
       formData.append("lessonTitle", videoItem.title);
       if (videoItem.courseId) formData.append("courseId", String(videoItem.courseId));
       if (studentNotes.trim()) formData.append("studentNotes", studentNotes.trim());
-      selectedFiles.forEach((file) => formData.append("images", file));
+      readyFiles.forEach((file) => formData.append("images", file));
 
-      const res = await fetch("/api/learning/summaries/upload", {
-        method: "POST",
-        credentials: "include",
-        body: formData,
+      // 2. Upload via XMLHttpRequest with real-time upload progress
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api/learning/summaries/upload");
+        xhr.withCredentials = true;
+
+        const deviceId = localStorage.getItem("drelmahdy_device_id");
+        if (deviceId) {
+          xhr.setRequestHeader("X-Device-Id", deviceId);
+        }
+
+        xhr.upload.onprogress = (ev) => {
+          if (ev.lengthComputable) {
+            const pct = Math.round((ev.loaded / ev.total) * 100);
+            setUploadProgress(pct);
+            setStatusText(`جارٍ الرفع (${pct}%)...`);
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            try {
+              const resData = JSON.parse(xhr.responseText);
+              reject(new Error(resData.error || `تعذر رفع التلخيص (رمز ${xhr.status})`));
+            } catch {
+              reject(new Error(`تعذر رفع التلخيص (رمز ${xhr.status})`));
+            }
+          }
+        };
+
+        xhr.onerror = () => {
+          reject(new Error("تعذر الاتصال بالخادم أثناء الرفع. يرجى التحقق من اتصال الإنترنت وإعادة المحاولة."));
+        };
+
+        xhr.timeout = 180000;
+        xhr.ontimeout = () => {
+          reject(new Error("انتهت مهلة الرفع، يرجى المحاولة مرة أخرى أو اختيار صور أقل حجماً."));
+        };
+
+        xhr.send(formData);
       });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || "تعذر رفع التلخيص");
-      }
 
       setSuccessMsg("تم رفع ملخص الدرس بنجاح! 📝 ينتظر مراجعة واكتفاء المعلم.");
       setSelectedFiles([]);
       setPreviewUrls([]);
       setStudentNotes("");
+      setUploadProgress(100);
     } catch (err: any) {
       alert(err.message || "حدث خطأ أثناء رفع التلخيص");
     } finally {
       setSubmitting(false);
+      setStatusText("");
     }
   };
 
@@ -91,7 +139,7 @@ function LessonSummaryUploadPanel({ videoItem }: { videoItem: VideoItem }) {
           <span>رفع تلخيص كشكول هذا الدرس ({videoItem.title})</span>
         </h4>
         <p className="text-xs text-slate-400 mt-1">
-          صوّر كشكول ملخص الدرس واختيار الصور لرفعها للمعلم/المشرف لمراجعتها واكتفائها.
+          صوّر كشكول ملخص الدرس واختيار الصور لرفعها للمعلم/المشرف لمراجعتها واكتفائها. يتم ضغط الصور تلقائياً لتسريع الرفع.
         </p>
       </div>
 
@@ -112,8 +160,9 @@ function LessonSummaryUploadPanel({ videoItem }: { videoItem: VideoItem }) {
               type="file"
               accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.txt"
               multiple
+              disabled={submitting}
               onChange={handleFiles}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
             />
             <FileText className="mx-auto h-7 w-7 text-sky-400/80 mb-1" />
             <span className="block text-xs font-bold text-slate-200">اضغط هنا لاختيار صور أو ملفات كشكول/مذكرة الملخص</span>
@@ -122,18 +171,20 @@ function LessonSummaryUploadPanel({ videoItem }: { videoItem: VideoItem }) {
 
           {previewUrls.length > 0 && (
             <div className="space-y-1.5">
-              <span className="text-xs font-bold text-slate-300">الصور المختارة ({previewUrls.length}):</span>
+              <span className="text-xs font-bold text-slate-300">الملفات المختارة ({previewUrls.length}):</span>
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {previewUrls.map((url, idx) => (
                   <div key={idx} className="relative h-16 w-16 shrink-0 rounded-lg overflow-hidden border border-white/15 group">
                     <img src={url} alt={`صفحة ${idx + 1}`} className="h-full w-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => removeFile(idx)}
-                      className="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+                    {!submitting && (
+                      <button
+                        type="button"
+                        onClick={() => removeFile(idx)}
+                        className="absolute inset-0 bg-black/60 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -143,19 +194,38 @@ function LessonSummaryUploadPanel({ videoItem }: { videoItem: VideoItem }) {
           <textarea
             value={studentNotes}
             onChange={(e) => setStudentNotes(e.target.value)}
+            disabled={submitting}
             placeholder="أضف أية ملاحظات للمعلم (اختياري)..."
-            className="w-full min-h-16 rounded-xl border border-white/10 bg-slate-950 p-2.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500"
+            className="w-full min-h-16 rounded-xl border border-white/10 bg-slate-950 p-2.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:opacity-50"
           />
+
+          {submitting && (
+            <div className="space-y-1.5 rounded-xl border border-sky-500/20 bg-sky-500/10 p-3">
+              <div className="flex items-center justify-between text-xs font-bold text-sky-300">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-sky-400" />
+                  <span>{statusText || "جارٍ رفع صور الملخص..."}</span>
+                </div>
+                <span>{uploadProgress}%</span>
+              </div>
+              <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+                <div
+                  className="bg-sky-500 h-full rounded-full transition-all duration-300"
+                  style={{ width: `${Math.max(5, uploadProgress)}%` }}
+                />
+              </div>
+            </div>
+          )}
 
           <button
             type="submit"
             disabled={submitting || selectedFiles.length === 0}
-            className="w-full h-11 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-2 disabled:opacity-40 cursor-pointer"
+            className="w-full h-11 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-2 disabled:opacity-40 cursor-pointer transition-colors"
           >
             {submitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>جارٍ رفع صور الملخص...</span>
+                <span>{statusText || "جارٍ المعالجة والرفع..."}</span>
               </>
             ) : (
               <span>إرسال ملخص الدرس للمعلم 🚀</span>

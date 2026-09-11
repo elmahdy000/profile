@@ -1515,11 +1515,13 @@ router.patch("/admin/payment-receipts/:id", requireAdmin, async (req, res, next)
 
 // POST /api/learning/summaries/upload - Student uploads summary photos
 router.post("/learning/summaries/upload", requireStudent, (req, res, next) => {
+  // Allow up to 5 minutes for uploads on slower mobile connections
+  req.setTimeout(300000);
   summaryImagesUpload(req, res, async (err) => {
     if (err) {
       const multerErr = err as any;
       if (multerErr.code === "LIMIT_FILE_SIZE") {
-        return res.status(400).json({ error: "حجم الصورة كبير جداً (الحد الأقصى 25 ميجابايت لكل صورة)" });
+        return res.status(400).json({ error: "حجم الصورة كبير جداً (الحد الأقصى 50 ميجابايت لكل صورة)" });
       }
       if (multerErr.code === "LIMIT_UNEXPECTED_FILE") {
         return res.status(400).json({ error: "يمكنك رفع 10 صور كحد أقصى لكل درس" });
