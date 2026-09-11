@@ -464,6 +464,30 @@ export function normalizeQuestionPrompt(p?: string | null): string {
     .replace(/[^\p{L}\p{N}\s]/gu, "");
 }
 
+function cleanOptionString(opt: string): string {
+  return opt
+    .replace(/\s*\n\s*[A-Da-dأابجده]\)\s*$/g, "")
+    .replace(/^[\*\•\s]+/, "")
+    .trim();
+}
+
+function isCompleteValidQuestion(q: QuizQuestion | undefined | null): boolean {
+  if (!q || !q.prompt || typeof q.prompt !== "string") return false;
+  const prompt = q.prompt.trim();
+  if (prompt.length < 8) return false;
+  if (/\b(?:ما فائدة|سؤال|Question)\b\s*$/.test(prompt)) return false;
+  if (/[\n\s]+[A-Da-dأابجده]\)\s*$/.test(prompt)) return false;
+  if (!Array.isArray(q.options) || q.options.length < 2) return false;
+  for (const rawOpt of q.options) {
+    if (!rawOpt || typeof rawOpt !== "string") return false;
+    const opt = cleanOptionString(rawOpt);
+    if (opt.length < 2) return false;
+    // An option ending in standalone 'و' (Arabic 'and') was amputated by an overeager regex
+    if (/(?:^|\s)و$/.test(opt)) return false;
+  }
+  return true;
+}
+
 function validateQuestions(value: unknown): QuizQuestion[] | null {
   if (!Array.isArray(value) || value.length === 0) return null;
   const questions = value as QuizQuestion[];
@@ -482,14 +506,19 @@ function validateQuestions(value: unknown): QuizQuestion[] | null {
   );
   if (!valid) return null;
 
-  // Deduplicate questions by prompt so students never see duplicate questions
+  // Deduplicate questions by prompt and clean option artifacts
   const seen = new Set<string>();
   const deduplicated: QuizQuestion[] = [];
   for (const q of questions) {
     const key = normalizeQuestionPrompt(q.prompt);
     if (key && seen.has(key)) continue;
     if (key) seen.add(key);
-    deduplicated.push(q);
+    deduplicated.push({
+      ...q,
+      prompt: q.prompt.replace(/[\n\s]+[A-Da-dأابجده]\)\s*$/, "").trim(),
+      options: q.options.map(cleanOptionString),
+      explanation: q.explanation?.trim() || undefined,
+    });
   }
   return deduplicated.length > 0 ? deduplicated : null;
 }
@@ -501,7 +530,6 @@ const optionLabels: Record<string, number> = {
   "ج": 2,
   "د": 3,
   "ه": 4, "هـ": 4,
-  "و": 5,
   "ز": 6,
   "الأول": 0, "الاول": 0,
   "الثاني": 1, "الثانى": 1,
@@ -4261,6 +4289,154 @@ router.delete(
   },
 );
 
+// GET /api/admin/learning/quizzes/:id/replacement-candidates - Get alternative clean questions from bank
+router.get("/admin/learning/quizzes/:id/replacement-candidates", requireAdmin, async (req, res, next) => {
+  try {
+    const quizId = Number(req.params.id);
+    const [quiz] = await db.select().from(quizzesTable).where(eq(quizzesTable.id, quizId)).limit(1);
+    if (!quiz) {
+      res.status(404).json({ error: "الاختبار غير موجود" });
+      return;
+    }
+
+    const currentPrompts = new Set((quiz.questions || []).map((q) => normalizeQuestionPrompt(q.prompt)));
+
+    const conditions = [];
+    if (quiz.courseId) {
+      conditions.push(or(eq(questionBankTable.courseId, quiz.courseId), isNull(questionBankTable.courseId)));
+    }
+    if (quiz.stage) {
+      conditions.push(or(eq(questionBankTable.stage, quiz.stage), eq(questionBankTable.stage, "عام")));
+    }
+
+    const bankQuestions = await db
+      .select()
+      .from(questionBankTable)
+      .where(conditions.length ? and(...conditions) : undefined)
+      .limit(100);
+
+    const validCandidates = bankQuestions
+      .filter((bq) => {
+        const q = bq.question;
+        if (!isCompleteValidQuestion(q)) return false;
+        const norm = normalizeQuestionPrompt(q.prompt);
+        return !currentPrompts.has(norm);
+      })
+      .map((bq) => ({
+        id: bq.id,
+        lesson: bq.lesson,
+        unit: bq.unit,
+        stage: bq.stage,
+        difficulty: bq.difficulty,
+        question: {
+          ...bq.question,
+          options: (bq.question.options || []).map(cleanOptionString),
+          prompt: bq.question.prompt.replace(/[\n\s]+[A-Da-dأابجده]\)\s*$/, "").trim(),
+        },
+      }));
+
+    res.json({ candidates: validCandidates });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/learning/quizzes/:id/replace-question - Replace a question with a clean one
+router.post("/admin/learning/quizzes/:id/replace-question", requireAdmin, async (req, res, next) => {
+  try {
+    const quizId = Number(req.params.id);
+    const { questionIndex, replacementQuestionId, replacementQuestion } = req.body;
+
+    const [quiz] = await db.select().from(quizzesTable).where(eq(quizzesTable.id, quizId)).limit(1);
+    if (!quiz) {
+      res.status(404).json({ error: "الاختبار غير موجود" });
+      return;
+    }
+
+    const currentQuestions = [...(quiz.questions || [])];
+    const idx = Number(questionIndex);
+    if (isNaN(idx) || idx < 0 || idx >= currentQuestions.length) {
+      res.status(400).json({ error: "رقم السؤال المطلوب استبداله غير صحيح" });
+      return;
+    }
+
+    let newQuestion: QuizQuestion | null = null;
+
+    if (replacementQuestion && isCompleteValidQuestion(replacementQuestion)) {
+      newQuestion = {
+        ...replacementQuestion,
+        prompt: replacementQuestion.prompt.replace(/[\n\s]+[A-Da-dأابجده]\)\s*$/, "").trim(),
+        options: replacementQuestion.options.map(cleanOptionString),
+      };
+    } else if (replacementQuestionId) {
+      const [bq] = await db.select().from(questionBankTable).where(eq(questionBankTable.id, Number(replacementQuestionId))).limit(1);
+      if (bq && isCompleteValidQuestion(bq.question)) {
+        newQuestion = {
+          ...bq.question,
+          prompt: bq.question.prompt.replace(/[\n\s]+[A-Da-dأابجده]\)\s*$/, "").trim(),
+          options: bq.question.options.map(cleanOptionString),
+        };
+      }
+    } else {
+      // Auto-find a random clean question from question bank
+      const currentPrompts = new Set(currentQuestions.map((q) => normalizeQuestionPrompt(q.prompt)));
+
+      const conditions = [];
+      if (quiz.courseId) {
+        conditions.push(or(eq(questionBankTable.courseId, quiz.courseId), isNull(questionBankTable.courseId)));
+      }
+      if (quiz.stage) {
+        conditions.push(or(eq(questionBankTable.stage, quiz.stage), eq(questionBankTable.stage, "عام")));
+      }
+
+      const candidates = await db
+        .select()
+        .from(questionBankTable)
+        .where(conditions.length ? and(...conditions) : undefined);
+
+      const available = candidates
+        .filter((bq) => isCompleteValidQuestion(bq.question) && !currentPrompts.has(normalizeQuestionPrompt(bq.question.prompt)))
+        .sort(() => Math.random() - 0.5);
+
+      if (available.length > 0) {
+        const picked = available[0].question;
+        newQuestion = {
+          ...picked,
+          prompt: picked.prompt.replace(/[\n\s]+[A-Da-dأابجده]\)\s*$/, "").trim(),
+          options: picked.options.map(cleanOptionString),
+        };
+      }
+    }
+
+    if (!newQuestion) {
+      res.status(404).json({ error: "لا توجد أسئلة بديلة متوفرة في بنك الأسئلة لهذا النطاق" });
+      return;
+    }
+
+    currentQuestions[idx] = newQuestion;
+
+    const [updatedQuiz] = await db
+      .update(quizzesTable)
+      .set({
+        questions: currentQuestions,
+        updatedAt: new Date(),
+      })
+      .where(eq(quizzesTable.id, quizId))
+      .returning();
+
+    await logAudit(req, "REPLACE_QUIZ_QUESTION", "quiz", String(quizId), `استبدال السؤال رقم ${idx + 1} في اختبار: ${quiz.title}`);
+
+    res.json({
+      success: true,
+      quiz: updatedQuiz,
+      questionIndex: idx,
+      newQuestion,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // ── Question Bank CRUD Endpoints ──
 
 router.get("/admin/learning/question-bank", requireAdmin, async (req, res, next) => {
@@ -4734,6 +4910,7 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
     const uniqueAvailable: typeof availableQuestions = [];
 
     for (const q of availableQuestions) {
+      if (!isCompleteValidQuestion(q.question)) continue;
       if (seenBankIds.has(q.id)) continue;
       seenBankIds.add(q.id);
 
@@ -4742,7 +4919,14 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
         if (seenBankPrompts.has(pKey)) continue;
         seenBankPrompts.add(pKey);
       }
-      uniqueAvailable.push(q);
+      uniqueAvailable.push({
+        ...q,
+        question: {
+          ...q.question,
+          prompt: q.question.prompt.replace(/[\n\s]+[A-Da-dأابجده]\)\s*$/, "").trim(),
+          options: (q.question.options || []).map(cleanOptionString),
+        },
+      });
     }
 
     if (uniqueAvailable.length === 0) {

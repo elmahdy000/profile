@@ -1,0 +1,632 @@
+--- LATEST QUIZZES ---
+Quiz ID: 34 | Title: اختبار مراجعة على: الوحدة الاولى (تجريبى)
+  Q1: في أي قطاع يُستخدم الذكاء الاصطناعي لتحسين مسارات التوصيل؟
+    Options: ["الزراعة", "الرعاية الصحية", "التصنيع", "الخدمات اللوجستية"]
+    Expl: تحسين مسارات التوصيل تطبيق مباشر للذكاء الاصطناعي في الخدمات اللوجستية.
+  Q2: أي تصرف غير مناسب عند استخدام الذكاء الاصطناعي؟
+    Options: ["مراجعة القرارات المهمة", "حماية المعلومات الشخصية", "الانتباه لاحتمال التحيز", "ترك جميع القرارات النهائية للنظام دون إشراف"]
+    Expl: القرارات النهائية المهمة تحتاج إلى إشراف الإنسان ولا ينبغي تسليمها بالكامل للنظام.
+  Q3: أي عبارة تعكس الاستخدام المسؤول للذكاء الاصطناعي؟
+    Options: ["فحص التحيز و", "جمع البيانات دون قيود", "إخفاء آلية النظام", "ترك جميع النتائج دون مراجعة"]
+    Expl: الاستخدام المسؤول يجمع بين العدالة والشفافية وحماية الخصوصية والمساءلة.
+  Q4: أي موقف يمثل التعلم عبر الإنترنت؟
+    Options: ["دفع فاتورة إلكترونيًا", "بيع هاتف عبر متجر إلكتروني", "إرسال منشور اجتماعي", "تقديم الدروس والمواد الدراسية عبر الإنترنت"]
+    Expl: التعلم عبر الإنترنت يعتمد على تقديم الدروس والمحتوى التعليمي من خلال الإنترنت.
+  Q5: ماذا يصف قانون مور؟
+    Options: ["تضاعف عدد مستخدمي الإنترنت يوميًا", "تضاعف حجم الحاسب كل عام", "تضاعف عدد الترانزستورات في الدائرة المتكاملة تقريبًا كل عامين", "تضاعف عدد الهواتف شهريًا"]
+    Expl: يصف قانون مور الملاحظة التي تشير إلى تضاعف عدد الترانزستورات تقريبًا كل عامين.
+  Q6: أي مجموعة تضم المبادئ الأربعة الأساسية لأخلاقيات الذكاء الاصطناعي؟
+    Options: ["العدالة، الشفافية، حماية الخصوصية، المساءلة", "السرعة، التخزين، الترجمة، التنبؤ", "XAI، الإنترنت، الحوسبة، البيانات", "الخصوصية، السرعة، التصميم، الشبكات"]
+    Expl: المبادئ الأربعة هي العدالة والشفافية وحماية الخصوصية والمساءلة.
+  Q7: أي خدمة يمكن أن تستخدم نظام التوصية لاقتراح منتجات مناسبة؟
+    Options: ["Amazon", "DeepL", "Siri", "Google Translate"]
+    Expl: يمكن لأنظمة التوصية اقتراح منتجات للمستخدم استنادًا إلى بيانات سلوكه السابق.
+  Q8: أي مبدأ يركز على التعامل المناسب مع البيانات الشخصية؟
+    Options: ["العدالة", "حماية الخصوصية", "الشفافية", "المساءلة"]
+    Expl: حماية الخصوصية تختص بكيفية التعامل مع المعلومات الشخصية وتأمينها.
+  Q9: أي مما يلي مثال على نظام توصية؟
+    Options: ["اقتراح Spotify موسيقى تناسب المستخدم", "اكتشاف مرض من صورة أشعة", "ترجمة صفحة أجنبية", "التعرف على وجه صاحب الهاتف"]
+    Expl: اقتراح الموسيقى بناءً على تفضيلات وسلوك المستخدم يعتمد على نظام التوصية.
+  Q10: على ماذا يعتمد التعلم الآلي أساسًا؟
+    Options: ["حذف البيانات", "تغيير مكونات الحاسب", "اكتشاف الأنماط في البيانات", "العمل دون أمثلة"]
+    Expl: يعتمد التعلم الآلي على اكتشاف الأنماط في البيانات والاستفادة منها.
+  Q11: ما وظيفة نماذج توليد الفيديو؟
+    Options: ["تصنيف الرسائل", "توصية المنتجات", "تخزين الصور فقط", "إنشاء مقاطع فيديو جديدة من نص أو صور ثابتة"]
+    Expl: يمكن لنماذج توليد الفيديو إنشاء فيديو جديد اعتمادًا على نص أو صور.
+  Q12: أي نوع من المعلومات يتطلب حماية خاصة؟
+    Options: ["أسماء الملفات العامة", "المعلومات الشخصية والبيانات الحساسة", "صور المنتجات فقط", "مسارات التوصيل"]
+    Expl: التعامل مع البيانات الشخصية والحساسة يتطلب مراعاة الخصوصية.
+  Q13: أي عبارة صحيحة وفق العلاقة المبسطة في الدرس؟
+    Options: ["كل تعلم عميق هو تعلم آلي", "كل ذكاء اصطناعي هو تعلم عميق", "كل تعلم آلي هو ذكاء توليدي", "الذكاء التوليدي هو المجال الأوسع"]
+    Expl: التعلم العميق أحد أساليب التعلم الآلي.
+  Q14: في أي فترة ظهرت الحواسيب الإلكترونية المبكرة مثل ENIAC؟
+    Options: ["التسعينيات", "الأربعينيات والخمسينيات", "العقد الأول من الألفية", "العقد الثاني من الألفية"]
+    Expl: ظهرت الحواسيب الإلكترونية المبكرة مثل ENIAC خلال الأربعينيات والخمسينيات.
+  Q15: ما المقصود بالذكاء الاصطناعي التوليدي (GenAI)؟
+    Options: ["أنظمة تنشئ محتوى جديدًا اعتمادًا على الأنماط التي تعلمتها من بيانات التدريب", "برنامج لتخزين الملفات فقط", "نظام لا يستخدم بيانات", "جهاز حاسب مادي"]
+    Expl: الذكاء الاصطناعي التوليدي ينتج محتوى جديدًا اعتمادًا على الأنماط التي تعلمها أثناء التدريب.
+  Q16: أي عبارة تصف المساءلة بصورة صحيحة؟
+    Options: ["تعني", "تعني تحديد الجهات التي يمكن محاسبتها على النتائج", "تعني حماية البيانات", "تعني منع التمييز فقط"]
+    Expl: المساءلة تربط القرارات والآثار بجهات يمكن الرجوع إليها ومحاسبتها.
+  Q17: أي مما يلي لا يصف شبكات التواصل الاجتماعي؟
+    Options: ["تتيح التواصل بين المستخدمين", "تساعد على نشر المحتوى", "يمكن أن تنشر المعلومات بسرعة", "تعني شراء وبيع السلع عبر الإنترنت"]
+    Expl: شراء وبيع السلع والخدمات عبر الإنترنت هو التجارة الإلكترونية وليس شبكات التواصل الاجتماعي.
+  Q18: أي تقنية انتشرت من العقد الثاني من الألفية فصاعدًا؟
+    Options: ["الحوسبة السحابية", "ENIAC", "الأنابيب المفرغة", "البريد الورقي"]
+    Expl: ارتبط العقد الثاني من الألفية وما بعده بانتشار الحوسبة السحابية.
+  Q19: ما المقصود باستخدام متغير غير مناسب في بناء النظام؟
+    Options: ["زيادة حجم بيانات التدريب", "حماية البيانات الشخصية\nC)"]
+    Expl: None
+  Q20: ما نتيجة زيادة عدد الترانزستورات عبر الزمن؟
+    Options: ["انخفاض قدرات الحوسبة", "زيادة قدرات الحوسبة وتحسين أداء المعالجات", "إلغاء الحاجة إلى المعالجات", "اختفاء الحواسيب"]
+    Expl: ساعدت زيادة عدد الترانزستورات على تحسين أداء المعالجات وزيادة قدرات الحوسبة.
+  Q21: أي من الآتي ورد مثالًا على التعلم العميق؟
+    Options: ["البيع والشراء", "التعرف على الكلام", "تشغيل الشاشة", "إرسال رسالة عادية"]
+    Expl: التعرف على الكلام من التطبيقات التي يمكن أن تستخدم التعلم العميق.
+  Q22: ماذا يمكن أن تفعل كاميرات التعرف على الوجه في الأماكن العامة؟
+    Options: ["تترجم النصوص", "تكتشف الأعطال", "تتعرف على الأفراد وتتبعهم", "تحسن سرعة الحاسب"]
+    Expl: يمكن لأنظمة التعرف على الوجه تحديد الأشخاص وتتبعهم في الأماكن العامة.
+  Q23: أي عبارة لا تصف التعلم الآلي بصورة صحيحة؟
+    Options: ["يتعلم من البيانات", "يكتشف الأنماط", "يمكنه إجراء تنبؤات", "يجب برمجة كل قاعدة فيه بشكل صريح دائمًا"]
+    Expl: التعلم الآلي يتميز بتعلم الأنماط من البيانات بدل الاعتماد فقط على قواعد مكتوبة صراحةً.
+  Q24: الحوسبة الكمية تعتمد على مبادئ:
+    Options: ["التجارة الإلكترونية", "شبكات التواصل", "ميكانيكا الكم", "الواقع الافتراضي"]
+    Expl: تعتمد الحوسبة الكمية على مبادئ ميكانيكا الكم.
+  Q25: في أي قطاع يُستخدم الذكاء الاصطناعي للتنبؤ بموعد الحصاد؟
+    Options: ["الخدمات اللوجستية", "الزراعة", "التصنيع", "الرعاية الصحية"]
+    Expl: التنبؤ بموعد الحصاد من تطبيقات الذكاء الاصطناعي في الزراعة.
+  Q26: مزرعة تريد استخدام الذكاء الاصطناعي للكشف عن مشكلات المحاصيل. ما التطبيق الأنسب؟
+    Options: ["الكشف عن الآفات والأمراض", "الصيانة التنبؤية", "الترجمة الآلية", "ت"]
+    Expl: يمكن استخدام الذكاء الاصطناعي للكشف عن الآفات والأمراض التي تصيب النباتات.
+  Q27: أي مهمة لا ينبغي تركها بالكامل للذكاء الاصطناعي؟
+    Options: ["التعرف على الصور", "إيجاد الأنماط", "التنبؤ بالبيانات", "اتخاذ حكم أخلاقي نهائي"]
+    Expl: الأحكام الأخلاقية النهائية تتطلب تدخل الإنسان وتحمل المسؤولية.
+  Q28: أي مما يلي يمكن أن ينتج عن التعلم الآلي؟
+    Options: ["تصنيع جهاز جديد", "تصنيف البيانات", "إلغاء جميع المدخلات", "منع النظام من التعلم"]
+    Expl: يمكن للتعلم الآلي استخدام الأنماط المتعلمة لإجراء التصنيفات.
+  Q29: أي من الآتي يعبر عن قدرة الذكاء الاصطناعي في التعرف؟
+    Options: ["تحمل المسؤولية", "إصدار حكم أخلاقي", "التعرف على الصور والصوت والنصوص", "تحديد الحقوق القانونية"]
+    Expl: يستطيع الذكاء الاصطناعي التعرف على أنماط ومحتوى في الصور والصوت والنص.
+  Q30: أي موقف لا يمثل تحيزًا خوارزميًا؟
+    Options: ["نظام توظيف يفضل مجموعة دون مبرر عادل", "نظام تعرف على الوجه أقل دقة مع فئة معينة", "بيانات تدريب لا تمثل بعض الفئات جيدًا", "نظام يقدم نتائج متساوية دون تمييز ظالم"]
+    Expl: تقديم نتائج منصفة دون تمييز يتفق مع مبدأ العدالة ولا يمثل تحيزًا.
+  Q31: إنشاء مقطع موسيقي جديد بواسطة نموذج ذكاء اصطناعي يُعد مثالًا على:
+    Options: ["التعلم الآلي الخاص بالتصنيف فقط", "توصية المنتجات", "الذكاء الاصطناعي التوليدي", "برنامج ثابت"]
+    Expl: توليد محتوى صوتي أو موسيقي جديد من تطبيقات الذكاء الاصطناعي التوليدي.
+  Q32: أي عبارة توضح الفرق بين AR وVR بصورة صحيحة؟
+    Options: ["AR وVR لهما المعنى نفسه", "AR للدفع وVR للتجارة", "VR يضيف عناصر للعالم الحقيقي فقط", "AR يضيف عناصر إلى الواقع الحقيقي، بينما VR يضع المستخدم داخل عالم افتراضي"]
+    Expl: الواقع المعزز يحتفظ بالمشهد الحقيقي ويضيف إليه، أما الواقع الافتراضي فينشئ بيئة افتراضية كاملة.
+  Q33: ما الذي يجعل استمرار تصغير الترانزستورات تحديًا؟
+    Options: ["ظهور تأثيرات وحدود فيزيائية عند الأحجام شديدة الصغر", "زيادة استخدام البريد الإلكتروني", "انتشار التجارة الإلكترونية", "العمل عن بُعد"]
+    Expl: عند الوصول إلى أحجام صغيرة جدًا تظهر تأثيرات فيزيائية تحد من استمرار التصغير.
+  Q34: ما المقصود بالهلوسة في الذكاء الاصطناعي؟
+    Options: ["تقديم معلومات غير صحيحة أو غير دقيقة لكنها تبدو مقنعة أو منطقية", "زيادة سرعة الحاسب", "تدريب شبكة عصبية", "إنشاء صورة جديدة"]
+    Expl: الهلوسة هي أن يقدم النظام معلومات خاطئة أو غير دقيقة تبدو في ظاهرها مقنعة.
+  Q35: ماذا يحدث لأوزان الشبكة العصبية أثناء التدريب؟
+    Options: ["تختفي", "تظل ثابتة دائمًا", "تتغير", "تتحول إلى نصوص"]
+    Expl: تتعلم الشبكة العصبية من خلال تغير الأوزان أثناء التدريب.
+  Q36: نظام يتعرف على المشاة في صور الطريق باستخدام شبكة متعددة الطبقات. ما التقنية الأقرب؟
+    Options: ["قواعد صريحة فقط", "التعلم العميق", "توليد النصوص", "التخزين"]
+    Expl: ت
+  Q37: أي مما يلي لا يُعد مثالًا على نظام التوصية؟
+    Options: ["اقتراح أفلام", "اقتراح موسيقى", "اقتراح منتجات", "فتح الهاتف بالتعرف على الوجه"]
+    Expl: فتح الهاتف باستخدام ملامح الوجه يعتمد على تقنية التعرف على الوجه وليس نظام التوصية.
+  Q38: أي مما يلي لا يصف XAI؟
+    Options: ["يساعد على فهم القرار", "يوضح العوامل المؤثرة", "يسهل اكتشاف الأخطاء", "يحدد من يجب محاسبته على النتيجة"]
+    Expl: تحديد الجهة التي يمكن محاسبتها يتعلق بالمساءلة وليس بوظيفة XAI.
+  Q39: أي مما يلي مثال على تطبيقات التعلم العميق في الدرس؟
+    Options: ["ت", "استخدام الورق", "شحن الهاتف", "فتح ملف نصي فقط"]
+    Expl: ت
+  Q40: ما المقصود بتيار التسرب في سياق تصغير مكونات الحاسب؟
+    Options: ["انتشار الإنترنت", "تخزين البيانات في السحابة", "زيادة عدد المستخدمين", "تدفق كهربائي غير مرغوب فيه"]
+    Expl: تيار التسرب هو تدفق كهربائي غير مرغوب فيه قد يظهر مع صِغَر المكونات.
+  Q41: ما الأثر المرتبط بالحوسبة السحابية في المر
+    Options: ["إلغاء ت", "منع استخدام الذكاء الاصطناعي", "تقليل خدمات المعلومات", "دعم البيانات الضخمة والذكاء الاصطناعي"]
+    Expl: ساعد انتشار الحوسبة السحابية على دعم ت
+  Q42: ما الفرق بين الشفافية وXAI؟
+    Options: ["لا يوجد أي فرق", "XAI يختص بحماية البيانات", "الشفافية توضح النظام واستخدامه، بينما XAI يفسر لماذا ظهرت نتيجة معينة", "الشفافية تعني المحاسبة"]
+    Expl: سبب القرار أو المخرج.
+  Q43: أي نوع من الأنظمة يمكنه إنشاء صور جديدة؟
+    Options: ["نظام تصنيف البريد", "نماذج توليد الصور", "لوحة المفاتيح", "جهاز التخزين"]
+    Expl: نماذج توليد الصور من تطبيقات الذكاء الاصطناعي التوليدي.
+  Q44: ظهور الإنترنت في يد المستخدم أثناء التنقل ارتبط أساسًا بانتشار:
+    Options: ["الحواسيب الضخمة", "الهواتف الذكية", "الأنابيب المفرغة", "الحوسبة الكمية"]
+    Expl: ساعدت الهواتف الذكية على انتشار الإنترنت المحمول واستخدامه أثناء التنقل.
+  Q45: ما القضية المرتبطة باستخدام أعمال محمية بحقوق المؤلف في بيانات التدريب؟
+    Options: ["سرعة المعالجة", "قضايا الحقوق", "جودة الصور", "تحديد المسارات"]
+    Expl: استخدام أعمال محمية في بيانات التدريب قد يثير قضايا تتعلق بحقوق المؤلف.
+  Q46: ما المقصود بالواقع الافتراضي (VR)؟
+    Options: ["إضافة معلومات فوق صورة العالم الحقيقي", "الدفع باستخدام QR", "وضع المستخدم داخل بيئة افتراضية كاملة", "معالجة بيانات المركبة"]
+    Expl: الواقع الافتراضي يضع المستخدم داخل بيئة رقمية افتراضية كاملة.
+  Q47: أي موقف يمثل تحيزًا خوارزميًا؟
+    Options: ["نظام ي", "نظام يحمي البيانات الشخصية", "نظام توظيف يفضل فئة معينة بصورة غير عادلة", "نظام يحدد الجهة المسؤولة عن النتيجة"]
+    Expl: تفضيل فئة في التوظيف دون أساس عادل يمثل نتيجة متحيزة.
+  Q48: أي موقف يجمع بين الخصوصية وحماية الخصوصية؟
+    Options: ["تفضيل فئة في التوظيف\nB)", "تحديد من يمكن محاسبته", "منع استخدام البيانات الشخصية خارج الغرض المصرح به"]
+    Expl: منع الاستخدام غير المصرح به للبيانات من الإجراءات الأساسية لحماية الخصوصية.
+  Q49: ما المقصود بالهلوسة؟
+    Options: ["التعرف على الصور", "اكتشاف الاحتيال", "التنبؤ بالبيانات", "توليد معلومات غير صحيحة أو غير مدعومة تبدو مقنعة"]
+    Expl: الهلوسة تحدث عندما يولد النظام معلومات غير صحيحة أو غير مدعومة بطريقة تبدو مقنعة.
+  Q50: ما الاستخدام الأنسب للذكاء الاصطناعي في القرارات عالية الأثر؟
+    Options: ["استخدامه كأداة مساعدة مع إشراف بشري", "ترك القرار بالكامل للنظام", "تجاهل المسؤولية عن النتيجة", "الاعتماد عليه دون مراجعة"]
+    Expl: الذكاء الاصطناعي يمكن أن يدعم القرار، بينما يظل الإشراف والمسؤولية البشرية ضروريين.
+Quiz ID: 33 | Title: اختبار مراجعة على: الوحدة الاولى
+  Q1: أي تقنية تناسب شخصًا يريد قراءة موقع بلغة أجنبية بلغته؟
+    Options: ["التعرف على الوجه", "نظام التوصية", "الترجمة الآلية", "الصيانة التنبؤية"]
+    Expl: الترجمة الآلية تحول النص المكتوب من لغة إلى أخرى تلقائيًا.
+  Q2: ما فائدة تعدد الطبقات في نماذج التعلم العميق وفق الدرس؟
+    Options: ["منع استخدام البيانات", "مساعدة النموذج على تعلم أنماط أكثر تعقيدًا", "إلغاء التدريب", "تقليل عدد المخرجات إلى صفر"]
+    Expl: تساعد الطبقات المتعددة النموذج على التعامل مع أنماط أكثر تعقيدًا.
+  Q3: أي جزء من الشبكة العصبية يستقبل المدخلات؟
+    Options: ["طبقة الإخراج", "الطبقة المخفية الأخيرة", "طبقة الإدخال", "نموذج التوليد"]
+    Expl: طبقة الإدخال هي التي تستقبل البيانات الأولية.
+  Q4: ما المشكلة في استخدام نظام توظيف مدرب على بيانات تاريخية تعكس تمييزًا سابقًا؟
+    Options: ["سيصبح أكثر شفافية تلقائيًا", "قد يعيد إنتاج التمييز السابق", "سيحمي الخصوصية تلقائيًا", "سيحدد المسؤول بوضوح"]
+    Expl: الأنماط التمييزية التاريخية قد تنتقل إلى النموذج إذا تعلم منها دون معالجة مناسبة.
+  Q5: أي مما يلي لا يصف الشبكة العصبية الاصطناعية؟
+    Options: ["تتكون من وحدات مترابطة", "تتعلم أثناء التدريب", "تتغير أوزانها", "لا تستطيع تعلم أي نمط من البيانات"]
+    Expl: الشبكة العصبية مصممة لتتعلم الأنماط من البيانات.
+  Q6: ما العلاقة الصحيحة بين التعلم الآلي والتعلم العميق؟
+    Options: ["التعلم الآلي جزء من التعلم العميق", "لا توجد علاقة بينهما", "كلاهما يعني الشيء نفسه تمامًا", "التعلم العميق أسلوب من أساليب التعلم الآلي"]
+    Expl: التعلم العميق أحد الأساليب الأكثر تخصصًا داخل التعلم الآلي.
+  Q7: ظهور الويب واتساع الوصول العالمي للمعلومات يدل على مر
+    Options: ["الحواسيب الإلكترونية المبكرة", "الهواتف الذكية", "الحوسبة الكمية", "التسعينيات"]
+    Expl: ارتبطت التسعينيات بانتشار الويب والإنترنت التجاري والوصول العالمي للمعلومات.
+  Q8: إنشاء مقطع موسيقي جديد بواسطة نموذج ذكاء اصطناعي يُعد مثالًا على:
+    Options: ["التعلم الآلي الخاص بالتصنيف فقط", "توصية المنتجات", "الذكاء الاصطناعي التوليدي", "برنامج ثابت"]
+    Expl: توليد محتوى صوتي أو موسيقي جديد من تطبيقات الذكاء الاصطناعي التوليدي.
+  Q9: ما القضية المرتبطة باستخدام أعمال محمية بحقوق المؤلف في بيانات التدريب؟
+    Options: ["سرعة المعالجة", "قضايا الحقوق", "جودة الصور", "تحديد المسارات"]
+    Expl: استخدام أعمال محمية في بيانات التدريب قد يثير قضايا تتعلق بحقوق المؤلف.
+  Q10: ما التقنية الأنسب للتعرف على هوية صاحب الهاتف باستخدام ملامح وجهه؟
+    Options: ["نظام التوصية", "الترجمة الآلية", "المساعد الصوتي", "التعرف على الوجه"]
+    Expl: تعتمد هذه العملية على الكشف عن ملامح الوجه والتعرف على الشخص.
+  Q11: لماذا يصعب تقييم نتيجة نظام غير قابل للتفسير بشكل واضح؟
+    Options: ["لأن البيانات تكون دائمًا قليلة", "لأن النظام يكون بطيئًا", "لأن العوامل المؤدية إلى النتيجة غير واضحة", "لأن الخصوصية تكون مضمونة"]
+    Expl: عدم وضوح العوامل المؤدية للنتيجة يجعل اكتشاف الأخطاء أو التحيز أكثر صعوبة.
+  Q12: أي خدمة تُعد مثالًا على الترجمة الآلية؟
+    Options: ["Siri", "Spotify", "DeepL", "YouTube"]
+    Expl: DeepL خدمة تستخدم الترجمة الآلية لتحويل النصوص بين اللغات.
+  Q13: ما الأثر المجتمعي المرتبط بانتشار الحواسيب الشخصية؟
+    Options: ["انتشار الدفع غير النقدي", "ظهور القيادة الذاتية", "بداية استخدام الأفراد للحاسب", "انتشار الواقع الافتراضي"]
+    Expl: أدى انتشار الحواسيب الشخصية إلى بداية الاستخدام الشخصي للحاسب على نطاق أوسع.
+  Q14: ما الخطر المحتمل عند استخدام الذكاء الاصطناعي في الأحكام الأخلاقية؟
+    Options: ["التمييز أو التحيز", "زيادة سرعة المعالجة", "تحسين الترجمة", "رفع جودة الصور"]
+    Expl: قد تؤدي القرارات الأخلاقية الآلية إلى نتائج متحيزة أو تمييزية.
+  Q15: أي تطبيق لا يرتبط بالزراعة؟
+    Options: ["التنبؤ بموعد الحصاد", "الكشف عن الآفات", "الكشف عن أمراض النباتات", "دعم اكتشاف الأدوية"]
+    Expl: دعم اكتشاف الأدوية يرتبط بقطاع الرعاية الصحية.
+  Q16: أي نوع من الأنظمة يمكنه إنشاء صور جديدة؟
+    Options: ["نظام تصنيف البريد", "نماذج توليد الصور", "لوحة المفاتيح", "جهاز التخزين"]
+    Expl: نماذج توليد الصور من تطبيقات الذكاء الاصطناعي التوليدي.
+  Q17: ما الاستخدام الأنسب للذكاء الاصطناعي في القرارات عالية الأثر؟
+    Options: ["استخدامه كأداة مساعدة مع إشراف بشري", "ترك القرار بالكامل للنظام", "تجاهل المسؤولية عن النتيجة", "الاعتماد عليه دون مراجعة"]
+    Expl: الذكاء الاصطناعي يمكن أن يدعم القرار، بينما يظل الإشراف والمسؤولية البشرية ضروريين.
+  Q18: أي مفهوم يناسب السؤال: "ما واجب المطور والمستخدم والجهة المشغلة؟"
+    Options: ["الشفافية", "المسؤولية", "العدالة", "حماية الخصوصية"]
+    Expl: المسؤولية تحدد الأدوار والواجبات الملقاة على الأطراف المختلفة.
+  Q19: لماذا يناسب الذكاء الاصطناعي ت
+    Options: ["لأنه يستطيع إيجاد الأنماط وتصنيفها", "لأنه يتحمل المسؤولية عن النتائج", "لأنه لا يحتاج إلى بيانات", "لأنه لا يخطئ مطلقًا"]
+    Expl: قدرة الذكاء الاصطناعي على اكتشاف الأنماط تجعله مناسبًا لت
+  Q20: أي تقنية انتشرت من العقد الثاني من الألفية فصاعدًا؟
+    Options: ["الحوسبة السحابية", "ENIAC", "الأنابيب المفرغة", "البريد الورقي"]
+    Expl: ارتبط العقد الثاني من الألفية وما بعده بانتشار الحوسبة السحابية.
+  Q21: أي خدمة تستخدم في الترجمة الآلية؟
+    Options: ["Spotify", "Siri", "Google Translate", "YouTube"]
+    Expl: Google Translate يحول النصوص تلقائيًا بين لغات مختلفة.
+  Q22: ما الفرق الأساسي بين الحوسبة السحابية والحوسبة الطرفية؟
+    Options: ["الحوسبة السحابية تعتمد على موارد بعيدة، والطرفية تعالج البيانات قرب مصدرها", "الحوسبة الطرفية تعالج البيانات دائمًا في خادم بعيد", "كلاهما نوع من الواقع الافتراضي", "لا فرق بينهما"]
+    Expl: السحابية تعتمد على موارد وخدمات عبر الشبكة، بينما الطرفية تقرّب المعالجة من مصدر البيانات.
+  Q23: أي ترتيب يوضح العلاقة من الأوسع إلى الأكثر تخصصًا كما ورد في الدرس؟
+    Options: ["التعلم الآلي ← الذكاء الاصطناعي ← التعلم العميق ← الذكاء الاصطناعي التوليدي", "التعلم العميق ← الذكاء الاصطناعي ← التعلم الآلي ← الذكاء الاصطناعي التوليدي", "الذكاء الاصطناعي التوليدي ← التعلم العميق ← التعلم الآلي ← الذكاء الاصطناعي", "الذكاء الاصطناعي ← التعلم الآلي ← التعلم العميق ← الذكاء الاصطناعي التوليدي"]
+    Expl: يعرض الدرس العلاقة بصورة مبسطة تبدأ بالذكاء الاصطناعي ثم التعلم الآلي ثم التعلم العميق ثم الذكاء الاصطناعي التوليدي.
+  Q24: أي مفهوم يناسب السؤال: "من سيحاسب إذا تسبب القرار في ضرر؟"
+    Options: ["المسؤولية", "الشفافية", "المساءلة", "XAI"]
+    Expl: المساءلة تركز على تحديد الجهة التي يمكن محاسبتها على النتيجة.
+  Q25: ماذا يصف قانون مور؟
+    Options: ["تضاعف عدد مستخدمي الإنترنت يوميًا", "تضاعف حجم الحاسب كل عام", "تضاعف عدد الترانزستورات في الدائرة المتكاملة تقريبًا كل عامين", "تضاعف عدد الهواتف شهريًا"]
+    Expl: يصف قانون مور الملاحظة التي تشير إلى تضاعف عدد الترانزستورات تقريبًا كل عامين.
+  Q26: أي موقف يمثل تحيزًا خوارزميًا؟
+    Options: ["نظام ي", "نظام يحمي البيانات الشخصية", "نظام توظيف يفضل فئة معينة بصورة غير عادلة", "نظام يحدد الجهة المسؤولة عن النتيجة"]
+    Expl: تفضيل فئة في التوظيف دون أساس عادل يمثل نتيجة متحيزة.
+  Q27: ما المقصود بالتحيز الخوارزمي؟
+    Options: ["نمط في مخرجات الذكاء الاصطناعي قد يؤدي إلى نتائج غير عادلة أو ضارة", "زيادة سرعة النظام في معالجة البيانات", "حماية البيانات الشخصية من الوصول غير المصرح به", "توضيح سبب وصول النظام إلى قرار معين"]
+    Expl: التحيز الخوارزمي هو انحراف أو نمط في مخرجات النظام قد ينتج عنه تفضيل غير عادل أو ضرر لفرد أو مجموعة.
+  Q28: مدرسة ترسل الدروس والمواد الدراسية إلى الطلاب عبر الإنترنت. ما المصطلح المناسب؟
+    Options: ["التعلم عبر الإنترنت", "التجارة الإلكترونية", "شبكات التواصل فقط", "القيادة الذاتية"]
+    Expl: توصيل الدروس والمواد الدراسية عبر الإنترنت يسمى التعلم عبر الإنترنت.
+  Q29: لماذا لا توجد قاعدة واحدة ثابتة لتوزيع المسؤولية في كل الأنظمة؟
+    Options: ["لأن الأنظمة لا تنتج نتائج", "لأن المسؤولية تعني فقط", "لأن الأدوار تختلف باختلاف النظام والسياق وطريقة الاستخدام", "لأن المطور يتحمل المسؤولية دائمًا"]
+    Expl: توزيع المسؤولية يعتمد على طبيعة النظام والأدوار الفعلية للأطراف المشاركة فيه.
+  Q30: ما المشكلة التي يصبح فيها XAI مهمًا بصورة خاصة؟
+    Options: ["زيادة حجم البيانات", "حماية الأجهزة", "ضعف سرعة الشبكة", "غموض آلية اتخاذ القرار"]
+    Expl: عندما تكون طريقة الوصول إلى النتيجة غير واضحة، يساعد XAI على فهم سبب القرار.
+  Q31: أي تطبيق ذُكر مع التعلم العميق؟
+    Options: ["شحن البطارية", "طباعة الأوراق", "ترجمة النصوص وفهم المعاني", "إنشاء المجلدات"]
+    Expl: وردت ترجمة النصوص وفهم المعاني ضمن أمثلة التعلم العميق.
+  Q32: شخص يقول لهاتفه: "ما حالة الطقس؟" فيجيبه الجهاز. ما التقنية المستخدمة؟
+    Options: ["نظام التوصية", "المساعد الصوتي", "الترجمة الآلية", "التعرف على الوجه"]
+    Expl: التفاعل الصوتي مع الجهاز يعتمد على المساعد الصوتي.
+  Q33: أي مبدأ يركز على توضيح النظام واستخدامه وعملية اتخاذ القرار؟
+    Options: ["العدالة", "حماية الخصوصية", "الشفافية", "المساءلة"]
+    Expl: الشفافية تهدف إلى توفير معلومات واضحة ومناسبة عن النظام واستخدامه وحدوده.
+  Q34: ما المقصود بالذكاء الاصطناعي (AI)؟
+    Options: ["مجال يهدف إلى تطوير أنظمة حاسوبية تستطيع تنفيذ مهام تتطلب عادةً ذكاءً بشريًا", "نظام مخصص لتخزين الملفات فقط", "وسيلة لتوصيل أجهزة الحاسب بالإنترنت فقط", "برنامج يستخدم لإنشاء الصور فقط"]
+    Expl: الذكاء الاصطناعي مجال يضم أنظمة حاسوبية تستطيع تنفيذ مهام مثل التعلم والتنبؤ والتعرف وتوليد المحتوى واتخاذ القرارات أو دعمها.
+  Q35: موظف يؤدي عمله من المنزل باستخدام الإنترنت. أي تحول اجتماعي يمثله ذلك؟
+    Options: ["التجارة الإلكترونية", "العمل عن بُعد", "الواقع الافتراضي", "الدفع غير النقدي"]
+    Expl: أداء الوظيفة من المنزل باستخدام الإنترنت هو عمل عن بُعد.
+  Q36: أي مثال يمثل استخدام التعلم الآلي في تصنيف البيانات؟
+    Options: ["مرشح الرسائل المزعجة", "توليد صورة من نص", "إنتاج موسيقى جديدة", "إنشاء مقطع فيديو"]
+    Expl: مرشح الرسائل المزعجة يتعلم أنماط الرسائل ثم يصنفها.
+  Q37: ماذا تفعل النماذج اللغوية؟
+    Options: ["تولد نصوصًا مثل المقالات و", "تخزن الكهرباء", "تصنع الكاميرات"]
+    Expl: النماذج اللغوية من تطبيقات الذكاء الاصطناعي التوليدي وتستخدم لإنتاج نصوص جديدة.
+  Q38: أي موقف يمثل استخدامًا لنظام التوصية؟
+    Options: ["اقتراح يوتيوب مقاطع فيديو تناسب اهتمامات المستخدم", "ترجمة نص من العربية إلى الإنجليزية", "فتح الهاتف باستخدام الوجه", "التحدث إلى الهاتف لمعرفة الطقس"]
+    Expl: اقتراح المحتوى استنادًا إلى اهتمامات المستخدم وسلوكه السابق هو وظيفة نظام التوصية.
+  Q39: أي عبارة تصف الدفع غير النقدي؟
+    Options: ["دفع الأموال الورقية فقط", "شراء منتج من متجر تقليدي فقط", "استخدام المراسلات الورقية", "إجراء المدفوعات بوسائل إلكترونية دون استخدام النقد"]
+    Expl: الدفع غير النقدي يعتمد على وسائل إلكترونية بدلًا من النقود المادية.
+  Q40: ما وحدة المعلومات المستخدمة في الحوسبة الكمية؟
+    Options: ["البكسل", "البايت", "البِت فقط", "الكيوبت"]
+    Expl: تستخدم الحوسبة الكمية الكيوبت كوحدة للمعلومات.
+  Q41: فيمَ استُخدمت الحواسيب الإلكترونية المبكرة بصورة أساسية؟
+    Options: ["التجارة الإلكترونية", "التعلم عبر الإنترنت", "شبكات التواصل الاجتماعي", "الأغراض العسكرية والعلمية"]
+    Expl: استُخدمت الحواسيب المبكرة أساسًا في الأغراض العسكرية والحسابات العلمية.
+  Q42: أي تطبيق يجمع بين الكاميرات والمستشعرات والذكاء الاصطناعي؟
+    Options: ["القيادة الذاتية", "التعلم عبر الإنترنت", "الدفع غير النقدي", "SNS"]
+    Expl: تستخدم القيادة الذاتية الكاميرات والمستشعرات والذكاء الاصطناعي لفهم البيئة واتخاذ القرارات.
+  Q43: ما العلاقة بين الذكاء الاصطناعي والتعلم الآلي؟
+    Options: ["الذكاء الاصطناعي جزء من التعلم الآلي", "التعلم الآلي أحد فروع أو أساليب الذكاء الاصطناعي", "لا توجد علاقة بينهما", "لهما المعنى نفسه تمامًا"]
+    Expl: التعلم الآلي أحد الأساليب الرئيسية المستخدمة ضمن المجال الأوسع للذكاء الاصطناعي.
+  Q44: أي مفهوم يرتبط بنتائج غير متوازنة بين مجموعات مختلفة؟
+    Options: ["المساءلة", "الشفافية", "التحيز الخوارزمي", "XAI"]
+    Expl: التحيز الخوارزمي قد يظهر على هيئة اختلاف غير عادل في النتائج بين المجموعات.
+  Q45: أي من الآتي ورد مثالًا على التعلم العميق؟
+    Options: ["البيع والشراء", "التعرف على الكلام", "تشغيل الشاشة", "إرسال رسالة عادية"]
+    Expl: التعرف على الكلام من التطبيقات التي يمكن أن تستخدم التعلم العميق.
+  Q46: منصة فيديو تقترح للمستخدم محتوى يناسب ما يشاهده عادةً. ما التقنية المستخدمة؟
+    Options: ["نظام التوصية", "الترجمة الآلية", "التعرف على الوجه", "الصيانة التنبؤية"]
+    Expl: يعتمد نظام التوصية على بيانات السلوك السابق لاقتراح محتوى مناسب.
+  Q47: أي مما يلي ليس من المبادئ الأربعة الأساسية؟
+    Options: ["العدالة", "زيادة سرعة المعالجة", "حماية الخصوصية", "المساءلة"]
+    Expl: سرعة المعالجة خاصية تقنية وليست مبدأً أخلاقيًا من المبادئ الأربعة.
+  Q48: أي ترتيب يعبر بصورة صحيحة عن تطور تكنولوجيا المعلومات؟
+    Options: ["الهواتف الذكية ← الحواسيب المبكرة ← الإنترنت ← الحوسبة السحابية", "الحواسيب المبكرة ← الحواسيب الشخصية ← الإنترنت والويب ← الهواتف الذكية ← الحوسبة السحابية", "الإنترنت ← الهواتف الذكية ← الحواسيب المبكرة ← الحوسبة السحابية", "الحوسبة السحابية ← الإنترنت ← الحواسيب الشخصية ← الحواسيب المبكرة"]
+    Expl: هذا هو الترتيب الزمني للمرا
+  Q49: هاتف لا يفتح إلا بعد التعرف على وجه صاحبه. ما التقنية المستخدمة؟
+    Options: ["المساعد الصوتي", "الترجمة الآلية", "نظام التوصية", "التعرف على الوجه"]
+    Expl: فتح الهاتف اعتمادًا على هوية الوجه يستخدم تقنية التعرف على الوجه.
+  Q50: أي موقف يهدد حماية الخصوصية؟
+    Options: ["توضيح حدود النظام", "عدم التمييز بين المستخدمين", "الوصول إلى بيانات شخصية دون تصريح", "تحديد من يحاسب على القرار"]
+    Expl: الوصول غير المصرح به إلى المعلومات الشخصية يمثل انتهاكًا للخصوصية.
+  Q51: ما الذي يميز الذكاء الاصطناعي التوليدي عن نظام التصنيف فقط؟
+    Options: ["لا يستخدم البيانات", "يستطيع إنشاء محتوى جديد", "لا يتعلم", "يعمل دون مدخلات"]
+    Expl: القدرة على توليد مخرجات جديدة من أهم خصائص الذكاء الاصطناعي التوليدي.
+  Q52: ما المقصود بالواقع المعزز (AR)؟
+    Options: ["وضع المستخدم داخل عالم افتراضي كامل", "إضافة عناصر أو معلومات رقمية فوق العالم الحقيقي", "معالجة البيانات قرب مصدرها", "استخدام الكيوبتات"]
+    Expl: الواقع المعزز يضيف محتوى رقميًا إلى المشهد الحقيقي.
+  Q53: أي موقف يمثل العمل عن بُعد؟
+    Options: ["دفع ثمن منتج بتطبيق", "موظف يؤدي مهامه من المنزل عبر الإنترنت", "طالب يستخدم بيئة افتراضية", "شخص يشتري منتجًا إلكترونيًا"]
+    Expl: أداء المهام الوظيفية من المنزل باستخدام الإنترنت هو عمل عن بُعد.
+  Q54: ما العلاقة بين الحوسبة السحابية وت
+    Options: ["تمنع الحوسبة السحابية ت", "لا توجد علاقة بينهما", "تستبدل الحوسبة السحابية جميع البيانات", "توفر الحوسبة السحابية موارد تساعد على ت"]
+    Expl: من آثار انتشار الحوسبة السحابية دعم ت
+  Q55: أي موقف يجمع بين مشكلة تحيز وقضية عدالة؟
+A)
+    Options: ["تحديد الجهة المسؤولة", "نظام توظيف يعطي فئة معينة فرصة أقل دون سبب عادل", "حماية بيانات المستخدمين"]
+    Expl: النتيجة غير المتوازنة الناتجة عن التحيز تمثل أيضًا انتهاكًا لمبدأ العدالة.
+  Q56: نظام يستخدم بيانات غير متوازنة بين مجموعتين. ما الخطر الأقرب؟
+    Options: ["ظهور تحيز في النتائج", "زيادة الشفافية", "زيادة حماية الخصوصية", "وضوح المسؤوليات"]
+    Expl: البيانات غير المتوازنة قد تجعل النموذج يتعلم بصورة أفضل عن فئة مقارنة بأخرى.
+  Q57: ما الهدف من تغير الأوزان في الشبكة العصبية؟
+    Options: ["إيقاف النموذج", "حذف المدخلات", "إلغاء التدريب", "تعلم الأنماط من البيانات"]
+    Expl: تساعد تغيرات الأوزان الشبكة العصبية على تعلم الأنماط الموجودة في البيانات.
+  Q58: أي تقنية يعتمد عليها الهاتف عند التعرف تلقائيًا على وجه صاحبه؟
+    Options: ["الترجمة الآلية", "نظام التوصية", "المساعد الصوتي", "التعرف على الوجه"]
+    Expl: التعرف على الوجه يكتشف ملامح الشخص ويستخدمها في التعرف عليه.
+  Q59: أي منصة يمكن أن تستخدم نظام توصية للموسيقى؟
+    Options: ["Spotify", "DeepL", "Google Translate", "Siri"]
+    Expl: يمكن لـ Spotify استخدام بيانات السلوك السابق لتقديم اقتراحات موسيقية تناسب المستخدم.
+  Q60: من أين يمكن أن ينشأ التحيز إلى جانب بيانات التدريب؟
+    Options: ["من تصميم النظام نفسه", "من حماية الخصوصية", "من المساءلة", "من الشفافية"]
+    Expl: طريقة تصميم النموذج و
+Quiz ID: 32 | Title: اختبار على الوحدة الاولى
+  Q1: Which scenario best represents Accountability?
+    Options: ["An AI generates a prediction.", "A camera tracks a person.", "Training data contains bias.", "An organization accepts responsibility for the consequences of its AI system."]
+    Expl: Accountability means being
+  Q2: Which period is associated with the birth of early electronic computers such as ENIAC?
+    Options: ["1970s–1980s", "1940s–1960s", "1990s", "2010s onward"]
+    Expl: Early electronic computers such as ENIAC appeared during the 1940s–1960s.
+  Q3: Which statement about Deep Learning is correct?
+    Options: ["It is broader than Artificial Intelligence.", "It cannot learn.", "It is inside Machine Learning.", "It is unrelated to neural networks."]
+    Expl: Deep Learning is an advanced technology within Machine Learning.
+  Q4: What does Machine Learning mainly learn from?
+    Options: ["Data", "Paper documents only", "Batteries", "Computer screens"]
+    Expl: Machine Learning learns patterns from data.
+  Q5: What does speech synthesis do?
+    Options: ["Converts text into natural-sounding speech", "Converts a charger into a battery", "Sorts paper documents", "Creates road signs manually"]
+    Expl: Speech synthesis can use Deep Learning to convert text into natural-sounding speech.
+  Q6: Which statement best describes Deep Learning?
+    Options: ["It uses no data.", "It is unrelated to Machine Learning.", "It uses neural networks to learn complex patterns.", "It is only a type of hardware."]
+    Expl: Deep Learning uses neural networks to learn complex patterns from large-scale data.
+  Q7: What does E-commerce mean?
+    Options: ["Studying through the Internet", "Buying and selling goods and services through the Internet", "Driving a vehicle automatically", "Processing data near a device"]
+    Expl: E-commerce means purchasing and selling goods and services online.
+  Q8: Which type of AI could create an original picture from a user's description?
+    Options: ["Traditional fixed-rule system", "Basic storage software", "Manual calculator", "Generative AI"]
+    Expl: Generative AI can generate new images from text prompts.
+  Q9: A user asks a system to write a new story, and the system produces original text. Which technology is being used?
+    Options: ["Spam filtering", "Traditional fixed rules only", "Generative AI", "Manual translation"]
+    Expl: Generating new text from a user's request is an example of Generative AI.
+  Q10: What happens as information moves through the connected layers of a Neural Network?
+    Options: ["All patterns are removed.", "The network learns patterns and produces a result.", "The network becomes a paper system.", "Input is never processed."]
+    Expl: Neural Networks process information through connected layers to learn patterns and produce predictions or decisions.
+  Q11: What is Artificial Intelligence (AI)?
+    Options: ["A system used only to store images", "A technology used only for Internet connections", "A general term for technologies that reproduce or perform intelligent human behavior on a computer", "A method used only to write fixed rules"]
+    Expl: AI is a general term for technologies that reproduce or perform intelligent human behavior such as learning, reasoning, and judgment on a computer.
+  Q12: Which of the following can be part of intelligent human behavior reproduced by AI?
+    Options: ["Only typing", "Only printing", "Only saving files", "Reasoning"]
+    Expl: Reasoning is one of the intelligent behaviors AI can reproduce.
+  Q13: Which of the following is NOT a Generative AI example?
+    Options: ["ChatGPT", "Spam filter", "Image generation AI", "Audio generation AI"]
+    Expl: A spam filter is primarily an example of Machine Learning classification, not Generative AI.
+  Q14: Which system mainly depends on fixed rules written by humans?
+    Options: ["A traditional rule-based system", "Generative AI", "Deep Learning", "Neural Network learning"]
+    Expl: Traditional systems mainly rely on fixed rules written by humans.
+  Q15: Which technology uses Neural Networks to learn complex patterns?
+    Options: ["Deep Learning", "Manual calculation", "Traditional filing", "Basic printing"]
+    Expl: Deep Learning uses Neural Networks to learn complex patterns.
+  Q16: Which situation shows a need for Explainable AI?
+    Options: ["An AI rejects an application, but no one knows why.", "A user changes a password.", "A computer is upgraded.", "A screen displays a video."]
+    Expl: XAI is especially useful when people need to understand why an AI reached a particular judgment.
+  Q17: Which ethical principle is strongly supported by Explainable AI?
+    Options: ["Transparency", "Data collection", "Surveillance", "Processing speed"]
+    Expl: XAI supports transparency by revealing how AI judgments are made.
+  Q18: Which statement correctly describes AI?
+    Options: ["AI only creates images.", "AI includes technologies that can imitate intelligent human behavior.", "AI is the same as Generative AI.", "AI can only work with audio."]
+    Expl: AI is a broad field that includes technologies capable of intelligent behaviors such as learning and judgment.
+  Q19: Which description correctly matches Machine Learning?
+    Options: ["Generates all new content by definition", "Learns patterns from data to make predictions and judgments", "Is a physical computer component", "Is broader than Artificial Intelligence"]
+    Expl: Machine Learning learns patterns from data to make predictions and judgments.
+  Q20: Which phrase is associated with modern cloud computing?
+    Options: ["Computers without networks", "Military computing only", "Personal computing only", "IT as a service"]
+    Expl: The modern cloud era is associated with the concept of providing IT as a service.
+  Q21: Which technology does Generative AI use according to the lesson?
+    Options: ["Deep Learning", "Only fixed rules", "Paper processing", "Manual filing"]
+    Expl: Generative AI uses Deep Learning to generate new data.
+  Q22: What is given to a Generative AI system before it produces content?
+    Options: ["A physical battery", "A paper cable", "An input prompt or request", "A fixed road sign"]
+    Expl: A user provides a prompt or request to the Generative AI system.
+  Q23: Which statement about responsibility for AI decisions is correct?
+    Options: ["The AI itself is always the only responsible party.", "Responsibility can differ depending on people's roles.", "Only the user can ever be responsible.", "Responsibility has no connection to AI ethics."]
+    Expl: Responsibility can differ among developers, users, operators, and organizations.
+  Q24: Which technology aims to make AI decisions easier to understand?
+    Options: ["Explainable AI", "Face recognition", "Surveillance", "Data collection"]
+    Expl: Explainable AI is designed to help people understand AI judgments.
+  Q25: A bank uses an AI model but cannot explain why one applicant was rejected. Which issue is this?
+    Options: ["Privacy protection", "Recommendation", "Processing speed", "Black-box problem"]
+    Expl: Inability to explain an AI decision is an example of the black-box problem.
+Quiz ID: 30 | Title: Exam Unit 1 : Lesson 3
+  Q1: Which service uses past behavior data to predict what a user may prefer?
+    Options: ["Face recognition", "Recommendation system", "Machine translation", "Predictive maintenance"]
+    Expl: Recommendation systems use past behavior data to predict preferences and display suitable recommendations.
+  Q2: Which of the following is an example of a recommendation system?
+    Options: ["YouTube suggesting videos based on viewing history", "A smartphone unlocking with a face", "A factory detecting equipment failure", "A translation tool converting English into Arabic"]
+    Expl: YouTube recommendations are based on users’ previous behavior and preferences.
+  Q3: What does a voice assistant mainly recognize?
+    Options: ["Delivery routes", "Product defects", "Voice commands", "X-ray images"]
+    Expl: Voice assistants recognize speech, understand commands, and execute them.
+  Q4: Which of the following is an example of a voice assistant?
+    Options: ["DeepL", "Siri", "YouTube", "Face ID"]
+    Expl: Siri is a voice assistant that responds to spoken commands.
+  Q5: A user speaks to a smartphone to ask about the weather. Which AI service is being used?
+    Options: ["Machine translation", "Face recognition", "Recommendation system", "Voice assistant"]
+    Expl: Speaking commands to a smartphone is an example of using a voice assistant.
+  Q6: Which AI technology automatically converts text from one language into another?
+    Options: ["Machine translation", "Predictive maintenance", "Face recognition", "Recommendation system"]
+    Expl: Machine translation automatically translates text between different languages.
+  Q7: Which of the following is an example of machine translation?
+    Options: ["Spotify suggesting music", "Google Translate converting English text into Arabic", "A phone detecting a face", "A factory checking product quality"]
+    Expl: Google Translate is a machine translation service.
+  Q8: What is the main purpose of face recognition?
+    Options: ["Predicting harvest timing", "Translating text", "Detecting and identifying human faces", "Recommending videos"]
+    Expl: Face recognition detects and identifies human faces in images or photographs.
+  Q9: Which situation is an example of face recognition?
+    Options: ["Unlocking a smartphone using a person’s face", "Translating a foreign website", "Optimizing a truck route", "Detecting pests in crops"]
+    Expl: Smartphone face unlocking uses face recognition technology.
+  Q10: Which industry uses AI to detect diseases from X-ray and CT images?
+    Options: ["Agriculture", "Logistics", "Manufacturing", "Healthcare"]
+    Expl: Healthcare uses image-diagnosis AI to detect diseases from medical images.
+  Q11: Which of the following is another AI application in healthcare?
+    Options: ["Drug-discovery support", "Route optimization", "Predicting harvest timing", "Voice-controlled search"]
+    Expl: AI can support the discovery and development of medicines in healthcare.
+  Q12: Which AI application is most closely related to agriculture?
+    Options: ["Smartphone unlocking", "Predicting harvest timing", "Translating text", "Recommending movies"]
+    Expl: AI can help agriculture by predicting when crops should be harvested.
+  Q13: Which agricultural problem can AI help detect?
+    Options: ["Battery problems", "Internet problems", "Pests and diseases", "Translation errors"]
+    Expl: AI can analyze agricultural data to help detect pests and crop diseases.
+  Q14: A farm uses AI to determine the best time to collect crops. What is this an example of?
+    Options: ["Predicting harvest timing", "Face recognition", "Product inspection", "Machine translation"]
+    Expl: Predicting when crops should be harvested is an AI use in agriculture.
+  Q15: Which AI application belongs to manufacturing?
+    Options: ["Translating foreign menus", "Product-quality inspection automation", "Recommending songs", "Face unlocking"]
+    Expl: Manufacturing uses AI to automate product-quality inspection.
+  Q16: What does predictive maintenance help manufacturers do?
+    Options: ["Translate factory documents", "Recommend products", "Predict equipment problems before failure", "Identify people in photographs"]
+    Expl: Predictive maintenance uses data to predict equipment failures before they happen.
+  Q17: A factory uses AI to inspect products automatically for defects. Which field does this represent?
+    Options: ["Logistics", "Healthcare", "Agriculture", "Manufacturing"]
+    Expl: Automated product-quality inspection is an AI application in manufacturing.
+  Q18: Which AI application is most closely associated with logistics?
+    Options: ["Optimizing delivery routes", "Detecting diseases from X-rays", "Recognizing faces", "Generating audio"]
+    Expl: AI is used in logistics to optimize delivery routes.
+  Q19: A delivery company uses AI to choose the most efficient route for its trucks. Which industry is this?
+    Options: ["Healthcare", "Agriculture", "Logistics", "Manufacturing"]
+    Expl: Route optimization is a major AI application in logistics.
+  Q20: What is AI especially good at when working with complex data?
+    Options: ["Making ethical judgments", "Finding and classifying patterns", "Taking legal responsibility", "Protecting copyright automatically"]
+    Expl: AI is good at finding and classifying patterns in complex data such as images and text.
+  Q21: Which types of content can AI recognize and generate according to the lesson?
+    Options: ["Images, audio, and text", "Only numbers", "Only printed books", "Only passwords"]
+    Expl: AI can recognize and generate images, audio, and text.
+  Q22: Which AI ability involves using data to estimate what may happen next?
+    Options: ["Ethical judgment", "Copyright protection", "Probabilistic reasoning and prediction", "Manual decision-making"]
+    Expl: AI can use probabilistic reasoning and data to make predictions.
+  Q23: Which task is AI well suited for?
+    Options: ["Taking final legal responsibility", "Finding patterns in large datasets", "Making all ethical decisions alone", "Deciding how privacy laws should work"]
+    Expl: Finding patterns in large and complex data is one of AI’s strengths.
+  Q24: Which task requires caution when using AI?
+    Options: ["Finding patterns in images", "Recognizing audio", "Ethical judgments", "Classifying text"]
+    Expl: Ethical judgments may involve discrimination or prejudice and therefore require human caution.
+  Q25: Why do judgments involving personal information require caution?
+    Options: ["They may affect privacy", "They always improve accuracy", "They increase processing speed", "They reduce data size"]
+    Expl: Personal information must be handled carefully because its use may affect privacy.
+  Q26: Which statement about final decision-making is most appropriate?
+    Options: ["AI should make every important decision alone", "Human judgment and responsibility are still needed", "Privacy should be ignored", "Decisions should depend only on speed"]
+    Expl: Important final decisions require human judgment and clear responsibility for the result.
+  Q27: What may happen when AI is trained on biased data?
+    Options: ["The computer becomes faster", "The screen becomes brighter", "AI judgments may become inaccurate or unfair", "The Internet becomes more reliable"]
+    Expl: Biased training data can reduce the accuracy and fairness of AI judgments.
+  Q28: Which situation best illustrates a problem caused by biased training data?
+    Options: ["An AI system gives unfair results to a particular group", "A computer stores a file correctly", "A translation tool opens normally", "A delivery truck follows a road"]
+    Expl: Bias in training data can cause AI systems to produce unfair results.
+  Q29: What does hallucination mean in AI?
+    Options: ["AI processing data more quickly", "AI generating information that differs from the facts", "AI storing large files", "AI recognizing a face correctly"]
+    Expl: Hallucination occurs when AI generates false or misleading content that differs from the facts.
+  Q30: Which situation is an example of AI hallucination?
+    Options: ["AI correctly identifies a face", "AI recommends a video", "AI produces convincing but false information", "AI optimizes a delivery route"]
+    Expl: Hallucination refers to AI producing false or unsupported information.
+  Q31: Which issue may arise when copyrighted works are used as training data?
+    Options: ["Rights and copyright concerns", "Faster Internet access", "Better battery life", "Improved screen resolution"]
+    Expl: Using copyrighted works as training data can raise issues concerning rights and copyright.
+  Q32: What is the black-box problem?
+    Options: ["A problem with a black computer case", "A failure in a delivery truck", "Lack of clarity about how AI made a judgment", "A method of translating text"]
+    Expl: The black-box problem occurs when it is unclear how an AI system reached a particular judgment.
+  Q33: Why can the black-box problem be a concern?
+    Options: ["It makes it difficult to understand how a decision was reached", "It makes computers physically larger", "It prevents all data processing", "It changes the language of a program"]
+    Expl: If the decision process is unclear, people may find it difficult to understand or evaluate the AI judgment.
+  Q34: Which option does NOT require special caution according to the lesson?
+    Options: ["Ethical judgments", "Judgments involving personal information", "Final decision-making", "Finding and classifying patterns"]
+    Expl: Finding and classifying patterns is an area where AI performs well rather than a caution category.
+  Q35: Which statement best summarizes the lesson?
+    Options: ["AI is suitable for every task without human involvement", "AI is good at finding patterns and making predictions, but some uses require human judgment", "AI should only be used for translation", "AI should never be used in industry"]
+    Expl: AI is powerful for pattern recognition and prediction, but human judgment remains important for ethics, privacy, and responsibility.
+Quiz ID: 29 | Title: Exam Unit 1 : Lesson 3
+  Q1: Which service uses past behavior data to predict what a user may prefer?
+    Options: ["Face recognition", "Recommendation system", "Machine translation", "Predictive maintenance"]
+    Expl: Recommendation systems use past behavior data to predict preferences and display suitable recommendations.
+  Q2: Which of the following is an example of a recommendation system?
+    Options: ["YouTube suggesting videos based on viewing history", "A smartphone unlocking with a face", "A factory detecting equipment failure", "A translation tool converting English into Arabic"]
+    Expl: YouTube recommendations are based on users’ previous behavior and preferences.
+  Q3: What does a voice assistant mainly recognize?
+    Options: ["Delivery routes", "Product defects", "Voice commands", "X-ray images"]
+    Expl: Voice assistants recognize speech, understand commands, and execute them.
+  Q4: Which of the following is an example of a voice assistant?
+    Options: ["DeepL", "Siri", "YouTube", "Face ID"]
+    Expl: Siri is a voice assistant that responds to spoken commands.
+  Q5: A user speaks to a smartphone to ask about the weather. Which AI service is being used?
+    Options: ["Machine translation", "Face recognition", "Recommendation system", "Voice assistant"]
+    Expl: Speaking commands to a smartphone is an example of using a voice assistant.
+  Q6: Which AI technology automatically converts text from one language into another?
+    Options: ["Machine translation", "Predictive maintenance", "Face recognition", "Recommendation system"]
+    Expl: Machine translation automatically translates text between different languages.
+  Q7: Which of the following is an example of machine translation?
+    Options: ["Spotify suggesting music", "Google Translate converting English text into Arabic", "A phone detecting a face", "A factory checking product quality"]
+    Expl: Google Translate is a machine translation service.
+  Q8: What is the main purpose of face recognition?
+    Options: ["Predicting harvest timing", "Translating text", "Detecting and identifying human faces", "Recommending videos"]
+    Expl: Face recognition detects and identifies human faces in images or photographs.
+  Q9: Which situation is an example of face recognition?
+    Options: ["Unlocking a smartphone using a person’s face", "Translating a foreign website", "Optimizing a truck route", "Detecting pests in crops"]
+    Expl: Smartphone face unlocking uses face recognition technology.
+  Q10: Which industry uses AI to detect diseases from X-ray and CT images?
+    Options: ["Agriculture", "Logistics", "Manufacturing", "Healthcare"]
+    Expl: Healthcare uses image-diagnosis AI to detect diseases from medical images.
+  Q11: Which of the following is another AI application in healthcare?
+    Options: ["Drug-discovery support", "Route optimization", "Predicting harvest timing", "Voice-controlled search"]
+    Expl: AI can support the discovery and development of medicines in healthcare.
+  Q12: Which AI application is most closely related to agriculture?
+    Options: ["Smartphone unlocking", "Predicting harvest timing", "Translating text", "Recommending movies"]
+    Expl: AI can help agriculture by predicting when crops should be harvested.
+  Q13: Which agricultural problem can AI help detect?
+    Options: ["Battery problems", "Internet problems", "Pests and diseases", "Translation errors"]
+    Expl: AI can analyze agricultural data to help detect pests and crop diseases.
+  Q14: A farm uses AI to determine the best time to collect crops. What is this an example of?
+    Options: ["Predicting harvest timing", "Face recognition", "Product inspection", "Machine translation"]
+    Expl: Predicting when crops should be harvested is an AI use in agriculture.
+  Q15: Which AI application belongs to manufacturing?
+    Options: ["Translating foreign menus", "Product-quality inspection automation", "Recommending songs", "Face unlocking"]
+    Expl: Manufacturing uses AI to automate product-quality inspection.
+  Q16: What does predictive maintenance help manufacturers do?
+    Options: ["Translate factory documents", "Recommend products", "Predict equipment problems before failure", "Identify people in photographs"]
+    Expl: Predictive maintenance uses data to predict equipment failures before they happen.
+  Q17: A factory uses AI to inspect products automatically for defects. Which field does this represent?
+    Options: ["Logistics", "Healthcare", "Agriculture", "Manufacturing"]
+    Expl: Automated product-quality inspection is an AI application in manufacturing.
+  Q18: Which AI application is most closely associated with logistics?
+    Options: ["Optimizing delivery routes", "Detecting diseases from X-rays", "Recognizing faces", "Generating audio"]
+    Expl: AI is used in logistics to optimize delivery routes.
+  Q19: A delivery company uses AI to choose the most efficient route for its trucks. Which industry is this?
+    Options: ["Healthcare", "Agriculture", "Logistics", "Manufacturing"]
+    Expl: Route optimization is a major AI application in logistics.
+  Q20: What is AI especially good at when working with complex data?
+    Options: ["Making ethical judgments", "Finding and classifying patterns", "Taking legal responsibility", "Protecting copyright automatically"]
+    Expl: AI is good at finding and classifying patterns in complex data such as images and text.
+  Q21: Which types of content can AI recognize and generate according to the lesson?
+    Options: ["Images, audio, and text", "Only numbers", "Only printed books", "Only passwords"]
+    Expl: AI can recognize and generate images, audio, and text.
+  Q22: Which AI ability involves using data to estimate what may happen next?
+    Options: ["Ethical judgment", "Copyright protection", "Probabilistic reasoning and prediction", "Manual decision-making"]
+    Expl: AI can use probabilistic reasoning and data to make predictions.
+  Q23: Which task is AI well suited for?
+    Options: ["Taking final legal responsibility", "Finding patterns in large datasets", "Making all ethical decisions alone", "Deciding how privacy laws should work"]
+    Expl: Finding patterns in large and complex data is one of AI’s strengths.
+  Q24: Which task requires caution when using AI?
+    Options: ["Finding patterns in images", "Recognizing audio", "Ethical judgments", "Classifying text"]
+    Expl: Ethical judgments may involve discrimination or prejudice and therefore require human caution.
+  Q25: Why do judgments involving personal information require caution?
+    Options: ["They may affect privacy", "They always improve accuracy", "They increase processing speed", "They reduce data size"]
+    Expl: Personal information must be handled carefully because its use may affect privacy.
+  Q26: Which statement about final decision-making is most appropriate?
+    Options: ["AI should make every important decision alone", "Human judgment and responsibility are still needed", "Privacy should be ignored", "Decisions should depend only on speed"]
+    Expl: Important final decisions require human judgment and clear responsibility for the result.
+  Q27: What may happen when AI is trained on biased data?
+    Options: ["The computer becomes faster", "The screen becomes brighter", "AI judgments may become inaccurate or unfair", "The Internet becomes more reliable"]
+    Expl: Biased training data can reduce the accuracy and fairness of AI judgments.
+  Q28: Which situation best illustrates a problem caused by biased training data?
+    Options: ["An AI system gives unfair results to a particular group", "A computer stores a file correctly", "A translation tool opens normally", "A delivery truck follows a road"]
+    Expl: Bias in training data can cause AI systems to produce unfair results.
+  Q29: What does hallucination mean in AI?
+    Options: ["AI processing data more quickly", "AI generating information that differs from the facts", "AI storing large files", "AI recognizing a face correctly"]
+    Expl: Hallucination occurs when AI generates false or misleading content that differs from the facts.
+  Q30: Which situation is an example of AI hallucination?
+    Options: ["AI correctly identifies a face", "AI recommends a video", "AI produces convincing but false information", "AI optimizes a delivery route"]
+    Expl: Hallucination refers to AI producing false or unsupported information.
+  Q31: Which issue may arise when copyrighted works are used as training data?
+    Options: ["Rights and copyright concerns", "Faster Internet access", "Better battery life", "Improved screen resolution"]
+    Expl: Using copyrighted works as training data can raise issues concerning rights and copyright.
+  Q32: What is the black-box problem?
+    Options: ["A problem with a black computer case", "A failure in a delivery truck", "Lack of clarity about how AI made a judgment", "A method of translating text"]
+    Expl: The black-box problem occurs when it is unclear how an AI system reached a particular judgment.
+  Q33: Why can the black-box problem be a concern?
+    Options: ["It makes it difficult to understand how a decision was reached", "It makes computers physically larger", "It prevents all data processing", "It changes the language of a program"]
+    Expl: If the decision process is unclear, people may find it difficult to understand or evaluate the AI judgment.
+  Q34: Which option does NOT require special caution according to the lesson?
+    Options: ["Ethical judgments", "Judgments involving personal information", "Final decision-making", "Finding and classifying patterns"]
+    Expl: Finding and classifying patterns is an area where AI performs well rather than a caution category.
+  Q35: Which statement best summarizes the lesson?
+    Options: ["AI is suitable for every task without human involvement", "AI is good at finding patterns and making predictions, but some uses require human judgment", "AI should only be used for translation", "AI should never be used in industry"]
+    Expl: AI is powerful for pattern recognition and prediction, but human judgment remains important for ethics, privacy, and responsibility.
+
+--- QUESTION BANK ---
+Bank ID: 828 | Lesson: الدرس الرابع : القضايا الاخلاقية المتعلقة بالذكاء الاصطناعى
+  Prompt: ما أحد أشكال جمع البيانات الذي قد يثير مخاوف الخصوصية؟
+  Options: ["جمع بيانات السلوك عبر الإنترنت بكميات كبيرة", "توضيح سبب القرار", "تحديد المسؤوليات", "فحص التحيز"]
+  Expl: جمع كميات كبيرة من بيانات النشاط والسلوك الرقمي قد يكشف معلومات شخصية عن المستخدمين.
+Bank ID: 892 | Lesson: الدرس الرابع : القضايا الاخلاقية المتعلقة بالذكاء الاصطناعى
+  Prompt: أي عبارة تعكس الاستخدام المسؤول للذكاء الاصطناعي؟
+  Options: ["فحص التحيز و", "جمع البيانات دون قيود", "إخفاء آلية النظام", "ترك جميع النتائج دون مراجعة"]
+  Expl: الاستخدام المسؤول يجمع بين العدالة والشفافية وحماية الخصوصية والمساءلة.
