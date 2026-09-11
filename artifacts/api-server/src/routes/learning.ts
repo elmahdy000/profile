@@ -391,6 +391,69 @@ setInterval(() => {
   void processSubscriptionExpirations();
 }, 30 * 60 * 1000);
 
+async function repairTruncatedQuestions() {
+  try {
+    const allQuizzes = await db.select().from(quizzesTable);
+    for (const quiz of allQuizzes) {
+      if (!Array.isArray(quiz.questions)) continue;
+      let changed = false;
+      const updatedQuestions = quiz.questions.map((q) => {
+        let prompt = q.prompt;
+        let explanation = q.explanation;
+        if (prompt && (prompt.endsWith("غير قابل لل") || prompt.includes("غير قابل لل\n") || prompt.trim() === "لماذا يصعب تقييم نتيجة نظام غير قابل لل")) {
+          prompt = prompt.replace(/غير قابل لل\s*$/, "غير قابل للتفسير بشكل واضح؟");
+          if (explanation && explanation.startsWith("واضح يجعل")) {
+            explanation = "عدم وضوح العوامل المؤدية للنتيجة يجعل " + explanation.replace(/^واضح يجعل\s*/, "");
+          }
+          changed = true;
+        } else if (prompt && (prompt.endsWith(" لل") || prompt.endsWith(" لل؟"))) {
+          if (explanation && (explanation.startsWith("واضح") || explanation.startsWith("بشكل واضح"))) {
+            prompt = prompt.replace(/\s*لل\s*[\؟\?]?$/, " للتفسير بشكل واضح؟");
+            changed = true;
+          }
+        }
+        return { ...q, prompt, explanation };
+      });
+
+      if (changed) {
+        await db.update(quizzesTable).set({ questions: updatedQuestions }).where(eq(quizzesTable.id, quiz.id));
+      }
+    }
+
+    const bankItems = await db.select().from(questionBankTable);
+    for (const item of bankItems) {
+      const q = item.question;
+      if (!q || !q.prompt) continue;
+      let prompt = q.prompt;
+      let explanation = q.explanation;
+      let changed = false;
+      if (prompt.endsWith("غير قابل لل") || prompt.includes("غير قابل لل\n") || prompt.trim() === "لماذا يصعب تقييم نتيجة نظام غير قابل لل") {
+        prompt = prompt.replace(/غير قابل لل\s*$/, "غير قابل للتفسير بشكل واضح؟");
+        if (explanation && explanation.startsWith("واضح يجعل")) {
+          explanation = "عدم وضوح العوامل المؤدية للنتيجة يجعل " + explanation.replace(/^واضح يجعل\s*/, "");
+        }
+        changed = true;
+      } else if (prompt.endsWith(" لل") || prompt.endsWith(" لل؟")) {
+        if (explanation && (explanation.startsWith("واضح") || explanation.startsWith("بشكل واضح"))) {
+          prompt = prompt.replace(/\s*لل\s*[\؟\?]?$/, " للتفسير بشكل واضح؟");
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        await db.update(questionBankTable).set({
+          question: { ...q, prompt, explanation },
+        }).where(eq(questionBankTable.id, item.id));
+      }
+    }
+  } catch (e) {
+    console.error("[repairTruncatedQuestions error]", e);
+  }
+}
+setTimeout(() => {
+  void repairTruncatedQuestions();
+}, 2000);
+
 export function normalizeQuestionPrompt(p?: string | null): string {
   if (!p) return "";
   return p
@@ -716,18 +779,25 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   }
 
   // Preprocess inline text & Word table cell merges
-  cleanedText = cleanedText.replace(/(الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|الجواب|الحل|الاختيار\s+الصحيح)\s*[:：\-]?\s*([أابجدهإآA-Da-d1-6])(التوضيح|التفسير|الشرح|تفسير|شرح|explanation|note)\s*[:：\-]?/gi, "$1: $2\n$3: ");
-  // Split inline choices e.g. "أ) باريس  ب) لندن" or "A. Paris  B. London" or "(1) القاهرة (2) الجيزة" or "أ/ باريس ب/ لندن"
-  // Never split headers like "Question 1:" or "سؤال 1:"
-  cleanedText = cleanedText.replace(/([^\n\s]+)\s+((?:[\*\•\-\[\(]|\[x\]|\[✓\]|\(✓\))?\s*(?:[A-Fa-fأابجدهإآ]|هـ)\s*[\)\.\:\-\]\/]\s+|(?:[\*\•\-\[\(]|\[x\]|\[✓\]|\(✓\))?\s*[1-6]\s*[\)\.\-\]\/]\s+)/gi, (match, p1, p2) => {
+  cleanedText = cleanedText.replace(/(?:^|\s)((?:الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|الجواب|الحل|الاختيار\s+الصحيح)\s*[:：\-]?\s*[أابجدهإآA-Da-d1-6])\s*((?:التوضيح|التفسير|الشرح|explanation|note)\s*[:：\-])/gi, "$1\n$2");
+
+  // Split inline choices e.g. "أ) باريس    ب) لندن"
+  // Require at least 2 spaces or tab before another choice letter so we never split normal Arabic text
+  cleanedText = cleanedText.replace(/([^\n\s]+)(?:\s{2,}|\t)((?:[\*\•\-\[\(]|\[x\]|\[✓\]|\(✓\))?\s*(?:[A-Fa-fأابجدهإآ]|هـ|[1-6])\s*[\)\.\:\-\]\/]\s+)/gi, (match, p1, p2) => {
     if (/^(?:Question|سؤال|س|Q|السؤال|item|ex|no|num)$/i.test(p1.trim())) {
       return match;
     }
     return `${p1}\n${p2}`;
   });
-  cleanedText = cleanedText.replace(/([^\n])\s*((?:ال)?س(?:ؤال)?(?:\s*رقم)?\s*[:：\-\/]?\s*\(?\d+\)?|Question\s*[:：\-]?\s*\d+|#\d+)/gi, "$1\n$2");
-  cleanedText = cleanedText.replace(/([^\n])\s*(الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|الجواب(?:\s+الصحيح)?|جواب|الحل(?:\s+الصحيح)?|حل|الاختيار(?:\s+الصحيح)?|اختيار|correct\s*answer|answer)\s*(?:هو|هي)?\s*[:：\-]?\s*/gi, "$1\nالإجابة الصحيحة: ");
-  cleanedText = cleanedText.replace(/([^\n])\s*(التوضيح|التفسير|الشرح|تفسير|شرح|explanation|note)\s*[:：\-]?\s*/gi, "$1\nالتوضيح: ");
+
+  // Split question headers if accidentally on same line after previous content
+  cleanedText = cleanedText.replace(/([^\n])\s+((?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?\s*[:：\-\/]?\s*\(?\d+\)|(?:ال)?س(?:ؤال)?(?:\s*رقم)?\s*[:：\-\/]?\s*\d+|Question\s*[:：\-]?\s*\d+|#\d+)\s*[:：\-\.\/])/gi, "$1\n$2");
+
+  // Only split answer headers when there is a MANDATORY colon/dash or "هو/هي" AND preceded by space
+  cleanedText = cleanedText.replace(/([^\n])\s+((?:الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|الجواب(?:\s+الصحيح)?|الحل(?:\s+الصحيح)?|الاختيار\s+الصحيح|Correct\s*Answer|Answer)\s*(?:[:：\-]|(?:هو|هي)\s*[:：\-]?)\s*.*)$/gim, "$1\n$2");
+
+  // Only split explanation headers when preceded by space AND followed by a MANDATORY colon/dash
+  cleanedText = cleanedText.replace(/([^\n])\s+((?:التوضيح|التفسير|الشرح|Explanation|Note|ملاحظة)\s*[:：\-]\s*.*)$/gim, "$1\n$2");
 
   const lines = cleanedText
     .split("\n")
@@ -810,11 +880,11 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   // CHOICE_RE: Support أ), أ-, أ/, (أ), [أ], A), 1), 1-, 1/, (1), [1], الأول
   const CHOICE_RE = /^\s*(?:(?:[\*\•\-\[\(]|\[x\]|\[✓\]|\(✓\))?\s*([A-Fa-fأابجدهإآ]|هـ|[1-6]|الأول|الاول|الثاني|الثانى|الثالث|الرابع)\s*[\)\.\:\-\]\/]\s*)(.+)$/i;
 
-  // ANSWER_RE
-  const ANSWER_RE = /^\s*(?:correct\s*answer|answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|الجواب(?:\s+الصحيح)?|جواب|الحل(?:\s+الصحيح)?|حل|الاختيار(?:\s+الصحيح)?|اختيار)\s*(?:هو|هي)?\s*[:：\-]?\s*(.+)$/i;
+  // ANSWER_RE: MUST have explicit colon or "هو/هي"
+  const ANSWER_RE = /^\s*(?:correct\s*answer|answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|الجواب(?:\s+الصحيح)?|الحل(?:\s+الصحيح)?|الاختيار\s+الصحيح)\s*(?:[:：\-]|(?:هو|هي)\s*[:：\-]?)\s*(.+)$/i;
 
-  // EXPLANATION_HEADER_RE
-  const EXPLANATION_HEADER_RE = /^\s*(?::?\s*(?:explanation|note|التوضيح|التفسير|الشرح|تفسير|شرح|ملاحظة)\s*:?\s*)(.*)$/i;
+  // EXPLANATION_HEADER_RE: MUST have explicit colon or dash
+  const EXPLANATION_HEADER_RE = /^\s*(?:explanation|note|التوضيح|التفسير|الشرح|تفسير|شرح|ملاحظة)\s*[:：\-]\s*(.*)$/i;
 
   // EXPLICIT_QUESTION_RE: "سؤال 1", "س1:", "س1 /", "السؤال الأول", "Q1:"
   const EXPLICIT_QUESTION_RE = /^\s*(?:(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-\/]?\s*\(?\d+\)?|السؤال\s+(?:الأول|الاول|الثاني|الثانى|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر)|#\d+)(?:\s*[:：\-\.\)\/]\s*(.*))?$/i;
