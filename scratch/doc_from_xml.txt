@@ -1,0 +1,227 @@
+
+
+w14:paraId="3F0F1682" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 1:
+w14:paraId="40DF5444" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">ما التطور الذي أدى إلى بداية عصر معالجة المعلومات إلكترونياً؟
+w14:paraId="52B082C7" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) ظهور الحواسيب الإلكترونية
+ب) ظهور الهواتف الذكية
+ج) انتشار التجارة الإلكترونية
+د) ظهور شبكات التواصل الاجتماعي
+w14:paraId="5895F079" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: أ
+التوضيح: أدى ظهور الحواسيب الإلكترونية إلى إمكانية معالجة كميات كبيرة من البيانات بسرعة ودقة.
+w14:paraId="0B37262E" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="5DC06C7B" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 2:
+w14:paraId="3A0E863F" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">ما الجهاز الذي ساعد على انتشار استخدام الحاسوب بين الأفراد والمنازل؟
+w14:paraId="5A40F760" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) الحاسوب المركزي Mainframe
+ب) الحاسوب الشخصي Personal Computer
+ج) الخادم Server
+د) الحاسوب الكمي Quantum Computer
+w14:paraId="095F0B93" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: ب
+التوضيح: أدى انتشار الحواسيب الشخصية في السبعينيات والثمانينيات إلى جعل الحوسبة متاحة للأفراد وليس للمؤسسات فقط.
+w14:paraId="1E4BB6E2" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="59B3C395" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 3:
+w14:paraId="60630FE8" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">ما التطور الذي ساهم بصورة مباشرة في عولمة المعلومات خلال التسعينيات؟
+w14:paraId="53661CE2" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) الحوسبة السحابية
+ب) الإنترنت التجاري
+ج) الحوسبة الكمية
+د) الذكاء الاصطناعي التوليدي
+w14:paraId="0F6EEFA2" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: ب
+التوضيح: ساعد انتشار الإنترنت التجاري في التسعينيات على تبادل المعلومات عالمياً بسرعة وسهولة.
+w14:paraId="2DEBD20D" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="4AE5F90A" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 4:
+w14:paraId="738FD6F0" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أي من الآتي كان من أهم آثار انتشار الهواتف الذكية؟
+w14:paraId="70359B03" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) تقليل إمكانية الوصول إلى الإنترنت
+ب) جعل الوصول إلى المعلومات والخدمات متاحاً في أي وقت ومكان
+ج) إنهاء استخدام الشبكات
+د) الاعتماد على الحواسيب المركزية فقط
+w14:paraId="5388BC99" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: ب
+التوضيح: جمعت الهواتف الذكية بين الاتصال والإنترنت والتطبيقات في جهاز محمول يمكن استخدامه في أي مكان.
+w14:paraId="3FB812D2" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="13B6E8F2" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 5:
+w14:paraId="6B13398B" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">ما المقصود بالحوسبة السحابية Cloud Computing؟
+w14:paraId="5B937B16" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) تخزين ومعالجة البيانات باستخدام موارد حاسوبية عبر الإنترنت
+ب) تشغيل البرامج دون استخدام أجهزة حاسوب
+ج) تخزين البيانات على الورق
+د) استخدام الحاسوب دون شبكة
+w14:paraId="43E5E2EB" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: أ
+التوضيح: توفر الحوسبة السحابية موارد مثل التخزين والمعالجة والخدمات عبر الإنترنت.
+w14:paraId="653F28BC" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="430AAC8F" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 6:
+w14:paraId="0B8AB1E2" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">لماذا ساعدت الحوسبة السحابية في تطور تحليل البيانات والذكاء الاصطناعي؟
+w14:paraId="62D6ECF6" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) لأنها ألغت الحاجة إلى البيانات
+ب) لأنها وفرت موارد تخزين ومعالجة ضخمة عند الحاجة
+ج) لأنها منعت مشاركة البيانات
+د) لأنها تعتمد على جهاز واحد فقط
+w14:paraId="6A4D8C9B" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: ب
+التوضيح: توفر الخدمات السحابية قدرة حاسوبية وتخزينية كبيرة يمكن استخدامها لمعالجة كميات ضخمة من البيانات.
+w14:paraId="3C17FE16" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="7F7B5B6B" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 7:
+w14:paraId="3A6F1860" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">ما الفكرة الأساسية لقانون مور Moore’s Law؟
+w14:paraId="5306E222" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) عدد الترانزستورات في الدوائر المتكاملة يزداد بصورة كبيرة مع مرور الوقت
+ب) حجم أجهزة الحاسوب يتضاعف كل عام
+ج) استهلاك الطاقة يتضاعف كل شهر
+د) سرعة الإنترنت ثابتة
+w14:paraId="4A1E023A" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: أ
+التوضيح: يصف قانون مور الاتجاه التاريخي لزيادة عدد الترانزستورات التي يمكن وضعها داخل الدوائر المتكاملة مع تطور تقنيات التصنيع.
+w14:paraId="7C4836AB" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="796648E3" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 8:
+w14:paraId="64071596" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">ما النتيجة الرئيسية لزيادة عدد الترانزستورات داخل المعالج؟
+w14:paraId="7ED415B2" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) انخفاض قدرات المعالجة دائماً
+ب) إمكانية زيادة قدرات وأداء الحاسوب
+ج) منع تشغيل البرامج
+د) إلغاء الحاجة إلى الذاكرة
+w14:paraId="295157AF" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: ب
+التوضيح: تسمح زيادة عدد الترانزستورات بتنفيذ وظائف وعمليات أكثر داخل المعالج.
+w14:paraId="309D9E88" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="29D78599" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 9:
+w14:paraId="4C2D0F48" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">لماذا أصبح من الصعب الاستمرار في تصغير الترانزستورات بنفس المعدل؟
+w14:paraId="77B008AE" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) بسبب الحدود الفيزيائية في الأحجام الصغيرة جداً
+ب) بسبب اختفاء الإنترنت
+ج) بسبب زيادة حجم لوحة المفاتيح
+د) بسبب نقص البرامج
+w14:paraId="3749FF03" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: أ
+التوضيح: عند الوصول إلى أحجام شديدة الصغر تظهر تأثيرات فيزيائية تحد من استمرار عملية التصغير.
+w14:paraId="2CC8DD0C" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="30D4EFB9" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 10:
+w14:paraId="73FD684B" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أي ظاهرة تظهر عند تصغير الترانزستورات إلى أحجام شديدة الصغر ويمكن أن تسمح للإلكترونات بعبور حواجز لا يفترض أن تتجاوزها؟
+w14:paraId="5B96E826" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) Quantum Tunneling
+ب) Cloud Computing
+ج) Parallel Processing
+د) Social Networking
+w14:paraId="4754F104" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: أ
+التوضيح: النفق الكمي Quantum Tunneling من التأثيرات التي تظهر على المقاييس شديدة الصغر وتسبب صعوبة في التحكم في حركة الإلكترونات.
+w14:paraId="20AEFFEB" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="749CAF90" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 11:
+w14:paraId="3A08154F" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">ما المشكلة التي يمكن أن تنتج عن Leakage Current في الترانزستورات الصغيرة؟
+w14:paraId="6326440D" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) تسرب تيار كهربائي غير مرغوب فيه
+ب) زيادة مساحة الشاشة
+ج) زيادة سرعة الإنترنت
+د) زيادة سعة القرص الصلب
+w14:paraId="4E0D8415" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: أ
+التوضيح: يؤدي تسرب التيار إلى استهلاك طاقة إضافي وتوليد حرارة، مما يحد من استمرار تصغير الترانزستورات.
+w14:paraId="7790FFE7" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="10B63ECD" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 12:
+w14:paraId="3A93F7F1" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">ما الاتجاه الذي أصبح مهماً لتحسين الأداء مع صعوبة زيادة سرعة المعالج بالطريقة التقليدية؟
+w14:paraId="599BBE9A" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) Parallel Processing
+ب) تقليل عدد المعالجات
+ج) إلغاء الذاكرة
+د) تقليل عدد البرامج
+w14:paraId="46EC02EB" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: أ
+التوضيح: تعتمد المعالجة المتوازية على تنفيذ عدة عمليات في الوقت نفسه باستخدام أكثر من نواة أو وحدة معالجة.
+w14:paraId="6738DD91" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="0B98E89C" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 13:
+w14:paraId="04204F7D" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">ما الفكرة الأساسية للمعالجة المتوازية Parallel Processing؟
+w14:paraId="66962555" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) تنفيذ جميع العمليات بالتتابع فقط
+ب) تنفيذ عدة عمليات أو أجزاء من المهمة في الوقت نفسه
+ج) تخزين البيانات دون معالجتها
+د) استخدام شبكة الإنترنت فقط
+w14:paraId="29230D30" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: ب
+التوضيح: تقسيم العمل وتنفيذ أجزائه بصورة متزامنة يساعد على تحسين الأداء.
+w14:paraId="40BDC613" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="4B64A65C" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 14:
+w14:paraId="6F4F00FE" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أي من المواقف التالية يمثل Remote Work؟
+w14:paraId="44E60DDA" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) شراء منتج من متجر إلكتروني
+ب) أداء الموظف لعمله من المنزل باستخدام الإنترنت
+ج) الدفع باستخدام الهاتف
+د) نشر صورة على شبكة اجتماعية
+w14:paraId="48AE4E85" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: ب
+التوضيح: العمل عن بعد يسمح للموظف بأداء مهامه من خارج مكان العمل التقليدي باستخدام تقنيات الاتصال.
+w14:paraId="6207147D" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="44A9E6E3" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 15:
+w14:paraId="450B6662" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أي من المواقف التالية يعد مثالاً على E-commerce؟
+w14:paraId="6163A839" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) شراء كتاب من متجر عبر الإنترنت
+ب) إرسال رسالة إلى صديق
+ج) تخزين ملف على الحاسوب
+د) كتابة مستند دون اتصال بالإنترنت
+w14:paraId="47397EC1" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: أ
+التوضيح: التجارة الإلكترونية تعني إجراء عمليات شراء وبيع السلع أو الخدمات باستخدام الإنترنت.
+w14:paraId="03C0891C" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="0C58A63B" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 16:
+w14:paraId="3FEDDB9B" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">ما الهدف الرئيسي من SNS أو Social Networking Services؟
+w14:paraId="230EAFAA" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) التواصل ومشاركة المعلومات والمحتوى بين المستخدمين
+ب) تصنيع المعالجات
+ج) زيادة عدد الترانزستورات
+د) تخزين الملفات دون مشاركة
+w14:paraId="0575C4E2" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: أ
+التوضيح: تتيح خدمات الشبكات الاجتماعية للمستخدمين التواصل وإنشاء ومشاركة المحتوى عبر الإنترنت.
+w14:paraId="120EC774" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="5C066D34" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 17:
+w14:paraId="7D984957" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أي موقف يمثل Cashless Payment؟
+w14:paraId="56428C8F" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) دفع قيمة المشتريات باستخدام تطبيق دفع على الهاتف
+ب) دفع قيمة المشتريات بالنقود الورقية
+ج) كتابة قائمة بالمشتريات
+د) مشاهدة إعلان لمنتج
+w14:paraId="521730D3" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: أ
+التوضيح: الدفع غير النقدي يعتمد على وسائل إلكترونية مثل البطاقات وتطبيقات الدفع بدلاً من النقود التقليدية.
+w14:paraId="5EB8F78D" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="78FDC173" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 18:
+w14:paraId="39F341D4" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">طالب يتواصل مع زملائه من خلال منصة اجتماعية. أي تغير اجتماعي يمثله هذا الموقف؟
+w14:paraId="44312EF8" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) SNS
+ب) E-commerce
+ج) Remote Work
+د) Moore’s Law
+w14:paraId="2DE3A87A" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: أ
+التوضيح: استخدام المنصات الاجتماعية للتواصل ومشاركة المحتوى مثال مباشر على خدمات الشبكات الاجتماعية.
+w14:paraId="11C315A2" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="04219C01" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 19:
+w14:paraId="186A9607" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">شخص يعمل من منزله، ثم يشتري جهازاً من أحد المواقع، ويدفع قيمته باستخدام تطبيق على هاتفه. ما التغيرات التي يمثلها الموقف بالترتيب؟
+w14:paraId="4C0A3ED8" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) Remote Work → E-commerce → Cashless Payment
+ب) E-commerce → SNS → Cloud Computing
+ج) SNS → Remote Work → Moore’s Law
+د) Cloud Computing → E-commerce → Parallel Processing
+w14:paraId="4019B611" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: أ
+التوضيح: العمل من المنزل يمثل Remote Work، والشراء عبر الموقع يمثل E-commerce، والدفع بالتطبيق يمثل Cashless Payment.
+w14:paraId="356A7C99" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="513ACBED" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 20:
+w14:paraId="57AE34D6" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">ما الفرق الأساسي بين SNS و E-commerce؟
+w14:paraId="512DEB9B" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) SNS للتواصل ومشاركة المحتوى، بينما E-commerce لبيع وشراء السلع والخدمات
+ب) كلاهما يستخدم فقط لتصنيع الحواسيب
+ج) SNS للدفع الإلكتروني وE-commerce للمعالجة المتوازية
+د) لا يوجد فرق بينهما
+w14:paraId="69B4686E" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: أ
+التوضيح: تختلف الوظيفة الأساسية؛ الشبكات الاجتماعية تركز على التواصل، بينما التجارة الإلكترونية تركز على المعاملات التجارية.
+w14:paraId="49173CF8" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="1B8ADD59" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 21:
+w14:paraId="395A5E59" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أي ترتيب يعبر بصورة أفضل عن التطور التاريخي لتكنولوجيا المعلومات؟
+w14:paraId="5AE24CF4" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) الحواسيب الإلكترونية ← الحواسيب الشخصية ← الإنترنت ← الهواتف الذكية والحوسبة السحابية
+ب) الهواتف الذكية ← الحواسيب الإلكترونية ← الإنترنت ← الحواسيب الشخصية
+ج) الإنترنت ← الحواسيب الشخصية ← الحواسيب الإلكترونية ← الهواتف الذكية
+د) الحوسبة السحابية ← الحواسيب الإلكترونية ← الحواسيب الشخصية ← الإنترنت
+w14:paraId="36AF1790" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: أ
+التوضيح: انتقلت تكنولوجيا المعلومات من الحوسبة الإلكترونية إلى الحوسبة الشخصية، ثم الاتصال العالمي بالإنترنت، ثم عصر الأجهزة المحمولة والخدمات السحابية.
+w14:paraId="7627D0DE" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="7084C184" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 22:
+w14:paraId="3000E24F" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أي عبارة تصف تأثير تكنولوجيا المعلومات على المجتمع بصورة أدق؟
+w14:paraId="2CF6C632" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) غيرت طرق التواصل والعمل والتجارة والوصول إلى المعلومات
+ب) أثرت فقط على صناعة أجهزة الحاسوب
+ج) أثرت فقط على المؤسسات الكبيرة
+د) قللت من إمكانية تبادل المعلومات
+w14:paraId="121E294F" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: أ
+التوضيح: أدى تطور تكنولوجيا المعلومات إلى تغيرات واسعة في الحياة اليومية مثل التواصل والعمل والتجارة والدفع والوصول إلى الخدمات.
+w14:paraId="2A237792" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="2DAED489" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 23:
+w14:paraId="271C63F6" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أي عبارة عن قانون مور تعتبر غير دقيقة؟
+w14:paraId="0733A631" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) يعبر عن اتجاه تاريخي في زيادة عدد الترانزستورات
+ب) ساهم تصغير الترانزستورات في تحسين أداء الحواسيب
+ج) يمكن الاستمرار في تصغير الترانزستورات إلى ما لا نهاية دون قيود
+د) توجد حدود فيزيائية تجعل استمرار التصغير أكثر صعوبة
+w14:paraId="637B66C3" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: ج
+التوضيح: توجد حدود فيزيائية مثل Quantum Tunneling وLeakage Current، لذلك لا يمكن الاعتماد على التصغير إلى ما لا نهاية.
+w14:paraId="10223330" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="0B1284F1" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 24:
+w14:paraId="6082D67C" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أرادت شركة زيادة أداء نظام حاسوبي دون الاعتماد فقط على زيادة سرعة نواة واحدة. أي تقنية تعد الأنسب؟
+w14:paraId="166B3116" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) Parallel Processing
+ب) Cashless Payment
+ج) SNS
+د) E-commerce
+w14:paraId="2946CAE5" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: أ
+التوضيح: تسمح المعالجة المتوازية بتوزيع العمليات على عدة أنوية أو وحدات معالجة وتنفيذها في الوقت نفسه.
+w14:paraId="1BE28BFC" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">
+w14:paraId="5D20FF63" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">سؤال 25:
+w14:paraId="55F265AF" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أي مجموعة تحتوي فقط على أمثلة للتغيرات الاجتماعية الناتجة عن تطور تكنولوجيا المعلومات؟
+w14:paraId="4F33D9EB" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">أ) Remote Work – E-commerce – SNS – Cashless Payment
+ب) Quantum Tunneling – Leakage Current – SNS – CPU
+ج) Moore’s Law – Transistor – Remote Work – RAM
+د) Parallel Processing – CPU – Cloud Server – Transistor
+w14:paraId="133BE311" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">الإجابة الصحيحة: أ
+التوضيح: العمل عن بعد والتجارة الإلكترونية والشبكات الاجتماعية والدفع غير النقدي كلها تغيرات واضحة في أسلوب حياة 
+w14:paraId="612CBFCD" w14:textId="77777777" w:rsidR="00A310BB" w:rsidRPr="00A310BB" w:rsidRDefault="00A310BB" w:rsidP="00A310BB">

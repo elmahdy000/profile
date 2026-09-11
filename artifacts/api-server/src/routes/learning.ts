@@ -633,9 +633,9 @@ function extractTextFromDocxXml(xml: string): string {
   return xml
     .replace(/<\/w:tc>/g, "\t")
     .replace(/<\/w:tr>/g, "\n")
-    .replace(/<w:p[ >]/g, "\n")
-    .replace(/<w:tab\s*\/?>/g, "\t")
-    .replace(/<w:br\s*\/?>/g, "\n")
+    .replace(/<w:p\b[^>]*>/g, "\n")
+    .replace(/<w:tab\b[^>]*\/?>/g, "\t")
+    .replace(/<w:br\b[^>]*\/?>/g, "\n")
     .replace(/<[^>]+>/g, "")
     .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)))
     .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
@@ -829,17 +829,27 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   }
 
   // Preprocess inline text & Word table cell merges
-  // Only split when an explicit answer pattern (e.g. "الإجابة الصحيحة: أ") is IMMEDIATELY followed by an explicit explanation header
-  cleanedText = cleanedText.replace(/(?:^|\s)((?:الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|الجواب|الحل|الاختيار\s+الصحيح)\s*[:：\-]?\s*[أابجدهإآA-Da-d1-6])\s*((?:explanation(?:\s*[\/\-]\s*steps)?|solution|reason|note|التوضيح(?:\s*[\/\-]\s*(?:خطوات|طريقة)\s*(?:الحل|الإجابة))?|التفسير(?:\s*[\/\-]\s*(?:خطوات|طريقة)\s*(?:الحل|الإجابة))?|(?:خطوات|طريقة)\s*(?:الحل|الإجابة)|تفسير(?:\s+الإجابة)?|توضيح(?:\s+الإجابة)?|الشرح(?:\s+والتوضيح)?|شرح(?:\s+الحل|\s+الإجابة)?|سبب(?:\s+الإجابة)?|ملاحظة)\s*[:：\-])/gi, "$1\n$2");
+  cleanedText = cleanedText.replace(/((?:الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|الجواب|الحل|الاختيار\s+الصحيح)\s*[:：\-]?\s*[أابجدهإآA-Da-d1-6])\s+((?:explanation(?:\s*[\/\-]\s*steps)?|solution|reason|note|التوضيح(?:\s*[\/\-]\s*(?:خطوات|طريقة)\s*(?:الحل|الإجابة))?|التفسير(?:\s*[\/\-]\s*(?:خطوات|طريقة)\s*(?:الحل|الإجابة))?|(?:خطوات|طريقة)\s*(?:الحل|الإجابة)|تفسير(?:\s+الإجابة)?|توضيح(?:\s+الإجابة)?|الشرح(?:\s+والتوضيح)?|شرح(?:\s+الحل|\s+الإجابة)?|سبب(?:\s+الإجابة)?|ملاحظة)\s*[:：\-])/gi, "$1\n$2");
 
   // Split inline choices e.g. "أ) باريس    ب) لندن" or "A) Final — B) const" or "أ) كذا - ب) كذا"
-  // Separator can be multiple spaces, tabs, or dashes/slashes/pipes with spaces
+  // 1) Separator with explicit punctuation (—, -, |, /, comma, semicolon, 2+ spaces, tab)
   cleanedText = cleanedText.replace(/([^\n\s]+)(?:\s*(?:[\—\–\-\|\/]|[\,\;])\s*|\s{2,}|\t)((?:[\*\•\-\[\(]|\[x\]|\[✓\]|\(✓\))?\s*(?:[A-Fa-fأابجدهإآ]|هـ|[1-6])\s*[\)\.\:\-\]\/]\s+)/gi, (match, p1, p2) => {
     if (/^(?:Question|سؤال|س|Q|السؤال|item|ex|no|num)$/i.test(p1.trim())) {
       return match;
     }
     return `${p1}\n${p2}`;
   });
+
+  // 2) Separator with single space when followed by standard choice letter and closing bracket/dot/slash
+  cleanedText = cleanedText.replace(/([^\n\s]+)\s+((?:[A-Fa-fأابجدهإآ]|هـ|[1-6])\s*[\)\.\:\-\/]\s+)/gi, (match, p1, p2) => {
+    if (/^(?:Question|سؤال|س|Q|السؤال|item|ex|no|num)$/i.test(p1.trim())) {
+      return match;
+    }
+    return `${p1}\n${p2}`;
+  });
+
+  // 3) Split inline choices glued without spaces (from Word soft break loss) e.g. "الإلكترونيةب) ظهور"
+  cleanedText = cleanedText.replace(/([a-zA-Z\u0600-\u06FF])([A-Fa-fأابجدهإآ]|هـ|[1-6])\)\s+/g, "$1\n$2) ");
 
   // Split question headers if accidentally on same line after previous content
   cleanedText = cleanedText.replace(/([^\n])\s+((?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?\s*[:：\-\/]?\s*\(?\d+\)|(?:ال)?س(?:ؤال)?(?:\s*رقم)?\s*[:：\-\/]?\s*\d+|Question\s*[:：\-]?\s*\d+|#\d+)\s*[:：\-\.\/])/gi, "$1\n$2");
@@ -867,7 +877,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
     let cleanedPrompt = current.prompt
       .replace(/^(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-\/]?\s*\(?\d+\)?\s*[:：\-.\/]?\s*/i, "")
       .replace(/^(?:السؤال\s+(?:الأول|الاول|الثاني|الثانى|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر))\s*[:：\-.\/]?\s*/i, "")
-      .replace(/^\(?\d+\)?[\s\.\)\-\/:]+\s*/, "")
+      .replace(/^(?:\(\d+\)|\d+\s*[\.\)\-\/:\—\–])\s*/, "")
       .trim();
 
     // Clean inline answers from prompt end ONLY when preceded by an explicit label (e.g. "[الإجابة: ب]")
@@ -935,8 +945,14 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   // EXPLICIT_QUESTION_RE: "سؤال 1", "س1:", "س1 /", "السؤال الأول", "Q1:"
   const EXPLICIT_QUESTION_RE = /^\s*(?:(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-\/]?\s*\(?\d+\)?|السؤال\s+(?:الأول|الاول|الثاني|الثانى|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر)|#\d+)(?:\s*[:：\-\.\)\/]\s*(.*))?$/i;
 
-  // Generic Numbered line: "1- ...", "1. ...", "(1) ..."
-  const NUMBERED_LINE_RE = /^\s*\(?(\d+)\)?[\s\.\:\-\)\/]+\s*(.*)$/;
+  // Generic Numbered line: "1- ...", "1. ...", "(1) ...", "1: ..."
+  const NUMBERED_LINE_RE = /^\s*(?:\((\d+)\)|\b(\d+)\s*[\.\:\-\)\/\—\–])\s*(.*)$/;
+
+  // Robust Unicode-aware Question-like check for both Arabic and English
+  // Question must have ? / ؟ OR START with an interrogative word/verb
+  const isQuestionLike = (str: string) =>
+    /[\؟\?]/.test(str) ||
+    /^\s*(?:ما|ماذا|من\s+(?:هو|هي|هم|هن|الذي|التي|الذين)|أين|اين|متى|كيف|لماذا|علل|فسر|اذكر|قارن|اختر|هل|كم|أي|اي|وضح|صنف|عدد|اشرح|حدد|عرف|what|which|why|how|when|where|who|whose|whom)(?:[\s:：\-\/]|$)/iu.test(str);
 
   let collectingExplanation = false;
   let hasFoundAnswer = false;
@@ -962,11 +978,12 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
 
     // 1b. Check if line looks like a question
     const numMatch = line.match(NUMBERED_LINE_RE);
-    const isQuestionLike = /[\؟\?]|\b(?:ما|ماذا|من|أين|اين|متى|كيف|لماذا|علل|فسر|اذكر|قارن|اختر|هل|كم|أي|اي|وضح|بين|what|which|why|how|when|where|who|whose|whom)\b/i.test(line);
-    const isNextSequentialChoice = current && numMatch && (parseInt(numMatch[1], 10) === current.options.length + 1) && !isQuestionLike && current.options.length < 6;
+    const lineIsQuestion = isQuestionLike(line);
+    const numValue = numMatch ? parseInt(numMatch[1] || numMatch[2], 10) : NaN;
+    const isNextSequentialChoice = current && !isNaN(numValue) && (numValue === current.options.length + 1) && !lineIsQuestion && current.options.length < 6;
 
-    if (numMatch && !isNextSequentialChoice && (!current || current.options.length >= 2 || hasFoundAnswer || isQuestionLike)) {
-      const restOfLine = numMatch[2].trim();
+    if (numMatch && !isNextSequentialChoice && (!current || current.options.length >= 2 || hasFoundAnswer || lineIsQuestion)) {
+      const restOfLine = (numMatch[3] || "").trim();
       questionCounter += 1;
       finishCurrent(questionCounter);
       collectingExplanation = false;
@@ -983,7 +1000,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
     const choiceMatch = line.match(CHOICE_RE);
     const isLetterChoice = choiceMatch ? /^[A-Fa-fأابجدهإآهـ]$/.test(choiceMatch[1]) : false;
     const isSequentialChoice = Boolean(current && current.options.length > 0);
-    const isChoice = Boolean(choiceMatch && (isLetterChoice || isSequentialChoice || !isQuestionLike));
+    const isChoice = Boolean(choiceMatch && (isLetterChoice || isSequentialChoice || !isQuestionLike(line)));
 
     if (isChoice && choiceMatch) {
       const optionToken = choiceMatch[1];
@@ -1086,8 +1103,8 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
         line.match(EXPLICIT_QUESTION_RE) ||
         line.match(ANSWER_RE) ||
         line.match(CHOICE_RE) ||
-        (line.match(NUMBERED_LINE_RE) && isQuestionLike) ||
-        (isQuestionLike && (current.options.length >= 2 || hasFoundAnswer));
+        (line.match(NUMBERED_LINE_RE) && isQuestionLike(line)) ||
+        (isQuestionLike(line) && (current.options.length >= 2 || hasFoundAnswer));
 
       if (isNewQ) {
         collectingExplanation = false;
