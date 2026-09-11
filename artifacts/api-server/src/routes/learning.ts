@@ -4061,21 +4061,31 @@ router.patch(
       const quizId = Number(req.params.id);
       const [current] = await db.select().from(quizzesTable).where(eq(quizzesTable.id, quizId)).limit(1);
       if (!current) { res.status(404).json({ error: "الاختبار غير موجود" }); return; }
-      const courseId = req.body.courseId !== undefined ? Number(req.body.courseId) : current.courseId;
+      const courseId = req.body.courseId !== undefined
+        ? (req.body.courseId && Number(req.body.courseId) > 0 ? Number(req.body.courseId) : null)
+        : current.courseId;
       const scope = req.body.scope !== undefined ? (req.body.scope === "lesson" ? "lesson" : "course") : current.scope;
-      const videoId = scope === "lesson" ? (req.body.videoId !== undefined ? Number(req.body.videoId) || null : current.videoId) : null;
+      const videoId = scope === "lesson"
+        ? (req.body.videoId !== undefined ? (Number(req.body.videoId) || null) : current.videoId)
+        : null;
       const stages: string[] = req.body.stages !== undefined
         ? normalizeStringList(req.body.stages)
-        : current.stages;
+        : (current.stages?.length ? current.stages : (current.stage ? [current.stage] : ["عام"]));
+
       const [course] = courseId ? await db.select().from(coursesTable).where(eq(coursesTable.id, courseId)).limit(1) : [];
       const [video] = scope === "lesson" && videoId ? await db.select().from(videosTable).where(eq(videosTable.id, videoId)).limit(1) : [];
-      if (
-        !course ||
-        stages.length === 0 ||
-        stages.some((stage) => course.stages.length > 0 && !course.stages.includes(stage)) ||
-        (scope === "lesson" && (!video || video.courseId !== courseId))
-      ) {
-        res.status(400).json({ error: "الكورس أو المرحلة أو الدرس غير صحيح" }); return;
+
+      if (courseId && !course) {
+        res.status(400).json({ error: "الكورس المحدد غير موجود" });
+        return;
+      }
+      if (course && stages.length > 0 && stages.some((stage) => course.stages.length > 0 && !course.stages.includes(stage))) {
+        res.status(400).json({ error: "المرحلة غير متوافقة مع الكورس المحدد" });
+        return;
+      }
+      if (scope === "lesson" && videoId && (!video || (courseId && video.courseId !== courseId))) {
+        res.status(400).json({ error: "الدرس غير صحيح أو غير تابع للكورس" });
+        return;
       }
       if (videoId) {
         const [linkedQuiz] = await db
@@ -4107,9 +4117,9 @@ router.patch(
           courseId,
           videoId,
           scope,
-          category: course.title,
+          category: course ? course.title : (current.category || stages[0] || "عام"),
           stages,
-          stage: stages[0] ?? null,
+          stage: stages[0] ?? current.stage ?? null,
           ...(req.body.title !== undefined && {
             title: String(req.body.title).trim(),
           }),

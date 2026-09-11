@@ -1031,8 +1031,8 @@ export function AdminLearning({
         },
       );
       setQuizzes(prev => prev.map((q) => (q.id === quiz.id ? updated : q)));
-    } catch {
-      toast({ title: "خطأ في تحديث الاختبار", variant: "destructive" });
+    } catch (err: any) {
+      toast({ title: "خطأ في تحديث الاختبار", description: err.message, variant: "destructive" });
     }
   };
   const setQuestion = (index: number, patch: Partial<Question>) =>
