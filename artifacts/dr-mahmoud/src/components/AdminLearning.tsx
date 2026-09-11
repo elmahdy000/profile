@@ -2216,6 +2216,7 @@ export function AdminLearning({
               editQuiz={editQuiz}
               toggleQuiz={toggleQuiz}
               deleteQuiz={deleteQuiz}
+              onNavigateToTestBank={() => setTab("testbank")}
             />
           )}
           {tab === "reports" && analytics && (

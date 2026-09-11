@@ -94,6 +94,7 @@ type ExamWizardProps = {
   editQuiz: (q: QuizItem) => void;
   toggleQuiz: (q: QuizItem) => Promise<void>;
   deleteQuiz: (id: number) => Promise<void>;
+  onNavigateToTestBank?: () => void;
 };
 
 export function ExamWizard({
@@ -109,6 +110,7 @@ export function ExamWizard({
   editQuiz,
   toggleQuiz,
   deleteQuiz,
+  onNavigateToTestBank,
 }: ExamWizardProps) {
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
@@ -277,6 +279,16 @@ export function ExamWizard({
           <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
             <Check className="h-3.5 w-3.5" /> تم الحفظ تلقائيًا
           </span>
+          {onNavigateToTestBank && (
+            <Button
+              type="button"
+              onClick={onNavigateToTestBank}
+              className="bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold h-9 px-3.5 rounded-xl cursor-pointer shadow-xs"
+            >
+              <Sparkles className="h-4 w-4 ml-1.5" />
+              توليد من بنك الأسئلة 📚
+            </Button>
+          )}
           {editingQuizId && (
             <Button variant="ghost" size="sm" onClick={resetQuizForm}>
               إلغاء التعديل

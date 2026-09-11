@@ -184,6 +184,16 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
       title: "التقييم والاختبارات",
       items: [
         {
+          id: "testbank",
+          label: "بنك الأسئلة الشامل 📚",
+          icon: BookOpen,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("testbank");
+          },
+          active: activeTab === "learning" && learningSubTab === "testbank",
+        },
+        {
           id: "quizzes",
           label: "منظومة الاختبارات",
           icon: ClipboardCheck,
