@@ -28,7 +28,9 @@ import {
   Video,
   PlaySquare,
   CheckSquare,
-  ArrowRight
+  ArrowRight,
+  Lock,
+  Globe
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -184,6 +186,7 @@ export function TestBankTab({
   const [genUnit, setGenUnit] = useState<string>("all");
   const [genLesson, setGenLesson] = useState<string>("all");
   const [genTitle, setGenTitle] = useState<string>("");
+  const [isTitleCustomized, setIsTitleCustomized] = useState<boolean>(false);
   const [genCount, setGenCount] = useState<number>(10);
   const [genDuration, setGenDuration] = useState<number>(30);
   const [genPassingScore, setGenPassingScore] = useState<number>(60);
@@ -196,6 +199,10 @@ export function TestBankTab({
   const [hardCount, setHardCount] = useState<number>(2);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [generatedQuizSuccess, setGeneratedQuizSuccess] = useState<any | null>(null);
+  const [genPublishMode, setGenPublishMode] = useState<"draft" | "publish">("draft");
+  const [reviewingQuiz, setReviewingQuiz] = useState<any | null>(null);
+  const [isSavingQuizQuestions, setIsSavingQuizQuestions] = useState<boolean>(false);
+  const [editingQuizQuestionIdx, setEditingQuizQuestionIdx] = useState<number | null>(null);
 
   // Load Tree Data from Backend
   const loadTree = async () => {
@@ -570,7 +577,7 @@ export function TestBankTab({
         maxAttempts: genMaxAttempts,
         shuffleQuestions: genShuffle,
         requiredProgress: isVideoLesson ? genRequiredProgress : 0,
-        isPublished: true,
+        isPublished: genPublishMode === "publish",
       };
 
       if (genDifficultyMode === "custom") {
@@ -587,12 +594,65 @@ export function TestBankTab({
       });
 
       setGeneratedQuizSuccess(created);
-      toast({ title: `تم توليد ونشر الاختبار (${created.title}) بنجاح! 🚀` });
+      if (genPublishMode === "publish") {
+        toast({ title: `تم توليد ونشر الاختبار (${created.title}) للطلاب بنجاح! 🚀` });
+      } else {
+        toast({ title: `تم توليد الاختبار (${created.title}) كمسودة للمراجعة (غير ظاهر للطلاب)! 📝` });
+      }
       loadTree();
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message || "تعذر توليد الاختبار من البنك" });
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  // Publish / Unpublish a Quiz
+  const handlePublishQuiz = async (quizId: number, publish: boolean) => {
+    try {
+      const updated = await adminApi<any>(`/api/admin/learning/quizzes/${quizId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ isPublished: publish }),
+      });
+      toast({
+        title: publish
+          ? `تم نشر الاختبار للطلاب بنجاح! 🚀`
+          : `تم حفظ الاختبار كمسودة وإخفاؤه عن الطلاب 🔒`,
+      });
+      if (generatedQuizSuccess && generatedQuizSuccess.id === quizId) {
+        setGeneratedQuizSuccess({ ...generatedQuizSuccess, isPublished: publish });
+      }
+      if (reviewingQuiz && reviewingQuiz.id === quizId) {
+        setReviewingQuiz({ ...reviewingQuiz, isPublished: publish });
+      }
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message || "تعذر تحديث حالة الاختبار" });
+    }
+  };
+
+  // Save changes to Quiz Questions from Review Modal
+  const handleSaveReviewedQuizQuestions = async () => {
+    if (!reviewingQuiz) return;
+    setIsSavingQuizQuestions(true);
+    try {
+      const updated = await adminApi<any>(`/api/admin/learning/quizzes/${reviewingQuiz.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          title: reviewingQuiz.title,
+          questions: reviewingQuiz.questions,
+          isPublished: reviewingQuiz.isPublished,
+        }),
+      });
+      toast({ title: "تم حفظ كافة تعديلات أسئلة الاختبار بنجاح! 💾" });
+      setReviewingQuiz(updated);
+      setEditingQuizQuestionIdx(null);
+      if (generatedQuizSuccess && generatedQuizSuccess.id === reviewingQuiz.id) {
+        setGeneratedQuizSuccess(updated);
+      }
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message || "تعذر حفظ التعديلات على الاختبار" });
+    } finally {
+      setIsSavingQuizQuestions(false);
     }
   };
 
@@ -992,6 +1052,7 @@ export function TestBankTab({
                           setGenStage(selectedStage);
                           setGenUnit(selectedUnit);
                           setGenLesson(selectedLesson);
+                          setIsTitleCustomized(false);
                           setGenTitle(`اختبار على (${selectedLesson})`);
                           const v = videos.find((vid) => vid.title.trim() === selectedLesson.trim());
                           if (v) {
@@ -1253,6 +1314,7 @@ export function TestBankTab({
                     setGenStage(recentSavedLesson.stage);
                     setGenUnit(recentSavedLesson.unit);
                     setGenLesson(recentSavedLesson.lesson);
+                    setIsTitleCustomized(false);
                     setGenTitle(`اختبار على درس ${recentSavedLesson.lesson}`);
                     if (recentSavedLesson.lessonId) {
                       setGenScope("lesson");
@@ -1729,14 +1791,33 @@ export function TestBankTab({
       {activeTab === "generate" && (
         <div className="max-w-3xl mx-auto space-y-6">
           {generatedQuizSuccess ? (
-            <div className="rounded-3xl border border-emerald-500/30 bg-emerald-500/10 p-8 text-center space-y-4 shadow-sm animate-in fade-in">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-600 mx-auto">
-                <CheckCircle2 className="h-8 w-8" />
+            <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 text-center space-y-5 shadow-sm animate-in fade-in">
+              <div className="flex h-16 w-16 mx-auto items-center justify-center rounded-2xl bg-violet-500/15 text-violet-600">
+                <Sparkles className="h-8 w-8" />
               </div>
-              <div className="space-y-1">
-                <h3 className="text-xl font-black text-foreground">تم توليد الاختبار ونشره بنجاح! 🎉</h3>
-                <p className="text-xs font-bold text-muted-foreground">
-                  العنوان: {generatedQuizSuccess.title} ({generatedQuizSuccess.questions?.length || generatedQuizSuccess.actualCount} سؤال)
+
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black border">
+                  {generatedQuizSuccess.isPublished ? (
+                    <span className="text-emerald-700 dark:text-emerald-300 font-extrabold flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                      منشور وظاهر للطلاب حالياً 🟢
+                    </span>
+                  ) : (
+                    <span className="text-amber-700 dark:text-amber-300 font-extrabold flex items-center gap-1.5">
+                      <Lock className="h-3.5 w-3.5" />
+                      محفوظ كمسودة 🔒 (غير ظاهر للطلاب - بانتظار مراجعتك)
+                    </span>
+                  )}
+                </div>
+
+                <h3 className="text-lg sm:text-xl font-black text-foreground">
+                  تم إنشاء الاختبار: {generatedQuizSuccess.title}
+                </h3>
+                <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
+                  {generatedQuizSuccess.isPublished
+                    ? `تم توليد ${generatedQuizSuccess.questions?.length || generatedQuizSuccess.actualCount} سؤالاً، والاختبار متاح للطلاب الآن.`
+                    : `تم سحب ${generatedQuizSuccess.questions?.length || generatedQuizSuccess.actualCount} سؤالاً بنجاح وحفظها كمسودة. يمكنك الآن مراجعة وتعديل الأسئلة بدقة قبل نشرها للطلاب.`}
                 </p>
                 {generatedQuizSuccess.note && (
                   <p className="text-xs text-amber-600 font-bold mt-1">
@@ -1745,24 +1826,53 @@ export function TestBankTab({
                 )}
               </div>
 
-              <div className="flex justify-center gap-3 pt-2">
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                 <Button
                   type="button"
-                  onClick={() => setGeneratedQuizSuccess(null)}
-                  className="bg-primary hover:bg-primary/90 text-white text-xs font-bold h-10 px-5 cursor-pointer"
+                  onClick={() => setReviewingQuiz(generatedQuizSuccess)}
+                  className="bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold h-11 px-5 shadow-md cursor-pointer flex items-center gap-2"
                 >
-                  <Plus className="h-4 w-4 ml-1.5" /> توليد اختبار آخر
+                  <Eye className="h-4 w-4" /> مراجعة وتعديل أسئلة الاختبار 🔍
                 </Button>
+
+                {!generatedQuizSuccess.isPublished ? (
+                  <Button
+                    type="button"
+                    onClick={() => handlePublishQuiz(generatedQuizSuccess.id, true)}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold h-11 px-5 shadow-md cursor-pointer flex items-center gap-2"
+                  >
+                    <CheckCircle2 className="h-4 w-4" /> نشر الاختبار للطلاب الآن 🚀
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handlePublishQuiz(generatedQuizSuccess.id, false)}
+                    className="text-xs font-bold h-11 px-5 cursor-pointer flex items-center gap-2 border-amber-500/40 text-amber-600 hover:bg-amber-500/10"
+                  >
+                    <Lock className="h-3.5 w-3.5" /> تحويل لمسودة (إخفاء عن الطلاب) 🔒
+                  </Button>
+                )}
+
                 {onNavigateToQuizzes && (
                   <Button
                     type="button"
                     variant="outline"
                     onClick={onNavigateToQuizzes}
-                    className="text-xs font-bold h-10 px-5 cursor-pointer"
+                    className="text-xs font-bold h-11 px-5 cursor-pointer"
                   >
                     الانتقال لقائمة الاختبارات 📋
                   </Button>
                 )}
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setGeneratedQuizSuccess(null)}
+                  className="text-xs font-bold h-11 px-4 cursor-pointer text-muted-foreground"
+                >
+                  <Plus className="h-4 w-4 ml-1" /> توليد اختبار آخر
+                </Button>
               </div>
             </div>
           ) : (
@@ -1910,7 +2020,9 @@ export function TestBankTab({
                                 const v = videos.find((vObj) => String(vObj.id) === vid);
                                 if (v) {
                                   setGenLesson(v.title);
-                                  setGenTitle(`اختبار على درس ${v.title}`);
+                                  if (!isTitleCustomized) {
+                                    setGenTitle(`اختبار على درس ${v.title}`);
+                                  }
                                   if (v.courseId) setGenCourseId(String(v.courseId));
                                   if (v.stage) setGenStage(v.stage);
                                 }
@@ -1996,7 +2108,7 @@ export function TestBankTab({
                             onChange={(e) => {
                               const les = e.target.value;
                               setGenLesson(les);
-                              if (les !== "all") {
+                              if (les !== "all" && !isTitleCustomized) {
                                 setGenTitle(`اختبار على (${les})`);
                               }
                             }}
@@ -2131,8 +2243,10 @@ export function TestBankTab({
                                 .filter((l) => l.totalQuestions > 0)
                                 .map((l) => l.lesson);
                               setGenSelectedLessons(allLessonsWithQuestions);
-                              if (allLessonsWithQuestions.length > 0) {
-                                setGenTitle(`اختبار مراجعة على ${allLessonsWithQuestions.length} دروس`);
+                              if (!isTitleCustomized && (!genTitle || genTitle.startsWith("اختبار مراجعة"))) {
+                                if (allLessonsWithQuestions.length > 0) {
+                                  setGenTitle(`اختبار مراجعة على ${allLessonsWithQuestions.length} دروس`);
+                                }
                               }
                             }}
                             className="text-[11px] font-bold text-primary hover:underline cursor-pointer bg-primary/10 px-2.5 py-1 rounded-lg"
@@ -2170,8 +2284,10 @@ export function TestBankTab({
                                     next = [...genSelectedLessons, item.lesson];
                                   }
                                   setGenSelectedLessons(next);
-                                  if (next.length > 0) {
-                                    setGenTitle(`اختبار مراجعة على: ${next.slice(0, 3).join("، ")}${next.length > 3 ? "..." : ""}`);
+                                  if (!isTitleCustomized && (!genTitle || genTitle.startsWith("اختبار مراجعة"))) {
+                                    if (next.length > 0) {
+                                      setGenTitle(`اختبار مراجعة على: ${next.slice(0, 3).join("، ")}${next.length > 3 ? "..." : ""}`);
+                                    }
                                   }
                                 }}
                                 className={`flex items-start gap-3 p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
@@ -2209,6 +2325,53 @@ export function TestBankTab({
                           })}
                         </div>
                       )}
+
+                      {/* Dedicated Custom Exam Title Input for Multi-Lessons */}
+                      <div className="mt-2 p-3 rounded-xl border border-primary/30 bg-primary/5 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <label className="text-xs font-black text-foreground flex items-center gap-1.5">
+                            <FileText className="h-4 w-4 text-primary" />
+                            <span>حدد اسم / عنوان الاختبار من هذه الدروس: *</span>
+                            {isTitleCustomized && (
+                              <span className="text-[10px] bg-primary/20 text-primary font-bold px-2 py-0.5 rounded-full">
+                                اسم مخصص
+                              </span>
+                            )}
+                          </label>
+                          {isTitleCustomized && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsTitleCustomized(false);
+                                if (genSelectedLessons.length > 0) {
+                                  setGenTitle(`اختبار مراجعة على: ${genSelectedLessons.slice(0, 3).join("، ")}${genSelectedLessons.length > 3 ? "..." : ""}`);
+                                } else {
+                                  setGenTitle("");
+                                }
+                              }}
+                              className="text-[10px] text-muted-foreground hover:text-primary flex items-center gap-1 cursor-pointer font-bold"
+                              title="استعادة الاقتراح التلقائي"
+                            >
+                              <RefreshCw className="h-3 w-3" />
+                              <span>اقتراح اسم تلقائي</span>
+                            </button>
+                          )}
+                        </div>
+                        <input
+                          type="text"
+                          required
+                          placeholder="اكتب هنا اسم الاختبار (مثال: اختبار شامل على الفصل الأول والثاني...)"
+                          value={genTitle}
+                          onChange={(e) => {
+                            setGenTitle(e.target.value);
+                            setIsTitleCustomized(true);
+                          }}
+                          className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs sm:text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-xs"
+                        />
+                        <p className="text-[11px] text-muted-foreground">
+                          💡 هذا هو الاسم الذي سيظهر للطلاب في صفحة الاختبارات. يمكنك كتابة أي اسم تريده ولن يتم تغييره عند تحديد الدروس.
+                        </p>
+                      </div>
 
                       <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 pt-1">
                         <Sparkles className="h-3.5 w-3.5 text-amber-500 shrink-0" />
@@ -2250,13 +2413,23 @@ export function TestBankTab({
                 </h4>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">عنوان الاختبار *</label>
+                  <div className="flex items-center justify-between gap-2">
+                    <label className="text-xs font-bold text-foreground">عنوان الاختبار *</label>
+                    {isTitleCustomized && (
+                      <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">
+                        اسم مخصص
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="text"
                     required
                     placeholder="مثال: اختبار شامل على الوحدة الأولى"
                     value={genTitle}
-                    onChange={(e) => setGenTitle(e.target.value)}
+                    onChange={(e) => {
+                      setGenTitle(e.target.value);
+                      setIsTitleCustomized(true);
+                    }}
                     className="w-full h-11 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
@@ -2410,6 +2583,76 @@ export function TestBankTab({
                     تبديل ترتيب الأسئلة والخيارات عشوائياً لكل طالب لمنع الغش
                   </label>
                 </div>
+
+                {/* Publishing Mode Selection: Draft vs Publish */}
+                <div className="p-4 rounded-2xl border border-border bg-card/80 space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-black text-foreground flex items-center gap-2">
+                      <Eye className="h-4 w-4 text-primary" />
+                      <span>حالة ظهور الاختبار للطلاب:</span>
+                    </label>
+                    <span className="text-[10px] text-muted-foreground font-bold">
+                      {genPublishMode === "draft" ? "🔒 مسودة للمراجعة أولاً" : "🚀 نشر فوري للطلاب"}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setGenPublishMode("draft")}
+                      className={`p-3.5 rounded-xl border text-right transition-all cursor-pointer flex items-start gap-3 ${
+                        genPublishMode === "draft"
+                          ? "bg-amber-500/10 border-amber-500/50 text-foreground ring-2 ring-amber-500/20 shadow-xs"
+                          : "bg-muted/30 border-border hover:bg-muted/50 text-muted-foreground"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="genPublishMode"
+                        checked={genPublishMode === "draft"}
+                        onChange={() => setGenPublishMode("draft")}
+                        className="mt-0.5 h-4 w-4 accent-amber-600 pointer-events-none shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <strong className="block text-xs font-black text-foreground flex items-center gap-1.5">
+                          <span>حفظ كمسودة للمراجعة أولاً</span>
+                          <span className="text-[10px] px-1.5 py-0.2 bg-amber-500/20 text-amber-700 dark:text-amber-300 rounded font-black">
+                            مستحسن 🔒
+                          </span>
+                        </strong>
+                        <span className="text-[11px] text-muted-foreground block leading-relaxed mt-1">
+                          لن يظهر الاختبار للطلاب حتى تراجع الأسئلة وتتأكد من صحتها ثم تضغط "نشر".
+                        </span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setGenPublishMode("publish")}
+                      className={`p-3.5 rounded-xl border text-right transition-all cursor-pointer flex items-start gap-3 ${
+                        genPublishMode === "publish"
+                          ? "bg-emerald-500/10 border-emerald-500/50 text-foreground ring-2 ring-emerald-500/20 shadow-xs"
+                          : "bg-muted/30 border-border hover:bg-muted/50 text-muted-foreground"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="genPublishMode"
+                        checked={genPublishMode === "publish"}
+                        onChange={() => setGenPublishMode("publish")}
+                        className="mt-0.5 h-4 w-4 accent-emerald-600 pointer-events-none shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <strong className="block text-xs font-black text-foreground">
+                          نشر فوري ومباشر للطلاب 🚀
+                        </strong>
+                        <span className="text-[11px] text-muted-foreground block leading-relaxed mt-1">
+                          يظهر الاختبار في حسابات الطلاب فوراً وتصلهم إشعارات ببدء الاختبار.
+                        </span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Submit Generate */}
@@ -2428,10 +2671,15 @@ export function TestBankTab({
                     <AlertCircle className="h-4 w-4" />
                     <span>لا توجد أسئلة متوفرة في البنك لهذا النطاق (ارفع أسئلة أولاً)</span>
                   </>
+                ) : genPublishMode === "draft" ? (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    <span>توليد الاختبار وحفظه كمسودة للمراجعة 📝</span>
+                  </>
                 ) : (
                   <>
                     <Sparkles className="h-4 w-4" />
-                    <span>توليد ونشر الاختبار الآن 🚀</span>
+                    <span>توليد ونشر الاختبار فوراً للطلاب 🚀</span>
                   </>
                 )}
               </Button>
@@ -2622,6 +2870,370 @@ export function TestBankTab({
                 </form>
               );
             })()}
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* REVIEW QUIZ MODAL (مراجعة أسئلة الاختبار قبل النشر)          */}
+      {/* ============================================================ */}
+      {reviewingQuiz && (
+        <div
+          className="fixed inset-0 z-[140] flex items-center justify-center bg-black/80 backdrop-blur-xs p-3 sm:p-5"
+          onClick={(e) => e.target === e.currentTarget && setReviewingQuiz(null)}
+        >
+          <div className="w-full max-w-4xl bg-card rounded-3xl shadow-2xl border border-border text-right max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95">
+            {/* Modal Header */}
+            <div className="shrink-0 flex items-center justify-between p-5 border-b border-border bg-muted/20">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-500/15 text-violet-600">
+                  <Eye className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-black text-foreground">
+                      مراجعة أسئلة الاختبار: {reviewingQuiz.title}
+                    </h3>
+                    <span
+                      className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${
+                        reviewingQuiz.isPublished
+                          ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+                          : "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                      }`}
+                    >
+                      {reviewingQuiz.isPublished ? "منشور للطلاب 🟢" : "مسودة غير منشورة 🔒"}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {reviewingQuiz.questions?.length || 0} أسئلة · درجة النجاح: {reviewingQuiz.passingScore}% · المدة: {reviewingQuiz.durationMinutes ? `${reviewingQuiz.durationMinutes} دقيقة` : "مفتوح"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Publish / Unpublish direct toggle button */}
+                {!reviewingQuiz.isPublished ? (
+                  <Button
+                    type="button"
+                    onClick={() => handlePublishQuiz(reviewingQuiz.id, true)}
+                    className="h-9 px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs cursor-pointer shadow-xs flex items-center gap-1.5"
+                  >
+                    <CheckCircle2 className="h-4 w-4" /> نشر الاختبار للطلاب الآن 🚀
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handlePublishQuiz(reviewingQuiz.id, false)}
+                    className="h-9 px-3.5 rounded-xl text-xs font-bold border-amber-500/40 text-amber-600 hover:bg-amber-500/10 cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Lock className="h-3.5 w-3.5" /> تحويل لمسودة (إخفاء عن الطلاب) 🔒
+                  </Button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setReviewingQuiz(null)}
+                  className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Notice Bar */}
+            <div className="px-5 py-2.5 bg-muted/40 border-b border-border/80 flex items-center justify-between text-xs">
+              <span className="text-muted-foreground flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-primary shrink-0" />
+                <span>
+                  {reviewingQuiz.isPublished
+                    ? "الاختبار منشور وظاهر للطلاب حالياً. يمكنك تعديل أي سؤال وحفظ التغييرات فوراً."
+                    : "الاختبار محفوظ كمسودة ولن يظهر للطلاب حتى تضغط على زر «نشر الاختبار للطلاب الآن». راجع الأسئلة وتأكد منها بحرية."}
+                </span>
+              </span>
+              <span className="font-bold text-foreground shrink-0 pr-2">
+                إجمالي الأسئلة: {reviewingQuiz.questions?.length || 0}
+              </span>
+            </div>
+
+            {/* Questions List */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {(reviewingQuiz.questions || []).length === 0 ? (
+                <div className="p-12 text-center text-muted-foreground text-xs font-bold border border-dashed border-border rounded-2xl">
+                  لا توجد أسئلة داخل هذا الاختبار
+                </div>
+              ) : (
+                (reviewingQuiz.questions || []).map((q: any, qIdx: number) => {
+                  const isEnglish = isEnglishQuestion(q.prompt, q.options);
+                  const isEditingThis = editingQuizQuestionIdx === qIdx;
+
+                  return (
+                    <div
+                      key={qIdx}
+                      className="rounded-2xl border border-border bg-card p-4 space-y-3 shadow-xs hover:border-primary/40 transition-colors"
+                    >
+                      {/* Question Top Bar */}
+                      <div className="flex items-center justify-between gap-2 border-b border-border/60 pb-2.5">
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary text-white text-xs font-black">
+                            {qIdx + 1}
+                          </span>
+                          <span
+                            className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
+                              isEnglish
+                                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+                                : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                            }`}
+                          >
+                            {isEnglish ? "EN (LTR)" : "عربي (RTL)"}
+                          </span>
+                          <span className="text-[11px] text-muted-foreground font-bold">
+                            {q.points || 1} {q.points === 1 ? "درجة" : "درجات"}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditingQuizQuestionIdx(isEditingThis ? null : qIdx)}
+                            className="h-7 text-[11px] font-bold gap-1 text-slate-500 hover:text-primary"
+                          >
+                            <Edit className="h-3.5 w-3.5" />
+                            <span>{isEditingThis ? "إغلاق التعديل" : "تعديل السؤال"}</span>
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const nextQuestions = reviewingQuiz.questions.filter((_: any, i: number) => i !== qIdx);
+                              setReviewingQuiz({ ...reviewingQuiz, questions: nextQuestions });
+                            }}
+                            className="h-7 text-[11px] font-bold gap-1 text-slate-400 hover:text-rose-600"
+                            title="حذف هذا السؤال من الاختبار"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Inline Editor or Display */}
+                      {isEditingThis ? (
+                        <div className="space-y-3 pt-1 bg-muted/20 p-3 rounded-xl border border-primary/20">
+                          <div className="space-y-1">
+                            <label className="text-xs font-bold text-foreground">نص السؤال:</label>
+                            <textarea
+                              rows={2}
+                              dir={isEnglish ? "ltr" : "rtl"}
+                              value={q.prompt}
+                              onChange={(e) => {
+                                const nextQuestions = [...reviewingQuiz.questions];
+                                nextQuestions[qIdx] = { ...nextQuestions[qIdx], prompt: e.target.value };
+                                setReviewingQuiz({ ...reviewingQuiz, questions: nextQuestions });
+                              }}
+                              className={`w-full rounded-xl border border-border bg-background p-2.5 text-xs font-bold ${
+                                isEnglish ? "text-left font-sans" : "text-right font-sans"
+                              }`}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-xs font-bold text-foreground">
+                              الاختيارات (اختر الدائرة للإجابة الصحيحة):
+                            </label>
+                            {(q.options || []).map((opt: string, oIdx: number) => {
+                              const letter = getOptionLabel(oIdx, isEnglish);
+                              const isChecked = q.correctIndex === oIdx;
+                              return (
+                                <div key={oIdx} dir={isEnglish ? "ltr" : "rtl"} className="flex items-center gap-2">
+                                  <input
+                                    type="radio"
+                                    name={`review-correct-${qIdx}`}
+                                    checked={isChecked}
+                                    onChange={() => {
+                                      const nextQuestions = [...reviewingQuiz.questions];
+                                      nextQuestions[qIdx] = { ...nextQuestions[qIdx], correctIndex: oIdx };
+                                      setReviewingQuiz({ ...reviewingQuiz, questions: nextQuestions });
+                                    }}
+                                    className="h-4 w-4 accent-emerald-600 cursor-pointer shrink-0"
+                                  />
+                                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted text-[11px] font-black shrink-0">
+                                    {letter}
+                                  </span>
+                                  <input
+                                    type="text"
+                                    dir={isEnglish ? "ltr" : "rtl"}
+                                    value={opt}
+                                    onChange={(e) => {
+                                      const nextQuestions = [...reviewingQuiz.questions];
+                                      const nextOpts = [...nextQuestions[qIdx].options];
+                                      nextOpts[oIdx] = e.target.value;
+                                      nextQuestions[qIdx] = { ...nextQuestions[qIdx], options: nextOpts };
+                                      setReviewingQuiz({ ...reviewingQuiz, questions: nextQuestions });
+                                    }}
+                                    className={`flex-1 h-8 px-3 rounded-xl border text-xs font-bold bg-background ${
+                                      isChecked ? "border-emerald-500/50 bg-emerald-500/5" : "border-border"
+                                    } ${isEnglish ? "text-left font-sans" : "text-right font-sans"}`}
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3 pt-1">
+                            <div className="space-y-1">
+                              <label className="text-xs font-bold text-muted-foreground">الدرجة:</label>
+                              <input
+                                type="number"
+                                min={1}
+                                max={10}
+                                value={q.points || 1}
+                                onChange={(e) => {
+                                  const nextQuestions = [...reviewingQuiz.questions];
+                                  nextQuestions[qIdx] = { ...nextQuestions[qIdx], points: Number(e.target.value) };
+                                  setReviewingQuiz({ ...reviewingQuiz, questions: nextQuestions });
+                                }}
+                                className="w-full h-8 px-2 rounded-lg border border-border bg-background text-xs font-bold text-center"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-xs font-bold text-muted-foreground">التفسير:</label>
+                              <input
+                                type="text"
+                                dir={isEnglish ? "ltr" : "rtl"}
+                                value={q.explanation || ""}
+                                onChange={(e) => {
+                                  const nextQuestions = [...reviewingQuiz.questions];
+                                  nextQuestions[qIdx] = { ...nextQuestions[qIdx], explanation: e.target.value };
+                                  setReviewingQuiz({ ...reviewingQuiz, questions: nextQuestions });
+                                }}
+                                placeholder="خطوات الإجابة النموذجية..."
+                                className={`w-full h-8 px-2 rounded-lg border border-border bg-background text-xs ${
+                                  isEnglish ? "text-left font-sans" : "text-right font-sans"
+                                }`}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end pt-1">
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => setEditingQuizQuestionIdx(null)}
+                              className="h-7 text-xs bg-primary text-white font-bold"
+                            >
+                              تم تعديل السؤال ✓
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p
+                            dir={isEnglish ? "ltr" : "rtl"}
+                            className={`text-xs font-bold text-foreground leading-relaxed whitespace-pre-line ${
+                              isEnglish ? "text-left font-sans" : "text-right font-sans"
+                            }`}
+                          >
+                            {q.prompt}
+                          </p>
+
+                          {q.imageUrl && (
+                            <div className="max-w-xs rounded-xl overflow-hidden border border-border">
+                              <img src={q.imageUrl} alt="صورة السؤال" className="h-32 w-full object-cover" />
+                            </div>
+                          )}
+
+                          {/* Choices */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1" dir={isEnglish ? "ltr" : "rtl"}>
+                            {(q.options || []).map((opt: string, oIdx: number) => {
+                              const isCorrect = oIdx === q.correctIndex;
+                              const letter = getOptionLabel(oIdx, isEnglish);
+                              return (
+                                <div
+                                  key={oIdx}
+                                  dir={isEnglish ? "ltr" : "rtl"}
+                                  className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-2 border ${
+                                    isCorrect
+                                      ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-800 dark:text-emerald-300 font-bold"
+                                      : "bg-muted/40 border-border text-foreground"
+                                  }`}
+                                >
+                                  <span
+                                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-black ${
+                                      isCorrect ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground"
+                                    }`}
+                                  >
+                                    {letter}
+                                  </span>
+                                  <span className={`truncate flex-1 ${isEnglish ? "text-left font-sans font-medium" : "text-right font-medium"}`}>
+                                    {opt}
+                                  </span>
+                                  {isCorrect && (
+                                    <Check className={`h-3.5 w-3.5 text-emerald-600 shrink-0 ${isEnglish ? "ml-auto" : "mr-auto"}`} />
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* Explanation */}
+                          {q.explanation && (
+                            <div
+                              dir={isEnglish ? "ltr" : "rtl"}
+                              className={`p-2.5 rounded-xl bg-primary/5 border border-primary/15 text-[11px] text-primary space-y-0.5 ${
+                                isEnglish ? "text-left font-sans" : "text-right font-sans"
+                              }`}
+                            >
+                              <span className="font-bold block">
+                                {isEnglish ? "Explanation / Steps:" : "التفسير / خطوات الإجابة:"}
+                              </span>
+                              <p className="text-foreground">{q.explanation}</p>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="shrink-0 flex items-center justify-between p-4 border-t border-border bg-muted/20">
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  disabled={isSavingQuizQuestions}
+                  onClick={handleSaveReviewedQuizQuestions}
+                  className="h-10 px-5 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-xs cursor-pointer shadow-sm"
+                >
+                  {isSavingQuizQuestions ? "جارٍ حفظ التعديلات..." : "حفظ التعديلات على الاختبار 💾"}
+                </Button>
+
+                {!reviewingQuiz.isPublished && (
+                  <Button
+                    type="button"
+                    onClick={async () => {
+                      await handleSaveReviewedQuizQuestions();
+                      await handlePublishQuiz(reviewingQuiz.id, true);
+                    }}
+                    className="h-10 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs cursor-pointer shadow-sm"
+                  >
+                    حفظ ونشر للطلاب الآن 🚀
+                  </Button>
+                )}
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setReviewingQuiz(null)}
+                className="h-10 px-4 rounded-xl text-xs font-bold cursor-pointer"
+              >
+                إلغاء وإغلاق
+              </Button>
+            </div>
           </div>
         </div>
       )}

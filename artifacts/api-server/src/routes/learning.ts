@@ -391,6 +391,16 @@ setInterval(() => {
   void processSubscriptionExpirations();
 }, 30 * 60 * 1000);
 
+export function normalizeQuestionPrompt(p?: string | null): string {
+  if (!p) return "";
+  return p
+    .trim()
+    .toLowerCase()
+    .replace(/[\s\r\n\t]+/g, " ")
+    .replace(/[؟?.,!،:;ـ_—\-\(\)\[\]\{\}«»"']/g, "")
+    .replace(/[^\p{L}\p{N}\s]/gu, "");
+}
+
 function validateQuestions(value: unknown): QuizQuestion[] | null {
   if (!Array.isArray(value) || value.length === 0) return null;
   const questions = value as QuizQuestion[];
@@ -407,7 +417,18 @@ function validateQuestions(value: unknown): QuizQuestion[] | null {
       q.correctIndex >= 0 &&
       q.correctIndex < q.options.length,
   );
-  return valid ? questions : null;
+  if (!valid) return null;
+
+  // Deduplicate questions by prompt so students never see duplicate questions
+  const seen = new Set<string>();
+  const deduplicated: QuizQuestion[] = [];
+  for (const q of questions) {
+    const key = normalizeQuestionPrompt(q.prompt);
+    if (key && seen.has(key)) continue;
+    if (key) seen.add(key);
+    deduplicated.push(q);
+  }
+  return deduplicated.length > 0 ? deduplicated : null;
 }
 
 const optionLabels: Record<string, number> = {
@@ -983,7 +1004,21 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
 
   questionCounter += 1;
   finishCurrent(questionCounter);
-  return { questions, warnings };
+
+  // Deduplicate questions by prompt to prevent repeated questions
+  const seenParsed = new Set<string>();
+  const deduplicatedQuestions: QuizQuestion[] = [];
+  for (const q of questions) {
+    const key = normalizeQuestionPrompt(q.prompt);
+    if (key && seenParsed.has(key)) {
+      warnings.push(`تم استبعاد سؤال مكرر تلقائيًا: «${q.prompt.slice(0, 45)}...»`);
+      continue;
+    }
+    if (key) seenParsed.add(key);
+    deduplicatedQuestions.push(q);
+  }
+
+  return { questions: deduplicatedQuestions, warnings };
 }
 
 
@@ -4613,17 +4648,51 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
 
     const availableQuestions = await (conditions.length ? query.where(and(...conditions)) : query);
 
-    if (availableQuestions.length === 0) {
+    // 1. Guarantee zero duplicate prompts or IDs right from the question pool
+    const seenBankPrompts = new Set<string>();
+    const seenBankIds = new Set<number>();
+    const uniqueAvailable: typeof availableQuestions = [];
+
+    for (const q of availableQuestions) {
+      if (seenBankIds.has(q.id)) continue;
+      seenBankIds.add(q.id);
+
+      const pKey = normalizeQuestionPrompt(q.question?.prompt);
+      if (pKey) {
+        if (seenBankPrompts.has(pKey)) continue;
+        seenBankPrompts.add(pKey);
+      }
+      uniqueAvailable.push(q);
+    }
+
+    if (uniqueAvailable.length === 0) {
       return res.status(404).json({ error: "لا توجد أسئلة متوفرة في بنك الأسئلة لهذا النطاق (المرحلة/الوحدة/الدروس المختارة)" });
     }
 
-    let selectedRows: typeof availableQuestions = [];
-    let targetCount = qCount;
+    let selectedRows: typeof uniqueAvailable = [];
+    let targetCount = Math.min(qCount, uniqueAvailable.length);
+
+    const pickedSet = new Set<number>();
+    const pickedPrompts = new Set<string>();
+
+    const canPick = (item: (typeof uniqueAvailable)[0]) => {
+      if (pickedSet.has(item.id)) return false;
+      const pKey = normalizeQuestionPrompt(item.question?.prompt);
+      if (pKey && pickedPrompts.has(pKey)) return false;
+      return true;
+    };
+
+    const pickQuestion = (item: (typeof uniqueAvailable)[0]) => {
+      pickedSet.add(item.id);
+      const pKey = normalizeQuestionPrompt(item.question?.prompt);
+      if (pKey) pickedPrompts.add(pKey);
+      selectedRows.push(item);
+    };
 
     if (isMultiLesson) {
       // Fair balanced sampling across selected lessons to avoid student confusion or bias
-      const byLesson = new Map<string, typeof availableQuestions>();
-      for (const q of availableQuestions) {
+      const byLesson = new Map<string, typeof uniqueAvailable>();
+      for (const q of uniqueAvailable) {
         const lKey = q.lesson || "عام";
         if (!byLesson.has(lKey)) byLesson.set(lKey, []);
         byLesson.get(lKey)!.push(q);
@@ -4638,28 +4707,26 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
       const effectiveLessons = activeLessons.length > 0 ? activeLessons : Array.from(byLesson.keys());
 
       const quotaPerLesson = Math.max(1, Math.ceil(targetCount / effectiveLessons.length));
-      const pickedSet = new Set<number>();
 
       for (const lName of effectiveLessons) {
         const list = byLesson.get(lName) || [];
-        const slice = list.slice(0, quotaPerLesson);
-        for (const item of slice) {
-          if (pickedSet.size < targetCount) {
-            pickedSet.add(item.id);
-            selectedRows.push(item);
+        let pickedFromLesson = 0;
+        for (const item of list) {
+          if (selectedRows.length < targetCount && pickedFromLesson < quotaPerLesson && canPick(item)) {
+            pickQuestion(item);
+            pickedFromLesson++;
           }
         }
       }
 
       // Fill remainder if lessons have fewer questions than quota
       if (selectedRows.length < targetCount) {
-        const remaining = availableQuestions
-          .filter((q) => !pickedSet.has(q.id))
+        const remaining = uniqueAvailable
+          .filter(canPick)
           .sort(() => Math.random() - 0.5);
         for (const item of remaining) {
           if (selectedRows.length < targetCount) {
-            pickedSet.add(item.id);
-            selectedRows.push(item);
+            pickQuestion(item);
           }
         }
       }
@@ -4674,41 +4741,62 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
       const hardCount = Math.max(0, Number(difficultyDistribution.hard) || 0);
       const sum = easyCount + medCount + hardCount;
       if (sum > 0) {
-        targetCount = sum;
+        targetCount = Math.min(sum, uniqueAvailable.length);
       }
 
-      const easyPool = availableQuestions.filter((q) => q.difficulty === "easy").sort(() => Math.random() - 0.5);
-      const medPool = availableQuestions.filter((q) => q.difficulty === "medium").sort(() => Math.random() - 0.5);
-      const hardPool = availableQuestions.filter((q) => q.difficulty === "hard").sort(() => Math.random() - 0.5);
+      const easyPool = uniqueAvailable.filter((q) => q.difficulty === "easy").sort(() => Math.random() - 0.5);
+      const medPool = uniqueAvailable.filter((q) => q.difficulty === "medium").sort(() => Math.random() - 0.5);
+      const hardPool = uniqueAvailable.filter((q) => q.difficulty === "hard").sort(() => Math.random() - 0.5);
 
-      const pickedEasy = easyPool.slice(0, easyCount);
-      const pickedMed = medPool.slice(0, medCount);
-      const pickedHard = hardPool.slice(0, hardCount);
-
-      selectedRows = [...pickedEasy, ...pickedMed, ...pickedHard];
+      for (const item of easyPool) {
+        if (selectedRows.filter((r) => r.difficulty === "easy").length >= easyCount) break;
+        if (canPick(item)) pickQuestion(item);
+      }
+      for (const item of medPool) {
+        if (selectedRows.filter((r) => r.difficulty === "medium").length >= medCount) break;
+        if (canPick(item)) pickQuestion(item);
+      }
+      for (const item of hardPool) {
+        if (selectedRows.filter((r) => r.difficulty === "hard").length >= hardCount) break;
+        if (canPick(item)) pickQuestion(item);
+      }
 
       if (selectedRows.length < targetCount) {
-        const selectedIds = new Set(selectedRows.map((r) => r.id));
-        const remaining = availableQuestions.filter((r) => !selectedIds.has(r.id)).sort(() => Math.random() - 0.5);
-        selectedRows.push(...remaining.slice(0, targetCount - selectedRows.length));
+        const remaining = uniqueAvailable.filter(canPick).sort(() => Math.random() - 0.5);
+        for (const item of remaining) {
+          if (selectedRows.length < targetCount) {
+            pickQuestion(item);
+          }
+        }
       }
     } else {
-      const shuffled = [...availableQuestions].sort(() => Math.random() - 0.5);
-      selectedRows = shuffled.slice(0, targetCount);
+      const shuffled = [...uniqueAvailable].sort(() => Math.random() - 0.5);
+      for (const item of shuffled) {
+        if (selectedRows.length < targetCount && canPick(item)) {
+          pickQuestion(item);
+        }
+      }
     }
 
     if (selectedRows.length === 0) {
       return res.status(404).json({ error: "تعذر اختيار أسئلة للاختبار" });
     }
 
-    const finalQuestions: QuizQuestion[] = selectedRows.map((r) => ({
-      prompt: r.question.prompt,
-      options: r.question.options,
-      correctIndex: r.question.correctIndex,
-      explanation: r.question.explanation,
-      imageUrl: r.question.imageUrl,
-      points: r.points || r.question.points || 1,
-    }));
+    const finalQuestions: QuizQuestion[] = [];
+    const finalPrompts = new Set<string>();
+    for (const r of selectedRows) {
+      const pKey = normalizeQuestionPrompt(r.question.prompt);
+      if (pKey && finalPrompts.has(pKey)) continue;
+      if (pKey) finalPrompts.add(pKey);
+      finalQuestions.push({
+        prompt: r.question.prompt,
+        options: r.question.options,
+        correctIndex: r.question.correctIndex,
+        explanation: r.question.explanation,
+        imageUrl: r.question.imageUrl,
+        points: r.points || r.question.points || 1,
+      });
+    }
 
     let quizCategory = stage || "عام";
     let isLessonScope = !isMultiLesson && scope === "lesson" && Boolean(resolvedVideoId);

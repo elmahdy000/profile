@@ -30,6 +30,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ACADEMIC_TRACKS, getStagesForTrack, getTrack } from "@/data/academic";
+import { isEnglishQuestion, getOptionLabel } from "./admin/learning/TestBankTab";
 
 export type Question = {
   prompt: string;
@@ -120,6 +121,7 @@ export function ExamWizard({
   const [isImportingQuestions, setIsImportingQuestions] = useState(false);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
   const quizImportInputRef = useRef<HTMLInputElement>(null);
+  const [previewQuiz, setPreviewQuiz] = useState<QuizItem | null>(null);
 
   // Unlimited toggles state
   const isTimeUnlimited = !quizForm.durationMinutes || quizForm.durationMinutes === "0";
@@ -1196,7 +1198,16 @@ export function ExamWizard({
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 border-t border-slate-200/60 pt-3">
+              <div className="flex items-center gap-1.5 border-t border-slate-200/60 pt-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPreviewQuiz(q)}
+                  className="h-8 text-xs font-bold text-violet-600 hover:text-violet-700 hover:bg-violet-50"
+                  title="معاينة أسئلة الاختبار"
+                >
+                  <Eye className="h-3.5 w-3.5" /> معاينة
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -1220,6 +1231,153 @@ export function ExamWizard({
           ))}
         </div>
       </div>
+
+      {/* QUICK PREVIEW QUIZ MODAL */}
+      {previewQuiz && (
+        <div
+          className="fixed inset-0 z-[140] flex items-center justify-center bg-black/80 backdrop-blur-xs p-3 sm:p-5"
+          onClick={(e) => e.target === e.currentTarget && setPreviewQuiz(null)}
+        >
+          <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-200 text-right max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95">
+            <div className="shrink-0 flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-100 text-violet-600">
+                  <Eye className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-black text-slate-900">{previewQuiz.title}</h3>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${previewQuiz.isPublished ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-700"}`}>
+                      {previewQuiz.isPublished ? "منشور للطلاب 🟢" : "مسودة غير منشورة 🔒"}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    {previewQuiz.questions?.length || 0} أسئلة · درجة النجاح {previewQuiz.passingScore}% · {previewQuiz.durationMinutes ? `${previewQuiz.durationMinutes} دقيقة` : "بدون وقت"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    await toggleQuiz(previewQuiz);
+                    setPreviewQuiz({ ...previewQuiz, isPublished: !previewQuiz.isPublished });
+                  }}
+                  className="h-8 text-xs font-bold"
+                >
+                  {previewQuiz.isPublished ? "تحويل لمسودة 🔒" : "نشر للطلاب الآن 🚀"}
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewQuiz(null)}
+                  className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Questions List */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              {(previewQuiz.questions || []).map((q, qIdx) => {
+                const isEnglish = isEnglishQuestion(q.prompt, q.options);
+                return (
+                  <div key={qIdx} className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 space-y-3">
+                    <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-md bg-primary text-white text-[10px] font-black">
+                          {qIdx + 1}
+                        </span>
+                        <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
+                          isEnglish ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700"
+                        }`}>
+                          {isEnglish ? "EN (LTR)" : "عربي (RTL)"}
+                        </span>
+                        <span className="text-[11px] text-slate-500 font-bold">
+                          {q.points || 1} درجة
+                        </span>
+                      </div>
+                    </div>
+
+                    <p
+                      dir={isEnglish ? "ltr" : "rtl"}
+                      className={`text-xs font-bold text-slate-900 leading-relaxed whitespace-pre-line ${
+                        isEnglish ? "text-left font-sans" : "text-right font-sans"
+                      }`}
+                    >
+                      {q.prompt}
+                    </p>
+
+                    {q.imageUrl && (
+                      <div className="max-w-xs rounded-xl overflow-hidden border border-slate-200">
+                        <img src={q.imageUrl} alt="صورة السؤال" className="h-32 w-full object-cover" />
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1" dir={isEnglish ? "ltr" : "rtl"}>
+                      {(q.options || []).map((opt, oIdx) => {
+                        const isCorrect = oIdx === q.correctIndex;
+                        const letter = getOptionLabel(oIdx, isEnglish);
+                        return (
+                          <div
+                            key={oIdx}
+                            dir={isEnglish ? "ltr" : "rtl"}
+                            className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-2 border ${
+                              isCorrect
+                                ? "bg-emerald-50 border-emerald-300 text-emerald-900 font-bold"
+                                : "bg-white border-slate-200 text-slate-800"
+                            }`}
+                          >
+                            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-black ${
+                              isCorrect ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-600"
+                            }`}>
+                              {letter}
+                            </span>
+                            <span className={`truncate flex-1 ${isEnglish ? "text-left font-sans" : "text-right"}`}>
+                              {opt}
+                            </span>
+                            {isCorrect && (
+                              <Check className={`h-3.5 w-3.5 text-emerald-600 shrink-0 ${isEnglish ? "ml-auto" : "mr-auto"}`} />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {q.explanation && (
+                      <div dir={isEnglish ? "ltr" : "rtl"} className={`p-2.5 rounded-xl bg-blue-50 border border-blue-100 text-[11px] text-blue-900 ${isEnglish ? "text-left font-sans" : "text-right font-sans"}`}>
+                        <span className="font-bold block">{isEnglish ? "Explanation / Steps:" : "التفسير:"}</span>
+                        <p className="text-slate-700">{q.explanation}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="shrink-0 flex items-center justify-between p-4 border-t border-slate-100 bg-slate-50/50">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  editQuiz(previewQuiz);
+                  setPreviewQuiz(null);
+                  setCurrentStep(1);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="text-xs font-bold gap-1.5"
+              >
+                <Edit2 className="h-3.5 w-3.5" /> فتح الاختبار في المحرر الكامل
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setPreviewQuiz(null)} className="text-xs font-bold">
+                إغلاق
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
