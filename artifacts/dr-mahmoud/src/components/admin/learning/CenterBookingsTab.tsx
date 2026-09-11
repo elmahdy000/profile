@@ -1024,6 +1024,11 @@ export function CenterBookingsTab({
           onSetMaxDevices={onSetMaxDevices}
           onDeleteStudent={onDeleteStudent}
           onUpdateStudentCourses={onUpdateStudentCourses}
+          onStudentUpdated={(updatedStudent) => {
+            setLocalStudents((prev) =>
+              prev.map((s) => (s.id === updatedStudent.id ? { ...s, ...updatedStudent } : s))
+            );
+          }}
         />
       )}
       {/* Printable Batch Cards Modal */}

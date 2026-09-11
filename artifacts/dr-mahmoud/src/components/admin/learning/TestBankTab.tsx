@@ -437,7 +437,7 @@ export function TestBankTab({
       if ((res.questions || []).length === 0) {
         if (res.extractedText && res.extractedText.trim()) {
           setRawText(res.extractedText);
-          setUploadMode("from_text");
+          setUploadFile(null);
           toast({
             title: "تم استخراج النص من الملف بنجاح",
             description: "لم نتمكن من تحديد بنية الأسئلة آلياً. تم وضع النص المستخرج في محرر 'نص مباشر' لتعديل تنسيقه وفحصه بسهولة.",
@@ -466,7 +466,7 @@ export function TestBankTab({
   };
 
   // Final Commit of Uploaded Questions to Bank
-  const handleSaveImportedQuestions = async () => {
+  const handleConfirmImport = async () => {
     if (previewQuestions.length === 0) {
       toast({ variant: "destructive", description: "لا توجد أسئلة جاهزة للحفظ" });
       return;

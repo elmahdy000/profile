@@ -147,6 +147,7 @@ interface StudentDrawerProps {
   onUpdateStudentCourses?: (student: ExtendedStudent, courseIds: number[]) => void;
   onApproveReceipt?: (receiptId: number) => void;
   onSendNotificationToStudent?: (student: ExtendedStudent) => void;
+  onStudentUpdated?: (student: ExtendedStudent) => void;
 }
 
 export function StudentDrawer({
@@ -165,6 +166,7 @@ export function StudentDrawer({
   onUpdateStudentCourses,
   onApproveReceipt,
   onSendNotificationToStudent,
+  onStudentUpdated,
 }: StudentDrawerProps) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"overview" | "payments" | "summaries" | "courses" | "attendance" | "quizzes" | "files" | "security">("overview");
@@ -373,7 +375,9 @@ export function StudentDrawer({
       }
 
       const updated = await res.json();
-      setLocalStudent((prev) => (prev ? { ...prev, ...updated, centerConfirmed: true } : updated));
+      const updatedStudent = { ...currentStudent, ...updated, centerConfirmed: true };
+      setLocalStudent(updatedStudent);
+      onStudentUpdated?.(updatedStudent);
       toast({
         title: "تم تحديث بيانات السنتر بنجاح 📍",
         description: `تم ربط الطالب وتأكيد سنتره بـ ${editFormData.centerName || "السنتر المختار"}`,

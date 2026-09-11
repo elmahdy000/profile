@@ -1309,6 +1309,7 @@ export function StudentsTab({
         onDeleteStudent={onDeleteStudent}
         onUpdateStudentCourses={onUpdateStudentCourses}
         onApproveReceipt={onApproveReceipt}
+        onStudentUpdated={(updatedStudent) => setActiveDrawerStudent(updatedStudent)}
       />
     </div>
   );
