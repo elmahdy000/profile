@@ -435,12 +435,24 @@ export function TestBankTab({
       setPreviewQuestions(res.questions || []);
       setPreviewWarnings(res.warnings || []);
       if ((res.questions || []).length === 0) {
-        toast({
-          variant: "destructive",
-          title: "لم يتم التعرف على أسئلة",
-          description: "تأكد من تنسيق الملف أو كتابة كل سؤال بخياراته وإجابته الصريحة.",
-        });
+        if (res.extractedText && res.extractedText.trim()) {
+          setRawText(res.extractedText);
+          setUploadMode("from_text");
+          toast({
+            title: "تم استخراج النص من الملف بنجاح",
+            description: "لم نتمكن من تحديد بنية الأسئلة آلياً. تم وضع النص المستخرج في محرر 'نص مباشر' لتعديل تنسيقه وفحصه بسهولة.",
+          });
+        } else {
+          toast({
+            variant: "destructive",
+            title: "لم يتم التعرف على أسئلة",
+            description: res.warnings?.[0] || "تأكد من تنسيق الملف أو كتابة كل سؤال بخياراته وإجابته الصريحة.",
+          });
+        }
       } else {
+        if (res.extractedText && !rawText) {
+          setRawText(res.extractedText);
+        }
         toast({
           title: `تم التعرف على ${res.questions.length} سؤالاً بنجاح!`,
           description: "راجع الأسئلة أدناه ثم اضغط 'حفظ في البنك'.",

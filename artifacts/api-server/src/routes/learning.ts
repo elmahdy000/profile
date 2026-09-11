@@ -3,6 +3,7 @@ import { createHash, randomBytes } from "crypto";
 import { createRequire } from "module";
 import fs from "fs";
 import path from "path";
+import zlib from "zlib";
 import multer from "multer";
 import mammoth from "mammoth";
 import { and, desc, eq, ilike, inArray, isNull, ne, or, sql } from "drizzle-orm";
@@ -427,10 +428,147 @@ const optionLabels: Record<string, number> = {
 };
 
 function optionIndex(value: string): number | null {
-  const normalized = value.trim().toLowerCase().replace(/[.():\-]/g, "");
+  const normalized = value.trim().toLowerCase().replace(/[.():\-\/\[\]]/g, "");
   if (normalized in optionLabels) return optionLabels[normalized];
   const numeric = Number(normalized);
   return Number.isInteger(numeric) && numeric >= 1 && numeric <= 6 ? numeric - 1 : null;
+}
+
+function smartDecodeText(buffer: Buffer): string {
+  if (buffer.length >= 2 && buffer[0] === 0xff && buffer[1] === 0xfe) {
+    return new TextDecoder("utf-16le").decode(buffer);
+  }
+  if (buffer.length >= 2 && buffer[0] === 0xfe && buffer[1] === 0xff) {
+    return new TextDecoder("utf-16be").decode(buffer);
+  }
+  if (buffer.length >= 3 && buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf) {
+    return new TextDecoder("utf-8").decode(buffer.subarray(3));
+  }
+
+  // Check if buffer contains null bytes interleaved (UTF-16LE without BOM)
+  if (buffer.length >= 4 && (buffer[1] === 0x00 || buffer[3] === 0x00)) {
+    try {
+      const u16 = new TextDecoder("utf-16le").decode(buffer);
+      if (/[\u0600-\u06FF\w]/.test(u16)) return u16;
+    } catch {}
+  }
+
+  const utf8 = new TextDecoder("utf-8", { fatal: false }).decode(buffer);
+  const utf8Replacements = (utf8.match(/\uFFFD/g) || []).length;
+
+  try {
+    const win1256 = new TextDecoder("windows-1256").decode(buffer);
+    const winArabic = (win1256.match(/[\u0600-\u06FF]/g) || []).length;
+    const utf8Arabic = (utf8.match(/[\u0600-\u06FF]/g) || []).length;
+    if (winArabic > utf8Arabic && utf8Replacements > 0) {
+      return win1256;
+    }
+  } catch {}
+
+  return utf8;
+}
+
+function extractTextFromDocBinary(buffer: Buffer): string {
+  let u16Runs: string[] = [];
+  try {
+    const u16Str = new TextDecoder("utf-16le", { fatal: false }).decode(buffer);
+    const matches = u16Str.match(/[\u0600-\u06FF\w\s.,;:()\-–—?!"'«»\n\r\t]{4,}/g);
+    if (matches && matches.length > 0) u16Runs = matches;
+  } catch {}
+
+  let winRuns: string[] = [];
+  try {
+    const winStr = new TextDecoder("windows-1256", { fatal: false }).decode(buffer);
+    const matches = winStr.match(/[\u0600-\u06FF\w\s.,;:()\-–—?!"'«»\n\r\t]{4,}/g);
+    if (matches && matches.length > 0) winRuns = matches;
+  } catch {}
+
+  const u16Text = u16Runs.join("\n");
+  const winText = winRuns.join("\n");
+  const u16Arabic = (u16Text.match(/[\u0600-\u06FF]/g) || []).length;
+  const winArabic = (winText.match(/[\u0600-\u06FF]/g) || []).length;
+
+  return u16Arabic >= winArabic ? u16Text : winText;
+}
+
+function extractFromZip(buffer: Buffer, targetName: string): string | null {
+  let offset = 0;
+  while (offset < buffer.length - 30) {
+    if (buffer.readUInt32LE(offset) === 0x04034b50) {
+      const compression = buffer.readUInt16LE(offset + 8);
+      const compSize = buffer.readUInt32LE(offset + 18);
+      const nameLen = buffer.readUInt16LE(offset + 26);
+      const extraLen = buffer.readUInt16LE(offset + 28);
+      const name = buffer.toString("utf8", offset + 30, offset + 30 + nameLen);
+      const dataStart = offset + 30 + nameLen + extraLen;
+      if (name === targetName || name.endsWith("/" + targetName)) {
+        const compData = buffer.subarray(dataStart, dataStart + compSize);
+        if (compression === 8) {
+          return zlib.inflateRawSync(compData).toString("utf8");
+        } else if (compression === 0) {
+          return compData.toString("utf8");
+        }
+      }
+      offset = dataStart + compSize;
+    } else {
+      offset++;
+    }
+  }
+  return null;
+}
+
+function extractTextFromDocxXml(xml: string): string {
+  return xml
+    .replace(/<w:p[ >]/g, "\n")
+    .replace(/<w:tab\s*\/?>/g, "\t")
+    .replace(/<w:br\s*\/?>/g, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'");
+}
+
+async function extractTextFromUpload(buffer: Buffer, originalname: string): Promise<string> {
+  const extension = path.extname(originalname).toLowerCase();
+  let text = "";
+
+  if (extension === ".pdf") {
+    try {
+      const parsed = await pdfParse(buffer);
+      text = parsed.text || "";
+    } catch {
+      text = smartDecodeText(buffer);
+    }
+  } else if (extension === ".docx") {
+    try {
+      text = (await mammoth.extractRawText({ buffer })).value || "";
+    } catch {}
+
+    if (!text.trim()) {
+      try {
+        const xml = extractFromZip(buffer, "word/document.xml");
+        if (xml) text = extractTextFromDocxXml(xml);
+      } catch {}
+    }
+  } else if (extension === ".doc") {
+    try {
+      text = (await mammoth.extractRawText({ buffer })).value || "";
+    } catch {}
+
+    if (!text.trim()) {
+      text = extractTextFromDocBinary(buffer);
+    }
+  } else {
+    text = smartDecodeText(buffer);
+  }
+
+  if (!text.trim()) {
+    text = smartDecodeText(buffer);
+  }
+
+  return text;
 }
 
 function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; warnings: string[] } {
@@ -443,11 +581,69 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
     .replace(/\r/g, "\n")
     .replace(/[\u2028\u2029]/g, "\n");
 
-  // 2. Preprocess inline text & Word table cell merges (force newlines before headers/choices/answers/explanations if missing)
+  // Check for Table rows (lines with \t that have 3+ cells)
+  const rawLines = cleanedText.split("\n");
+  const isEntireTable = rawLines.filter((l) => l.trim()).length > 0 && rawLines.filter((l) => l.trim()).every((l) => l.split("\t").length >= 3);
+  if (isEntireTable) {
+    const tableQuestions: QuizQuestion[] = [];
+    for (const l of rawLines) {
+      const cells = l.split("\t").map((c) => c.trim()).filter(Boolean);
+      if (cells.length >= 3) {
+        const prompt = cells[0];
+        let options: string[] = [];
+        let correctIndex = 0;
+        const lastCell = cells[cells.length - 1];
+        const lastIdx = optionIndex(lastCell);
+        if (lastIdx !== null && lastIdx < cells.length - 2) {
+          options = cells.slice(1, -1);
+          correctIndex = lastIdx;
+        } else {
+          const matchIdx = cells.slice(1, -1).findIndex((c) => c.toLowerCase() === lastCell.toLowerCase());
+          if (matchIdx >= 0) {
+            options = cells.slice(1, -1);
+            correctIndex = matchIdx;
+          } else {
+            options = cells.slice(1);
+          }
+        }
+        if (options.length >= 2) {
+          tableQuestions.push({
+            prompt,
+            options,
+            correctIndex,
+          });
+        }
+      }
+    }
+    if (tableQuestions.length > 0) {
+      return { questions: tableQuestions, warnings: [] };
+    }
+  }
+
+  // 2. Extract Answer Key section at the bottom if present (e.g. نموذج الإجابة: 1- أ 2- ج)
+  const answerKeyMap = new Map<number, number>();
+  const answerKeySectionMatch = cleanedText.match(/(?:نموذج\s+الإجاب[ةات]|نموذج\s+الاجاب[ةات]|مفتاح\s+الحل|الإجابات\s+النموذجية|Answer\s*Key)[\s\S]*$/i);
+  if (answerKeySectionMatch) {
+    const keyBlock = answerKeySectionMatch[0];
+    cleanedText = cleanedText.replace(keyBlock, "");
+    const keyLines = keyBlock.split(/[\n,;]+/);
+    for (const kl of keyLines) {
+      const pairMatch = kl.match(/(\d+)[\s\.\:\-\)\/]+\s*([أابجدهإآA-Da-d1-6])/);
+      if (pairMatch) {
+        const qNum = parseInt(pairMatch[1], 10);
+        const ansIdx = optionIndex(pairMatch[2]);
+        if (ansIdx !== null) {
+          answerKeyMap.set(qNum, ansIdx);
+        }
+      }
+    }
+  }
+
+  // Preprocess inline text & Word table cell merges
   cleanedText = cleanedText.replace(/(الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|الجواب|الحل|الاختيار\s+الصحيح)\s*[:：\-]?\s*([أابجدهإآA-Da-d1-6])(التوضيح|التفسير|الشرح|تفسير|شرح|explanation|note)\s*[:：\-]?/gi, "$1: $2\n$3: ");
-  // Split inline choices e.g. "أ) باريس  ب) لندن" or "A. Paris  B. London" or "(1) القاهرة (2) الجيزة"
-  cleanedText = cleanedText.replace(/([^\n])\s+((?:[\*\•\-\[\(]|\[x\]|\[✓\]|\(✓\))?\s*(?:[A-Fa-fأابجدهإآ]|هـ|[1-6])\s*[\)\.\:\-\]]\s+)/g, "$1\n$2");
-  cleanedText = cleanedText.replace(/([^\n])\s*((?:ال)?س(?:ؤال)?(?:\s*رقم)?\s*[:：\-]?\s*\(?\d+\)?|Question\s*[:：\-]?\s*\d+|#\d+)/gi, "$1\n$2");
+  // Split inline choices e.g. "أ) باريس  ب) لندن" or "A. Paris  B. London" or "(1) القاهرة (2) الجيزة" or "أ/ باريس ب/ لندن"
+  cleanedText = cleanedText.replace(/([^\n])\s+((?:[\*\•\-\[\(]|\[x\]|\[✓\]|\(✓\))?\s*(?:[A-Fa-fأابجدهإآ]|هـ|[1-6])\s*[\)\.\:\-\]\/]\s+)/g, "$1\n$2");
+  cleanedText = cleanedText.replace(/([^\n])\s*((?:ال)?س(?:ؤال)?(?:\s*رقم)?\s*[:：\-\/]?\s*\(?\d+\)?|Question\s*[:：\-]?\s*\d+|#\d+)/gi, "$1\n$2");
   cleanedText = cleanedText.replace(/([^\n])\s*(الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|الجواب(?:\s+الصحيح)?|جواب|الحل(?:\s+الصحيح)?|حل|الاختيار(?:\s+الصحيح)?|اختيار|correct\s*answer|answer)\s*(?:هو|هي)?\s*[:：\-]?\s*/gi, "$1\nالإجابة الصحيحة: ");
   cleanedText = cleanedText.replace(/([^\n])\s*(التوضيح|التفسير|الشرح|تفسير|شرح|explanation|note)\s*[:：\-]?\s*/gi, "$1\nالتوضيح: ");
 
@@ -469,22 +665,42 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
 
   let current: DraftQuestion | null = null;
 
-  const finishCurrent = () => {
+  const finishCurrent = (qIndex?: number) => {
     if (!current) return;
-    // Strip leading question numbers like "1- ", "1. ", "سؤال :1", "Q1:", "(1)"
     let cleanedPrompt = current.prompt
-      .replace(/^(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-]?\s*\(?\d+\)?\s*[:：\-.]?\s*/i, "")
-      .replace(/^\(?\d+\)?[\s\.\)\-:]+\s*/, "")
+      .replace(/^(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-\/]?\s*\(?\d+\)?\s*[:：\-.\/]?\s*/i, "")
+      .replace(/^(?:السؤال\s+(?:الأول|الاول|الثاني|الثانى|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر))\s*[:：\-.\/]?\s*/i, "")
+      .replace(/^\(?\d+\)?[\s\.\)\-\/:]+\s*/, "")
       .trim();
+
+    // Clean inline answers from prompt end e.g. "ما هي عاصمة فرنسا؟ (أ)" or "[الإجابة: ب]"
+    const inlineAnsMatch = cleanedPrompt.match(/[\(\[]\s*(?:(?:الإجابة|الاجابة|الجواب|الحل|Answer)\s*[:：\-]?\s*)?([أابجدهإآA-Da-d1-6]|صواب|صح|خطأ)\s*[\)\]]\s*$/i);
+    if (inlineAnsMatch) {
+      if (current.correctIndex === null) {
+        const token = inlineAnsMatch[1];
+        if (token === "صواب" || token === "صح") current.correctIndex = 0;
+        else if (token === "خطأ") current.correctIndex = 1;
+        else {
+          const idx = optionIndex(token);
+          if (idx !== null) current.correctIndex = idx;
+        }
+      }
+      cleanedPrompt = cleanedPrompt.replace(/[\(\[]\s*(?:(?:الإجابة|الاجابة|الجواب|الحل|Answer)\s*[:：\-]?\s*)?([أابجدهإآA-Da-d1-6]|صواب|صح|خطأ)\s*[\)\]]\s*$/i, "").trim();
+    }
+
     if (!cleanedPrompt && current.prompt) {
       cleanedPrompt = current.prompt;
     }
-    // Merge English prompt + Arabic translation if both exist
+
     const finalPrompt = current.arabicTranslation
       ? `${cleanedPrompt}\n${current.arabicTranslation}`
       : cleanedPrompt;
+
+    if (current.correctIndex === null && typeof qIndex === "number" && answerKeyMap.has(qIndex)) {
+      current.correctIndex = answerKeyMap.get(qIndex)!;
+    }
+
     if (finalPrompt && current.options.length >= 2) {
-      // Ensure correctIndex is valid integer within bounds
       const validIndex =
         typeof current.correctIndex === "number" &&
         current.correctIndex >= 0 &&
@@ -509,86 +725,108 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
 
   const isArabicLine = (line: string) => /[\u0600-\u06FF]/.test(line);
 
-  // Helper: detect choice lines with support for prefixes like "* أ)", "(أ)", "A.", "1-", etc.
-  const CHOICE_RE = /^\s*(?:(?:[\*\•\-\[\(]|\[x\]|\[✓\]|\(✓\))?\s*([A-Fa-fأابجدهإآ]|هـ|[1-6]|الأول|الاول|الثاني|الثانى|الثالث|الرابع)\s*[\)\.\:\-\]]\s*)(.+)$/i;
+  // CHOICE_RE: Support أ), أ-, أ/, (أ), [أ], A), 1), 1-, 1/, (1), [1], الأول
+  const CHOICE_RE = /^\s*(?:(?:[\*\•\-\[\(]|\[x\]|\[✓\]|\(✓\))?\s*([A-Fa-fأابجدهإآ]|هـ|[1-6]|الأول|الاول|الثاني|الثانى|الثالث|الرابع)\s*[\)\.\:\-\]\/]\s*)(.+)$/i;
 
-  // Helper: detect answer line
+  // ANSWER_RE
   const ANSWER_RE = /^\s*(?:correct\s*answer|answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|الجواب(?:\s+الصحيح)?|جواب|الحل(?:\s+الصحيح)?|حل|الاختيار(?:\s+الصحيح)?|اختيار)\s*(?:هو|هي)?\s*[:：\-]?\s*(.+)$/i;
 
-  // Helper: detect explanation header
+  // EXPLANATION_HEADER_RE
   const EXPLANATION_HEADER_RE = /^\s*(?::?\s*(?:explanation|note|التوضيح|التفسير|الشرح|تفسير|شرح|ملاحظة)\s*:?\s*)(.*)$/i;
 
-  // Helper: detect question header e.g. "Question 1", "1.", "سؤال 1"
-  const QUESTION_HEADER_RE = /^\s*(?:(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-]?\s*\(?\d+\)?|\(?\d+\)?|#\d+)(?:\s*[:：\-\.\)]\s*(.*))?$/i;
+  // EXPLICIT_QUESTION_RE: "سؤال 1", "س1:", "س1 /", "السؤال الأول", "Q1:"
+  const EXPLICIT_QUESTION_RE = /^\s*(?:(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-\/]?\s*\(?\d+\)?|السؤال\s+(?:الأول|الاول|الثاني|الثانى|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر)|#\d+)(?:\s*[:：\-\.\)\/]\s*(.*))?$/i;
 
-  const isNextLineChoice = (idx: number) => {
-    return idx + 1 < lines.length && Boolean(lines[idx + 1].match(CHOICE_RE));
-  };
+  // Generic Numbered line: "1- ...", "1. ...", "(1) ..."
+  const NUMBERED_LINE_RE = /^\s*\(?(\d+)\)?[\s\.\:\-\)\/]+\s*(.*)$/;
 
   let collectingExplanation = false;
   let hasFoundAnswer = false;
+  let questionCounter = 0;
 
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
 
-    // 1. Standalone Question Header ("Question 1" or "سؤال 1:" or "1. ...")
-    const questionHeaderMatch = line.match(QUESTION_HEADER_RE);
-    if (questionHeaderMatch && !line.match(/^\s*[A-Fa-fأابجدهإآ]\s*[.):\-]/)) {
-      const inlinePrompt = questionHeaderMatch[1]?.trim();
-      finishCurrent();
+    // 1. Explicit Question Header (e.g. "سؤال 1:", "س1 /", "السؤال الأول:", "Q1:")
+    const explicitQMatch = line.match(EXPLICIT_QUESTION_RE);
+    if (explicitQMatch) {
+      questionCounter += 1;
+      finishCurrent(questionCounter);
       collectingExplanation = false;
       hasFoundAnswer = false;
       current = {
-        prompt: inlinePrompt || "",
+        prompt: explicitQMatch[1]?.trim() || "",
         options: [],
         correctIndex: null,
       };
       continue;
     }
 
-    // 2. If current has an answer or explanation, and this line is NOT a choice,
-    // and next line is a choice, this line is the PROMPT of the next question!
-    if ((hasFoundAnswer || collectingExplanation) && !line.match(CHOICE_RE) && !line.match(ANSWER_RE) && !line.match(EXPLANATION_HEADER_RE) && isNextLineChoice(i)) {
-      finishCurrent();
+    // 1b. Check if line looks like a question
+    const numMatch = line.match(NUMBERED_LINE_RE);
+    const isQuestionLike = /[\؟\?]|\b(?:ما|ماذا|من|أين|اين|متى|كيف|لماذا|علل|فسر|اذكر|قارن|اختر|هل|كم|أي|اي)\b/.test(line);
+    const isNextSequentialChoice = current && numMatch && (parseInt(numMatch[1], 10) === current.options.length + 1) && !isQuestionLike && current.options.length < 6;
+
+    if (numMatch && !isNextSequentialChoice && (!current || current.options.length >= 2 || hasFoundAnswer || isQuestionLike)) {
+      const restOfLine = numMatch[2].trim();
+      questionCounter += 1;
+      finishCurrent(questionCounter);
       collectingExplanation = false;
       hasFoundAnswer = false;
       current = {
-        prompt: line,
+        prompt: restOfLine || line,
         options: [],
         correctIndex: null,
       };
       continue;
     }
 
-    // 3. Explanation Header
-    const explanationHeaderMatch = line.match(EXPLANATION_HEADER_RE);
-    if (explanationHeaderMatch && current) {
-      collectingExplanation = true;
-      const inlineText = explanationHeaderMatch[1].trim();
-      if (inlineText) {
-        current.explanation = inlineText;
-      }
-      continue;
-    }
+    // 2. Check if this is a Choice line
+    const choiceMatch = line.match(CHOICE_RE);
+    if (choiceMatch && !isQuestionLike) {
+      const optionToken = choiceMatch[1];
+      const optIdx = optionIndex(optionToken);
 
-    // 3b. Multi-line explanation collection
-    if (collectingExplanation && current) {
-      if (line.match(QUESTION_HEADER_RE) || line.match(ANSWER_RE) || line.match(CHOICE_RE)) {
+      // If we see Option 0 ("أ" or "A" or "1") AND current already has 2+ choices:
+      // it means a previous question has finished without an explicit header!
+      if ((optIdx === 0) && current && current.options.length >= 2) {
+        questionCounter += 1;
+        finishCurrent(questionCounter);
+        hasFoundAnswer = false;
         collectingExplanation = false;
-      } else {
-        current.explanation = (current.explanation ? current.explanation + "\n" : "") + line;
+        current = { prompt: "", options: [], correctIndex: null };
+      }
+
+      if (current && current.options.length < 8) {
+        collectingExplanation = false;
+        const isMarkedCorrect =
+          /^\s*(?:\*|\[x\]|\[✓\]|\(✓\))\s*/i.test(line) ||
+          /(?:\*|\[x\]|\[✓\]|\(✓\)|\(صح\)|\(صحيحة\)|\(الإجابة الصحيحة\)|\(الاجابة الصحيحة\))\s*$/i.test(line) ||
+          /\s+\*\s*$/.test(line) ||
+          /^\s*[\*\•]\s*/.test(choiceMatch[2]);
+
+        const cleanOption = choiceMatch[2]
+          .replace(/^[\*\•\s]+/, "")
+          .replace(/\s*(?:\*|\[x\]|\[✓\]|\(✓\)|\(صح\)|\(صحيحة\)|\(الإجابة الصحيحة\)|\(الاجابة الصحيحة\))\s*$/i, "")
+          .trim();
+
+        current.options.push(cleanOption);
+        if (isMarkedCorrect) {
+          current.correctIndex = current.options.length - 1;
+          hasFoundAnswer = true;
+        }
         continue;
       }
     }
 
-    // 4. Answer Line (e.g. "الإجابة الصحيحة: ب" or "Answer: B" or "الإجابة: صواب")
+    // 3. Answer Line (e.g. "الإجابة الصحيحة: ب" or "Answer: B")
     const answerMatch = line.match(ANSWER_RE);
     if (answerMatch && current) {
       collectingExplanation = false;
       hasFoundAnswer = true;
       const answerVal = answerMatch[1].trim();
 
-      // Check True / False question if no options yet
+      // True / False check
       const normAns = answerVal.toLowerCase().replace(/[\(\)\[\]]/g, "").trim();
       if (current.options.length === 0) {
         if (normAns === "صواب" || normAns === "صح" || normAns === "صحيح" || normAns === "true" || normAns === "t") {
@@ -602,8 +840,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
         }
       }
 
-      // Leading letter token e.g. "ب", "(ب)", "[B]", "2"
-      const leadingToken = answerVal.match(/^[\(\[]?\s*([A-Fa-fأابجدهإآ]|هـ|[1-6]|الأول|الاول|الثاني|الثانى|الثالث|الرابع)(?=[\s\)\.\:\-\]]|$)/i)?.[1];
+      const leadingToken = answerVal.match(/^[\(\[]?\s*([A-Fa-fأابجدهإآ]|هـ|[1-6]|الأول|الاول|الثاني|الثانى|الثالث|الرابع)(?=[\s\)\.\:\-\]\/]|$)/i)?.[1];
       const byIndex = leadingToken ? optionIndex(leadingToken) : null;
       const byText = current.options.findIndex((o) => {
         const oNorm = o.toLowerCase().trim();
@@ -619,7 +856,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
       } else if (byText >= 0) {
         current.correctIndex = byText;
       } else {
-        const afterLetter = answerVal.replace(/^[\(\[]?\s*([A-Fa-fأابجدهإآ]|هـ|[1-6]|الأول|الاول|الثاني|الثانى|الثالث|الرابع)\)?[.):\-\s]+/, "").trim();
+        const afterLetter = answerVal.replace(/^[\(\[]?\s*([A-Fa-fأابجدهإآ]|هـ|[1-6]|الأول|الاول|الثاني|الثانى|الثالث|الرابع)\)?[.):\-\/\s]+/, "").trim();
         const byTextAfter = current.options.findIndex((o) =>
           o.toLowerCase().replace(/[()]/g, "").trim().includes(afterLetter.toLowerCase().replace(/[()]/g, "").trim())
         );
@@ -632,66 +869,36 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
       continue;
     }
 
-    // 4. Choice Line (e.g. "أ) باريس" or "*ب) لندن" or "A) London")
-    const choiceMatch = line.match(CHOICE_RE);
-    if (choiceMatch && current) {
-      const optionToken = choiceMatch[1];
-      const optIdx = optionIndex(optionToken);
+    // 4. Explanation Header
+    const explanationHeaderMatch = line.match(EXPLANATION_HEADER_RE);
+    if (explanationHeaderMatch && current) {
+      collectingExplanation = true;
+      const inlineText = explanationHeaderMatch[1].trim();
+      if (inlineText) current.explanation = inlineText;
+      continue;
+    }
 
-      // If we see Option 0 ("A" or "أ") while current already has choices,
-      // it means the previous question has finished without an explicit header!
-      if (optIdx === 0 && current.options.length >= 2) {
-        finishCurrent();
-        hasFoundAnswer = false;
+    // 5. Multi-line explanation collection
+    if (collectingExplanation && current) {
+      if (line.match(EXPLICIT_QUESTION_RE) || line.match(ANSWER_RE) || line.match(CHOICE_RE)) {
         collectingExplanation = false;
-        current = { prompt: "", options: [], correctIndex: null };
-      }
-
-      if (current && current.options.length < 8) {
-        collectingExplanation = false;
-
-        // Check if choice has an asterisk or checkmark indicating it is correct
-        const isMarkedCorrect =
-          /^\s*(?:\*|\[x\]|\[✓\]|\(✓\))\s*/i.test(line) ||
-          /(?:\*|\[x\]|\[✓\]|\(✓\)|\(صح\)|\(صحيحة\)|\(الإجابة الصحيحة\)|\(الاجابة الصحيحة\))\s*$/i.test(line) ||
-          /\s+\*\s*$/.test(line) ||
-          /^\s*[\*\•]\s*/.test(choiceMatch[2]);
-
-        let cleanOption = choiceMatch[2]
-          .replace(/^[\*\•\s]+/, "")
-          .replace(/\s*(?:\*|\[x\]|\[✓\]|\(✓\)|\(صح\)|\(صحيحة\)|\(الإجابة الصحيحة\)|\(الاجابة الصحيحة\))\s*$/i, "")
-          .trim();
-
-        current.options.push(cleanOption);
-
-        if (isMarkedCorrect) {
-          current.correctIndex = current.options.length - 1;
-          hasFoundAnswer = true;
-        }
+      } else {
+        current.explanation = (current.explanation ? current.explanation + "\n" : "") + line;
         continue;
       }
     }
 
-    // 5. Fallback line handling
+    // 6. Fallback line handling
     if (!current) {
-      current = {
-        prompt: line,
-        options: [],
-        correctIndex: null,
-      };
+      current = { prompt: line, options: [], correctIndex: null };
       collectingExplanation = false;
       hasFoundAnswer = false;
     } else if (!current.prompt) {
       current.prompt = line;
     } else if (hasFoundAnswer && !collectingExplanation) {
-      // Line appears after the previous question's answer line, and is not an explanation.
-      // This is the prompt of a new unnumbered question!
-      finishCurrent();
-      current = {
-        prompt: line,
-        options: [],
-        correctIndex: null,
-      };
+      questionCounter += 1;
+      finishCurrent(questionCounter);
+      current = { prompt: line, options: [], correctIndex: null };
       hasFoundAnswer = false;
       collectingExplanation = false;
     } else if (current.options.length === 0 && !current.arabicTranslation) {
@@ -705,12 +912,12 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
     } else if (collectingExplanation) {
       current.explanation = (current.explanation ? current.explanation + "\n" : "") + line;
     } else if (current.options.length > 0) {
-      // Continuation line for the last choice
       current.options[current.options.length - 1] += `\n${line}`;
     }
   }
 
-  finishCurrent();
+  questionCounter += 1;
+  finishCurrent(questionCounter);
   return { questions, warnings };
 }
 
@@ -3644,26 +3851,7 @@ router.post("/admin/learning/quizzes/import", requireAdmin, (req, res, next) => 
         res.status(400).json({ error: "اختر ملفًا لاستيراد الأسئلة" });
         return;
       }
-      const extension = path.extname(req.file.originalname).toLowerCase();
-      let extractedText = "";
-      if (extension === ".pdf") {
-        try {
-          extractedText = (await pdfParse(req.file.buffer)).text;
-        } catch {
-          extractedText = req.file.buffer.toString("utf8");
-        }
-      } else if (extension === ".docx" || extension === ".doc") {
-        try {
-          extractedText = (await mammoth.extractRawText({ buffer: req.file.buffer })).value;
-        } catch {
-          extractedText = req.file.buffer.toString("utf8");
-        }
-        if (!extractedText.trim()) {
-          extractedText = req.file.buffer.toString("utf8");
-        }
-      } else {
-        extractedText = req.file.buffer.toString("utf8");
-      }
+      const extractedText = await extractTextFromUpload(req.file.buffer, req.file.originalname);
       if (!extractedText.trim()) {
         res.status(422).json({ error: "لم نتمكن من قراءة نص من الملف. إذا كان PDF مصورًا، حوّله إلى PDF قابل للبحث أولًا." });
         return;
@@ -4081,8 +4269,8 @@ router.get("/admin/learning/test-bank/questions", requireAdmin, async (req, res,
   }
 });
 
-// POST /api/admin/learning/test-bank/upload - Upload file or raw text to create questions for a specific Lesson
-router.post("/admin/learning/test-bank/upload", requireAdmin, (req, res, next) => {
+// POST /api/admin/learning/test-bank/upload & /batch-import - Upload file or raw text to create questions for a specific Lesson
+router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batch-import"], requireAdmin, (req, res, next) => {
   quizImportUpload(req, res, async (uploadError) => {
     if (uploadError) {
       return res.status(400).json({ error: uploadError.message || "تعذر رفع الملف" });
@@ -4117,26 +4305,11 @@ router.post("/admin/learning/test-bank/upload", requireAdmin, (req, res, next) =
 
       let questionsToProcess: QuizQuestion[] = [];
       let warnings: string[] = [];
+      let extractedText = "";
 
       if (req.file) {
         const extension = path.extname(req.file.originalname).toLowerCase();
-        let extractedText = "";
-        if (extension === ".pdf") {
-          try {
-            extractedText = (await pdfParse(req.file.buffer)).text;
-          } catch {
-            extractedText = req.file.buffer.toString("utf8");
-          }
-        } else if (extension === ".docx" || extension === ".doc") {
-          try {
-            extractedText = (await mammoth.extractRawText({ buffer: req.file.buffer })).value;
-          } catch {
-            extractedText = req.file.buffer.toString("utf8");
-          }
-          if (!extractedText.trim()) {
-            extractedText = req.file.buffer.toString("utf8");
-          }
-        } else if (extension === ".json") {
+        if (extension === ".json") {
           try {
             const parsedJson = JSON.parse(req.file.buffer.toString("utf8"));
             if (Array.isArray(parsedJson)) {
@@ -4148,11 +4321,20 @@ router.post("/admin/learning/test-bank/upload", requireAdmin, (req, res, next) =
             return res.status(400).json({ error: "ملف JSON غير صالح" });
           }
         } else {
-          extractedText = req.file.buffer.toString("utf8");
+          extractedText = await extractTextFromUpload(req.file.buffer, req.file.originalname);
         }
 
         if (!questionsToProcess.length) {
           if (!extractedText.trim()) {
+            if (previewOnly) {
+              return res.json({
+                preview: true,
+                totalDetected: 0,
+                questions: [],
+                extractedText: "",
+                warnings: ["الملف المرفوع فارغ أو لم نتمكن من استخراج نص قابل للقراءة منه."],
+              });
+            }
             return res.status(422).json({ error: "لم نتمكن من استخراج نص صالح من الملف" });
           }
           const parsed = parseImportedQuestions(extractedText);
@@ -4166,8 +4348,11 @@ router.post("/admin/learning/test-bank/upload", requireAdmin, (req, res, next) =
         } catch {
           return res.status(400).json({ error: "بيانات الأسئلة غير صالحة" });
         }
+      } else if (req.body.questions && Array.isArray(req.body.questions)) {
+        questionsToProcess = req.body.questions;
       } else if (req.body.text) {
-        const parsed = parseImportedQuestions(String(req.body.text));
+        extractedText = String(req.body.text);
+        const parsed = parseImportedQuestions(extractedText);
         questionsToProcess = parsed.questions;
         warnings = parsed.warnings;
       } else {
@@ -4179,7 +4364,22 @@ router.post("/admin/learning/test-bank/upload", requireAdmin, (req, res, next) =
       );
 
       if (validQuestions.length === 0) {
-        return res.status(422).json({ error: "لم يتم التعرف على أي أسئلة صالحة. تأكد من وجود نص السؤال والخيارات والإجابة الصحيحة." });
+        if (previewOnly) {
+          return res.json({
+            preview: true,
+            totalDetected: 0,
+            questions: [],
+            extractedText: extractedText.trim(),
+            warnings: [
+              "تم استخراج النص من الملف بنجاح، لكن لم يتم التعرف على نمط الأسئلة والخيارات آلياً.",
+              "تم وضع النص المستخرج في محرر 'نص مباشر' بالأسفل لتتمكن من مراجعته وتعديل تنسيقه بسهولة.",
+            ],
+          });
+        }
+        return res.status(422).json({
+          error: "لم يتم التعرف على أي أسئلة صالحة. تأكد من وجود نص السؤال والخيارات والإجابة الصحيحة.",
+          extractedTextSnippet: extractedText.slice(0, 300),
+        });
       }
 
       if (previewOnly) {
@@ -4188,6 +4388,7 @@ router.post("/admin/learning/test-bank/upload", requireAdmin, (req, res, next) =
           totalDetected: validQuestions.length,
           warnings,
           questions: validQuestions,
+          extractedText: extractedText.trim(),
         });
       }
 
