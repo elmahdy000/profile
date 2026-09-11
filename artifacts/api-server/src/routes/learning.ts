@@ -444,11 +444,11 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
     .replace(/[\u2028\u2029]/g, "\n");
 
   // 2. Preprocess inline text & Word table cell merges (force newlines before headers/choices/answers/explanations if missing)
-  cleanedText = cleanedText.replace(/(الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة)\s*[:：\-]?\s*([أابجدهإآA-Da-d1-6])(التوضيح|التفسير|الشرح|تفسير|شرح|explanation|note)\s*[:：\-]?/gi, "$1: $2\n$3: ");
-  // Separate words glued to choice letters, but NEVER break '(', '[', '*', '-', '•'
-  cleanedText = cleanedText.replace(/([a-zA-Z\u0600-\u06FF])\s*([A-Fa-fأابجدهإآ]|هـ|[1-6])\)\s+/g, "$1\n$2) ");
-  cleanedText = cleanedText.replace(/([^\n])\s*((?:ال)?س(?:ؤال)?(?:\s*رقم)?\s*[:：\-]?\s*\d+|Question\s*[:：\-]?\s*\d+|#\d+)/gi, "$1\n$2");
-  cleanedText = cleanedText.replace(/([^\n])\s*(الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|correct\s*answer|answer)\s*[:：\-]?\s*/gi, "$1\nالإجابة الصحيحة: ");
+  cleanedText = cleanedText.replace(/(الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|الجواب|الحل|الاختيار\s+الصحيح)\s*[:：\-]?\s*([أابجدهإآA-Da-d1-6])(التوضيح|التفسير|الشرح|تفسير|شرح|explanation|note)\s*[:：\-]?/gi, "$1: $2\n$3: ");
+  // Split inline choices e.g. "أ) باريس  ب) لندن" or "A. Paris  B. London" or "(1) القاهرة (2) الجيزة"
+  cleanedText = cleanedText.replace(/([^\n])\s+((?:[\*\•\-\[\(]|\[x\]|\[✓\]|\(✓\))?\s*(?:[A-Fa-fأابجدهإآ]|هـ|[1-6])\s*[\)\.\:\-\]]\s+)/g, "$1\n$2");
+  cleanedText = cleanedText.replace(/([^\n])\s*((?:ال)?س(?:ؤال)?(?:\s*رقم)?\s*[:：\-]?\s*\(?\d+\)?|Question\s*[:：\-]?\s*\d+|#\d+)/gi, "$1\n$2");
+  cleanedText = cleanedText.replace(/([^\n])\s*(الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|الجواب(?:\s+الصحيح)?|جواب|الحل(?:\s+الصحيح)?|حل|الاختيار(?:\s+الصحيح)?|اختيار|correct\s*answer|answer)\s*(?:هو|هي)?\s*[:：\-]?\s*/gi, "$1\nالإجابة الصحيحة: ");
   cleanedText = cleanedText.replace(/([^\n])\s*(التوضيح|التفسير|الشرح|تفسير|شرح|explanation|note)\s*[:：\-]?\s*/gi, "$1\nالتوضيح: ");
 
   const lines = cleanedText
@@ -471,9 +471,9 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
 
   const finishCurrent = () => {
     if (!current) return;
-    // Strip leading question numbers like "1- ", "1. ", "سؤال :1", "Q1:"
+    // Strip leading question numbers like "1- ", "1. ", "سؤال :1", "Q1:", "(1)"
     let cleanedPrompt = current.prompt
-      .replace(/^(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-]?\s*\d+\s*[:：\-.]?\s*/i, "")
+      .replace(/^(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-]?\s*\(?\d+\)?\s*[:：\-.]?\s*/i, "")
       .replace(/^\(?\d+\)?[\s\.\)\-:]+\s*/, "")
       .trim();
     if (!cleanedPrompt && current.prompt) {
@@ -513,13 +513,13 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   const CHOICE_RE = /^\s*(?:(?:[\*\•\-\[\(]|\[x\]|\[✓\]|\(✓\))?\s*([A-Fa-fأابجدهإآ]|هـ|[1-6]|الأول|الاول|الثاني|الثانى|الثالث|الرابع)\s*[\)\.\:\-\]]\s*)(.+)$/i;
 
   // Helper: detect answer line
-  const ANSWER_RE = /^\s*(?:correct\s*answer|answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة)\s*[:：\-]?\s*(.+)$/i;
+  const ANSWER_RE = /^\s*(?:correct\s*answer|answer|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|إجابة|اجابة|الجواب(?:\s+الصحيح)?|جواب|الحل(?:\s+الصحيح)?|حل|الاختيار(?:\s+الصحيح)?|اختيار)\s*(?:هو|هي)?\s*[:：\-]?\s*(.+)$/i;
 
   // Helper: detect explanation header
   const EXPLANATION_HEADER_RE = /^\s*(?::?\s*(?:explanation|note|التوضيح|التفسير|الشرح|تفسير|شرح|ملاحظة)\s*:?\s*)(.*)$/i;
 
   // Helper: detect question header e.g. "Question 1", "1.", "سؤال 1"
-  const QUESTION_HEADER_RE = /^\s*(?:(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-]?\s*\d+|\(?\d+\)?|#\d+)(?:\s*[:：\-\.\)]\s*(.*))?$/i;
+  const QUESTION_HEADER_RE = /^\s*(?:(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-]?\s*\(?\d+\)?|\(?\d+\)?|#\d+)(?:\s*[:：\-\.\)]\s*(.*))?$/i;
 
   const isNextLineChoice = (idx: number) => {
     return idx + 1 < lines.length && Boolean(lines[idx + 1].match(CHOICE_RE));
@@ -581,21 +581,45 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
       }
     }
 
-    // 4. Answer Line (e.g. "الإجابة الصحيحة: ب" or "Answer: B")
+    // 4. Answer Line (e.g. "الإجابة الصحيحة: ب" or "Answer: B" or "الإجابة: صواب")
     const answerMatch = line.match(ANSWER_RE);
     if (answerMatch && current) {
       collectingExplanation = false;
       hasFoundAnswer = true;
       const answerVal = answerMatch[1].trim();
-      const leadingToken = answerVal.match(/^([A-Fa-fأابجدهإآ]|هـ|[1-6]|الأول|الاول|الثاني|الثانى|الثالث|الرابع)(?=[\s\)\.\:\-]|$)/i)?.[1];
+
+      // Check True / False question if no options yet
+      const normAns = answerVal.toLowerCase().replace(/[\(\)\[\]]/g, "").trim();
+      if (current.options.length === 0) {
+        if (normAns === "صواب" || normAns === "صح" || normAns === "صحيح" || normAns === "true" || normAns === "t") {
+          current.options = ["صواب", "خطأ"];
+          current.correctIndex = 0;
+          continue;
+        } else if (normAns === "خطأ" || normAns === "خطا" || normAns === "غير صحيح" || normAns === "false" || normAns === "f") {
+          current.options = ["صواب", "خطأ"];
+          current.correctIndex = 1;
+          continue;
+        }
+      }
+
+      // Leading letter token e.g. "ب", "(ب)", "[B]", "2"
+      const leadingToken = answerVal.match(/^[\(\[]?\s*([A-Fa-fأابجدهإآ]|هـ|[1-6]|الأول|الاول|الثاني|الثانى|الثالث|الرابع)(?=[\s\)\.\:\-\]]|$)/i)?.[1];
       const byIndex = leadingToken ? optionIndex(leadingToken) : null;
-      const byText = current.options.findIndex((o) => o.toLowerCase().trim() === answerVal.toLowerCase().trim());
+      const byText = current.options.findIndex((o) => {
+        const oNorm = o.toLowerCase().trim();
+        const aNorm = answerVal.toLowerCase().trim();
+        if (oNorm === aNorm) return true;
+        if ((aNorm === "صح" || aNorm === "صواب" || aNorm === "صحيح") && (oNorm === "صح" || oNorm === "صواب" || oNorm === "صحيح")) return true;
+        if ((aNorm === "خطأ" || aNorm === "خطا") && (oNorm === "خطأ" || oNorm === "خطا")) return true;
+        return false;
+      });
+
       if (byIndex !== null && byIndex < current.options.length) {
         current.correctIndex = byIndex;
       } else if (byText >= 0) {
         current.correctIndex = byText;
       } else {
-        const afterLetter = answerVal.replace(/^([A-Fa-fأابجدهإآ]|هـ|[1-6]|الأول|الاول|الثاني|الثانى|الثالث|الرابع)\)?[.):\-\s]+/, "").trim();
+        const afterLetter = answerVal.replace(/^[\(\[]?\s*([A-Fa-fأابجدهإآ]|هـ|[1-6]|الأول|الاول|الثاني|الثانى|الثالث|الرابع)\)?[.):\-\s]+/, "").trim();
         const byTextAfter = current.options.findIndex((o) =>
           o.toLowerCase().replace(/[()]/g, "").trim().includes(afterLetter.toLowerCase().replace(/[()]/g, "").trim())
         );
@@ -3904,8 +3928,39 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
         difficulty: questionBankTable.difficulty,
         points: questionBankTable.points,
         courseId: questionBankTable.courseId,
+        lessonId: questionBankTable.lessonId,
       })
       .from(questionBankTable);
+
+    const courses = await db
+      .select({ id: coursesTable.id, title: coursesTable.title, stages: coursesTable.stages })
+      .from(coursesTable);
+
+    const videos = await db
+      .select({ id: videosTable.id, title: videosTable.title, courseId: videosTable.courseId, stage: videosTable.stage, quizId: videosTable.quizId })
+      .from(videosTable);
+
+    // Collect ALL unique stages in the system
+    const systemStagesSet = new Set<string>();
+    for (const c of courses) {
+      if (Array.isArray(c.stages)) {
+        for (const s of c.stages) if (s && s.trim()) systemStagesSet.add(s.trim());
+      }
+    }
+    for (const v of videos) {
+      if (v.stage && v.stage.trim()) systemStagesSet.add(v.stage.trim());
+    }
+    for (const row of all) {
+      if (row.stage && row.stage.trim()) systemStagesSet.add(row.stage.trim());
+    }
+
+    // Default canonical stages if empty
+    if (systemStagesSet.size === 0) {
+      systemStagesSet.add("البكالوريا · الصف الأول (أولى بكالوريا) · مدارس عربي");
+      systemStagesSet.add("البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي");
+      systemStagesSet.add("المرحلة الجامعية · الفرقة الأولى / إعدادي · كلية حاسبات ومعلومات");
+      systemStagesSet.add("عام");
+    }
 
     const stagesMap: Record<string, {
       stage: string;
@@ -3916,11 +3971,18 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
         difficulty: { easy: number; medium: number; hard: number };
         lessons: Record<string, {
           lesson: string;
+          lessonId: number | null;
+          courseId: number | null;
           totalQuestions: number;
           difficulty: { easy: number; medium: number; hard: number };
         }>;
       }>;
     }> = {};
+
+    // Initialize all system stages so they appear in tree even if 0 questions
+    for (const st of systemStagesSet) {
+      stagesMap[st] = { stage: st, totalQuestions: 0, units: {} };
+    }
 
     for (const row of all) {
       const stage = String(row.stage || "عام").trim();
@@ -3947,9 +4009,18 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
       if (!stagesMap[stage].units[unit].lessons[lesson]) {
         stagesMap[stage].units[unit].lessons[lesson] = {
           lesson,
+          lessonId: row.lessonId || null,
+          courseId: row.courseId || null,
           totalQuestions: 0,
           difficulty: { easy: 0, medium: 0, hard: 0 },
         };
+      } else {
+        if (!stagesMap[stage].units[unit].lessons[lesson].lessonId && row.lessonId) {
+          stagesMap[stage].units[unit].lessons[lesson].lessonId = row.lessonId;
+        }
+        if (!stagesMap[stage].units[unit].lessons[lesson].courseId && row.courseId) {
+          stagesMap[stage].units[unit].lessons[lesson].courseId = row.courseId;
+        }
       }
       stagesMap[stage].units[unit].lessons[lesson].totalQuestions++;
       stagesMap[stage].units[unit].lessons[lesson].difficulty[diff]++;
@@ -3966,10 +4037,13 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
       })),
     }));
 
-    const courses = await db.select({ id: coursesTable.id, title: coursesTable.title, stages: coursesTable.stages }).from(coursesTable);
-    const videos = await db.select({ id: videosTable.id, title: videosTable.title, courseId: videosTable.courseId, stage: videosTable.stage }).from(videosTable);
-
-    res.json({ tree, totalQuestions: all.length, courses, videos });
+    res.json({
+      tree,
+      totalQuestions: all.length,
+      courses,
+      videos,
+      stages: Array.from(systemStagesSet),
+    });
   } catch (error) {
     next(error);
   }
@@ -4014,14 +4088,32 @@ router.post("/admin/learning/test-bank/upload", requireAdmin, (req, res, next) =
       return res.status(400).json({ error: uploadError.message || "تعذر رفع الملف" });
     }
     try {
-      const stage = String(req.body.stage || "").trim();
-      const unit = String(req.body.unit || "").trim();
-      const lesson = String(req.body.lesson || "").trim();
-      const courseId = Number(req.body.courseId) || null;
+      let stage = String(req.body.stage || "").trim();
+      let unit = String(req.body.unit || "").trim();
+      let lesson = String(req.body.lesson || "").trim();
+      let courseId = Number(req.body.courseId) || null;
       const lessonId = Number(req.body.lessonId) || null;
       const defaultDifficulty = String(req.body.difficulty || "medium").trim();
       const defaultPoints = Number(req.body.points) || 1;
       const previewOnly = req.body.previewOnly === "true" || req.body.previewOnly === true;
+
+      // Smart resolution if lessonId (videoId) was passed
+      if (lessonId) {
+        const [video] = await db.select().from(videosTable).where(eq(videosTable.id, lessonId)).limit(1);
+        if (video) {
+          lesson = lesson || video.title;
+          courseId = courseId || video.courseId;
+          stage = stage || video.stage || "";
+          if (!stage && video.courseId) {
+            const [c] = await db.select().from(coursesTable).where(eq(coursesTable.id, video.courseId)).limit(1);
+            if (c?.stages?.length) stage = c.stages[0];
+          }
+        }
+      }
+
+      if (!stage) stage = "عام";
+      if (!unit) unit = "الوحدة العامة";
+      if (!lesson) lesson = "الدرس العام";
 
       let questionsToProcess: QuizQuestion[] = [];
       let warnings: string[] = [];
@@ -4099,7 +4191,18 @@ router.post("/admin/learning/test-bank/upload", requireAdmin, (req, res, next) =
         });
       }
 
-      // Deduplicate against existing questions in this stage/unit/lesson
+      // 1. Deduplicate within this uploaded batch
+      const seenPromptsInBatch = new Set<string>();
+      const batchUniqueQuestions: QuizQuestion[] = [];
+      for (const q of validQuestions) {
+        const key = String(q.prompt).trim().toLowerCase();
+        if (!seenPromptsInBatch.has(key)) {
+          seenPromptsInBatch.add(key);
+          batchUniqueQuestions.push(q);
+        }
+      }
+
+      // 2. Deduplicate against existing questions in DB for this stage/unit/lesson
       const existingRows = await db
         .select({
           id: questionBankTable.id,
@@ -4108,14 +4211,14 @@ router.post("/admin/learning/test-bank/upload", requireAdmin, (req, res, next) =
         .from(questionBankTable)
         .where(
           and(
-            eq(questionBankTable.stage, stage || "عام"),
-            eq(questionBankTable.unit, unit || "الوحدة العامة"),
-            eq(questionBankTable.lesson, lesson || "الدرس العام")
+            eq(questionBankTable.stage, stage),
+            eq(questionBankTable.unit, unit),
+            eq(questionBankTable.lesson, lesson)
           )
         );
 
       const existingPrompts = new Set(existingRows.map((r) => (r.prompt || "").trim().toLowerCase()));
-      const nonDuplicates = validQuestions.filter(
+      const nonDuplicates = batchUniqueQuestions.filter(
         (q) => !existingPrompts.has(String(q.prompt).trim().toLowerCase())
       );
 
@@ -4137,10 +4240,10 @@ router.post("/admin/learning/test-bank/upload", requireAdmin, (req, res, next) =
           nonDuplicates.map((q) => ({
             courseId,
             category: "عام",
-            stage: stage || "عام",
-            stages: stage ? [stage] : [],
-            unit: unit || "الوحدة العامة",
-            lesson: lesson || "الدرس العام",
+            stage,
+            stages: [stage],
+            unit,
+            lesson,
             lessonId: lessonId || null,
             difficulty: (q as any).difficulty || defaultDifficulty,
             points: q.points || defaultPoints,
@@ -4199,18 +4302,37 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
       return res.status(400).json({ error: "عنوان الاختبار مطلوب" });
     }
 
+    const resolvedVideoId = Number(videoId || req.body.lessonId) || null;
+    let resolvedCourseId = Number(courseId) || null;
+
     const qCount = Math.max(1, Math.min(100, Number(count || 10)));
     let query = db.select().from(questionBankTable);
     const conditions = [];
 
     if (stage && stage !== "all") {
-      conditions.push(eq(questionBankTable.stage, stage));
+      conditions.push(
+        or(
+          eq(questionBankTable.stage, stage),
+          sql`${questionBankTable.stages}::jsonb @> ${JSON.stringify([stage])}::jsonb`
+        )
+      );
     }
     if (unit && unit !== "all") {
       conditions.push(eq(questionBankTable.unit, unit));
     }
     if (lesson && lesson !== "all") {
-      conditions.push(eq(questionBankTable.lesson, lesson));
+      if (resolvedVideoId) {
+        conditions.push(
+          or(
+            eq(questionBankTable.lessonId, resolvedVideoId),
+            eq(questionBankTable.lesson, lesson)
+          )
+        );
+      } else {
+        conditions.push(eq(questionBankTable.lesson, lesson));
+      }
+    } else if (resolvedVideoId) {
+      conditions.push(eq(questionBankTable.lessonId, resolvedVideoId));
     }
 
     const availableQuestions = await (conditions.length ? query.where(and(...conditions)) : query);
@@ -4264,8 +4386,6 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
       points: r.points || r.question.points || 1,
     }));
 
-    let resolvedCourseId = Number(courseId) || null;
-    const resolvedVideoId = Number(videoId) || null;
     let quizCategory = stage || "عام";
     let isLessonScope = scope === "lesson" && Boolean(resolvedVideoId);
 
@@ -4278,14 +4398,21 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
       }
     }
 
-    if (resolvedCourseId && quizCategory === (stage || "عام")) {
+    let finalStages = Array.isArray(stages) && stages.length ? stages : (stage && stage !== "all" ? [stage] : []);
+
+    if (resolvedCourseId) {
       const [course] = await db.select().from(coursesTable).where(eq(coursesTable.id, resolvedCourseId)).limit(1);
       if (course) {
         quizCategory = course.title;
+        if (Array.isArray(course.stages) && course.stages.length) {
+          finalStages = Array.from(new Set([...finalStages, ...course.stages]));
+        }
       }
     }
 
-    const targetStages = Array.isArray(stages) && stages.length ? stages : (stage ? [stage] : []);
+    if (finalStages.length === 0) {
+      finalStages = ["عام"];
+    }
 
     const [newQuiz] = await db
       .insert(quizzesTable)
@@ -4296,8 +4423,8 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
         scope: isLessonScope ? "lesson" : "course",
         description: `اختبار تم توليده آلياً من بنك الأسئلة (${stage || ""} - ${unit || ""} - ${lesson || ""})`.trim(),
         category: quizCategory,
-        stage: targetStages[0] || null,
-        stages: targetStages,
+        stage: finalStages[0] || null,
+        stages: finalStages,
         durationMinutes: durationMinutes ? Number(durationMinutes) : null,
         passingScore: Math.max(0, Math.min(100, Number(passingScore ?? 60))),
         maxAttempts: Math.max(0, Math.min(20, Number(maxAttempts ?? 3))),
@@ -4309,9 +4436,38 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
       })
       .returning();
 
-    // CRITICAL: Link the newly generated quiz directly to the video lesson so students see it immediately!
+    // CRITICAL: Link newly generated quiz directly to the video lesson and unlink previous quiz
     if (isLessonScope && resolvedVideoId) {
-      await db.update(videosTable).set({ quizId: newQuiz.id }).where(eq(videosTable.id, resolvedVideoId));
+      await db
+        .update(quizzesTable)
+        .set({ videoId: null })
+        .where(and(eq(quizzesTable.videoId, resolvedVideoId), ne(quizzesTable.id, newQuiz.id)));
+      await db
+        .update(videosTable)
+        .set({ quizId: newQuiz.id })
+        .where(eq(videosTable.id, resolvedVideoId));
+    }
+
+    // Send notifications to enrolled/matching approved students
+    if (newQuiz.isPublished) {
+      try {
+        const approvedStudents = await db.select().from(studentsTable).where(eq(studentsTable.status, "approved"));
+        const recipients = approvedStudents.filter((student) =>
+          canStudentAccessContent(student, newQuiz.category, newQuiz.stage, newQuiz.stages, newQuiz.courseId)
+        );
+        if (recipients.length > 0) {
+          await db.insert(studentNotificationsTable).values(
+            recipients.map((student) => ({
+              studentId: student.id,
+              type: "quiz",
+              title: "اختبار جديد متاح لك",
+              message: `${newQuiz.title} جاهز الآن داخل منصة الاختبارات.`,
+            }))
+          );
+        }
+      } catch (notifErr) {
+        console.error("[GENERATE_EXAM_NOTIFICATION_ERROR]", notifErr);
+      }
     }
 
     return res.status(201).json({
@@ -4405,7 +4561,7 @@ router.put("/admin/learning/question-bank/:id", requireAdmin, async (req, res, n
 });
 
 // DELETE /api/admin/learning/test-bank/clear-lesson - Delete all questions of a specific lesson
-router.delete("/admin/learning/test-bank/clear-lesson", requireSuperAdmin, async (req, res, next) => {
+router.delete("/admin/learning/test-bank/clear-lesson", requireAdmin, async (req, res, next) => {
   try {
     const { stage, unit, lesson } = req.body;
     if (!stage || !unit || !lesson) {
@@ -4431,7 +4587,7 @@ router.delete("/admin/learning/test-bank/clear-lesson", requireSuperAdmin, async
 
 router.post("/admin/learning/question-bank/batch-import", requireAdmin, async (req, res, next) => {
   try {
-    const { questions, courseId, category, stage, stages, unit, lesson, difficulty, points } = req.body;
+    const { questions, courseId, category, stage, stages, unit, lesson, lessonId, difficulty, points } = req.body;
     if (!Array.isArray(questions) || questions.length === 0) {
       res.status(400).json({ error: "قائمة الأسئلة فارغة" });
       return;
@@ -4446,11 +4602,41 @@ router.post("/admin/learning/question-bank/batch-import", requireAdmin, async (r
       return;
     }
 
-    // Deduplicate against existing questions in this stage/unit/lesson
-    const targetStage = String(stage || "عام").trim();
-    const targetUnit = String(unit || "الوحدة العامة").trim();
-    const targetLesson = String(lesson || "الدرس العام").trim();
+    let targetStage = String(stage || "").trim();
+    let targetUnit = String(unit || "").trim();
+    let targetLesson = String(lesson || "").trim();
+    let resolvedCourseId = Number(courseId) || null;
+    const resolvedLessonId = Number(lessonId) || null;
 
+    if (resolvedLessonId) {
+      const [video] = await db.select().from(videosTable).where(eq(videosTable.id, resolvedLessonId)).limit(1);
+      if (video) {
+        targetLesson = targetLesson || video.title;
+        resolvedCourseId = resolvedCourseId || video.courseId;
+        targetStage = targetStage || video.stage || "";
+        if (!targetStage && video.courseId) {
+          const [c] = await db.select().from(coursesTable).where(eq(coursesTable.id, video.courseId)).limit(1);
+          if (c?.stages?.length) targetStage = c.stages[0];
+        }
+      }
+    }
+
+    if (!targetStage) targetStage = "عام";
+    if (!targetUnit) targetUnit = "الوحدة العامة";
+    if (!targetLesson) targetLesson = "الدرس العام";
+
+    // Deduplicate in batch
+    const seenPromptsInBatch = new Set<string>();
+    const batchUniqueQuestions: any[] = [];
+    for (const q of validQuestions) {
+      const key = String(q.prompt).trim().toLowerCase();
+      if (!seenPromptsInBatch.has(key)) {
+        seenPromptsInBatch.add(key);
+        batchUniqueQuestions.push(q);
+      }
+    }
+
+    // Deduplicate against existing DB rows
     const existingRows = await db
       .select({
         id: questionBankTable.id,
@@ -4466,7 +4652,7 @@ router.post("/admin/learning/question-bank/batch-import", requireAdmin, async (r
       );
 
     const existingPrompts = new Set(existingRows.map((r) => (r.prompt || "").trim().toLowerCase()));
-    const nonDuplicates = validQuestions.filter(
+    const nonDuplicates = batchUniqueQuestions.filter(
       (q) => !existingPrompts.has(String(q.prompt).trim().toLowerCase())
     );
 
@@ -4482,12 +4668,13 @@ router.post("/admin/learning/question-bank/batch-import", requireAdmin, async (r
       .insert(questionBankTable)
       .values(
         nonDuplicates.map((q) => ({
-          courseId: Number(courseId) || null,
+          courseId: resolvedCourseId,
           category: String(category || "عام"),
           stage: targetStage,
-          stages: Array.isArray(stages) ? stages : (stage ? [stage] : []),
+          stages: Array.isArray(stages) ? stages : [targetStage],
           unit: targetUnit,
           lesson: targetLesson,
+          lessonId: resolvedLessonId || null,
           difficulty: String(q.difficulty || difficulty || "medium"),
           points: Number(q.points || points) || 1,
           subject: "",
