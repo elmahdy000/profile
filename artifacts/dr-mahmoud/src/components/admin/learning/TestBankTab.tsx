@@ -161,7 +161,8 @@ export function TestBankTab({
   } | null>(null);
 
   // Generator Tab State
-  const [genScope, setGenScope] = useState<"lesson" | "unit" | "stage">("lesson");
+  const [genScope, setGenScope] = useState<"lesson" | "multi_lessons" | "unit" | "stage">("lesson");
+  const [genSelectedLessons, setGenSelectedLessons] = useState<string[]>([]);
   const [genLessonMode, setGenLessonMode] = useState<"video" | "bank">("video");
   const [genStage, setGenStage] = useState<string>("");
   const [genCourseId, setGenCourseId] = useState<string>("");
@@ -524,6 +525,10 @@ export function TestBankTab({
       toast({ variant: "destructive", description: "يرجى كتابة عنوان الاختبار" });
       return;
     }
+    if (genScope === "multi_lessons" && genSelectedLessons.length === 0) {
+      toast({ variant: "destructive", description: "يرجى تحديد درس واحد على الأقل من القائمة لتوليد الاختبار" });
+      return;
+    }
     if (availableCountInfo.total === 0) {
       toast({ variant: "destructive", description: "لا توجد أسئلة متوفرة في بنك الأسئلة لهذا النطاق المختار. يرجى رفع أسئلة أولاً." });
       return;
@@ -533,13 +538,15 @@ export function TestBankTab({
 
     try {
       const isVideoLesson = genScope === "lesson" && genLessonMode === "video" && Boolean(genVideoId);
+      const isMulti = genScope === "multi_lessons";
       const targetCount = Math.min(genCount, availableCountInfo.total);
 
       const bodyPayload: any = {
         title: genTitle.trim(),
         stage: genStage,
         unit: genScope === "stage" ? undefined : (genUnit === "all" ? undefined : genUnit),
-        lesson: genScope === "stage" || genScope === "unit" ? undefined : (genLesson === "all" ? undefined : genLesson),
+        lesson: (genScope === "stage" || genScope === "unit" || isMulti) ? undefined : (genLesson === "all" ? undefined : genLesson),
+        lessons: isMulti ? genSelectedLessons : undefined,
         courseId: genCourseId ? Number(genCourseId) : undefined,
         scope: isVideoLesson ? "lesson" : "course",
         videoId: isVideoLesson ? Number(genVideoId) : undefined,
@@ -613,8 +620,51 @@ export function TestBankTab({
     return u ? u.lessons : [];
   }, [generatorUnits, genUnit]);
 
+  // Lessons list for multi-lesson selection in Generator
+  const multiLessonList = useMemo(() => {
+    const st = treeData.find((s) => s.stage === genStage);
+    if (!st) return [];
+    const list: {
+      lesson: string;
+      unit: string;
+      totalQuestions: number;
+      difficulty: { easy: number; medium: number; hard: number };
+    }[] = [];
+    for (const u of st.units) {
+      if (genUnit !== "all" && u.unit !== genUnit) continue;
+      for (const l of u.lessons) {
+        list.push({
+          lesson: l.lesson,
+          unit: u.unit,
+          totalQuestions: l.totalQuestions,
+          difficulty: l.difficulty,
+        });
+      }
+    }
+    return list;
+  }, [treeData, genStage, genUnit]);
+
   // Count available questions for selected generator scope
   const availableCountInfo = useMemo(() => {
+    if (genScope === "multi_lessons") {
+      const selectedSet = new Set(genSelectedLessons);
+      let total = 0, easy = 0, medium = 0, hard = 0;
+      const st = treeData.find((s) => s.stage === genStage);
+      if (st) {
+        for (const u of st.units) {
+          for (const l of u.lessons) {
+            if (selectedSet.has(l.lesson)) {
+              total += l.totalQuestions;
+              easy += l.difficulty?.easy || 0;
+              medium += l.difficulty?.medium || 0;
+              hard += l.difficulty?.hard || 0;
+            }
+          }
+        }
+      }
+      return { total, easy, medium, hard };
+    }
+
     if (genScope === "lesson") {
       // 1. Try finding within genStage and genUnit first
       const currentStage = treeData.find((s) => s.stage === genStage);
@@ -672,7 +722,7 @@ export function TestBankTab({
     const l = u.lessons.find((les) => les.lesson === genLesson);
     if (!l) return { total: 0, easy: 0, medium: 0, hard: 0 };
     return { total: l.totalQuestions, ...l.difficulty };
-  }, [treeData, genScope, genStage, genUnit, genLesson]);
+  }, [treeData, genScope, genStage, genUnit, genLesson, genSelectedLessons]);
 
   return (
     <div className="space-y-6 text-right" dir="rtl">
@@ -1668,7 +1718,7 @@ export function TestBankTab({
                 </h4>
 
                 {/* Scope Radio Pills */}
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <button
                     type="button"
                     onClick={() => setGenScope("lesson")}
@@ -1679,7 +1729,20 @@ export function TestBankTab({
                     }`}
                   >
                     <Video className="h-4 w-4 mx-auto mb-1 text-current" />
-                    <span>اختبار لدرس محدد 🎥</span>
+                    <span>درس محدد 🎥</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setGenScope("multi_lessons")}
+                    className={`p-3 rounded-xl text-xs font-black border transition-all cursor-pointer text-center ${
+                      genScope === "multi_lessons"
+                        ? "bg-violet-600 text-white border-violet-600 shadow-xs"
+                        : "bg-card border-border text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <CheckSquare className="h-4 w-4 mx-auto mb-1 text-current" />
+                    <span>عدة دروس محددة 📑</span>
                   </button>
 
                   <button
@@ -1692,7 +1755,7 @@ export function TestBankTab({
                     }`}
                   >
                     <FolderOpen className="h-4 w-4 mx-auto mb-1 text-current" />
-                    <span>امتحان شامل للوحدة 📚</span>
+                    <span>شامل للوحدة 📚</span>
                   </button>
 
                   <button
@@ -1705,7 +1768,7 @@ export function TestBankTab({
                     }`}
                   >
                     <GraduationCap className="h-4 w-4 mx-auto mb-1 text-current" />
-                    <span>امتحان شامل للمرحلة 🎓</span>
+                    <span>شامل للمرحلة 🎓</span>
                   </button>
                 </div>
 
@@ -1920,6 +1983,169 @@ export function TestBankTab({
                         </select>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* If Multi Lessons Scope */}
+                {genScope === "multi_lessons" && (
+                  <div className="p-4 bg-card rounded-2xl border border-border/80 space-y-4 shadow-sm">
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-muted-foreground">المرحلة الدراسية *</label>
+                        <select
+                          value={genStage}
+                          onChange={(e) => {
+                            setGenStage(e.target.value);
+                            setGenUnit("all");
+                            setGenSelectedLessons([]);
+                          }}
+                          className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none cursor-pointer"
+                        >
+                          {availableStages.map((st) => (
+                            <option key={st} value={st}>
+                              {st}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-muted-foreground">تصفية حسب الوحدة</label>
+                        <select
+                          value={genUnit}
+                          onChange={(e) => setGenUnit(e.target.value)}
+                          className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none cursor-pointer"
+                        >
+                          <option value="all">-- كل الوحدات في هذه المرحلة --</option>
+                          {generatorUnits.map((u, i) => (
+                            <option key={i} value={u.unit}>
+                              {u.unit} ({u.totalQuestions} س)
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-muted-foreground">ربط بكورس (اختياري)</label>
+                        <select
+                          value={genCourseId}
+                          onChange={(e) => setGenCourseId(e.target.value)}
+                          className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none cursor-pointer"
+                        >
+                          <option value="">-- اختبار عام للمرحلة (بدون كورس محدد) --</option>
+                          {courses.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.title}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Lessons Selection Checkboxes */}
+                    <div className="space-y-2 pt-2 border-t border-border/70">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <label className="text-xs font-black text-foreground flex items-center gap-1.5">
+                          <CheckSquare className="h-4 w-4 text-primary" />
+                          <span>اختر الدروس التي تريد اشتقاق الامتحان منها (توزيع متوازن):</span>
+                          <span className="text-xs font-bold text-primary mr-1">
+                            ({genSelectedLessons.length} درس مختار)
+                          </span>
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const allLessonsWithQuestions = multiLessonList
+                                .filter((l) => l.totalQuestions > 0)
+                                .map((l) => l.lesson);
+                              setGenSelectedLessons(allLessonsWithQuestions);
+                              if (allLessonsWithQuestions.length > 0) {
+                                setGenTitle(`اختبار مراجعة على ${allLessonsWithQuestions.length} دروس`);
+                              }
+                            }}
+                            className="text-[11px] font-bold text-primary hover:underline cursor-pointer bg-primary/10 px-2.5 py-1 rounded-lg"
+                          >
+                            تحديد الدروس المتوفرة
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setGenSelectedLessons([])}
+                            className="text-[11px] font-bold text-muted-foreground hover:underline cursor-pointer bg-muted px-2.5 py-1 rounded-lg"
+                          >
+                            إلغاء التحديد
+                          </button>
+                        </div>
+                      </div>
+
+                      {multiLessonList.length === 0 ? (
+                        <div className="p-4 rounded-xl bg-muted/40 text-center text-xs text-muted-foreground border border-dashed border-border">
+                          لا توجد دروس أو أسئلة مسجلة في هذا النطاق
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-64 overflow-y-auto p-1">
+                          {multiLessonList.map((item, idx) => {
+                            const isSelected = genSelectedLessons.includes(item.lesson);
+                            const hasQuestions = item.totalQuestions > 0;
+                            return (
+                              <div
+                                key={idx}
+                                onClick={() => {
+                                  if (!hasQuestions) return;
+                                  let next: string[];
+                                  if (isSelected) {
+                                    next = genSelectedLessons.filter((l) => l !== item.lesson);
+                                  } else {
+                                    next = [...genSelectedLessons, item.lesson];
+                                  }
+                                  setGenSelectedLessons(next);
+                                  if (next.length > 0) {
+                                    setGenTitle(`اختبار مراجعة على: ${next.slice(0, 3).join("، ")}${next.length > 3 ? "..." : ""}`);
+                                  }
+                                }}
+                                className={`flex items-start gap-3 p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
+                                  !hasQuestions
+                                    ? "opacity-50 bg-muted/20 border-border cursor-not-allowed"
+                                    : isSelected
+                                    ? "bg-primary/10 border-primary shadow-xs font-bold"
+                                    : "bg-background border-border/80 hover:bg-muted/50"
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  disabled={!hasQuestions}
+                                  readOnly
+                                  className="mt-0.5 h-4 w-4 rounded accent-primary pointer-events-none"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-bold truncate text-foreground text-xs">{item.lesson}</div>
+                                  <div className="text-[10px] text-muted-foreground truncate">{item.unit}</div>
+                                </div>
+                                <div className="text-left shrink-0">
+                                  <span
+                                    className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold ${
+                                      hasQuestions
+                                        ? "bg-primary/15 text-primary"
+                                        : "bg-muted text-muted-foreground"
+                                    }`}
+                                  >
+                                    {item.totalQuestions} س
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 pt-1">
+                        <Sparkles className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                        <span>
+                          سيتم توليد أسئلة الاختبار بشكل متوازن وعادل من الدروس المختارة دون التقيد بمشاهدة فيديو ودون التأثير على كويزات الدروس الفردية.
+                        </span>
+                      </p>
+                    </div>
                   </div>
                 )}
 
