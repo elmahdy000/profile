@@ -749,7 +749,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
 
   return <AnimatePresence>
     <motion.div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-black/85 p-0 backdrop-blur-sm sm:p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-      <motion.div ref={shellRef} role="dialog" aria-modal="true" aria-labelledby="lesson-player-title" dir="rtl" initial={{ opacity: 0, scale: .98, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: .98, y: 12 }} className="flex h-[100dvh] max-h-[100dvh] w-full max-w-[1280px] flex-col overflow-hidden bg-slate-950 shadow-2xl sm:h-auto sm:max-h-[92vh] sm:rounded-[20px] sm:border sm:border-white/10">
+      <motion.div ref={shellRef} role="dialog" aria-modal="true" aria-labelledby="lesson-player-title" dir="rtl" initial={{ opacity: 0, scale: .98, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: .98, y: 12 }} className="flex h-[100dvh] max-h-[100dvh] w-full max-w-[1280px] flex-col overflow-hidden bg-slate-950 shadow-2xl sm:h-[92vh] sm:max-h-[92vh] sm:rounded-[20px] sm:border sm:border-white/10">
         <header className="relative shrink-0 border-b border-white/10 bg-slate-950 px-4 py-3 sm:px-5 landscape:hidden">
           <div className="flex min-h-11 items-center gap-3">
             <div className="min-w-0 flex-1">
@@ -933,23 +933,23 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
 
               {/* Portrait + desktop bottom control bar (hidden in landscape mobile) */}
               {isProtected && !isLandscapeMobile && (
-                <div className="flex h-12 shrink-0 items-center gap-1 border-t border-white/10 bg-slate-950 px-2 sm:px-4" dir="ltr">
-                  <PlayerButton label="تأخير 10 ثواني" onClick={() => seekRelative(-10)}>
+                <div className="flex h-12 shrink-0 items-center gap-0.5 sm:gap-1 border-t border-white/10 bg-slate-950 px-1.5 sm:px-4" dir="ltr">
+                  <PlayerButton label="تأخير 10 ثواني" onClick={() => seekRelative(-10)} className="h-9 w-9 sm:h-11 sm:w-11">
                     <div className="flex flex-col items-center">
-                      <RotateCcw className="h-4 w-4" />
+                      <RotateCcw className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </div>
                   </PlayerButton>
 
-                  <PlayerButton label={playing ? "إيقاف مؤقت" : "تشغيل"} onClick={() => void togglePlay()}>
-                    {playing ? <Pause className="h-5 w-5 fill-current"/> : <Play className="h-5 w-5 fill-current"/>}
+                  <PlayerButton label={playing ? "إيقاف مؤقت" : "تشغيل"} onClick={() => void togglePlay()} className="h-9 w-9 sm:h-11 sm:w-11">
+                    {playing ? <Pause className="h-4 w-4 sm:h-5 sm:w-5 fill-current"/> : <Play className="h-4 w-4 sm:h-5 sm:w-5 fill-current"/>}
                   </PlayerButton>
 
-                  <PlayerButton label="تقديم 10 ثواني" onClick={() => seekRelative(10)}>
+                  <PlayerButton label="تقديم 10 ثواني" onClick={() => seekRelative(10)} className="h-9 w-9 sm:h-11 sm:w-11">
                     <div className="flex flex-col items-center">
-                      <RotateCw className="h-4 w-4" />
+                      <RotateCw className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </div>
                   </PlayerButton>
-                  <span className="min-w-[82px] text-xs tabular-nums text-slate-300">
+                  <span className="min-w-[68px] sm:min-w-[82px] text-[10px] sm:text-xs tabular-nums text-slate-300 font-mono">
                     {formatTime(currentTime)} / {formatTime(duration)}
                   </span>
                   <input
@@ -965,13 +965,14 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                   />
                   <PlayerButton
                     label={volume ? "كتم الصوت" : "تشغيل الصوت"}
+                    className="h-9 w-9 sm:h-11 sm:w-11"
                     onClick={() => {
                       const nextVolume = volume ? 0 : 1;
                       setVolume(nextVolume);
                       if (videoRef.current) videoRef.current.volume = nextVolume;
                     }}
                   >
-                    {volume ? <Volume2 className="h-5 w-5"/> : <VolumeX className="h-5 w-5"/>}
+                    {volume ? <Volume2 className="h-4 w-4 sm:h-5 sm:w-5"/> : <VolumeX className="h-4 w-4 sm:h-5 sm:w-5"/>}
                   </PlayerButton>
                   <div className="relative hidden sm:block">
                     <PlayerButton label="سرعة التشغيل" onClick={() => setShowSpeed(!showSpeed)}>
@@ -999,8 +1000,8 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                   <PlayerButton label="صورة داخل صورة" className="hidden sm:grid" onClick={() => void videoRef.current?.requestPictureInPicture?.()}>
                     <PictureInPicture className="h-5 w-5"/>
                   </PlayerButton>
-                  <PlayerButton label={isFullscreen ? "الخروج من ملء الشاشة" : "ملء الشاشة"} onClick={() => void toggleFullscreen()}>
-                    {isFullscreen ? <Minimize className="h-5 w-5"/> : <Maximize className="h-5 w-5"/>}
+                  <PlayerButton label={isFullscreen ? "الخروج من ملء الشاشة" : "ملء الشاشة"} onClick={() => void toggleFullscreen()} className="h-9 w-9 sm:h-11 sm:w-11">
+                    {isFullscreen ? <Minimize className="h-4 w-4 sm:h-5 sm:w-5"/> : <Maximize className="h-4 w-4 sm:h-5 sm:w-5"/>}
                   </PlayerButton>
                 </div>
               )}

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LearningFile } from "@/types/platform";
+import { FilePreviewModal } from "../FilePreviewModal";
 
 // Helper for file type icons & accent colors
 function getFileTypeDetails(mimeType?: string | null, originalName: string = "") {
@@ -254,58 +255,8 @@ export function FilesTab({ files }: { files: LearningFile[] }) {
         <EmptyFilesState hasCategoryFilter={selectedCategory !== "all"} />
       )}
 
-      {/* 4. Preview Modal */}
-      <AnimatePresence>
-        {previewFile && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/75 p-3 sm:p-6"
-            onMouseDown={(event) => { if (event.currentTarget === event.target) setPreviewFile(null); }}
-          >
-            <motion.section
-              initial={{ scale: 0.98, y: 12 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.98, y: 12 }}
-              role="dialog"
-              aria-modal="true"
-              aria-label={`معاينة ${previewFile.title}`}
-              className="flex h-[min(90vh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white dark:bg-[#101E32] border border-slate-200 dark:border-[#283A54] shadow-2xl"
-            >
-              <header className="flex items-center justify-between gap-3 border-b border-slate-200 dark:border-[#283A54] px-4 py-3 bg-slate-50 dark:bg-[#172A46]">
-                <div className="min-w-0">
-                  <strong className="block truncate text-slate-900 dark:text-white font-bold">{previewFile.title}</strong>
-                  <span dir="ltr" className="block truncate text-xs text-slate-500 dark:text-[#AFC0D6] text-right" style={{ unicodeBidi: "isolate" }}>{previewFile.originalName}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setPreviewFile(null)}
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-xl hover:bg-slate-200 dark:hover:bg-[#1D3252] text-slate-600 dark:text-slate-300 transition-colors"
-                  aria-label="إغلاق المعاينة"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </header>
-              <div className="min-h-0 flex-1 bg-slate-100 dark:bg-[#08111F] p-2 sm:p-4">
-                {previewFile.mimeType?.startsWith("image/") ? (
-                  <img src={`/api/learning/files/${previewFile.id}/preview?deviceId=${encodeURIComponent(localStorage.getItem("dr_mahmoud_device_id") || "")}`} alt={previewFile.title} className="h-full w-full object-contain select-none" onContextMenu={(e) => e.preventDefault()} />
-                ) : previewFile.mimeType === "application/pdf" || previewFile.mimeType?.startsWith("text/") ? (
-                  <iframe src={`/api/learning/files/${previewFile.id}/preview?deviceId=${encodeURIComponent(localStorage.getItem("dr_mahmoud_device_id") || "")}#toolbar=0&navpanes=0&scrollbar=1`} title={previewFile.title} className="h-full w-full rounded-xl border border-slate-200 dark:border-[#283A54] bg-white dark:bg-[#101E32]" />
-                ) : (
-                  <div className="grid h-full place-items-center rounded-xl border border-slate-200 dark:border-[#283A54] bg-white dark:bg-[#101E32] p-8 text-center">
-                    <div>
-                      <FileText className="mx-auto h-12 w-12 text-[#247CF0]" />
-                      <strong className="mt-4 block text-slate-900 dark:text-white">لا يمكن عرض هذا النوع داخل المتصفح</strong>
-                      <p className="mt-2 text-sm text-slate-500 dark:text-[#AFC0D6]">ارفع نسخة PDF من الملف لمعاينتها بأمان داخل المنصة.</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </motion.section>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* 4. Responsive Fullscreen-Optimized Preview Modal */}
+      <FilePreviewModal file={previewFile as any} onClose={() => setPreviewFile(null)} />
     </section>
   );
 }

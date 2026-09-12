@@ -28,6 +28,8 @@ import {
   Sparkles,
   AlertCircle,
   Code2,
+  Maximize2,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VideoLessonsSection } from "@/components/YoutubeSection";
@@ -48,6 +50,7 @@ import { AccessScreen } from "./tabs/AccessScreen";
 import { StudentSummariesTab } from "./tabs/StudentSummariesTab";
 import { IncompleteProfileModal } from "./tabs/IncompleteProfileModal";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { FilePreviewModal } from "./FilePreviewModal";
 
 import type {
   Student,
@@ -90,19 +93,7 @@ const getOptionLetter = (index: number, isEng: boolean): string => {
 };
 
 function AppFilePreviewModal({ file, onClose }: { file: LearningFile | null; onClose: () => void }) {
-  if (!file) return null;
-  const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
-  const previewUrl = `/api/learning/files/${file.id}/preview${deviceId ? `?deviceId=${encodeURIComponent(deviceId)}` : ""}#toolbar=0&navpanes=0&scrollbar=1`;
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[110] grid place-items-center bg-black/70 backdrop-blur-sm p-3 sm:p-6" onMouseDown={(event) => { if (event.currentTarget === event.target) onClose(); }}>
-      <motion.section initial={{ scale: 0.98, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.98, y: 12 }} role="dialog" aria-modal="true" aria-label={`معاينة ${file.title}`} className="flex h-[min(90vh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-card border border-border shadow-2xl">
-        <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3"><div className="min-w-0"><strong className="block truncate text-foreground">{file.title}</strong><span className="block truncate text-xs text-muted-foreground">{file.originalName}</span></div><button type="button" onClick={onClose} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl hover:bg-muted transition-colors" aria-label="إغلاق المعاينة"><X className="h-5 w-5" /></button></header>
-        <div className="min-h-0 flex-1 bg-muted p-2 sm:p-4">
-          {file.mimeType?.startsWith("image/") ? <img src={previewUrl} alt={file.title} className="h-full w-full object-contain" /> : file.mimeType === "application/pdf" || file.mimeType?.startsWith("text/") ? <iframe src={previewUrl} title={file.title} className="h-full w-full rounded-xl border border-border bg-card" /> : <div className="grid h-full place-items-center rounded-xl border border-border bg-card p-8 text-center"><div><FileText className="mx-auto h-12 w-12 text-primary" /><strong className="mt-4 block text-foreground">لا يمكن عرض هذا النوع داخل المتصفح</strong><p className="mt-2 text-sm text-muted-foreground">اطلب نسخة PDF لمعاينتها داخل المنصة.</p></div></div>}
-        </div>
-      </motion.section>
-    </motion.div>
-  );
+  return <FilePreviewModal file={file} onClose={onClose} />;
 }
 
 
@@ -142,6 +133,7 @@ export function StudentPlatform() {
 
   // Quiz active states & Timer
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [quizAnswers, setQuizAnswers] = useState<number[]>([]);
   const [quizTimeRemaining, setQuizTimeRemaining] = useState<number | null>(null);
   const [quizStartTime, setQuizStartTime] = useState<number>(0);
@@ -1060,8 +1052,22 @@ export function StudentPlatform() {
                       </div>
 
                       {q.imageUrl && (
-                        <div className="my-3 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 max-h-72 flex justify-center p-2">
-                          <img src={q.imageUrl} alt={`Question ${qi + 1} image`} className="object-contain max-h-64 rounded-xl" />
+                        <div className="my-3 sm:my-4 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/60 p-2 sm:p-4 flex flex-col items-center justify-center">
+                          <img
+                            src={q.imageUrl}
+                            alt={`Question ${qi + 1} image`}
+                            onClick={() => setLightboxImage(q.imageUrl || null)}
+                            className="object-contain max-h-[55vh] sm:max-h-[65vh] w-auto max-w-full rounded-xl cursor-zoom-in transition duration-200 hover:scale-[1.01] active:scale-95 shadow-sm"
+                            title="اضغط لتكبير الصورة بملء الشاشة"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setLightboxImage(q.imageUrl || null)}
+                            className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition"
+                          >
+                            <Maximize2 className="h-3.5 w-3.5" />
+                            <span>اضغط لتكبير الصورة وفحص التفاصيل بدقة</span>
+                          </button>
                         </div>
                       )}
 
@@ -1091,7 +1097,7 @@ export function StudentPlatform() {
                             <label
                               key={oi}
                               dir={isEng ? "ltr" : "rtl"}
-                              className={`flex min-h-13 sm:min-h-14 cursor-pointer items-center gap-3.5 rounded-2xl border px-4 py-3.5 transition-all ${optionStyle}`}
+                              className={`flex min-h-12 sm:min-h-14 cursor-pointer items-center gap-3 sm:gap-3.5 rounded-2xl border px-3 sm:px-4 py-3 sm:py-3.5 transition-all select-none ${optionStyle}`}
                             >
                               <input
                                 type="radio"
@@ -1106,7 +1112,7 @@ export function StudentPlatform() {
                                 className="text-blue-600 focus:ring-blue-500 h-4 w-4 shrink-0 cursor-pointer"
                               />
                               <span
-                                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-xs font-black transition-colors ${
+                                className={`flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl text-xs sm:text-sm font-black transition-colors ${
                                   optionSelected
                                     ? "bg-blue-600 text-white"
                                     : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
@@ -1114,7 +1120,7 @@ export function StudentPlatform() {
                               >
                                 {letter}
                               </span>
-                              <span dir={isEng ? "ltr" : "rtl"} className={`text-sm sm:text-base font-medium flex-1 leading-relaxed ${isEng ? "text-left" : "text-right"}`}>
+                              <span dir={isEng ? "ltr" : "rtl"} className={`text-sm sm:text-base font-semibold flex-1 leading-relaxed break-words ${isEng ? "text-left" : "text-right"}`}>
                                 {option}
                               </span>
                             </label>
@@ -1179,6 +1185,46 @@ export function StudentPlatform() {
                   </div>
                 )}
               </div>
+            </div>
+          </motion.div>
+        )}
+        {lightboxImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[160] flex flex-col items-center justify-center bg-black/95 backdrop-blur-md p-2 sm:p-6 select-none"
+          >
+            <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+              <a
+                href={lightboxImage}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-3 py-2 text-xs font-bold text-white hover:bg-white/20 transition"
+                title="فتح في نافذة مستقلة"
+              >
+                <ExternalLink className="h-4 w-4" />
+                <span className="hidden sm:inline">نافذة مستقلة</span>
+              </a>
+              <button
+                type="button"
+                onClick={() => setLightboxImage(null)}
+                className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-white hover:bg-red-500/30 hover:text-red-300 transition"
+                aria-label="إغلاق"
+                title="إغلاق"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div
+              className="max-h-[90vh] max-w-[95vw] overflow-auto flex items-center justify-center p-2"
+              onClick={() => setLightboxImage(null)}
+            >
+              <img
+                src={lightboxImage}
+                alt="تكبير السؤال"
+                className="max-h-[85vh] max-w-full object-contain rounded-xl shadow-2xl cursor-zoom-out"
+              />
             </div>
           </motion.div>
         )}
