@@ -776,8 +776,8 @@ router.get("/videos/:id/stream", async (req, res, next) => {
       }
 
       // ── Payment gating on stream ──
-      if (approvedStudent && (approvedStudent.status !== "approved" || approvedStudent.paymentStatus !== "paid")) {
-        const maxAllowedFreeVideos = 1;
+      if (approvedStudent && (approvedStudent.status !== "approved" && approvedStudent.paymentStatus !== "paid")) {
+        const maxAllowedFreeVideos = approvedStudent.educationSystem === "university" ? 1 : 2;
         const courseKey = video.courseId ? eq(videosTable.courseId, video.courseId) : eq(videosTable.category, video.category);
         const courseVideos = await db
           .select({ id: videosTable.id, order: videosTable.order })
@@ -787,7 +787,7 @@ router.get("/videos/:id/stream", async (req, res, next) => {
         const videoIndex = courseVideos.findIndex((v) => v.id === video.id);
         if (videoIndex === -1 || videoIndex >= maxAllowedFreeVideos) {
           res.status(403).json({
-            error: "ادفع رسوم الاشتراك لمشاهدة باقي المحاضرات. يُسمح بفيديو معاينة واحد فقط مجاناً لكل مادة.",
+            error: "ادفع رسوم الاشتراك لمشاهدة باقي المحاضرات. يُسمح بمحاضرات المعاينة المجانية فقط.",
             code: "PAYMENT_REQUIRED",
           });
           return;
@@ -872,7 +872,6 @@ router.get("/videos/:id/stream", async (req, res, next) => {
       VIDEO_CONTENT_TYPES[path.extname(filename).toLowerCase()] ||
       "video/mp4";
     const cacheControl = "private, max-age=86400, stale-while-revalidate=3600";
-    const MAX_CHUNK_SIZE = 8 * 1024 * 1024; // 8MB chunk for ultra-smooth progressive buffering without stutter
 
     if (range) {
       const match = range.match(/^bytes=(\d*)-(\d*)$/);
@@ -901,12 +900,13 @@ router.get("/videos/:id/stream", async (req, res, next) => {
         end = fileSize - 1;
       } else if (rawStart !== "" && rawEnd === "") {
         // Open-ended range: bytes=1000-
+        // Stream seamlessly to the end of file so the browser buffer does not starve after 10s
         start = parseInt(rawStart, 10);
         if (isNaN(start) || start >= fileSize || start < 0) {
           res.status(416).setHeader("Content-Range", `bytes */${fileSize}`).end();
           return;
         }
-        end = Math.min(start + MAX_CHUNK_SIZE - 1, fileSize - 1);
+        end = fileSize - 1;
       } else if (rawStart !== "" && rawEnd !== "") {
         // Explicit range: bytes=0-1000
         start = parseInt(rawStart, 10);
@@ -915,7 +915,7 @@ router.get("/videos/:id/stream", async (req, res, next) => {
           res.status(416).setHeader("Content-Range", `bytes */${fileSize}`).end();
           return;
         }
-        end = Math.min(requestedEnd, start + MAX_CHUNK_SIZE - 1, fileSize - 1);
+        end = Math.min(requestedEnd, fileSize - 1);
       } else {
         res.status(416).setHeader("Content-Range", `bytes */${fileSize}`).end();
         return;

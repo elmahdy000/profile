@@ -5562,8 +5562,20 @@ router.post(
       }
       // maxAttempts <= 0 means unlimited attempts
       const unlimitedAttempts = !quiz.maxAttempts || quiz.maxAttempts <= 0;
+      const [extraGrant] = await db
+        .select({ extraAttempts: quizExtraAttemptsTable.extraAttempts })
+        .from(quizExtraAttemptsTable)
+        .where(
+          and(
+            eq(quizExtraAttemptsTable.quizId, quiz.id),
+            eq(quizExtraAttemptsTable.studentId, student.id),
+          ),
+        )
+        .limit(1);
+      const extraGranted = extraGrant?.extraAttempts ?? 0;
+      const effectiveMaxAttempts = unlimitedAttempts ? null : quiz.maxAttempts + extraGranted;
       const previousAttempts = await db.select({ id: quizAttemptsTable.id }).from(quizAttemptsTable).where(and(eq(quizAttemptsTable.quizId, quiz.id), eq(quizAttemptsTable.studentId, student.id)));
-      if (!unlimitedAttempts && previousAttempts.length >= quiz.maxAttempts) {
+      if (!unlimitedAttempts && previousAttempts.length >= (effectiveMaxAttempts ?? 0)) {
         res.status(409).json({ error: "استخدمت كل المحاولات المتاحة لهذا الاختبار" }); return;
       }
       if (quiz.scope === "lesson" && quiz.videoId) {
@@ -5608,7 +5620,7 @@ router.post(
       // Wrap check + insert in transaction to prevent race condition
       const result = await db.transaction(async (tx) => {
         const prevAttempts = await tx.select({ id: quizAttemptsTable.id }).from(quizAttemptsTable).where(and(eq(quizAttemptsTable.quizId, quiz.id), eq(quizAttemptsTable.studentId, student.id)));
-        if (!unlimitedAttempts && prevAttempts.length >= quiz.maxAttempts) {
+        if (!unlimitedAttempts && prevAttempts.length >= (effectiveMaxAttempts ?? 0)) {
           return null; // exceeded
         }
         const [attempt] = await tx
@@ -5653,7 +5665,7 @@ router.post(
         correct,
         total: effectiveTotal,
         attemptsUsed: result.attemptsUsed,
-        attemptsRemaining: unlimitedAttempts ? null : Math.max(0, quiz.maxAttempts - result.attemptsUsed),
+        attemptsRemaining: unlimitedAttempts ? null : Math.max(0, (effectiveMaxAttempts ?? 0) - result.attemptsUsed),
         details,
         ...(showExplanations && {
           explanations: quiz.questions.map((q) => q.explanation ?? null),

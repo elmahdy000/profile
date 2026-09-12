@@ -533,7 +533,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
       void saveProgress(item, percent >= 90 ? 100 : percent, video.currentTime, video.duration);
     }, 12000);
     return () => window.clearInterval(saveTimer.current);
-  }, [isProtected, item]);
+  }, [isProtected, item.id]);
 
   const [seekNotice, setSeekNotice] = useState<string | null>(null);
 
@@ -577,13 +577,9 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
 
   const refreshStreamUrl = async (retryCount = 0) => {
     if (refreshAttempted.current && retryCount === 0) {
-      setPlayerErrorMessage("الفيديو مش متاح دلوقتي. حاول تاني بعد شوية.");
-      setPlayerError(true);
       return;
     }
-    if (retryCount === 0) {
-      refreshAttempted.current = true;
-    }
+    refreshAttempted.current = true;
     try {
       const savedStored = item.id ? (readJson<Record<number, number>>("dr_mahmoud_watch_positions", {})[item.id] || 0) : 0;
       const currentPos = Math.max(
@@ -606,25 +602,30 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
       if (response.ok) {
         const data = await response.json() as { url: string };
         if (data?.url) {
-          setStreamSrc(data.url);
+          setStreamSrc((prev) => (prev === data.url ? prev : data.url));
           setPlayerError(false);
           refreshAttempted.current = false;
           return;
         }
       }
-      if (retryCount < 2) {
-        setTimeout(() => void refreshStreamUrl(retryCount + 1), 1200);
+      if (retryCount < 3) {
+        setTimeout(() => void refreshStreamUrl(retryCount + 1), 1000 * (retryCount + 1));
         return;
       }
-      setPlayerErrorMessage("رابط الفيديو غير صالح أو الملف غير موجود على السيرفر.");
+      setPlayerErrorMessage("رابط الفيديو غير صالح أو انتهت صلاحية الجلسة.");
+      setPlayerError(true);
     } catch {
-      if (retryCount < 2) {
-        setTimeout(() => void refreshStreamUrl(retryCount + 1), 1200);
+      if (retryCount < 3) {
+        setTimeout(() => void refreshStreamUrl(retryCount + 1), 1000 * (retryCount + 1));
         return;
       }
       setPlayerErrorMessage("تعذر الاتصال بالسيرفر. تأكد من اتصال الإنترنت وحاول ثانية.");
+      setPlayerError(true);
+    } finally {
+      if (retryCount >= 3) {
+        refreshAttempted.current = false;
+      }
     }
-    setPlayerError(true);
   };
 
   const markComplete = async () => {
@@ -747,7 +748,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
   );
 
   return <AnimatePresence>
-    <motion.div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-black/85 p-0 backdrop-blur-sm sm:p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+    <motion.div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-black/85 p-0 backdrop-blur-sm sm:p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <motion.div ref={shellRef} role="dialog" aria-modal="true" aria-labelledby="lesson-player-title" dir="rtl" initial={{ opacity: 0, scale: .98, y: 12 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: .98, y: 12 }} className="flex h-[100dvh] max-h-[100dvh] w-full max-w-[1280px] flex-col overflow-hidden bg-slate-950 shadow-2xl sm:h-auto sm:max-h-[92vh] sm:rounded-[20px] sm:border sm:border-white/10">
         <header className="relative shrink-0 border-b border-white/10 bg-slate-950 px-4 py-3 sm:px-5 landscape:hidden">
           <div className="flex min-h-11 items-center gap-3">
@@ -830,6 +831,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                     onError={(event) => {
                       const err = event.currentTarget.error;
                       if (err && err.code === 1) return; // MEDIA_ERR_ABORTED: ignore user seeks
+                      refreshAttempted.current = false;
                       void refreshStreamUrl();
                     }}
                     onPlay={() => setPlaying(true)}

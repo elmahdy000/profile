@@ -155,12 +155,23 @@ export function StudentPlatform() {
   } | null>(null);
   const [quizSubmitting, setQuizSubmitting] = useState(false);
   const [quizElapsedSeconds, setQuizElapsedSeconds] = useState(0);
-  const submitQuizRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  const submitQuizRef = useRef<(isAuto?: boolean) => Promise<void>>(() => Promise.resolve());
   // Synchronous re-entrancy guard: setState is async, so a second trigger in the
   // same tick could slip past the state-based checks. This ref blocks that.
   const quizSubmitInFlightRef = useRef(false);
   const quizScrollContainerRef = useRef<HTMLDivElement>(null);
   const playNotificationSound = useNotificationSound();
+
+  // Prevent accidental page refresh / navigation during active exam
+  useEffect(() => {
+    if (!activeQuiz || quizResult) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [activeQuiz, quizResult]);
 
   // Exam Countdown Timer Effect
   useEffect(() => {
@@ -171,7 +182,7 @@ export function StudentPlatform() {
         if (prev === null) return null;
         if (prev <= 1) {
           toast({ title: "انتهى وقت الاختبار", description: "جاري تسليم إجاباتك تلقائياً..." });
-          void submitQuizRef.current();
+          void submitQuizRef.current(true);
           return 0;
         }
         return prev - 1;
@@ -212,10 +223,24 @@ export function StudentPlatform() {
     setQuizTimeRemaining(quiz.durationMinutes ? quiz.durationMinutes * 60 : null);
   };
 
-  const submitQuiz = async () => {
+  const submitQuiz = async (isAuto = false) => {
     // Guard against double/late submission: timer expiry, anti-cheat auto-submit,
     // and the manual button can all fire close together. Only submit once.
     if (!activeQuiz || quizResult || quizSubmitting || quizSubmitInFlightRef.current) return;
+
+    // Check if there are unanswered questions when manually submitted
+    if (!isAuto) {
+      const answeredCount = quizAnswers.filter((a) => a >= 0).length;
+      const totalQuestions = activeQuiz.questions.length;
+      if (answeredCount < totalQuestions) {
+        const remaining = totalQuestions - answeredCount;
+        const confirmMsg = `تنبيه: لديك ${remaining} ${remaining === 1 ? "سؤال" : "أسئلة"} دون إجابة (أجبت على ${answeredCount} من أصل ${totalQuestions}).\n\nهل أنت متأكد من رغبتك في تسليم وتصحيح الاختبار الآن؟`;
+        if (!window.confirm(confirmMsg)) {
+          return;
+        }
+      }
+    }
+
     quizSubmitInFlightRef.current = true;
     setQuizSubmitting(true);
     const timeSpentSeconds = Math.round((Date.now() - quizStartTime) / 1000);
@@ -758,125 +783,133 @@ export function StudentPlatform() {
         {linkedPreviewFile && <AppFilePreviewModal file={linkedPreviewFile} onClose={() => setLinkedPreviewFile(null)} />}
         {activeQuiz && (
           <motion.div
-            className="fixed inset-0 z-[100] bg-black/75 p-4 overflow-y-auto flex items-center justify-center backdrop-blur-sm"
+            className="fixed inset-0 z-[100] bg-slate-50 dark:bg-[#070D18] flex flex-col overflow-hidden select-none md:select-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => {
-              // Only close if quiz is completed and result is shown.
-              // Never submit or close on backdrop click during an active exam.
-              if (quizResult) {
-                setActiveQuiz(null);
-                setQuizResult(null);
-              }
-            }}
           >
-            <motion.div
-              className="w-full max-w-xl rounded-3xl bg-background p-5 md:p-6 shadow-2xl relative border border-border"
-              onClick={(e) => e.stopPropagation()}
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-            >
-              {/* Sticky Timer Bar */}
-              <div className="sticky top-0 z-30 -mx-5 -mt-5 md:-mx-6 md:-mt-6 mb-0">
-                <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3.5 md:px-6 rounded-t-3xl border-b border-border shadow-xs transition-colors duration-300 bg-background ${
-                  quizResult
-                    ? "border-emerald-500/30"
-                    : quizTimeRemaining !== null
-                      ? quizTimeRemaining < 30
-                        ? "bg-red-500/10 border-red-500/30"
-                        : quizTimeRemaining < 60
-                        ? "bg-amber-500/10 border-amber-500/25"
-                        : "bg-background"
-                      : "bg-background"
-                }`} dir="rtl">
-                  {/* Right side (RTL): Quiz title & Stats */}
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <h2 className="text-base md:text-lg font-black text-foreground leading-tight truncate" dir="auto">
+            {/* ── 1. Sticky Full-Width Header Bar ── */}
+            <header className="sticky top-0 z-30 shrink-0 border-b border-slate-200 dark:border-slate-800/80 bg-white/95 dark:bg-[#0D1B2E]/95 backdrop-blur-md shadow-xs">
+              <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3" dir="rtl">
+                {/* Title and stats on Right (RTL) */}
+                <div className="min-w-0 flex-1 space-y-1 text-right">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60 px-2 py-0.5 text-xs font-black">
+                      اختبار إلكتروني
+                    </span>
+                    <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight truncate" dir="auto">
                       {activeQuiz.title}
                     </h2>
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground font-semibold">
-                      <span>{activeQuiz.questionsToShow && activeQuiz.questionsToShow > 0 ? activeQuiz.questionsToShow : activeQuiz.questions.length} سؤال</span>
-                      <span>•</span>
-                      <span>نجاح {activeQuiz.passingScore}%</span>
-                      {!quizResult && (
-                        <>
-                          <span>•</span>
-                          <span className="font-bold text-primary">
-                            أجبت: {quizAnswers.filter(a => a >= 0).length}/{activeQuiz.questions.length}
-                          </span>
-                        </>
-                      )}
-                    </div>
                   </div>
-
-                  {/* Left side (LTR): Timer */}
-                  {!quizResult && (
-                    <div className="flex items-center gap-2 shrink-0 justify-end" dir="ltr">
-
-                      <div className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-bold shadow-2xs transition-all duration-500 ${
-                        quizTimeRemaining === null
-                          ? "bg-muted text-muted-foreground"
-                          : quizTimeRemaining < 30
-                          ? "bg-red-500/20 text-red-500 border border-red-500/30 animate-pulse"
-                          : quizTimeRemaining < 60
-                          ? "bg-amber-500/15 text-amber-600 border border-amber-500/20"
-                          : "bg-primary/10 text-primary border border-primary/20"
-                      }`}>
-                        <Clock className="h-3.5 w-3.5 shrink-0" />
-                        <span className="font-black text-sm tabular-nums">
-                          {quizTimeRemaining !== null
-                            ? `${Math.floor(quizTimeRemaining / 60)}:${String(quizTimeRemaining % 60).padStart(2, "0")}`
-                            : `${Math.floor(quizElapsedSeconds / 60)}:${String(quizElapsedSeconds % 60).padStart(2, "0")}`
-                          }
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
+                    <span>{activeQuiz.questionsToShow && activeQuiz.questionsToShow > 0 ? activeQuiz.questionsToShow : activeQuiz.questions.length} سؤال</span>
+                    <span>•</span>
+                    <span>نسبة النجاح {activeQuiz.passingScore}%</span>
+                    {!quizResult && (
+                      <>
+                        <span>•</span>
+                        <span className="font-extrabold text-blue-600 dark:text-blue-400">
+                          أجبت: {quizAnswers.filter((a) => a >= 0).length} / {activeQuiz.questions.length}
                         </span>
-                        {quizTimeRemaining !== null && (
-                          <span className="text-[10px] font-bold opacity-70">
-                            {(() => {
-                              const totalSeconds = Math.round((activeQuiz.durationMinutes ?? 0) * 60);
-                              return `/ ${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, "0")}`;
-                            })()}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                      </>
+                    )}
+                  </div>
                 </div>
 
-                {/* Progress bar for countdown */}
-                {quizTimeRemaining !== null && !quizResult && activeQuiz.durationMinutes && (
-                  <div className="h-1 w-full bg-border overflow-hidden">
+                {/* Left side (LTR): Timer & Safe Exit button */}
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0" dir="ltr">
+                  {!quizResult && (
                     <div
-                      className={`h-full transition-all duration-1000 ease-linear ${
-                        quizTimeRemaining < 30 ? "bg-red-500" : quizTimeRemaining < 60 ? "bg-amber-500" : "bg-primary"
+                      className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-bold shadow-2xs transition-all duration-300 ${
+                        quizTimeRemaining === null
+                          ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                          : quizTimeRemaining < 30
+                          ? "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 animate-pulse"
+                          : quizTimeRemaining < 60
+                          ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                          : "bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-500/20"
                       }`}
-                      style={{ width: `${(quizTimeRemaining / (activeQuiz.durationMinutes * 60)) * 100}%` }}
-                    />
-                  </div>
-                )}
+                    >
+                      <Clock className="h-4 w-4 shrink-0" />
+                      <span className="font-black text-sm sm:text-base tabular-nums">
+                        {quizTimeRemaining !== null
+                          ? `${Math.floor(quizTimeRemaining / 60)}:${String(quizTimeRemaining % 60).padStart(2, "0")}`
+                          : `${Math.floor(quizElapsedSeconds / 60)}:${String(quizElapsedSeconds % 60).padStart(2, "0")}`
+                        }
+                      </span>
+                      {quizTimeRemaining !== null && (
+                        <span className="text-[10px] font-bold opacity-70">
+                          {(() => {
+                            const totalSeconds = Math.round((activeQuiz.durationMinutes ?? 0) * 60);
+                            return `/ ${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, "0")}`;
+                          })()}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Explicit Exit button that requires confirmation */}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      if (!quizResult) {
+                        if (
+                          !window.confirm(
+                            "هل أنت متأكد من رغبتك في الخروج من الاختبار؟ لن يتم حفظ إجاباتك إلا عند الضغط على زر 'تسليم وتصحيح الاختبار'."
+                          )
+                        ) {
+                          return;
+                        }
+                      }
+                      setActiveQuiz(null);
+                      setQuizResult(null);
+                    }}
+                    className="h-9 px-3 text-xs font-bold text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-all"
+                  >
+                    <X className="h-4 w-4 ml-1" />
+                    {quizResult ? "إغلاق" : "خروج"}
+                  </Button>
+                </div>
               </div>
 
-              <div className="border-b border-border mt-3 mb-3" />
+              {/* Progress bar for countdown */}
+              {quizTimeRemaining !== null && !quizResult && activeQuiz.durationMinutes && (
+                <div className="h-1 w-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-1000 ease-linear ${
+                      quizTimeRemaining < 30 ? "bg-red-500" : quizTimeRemaining < 60 ? "bg-amber-500" : "bg-blue-600"
+                    }`}
+                    style={{ width: `${(quizTimeRemaining / (activeQuiz.durationMinutes * 60)) * 100}%` }}
+                  />
+                </div>
+              )}
+            </header>
 
-              <div ref={quizScrollContainerRef} className="mt-2 space-y-5 max-h-[60vh] overflow-y-auto px-1 scroll-smooth" dir="ltr">
+            {/* ── 2. Full-Screen Scrollable Content (Takes 100% Height, Comfortable Reading) ── */}
+            <div
+              ref={quizScrollContainerRef}
+              className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 md:py-8 scroll-smooth"
+            >
+              <div className="max-w-3xl lg:max-w-4xl mx-auto space-y-6 pb-20">
                 {/* Result Card: Placed at TOP when exam is finished */}
                 {quizResult && (
                   <div
-                    className={`mb-6 rounded-2xl p-5 md:p-6 text-center shadow-xl transition-all border relative overflow-hidden ${
+                    className={`rounded-3xl p-6 md:p-8 text-center shadow-xl transition-all border relative overflow-hidden ${
                       quizResult.passed
                         ? "bg-emerald-500/10 dark:bg-emerald-950/40 border-emerald-500/30 text-emerald-900 dark:text-emerald-200"
                         : "bg-red-500/10 dark:bg-red-950/40 border-red-500/30 text-red-900 dark:text-red-200"
                     }`}
                     dir="rtl"
                   >
-                    <div className={`absolute -top-10 -right-10 h-32 w-32 rounded-full blur-2xl opacity-20 ${quizResult.passed ? "bg-emerald-500" : "bg-red-500"}`} />
+                    <div className={`absolute -top-10 -right-10 h-40 w-40 rounded-full blur-3xl opacity-20 ${quizResult.passed ? "bg-emerald-500" : "bg-red-500"}`} />
 
-                    <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-background/90 shadow-md mb-3 border border-current/10">
+                    <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-white dark:bg-[#0F1D32] shadow-md mb-3.5 border border-current/10">
                       {quizResult.passed ? (
-                        <Sparkles className="h-8 w-8 text-emerald-500 animate-bounce" />
+                        <Sparkles className="h-9 w-9 text-emerald-500 animate-bounce" />
                       ) : (
-                        <AlertCircle className="h-8 w-8 text-red-500" />
+                        <AlertCircle className="h-9 w-9 text-red-500" />
                       )}
                     </div>
 
@@ -884,19 +917,19 @@ export function StudentPlatform() {
                       {quizResult.passed ? "مبروك! تم الاجتياز بنجاح 🎉" : "للأسف لم تتخطَ درجة النجاح 💔"}
                     </strong>
 
-                    <p className="mt-1 text-xs md:text-sm font-semibold opacity-90">
+                    <p className="mt-1.5 text-xs md:text-sm font-semibold opacity-90 max-w-md mx-auto">
                       {quizResult.passed
                         ? "أداء ممتاز! تم توثيق نتيجتك وحفظ المحاولة بنجاح."
                         : `درجة النجاح المطلوبة هي ${activeQuiz?.passingScore}%، ادرس الأسئلة الموضحة بالأسفل وحاول مجدداً.`}
                     </p>
 
                     {/* Progress Bar for Score */}
-                    <div className="mt-4 mb-2 space-y-1.5" dir="rtl">
+                    <div className="mt-5 mb-2 max-w-md mx-auto space-y-1.5" dir="rtl">
                       <div className="flex justify-between items-center text-xs font-extrabold px-1">
                         <span>الدرجة المكتسبة</span>
-                        <span className="font-mono text-sm font-black text-primary">{quizResult.score}%</span>
+                        <span className="font-mono text-sm font-black text-blue-600 dark:text-blue-400">{quizResult.score}%</span>
                       </div>
-                      <div className="h-3 w-full bg-background/80 rounded-full overflow-hidden p-0.5 border border-current/15 shadow-inner">
+                      <div className="h-3.5 w-full bg-white/80 dark:bg-[#070D18]/80 rounded-full overflow-hidden p-0.5 border border-current/15 shadow-inner">
                         <div
                           className={`h-full rounded-full transition-all duration-1000 ${
                             quizResult.passed
@@ -909,35 +942,36 @@ export function StudentPlatform() {
                     </div>
 
                     {/* Stats Grid: RTL with explicit LTR number handling */}
-                    <div className="grid grid-cols-3 gap-1.5 md:gap-3 mt-4 pt-4 border-t border-current/15" dir="rtl">
-                      <div className="rounded-xl bg-background/80 p-2 md:p-2.5 text-center shadow-xs border border-current/5 flex flex-col items-center justify-center">
-                        <span className="block text-[10px] md:text-xs font-bold text-muted-foreground whitespace-nowrap">النسبة</span>
-                        <strong className="block text-sm md:text-base font-black text-primary">{quizResult.score}%</strong>
+                    <div className="grid grid-cols-3 gap-2 md:gap-4 mt-5 pt-5 border-t border-current/15 max-w-lg mx-auto" dir="rtl">
+                      <div className="rounded-2xl bg-white/80 dark:bg-[#0F1D32]/80 p-3 text-center shadow-xs border border-current/5 flex flex-col items-center justify-center">
+                        <span className="block text-[11px] md:text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">النسبة</span>
+                        <strong className="block text-base md:text-lg font-black text-blue-600 dark:text-blue-400">{quizResult.score}%</strong>
                       </div>
 
-                      <div className="rounded-xl bg-background/80 p-2 md:p-2.5 text-center shadow-xs border border-current/5 flex flex-col items-center justify-center min-w-0">
-                        <span className="block text-[10px] md:text-xs font-bold text-muted-foreground whitespace-nowrap truncate w-full">الإجابات الصحيحة</span>
+                      <div className="rounded-2xl bg-white/80 dark:bg-[#0F1D32]/80 p-3 text-center shadow-xs border border-current/5 flex flex-col items-center justify-center min-w-0">
+                        <span className="block text-[11px] md:text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap truncate w-full">الإجابات الصحيحة</span>
                         <div dir="ltr" className="flex items-center justify-center gap-0.5 whitespace-nowrap font-mono w-full">
-                          <span className="text-xs md:text-sm font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                          <span className="text-sm md:text-base font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                             {quizResult.correct} / {quizResult.total}
                           </span>
                         </div>
                       </div>
 
-                      <div className="rounded-xl bg-background/80 p-2 md:p-2.5 text-center shadow-xs border border-current/5 flex flex-col items-center justify-center">
-                        <span className="block text-[10px] md:text-xs font-bold text-muted-foreground whitespace-nowrap">المحاولات المتبقية</span>
+                      <div className="rounded-2xl bg-white/80 dark:bg-[#0F1D32]/80 p-3 text-center shadow-xs border border-current/5 flex flex-col items-center justify-center">
+                        <span className="block text-[11px] md:text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">المحاولات المتبقية</span>
                         <strong className="block text-xs md:text-sm font-black text-amber-600 dark:text-amber-400 whitespace-nowrap">
                           {quizResult.attemptsRemaining === null ? "بلا حدود" : quizResult.attemptsRemaining}
                         </strong>
                       </div>
                     </div>
 
-                    <div className="mt-3 pt-2 text-center text-xs font-bold text-muted-foreground">
-                      <span>↓ مرر لأسفل لمراجعة الأسئلة والشروحات</span>
+                    <div className="mt-4 pt-2 text-center text-xs font-bold text-slate-500 dark:text-slate-400">
+                      <span>↓ مرر لأسفل لمراجعة الأسئلة والشروحات التفصيلية</span>
                     </div>
                   </div>
                 )}
 
+                {/* Questions List */}
                 {activeQuiz.questions.map((q, qi) => {
                   const origIdx = (q as any)._originalIndex !== undefined ? (q as any)._originalIndex : qi;
                   const details = (quizResult as any)?.details as Array<{ questionIndex: number; selectedOption: number; correctOption: number; isCorrect: boolean }> | undefined;
@@ -948,29 +982,37 @@ export function StudentPlatform() {
                   const isEng = isEnglishQuestion(q.prompt, q.options);
 
                   return (
-                    <div key={qi} className={`space-y-4 rounded-2xl border p-5 transition-all shadow-xs ${isEng ? "text-left" : "text-right"} ${
-                      quizResult
-                        ? isCorrect
-                          ? "border-emerald-500/40 bg-emerald-500/5"
-                          : isWrong
-                          ? "border-red-500/40 bg-red-500/5"
-                          : "border-border bg-card/40"
-                        : "border-border bg-card/60"
-                    }`}>
+                    <div
+                      key={qi}
+                      className={`space-y-4 rounded-3xl border p-5 sm:p-7 transition-all shadow-xs ${isEng ? "text-left" : "text-right"} ${
+                        quizResult
+                          ? isCorrect
+                            ? "border-emerald-500/40 bg-emerald-500/5 dark:bg-emerald-950/20"
+                            : isWrong
+                            ? "border-red-500/40 bg-red-500/5 dark:bg-red-950/20"
+                            : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0D1B2E]"
+                          : isSelected
+                          ? "border-blue-500/40 bg-white dark:bg-[#0D1B2E] ring-1 ring-blue-500/10"
+                          : "border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0D1B2E]"
+                      }`}
+                    >
                       {/* Question Header & Prompt */}
-                      <div className="w-full space-y-2.5">
+                      <div className="w-full space-y-3">
                         <div className={`flex items-start justify-between gap-3 w-full ${isEng ? "flex-row" : "flex-row-reverse"}`}>
-                          <div className="flex-1 space-y-2">
+                          <div className="flex-1 space-y-2.5">
                             {(() => {
                               if (!isEng) {
                                 return (
-                                  <h3 dir="rtl" className="text-base md:text-lg font-bold text-foreground text-right leading-snug">
-                                    {qi + 1}. {q.prompt}
+                                  <h3 dir="rtl" className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 text-right leading-relaxed">
+                                    <span className="inline-flex items-center justify-center h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-black ml-2">
+                                      {qi + 1}
+                                    </span>
+                                    {q.prompt}
                                   </h3>
                                 );
                               }
 
-                              const lines = q.prompt.split('\n').map((l) => l.trim()).filter(Boolean);
+                              const lines = q.prompt.split("\n").map((l) => l.trim()).filter(Boolean);
                               const arLines = lines.filter((l) => /[\u0600-\u06FF]/.test(l));
                               const enLines = lines.filter((l) => !/[\u0600-\u06FF]/.test(l));
 
@@ -980,13 +1022,16 @@ export function StudentPlatform() {
                               return (
                                 <>
                                   {/* English Title Line */}
-                                  <h3 dir="ltr" className="text-base md:text-lg font-bold text-foreground text-left leading-snug">
-                                    {qi + 1}. {titleLine}
+                                  <h3 dir="ltr" className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 text-left leading-relaxed">
+                                    <span className="inline-flex items-center justify-center h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-black mr-2">
+                                      {qi + 1}
+                                    </span>
+                                    {titleLine}
                                   </h3>
 
                                   {/* Code Block if lines look like C++/Code */}
                                   {codeLines.length > 0 && (
-                                    <div dir="ltr" className="my-2.5 overflow-x-auto rounded-xl bg-slate-900 dark:bg-slate-950 p-3.5 text-xs md:text-sm font-mono text-emerald-400 border border-slate-800 shadow-inner leading-relaxed">
+                                    <div dir="ltr" className="my-3 overflow-x-auto rounded-2xl bg-slate-950 p-4 text-xs sm:text-sm font-mono text-emerald-400 border border-slate-800 shadow-inner leading-relaxed">
                                       {codeLines.map((cLine, ci) => (
                                         <div key={ci} className="whitespace-pre">{cLine}</div>
                                       ))}
@@ -995,7 +1040,7 @@ export function StudentPlatform() {
 
                                   {/* Arabic Translation Badge Card */}
                                   {arLines.length > 0 && (
-                                    <div dir="rtl" className="text-right text-xs md:text-sm font-semibold text-primary/90 bg-primary/5 dark:bg-primary/10 border border-primary/15 rounded-xl px-3.5 py-2 mt-2 leading-relaxed shadow-2xs">
+                                    <div dir="rtl" className="text-right text-xs sm:text-sm font-bold text-blue-700 dark:text-blue-300 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/40 rounded-xl px-4 py-2.5 mt-2 leading-relaxed">
                                       {arLines.join(" ")}
                                     </div>
                                   )}
@@ -1006,37 +1051,38 @@ export function StudentPlatform() {
 
                           {quizResult && (
                             <span className={`text-xs font-bold px-3 py-1 rounded-full shrink-0 ${
-                              isCorrect ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/15 text-red-600 dark:text-red-400'
+                              isCorrect ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-red-500/15 text-red-600 dark:text-red-400"
                             }`}>
-                              {isCorrect ? '✓ صح' : '✗ غلط'}
+                              {isCorrect ? "✓ إجابة صحيحة" : "✗ إجابة خاطئة"}
                             </span>
                           )}
                         </div>
                       </div>
 
                       {q.imageUrl && (
-                        <div className="my-3 overflow-hidden rounded-xl border border-border bg-muted max-h-56 flex justify-center">
-                          <img src={q.imageUrl} alt={`Question ${qi + 1} image`} className="object-contain max-h-56" />
+                        <div className="my-3 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 max-h-72 flex justify-center p-2">
+                          <img src={q.imageUrl} alt={`Question ${qi + 1} image`} className="object-contain max-h-64 rounded-xl" />
                         </div>
                       )}
 
-                      <div className="space-y-2.5 pt-1" dir={isEng ? "ltr" : "rtl"}>
+                      {/* Options Radio List */}
+                      <div className="space-y-3 pt-1" dir={isEng ? "ltr" : "rtl"}>
                         {q.options.map((option, oi) => {
                           const optionSelected = quizAnswers[qi] === oi;
                           const correctOptionIndex = detail ? detail.correctOption : q.correctIndex;
                           const optionIsCorrect = correctOptionIndex !== undefined && correctOptionIndex === oi;
-                          let optionStyle = "border-border hover:bg-muted/70 hover:border-primary/30";
+                          let optionStyle = "border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:border-blue-300 dark:hover:border-blue-700";
 
                           if (quizResult) {
                             if (optionIsCorrect) {
-                              optionStyle = "border-emerald-500 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-bold";
+                              optionStyle = "border-emerald-500 bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 font-bold";
                             } else if (optionSelected && !optionIsCorrect) {
-                              optionStyle = "border-red-500 bg-red-500/15 text-red-700 dark:text-red-300 line-through opacity-80";
+                              optionStyle = "border-red-500 bg-red-500/15 text-red-800 dark:text-red-200 line-through opacity-80";
                             } else {
-                              optionStyle = "border-border opacity-50";
+                              optionStyle = "border-slate-200 dark:border-slate-800 opacity-50";
                             }
                           } else if (optionSelected) {
-                            optionStyle = "border-primary bg-primary/10 text-primary font-bold ring-2 ring-primary/20 shadow-xs";
+                            optionStyle = "border-blue-600 dark:border-blue-500 bg-blue-50/80 dark:bg-blue-950/50 text-blue-900 dark:text-blue-100 font-bold ring-2 ring-blue-500/20 shadow-2xs";
                           }
 
                           const letter = getOptionLetter(oi, isEng);
@@ -1045,7 +1091,7 @@ export function StudentPlatform() {
                             <label
                               key={oi}
                               dir={isEng ? "ltr" : "rtl"}
-                              className={`flex min-h-12 cursor-pointer items-center gap-3.5 rounded-xl border px-4 py-3 transition-all ${optionStyle}`}
+                              className={`flex min-h-13 sm:min-h-14 cursor-pointer items-center gap-3.5 rounded-2xl border px-4 py-3.5 transition-all ${optionStyle}`}
                             >
                               <input
                                 type="radio"
@@ -1057,18 +1103,18 @@ export function StudentPlatform() {
                                     quizAnswers.map((a, i) => (i === qi ? oi : a)),
                                   )
                                 }
-                                className="text-primary focus:ring-primary h-4 w-4 shrink-0 cursor-pointer"
+                                className="text-blue-600 focus:ring-blue-500 h-4 w-4 shrink-0 cursor-pointer"
                               />
                               <span
-                                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-black ${
+                                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-xl text-xs font-black transition-colors ${
                                   optionSelected
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-muted text-muted-foreground"
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
                                 }`}
                               >
                                 {letter}
                               </span>
-                              <span dir={isEng ? "ltr" : "rtl"} className={`text-sm md:text-base font-medium flex-1 leading-normal ${isEng ? "text-left" : "text-right"}`}>
+                              <span dir={isEng ? "ltr" : "rtl"} className={`text-sm sm:text-base font-medium flex-1 leading-relaxed ${isEng ? "text-left" : "text-right"}`}>
                                 {option}
                               </span>
                             </label>
@@ -1080,15 +1126,15 @@ export function StudentPlatform() {
                         const isExplAr = /[\u0600-\u06FF]/.test(q.explanation);
                         return (
                           <div
-                            className={`mt-3 rounded-xl border border-primary/20 bg-primary/10 p-3.5 text-xs text-foreground ${
+                            className={`mt-4 rounded-2xl border border-blue-200 dark:border-blue-900/50 bg-blue-50/60 dark:bg-blue-950/30 p-4 text-xs sm:text-sm text-slate-800 dark:text-slate-200 ${
                               isExplAr ? "text-right" : "text-left"
                             }`}
                             dir={isExplAr ? "rtl" : "ltr"}
                           >
-                            <strong className="block font-bold mb-1 text-primary">
-                              {isExplAr ? "الشرح:" : "Explanation:"}
+                            <strong className="block font-bold mb-1 text-blue-700 dark:text-blue-300">
+                              {isExplAr ? "💡 توضيح وشرح الإجابة:" : "💡 Explanation:"}
                             </strong>
-                            <span className="text-muted-foreground" dir={isExplAr ? "rtl" : "ltr"}>
+                            <span className="text-slate-600 dark:text-slate-300 leading-relaxed" dir={isExplAr ? "rtl" : "ltr"}>
                               {q.explanation}
                             </span>
                           </div>
@@ -1097,48 +1143,43 @@ export function StudentPlatform() {
                     </div>
                   );
                 })}
-              </div>
 
-              {!quizResult && (
-                <Button
-                  onClick={submitQuiz}
-                  disabled={quizSubmitting}
-                  className="mt-5 w-full h-12 text-base font-extrabold rounded-xl shadow-lg bg-primary hover:bg-primary/90 text-white transition-all active:scale-[0.98]"
-                >
-                  {quizSubmitting ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <Loader2 className="animate-spin h-5 w-5" />
-                      <span>جارٍ التصحيح وحساب النتيجة...</span>
-                    </div>
-                  ) : (
-                    "تسليم وتصحيح الاختبار"
-                  )}
-                </Button>
-              )}
-              <Button
-                variant={quizResult ? "default" : "ghost"}
-                onClick={() => {
-                  if (!quizResult) {
-                    if (
-                      !window.confirm(
-                        "هل أنت متأكد من رغبتك في إغلاق نافذة الاختبار؟ إجاباتك لن تُحفظ إلا عند الضغط على زر 'تسليم وتصحيح الاختبار'.",
-                      )
-                    ) {
-                      return;
-                    }
-                  }
-                  setActiveQuiz(null);
-                  setQuizResult(null);
-                }}
-                className={`mt-3 w-full font-bold rounded-xl transition-all ${
-                  quizResult
-                    ? "bg-primary hover:bg-primary/90 text-primary-foreground h-11 shadow-md"
-                    : "text-xs text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800"
-                }`}
-              >
-                {quizResult ? "إغلاق النافذة ومتابعة الدرس ✕" : "إغلاق نافذة الاختبار ✕"}
-              </Button>
-            </motion.div>
+                {/* ── 3. Bottom Action Section ── */}
+                {!quizResult ? (
+                  <div className="pt-4 pb-8 space-y-3 text-center">
+                    <Button
+                      onClick={() => submitQuiz(false)}
+                      disabled={quizSubmitting}
+                      className="w-full h-14 text-base sm:text-lg font-black rounded-2xl shadow-xl bg-blue-600 hover:bg-blue-700 text-white transition-all active:scale-[0.99] flex items-center justify-center gap-2"
+                    >
+                      {quizSubmitting ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <Loader2 className="animate-spin h-5 w-5" />
+                          <span>جارٍ التصحيح وحساب النتيجة...</span>
+                        </div>
+                      ) : (
+                        "تسليم وتصحيح الاختبار"
+                      )}
+                    </Button>
+                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                      تأكد من الإجابة على جميع الأسئلة قبل التسليم. سيتم توثيق نتيجتك وحفظ المحاولة فوراً.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="pt-4 pb-8 text-center">
+                    <Button
+                      onClick={() => {
+                        setActiveQuiz(null);
+                        setQuizResult(null);
+                      }}
+                      className="w-full h-13 text-base font-black rounded-2xl shadow-md bg-blue-600 hover:bg-blue-700 text-white transition-all"
+                    >
+                      إغلاق نافذة الاختبار ومتابعة الكورس ✕
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
           </motion.div>
         )}
         {student && (
