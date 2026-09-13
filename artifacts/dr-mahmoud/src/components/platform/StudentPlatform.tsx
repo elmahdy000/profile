@@ -995,8 +995,8 @@ export function StudentPlatform() {
                             {(() => {
                               if (!isEng) {
                                 return (
-                                  <h3 dir="rtl" className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 text-right leading-relaxed">
-                                    <span className="inline-flex items-center justify-center h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-black ml-2">
+                                  <h3 dir="rtl" className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 text-right leading-relaxed whitespace-pre-line break-words">
+                                    <span className="inline-flex items-center justify-center h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-black ml-2 shrink-0">
                                       {qi + 1}
                                     </span>
                                     {q.prompt}
@@ -1014,8 +1014,8 @@ export function StudentPlatform() {
                               return (
                                 <>
                                   {/* English Title Line */}
-                                  <h3 dir="ltr" className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 text-left leading-relaxed">
-                                    <span className="inline-flex items-center justify-center h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-black mr-2">
+                                  <h3 dir="ltr" className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 text-left leading-relaxed break-words whitespace-pre-line">
+                                    <span className="inline-flex items-center justify-center h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-black mr-2 shrink-0">
                                       {qi + 1}
                                     </span>
                                     {titleLine}
@@ -1120,7 +1120,7 @@ export function StudentPlatform() {
                               >
                                 {letter}
                               </span>
-                              <span dir={isEng ? "ltr" : "rtl"} className={`text-sm sm:text-base font-semibold flex-1 leading-relaxed break-words ${isEng ? "text-left" : "text-right"}`}>
+                              <span dir={isEng ? "ltr" : "rtl"} className={`text-sm sm:text-base font-semibold flex-1 leading-relaxed break-words whitespace-pre-line ${isEng ? "text-left" : "text-right"}`}>
                                 {option}
                               </span>
                             </label>

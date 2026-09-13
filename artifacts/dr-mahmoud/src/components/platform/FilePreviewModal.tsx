@@ -10,7 +10,7 @@ import {
   Maximize2,
   FileCheck,
 } from "lucide-react";
-import type { LearningFile } from "../../types/learning";
+import type { LearningFile } from "../../types/platform";
 
 interface FilePreviewModalProps {
   file: LearningFile | null;

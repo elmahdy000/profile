@@ -80,7 +80,7 @@ function LessonSummaryUploadPanel({ videoItem }: { videoItem: VideoItem }) {
         xhr.open("POST", "/api/learning/summaries/upload");
         xhr.withCredentials = true;
 
-        const deviceId = localStorage.getItem("drelmahdy_device_id");
+        const deviceId = localStorage.getItem("dr_mahmoud_device_id") || localStorage.getItem("drelmahdy_device_id");
         if (deviceId) {
           xhr.setRequestHeader("X-Device-Id", deviceId);
         }
