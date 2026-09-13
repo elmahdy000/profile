@@ -4129,12 +4129,41 @@ router.post("/admin/learning/quizzes/import", requireAdmin, (req, res, next) => 
 
 router.get("/admin/learning/quizzes", requireAdmin, async (_req, res, next) => {
   try {
-    res.json(
-      await db
-        .select()
-        .from(quizzesTable)
-        .orderBy(desc(quizzesTable.createdAt)),
+    const quizzes = await db
+      .select()
+      .from(quizzesTable)
+      .orderBy(desc(quizzesTable.createdAt));
+
+    // Aggregate attempts count and distinct students count per quiz
+    const attemptStats = await db
+      .select({
+        quizId: quizAttemptsTable.quizId,
+        totalAttempts: sql<number>`count(${quizAttemptsTable.id})::int`,
+        uniqueStudents: sql<number>`count(distinct ${quizAttemptsTable.studentId})::int`,
+      })
+      .from(quizAttemptsTable)
+      .groupBy(quizAttemptsTable.quizId);
+
+    const statsMap = new Map<number, { totalAttempts: number; uniqueStudents: number }>(
+      attemptStats.map((s) => [
+        s.quizId,
+        {
+          totalAttempts: Number(s.totalAttempts) || 0,
+          uniqueStudents: Number(s.uniqueStudents) || 0,
+        },
+      ]),
     );
+
+    const enriched = quizzes.map((q) => {
+      const stats = statsMap.get(q.id);
+      return {
+        ...q,
+        attemptsCount: stats?.totalAttempts ?? 0,
+        uniqueStudentsCount: stats?.uniqueStudents ?? 0,
+      };
+    });
+
+    res.json(enriched);
   } catch (error) {
     next(error);
   }

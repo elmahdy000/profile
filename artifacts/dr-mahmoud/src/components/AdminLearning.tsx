@@ -109,6 +109,8 @@ interface Quiz {
   isPublished: boolean;
   lockedReason?: string | null;
   createdAt?: string;
+  attemptsCount?: number;
+  uniqueStudentsCount?: number;
 }
 interface BankQuestion {
   id: number;
@@ -978,7 +980,7 @@ export function AdminLearning({
         method: editingQuizId ? "PATCH" : "POST",
         body: JSON.stringify(payload),
       });
-      setQuizzes(prev => editingQuizId ? prev.map((quiz) => quiz.id === editingQuizId ? created : quiz) : [created, ...prev]);
+      setQuizzes(prev => editingQuizId ? prev.map((quiz) => quiz.id === editingQuizId ? { ...created, attemptsCount: quiz.attemptsCount, uniqueStudentsCount: quiz.uniqueStudentsCount } : quiz) : [created, ...prev]);
       resetQuizForm();
       toast({ title: wasEditing ? "تم تحديث الاختبار بنجاح" : "تم إنشاء الاختبار بنجاح" });
     } catch (e) {
@@ -1030,7 +1032,8 @@ export function AdminLearning({
           body: JSON.stringify({ isPublished: !quiz.isPublished }),
         },
       );
-      setQuizzes(prev => prev.map((q) => (q.id === quiz.id ? updated : q)));
+      setQuizzes(prev => prev.map((q) => (q.id === quiz.id ? { ...updated, attemptsCount: q.attemptsCount, uniqueStudentsCount: q.uniqueStudentsCount } : q)));
+      toast({ title: updated.isPublished ? "تم نشر الاختبار للطلاب" : "تم إخفاء الاختبار ونقله للمسودات" });
     } catch (err: any) {
       toast({ title: "خطأ في تحديث الاختبار", description: err.message, variant: "destructive" });
     }

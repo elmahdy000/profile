@@ -25,7 +25,12 @@ import {
   Search,
   Eye,
   RefreshCw,
-  Edit2
+  Edit2,
+  Users,
+  GraduationCap,
+  Filter,
+  Calendar,
+  RotateCcw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -71,6 +76,7 @@ export type QuizItem = {
   category: string;
   stage?: string | null;
   stages?: string[];
+  description?: string | null;
   passingScore: number;
   durationMinutes?: number | null;
   questionsToShow?: number | null;
@@ -80,6 +86,8 @@ export type QuizItem = {
   isPublished: boolean;
   questions: Question[];
   createdAt?: string;
+  attemptsCount?: number;
+  uniqueStudentsCount?: number;
 };
 
 type ExamWizardProps = {
@@ -122,6 +130,75 @@ export function ExamWizard({
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
   const quizImportInputRef = useRef<HTMLInputElement>(null);
   const [previewQuiz, setPreviewQuiz] = useState<QuizItem | null>(null);
+
+  // Filter states for Quizzes list section
+  const [quizListStageFilter, setQuizListStageFilter] = useState<string>("all");
+  const [quizListStatusFilter, setQuizListStatusFilter] = useState<"all" | "published" | "draft">("all");
+  const [quizListSearch, setQuizListSearch] = useState<string>("");
+
+  // Extract all distinct stages across quizzes
+  const allStagesInQuizzes = useMemo(() => {
+    const stageCounts = new Map<string, number>();
+    let noStageCount = 0;
+
+    quizzes.forEach((q) => {
+      const qStages: string[] = Array.isArray(q.stages) && q.stages.length > 0
+        ? q.stages.filter(Boolean)
+        : q.stage && q.stage.trim() ? [q.stage.trim()] : [];
+
+      if (qStages.length === 0) {
+        noStageCount++;
+      } else {
+        qStages.forEach((s) => {
+          const trimmed = s.trim();
+          if (trimmed) {
+            stageCounts.set(trimmed, (stageCounts.get(trimmed) || 0) + 1);
+          }
+        });
+      }
+    });
+
+    return {
+      stages: Array.from(stageCounts.entries()).map(([stage, count]) => ({ stage, count })),
+      noStageCount,
+    };
+  }, [quizzes]);
+
+  // Filtered quizzes list
+  const filteredQuizzes = useMemo(() => {
+    return quizzes.filter((q) => {
+      // 1. Stage filter
+      if (quizListStageFilter !== "all") {
+        if (quizListStageFilter === "no_stage") {
+          const hasAny = (Array.isArray(q.stages) && q.stages.length > 0) || Boolean(q.stage && q.stage.trim());
+          if (hasAny) return false;
+        } else {
+          const qStages: string[] = Array.isArray(q.stages) && q.stages.length > 0
+            ? q.stages
+            : q.stage ? [q.stage] : [];
+          if (!qStages.some((s) => s === quizListStageFilter || s.includes(quizListStageFilter))) {
+            return false;
+          }
+        }
+      }
+
+      // 2. Status filter
+      if (quizListStatusFilter === "published" && !q.isPublished) return false;
+      if (quizListStatusFilter === "draft" && q.isPublished) return false;
+
+      // 3. Search query
+      if (quizListSearch.trim()) {
+        const query = quizListSearch.toLowerCase().trim();
+        const matchesTitle = q.title?.toLowerCase().includes(query);
+        const matchesDesc = q.description?.toLowerCase().includes(query);
+        const matchesCat = q.category?.toLowerCase().includes(query);
+        const matchesStage = q.stage?.toLowerCase().includes(query) || (Array.isArray(q.stages) && q.stages.some((s) => s.toLowerCase().includes(query)));
+        if (!matchesTitle && !matchesDesc && !matchesCat && !matchesStage) return false;
+      }
+
+      return true;
+    });
+  }, [quizzes, quizListStageFilter, quizListStatusFilter, quizListSearch]);
 
   // Unlimited toggles state
   const isTimeUnlimited = !quizForm.durationMinutes || quizForm.durationMinutes === "0";
@@ -1181,55 +1258,404 @@ export function ExamWizard({
       </form>
 
       {/* QUIZZES LIST SIDE PANEL / SECTION */}
-      <div className="mt-12 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-        <h3 className="text-base font-black text-slate-900">الاختبارات المنشورة والمسودات ({quizzes.length})</h3>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {quizzes.map((q) => (
-            <article key={q.id} className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-3">
-              <div>
-                <div className="flex items-center justify-between">
-                  <h4 className="font-extrabold text-sm text-slate-900 truncate">{q.title}</h4>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${q.isPublished ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-700"}`}>
-                    {q.isPublished ? "منشور" : "مسودة"}
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500 mt-1">
-                  {q.questions.length} سؤال · نجاح {q.passingScore}% · {q.durationMinutes ? `${q.durationMinutes} دقيقة` : "بدون وقت"}
-                </p>
+      <div className="mt-12 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm space-y-5">
+        {/* Section Header */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-100 text-violet-700 shadow-xs">
+              <FileText className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base sm:text-lg font-black text-slate-900">
+                  الاختبارات المنشورة والمسودات
+                </h3>
+                <span className="text-xs font-black bg-violet-100 text-violet-800 px-2.5 py-0.5 rounded-full border border-violet-200">
+                  {quizzes.length}
+                </span>
               </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                تصفية الاختبارات بالمرحلة الدراسية، متابعة إحصائيات المختبرين، والتحكم بالنشر والتعديل.
+              </p>
+            </div>
+          </div>
 
-              <div className="flex items-center gap-1.5 border-t border-slate-200/60 pt-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPreviewQuiz(q)}
-                  className="h-8 text-xs font-bold text-violet-600 hover:text-violet-700 hover:bg-violet-50"
-                  title="معاينة أسئلة الاختبار"
+          {/* Search Box & Reset Button */}
+          <div className="flex items-center gap-2">
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="بحث باسم الاختبار أو الكورس..."
+                value={quizListSearch}
+                onChange={(e) => setQuizListSearch(e.target.value)}
+                className="w-full pl-8 pr-9 py-2 text-xs rounded-xl border border-slate-200 bg-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
+              />
+              {quizListSearch && (
+                <button
+                  type="button"
+                  onClick={() => setQuizListSearch("")}
+                  className="absolute left-2.5 top-2.5 text-slate-400 hover:text-slate-600 p-0.5 rounded-full"
                 >
-                  <Eye className="h-3.5 w-3.5" /> معاينة
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    editQuiz(q);
-                    setCurrentStep(1);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                  className="h-8 text-xs font-bold"
-                >
-                  <Edit2 className="h-3.5 w-3.5" /> تعديل
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => toggleQuiz(q)} className="h-8 text-xs font-bold">
-                  {q.isPublished ? "إخفاء" : "نشر"}
-                </Button>
-                <Button variant="destructive" size="sm" onClick={() => deleteQuiz(q.id)} className="h-8 text-xs">
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </article>
-          ))}
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+
+            {(quizListStageFilter !== "all" || quizListStatusFilter !== "all" || quizListSearch) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setQuizListStageFilter("all");
+                  setQuizListStatusFilter("all");
+                  setQuizListSearch("");
+                }}
+                className="h-9 text-xs font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                title="إعادة ضبط الفلاتر"
+              >
+                <RotateCcw className="h-3.5 w-3.5 ml-1" /> مسح
+              </Button>
+            )}
+          </div>
         </div>
+
+        {/* Filter Controls: Stage Filter + Status Filter */}
+        <div className="space-y-3 bg-slate-50/80 p-3.5 rounded-2xl border border-slate-200/80">
+          {/* Stage Filter Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-thin">
+            <span className="text-xs font-black text-slate-700 shrink-0 flex items-center gap-1.5 ml-1">
+              <GraduationCap className="h-4 w-4 text-violet-600" /> فلترة بالمرحلة:
+            </span>
+
+            <button
+              type="button"
+              onClick={() => setQuizListStageFilter("all")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all ${
+                quizListStageFilter === "all"
+                  ? "bg-violet-600 text-white shadow-sm ring-2 ring-violet-600/30"
+                  : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              جميع المراحل ({quizzes.length})
+            </button>
+
+            {allStagesInQuizzes.stages.map(({ stage, count }) => (
+              <button
+                key={stage}
+                type="button"
+                onClick={() => setQuizListStageFilter(stage)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all flex items-center gap-1.5 ${
+                  quizListStageFilter === stage
+                    ? "bg-violet-600 text-white shadow-sm ring-2 ring-violet-600/30"
+                    : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
+                }`}
+              >
+                <span className="truncate max-w-[200px]">{stage}</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${
+                    quizListStageFilter === stage
+                      ? "bg-white/20 text-white"
+                      : "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            ))}
+
+            {allStagesInQuizzes.noStageCount > 0 && (
+              <button
+                type="button"
+                onClick={() => setQuizListStageFilter("no_stage")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-all flex items-center gap-1.5 ${
+                  quizListStageFilter === "no_stage"
+                    ? "bg-violet-600 text-white shadow-sm ring-2 ring-violet-600/30"
+                    : "bg-white text-slate-500 border border-slate-200 hover:bg-slate-100"
+                }`}
+              >
+                <span>بدون مرحلة محددة</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold">
+                  {allStagesInQuizzes.noStageCount}
+                </span>
+              </button>
+            )}
+          </div>
+
+          {/* Status & Results Summary Bar */}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pt-2 border-t border-slate-200/70 text-xs">
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-500 font-bold ml-1">حالة النشر:</span>
+              <button
+                type="button"
+                onClick={() => setQuizListStatusFilter("all")}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
+                  quizListStatusFilter === "all"
+                    ? "bg-slate-800 text-white"
+                    : "text-slate-600 hover:bg-slate-200/70"
+                }`}
+              >
+                الكل ({quizzes.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuizListStatusFilter("published")}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
+                  quizListStatusFilter === "published"
+                    ? "bg-emerald-700 text-white"
+                    : "text-slate-600 hover:bg-slate-200/70"
+                }`}
+              >
+                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                المنشورة ({quizzes.filter((q) => q.isPublished).length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuizListStatusFilter("draft")}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
+                  quizListStatusFilter === "draft"
+                    ? "bg-amber-700 text-white"
+                    : "text-slate-600 hover:bg-slate-200/70"
+                }`}
+              >
+                <span className="h-2 w-2 rounded-full bg-amber-400" />
+                المسودات ({quizzes.filter((q) => !q.isPublished).length})
+              </button>
+            </div>
+
+            <div className="text-slate-500 text-[11px] font-semibold">
+              عرض <strong className="text-violet-700 font-extrabold">{filteredQuizzes.length}</strong> من أصل{" "}
+              <strong className="text-slate-800 font-extrabold">{quizzes.length}</strong> اختبار
+            </div>
+          </div>
+        </div>
+
+        {/* Quizzes Grid or Empty State */}
+        {filteredQuizzes.length === 0 ? (
+          <div className="p-12 text-center rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 space-y-3">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-200/70 text-slate-500">
+              <AlertCircle className="h-6 w-6" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-black text-slate-800">لا توجد اختبارات تطابق الفلترة المحددة</p>
+              <p className="text-xs text-slate-500">
+                جرب اختيار مرحلة دراسية أخرى أو مسح نص البحث للاطلاع على الاختبارات.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setQuizListStageFilter("all");
+                setQuizListStatusFilter("all");
+                setQuizListSearch("");
+              }}
+              className="mt-2 text-xs font-bold text-violet-700 hover:bg-violet-50"
+            >
+              عرض جميع الاختبارات ({quizzes.length})
+            </Button>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredQuizzes.map((q) => {
+              const quizStages = Array.isArray(q.stages) && q.stages.length > 0
+                ? q.stages.filter(Boolean)
+                : q.stage && q.stage.trim() ? [q.stage.trim()] : [];
+              const stagesLabel = quizStages.join(" · ") || "بدون مرحلة محددة";
+              const uniqueTested = q.uniqueStudentsCount || 0;
+              const totalAttempts = q.attemptsCount || uniqueTested;
+
+              return (
+                <article
+                  key={q.id}
+                  className={`rounded-2xl border transition-all duration-200 p-4 sm:p-5 flex flex-col justify-between space-y-3.5 ${
+                    q.isPublished
+                      ? "border-slate-200 bg-white hover:border-violet-300 hover:shadow-md"
+                      : "border-dashed border-slate-300 bg-slate-50/70 hover:border-slate-400"
+                  }`}
+                >
+                  {/* Top Badges: Stage & Published Status */}
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200/80 max-w-[65%] truncate"
+                        title={stagesLabel}
+                      >
+                        <GraduationCap className="h-3.5 w-3.5 shrink-0 text-blue-600" />
+                        <span className="truncate">{stagesLabel}</span>
+                      </span>
+
+                      <span
+                        className={`text-[10px] font-black px-2.5 py-1 rounded-full shrink-0 flex items-center gap-1.5 ${
+                          q.isPublished
+                            ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                            : "bg-slate-200 text-slate-700 border border-slate-300"
+                        }`}
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            q.isPublished ? "bg-emerald-500 animate-pulse" : "bg-slate-500"
+                          }`}
+                        />
+                        {q.isPublished ? "منشور للطلاب" : "مسودة مؤقتة"}
+                      </span>
+                    </div>
+
+                    {/* Quiz Title & Scope */}
+                    <div>
+                      <h4
+                        className="font-black text-sm text-slate-900 leading-snug line-clamp-2"
+                        title={q.title}
+                      >
+                        {q.title}
+                      </h4>
+                      <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500">
+                        <span className="font-bold text-slate-600">
+                          {q.scope === "lesson" ? "اختبار درس" : "اختبار كورس / شامل"}
+                        </span>
+                        {q.category && (
+                          <>
+                            <span>·</span>
+                            <span className="truncate text-slate-500">{q.category}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Prominent Student Tester Count Badge (بشكل مميز) */}
+                    {uniqueTested > 0 ? (
+                      <div className="flex items-center justify-between bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white p-2.5 rounded-xl shadow-xs border border-violet-400/40">
+                        <div className="flex items-center gap-2">
+                          <div className="h-7 w-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                            <Users className="h-4 w-4 text-white" />
+                          </div>
+                          <div>
+                            <div className="text-xs font-black tracking-tight">
+                              {uniqueTested} {uniqueTested === 1 ? "طالب اختبر" : "طلاب اختبروا"}
+                            </div>
+                            <div className="text-[10px] text-violet-100 font-medium">
+                              تم خوض الاختبار {totalAttempts} {totalAttempts === 1 ? "مرة" : "مرات"}
+                            </div>
+                          </div>
+                        </div>
+                        <span className="text-xs font-black bg-white text-indigo-700 px-2.5 py-1 rounded-lg shadow-2xs">
+                          {uniqueTested}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between bg-slate-100/90 text-slate-500 px-3 py-2 rounded-xl border border-slate-200/80">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-slate-400" />
+                          <span className="text-xs font-semibold">لم يختبره طلاب بعد</span>
+                        </div>
+                        <span className="text-[10px] bg-white px-2 py-0.5 rounded-md text-slate-400 font-bold border border-slate-200">
+                          0 مختبر
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Optional Description */}
+                    {q.description && (
+                      <p
+                        className="text-[11px] text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-200/60 line-clamp-2"
+                        title={q.description}
+                      >
+                        {q.description}
+                      </p>
+                    )}
+
+                    {/* Complete Quiz Metadata Details */}
+                    <div className="grid grid-cols-2 gap-2 text-[11px] bg-slate-50/90 p-2.5 rounded-xl border border-slate-200/60">
+                      <div className="flex items-center gap-1.5 text-slate-600">
+                        <FileText className="h-3.5 w-3.5 text-slate-400" />
+                        <span>
+                          <strong>{q.questions.length}</strong> أسئلة
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-slate-600">
+                        <Clock className="h-3.5 w-3.5 text-slate-400" />
+                        <span>{q.durationMinutes ? `${q.durationMinutes} دقيقة` : "بدون حد وقت"}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-slate-600">
+                        <Award className="h-3.5 w-3.5 text-amber-500" />
+                        <span>
+                          نجاح <strong>{q.passingScore}%</strong>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-slate-600">
+                        <RefreshCw className="h-3.5 w-3.5 text-slate-400" />
+                        <span>
+                          {q.maxAttempts === 0 ? "محاولات مفتوحة" : `${q.maxAttempts || 3} محاولات`}
+                        </span>
+                      </div>
+                      {q.createdAt && (
+                        <div className="col-span-2 flex items-center gap-1.5 text-slate-400 text-[10px] pt-1.5 border-t border-slate-200/60">
+                          <Calendar className="h-3 w-3" />
+                          <span>
+                            تاريخ الإنشاء:{" "}
+                            {new Date(q.createdAt).toLocaleDateString("ar-EG", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-1.5 border-t border-slate-200/70 pt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPreviewQuiz(q)}
+                      className="h-8 flex-1 text-xs font-bold text-violet-600 hover:text-violet-700 hover:bg-violet-50"
+                      title="معاينة أسئلة الاختبار"
+                    >
+                      <Eye className="h-3.5 w-3.5 ml-1" /> معاينة
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        editQuiz(q);
+                        setCurrentStep(1);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="h-8 flex-1 text-xs font-bold"
+                      title="تعديل الاختبار"
+                    >
+                      <Edit2 className="h-3.5 w-3.5 ml-1" /> تعديل
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleQuiz(q)}
+                      className={`h-8 text-xs font-bold ${
+                        q.isPublished
+                          ? "hover:bg-amber-50 hover:text-amber-700"
+                          : "hover:bg-emerald-50 hover:text-emerald-700"
+                      }`}
+                      title={q.isPublished ? "إخفاء الاختبار ونقله للمسودات" : "نشر الاختبار للطلاب"}
+                    >
+                      {q.isPublished ? "إخفاء" : "نشر"}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => deleteQuiz(q.id)}
+                      className="h-8 px-2.5 text-xs"
+                      title="حذف الاختبار نهائياً"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* QUICK PREVIEW QUIZ MODAL */}
@@ -1251,9 +1677,17 @@ export function ExamWizard({
                       {previewQuiz.isPublished ? "منشور للطلاب 🟢" : "مسودة غير منشورة 🔒"}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    {previewQuiz.questions?.length || 0} أسئلة · درجة النجاح {previewQuiz.passingScore}% · {previewQuiz.durationMinutes ? `${previewQuiz.durationMinutes} دقيقة` : "بدون وقت"}
-                  </p>
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    <p className="text-[11px] text-slate-500">
+                      {previewQuiz.questions?.length || 0} أسئلة · درجة النجاح {previewQuiz.passingScore}% · {previewQuiz.durationMinutes ? `${previewQuiz.durationMinutes} دقيقة` : "بدون وقت"}
+                    </p>
+                    {(previewQuiz.uniqueStudentsCount || 0) > 0 && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black bg-violet-100 text-violet-800 px-2 py-0.5 rounded-full border border-violet-200">
+                        <Users className="h-3 w-3" />
+                        {previewQuiz.uniqueStudentsCount} طالب اختبر ({previewQuiz.attemptsCount || previewQuiz.uniqueStudentsCount} محاولة)
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
