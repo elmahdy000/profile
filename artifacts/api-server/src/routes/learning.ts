@@ -55,13 +55,16 @@ import {
 } from "../lib/academic-stages";
 import { fixedWindowRateLimit } from "../middleware/rate-limit";
 import {
-  getAutoExamSettings,
-  saveAutoExamSettings,
-  generateDailyDraftExam,
+  getAutoExamFullConfig,
+  saveAutoExamFullConfig,
+  generateDraftExamForSchedule,
   sendExamToTelegram,
   sendExamToWhatsApp,
   approveAndPublishQuiz,
   isValidApprovalToken,
+  type AutoExamSchedule,
+  type AutoExamChannelsConfig,
+  type AutoExamFullConfig,
 } from "../services/auto-exam";
 
 const router: IRouter = Router();
@@ -6512,101 +6515,228 @@ router.post(
   }
 );
 
-// ── Auto-Exam Generator & Notification Endpoints ──
+// ── Auto-Exam Multi-Schedule Generator & Notification Endpoints ──
 
-// GET /api/admin/learning/auto-exam/settings - Get settings
-router.get("/admin/learning/auto-exam/settings", requireAdmin, async (_req, res, next) => {
+// GET /api/admin/learning/auto-exam/config - Get full configuration (channels + all schedules)
+router.get(["/admin/learning/auto-exam/config", "/admin/learning/auto-exam/settings"], requireAdmin, async (_req, res, next) => {
   try {
-    const settings = await getAutoExamSettings();
-    res.json(settings);
+    const config = await getAutoExamFullConfig();
+    res.json({ success: true, ...config });
   } catch (error) {
     next(error);
   }
 });
 
-// PUT /api/admin/learning/auto-exam/settings - Update settings
-router.put("/admin/learning/auto-exam/settings", requireAdmin, async (req, res, next) => {
+// PUT /api/admin/learning/auto-exam/channels - Update notification channels (Telegram & WhatsApp)
+router.put("/admin/learning/auto-exam/channels", requireAdmin, async (req, res, next) => {
   try {
-    const current = await getAutoExamSettings();
-    const updated = {
-      ...current,
-      ...req.body,
-      difficultyDistribution: {
-        ...current.difficultyDistribution,
-        ...(req.body.difficultyDistribution || {}),
-      },
+    const config = await getAutoExamFullConfig();
+    const updatedChannels: AutoExamChannelsConfig = {
       telegram: {
-        ...current.telegram,
+        ...config.channels.telegram,
         ...(req.body.telegram || {}),
       },
       whatsapp: {
-        ...current.whatsapp,
+        ...config.channels.whatsapp,
         ...(req.body.whatsapp || {}),
       },
     };
-    await saveAutoExamSettings(updated);
-    res.json({ success: true, settings: updated });
+
+    const newConfig: AutoExamFullConfig = {
+      ...config,
+      channels: updatedChannels,
+    };
+
+    await saveAutoExamFullConfig(newConfig);
+    res.json({ success: true, channels: updatedChannels });
   } catch (error) {
     next(error);
   }
 });
 
-// POST /api/admin/learning/auto-exam/trigger - Trigger immediate test generation and review dispatch
-router.post("/admin/learning/auto-exam/trigger", requireAdmin, async (req, res, next) => {
+// POST /api/admin/learning/auto-exam/schedules - Create a new schedule
+router.post("/admin/learning/auto-exam/schedules", requireAdmin, async (req, res, next) => {
   try {
-    const settings = await getAutoExamSettings();
-    const overrideSettings = {
-      ...settings,
+    const config = await getAutoExamFullConfig();
+    const title = String(req.body.title || "").trim();
+    if (!title) {
+      res.status(400).json({ error: "اسم الجدول مطلوب" });
+      return;
+    }
+
+    const newSchedule: AutoExamSchedule = {
+      id: "sched_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6),
+      title,
+      enabled: req.body.enabled !== false,
+      timeOfDay: req.body.timeOfDay || "08:00",
+      stage: req.body.stage || "all",
+      unit: req.body.unit || "all",
+      lesson: req.body.lesson || "all",
+      courseId: req.body.courseId ? Number(req.body.courseId) : null,
+      questionsCount: Math.max(1, Number(req.body.questionsCount) || 10),
+      durationMinutes: Math.max(0, Number(req.body.durationMinutes) || 20),
+      passingScore: Math.max(10, Math.min(100, Number(req.body.passingScore) || 60)),
+      difficultyDistribution: {
+        easy: Number(req.body.difficultyDistribution?.easy) || 3,
+        medium: Number(req.body.difficultyDistribution?.medium) || 5,
+        hard: Number(req.body.difficultyDistribution?.hard) || 2,
+      },
+    };
+
+    const newConfig: AutoExamFullConfig = {
+      ...config,
+      schedules: [...config.schedules, newSchedule],
+    };
+
+    await saveAutoExamFullConfig(newConfig);
+    res.json({ success: true, schedule: newSchedule, schedules: newConfig.schedules });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PUT /api/admin/learning/auto-exam/schedules/:id - Update an existing schedule
+router.put("/admin/learning/auto-exam/schedules/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const config = await getAutoExamFullConfig();
+    const scheduleIdx = config.schedules.findIndex((s) => s.id === id);
+
+    if (scheduleIdx === -1) {
+      res.status(404).json({ error: "الجدول غير موجود" });
+      return;
+    }
+
+    const existing = config.schedules[scheduleIdx];
+    const updatedSchedule: AutoExamSchedule = {
+      ...existing,
       ...(req.body || {}),
+      id: existing.id, // prevent ID change
       difficultyDistribution: {
-        ...settings.difficultyDistribution,
+        ...existing.difficultyDistribution,
         ...(req.body.difficultyDistribution || {}),
-      },
-      telegram: {
-        ...settings.telegram,
-        ...(req.body.telegram || {}),
-      },
-      whatsapp: {
-        ...settings.whatsapp,
-        ...(req.body.whatsapp || {}),
       },
     };
 
-    const result = await generateDailyDraftExam(overrideSettings);
-    let telegramResult = null;
-    let whatsappResult = null;
+    const updatedSchedules = [...config.schedules];
+    updatedSchedules[scheduleIdx] = updatedSchedule;
 
-    if (overrideSettings.telegram.enabled && overrideSettings.telegram.botToken && overrideSettings.telegram.chatId) {
-      telegramResult = await sendExamToTelegram(
-        overrideSettings.telegram.botToken,
-        overrideSettings.telegram.chatId,
-        result.quiz,
-        result.approvalToken,
-        result.messageText,
-      );
-    }
+    const newConfig: AutoExamFullConfig = {
+      ...config,
+      schedules: updatedSchedules,
+    };
 
-    if (overrideSettings.whatsapp.enabled && overrideSettings.whatsapp.webhookUrl) {
-      whatsappResult = await sendExamToWhatsApp(
-        overrideSettings.whatsapp.webhookUrl,
-        overrideSettings.whatsapp.phoneNumber,
-        result.messageText,
-      );
-    }
-
-    res.json({
-      success: true,
-      quiz: result.quiz,
-      courseTitle: result.courseTitle,
-      approvalToken: result.approvalToken,
-      approvalUrl: `https://drelmahdy.com/api/admin/learning/quizzes/${result.quiz.id}/quick-approve?token=${result.approvalToken}`,
-      telegramResult,
-      whatsappResult,
-    });
-  } catch (error: any) {
-    res.status(400).json({ error: error.message || "فشل توليد الاختبار التجريبي" });
+    await saveAutoExamFullConfig(newConfig);
+    res.json({ success: true, schedule: updatedSchedule, schedules: updatedSchedules });
+  } catch (error) {
+    next(error);
   }
 });
+
+// DELETE /api/admin/learning/auto-exam/schedules/:id - Delete a schedule
+router.delete("/admin/learning/auto-exam/schedules/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const config = await getAutoExamFullConfig();
+    const updatedSchedules = config.schedules.filter((s) => s.id !== id);
+
+    const newConfig: AutoExamFullConfig = {
+      ...config,
+      schedules: updatedSchedules,
+    };
+
+    await saveAutoExamFullConfig(newConfig);
+    res.json({ success: true, schedules: updatedSchedules });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/learning/auto-exam/schedules/:id/trigger - Trigger immediate test generation for a specific schedule
+router.post(
+  ["/admin/learning/auto-exam/schedules/:id/trigger", "/admin/learning/auto-exam/trigger"],
+  requireAdmin,
+  async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const config = await getAutoExamFullConfig();
+
+      let targetSchedule: AutoExamSchedule | undefined;
+      if (id) {
+        targetSchedule = config.schedules.find((s) => s.id === id);
+      }
+      if (!targetSchedule) {
+        // Fallback to first schedule or create temporary one from payload
+        targetSchedule = config.schedules[0] || {
+          id: "sched_manual",
+          title: "اختبار تجريبي فوري",
+          enabled: true,
+          timeOfDay: "08:00",
+          stage: req.body.stage || "all",
+          unit: req.body.unit || "all",
+          lesson: req.body.lesson || "all",
+          courseId: req.body.courseId || null,
+          questionsCount: req.body.questionsCount || 10,
+          durationMinutes: req.body.durationMinutes || 20,
+          passingScore: req.body.passingScore || 60,
+          difficultyDistribution: req.body.difficultyDistribution || { easy: 3, medium: 5, hard: 2 },
+        };
+      }
+
+      // Allow runtime overrides if passed in body
+      const effectiveSchedule: AutoExamSchedule = {
+        ...targetSchedule,
+        ...(req.body || {}),
+        difficultyDistribution: {
+          ...targetSchedule.difficultyDistribution,
+          ...(req.body.difficultyDistribution || {}),
+        },
+      };
+
+      const result = await generateDraftExamForSchedule(effectiveSchedule, config.channels);
+      let telegramResult = null;
+      let whatsappResult = null;
+
+      if (
+        config.channels.telegram.enabled &&
+        config.channels.telegram.botToken &&
+        config.channels.telegram.chatId
+      ) {
+        telegramResult = await sendExamToTelegram(
+          config.channels.telegram.botToken,
+          config.channels.telegram.chatId,
+          result.quiz,
+          result.approvalToken,
+          result.messageText,
+        );
+      }
+
+      if (config.channels.whatsapp.enabled && config.channels.whatsapp.webhookUrl) {
+        whatsappResult = await sendExamToWhatsApp(
+          config.channels.whatsapp.webhookUrl,
+          config.channels.whatsapp.phoneNumber,
+          result.messageText,
+        );
+      }
+
+      res.json({
+        success: true,
+        quiz: result.quiz,
+        scheduleTitle: effectiveSchedule.title,
+        courseTitle: result.courseTitle,
+        stageName: result.stageName,
+        unitName: result.unitName,
+        lessonName: result.lessonName,
+        approvalToken: result.approvalToken,
+        approvalUrl: `https://drelmahdy.com/api/admin/learning/quizzes/${result.quiz.id}/quick-approve?token=${result.approvalToken}`,
+        telegramResult,
+        whatsappResult,
+      });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "فشل توليد الاختبار التجريبي" });
+    }
+  },
+);
 
 // GET /api/admin/learning/quizzes/:id/quick-approve - One-click approval link from Telegram / WhatsApp
 router.get(["/admin/learning/quizzes/:id/quick-approve", "/learning/quizzes/:id/quick-approve"], async (req, res, next) => {

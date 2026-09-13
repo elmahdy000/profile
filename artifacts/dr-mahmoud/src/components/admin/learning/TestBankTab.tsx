@@ -217,123 +217,181 @@ export function TestBankTab({
   const [loadingCandidates, setLoadingCandidates] = useState<boolean>(false);
   const [candidateSearch, setCandidateSearch] = useState<string>("");
 
-  // Daily Auto-Exam State
-  const [autoSettings, setAutoSettings] = useState<{
+  // Multi-Schedule Auto-Exam State
+  const [channelsConfig, setChannelsConfig] = useState<{
+    telegram: { enabled: boolean; botToken: string; chatId: string };
+    whatsapp: { enabled: boolean; phoneNumber: string; webhookUrl: string };
+  }>({
+    telegram: { enabled: false, botToken: "", chatId: "" },
+    whatsapp: { enabled: false, phoneNumber: "", webhookUrl: "" },
+  });
+
+  const [schedules, setSchedules] = useState<Array<{
+    id: string;
+    title: string;
     enabled: boolean;
     timeOfDay: string;
+    stage: string;
+    unit?: string;
+    lesson?: string;
+    courseId?: number | null;
     questionsCount: number;
-    passingScore: number;
     durationMinutes: number;
-    targetCourseId: number | null;
-    targetStage: string;
-    difficultyDistribution: {
-      easy: number;
-      medium: number;
-      hard: number;
-    };
-    telegram: {
-      enabled: boolean;
-      botToken: string;
-      chatId: string;
-    };
-    whatsapp: {
-      enabled: boolean;
-      phoneNumber: string;
-      webhookUrl: string;
-    };
+    passingScore: number;
+    difficultyDistribution: { easy: number; medium: number; hard: number };
     lastRunDate?: string;
     lastGeneratedQuizId?: number;
-  }>({
-    enabled: false,
-    timeOfDay: "08:00",
-    questionsCount: 10,
-    passingScore: 60,
-    durationMinutes: 20,
-    targetCourseId: null,
-    targetStage: "all",
-    difficultyDistribution: {
-      easy: 3,
-      medium: 5,
-      hard: 2,
-    },
-    telegram: {
-      enabled: false,
-      botToken: "",
-      chatId: "",
-    },
-    whatsapp: {
-      enabled: false,
-      phoneNumber: "",
-      webhookUrl: "",
-    },
-  });
-  const [loadingAutoSettings, setLoadingAutoSettings] = useState<boolean>(false);
-  const [savingAutoSettings, setSavingAutoSettings] = useState<boolean>(false);
-  const [triggeringAutoExam, setTriggeringAutoExam] = useState<boolean>(false);
+  }>>([]);
+
+  const [loadingConfig, setLoadingConfig] = useState<boolean>(false);
+  const [savingChannels, setSavingChannels] = useState<boolean>(false);
+  const [triggeringScheduleId, setTriggeringScheduleId] = useState<string | null>(null);
   const [triggerResult, setTriggerResult] = useState<any | null>(null);
 
-  const loadAutoSettings = async () => {
-    setLoadingAutoSettings(true);
+  // Modal State for Adding/Editing a Schedule
+  const [scheduleModalOpen, setScheduleModalOpen] = useState<boolean>(false);
+  const [editingSchedule, setEditingSchedule] = useState<{
+    id?: string;
+    title: string;
+    enabled: boolean;
+    timeOfDay: string;
+    stage: string;
+    unit: string;
+    lesson: string;
+    courseId?: number | null;
+    questionsCount: number;
+    durationMinutes: number;
+    passingScore: number;
+    difficultyDistribution: { easy: number; medium: number; hard: number };
+  } | null>(null);
+  const [savingSchedule, setSavingSchedule] = useState<boolean>(false);
+
+  // Modal State for Channels Setup (Telegram Bot & WhatsApp)
+  const [channelsModalOpen, setChannelsModalOpen] = useState<boolean>(false);
+
+  const loadAutoExamConfig = async () => {
+    setLoadingConfig(true);
     try {
-      const res = await adminApi<any>("/api/admin/learning/auto-exam/settings");
-      if (res && res.settings) {
-        setAutoSettings(res.settings);
+      const res = await adminApi<any>("/api/admin/learning/auto-exam/config");
+      if (res) {
+        if (res.channels) setChannelsConfig(res.channels);
+        if (Array.isArray(res.schedules)) setSchedules(res.schedules);
       }
     } catch (err: any) {
       // silently handle
     } finally {
-      setLoadingAutoSettings(false);
+      setLoadingConfig(false);
     }
   };
 
-  const handleSaveAutoSettings = async (e?: React.FormEvent) => {
+  const handleSaveChannels = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    setSavingAutoSettings(true);
+    setSavingChannels(true);
     try {
-      const res = await adminApi<any>("/api/admin/learning/auto-exam/settings", {
+      const res = await adminApi<any>("/api/admin/learning/auto-exam/channels", {
         method: "PUT",
-        body: JSON.stringify(autoSettings),
+        body: JSON.stringify(channelsConfig),
       });
-      if (res.settings) {
-        setAutoSettings(res.settings);
+      if (res.channels) setChannelsConfig(res.channels);
+      setChannelsModalOpen(false);
+      toast({ title: "تم حفظ وتحديث إعدادات قنوات الإشعار (تليجرام/واتساب) بنجاح! 💾" });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "خطأ", description: err.message || "تعذر حفظ القنوات" });
+    } finally {
+      setSavingChannels(false);
+    }
+  };
+
+  const handleSaveSchedule = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSchedule) return;
+    if (!editingSchedule.title.trim()) {
+      toast({ variant: "destructive", description: "يرجى كتابة اسم للجدول" });
+      return;
+    }
+    setSavingSchedule(true);
+    try {
+      if (editingSchedule.id) {
+        // Update existing schedule
+        const res = await adminApi<any>(`/api/admin/learning/auto-exam/schedules/${editingSchedule.id}`, {
+          method: "PUT",
+          body: JSON.stringify(editingSchedule),
+        });
+        if (Array.isArray(res.schedules)) setSchedules(res.schedules);
+        toast({ title: "تم تحديث بيانات الجدول بنجاح! 💾" });
+      } else {
+        // Create new schedule
+        const res = await adminApi<any>("/api/admin/learning/auto-exam/schedules", {
+          method: "POST",
+          body: JSON.stringify(editingSchedule),
+        });
+        if (Array.isArray(res.schedules)) setSchedules(res.schedules);
+        toast({ title: "تمت إضافة الجدول اليومي الجديد بنجاح! 🎉" });
       }
+      setScheduleModalOpen(false);
+      setEditingSchedule(null);
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message || "تعذر حفظ الجدول" });
+    } finally {
+      setSavingSchedule(false);
+    }
+  };
+
+  const handleToggleSchedule = async (schedule: any) => {
+    try {
+      const updated = { ...schedule, enabled: !schedule.enabled };
+      const res = await adminApi<any>(`/api/admin/learning/auto-exam/schedules/${schedule.id}`, {
+        method: "PUT",
+        body: JSON.stringify(updated),
+      });
+      if (Array.isArray(res.schedules)) setSchedules(res.schedules);
       toast({
-        title: "تم حفظ إعدادات الاختبار اليومي بنجاح! 💾",
-        description: autoSettings.enabled
-          ? `النظام التلقائي مفعل يومياً الساعة ${autoSettings.timeOfDay} (توقيت القاهرة).`
-          : "تم حفظ الإعدادات (النظام التلقائي متوقف حالياً).",
+        title: updated.enabled
+          ? `تم تفعيل جدول (${schedule.title}) بنجاح 🟢`
+          : `تم إيقاف جدول (${schedule.title}) مؤقتاً ⚪`,
       });
     } catch (err: any) {
-      toast({ variant: "destructive", title: "خطأ", description: err.message || "تعذر حفظ الإعدادات" });
-    } finally {
-      setSavingAutoSettings(false);
+      toast({ variant: "destructive", description: err.message || "تعذر تغيير حالة الجدول" });
     }
   };
 
-  const handleTriggerAutoExam = async () => {
-    setTriggeringAutoExam(true);
+  const handleDeleteSchedule = async (scheduleId: string, title: string) => {
+    if (!window.confirm(`هل أنت متأكد من حذف جدول (${title})؟`)) return;
+    try {
+      const res = await adminApi<any>(`/api/admin/learning/auto-exam/schedules/${scheduleId}`, {
+        method: "DELETE",
+      });
+      if (Array.isArray(res.schedules)) setSchedules(res.schedules);
+      toast({ title: `تم حذف الجدول (${title}) بنجاح 🗑️` });
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message || "تعذر حذف الجدول" });
+    }
+  };
+
+  const handleTriggerSchedule = async (schedule: any) => {
+    setTriggeringScheduleId(schedule.id);
     setTriggerResult(null);
     try {
-      const res = await adminApi<any>("/api/admin/learning/auto-exam/trigger", {
+      const res = await adminApi<any>(`/api/admin/learning/auto-exam/schedules/${schedule.id}/trigger`, {
         method: "POST",
-        body: JSON.stringify(autoSettings),
       });
       setTriggerResult(res);
       toast({
-        title: "تم توليد النموذج التجريبي وإرساله بنجاح! 🚀",
-        description: `تم حفظ الاختبار #${res.quiz?.id} كمسودة وإرسال المعاينة لقنواتك المختارة.`,
+        title: `تم توليد اختبار تجريبي لـ (${schedule.title}) بنجاح! 🚀`,
+        description: `تم إرسال نموذج الاختبار للمراجعة على البوت.`,
       });
+      loadAutoExamConfig();
       loadTree();
     } catch (err: any) {
-      toast({ variant: "destructive", title: "خطأ أثناء التوليد التجريبي", description: err.message || "تعذر التوليد" });
+      toast({ variant: "destructive", title: "تعذر توليد الاختبار", description: err.message || "فشل التوليد" });
     } finally {
-      setTriggeringAutoExam(false);
+      setTriggeringScheduleId(null);
     }
   };
 
   useEffect(() => {
     if (activeTab === "auto_daily") {
-      loadAutoSettings();
+      loadAutoExamConfig();
     }
   }, [activeTab]);
 
@@ -985,6 +1043,19 @@ export function TestBankTab({
     }
     return list;
   }, [treeData, genStage, genUnit]);
+
+  // Dynamic units and lessons for Schedule Add/Edit Modal
+  const scheduleModalUnits = useMemo(() => {
+    if (!editingSchedule || !editingSchedule.stage || editingSchedule.stage === "all") return [];
+    const st = treeData.find((s) => s.stage === editingSchedule.stage);
+    return st ? st.units : [];
+  }, [treeData, editingSchedule?.stage]);
+
+  const scheduleModalLessons = useMemo(() => {
+    if (!editingSchedule || !editingSchedule.unit || editingSchedule.unit === "all") return [];
+    const u = scheduleModalUnits.find((unit) => unit.unit === editingSchedule.unit);
+    return u ? u.lessons : [];
+  }, [scheduleModalUnits, editingSchedule?.unit]);
 
   // Count available questions for selected generator scope
   const availableCountInfo = useMemo(() => {
@@ -3050,7 +3121,7 @@ export function TestBankTab({
                       onClick={() => setGenPublishMode("publish")}
                       className={`p-3.5 rounded-xl border text-right transition-all cursor-pointer flex items-start gap-3 ${
                         genPublishMode === "publish"
-                          ? "bg-emerald-500/10 border-emerald-500/50 text-foreground ring-2 ring-emerald-500/20 shadow-xs"
+                          ? "bg-emerald-500/10 border-emerald-500/20 text-foreground ring-2 ring-emerald-500/20 shadow-xs"
                           : "bg-muted/30 border-border hover:bg-muted/50 text-muted-foreground"
                       }`}
                     >
@@ -3108,7 +3179,7 @@ export function TestBankTab({
       )}
 
       {/* ============================================================ */}
-      {/* TAB 4: DAILY AUTO-EXAM & SMART NOTIFICATIONS                 */}
+      {/* TAB 4: MULTI-SCHEDULE DAILY AUTO-EXAM & SMART NOTIFICATIONS */}
       {/* ============================================================ */}
       {activeTab === "auto_daily" && (
         <div className="space-y-6">
@@ -3118,407 +3189,282 @@ export function TestBankTab({
               <div className="space-y-2">
                 <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/15 px-3 py-1 text-xs font-black text-amber-600 dark:text-amber-400 border border-amber-500/30">
                   <Bot className="h-4 w-4" />
-                  <span>نظام التوليد اليومي الآلي الذكي</span>
+                  <span>نظام الجداول المتعددة والامتحانات الآلية</span>
                 </div>
                 <h3 className="text-xl sm:text-2xl font-black text-foreground">
-                  توليد اختبار يومي تلقائي وإرساله لمراجعتك قبل النشر 🤖
+                  جداول الاختبارات اليومية الذكية لكل مرحلة ودرس 🤖📚
                 </h3>
                 <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
-                  يقوم النظام يومياً في الموعد المحدد بسحب باقة أسئلة متوازنة من بنك الأسئلة دون تكرار للأسئلة الحديثة، ثم ينشئ الاختبار <strong className="text-foreground">كمسودة خاصة سرية (مخفية عن الطلاب)</strong>، ويرسل لك ملخص الأسئلة وإجاباتها النموذجية عبر <strong className="text-primary">تليجرام أو واتساب</strong> مع رابط وزر للاعتماد والنشر بضغطة زر واحدة فقط.
+                  أنشئ جداول مستقلة لكل مرحلة دراسية، وحدة، أو درس محدد بمواعيد وتوزيع صعوبة مخصص. يقوم النظام في كل موعد بسحب الأسئلة دون تكرار للأسئلة الحديثة، ثم ينشئ الاختبار <strong className="text-foreground">كمسودة خاصة سرية</strong>، ويرسله فوراً لمراجعتك على <strong className="text-sky-600">تليجرام أو واتساب</strong> مع زر للاعتماد والنشر بضغطة واحدة.
                 </p>
               </div>
 
-              {/* Status Indicator & Activation Toggle */}
+              {/* Bot Status Pill & Actions */}
               <div className="shrink-0 flex flex-col items-end gap-3 bg-card p-4 rounded-2xl border border-border shadow-xs">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-extrabold text-foreground">حالة النظام التلقائي:</span>
+                <div className="flex items-center gap-2">
                   <span
                     className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black ${
-                      autoSettings.enabled
-                        ? "bg-emerald-500/15 text-emerald-600 border border-emerald-500/30"
+                      channelsConfig.telegram.enabled && channelsConfig.telegram.botToken
+                        ? "bg-sky-500/15 text-sky-600 border border-sky-500/30"
                         : "bg-muted text-muted-foreground border border-border"
                     }`}
                   >
-                    <span className={`h-2 w-2 rounded-full ${autoSettings.enabled ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground"}`} />
-                    {autoSettings.enabled ? "مفعّل ويعمل يومياً" : "متوقف مؤقتاً"}
+                    <Send className="h-3.5 w-3.5" />
+                    <span>
+                      {channelsConfig.telegram.enabled && channelsConfig.telegram.botToken
+                        ? "تليجرام مربوط بنجاح (@DrElmahdy_Quiz_Bot) 🟢"
+                        : "تليجرام غير مضبوط"}
+                    </span>
                   </span>
+
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setChannelsModalOpen(true)}
+                    className="h-8 px-3 rounded-xl border-border text-xs font-bold gap-1 cursor-pointer"
+                  >
+                    <Sliders className="h-3.5 w-3.5" />
+                    <span>إعدادات البوت والقنوات</span>
+                  </Button>
                 </div>
 
                 <Button
                   type="button"
-                  onClick={() => setAutoSettings({ ...autoSettings, enabled: !autoSettings.enabled })}
-                  className={`w-full h-10 px-5 rounded-xl font-black text-xs cursor-pointer shadow-xs gap-2 ${
-                    autoSettings.enabled
-                      ? "bg-rose-600 hover:bg-rose-700 text-white"
-                      : "bg-emerald-600 hover:bg-emerald-700 text-white"
-                  }`}
+                  onClick={() => {
+                    setEditingSchedule({
+                      title: "اختبار يومي جديد",
+                      enabled: true,
+                      timeOfDay: "08:00",
+                      stage: availableStages[0] || "all",
+                      unit: "all",
+                      lesson: "all",
+                      courseId: null,
+                      questionsCount: 10,
+                      durationMinutes: 20,
+                      passingScore: 60,
+                      difficultyDistribution: { easy: 3, medium: 5, hard: 2 },
+                    });
+                    setScheduleModalOpen(true);
+                  }}
+                  className="w-full h-11 px-5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs cursor-pointer shadow-md gap-2"
                 >
-                  <Zap className="h-3.5 w-3.5" />
-                  <span>{autoSettings.enabled ? "إيقاف التوليد التلقائي" : "تفعيل التوليد التلقائي الآن"}</span>
+                  <Plus className="h-4 w-4" />
+                  <span>إضافة جدول يومي جديد لمرحلة / درس ➕</span>
                 </Button>
-
-                {autoSettings.lastRunDate && (
-                  <span className="text-[11px] text-muted-foreground font-medium">
-                    آخر تشغيل: {autoSettings.lastRunDate} {autoSettings.lastGeneratedQuizId ? `(اختبار #${autoSettings.lastGeneratedQuizId})` : ""}
-                  </span>
-                )}
               </div>
             </div>
           </div>
 
-          <form onSubmit={handleSaveAutoSettings} className="space-y-6">
-            {/* Settings Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* 1. Schedule & Criteria Box */}
-              <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-5">
-                <div className="flex items-center gap-2 pb-3 border-b border-border">
-                  <Sliders className="h-5 w-5 text-primary" />
-                  <h4 className="text-sm font-black text-foreground">١. معايير وموعد توليد الاختبار اليومي</h4>
-                </div>
-
-                {/* Time of Day */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground flex items-center justify-between">
-                    <span>موعد التوليد اليومي (توقيت القاهرة 🇪🇬):</span>
-                    <span className="text-[11px] text-primary font-black">{autoSettings.timeOfDay}</span>
-                  </label>
-                  <input
-                    type="time"
-                    value={autoSettings.timeOfDay}
-                    onChange={(e) => setAutoSettings({ ...autoSettings, timeOfDay: e.target.value })}
-                    className="w-full h-11 px-4 rounded-xl border border-border bg-background text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <p className="text-[11px] text-muted-foreground">
-                    سيقوم السيرفر بفحص الموعد وتوليد الاختبار وإرسال الإشعار لهاتفك في هذا التوقيت يومياً.
-                  </p>
-                </div>
-
-                {/* Target Stage */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">المرحلة الدراسية المستهدفة:</label>
-                  <select
-                    value={autoSettings.targetStage}
-                    onChange={(e) => setAutoSettings({ ...autoSettings, targetStage: e.target.value })}
-                    className="w-full h-11 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground"
-                  >
-                    <option value="all">كل المراحل (تدوير تلقائي ذكي حسب الدروس)</option>
-                    {availableStages.map((st) => (
-                      <option key={st} value={st}>
-                        {st}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Target Course */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">الكورس المستهدف:</label>
-                  <select
-                    value={autoSettings.targetCourseId ? String(autoSettings.targetCourseId) : "all"}
-                    onChange={(e) =>
-                      setAutoSettings({
-                        ...autoSettings,
-                        targetCourseId: e.target.value === "all" ? null : Number(e.target.value),
-                      })
-                    }
-                    className="w-full h-11 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground"
-                  >
-                    <option value="all">كل الكورسات (تدوير تلقائي ذكي)</option>
-                    {courses.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Numbers Grid */}
-                <div className="grid grid-cols-3 gap-3 pt-2">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-muted-foreground">عدد الأسئلة</label>
-                    <input
-                      type="number"
-                      min={3}
-                      max={50}
-                      value={autoSettings.questionsCount}
-                      onChange={(e) =>
-                        setAutoSettings({ ...autoSettings, questionsCount: Math.max(1, Number(e.target.value)) })
-                      }
-                      className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-bold text-center"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-muted-foreground">المدة (دقيقة)</label>
-                    <input
-                      type="number"
-                      min={0}
-                      max={180}
-                      value={autoSettings.durationMinutes}
-                      onChange={(e) =>
-                        setAutoSettings({ ...autoSettings, durationMinutes: Number(e.target.value) })
-                      }
-                      className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-bold text-center"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-muted-foreground">درجة النجاح %</label>
-                    <input
-                      type="number"
-                      min={10}
-                      max={100}
-                      value={autoSettings.passingScore}
-                      onChange={(e) =>
-                        setAutoSettings({ ...autoSettings, passingScore: Number(e.target.value) })
-                      }
-                      className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-bold text-center"
-                    />
-                  </div>
-                </div>
-
-                {/* Difficulty Breakdown */}
-                <div className="space-y-2 pt-2 border-t border-border/50">
-                  <label className="text-xs font-bold text-foreground">توزيع الصعوبة داخل الاختبار اليومي:</label>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-2.5 text-center">
-                      <span className="block text-[11px] font-bold text-emerald-700 dark:text-emerald-400">سهل</span>
-                      <input
-                        type="number"
-                        min={0}
-                        max={30}
-                        value={autoSettings.difficultyDistribution.easy}
-                        onChange={(e) =>
-                          setAutoSettings({
-                            ...autoSettings,
-                            difficultyDistribution: {
-                              ...autoSettings.difficultyDistribution,
-                              easy: Number(e.target.value),
-                            },
-                          })
-                        }
-                        className="w-full h-8 mt-1 text-center bg-background rounded-lg border border-border text-xs font-bold"
-                      />
-                    </div>
-
-                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 text-center">
-                      <span className="block text-[11px] font-bold text-amber-700 dark:text-amber-400">متوسط</span>
-                      <input
-                        type="number"
-                        min={0}
-                        max={30}
-                        value={autoSettings.difficultyDistribution.medium}
-                        onChange={(e) =>
-                          setAutoSettings({
-                            ...autoSettings,
-                            difficultyDistribution: {
-                              ...autoSettings.difficultyDistribution,
-                              medium: Number(e.target.value),
-                            },
-                          })
-                        }
-                        className="w-full h-8 mt-1 text-center bg-background rounded-lg border border-border text-xs font-bold"
-                      />
-                    </div>
-
-                    <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-2.5 text-center">
-                      <span className="block text-[11px] font-bold text-rose-700 dark:text-rose-400">صعب</span>
-                      <input
-                        type="number"
-                        min={0}
-                        max={30}
-                        value={autoSettings.difficultyDistribution.hard}
-                        onChange={(e) =>
-                          setAutoSettings({
-                            ...autoSettings,
-                            difficultyDistribution: {
-                              ...autoSettings.difficultyDistribution,
-                              hard: Number(e.target.value),
-                            },
-                          })
-                        }
-                        className="w-full h-8 mt-1 text-center bg-background rounded-lg border border-border text-xs font-bold"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 2. Notification Channels (Telegram & WhatsApp) */}
-              <div className="space-y-6">
-                {/* Telegram Bot Card */}
-                <div className="rounded-3xl border border-sky-500/30 bg-card p-6 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-border">
-                    <div className="flex items-center gap-2">
-                      <Send className="h-5 w-5 text-sky-500" />
-                      <h4 className="text-sm font-black text-foreground">قناة Telegram (موصى بها ومجانية 100%)</h4>
-                    </div>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={autoSettings.telegram.enabled}
-                        onChange={(e) =>
-                          setAutoSettings({
-                            ...autoSettings,
-                            telegram: { ...autoSettings.telegram, enabled: e.target.checked },
-                          })
-                        }
-                        className="h-4 w-4 accent-sky-500 rounded cursor-pointer"
-                      />
-                      <span className="text-xs font-bold text-foreground">تفعيل إشعار Telegram</span>
-                    </label>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-foreground">Telegram Bot Token:</label>
-                      <input
-                        type="text"
-                        dir="ltr"
-                        placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
-                        value={autoSettings.telegram.botToken}
-                        onChange={(e) =>
-                          setAutoSettings({
-                            ...autoSettings,
-                            telegram: { ...autoSettings.telegram, botToken: e.target.value.trim() },
-                          })
-                        }
-                        className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-mono text-left focus:outline-none focus:ring-2 focus:ring-sky-500"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-foreground">Telegram Chat ID الخاص بك:</label>
-                      <input
-                        type="text"
-                        dir="ltr"
-                        placeholder="مثال: 987654321"
-                        value={autoSettings.telegram.chatId}
-                        onChange={(e) =>
-                          setAutoSettings({
-                            ...autoSettings,
-                            telegram: { ...autoSettings.telegram, chatId: e.target.value.trim() },
-                          })
-                        }
-                        className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-mono text-left focus:outline-none focus:ring-2 focus:ring-sky-500"
-                      />
-                    </div>
-
-                    {/* Quick Telegram Setup Guide */}
-                    <div className="rounded-2xl bg-sky-500/10 border border-sky-500/20 p-3.5 text-xs text-sky-900 dark:text-sky-200 space-y-1.5 leading-relaxed">
-                      <p className="font-extrabold flex items-center gap-1.5">
-                        <Info className="h-3.5 w-3.5 text-sky-500 shrink-0" />
-                        <span>كيفية إنشاء البوت في دقيقة واحدة:</span>
-                      </p>
-                      <ol className="list-decimal list-inside space-y-1 text-[11px] font-medium pr-1">
-                        <li>
-                          ابحث في Telegram عن <strong className="font-mono text-sky-600 dark:text-sky-300">@BotFather</strong> وأرسل له الأمر <code className="px-1 py-0.5 bg-background/60 rounded">/newbot</code> ثم اختر اسماً ومعرفاً للبوت، وسيعطيك الـ <strong>Bot Token</strong> مباشرة.
-                        </li>
-                        <li>
-                          ابحث عن بوتك الجديد الذي أنشأته واضغط <code className="px-1 py-0.5 bg-background/60 rounded">Start</code> أو أرسل له أي كلمة لتسمح له بمراسلتك.
-                        </li>
-                        <li>
-                          لمعرفة رقم الـ <strong>Chat ID</strong> الخاص بك، ابحث عن <strong className="font-mono text-sky-600 dark:text-sky-300">@userinfobot</strong> وأرسل له أي رسالة وسيعطيك رقم الـ Id فوراً لتضعه في الحقل أعلاه.
-                        </li>
-                      </ol>
-                    </div>
-                  </div>
-                </div>
-
-                {/* WhatsApp Webhook Card */}
-                <div className="rounded-3xl border border-emerald-500/30 bg-card p-6 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-border">
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="h-5 w-5 text-emerald-600" />
-                      <h4 className="text-sm font-black text-foreground">قناة WhatsApp (عبر Webhook / Gateway)</h4>
-                    </div>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={autoSettings.whatsapp.enabled}
-                        onChange={(e) =>
-                          setAutoSettings({
-                            ...autoSettings,
-                            whatsapp: { ...autoSettings.whatsapp, enabled: e.target.checked },
-                          })
-                        }
-                        className="h-4 w-4 accent-emerald-600 rounded cursor-pointer"
-                      />
-                      <span className="text-xs font-bold text-foreground">تفعيل إشعار WhatsApp</span>
-                    </label>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-foreground">رقم الهاتف لاستقبال الرسالة:</label>
-                      <input
-                        type="text"
-                        dir="ltr"
-                        placeholder="01012345678 أو +201012345678"
-                        value={autoSettings.whatsapp.phoneNumber}
-                        onChange={(e) =>
-                          setAutoSettings({
-                            ...autoSettings,
-                            whatsapp: { ...autoSettings.whatsapp, phoneNumber: e.target.value.trim() },
-                          })
-                        }
-                        className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-mono text-left focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-foreground">رابط WhatsApp API Gateway / Webhook URL:</label>
-                      <input
-                        type="url"
-                        dir="ltr"
-                        placeholder="https://api.ultramsg.com/... أو بوابة الواتساب الخاصة بك"
-                        value={autoSettings.whatsapp.webhookUrl}
-                        onChange={(e) =>
-                          setAutoSettings({
-                            ...autoSettings,
-                            whatsapp: { ...autoSettings.whatsapp, webhookUrl: e.target.value.trim() },
-                          })
-                        }
-                        className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-mono text-left focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
+          {/* Schedules List Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-amber-600" />
+              <h4 className="text-base font-black text-foreground">
+                الجداول اليومية المجدولة ({schedules.length} جدول)
+              </h4>
             </div>
 
-            {/* Bottom Actions Bar */}
-            <div className="rounded-3xl border border-border bg-card p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="h-5 w-5 text-emerald-600" />
-                <span className="text-xs font-bold text-muted-foreground">
-                  الأمان مضمون: لن يرى الطلاب أي اختبار تلقائي إلا بعد ضغطك على زر الاعتماد في الرسالة أو لوحة التحكم.
-                </span>
-              </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={loadAutoExamConfig}
+              className="h-8 px-3 rounded-xl text-xs font-bold gap-1.5"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${loadingConfig ? "animate-spin" : ""}`} />
+              <span>تحديث</span>
+            </Button>
+          </div>
 
-              <div className="flex items-center gap-3 w-full sm:w-auto">
-                <Button
-                  type="button"
-                  onClick={handleTriggerAutoExam}
-                  disabled={triggeringAutoExam}
-                  variant="outline"
-                  className="flex-1 sm:flex-none h-11 px-5 rounded-xl border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10 font-black text-xs cursor-pointer gap-2"
-                >
-                  <Sparkles className={`h-4 w-4 ${triggeringAutoExam ? "animate-spin" : ""}`} />
-                  <span>{triggeringAutoExam ? "جارٍ التوليد والإرسال..." : "توليد نموذج تجريبي وإرساله الآن لهاتفي 📲"}</span>
-                </Button>
-
-                <Button
-                  type="submit"
-                  disabled={savingAutoSettings}
-                  className="flex-1 sm:flex-none h-11 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-black text-xs cursor-pointer shadow-md gap-2"
-                >
-                  <Check className="h-4 w-4" />
-                  <span>{savingAutoSettings ? "جارٍ الحفظ..." : "حفظ الإعدادات 💾"}</span>
-                </Button>
+          {/* Schedules Cards Grid */}
+          {schedules.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-border bg-card/50 p-12 text-center space-y-4">
+              <Bot className="h-12 w-12 text-muted-foreground mx-auto opacity-50" />
+              <div className="space-y-1">
+                <h5 className="text-sm font-black text-foreground">لا توجد جداول يومية مضافة حتى الآن</h5>
+                <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                  يمكنك إضافة جدول لكل مرحلة دراسية أو درس لمراجعة وتوليد اختبارات يومية تلقائية مستمرة.
+                </p>
               </div>
+              <Button
+                type="button"
+                onClick={() => {
+                  setEditingSchedule({
+                    title: "اختبار يومي جديد",
+                    enabled: true,
+                    timeOfDay: "08:00",
+                    stage: availableStages[0] || "all",
+                    unit: "all",
+                    lesson: "all",
+                    courseId: null,
+                    questionsCount: 10,
+                    durationMinutes: 20,
+                    passingScore: 60,
+                    difficultyDistribution: { easy: 3, medium: 5, hard: 2 },
+                  });
+                  setScheduleModalOpen(true);
+                }}
+                className="h-10 px-5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs cursor-pointer shadow-md gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                <span>إنشاء أول جدول يومي الآن</span>
+              </Button>
             </div>
-          </form>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {schedules.map((schedule) => (
+                <div
+                  key={schedule.id}
+                  className={`rounded-3xl border bg-card p-5 sm:p-6 shadow-sm transition-all space-y-4 ${
+                    schedule.enabled
+                      ? "border-amber-500/30 hover:border-amber-500/60 ring-1 ring-amber-500/10"
+                      : "border-border opacity-70 hover:opacity-100"
+                  }`}
+                >
+                  {/* Card Header */}
+                  <div className="flex items-start justify-between gap-3 border-b border-border/50 pb-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-black ${
+                            schedule.enabled
+                              ? "bg-emerald-500/15 text-emerald-600"
+                              : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          <span className={`h-1.5 w-1.5 rounded-full ${schedule.enabled ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground"}`} />
+                          {schedule.enabled ? "مفعّل 🟢" : "متوقف مؤقتاً ⚪"}
+                        </span>
+
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted text-foreground text-[11px] font-bold">
+                          <Clock className="h-3 w-3 text-amber-600" />
+                          <span>الساعة {schedule.timeOfDay} (القاهرة)</span>
+                        </span>
+                      </div>
+
+                      <h4 className="text-base font-black text-foreground pt-1">{schedule.title}</h4>
+                    </div>
+
+                    {/* Toggle Switch */}
+                    <button
+                      type="button"
+                      onClick={() => handleToggleSchedule(schedule)}
+                      className={`h-7 px-3 rounded-full text-xs font-black cursor-pointer transition-colors ${
+                        schedule.enabled
+                          ? "bg-rose-500/15 text-rose-600 hover:bg-rose-500/25"
+                          : "bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25"
+                      }`}
+                      title={schedule.enabled ? "إيقاف مؤقت لهذا الجدول" : "تفعيل هذا الجدول"}
+                    >
+                      {schedule.enabled ? "إيقاف" : "تفعيل"}
+                    </button>
+                  </div>
+
+                  {/* Scope Details Badges */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <div className="bg-muted/40 p-2.5 rounded-xl border border-border/60 flex items-center justify-between">
+                      <span className="text-muted-foreground font-bold">المرحلة الدراسية:</span>
+                      <strong className="text-foreground font-extrabold truncate max-w-[150px]">
+                        {schedule.stage === "all" ? "كل المراحل" : schedule.stage}
+                      </strong>
+                    </div>
+
+                    <div className="bg-muted/40 p-2.5 rounded-xl border border-border/60 flex items-center justify-between">
+                      <span className="text-muted-foreground font-bold">الوحدة / الدرس:</span>
+                      <strong className="text-foreground font-extrabold truncate max-w-[150px]">
+                        {schedule.unit === "all" || !schedule.unit ? "شامل المنهج" : schedule.unit}
+                        {schedule.lesson && schedule.lesson !== "all" ? ` · ${schedule.lesson}` : ""}
+                      </strong>
+                    </div>
+                  </div>
+
+                  {/* Exam Specs Metrics */}
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div className="bg-background rounded-xl p-2 border border-border">
+                      <span className="block text-[10px] text-muted-foreground font-bold">عدد الأسئلة</span>
+                      <strong className="text-foreground font-black text-sm">{schedule.questionsCount}</strong>
+                    </div>
+
+                    <div className="bg-background rounded-xl p-2 border border-border">
+                      <span className="block text-[10px] text-muted-foreground font-bold">المدة</span>
+                      <strong className="text-foreground font-black text-sm">{schedule.durationMinutes} دقيقة</strong>
+                    </div>
+
+                    <div className="bg-background rounded-xl p-2 border border-border">
+                      <span className="block text-[10px] text-muted-foreground font-bold">درجة النجاح</span>
+                      <strong className="text-emerald-600 font-black text-sm">{schedule.passingScore}%</strong>
+                    </div>
+                  </div>
+
+                  {/* Difficulty Breakdown Pill */}
+                  <div className="flex items-center justify-between text-[11px] bg-muted/30 px-3 py-1.5 rounded-xl border border-border/50 text-muted-foreground">
+                    <span>توزيع الصعوبة:</span>
+                    <div className="flex items-center gap-2 font-bold">
+                      <span className="text-emerald-600">سهل: {schedule.difficultyDistribution?.easy || 0}</span>
+                      <span>·</span>
+                      <span className="text-amber-600">متوسط: {schedule.difficultyDistribution?.medium || 0}</span>
+                      <span>·</span>
+                      <span className="text-rose-600">صعب: {schedule.difficultyDistribution?.hard || 0}</span>
+                    </div>
+                  </div>
+
+                  {/* Card Actions Footer */}
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/40">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => handleTriggerSchedule(schedule)}
+                      disabled={triggeringScheduleId === schedule.id}
+                      className="h-9 px-3.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs cursor-pointer shadow-xs gap-1.5"
+                    >
+                      <Sparkles className={`h-3.5 w-3.5 ${triggeringScheduleId === schedule.id ? "animate-spin" : ""}`} />
+                      <span>{triggeringScheduleId === schedule.id ? "جارٍ الإرسال..." : "إرسال تجريبي الآن للبوت 🚀"}</span>
+                    </Button>
+
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditingSchedule({
+                            id: schedule.id,
+                            title: schedule.title,
+                            enabled: schedule.enabled,
+                            timeOfDay: schedule.timeOfDay,
+                            stage: schedule.stage,
+                            unit: schedule.unit || "all",
+                            lesson: schedule.lesson || "all",
+                            courseId: schedule.courseId || null,
+                            questionsCount: schedule.questionsCount,
+                            durationMinutes: schedule.durationMinutes,
+                            passingScore: schedule.passingScore,
+                            difficultyDistribution: schedule.difficultyDistribution || { easy: 3, medium: 5, hard: 2 },
+                          });
+                          setScheduleModalOpen(true);
+                        }}
+                        className="h-9 px-3 rounded-xl border border-border hover:bg-muted text-foreground text-xs font-bold cursor-pointer gap-1"
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                        <span>تعديل</span>
+                      </Button>
+
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDeleteSchedule(schedule.id, schedule.title)}
+                        className="h-9 px-3 rounded-xl text-rose-600 hover:bg-rose-500/10 text-xs font-bold cursor-pointer gap-1"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Trigger Result Banner */}
           {triggerResult && (
@@ -3528,10 +3474,10 @@ export function TestBankTab({
                   <CheckCircle2 className="h-6 w-6 text-emerald-600" />
                   <div>
                     <h4 className="text-sm font-black text-foreground">
-                      تم توليد الاختبار التجريبي بنجاح! (#{triggerResult.quiz?.id}: {triggerResult.quiz?.title})
+                      تم توليد الاختبار التجريبي لـ ({triggerResult.scheduleTitle}) بنجاح! (#{triggerResult.quiz?.id}: {triggerResult.quiz?.title})
                     </h4>
                     <p className="text-xs text-muted-foreground">
-                      الكورس: {triggerResult.courseTitle} · الحالة: مسودة غير منشورة 🔒
+                      المرحلة: {triggerResult.stageName} · النطاق: {triggerResult.unitName} · الحالة: مسودة غير منشورة 🔒
                     </p>
                   </div>
                 </div>
@@ -3576,6 +3522,446 @@ export function TestBankTab({
                     {triggerResult.whatsappResult?.success ? "تم الإرسال بنجاح ✅" : (triggerResult.whatsappResult?.error || "غير مفعل")}
                   </span>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* ============================================================ */}
+          {/* SCHEDULE ADD / EDIT MODAL                                    */}
+          {/* ============================================================ */}
+          {scheduleModalOpen && editingSchedule && (
+            <div
+              className="fixed inset-0 z-[140] flex items-center justify-center bg-black/75 backdrop-blur-xs p-4"
+              onClick={(e) => e.target === e.currentTarget && setScheduleModalOpen(false)}
+            >
+              <div className="w-full max-w-2xl bg-card rounded-3xl shadow-2xl border border-border text-right max-h-[92vh] flex flex-col overflow-hidden">
+                <div className="shrink-0 flex items-center justify-between p-5 border-b border-border bg-muted/20">
+                  <h3 className="text-sm font-black text-foreground flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-amber-600" />
+                    <span>{editingSchedule.id ? "تعديل الجدول اليومي" : "إضافة جدول يومي جديد"}</span>
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setScheduleModalOpen(false)}
+                    className="p-1 rounded-lg hover:bg-muted text-muted-foreground cursor-pointer"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSaveSchedule} className="flex-1 overflow-y-auto p-6 space-y-5">
+                  {/* Schedule Title */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-foreground">اسم أو عنوان الجدول *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="مثال: اختبار يومي - تانية ثانوي - التنفس الخلوي"
+                      value={editingSchedule.title}
+                      onChange={(e) => setEditingSchedule({ ...editingSchedule, title: e.target.value })}
+                      className="w-full h-11 px-4 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  {/* Stage, Unit, Lesson Pickers */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* Stage */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-foreground">المرحلة الدراسية:</label>
+                      <select
+                        value={editingSchedule.stage}
+                        onChange={(e) =>
+                          setEditingSchedule({
+                            ...editingSchedule,
+                            stage: e.target.value,
+                            unit: "all",
+                            lesson: "all",
+                          })
+                        }
+                        className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground"
+                      >
+                        <option value="all">كل المراحل (تدوير ذكي)</option>
+                        {availableStages.map((st) => (
+                          <option key={st} value={st}>
+                            {st}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Unit */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-foreground">الوحدة الدراسية:</label>
+                      <select
+                        value={editingSchedule.unit}
+                        onChange={(e) =>
+                          setEditingSchedule({
+                            ...editingSchedule,
+                            unit: e.target.value,
+                            lesson: "all",
+                          })
+                        }
+                        className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground"
+                      >
+                        <option value="all">شامل كل الوحدات</option>
+                        {scheduleModalUnits.map((u) => (
+                          <option key={u.unit} value={u.unit}>
+                            {u.unit} ({u.totalQuestions} سؤال)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Lesson */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-foreground">الدرس المحدد:</label>
+                      <select
+                        value={editingSchedule.lesson}
+                        onChange={(e) =>
+                          setEditingSchedule({
+                            ...editingSchedule,
+                            lesson: e.target.value,
+                          })
+                        }
+                        className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground"
+                      >
+                        <option value="all">شامل كامل دروس الوحدة</option>
+                        {scheduleModalLessons.map((l) => (
+                          <option key={l.lesson} value={l.lesson}>
+                            {l.lesson} ({l.totalQuestions} سؤال)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Timing & Exam Specs */}
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-1">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-foreground">موعد التوليد (القاهرة):</label>
+                      <input
+                        type="time"
+                        required
+                        value={editingSchedule.timeOfDay}
+                        onChange={(e) => setEditingSchedule({ ...editingSchedule, timeOfDay: e.target.value })}
+                        className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground text-center"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-foreground">عدد الأسئلة:</label>
+                      <input
+                        type="number"
+                        min={3}
+                        max={50}
+                        required
+                        value={editingSchedule.questionsCount}
+                        onChange={(e) =>
+                          setEditingSchedule({
+                            ...editingSchedule,
+                            questionsCount: Math.max(1, Number(e.target.value)),
+                          })
+                        }
+                        className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-bold text-center"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-foreground">المدة (دقيقة):</label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={180}
+                        required
+                        value={editingSchedule.durationMinutes}
+                        onChange={(e) =>
+                          setEditingSchedule({
+                            ...editingSchedule,
+                            durationMinutes: Number(e.target.value),
+                          })
+                        }
+                        className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-bold text-center"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-foreground">درجة النجاح %:</label>
+                      <input
+                        type="number"
+                        min={10}
+                        max={100}
+                        required
+                        value={editingSchedule.passingScore}
+                        onChange={(e) =>
+                          setEditingSchedule({
+                            ...editingSchedule,
+                            passingScore: Number(e.target.value),
+                          })
+                        }
+                        className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-bold text-center"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Difficulty Breakdown */}
+                  <div className="space-y-2 pt-2 border-t border-border">
+                    <label className="text-xs font-bold text-foreground">توزيع الصعوبة داخل الاختبار:</label>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-2.5 text-center">
+                        <span className="block text-[11px] font-bold text-emerald-700 dark:text-emerald-400">سهل</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={30}
+                          value={editingSchedule.difficultyDistribution.easy}
+                          onChange={(e) =>
+                            setEditingSchedule({
+                              ...editingSchedule,
+                              difficultyDistribution: {
+                                ...editingSchedule.difficultyDistribution,
+                                easy: Number(e.target.value),
+                              },
+                            })
+                          }
+                          className="w-full h-8 mt-1 text-center bg-background rounded-lg border border-border text-xs font-bold"
+                        />
+                      </div>
+
+                      <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 text-center">
+                        <span className="block text-[11px] font-bold text-amber-700 dark:text-amber-400">متوسط</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={30}
+                          value={editingSchedule.difficultyDistribution.medium}
+                          onChange={(e) =>
+                            setEditingSchedule({
+                              ...editingSchedule,
+                              difficultyDistribution: {
+                                ...editingSchedule.difficultyDistribution,
+                                medium: Number(e.target.value),
+                              },
+                            })
+                          }
+                          className="w-full h-8 mt-1 text-center bg-background rounded-lg border border-border text-xs font-bold"
+                        />
+                      </div>
+
+                      <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-2.5 text-center">
+                        <span className="block text-[11px] font-bold text-rose-700 dark:text-rose-400">صعب</span>
+                        <input
+                          type="number"
+                          min={0}
+                          max={30}
+                          value={editingSchedule.difficultyDistribution.hard}
+                          onChange={(e) =>
+                            setEditingSchedule({
+                              ...editingSchedule,
+                              difficultyDistribution: {
+                                ...editingSchedule.difficultyDistribution,
+                                hard: Number(e.target.value),
+                              },
+                            })
+                          }
+                          className="w-full h-8 mt-1 text-center bg-background rounded-lg border border-border text-xs font-bold"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Enable Switch */}
+                  <label className="flex items-center gap-2 cursor-pointer pt-2">
+                    <input
+                      type="checkbox"
+                      checked={editingSchedule.enabled}
+                      onChange={(e) => setEditingSchedule({ ...editingSchedule, enabled: e.target.checked })}
+                      className="h-4 w-4 accent-amber-600 rounded cursor-pointer"
+                    />
+                    <span className="text-xs font-bold text-foreground">تفعيل هذا الجدول للعمل يومياً فور الحفظ</span>
+                  </label>
+
+                  {/* Modal Action Buttons */}
+                  <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setScheduleModalOpen(false)}
+                      className="h-10 px-4 rounded-xl text-xs font-bold"
+                    >
+                      إلغاء
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={savingSchedule}
+                      className="h-10 px-6 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs shadow-md"
+                    >
+                      {savingSchedule ? "جارٍ الحفظ..." : "حفظ الجدول 💾"}
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* ============================================================ */}
+          {/* CHANNELS SETTINGS MODAL (Telegram Bot & WhatsApp)            */}
+          {/* ============================================================ */}
+          {channelsModalOpen && (
+            <div
+              className="fixed inset-0 z-[140] flex items-center justify-center bg-black/75 backdrop-blur-xs p-4"
+              onClick={(e) => e.target === e.currentTarget && setChannelsModalOpen(false)}
+            >
+              <div className="w-full max-w-xl bg-card rounded-3xl shadow-2xl border border-border text-right max-h-[90vh] flex flex-col overflow-hidden">
+                <div className="shrink-0 flex items-center justify-between p-5 border-b border-border bg-muted/20">
+                  <h3 className="text-sm font-black text-foreground flex items-center gap-2">
+                    <Send className="h-4 w-4 text-sky-500" />
+                    <span>إعدادات قنوات الإشعار والمراجعة (تليجرام / واتساب)</span>
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setChannelsModalOpen(false)}
+                    className="p-1 rounded-lg hover:bg-muted text-muted-foreground cursor-pointer"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSaveChannels} className="flex-1 overflow-y-auto p-6 space-y-6">
+                  {/* Telegram Setup Card */}
+                  <div className="rounded-2xl border border-sky-500/30 bg-sky-500/5 p-4 space-y-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-sky-500/20">
+                      <span className="text-xs font-black text-foreground flex items-center gap-2">
+                        <Send className="h-4 w-4 text-sky-500" />
+                        <span>قناة Telegram (موصى بها ومجانية)</span>
+                      </span>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={channelsConfig.telegram.enabled}
+                          onChange={(e) =>
+                            setChannelsConfig({
+                              ...channelsConfig,
+                              telegram: { ...channelsConfig.telegram, enabled: e.target.checked },
+                            })
+                          }
+                          className="h-4 w-4 accent-sky-500 rounded cursor-pointer"
+                        />
+                        <span className="text-xs font-bold text-foreground">تفعيل إرسال تليجرام</span>
+                      </label>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-foreground">Telegram Bot Token:</label>
+                      <input
+                        type="text"
+                        dir="ltr"
+                        value={channelsConfig.telegram.botToken}
+                        onChange={(e) =>
+                          setChannelsConfig({
+                            ...channelsConfig,
+                            telegram: { ...channelsConfig.telegram, botToken: e.target.value.trim() },
+                          })
+                        }
+                        placeholder="8821235319:AAFdp8sj..."
+                        className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-mono text-left"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-foreground">Telegram Chat ID الخاص بك:</label>
+                      <input
+                        type="text"
+                        dir="ltr"
+                        value={channelsConfig.telegram.chatId}
+                        onChange={(e) =>
+                          setChannelsConfig({
+                            ...channelsConfig,
+                            telegram: { ...channelsConfig.telegram, chatId: e.target.value.trim() },
+                          })
+                        }
+                        placeholder="مثال: 744591440"
+                        className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-mono text-left"
+                      />
+                    </div>
+                  </div>
+
+                  {/* WhatsApp Setup Card */}
+                  <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-emerald-500/20">
+                      <span className="text-xs font-black text-foreground flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4 text-emerald-600" />
+                        <span>قناة WhatsApp (عبر Webhook / Gateway)</span>
+                      </span>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={channelsConfig.whatsapp.enabled}
+                          onChange={(e) =>
+                            setChannelsConfig({
+                              ...channelsConfig,
+                              whatsapp: { ...channelsConfig.whatsapp, enabled: e.target.checked },
+                            })
+                          }
+                          className="h-4 w-4 accent-emerald-600 rounded cursor-pointer"
+                        />
+                        <span className="text-xs font-bold text-foreground">تفعيل إرسال واتساب</span>
+                      </label>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-foreground">رقم الهاتف لاستقبال الرسالة:</label>
+                      <input
+                        type="text"
+                        dir="ltr"
+                        value={channelsConfig.whatsapp.phoneNumber}
+                        onChange={(e) =>
+                          setChannelsConfig({
+                            ...channelsConfig,
+                            whatsapp: { ...channelsConfig.whatsapp, phoneNumber: e.target.value.trim() },
+                          })
+                        }
+                        placeholder="01012345678"
+                        className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-mono text-left"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-foreground">رابط WhatsApp API Gateway / Webhook URL:</label>
+                      <input
+                        type="url"
+                        dir="ltr"
+                        value={channelsConfig.whatsapp.webhookUrl}
+                        onChange={(e) =>
+                          setChannelsConfig({
+                            ...channelsConfig,
+                            whatsapp: { ...channelsConfig.whatsapp, webhookUrl: e.target.value.trim() },
+                          })
+                        }
+                        placeholder="https://api.ultramsg.com/..."
+                        className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-mono text-left"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-end gap-3 pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setChannelsModalOpen(false)}
+                      className="h-10 px-4 rounded-xl text-xs font-bold"
+                    >
+                      إلغاء
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={savingChannels}
+                      className="h-10 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-black text-xs shadow-md"
+                    >
+                      {savingChannels ? "جارٍ الحفظ..." : "حفظ إعدادات القنوات 💾"}
+                    </Button>
+                  </div>
+                </form>
               </div>
             </div>
           )}

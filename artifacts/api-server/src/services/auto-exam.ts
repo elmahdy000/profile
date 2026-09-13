@@ -14,19 +14,28 @@ import { and, desc, eq, inArray, ne, or, sql } from "drizzle-orm";
 import { canStudentAccessContent } from "../middleware/student-auth";
 import { logger } from "../lib/logger";
 
-export interface AutoExamSettings {
+export interface AutoExamSchedule {
+  id: string;
+  title: string;
   enabled: boolean;
-  timeOfDay: string; // "08:00" 24h format
+  timeOfDay: string; // "08:00" 24h format in Cairo time
+  stage: string; // "all" or specific stage name
+  unit?: string; // "all" or specific unit
+  lesson?: string; // "all" or specific lesson
+  courseId?: number | null;
   questionsCount: number; // default 10
-  passingScore: number; // default 60%
   durationMinutes: number; // default 20
-  targetCourseId: number | null; // null = auto-rotate across all courses with questions
-  targetStage: string; // "all" or specific stage
+  passingScore: number; // default 60%
   difficultyDistribution: {
     easy: number;
     medium: number;
     hard: number;
   };
+  lastRunDate?: string; // "YYYY-MM-DD"
+  lastGeneratedQuizId?: number;
+}
+
+export interface AutoExamChannelsConfig {
   telegram: {
     enabled: boolean;
     botToken: string;
@@ -37,23 +46,14 @@ export interface AutoExamSettings {
     phoneNumber: string;
     webhookUrl?: string;
   };
-  lastRunDate?: string; // "YYYY-MM-DD"
-  lastGeneratedQuizId?: number;
 }
 
-export const DEFAULT_AUTO_EXAM_SETTINGS: AutoExamSettings = {
-  enabled: false,
-  timeOfDay: "08:00",
-  questionsCount: 10,
-  passingScore: 60,
-  durationMinutes: 20,
-  targetCourseId: null,
-  targetStage: "all",
-  difficultyDistribution: {
-    easy: 3,
-    medium: 5,
-    hard: 2,
-  },
+export interface AutoExamFullConfig {
+  channels: AutoExamChannelsConfig;
+  schedules: AutoExamSchedule[];
+}
+
+export const DEFAULT_CHANNELS_CONFIG: AutoExamChannelsConfig = {
   telegram: {
     enabled: false,
     botToken: "",
@@ -66,7 +66,27 @@ export const DEFAULT_AUTO_EXAM_SETTINGS: AutoExamSettings = {
   },
 };
 
-const SETTINGS_KEY = "auto_exam_settings";
+export const DEFAULT_SCHEDULE: AutoExamSchedule = {
+  id: "sched_default",
+  title: "اختبار المراجعة اليومي العام",
+  enabled: true,
+  timeOfDay: "08:00",
+  stage: "all",
+  unit: "all",
+  lesson: "all",
+  courseId: null,
+  questionsCount: 10,
+  durationMinutes: 20,
+  passingScore: 60,
+  difficultyDistribution: {
+    easy: 3,
+    medium: 5,
+    hard: 2,
+  },
+};
+
+const SCHEDULES_SETTINGS_KEY = "auto_exam_schedules";
+const LEGACY_SETTINGS_KEY = "auto_exam_settings";
 
 const tokenSecret = (() => {
   return process.env.STREAM_TOKEN_SECRET || process.env.ADMIN_PASSWORD || "dr-mahmoud-auto-exam-secret-salt";
@@ -94,45 +114,101 @@ export function isValidApprovalToken(quizId: number, token?: string): boolean {
   return supplied.length === expected.length && timingSafeEqual(supplied, expected);
 }
 
-export async function getAutoExamSettings(): Promise<AutoExamSettings> {
+/**
+ * Retrieve the full auto-exam config (channels + schedules list)
+ */
+export async function getAutoExamFullConfig(): Promise<AutoExamFullConfig> {
   try {
     const [row] = await db
       .select()
       .from(siteSettingsTable)
-      .where(eq(siteSettingsTable.key, SETTINGS_KEY))
+      .where(eq(siteSettingsTable.key, SCHEDULES_SETTINGS_KEY))
       .limit(1);
-    if (!row?.value) {
-      return { ...DEFAULT_AUTO_EXAM_SETTINGS };
+
+    if (row?.value) {
+      const parsed = JSON.parse(row.value) as Partial<AutoExamFullConfig>;
+      return {
+        channels: {
+          telegram: {
+            ...DEFAULT_CHANNELS_CONFIG.telegram,
+            ...(parsed.channels?.telegram || {}),
+          },
+          whatsapp: {
+            ...DEFAULT_CHANNELS_CONFIG.whatsapp,
+            ...(parsed.channels?.whatsapp || {}),
+          },
+        },
+        schedules: Array.isArray(parsed.schedules) ? parsed.schedules : [],
+      };
     }
-    const parsed = JSON.parse(row.value) as Partial<AutoExamSettings>;
+
+    // Check legacy single-schedule config if exists
+    const [legacyRow] = await db
+      .select()
+      .from(siteSettingsTable)
+      .where(eq(siteSettingsTable.key, LEGACY_SETTINGS_KEY))
+      .limit(1);
+
+    if (legacyRow?.value) {
+      const legacy = JSON.parse(legacyRow.value) as any;
+      const initialSchedule: AutoExamSchedule = {
+        id: "sched_" + Date.now(),
+        title: "الجدول اليومي الأساسي",
+        enabled: Boolean(legacy.enabled),
+        timeOfDay: legacy.timeOfDay || "08:00",
+        stage: legacy.targetStage || "all",
+        unit: "all",
+        lesson: "all",
+        courseId: legacy.targetCourseId || null,
+        questionsCount: legacy.questionsCount || 10,
+        durationMinutes: legacy.durationMinutes || 20,
+        passingScore: legacy.passingScore || 60,
+        difficultyDistribution: legacy.difficultyDistribution || { easy: 3, medium: 5, hard: 2 },
+        lastRunDate: legacy.lastRunDate,
+        lastGeneratedQuizId: legacy.lastGeneratedQuizId,
+      };
+
+      const migratedConfig: AutoExamFullConfig = {
+        channels: {
+          telegram: {
+            ...DEFAULT_CHANNELS_CONFIG.telegram,
+            ...(legacy.telegram || {}),
+          },
+          whatsapp: {
+            ...DEFAULT_CHANNELS_CONFIG.whatsapp,
+            ...(legacy.whatsapp || {}),
+          },
+        },
+        schedules: [initialSchedule],
+      };
+
+      // Save migrated structure
+      await saveAutoExamFullConfig(migratedConfig);
+      return migratedConfig;
+    }
+
     return {
-      ...DEFAULT_AUTO_EXAM_SETTINGS,
-      ...parsed,
-      difficultyDistribution: {
-        ...DEFAULT_AUTO_EXAM_SETTINGS.difficultyDistribution,
-        ...(parsed.difficultyDistribution || {}),
-      },
-      telegram: {
-        ...DEFAULT_AUTO_EXAM_SETTINGS.telegram,
-        ...(parsed.telegram || {}),
-      },
-      whatsapp: {
-        ...DEFAULT_AUTO_EXAM_SETTINGS.whatsapp,
-        ...(parsed.whatsapp || {}),
-      },
+      channels: { ...DEFAULT_CHANNELS_CONFIG },
+      schedules: [{ ...DEFAULT_SCHEDULE }],
     };
   } catch (err) {
-    logger.error({ err }, "[AUTO_EXAM] Failed to read settings, using defaults");
-    return { ...DEFAULT_AUTO_EXAM_SETTINGS };
+    logger.error({ err }, "[AUTO_EXAM] Failed to read full config, using defaults");
+    return {
+      channels: { ...DEFAULT_CHANNELS_CONFIG },
+      schedules: [{ ...DEFAULT_SCHEDULE }],
+    };
   }
 }
 
-export async function saveAutoExamSettings(settings: AutoExamSettings): Promise<void> {
-  const value = JSON.stringify(settings);
+/**
+ * Save full auto-exam config (channels + schedules)
+ */
+export async function saveAutoExamFullConfig(config: AutoExamFullConfig): Promise<void> {
+  const value = JSON.stringify(config);
   await db
     .insert(siteSettingsTable)
     .values({
-      key: SETTINGS_KEY,
+      key: SCHEDULES_SETTINGS_KEY,
       value,
       type: "json",
     })
@@ -146,7 +222,7 @@ export async function saveAutoExamSettings(settings: AutoExamSettings): Promise<
     });
 }
 
-function normalizePrompt(text: string): string {
+function normalizeText(text: string): string {
   return String(text || "")
     .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
     .replace(/[\u064B-\u0652\u0670\u0640]/g, "")
@@ -156,18 +232,22 @@ function normalizePrompt(text: string): string {
 }
 
 /**
- * Generate a new draft exam from the test bank and return it without publishing.
+ * Generate a new draft exam for a specific schedule and return it without publishing.
  */
-export async function generateDailyDraftExam(customSettings?: AutoExamSettings): Promise<{
+export async function generateDraftExamForSchedule(
+  schedule: AutoExamSchedule,
+  channels?: AutoExamChannelsConfig,
+): Promise<{
   quiz: typeof quizzesTable.$inferSelect;
   courseTitle: string;
+  stageName: string;
+  unitName: string;
+  lessonName: string;
   approvalToken: string;
   messageText: string;
 }> {
-  const settings = customSettings || (await getAutoExamSettings());
-
-  // 1. Select course: specific course or auto-rotate to a course with question bank entries
-  let courseId = settings.targetCourseId;
+  // 1. Resolve Target Course
+  let courseId = schedule.courseId;
   let targetCourse: { id: number; title: string; category: string; stages: string[] | null } | null = null;
 
   if (courseId) {
@@ -184,59 +264,56 @@ export async function generateDailyDraftExam(customSettings?: AutoExamSettings):
     if (found) targetCourse = found;
   }
 
+  // If no course explicitly assigned, attempt to find a course matching the stage or with questions
   if (!targetCourse) {
-    // Find courses with questions in the bank
-    const coursesWithQuestions = await db
-      .select({
-        courseId: questionBankTable.courseId,
-        count: sql<number>`count(*)`,
-      })
-      .from(questionBankTable)
-      .where(sql`${questionBankTable.courseId} IS NOT NULL`)
-      .groupBy(questionBankTable.courseId)
-      .having(sql`count(*) >= 5`);
-
-    if (coursesWithQuestions.length > 0) {
-      // Pick one randomly or rotate based on day
-      const dayNum = new Date().getDate();
-      const chosen = coursesWithQuestions[dayNum % coursesWithQuestions.length];
-      if (chosen?.courseId) {
-        courseId = chosen.courseId;
-        const [found] = await db
-          .select({
-            id: coursesTable.id,
-            title: coursesTable.title,
-            category: coursesTable.category,
-            stages: coursesTable.stages,
-          })
-          .from(coursesTable)
-          .where(eq(coursesTable.id, chosen.courseId))
-          .limit(1);
-        if (found) targetCourse = found;
+    if (schedule.stage && schedule.stage !== "all") {
+      const allCourses = await db.select().from(coursesTable);
+      const matching = allCourses.find((c) =>
+        Array.isArray(c.stages) ? c.stages.includes(schedule.stage) : false,
+      );
+      if (matching) {
+        targetCourse = matching;
+        courseId = matching.id;
       }
     }
   }
 
-  // 2. Fetch available bank questions for this course or category
+  // 2. Build question bank filters for this specific schedule
   let questionsQuery = db.select().from(questionBankTable);
   const conditions = [];
+
   if (courseId) {
     conditions.push(eq(questionBankTable.courseId, courseId));
   }
-  if (settings.targetStage && settings.targetStage !== "all") {
+
+  if (schedule.stage && schedule.stage !== "all") {
     conditions.push(
       or(
-        eq(questionBankTable.stage, settings.targetStage),
-        sql`${questionBankTable.stages}::jsonb @> ${JSON.stringify([settings.targetStage])}::jsonb`,
+        eq(questionBankTable.stage, schedule.stage),
+        sql`${questionBankTable.stages}::jsonb @> ${JSON.stringify([schedule.stage])}::jsonb`,
       ),
     );
+  }
+
+  if (schedule.unit && schedule.unit !== "all") {
+    conditions.push(eq(questionBankTable.unit, schedule.unit));
+  }
+
+  if (schedule.lesson && schedule.lesson !== "all") {
+    conditions.push(eq(questionBankTable.lesson, schedule.lesson));
   }
 
   const rawQuestions = await (conditions.length ? questionsQuery.where(and(...conditions)) : questionsQuery);
 
   if (!rawQuestions || rawQuestions.length === 0) {
+    const scopeDesc = [
+      schedule.stage && schedule.stage !== "all" ? `المرحلة: ${schedule.stage}` : "",
+      schedule.unit && schedule.unit !== "all" ? `الوحدة: ${schedule.unit}` : "",
+      schedule.lesson && schedule.lesson !== "all" ? `الدرس: ${schedule.lesson}` : "",
+    ].filter(Boolean).join(" · ");
+
     throw new Error(
-      `لا توجد أسئلة كافية في بنك الأسئلة للكورس المختار (${targetCourse?.title || "كل الكورسات"}). يرجى إضافة أسئلة في بنك الأسئلة أولاً.`,
+      `لا توجد أسئلة كافية في بنك الأسئلة للنطاق المحدد لـ (${schedule.title}) [${scopeDesc || "عام"}]. يرجى إضافة أسئلة في بنك الأسئلة أولاً.`,
     );
   }
 
@@ -250,81 +327,81 @@ export async function generateDailyDraftExam(customSettings?: AutoExamSettings):
     return true;
   });
 
-  if (qualityQuestions.length < 3) {
-    throw new Error(`عدد الأسئلة الصالحة والمكتملة في بنك الأسئلة أقل من 3 أسئلة (تم العثور على ${qualityQuestions.length} فقط).`);
+  if (qualityQuestions.length === 0) {
+    throw new Error(`الأسئلة المتوفرة في بنك الأسئلة لنطاق (${schedule.title}) تحتاج إلى مراجعة وتنسيق خيارات.`);
   }
 
-  // 4. Retrieve prompts from recent quizzes (last 5 quizzes) to prevent repetition
+  // 4. Exclude questions recently used in the last 15 quizzes to ensure fresh daily questions
   const recentQuizzes = await db
     .select({ questions: quizzesTable.questions })
     .from(quizzesTable)
-    .orderBy(desc(quizzesTable.id))
-    .limit(5);
+    .orderBy(desc(quizzesTable.createdAt))
+    .limit(15);
 
-  const recentlyUsedPrompts = new Set<string>();
-  for (const rz of recentQuizzes) {
-    if (Array.isArray(rz.questions)) {
-      for (const q of rz.questions) {
-        if (q?.prompt) recentlyUsedPrompts.add(normalizePrompt(q.prompt));
+  const recentNormalizedPrompts = new Set<string>();
+  for (const qz of recentQuizzes) {
+    if (Array.isArray(qz.questions)) {
+      for (const item of qz.questions) {
+        if (item?.prompt) {
+          recentNormalizedPrompts.add(normalizeText(item.prompt));
+        }
       }
     }
   }
 
-  // Prefer questions not used recently, but fall back if needed
-  const freshQuestions = qualityQuestions.filter((q) => !recentlyUsedPrompts.has(normalizePrompt(q.question.prompt)));
-  const questionPool = freshQuestions.length >= settings.questionsCount ? freshQuestions : qualityQuestions;
+  const freshQuestions = qualityQuestions.filter(
+    (row) => !recentNormalizedPrompts.has(normalizeText(row.question.prompt)),
+  );
 
-  // 5. Balanced Difficulty Selection
-  const targetTotal = Math.min(settings.questionsCount, questionPool.length);
-  const easyTarget = Math.round(targetTotal * (settings.difficultyDistribution.easy / 10));
-  const medTarget = Math.round(targetTotal * (settings.difficultyDistribution.medium / 10));
-  const hardTarget = targetTotal - easyTarget - medTarget;
+  const questionPool = freshQuestions.length >= Math.min(schedule.questionsCount, 5) ? freshQuestions : qualityQuestions;
 
-  const easyPool = questionPool.filter((q) => q.difficulty === "easy").sort(() => Math.random() - 0.5);
-  const medPool = questionPool.filter((q) => q.difficulty === "medium").sort(() => Math.random() - 0.5);
-  const hardPool = questionPool.filter((q) => q.difficulty === "hard").sort(() => Math.random() - 0.5);
+  // 5. Categorize and select according to difficulty distribution
+  const easyPool = questionPool.filter((q) => (q.difficulty || "medium") === "easy");
+  const medPool = questionPool.filter((q) => (q.difficulty || "medium") === "medium");
+  const hardPool = questionPool.filter((q) => (q.difficulty || "medium") === "hard");
 
-  const selectedRows: typeof questionPool = [];
-  const selectedPrompts = new Set<string>();
-
-  const canAdd = (item: (typeof questionPool)[0]) => {
-    const norm = normalizePrompt(item.question.prompt);
-    return !selectedPrompts.has(norm);
+  const shuffle = <T>(arr: T[]): T[] => {
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
   };
 
-  const addOne = (item: (typeof questionPool)[0]) => {
-    selectedRows.push(item);
-    selectedPrompts.add(normalizePrompt(item.question.prompt));
+  const targetEasy = Math.max(0, schedule.difficultyDistribution.easy);
+  const targetMed = Math.max(0, schedule.difficultyDistribution.medium);
+  const targetHard = Math.max(0, schedule.difficultyDistribution.hard);
+
+  const selectedRows: typeof questionBankTable.$inferSelect[] = [];
+  const pickedIds = new Set<number>();
+
+  const pickFromPool = (pool: typeof questionBankTable.$inferSelect[], count: number) => {
+    const shuffled = shuffle(pool.filter((q) => !pickedIds.has(q.id)));
+    for (let i = 0; i < Math.min(count, shuffled.length); i++) {
+      selectedRows.push(shuffled[i]);
+      pickedIds.add(shuffled[i].id);
+    }
   };
 
-  for (const item of easyPool) {
-    if (selectedRows.filter((r) => r.difficulty === "easy").length >= easyTarget) break;
-    if (canAdd(item)) addOne(item);
-  }
-  for (const item of medPool) {
-    if (selectedRows.filter((r) => r.difficulty === "medium").length >= medTarget) break;
-    if (canAdd(item)) addOne(item);
-  }
-  for (const item of hardPool) {
-    if (selectedRows.filter((r) => r.difficulty === "hard").length >= hardTarget) break;
-    if (canAdd(item)) addOne(item);
-  }
+  pickFromPool(easyPool, targetEasy);
+  pickFromPool(medPool, targetMed);
+  pickFromPool(hardPool, targetHard);
 
-  // Fill up remainder to targetTotal if any pool was short
+  // Fill remainder if target total questions count is not reached
+  const targetTotal = Math.min(schedule.questionsCount, qualityQuestions.length);
   if (selectedRows.length < targetTotal) {
-    const remaining = [...questionPool].sort(() => Math.random() - 0.5);
-    for (const item of remaining) {
+    const remainderPool = shuffle(qualityQuestions.filter((q) => !pickedIds.has(q.id)));
+    for (const q of remainderPool) {
       if (selectedRows.length >= targetTotal) break;
-      if (canAdd(item)) addOne(item);
+      selectedRows.push(q);
+      pickedIds.add(q.id);
     }
   }
 
-  // Shuffle final questions order
-  selectedRows.sort(() => Math.random() - 0.5);
-
   const finalQuestions: QuizQuestion[] = selectedRows.map((r) => ({
-    prompt: r.question.prompt,
-    options: r.question.options,
+    prompt: r.question.prompt.trim(),
+    options: r.question.options.map((opt) => String(opt).trim()),
     correctIndex: r.question.correctIndex,
     explanation: r.question.explanation || undefined,
     imageUrl: r.question.imageUrl || undefined,
@@ -338,9 +415,13 @@ export async function generateDailyDraftExam(customSettings?: AutoExamSettings):
     day: "numeric",
   });
 
-  const courseTitle = targetCourse?.title || "الكورس العام";
-  const examTitle = `اختبار يومي تجريبي: ${courseTitle} (${todayDateStr})`;
-  const stages = targetCourse?.stages?.length ? targetCourse.stages : ["عام"];
+  const courseTitle = targetCourse?.title || (schedule.stage !== "all" ? schedule.stage : "الكورس العام");
+  const stageName = schedule.stage !== "all" ? schedule.stage : (targetCourse?.stages?.[0] || "عام");
+  const unitName = schedule.unit && schedule.unit !== "all" ? schedule.unit : "شامل المنهج";
+  const lessonName = schedule.lesson && schedule.lesson !== "all" ? schedule.lesson : "شامل الوحدة";
+
+  const examTitle = `${schedule.title} (${todayDateStr})`;
+  const stages = targetCourse?.stages?.length ? targetCourse.stages : [stageName];
 
   // 6. Insert as DRAFT (isPublished = false)
   const [createdQuiz] = await db
@@ -349,12 +430,12 @@ export async function generateDailyDraftExam(customSettings?: AutoExamSettings):
       title: examTitle,
       courseId: targetCourse?.id || null,
       scope: "course",
-      description: `اختبار مراجعة يومي تم توليده آلياً من بنك الأسئلة لكورس ${courseTitle}. بانتظار اعتماد المعلم.`,
+      description: `اختبار مراجعة يومي تم توليده آلياً من جدول (${schedule.title}) لنطاق [${stageName} · ${unitName}]. بانتظار اعتماد المعلم.`,
       category: targetCourse?.category || "عام",
-      stage: stages[0] || "عام",
+      stage: stageName,
       stages,
-      durationMinutes: settings.durationMinutes,
-      passingScore: settings.passingScore,
+      durationMinutes: schedule.durationMinutes,
+      passingScore: schedule.passingScore,
       maxAttempts: 3,
       shuffleQuestions: true,
       showExplanations: true,
@@ -378,30 +459,47 @@ export async function generateDailyDraftExam(customSettings?: AutoExamSettings):
 
   const approvalUrl = `https://drelmahdy.com/api/admin/learning/quizzes/${createdQuiz.id}/quick-approve?token=${approvalToken}`;
 
-  const messageText = `🎓 *نموذج اختبار يومي جديد بانتظار اعتمادك* 📋\n\n` +
-    `🏷️ *الكورس:* ${courseTitle}\n` +
+  const messageText =
+    `🎓 *اختبار يومي جديد بانتظار اعتمادك* 📋\n\n` +
+    `🔖 *اسم الجدول:* ${schedule.title}\n` +
+    `📚 *المرحلة:* ${stageName}\n` +
+    `📖 *الوحدة / الدرس:* ${unitName} · ${lessonName}\n` +
     `📅 *التاريخ:* ${todayDateStr}\n` +
     `🔢 *عدد الأسئلة:* ${finalQuestions.length} سؤال\n` +
-    `⏱️ *المدة:* ${settings.durationMinutes} دقيقة | 🎯 *النجاح:* ${settings.passingScore}%\n` +
-    `🔒 *الحالة:* مسودة (لم يُنشر للطلاب بعد)\n\n` +
+    `⏱️ *المدة:* ${schedule.durationMinutes} دقيقة | 🎯 *النجاح:* ${schedule.passingScore}%\n` +
+    `🔒 *الحالة:* مسودة خاصة (لم يُنشر للطلاب بعد)\n\n` +
     `═══════════════════\n` +
-    `📝 *تفاصيل ونصوص الأسئلة والإجابات:*\n\n` +
+    `📝 *تفاصيل الأسئلة والإجابات النموذجية:*\n\n` +
     `${questionsFormatted}\n\n` +
     `═══════════════════\n` +
     `👉 *للاعتماد والنشر المباشر للطلاب فوراً:* اضغط الزر أدناه أو الرابط:\n` +
     `${approvalUrl}`;
 
-  // Update lastGeneratedQuizId and lastRunDate
+  // Update schedule's lastRunDate and lastGeneratedQuizId
   const todayIso = new Date().toISOString().split("T")[0];
-  await saveAutoExamSettings({
-    ...settings,
-    lastRunDate: todayIso,
-    lastGeneratedQuizId: createdQuiz.id,
+  const fullConfig = await getAutoExamFullConfig();
+  const updatedSchedules = fullConfig.schedules.map((s) => {
+    if (s.id === schedule.id) {
+      return {
+        ...s,
+        lastRunDate: todayIso,
+        lastGeneratedQuizId: createdQuiz.id,
+      };
+    }
+    return s;
+  });
+
+  await saveAutoExamFullConfig({
+    ...fullConfig,
+    schedules: updatedSchedules,
   });
 
   return {
     quiz: createdQuiz,
     courseTitle,
+    stageName,
+    unitName,
+    lessonName,
     approvalToken,
     messageText,
   };
@@ -441,70 +539,78 @@ export async function sendExamToTelegram(
     ],
   };
 
+  const telegramApiUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
   try {
-    // Telegram has a 4096 character limit per message.
-    // If message is longer, split into chunks and put buttons on the last chunk.
-    const maxChunk = 3800;
+    const MAX_CHUNK_LENGTH = 3800;
+    if (messageText.length <= MAX_CHUNK_LENGTH) {
+      const response = await fetch(telegramApiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: messageText,
+          parse_mode: "Markdown",
+          reply_markup: inlineKeyboard,
+        }),
+      });
+      const data = (await response.json()) as any;
+      if (!data.ok) {
+        // Fallback without markdown parsing if syntax error occurred in prompt
+        const fallbackResp = await fetch(telegramApiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: messageText.replace(/[*_`]/g, ""),
+            reply_markup: inlineKeyboard,
+          }),
+        });
+        const fallbackData = (await fallbackResp.json()) as any;
+        if (!fallbackData.ok) {
+          return { success: false, error: fallbackData.description || "Failed to send Telegram message" };
+        }
+      }
+      return { success: true };
+    }
+
+    // Split into chunks if message is very long
     const chunks: string[] = [];
     let remaining = messageText;
-
-    while (remaining.length > maxChunk) {
-      // Find a suitable split point
-      let splitAt = remaining.lastIndexOf("\n\n────────────────\n\n", maxChunk);
-      if (splitAt === -1 || splitAt < 1000) {
-        splitAt = remaining.lastIndexOf("\n\n", maxChunk);
+    while (remaining.length > 0) {
+      if (remaining.length <= MAX_CHUNK_LENGTH) {
+        chunks.push(remaining);
+        break;
       }
-      if (splitAt === -1) {
-        splitAt = maxChunk;
-      }
-      chunks.push(remaining.slice(0, splitAt));
-      remaining = remaining.slice(splitAt).trim();
+      let splitIdx = remaining.lastIndexOf("\n\n", MAX_CHUNK_LENGTH);
+      if (splitIdx < 1000) splitIdx = remaining.lastIndexOf("\n", MAX_CHUNK_LENGTH);
+      if (splitIdx < 500) splitIdx = MAX_CHUNK_LENGTH;
+      chunks.push(remaining.slice(0, splitIdx));
+      remaining = remaining.slice(splitIdx).trim();
     }
-    chunks.push(remaining);
 
     for (let i = 0; i < chunks.length; i++) {
       const isLast = i === chunks.length - 1;
-      const body: Record<string, unknown> = {
-        chat_id: chatId,
-        text: chunks[i],
-        parse_mode: "Markdown",
-        disable_web_page_preview: false,
-      };
-      if (isLast) {
-        body.reply_markup = inlineKeyboard;
-      }
-
-      const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      await fetch(telegramApiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: chunks[i],
+          ...(isLast ? { reply_markup: inlineKeyboard } : {}),
+        }),
       });
-
-      if (!res.ok) {
-        const errText = await res.text();
-        // Retry with plain text without markdown if markdown failed
-        const plainBody = { ...body, parse_mode: undefined };
-        const retryRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(plainBody),
-        });
-        if (!retryRes.ok) {
-          logger.error({ errText }, "[AUTO_EXAM] Telegram API error");
-          return { success: false, error: errText };
-        }
-      }
     }
 
     return { success: true };
   } catch (err: any) {
-    logger.error({ err }, "[AUTO_EXAM] Failed to send Telegram message");
+    logger.error({ err }, "[AUTO_EXAM] Failed to send exam review to Telegram");
     return { success: false, error: err.message || "Network error sending to Telegram" };
   }
 }
 
 /**
- * Send WhatsApp notification via configured webhook (e.g. UltraMsg, Green API, or custom).
+ * Send the generated exam to WhatsApp via Webhook URL / Gateway
  */
 export async function sendExamToWhatsApp(
   webhookUrl: string,
@@ -512,30 +618,35 @@ export async function sendExamToWhatsApp(
   messageText: string,
 ): Promise<{ success: boolean; error?: string }> {
   if (!webhookUrl) {
-    return { success: false, error: "WhatsApp Webhook URL is not configured" };
+    return { success: false, error: "WhatsApp Webhook URL is missing" };
   }
+
   try {
-    const res = await fetch(webhookUrl, {
+    const payload = {
+      phone: phoneNumber,
+      message: messageText,
+      chatId: phoneNumber ? `${phoneNumber.replace(/[^0-9]/g, "")}@c.us` : undefined,
+    };
+
+    const response = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        to: phoneNumber,
-        message: messageText,
-        body: messageText,
-      }),
+      body: JSON.stringify(payload),
     });
-    if (!res.ok) {
-      const err = await res.text();
-      return { success: false, error: err };
+
+    if (!response.ok) {
+      return { success: false, error: `WhatsApp gateway returned HTTP ${response.status}` };
     }
+
     return { success: true };
   } catch (err: any) {
-    return { success: false, error: err.message || "Failed to send WhatsApp message" };
+    logger.error({ err }, "[AUTO_EXAM] Failed to send exam review to WhatsApp");
+    return { success: false, error: err.message || "Network error sending to WhatsApp" };
   }
 }
 
 /**
- * One-click approve and publish a quiz draft.
+ * Approve and instantly publish a quiz.
  */
 export async function approveAndPublishQuiz(quizId: number): Promise<{
   success: boolean;
@@ -544,8 +655,9 @@ export async function approveAndPublishQuiz(quizId: number): Promise<{
   alreadyPublished?: boolean;
 }> {
   const [quiz] = await db.select().from(quizzesTable).where(eq(quizzesTable.id, quizId)).limit(1);
+
   if (!quiz) {
-    throw new Error("الاختبار غير موجود");
+    throw new Error("الاختبار غير موجود في النظام");
   }
 
   if (quiz.isPublished) {
@@ -597,42 +709,58 @@ export async function approveAndPublishQuiz(quizId: number): Promise<{
 
 /**
  * Background scheduler check that runs periodically (every 60s).
+ * Evaluates ALL enabled schedules against current Cairo time.
  */
 export async function runAutoExamSchedulerTick(): Promise<void> {
   try {
-    const settings = await getAutoExamSettings();
-    if (!settings.enabled) return;
+    const config = await getAutoExamFullConfig();
+    const activeSchedules = (config.schedules || []).filter((s) => s.enabled);
+    if (activeSchedules.length === 0) return;
 
-    // Get current time in Cairo timezone (Africa/Cairo)
+    // Current time in Cairo timezone (Africa/Cairo)
     const nowCairo = new Date(new Date().toLocaleString("en-US", { timeZone: "Africa/Cairo" }));
     const currentHours = String(nowCairo.getHours()).padStart(2, "0");
     const currentMinutes = String(nowCairo.getMinutes()).padStart(2, "0");
     const currentTimeStr = `${currentHours}:${currentMinutes}`;
     const todayStr = nowCairo.toISOString().split("T")[0];
 
-    // Check if time matches and has not already run today
-    if (currentTimeStr === settings.timeOfDay && settings.lastRunDate !== todayStr) {
-      logger.info({ currentTimeStr, todayStr }, "[AUTO_EXAM] Scheduled trigger matched! Generating daily draft exam...");
-      const result = await generateDailyDraftExam(settings);
-
-      if (settings.telegram.enabled && settings.telegram.botToken && settings.telegram.chatId) {
-        await sendExamToTelegram(
-          settings.telegram.botToken,
-          settings.telegram.chatId,
-          result.quiz,
-          result.approvalToken,
-          result.messageText,
+    for (const schedule of activeSchedules) {
+      // Check if time matches and has not already run today
+      if (currentTimeStr === schedule.timeOfDay && schedule.lastRunDate !== todayStr) {
+        logger.info(
+          { scheduleId: schedule.id, scheduleTitle: schedule.title, currentTimeStr, todayStr },
+          "[AUTO_EXAM] Schedule matched! Generating daily draft exam...",
         );
-        logger.info("[AUTO_EXAM] Sent daily exam review to Telegram!");
-      }
 
-      if (settings.whatsapp.enabled && settings.whatsapp.webhookUrl) {
-        await sendExamToWhatsApp(
-          settings.whatsapp.webhookUrl,
-          settings.whatsapp.phoneNumber,
-          result.messageText,
-        );
-        logger.info("[AUTO_EXAM] Sent daily exam review to WhatsApp!");
+        try {
+          const result = await generateDraftExamForSchedule(schedule, config.channels);
+
+          if (
+            config.channels.telegram.enabled &&
+            config.channels.telegram.botToken &&
+            config.channels.telegram.chatId
+          ) {
+            await sendExamToTelegram(
+              config.channels.telegram.botToken,
+              config.channels.telegram.chatId,
+              result.quiz,
+              result.approvalToken,
+              result.messageText,
+            );
+            logger.info({ scheduleId: schedule.id }, "[AUTO_EXAM] Sent schedule exam review to Telegram!");
+          }
+
+          if (config.channels.whatsapp.enabled && config.channels.whatsapp.webhookUrl) {
+            await sendExamToWhatsApp(
+              config.channels.whatsapp.webhookUrl,
+              config.channels.whatsapp.phoneNumber,
+              result.messageText,
+            );
+            logger.info({ scheduleId: schedule.id }, "[AUTO_EXAM] Sent schedule exam review to WhatsApp!");
+          }
+        } catch (schedErr) {
+          logger.error({ err: schedErr, scheduleId: schedule.id }, "[AUTO_EXAM] Failed to run single schedule");
+        }
       }
     }
   } catch (err) {
