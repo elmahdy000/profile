@@ -10,7 +10,7 @@ import {
   videosTable,
   type QuizQuestion,
 } from "@workspace/db";
-import { and, desc, eq, inArray, ne, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, ne, or, sql } from "drizzle-orm";
 import { canStudentAccessContent } from "../middleware/student-auth";
 import { logger } from "../lib/logger";
 
@@ -247,10 +247,10 @@ export async function generateDraftExamForSchedule(
   messageText: string;
 }> {
   // 1. Resolve Target Course
-  let courseId = schedule.courseId;
+  // 1. Resolve Target Course (ONLY if explicitly set by schedule)
   let targetCourse: { id: number; title: string; category: string; stages: string[] | null } | null = null;
 
-  if (courseId) {
+  if (schedule.courseId) {
     const [found] = await db
       .select({
         id: coursesTable.id,
@@ -259,31 +259,17 @@ export async function generateDraftExamForSchedule(
         stages: coursesTable.stages,
       })
       .from(coursesTable)
-      .where(eq(coursesTable.id, courseId))
+      .where(eq(coursesTable.id, schedule.courseId))
       .limit(1);
     if (found) targetCourse = found;
   }
 
-  // If no course explicitly assigned, attempt to find a course matching the stage or with questions
-  if (!targetCourse) {
-    if (schedule.stage && schedule.stage !== "all") {
-      const allCourses = await db.select().from(coursesTable);
-      const matching = allCourses.find((c) =>
-        Array.isArray(c.stages) ? c.stages.includes(schedule.stage) : false,
-      );
-      if (matching) {
-        targetCourse = matching;
-        courseId = matching.id;
-      }
-    }
-  }
-
   // 2. Build question bank filters for this specific schedule
-  let questionsQuery = db.select().from(questionBankTable);
   const conditions = [];
 
-  if (courseId) {
-    conditions.push(eq(questionBankTable.courseId, courseId));
+  // ONLY filter questions by courseId if explicitly chosen by instructor
+  if (schedule.courseId) {
+    conditions.push(eq(questionBankTable.courseId, schedule.courseId));
   }
 
   if (schedule.stage && schedule.stage !== "all") {
@@ -291,19 +277,72 @@ export async function generateDraftExamForSchedule(
       or(
         eq(questionBankTable.stage, schedule.stage),
         sql`${questionBankTable.stages}::jsonb @> ${JSON.stringify([schedule.stage])}::jsonb`,
+        ilike(questionBankTable.stage, `%${schedule.stage.trim()}%`),
       ),
     );
   }
 
   if (schedule.unit && schedule.unit !== "all") {
-    conditions.push(eq(questionBankTable.unit, schedule.unit));
+    conditions.push(
+      or(
+        eq(questionBankTable.unit, schedule.unit),
+        ilike(questionBankTable.unit, `%${schedule.unit.trim()}%`),
+      ),
+    );
   }
 
   if (schedule.lesson && schedule.lesson !== "all") {
-    conditions.push(eq(questionBankTable.lesson, schedule.lesson));
+    conditions.push(
+      or(
+        eq(questionBankTable.lesson, schedule.lesson),
+        ilike(questionBankTable.lesson, `%${schedule.lesson.trim()}%`),
+      ),
+    );
   }
 
-  const rawQuestions = await (conditions.length ? questionsQuery.where(and(...conditions)) : questionsQuery);
+  let rawQuestions = await (conditions.length
+    ? db.select().from(questionBankTable).where(and(...conditions))
+    : db.select().from(questionBankTable));
+
+  // Smart fallback 1: If specific lesson had 0 questions, try falling back to the unit
+  if ((!rawQuestions || rawQuestions.length === 0) && schedule.lesson && schedule.lesson !== "all") {
+    logger.warn({ schedule }, "[AUTO_EXAM] No questions found for exact lesson, attempting fallback to unit");
+    const fallbackConditions = [];
+    if (schedule.courseId) fallbackConditions.push(eq(questionBankTable.courseId, schedule.courseId));
+    if (schedule.stage && schedule.stage !== "all") {
+      fallbackConditions.push(
+        or(
+          eq(questionBankTable.stage, schedule.stage),
+          sql`${questionBankTable.stages}::jsonb @> ${JSON.stringify([schedule.stage])}::jsonb`,
+          ilike(questionBankTable.stage, `%${schedule.stage.trim()}%`),
+        ),
+      );
+    }
+    if (schedule.unit && schedule.unit !== "all") {
+      fallbackConditions.push(
+        or(
+          eq(questionBankTable.unit, schedule.unit),
+          ilike(questionBankTable.unit, `%${schedule.unit.trim()}%`),
+        ),
+      );
+    }
+    if (fallbackConditions.length) {
+      rawQuestions = await db.select().from(questionBankTable).where(and(...fallbackConditions));
+    }
+  }
+
+  // Smart fallback 2: If still 0, try falling back to the stage
+  if ((!rawQuestions || rawQuestions.length === 0) && schedule.stage && schedule.stage !== "all") {
+    logger.warn({ schedule }, "[AUTO_EXAM] No questions found for unit, attempting fallback to stage");
+    const stageConditions = [
+      or(
+        eq(questionBankTable.stage, schedule.stage),
+        sql`${questionBankTable.stages}::jsonb @> ${JSON.stringify([schedule.stage])}::jsonb`,
+        ilike(questionBankTable.stage, `%${schedule.stage.trim()}%`),
+      ),
+    ];
+    rawQuestions = await db.select().from(questionBankTable).where(and(...stageConditions));
+  }
 
   if (!rawQuestions || rawQuestions.length === 0) {
     const scopeDesc = [
@@ -315,6 +354,40 @@ export async function generateDraftExamForSchedule(
     throw new Error(
       `لا توجد أسئلة كافية في بنك الأسئلة للنطاق المحدد لـ (${schedule.title}) [${scopeDesc || "عام"}]. يرجى إضافة أسئلة في بنك الأسئلة أولاً.`,
     );
+  }
+
+  // Resolve target course if not yet set
+  if (!targetCourse) {
+    const detectedCourseId = rawQuestions.find((q) => q.courseId)?.courseId;
+    if (detectedCourseId) {
+      const [found] = await db
+        .select({
+          id: coursesTable.id,
+          title: coursesTable.title,
+          category: coursesTable.category,
+          stages: coursesTable.stages,
+        })
+        .from(coursesTable)
+        .where(eq(coursesTable.id, detectedCourseId))
+        .limit(1);
+      if (found) targetCourse = found;
+    }
+  }
+
+  if (!targetCourse && schedule.unit && schedule.unit !== "all") {
+    const allCourses = await db.select().from(coursesTable);
+    const matchingUnit = allCourses.find(
+      (c) => c.title && (c.title.includes(schedule.unit!) || schedule.unit!.includes(c.title)),
+    );
+    if (matchingUnit) targetCourse = matchingUnit;
+  }
+
+  if (!targetCourse && schedule.stage && schedule.stage !== "all") {
+    const allCourses = await db.select().from(coursesTable);
+    const matching = allCourses.find((c) =>
+      Array.isArray(c.stages) ? c.stages.includes(schedule.stage) : false,
+    );
+    if (matching) targetCourse = matching;
   }
 
   // 3. Automated Quality Filter: Ensure questions are complete, have >= 2 choices, and valid correctIndex
