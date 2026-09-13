@@ -30,7 +30,8 @@ import {
   GraduationCap,
   Filter,
   Calendar,
-  RotateCcw
+  RotateCcw,
+  Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -199,6 +200,78 @@ export function ExamWizard({
       return true;
     });
   }, [quizzes, quizListStageFilter, quizListStatusFilter, quizListSearch]);
+
+  // Drill-down Quiz Results Modal state
+  const [resultsModalQuiz, setResultsModalQuiz] = useState<QuizItem | null>(null);
+  const [resultsAttempts, setResultsAttempts] = useState<any[]>([]);
+  const [isLoadingResults, setIsLoadingResults] = useState(false);
+  const [resultsSearchQuery, setResultsSearchQuery] = useState("");
+  const [resultsStatusFilter, setResultsStatusFilter] = useState<"all" | "passed" | "failed">("all");
+  const [grantingStudentId, setGrantingStudentId] = useState<number | null>(null);
+
+  const openQuizResults = async (quiz: QuizItem) => {
+    setResultsModalQuiz(quiz);
+    setIsLoadingResults(true);
+    setResultsSearchQuery("");
+    setResultsStatusFilter("all");
+    try {
+      const data = await adminApi<any[]>(`/api/admin/learning/attempts?quizId=${quiz.id}`);
+      setResultsAttempts(Array.isArray(data) ? data : []);
+    } catch {
+      toast({ variant: "destructive", description: "تعذر تحميل نتائج الطلاب لهذا الاختبار" });
+      setResultsAttempts([]);
+    } finally {
+      setIsLoadingResults(false);
+    }
+  };
+
+  const grantExtraAttempt = async (attempt: any) => {
+    try {
+      setGrantingStudentId(attempt.studentId);
+      await adminApi(`/api/admin/learning/quizzes/${attempt.quizId}/extra-attempts`, {
+        method: "POST",
+        body: JSON.stringify({ studentId: attempt.studentId, extraAttempts: 1 }),
+      });
+      toast({ title: "تم منح محاولة إضافية بنجاح 🎯", description: `للطالب: ${attempt.studentName}` });
+      if (resultsModalQuiz) {
+        const data = await adminApi<any[]>(`/api/admin/learning/attempts?quizId=${resultsModalQuiz.id}`);
+        setResultsAttempts(Array.isArray(data) ? data : []);
+      }
+    } catch (err: any) {
+      toast({ variant: "destructive", description: err.message || "تعذر منح المحاولة الإضافية" });
+    } finally {
+      setGrantingStudentId(null);
+    }
+  };
+
+  const exportQuizResultsCSV = () => {
+    if (!resultsModalQuiz || resultsAttempts.length === 0) return;
+    const bom = "\uFEFF";
+    const headers = ["اسم الطالب", "كود الطالب", "المرحلة", "رقم الهاتف", "هاتف ولي الأمر", "السنتر", "الدرجة", "إجمالي الأسئلة", "النسبة", "الحالة", "الوقت المستغرق (ثواني)", "تاريخ الاختبار"];
+    const rows = resultsAttempts.map((a) => [
+      `"${(a.studentName || "").replace(/"/g, '""')}"`,
+      `"${a.studentCode || ""}"`,
+      `"${a.studentGrade || ""}"`,
+      `"${a.studentPhone || ""}"`,
+      `"${a.parentPhone || ""}"`,
+      `"${(a.studentCenter || "").replace(/"/g, '""')}"`,
+      a.score ?? 0,
+      a.totalQuestions ?? 0,
+      `"${a.percentageScore ?? a.percentage ?? 0}%"`,
+      `"${a.passed ? "ناجح" : "راسب"}"`,
+      a.timeSpentSeconds ?? 0,
+      `"${new Date(a.createdAt).toLocaleString("ar-EG")}"`,
+    ]);
+    const csvContent = bom + [headers.join(","), ...rows.map((r) => r.join(","))].join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `نتائج_${resultsModalQuiz.title.replace(/[^\w\u0600-\u06FF]/g, "_")}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Unlimited toggles state
   const isTimeUnlimited = !quizForm.durationMinutes || quizForm.durationMinutes === "0";
@@ -1524,21 +1597,32 @@ export function ExamWizard({
 
                     {/* Prominent Student Tester Count Badge (بشكل مميز) */}
                     {uniqueTested > 0 ? (
-                      <div className="flex items-center justify-between bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white p-2.5 rounded-xl shadow-xs border border-violet-400/40">
+                      <div
+                        onClick={() => openQuizResults(q)}
+                        role="button"
+                        tabIndex={0}
+                        title="اضغط لعرض قائمة ودرجات الطلاب الذين اختبروا هذا الاختبار"
+                        className="flex items-center justify-between bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white p-2.5 rounded-xl shadow-xs border border-violet-400/40 cursor-pointer hover:shadow-md hover:scale-[1.01] active:scale-[0.99] transition-all group"
+                      >
                         <div className="flex items-center gap-2">
-                          <div className="h-7 w-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                          <div className="h-7 w-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0 group-hover:bg-white/30 transition-colors">
                             <Users className="h-4 w-4 text-white" />
                           </div>
                           <div>
-                            <div className="text-xs font-black tracking-tight">
-                              {uniqueTested} {uniqueTested === 1 ? "طالب اختبر" : "طلاب اختبروا"}
+                            <div className="text-xs font-black tracking-tight flex items-center gap-1.5">
+                              <span>
+                                {uniqueTested} {uniqueTested === 1 ? "طالب اختبر" : "طلاب اختبروا"}
+                              </span>
+                              <span className="text-[10px] font-normal underline opacity-80 group-hover:opacity-100">
+                                عرض النتائج ↗
+                              </span>
                             </div>
                             <div className="text-[10px] text-violet-100 font-medium">
                               تم خوض الاختبار {totalAttempts} {totalAttempts === 1 ? "مرة" : "مرات"}
                             </div>
                           </div>
                         </div>
-                        <span className="text-xs font-black bg-white text-indigo-700 px-2.5 py-1 rounded-lg shadow-2xs">
+                        <span className="text-xs font-black bg-white text-indigo-700 px-2.5 py-1 rounded-lg shadow-2xs group-hover:bg-violet-50 transition-colors">
                           {uniqueTested}
                         </span>
                       </div>
@@ -1806,6 +1890,302 @@ export function ExamWizard({
                 <Edit2 className="h-3.5 w-3.5" /> فتح الاختبار في المحرر الكامل
               </Button>
               <Button variant="outline" size="sm" onClick={() => setPreviewQuiz(null)} className="text-xs font-bold">
+                إغلاق
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DRILL-DOWN QUIZ RESULTS MODAL */}
+      {resultsModalQuiz && (
+        <div
+          className="fixed inset-0 z-[140] flex items-center justify-center bg-black/80 backdrop-blur-xs p-3 sm:p-5"
+          onClick={(e) => e.target === e.currentTarget && setResultsModalQuiz(null)}
+        >
+          <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl border border-slate-200 text-right max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95">
+            {/* Modal Header */}
+            <div className="shrink-0 flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/70">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-600 text-white shadow-xs">
+                  <Users className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-black text-slate-900">
+                      سجل درجات ومختبري: {resultsModalQuiz.title}
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {resultsModalQuiz.stage || resultsModalQuiz.stages?.join(" · ") || "عام"} · {resultsModalQuiz.questions.length} سؤال · درجة النجاح {resultsModalQuiz.passingScore}%
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={exportQuizResultsCSV}
+                  disabled={resultsAttempts.length === 0}
+                  className="h-8 text-xs font-bold gap-1.5 text-slate-700 hover:bg-slate-100"
+                  title="تصدير كملف Excel / CSV"
+                >
+                  <Download className="h-3.5 w-3.5" /> تصدير CSV
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setResultsModalQuiz(null)}
+                  className="p-1.5 rounded-xl hover:bg-slate-200/60 text-slate-400 hover:text-slate-700 cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Stats Summary Bar */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-violet-50/50 border-b border-slate-100 text-xs">
+              <div className="bg-white p-3 rounded-xl border border-violet-100 shadow-2xs">
+                <div className="text-slate-500 text-[11px] font-bold">الطلاب المختبرين</div>
+                <div className="text-lg font-black text-violet-700 mt-0.5">
+                  {new Set(resultsAttempts.map((a) => a.studentId)).size} طالب
+                </div>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-violet-100 shadow-2xs">
+                <div className="text-slate-500 text-[11px] font-bold">إجمالي المحاولات</div>
+                <div className="text-lg font-black text-indigo-700 mt-0.5">
+                  {resultsAttempts.length} محاولة
+                </div>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-violet-100 shadow-2xs">
+                <div className="text-slate-500 text-[11px] font-bold">نسبة النجاح</div>
+                <div className="text-lg font-black text-emerald-600 mt-0.5">
+                  {resultsAttempts.length > 0
+                    ? `${Math.round(
+                        (resultsAttempts.filter((a) => a.passed).length /
+                          resultsAttempts.length) *
+                          100,
+                      )}%`
+                    : "0%"}
+                </div>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-violet-100 shadow-2xs">
+                <div className="text-slate-500 text-[11px] font-bold">متوسط الدرجات</div>
+                <div className="text-lg font-black text-amber-600 mt-0.5">
+                  {resultsAttempts.length > 0
+                    ? `${Math.round(
+                        resultsAttempts.reduce(
+                          (acc, a) =>
+                            acc + (a.percentageScore ?? a.percentage ?? 0),
+                          0,
+                        ) / resultsAttempts.length,
+                      )}%`
+                    : "0%"}
+                </div>
+              </div>
+            </div>
+
+            {/* Search & Filter Bar */}
+            <div className="p-4 border-b border-slate-100 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="بحث باسم الطالب، كود الطالب، أو الهاتف..."
+                  value={resultsSearchQuery}
+                  onChange={(e) => setResultsSearchQuery(e.target.value)}
+                  className="w-full pl-8 pr-9 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
+                />
+                {resultsSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setResultsSearchQuery("")}
+                    className="absolute left-2.5 top-2.5 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1.5 text-xs shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setResultsStatusFilter("all")}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${
+                    resultsStatusFilter === "all"
+                      ? "bg-slate-800 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  الكل ({resultsAttempts.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setResultsStatusFilter("passed")}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${
+                    resultsStatusFilter === "passed"
+                      ? "bg-emerald-600 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  الناجحين ({resultsAttempts.filter((a) => a.passed).length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setResultsStatusFilter("failed")}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${
+                    resultsStatusFilter === "failed"
+                      ? "bg-rose-600 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  الراسبين ({resultsAttempts.filter((a) => !a.passed).length})
+                </button>
+              </div>
+            </div>
+
+            {/* Table / List */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {isLoadingResults ? (
+                <div className="p-12 text-center text-slate-500 text-xs font-bold space-y-2">
+                  <RefreshCw className="h-6 w-6 animate-spin mx-auto text-violet-600" />
+                  <p>جارٍ تحميل بيانات ودرجات الطلاب...</p>
+                </div>
+              ) : resultsAttempts.length === 0 ? (
+                <div className="p-12 text-center text-slate-400 text-xs font-bold">
+                  لم يسجل أي طالب محاولة في هذا الاختبار بعد.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-right text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-50/80 text-slate-600 font-extrabold text-[11px]">
+                        <th className="p-3">#</th>
+                        <th className="p-3">الطالب</th>
+                        <th className="p-3">المرحلة والسنتر</th>
+                        <th className="p-3">الدرجة</th>
+                        <th className="p-3">الحالة</th>
+                        <th className="p-3">الوقت</th>
+                        <th className="p-3">التاريخ</th>
+                        <th className="p-3 text-center">إجراءات</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {resultsAttempts
+                        .filter((a) => {
+                          if (resultsStatusFilter === "passed" && !a.passed) return false;
+                          if (resultsStatusFilter === "failed" && a.passed) return false;
+                          if (resultsSearchQuery.trim()) {
+                            const q = resultsSearchQuery.toLowerCase().trim();
+                            const matchName = a.studentName?.toLowerCase().includes(q);
+                            const matchCode = a.studentCode?.toLowerCase().includes(q);
+                            const matchPhone =
+                              a.studentPhone?.includes(q) || a.parentPhone?.includes(q);
+                            if (!matchName && !matchCode && !matchPhone) return false;
+                          }
+                          return true;
+                        })
+                        .map((attempt, idx) => {
+                          const pct = attempt.percentageScore ?? attempt.percentage ?? 0;
+                          return (
+                            <tr
+                              key={attempt.id}
+                              className="hover:bg-slate-50/80 transition-colors"
+                            >
+                              <td className="p-3 text-slate-400 font-bold">{idx + 1}</td>
+                              <td className="p-3">
+                                <div className="font-extrabold text-slate-900">
+                                  {attempt.studentName}
+                                </div>
+                                <div className="text-[10px] text-slate-500 flex items-center gap-1.5 mt-0.5">
+                                  {attempt.studentCode && (
+                                    <span className="bg-slate-100 px-1.5 py-0.2 rounded font-mono text-slate-700">
+                                      {attempt.studentCode}
+                                    </span>
+                                  )}
+                                  {attempt.studentPhone && <span>{attempt.studentPhone}</span>}
+                                </div>
+                              </td>
+                              <td className="p-3 text-slate-600">
+                                <div>{attempt.studentGrade || "غير محدد"}</div>
+                                {attempt.studentCenter && (
+                                  <div className="text-[10px] text-violet-600 font-bold">
+                                    {attempt.studentCenter}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="p-3">
+                                <div className="font-black text-slate-900">
+                                  {attempt.score} / {attempt.totalQuestions || resultsModalQuiz.questions.length}
+                                </div>
+                                <div
+                                  className={`text-[10px] font-bold ${
+                                    attempt.passed ? "text-emerald-600" : "text-rose-600"
+                                  }`}
+                                >
+                                  {pct}%
+                                </div>
+                              </td>
+                              <td className="p-3">
+                                <span
+                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black ${
+                                    attempt.passed
+                                      ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                      : "bg-rose-100 text-rose-800 border border-rose-200"
+                                  }`}
+                                >
+                                  {attempt.passed ? "ناجح 🟢" : "راسب 🔴"}
+                                </span>
+                              </td>
+                              <td className="p-3 text-slate-500 text-[11px]">
+                                {attempt.timeSpentSeconds
+                                  ? `${Math.floor(attempt.timeSpentSeconds / 60)} د ${
+                                      attempt.timeSpentSeconds % 60
+                                    } ث`
+                                  : "أقل من دقيقة"}
+                              </td>
+                              <td className="p-3 text-slate-500 text-[11px]">
+                                {new Date(attempt.createdAt).toLocaleDateString("ar-EG", {
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </td>
+                              <td className="p-3 text-center">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={grantingStudentId === attempt.studentId}
+                                  onClick={() => grantExtraAttempt(attempt)}
+                                  className="h-7 text-[10px] font-bold text-violet-700 hover:bg-violet-50"
+                                  title="منح الطالب محاولة إضافية لهذا الاختبار"
+                                >
+                                  {grantingStudentId === attempt.studentId
+                                    ? "جارٍ..."
+                                    : "+ محاولة"}
+                                </Button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="shrink-0 flex items-center justify-between p-4 border-t border-slate-100 bg-slate-50/50">
+              <span className="text-xs text-slate-500">
+                إجمالي السجلات: <strong>{resultsAttempts.length}</strong> محاولة
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setResultsModalQuiz(null)}
+                className="text-xs font-bold"
+              >
                 إغلاق
               </Button>
             </div>

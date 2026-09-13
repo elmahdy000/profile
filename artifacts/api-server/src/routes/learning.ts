@@ -5743,39 +5743,57 @@ router.post(
 router.get(
   "/admin/learning/attempts",
   requireAdmin,
-  async (_req, res, next) => {
+  async (req, res, next) => {
     try {
+      const quizIdParam = req.query.quizId ? Number(req.query.quizId) : null;
+      const studentIdParam = req.query.studentId ? Number(req.query.studentId) : null;
+
+      const whereConditions = [];
+      if (quizIdParam && Number.isInteger(quizIdParam)) {
+        whereConditions.push(eq(quizAttemptsTable.quizId, quizIdParam));
+      }
+      if (studentIdParam && Number.isInteger(studentIdParam)) {
+        whereConditions.push(eq(quizAttemptsTable.studentId, studentIdParam));
+      }
+
+      let query = db
+        .select({
+          id: quizAttemptsTable.id,
+          quizId: quizAttemptsTable.quizId,
+          studentId: quizAttemptsTable.studentId,
+          score: quizAttemptsTable.score,
+          passed: quizAttemptsTable.passed,
+          timeSpentSeconds: quizAttemptsTable.timeSpentSeconds,
+          details: quizAttemptsTable.details,
+          createdAt: quizAttemptsTable.createdAt,
+          studentName: studentsTable.name,
+          studentPhone: studentsTable.phone,
+          parentPhone: studentsTable.parentPhone,
+          studentCode: studentsTable.accessCode,
+          studentGrade: studentsTable.grade,
+          studentCenter: studentsTable.centerName,
+          quizTitle: quizzesTable.title,
+          quizStage: quizzesTable.stage,
+          quizStages: quizzesTable.stages,
+          passingScore: quizzesTable.passingScore,
+          questions: quizzesTable.questions,
+          questionsToShow: quizzesTable.questionsToShow,
+        })
+        .from(quizAttemptsTable)
+        .innerJoin(
+          studentsTable,
+          eq(quizAttemptsTable.studentId, studentsTable.id),
+        )
+        .innerJoin(quizzesTable, eq(quizAttemptsTable.quizId, quizzesTable.id));
+
+      if (whereConditions.length === 1) {
+        query = query.where(whereConditions[0]) as any;
+      } else if (whereConditions.length > 1) {
+        query = query.where(and(...whereConditions)) as any;
+      }
+
       const [attempts, extraGrants] = await Promise.all([
-        db
-          .select({
-            id: quizAttemptsTable.id,
-            quizId: quizAttemptsTable.quizId,
-            studentId: quizAttemptsTable.studentId,
-            score: quizAttemptsTable.score,
-            passed: quizAttemptsTable.passed,
-            timeSpentSeconds: quizAttemptsTable.timeSpentSeconds,
-            details: quizAttemptsTable.details,
-            createdAt: quizAttemptsTable.createdAt,
-            studentName: studentsTable.name,
-            studentPhone: studentsTable.phone,
-            parentPhone: studentsTable.parentPhone,
-            studentCode: studentsTable.accessCode,
-            studentGrade: studentsTable.grade,
-            studentCenter: studentsTable.centerName,
-            quizTitle: quizzesTable.title,
-            quizStage: quizzesTable.stage,
-            quizStages: quizzesTable.stages,
-            passingScore: quizzesTable.passingScore,
-            questions: quizzesTable.questions,
-            questionsToShow: quizzesTable.questionsToShow,
-          })
-          .from(quizAttemptsTable)
-          .innerJoin(
-            studentsTable,
-            eq(quizAttemptsTable.studentId, studentsTable.id),
-          )
-          .innerJoin(quizzesTable, eq(quizAttemptsTable.quizId, quizzesTable.id))
-          .orderBy(desc(quizAttemptsTable.createdAt)),
+        query.orderBy(desc(quizAttemptsTable.createdAt)),
         db.select().from(quizExtraAttemptsTable),
       ]);
 
