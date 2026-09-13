@@ -4741,7 +4741,8 @@ router.get("/admin/learning/test-bank/questions", requireAdmin, async (req, res,
 router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batch-import"], requireAdmin, (req, res, next) => {
   quizImportUpload(req, res, async (uploadError) => {
     if (uploadError) {
-      return res.status(400).json({ error: uploadError.message || "تعذر رفع الملف" });
+      res.status(400).json({ error: uploadError.message || "تعذر رفع الملف" });
+      return;
     }
     try {
       let stage = String(req.body.stage || "").trim();
@@ -4786,7 +4787,8 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
               questionsToProcess = parsedJson.questions;
             }
           } catch {
-            return res.status(400).json({ error: "ملف JSON غير صالح" });
+            res.status(400).json({ error: "ملف JSON غير صالح" });
+            return;
           }
         } else {
           extractedText = await extractTextFromUpload(req.file.buffer, req.file.originalname);
@@ -4795,15 +4797,17 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
         if (!questionsToProcess.length) {
           if (!extractedText.trim()) {
             if (previewOnly) {
-              return res.json({
+              res.json({
                 preview: true,
                 totalDetected: 0,
                 questions: [],
                 extractedText: "",
                 warnings: ["الملف المرفوع فارغ أو لم نتمكن من استخراج نص قابل للقراءة منه."],
               });
+              return;
             }
-            return res.status(422).json({ error: "لم نتمكن من استخراج نص صالح من الملف" });
+            res.status(422).json({ error: "لم نتمكن من استخراج نص صالح من الملف" });
+            return;
           }
           const parsed = parseImportedQuestions(extractedText);
           questionsToProcess = parsed.questions;
@@ -4814,7 +4818,8 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
           const raw = typeof req.body.rawQuestions === "string" ? JSON.parse(req.body.rawQuestions) : req.body.rawQuestions;
           if (Array.isArray(raw)) questionsToProcess = raw;
         } catch {
-          return res.status(400).json({ error: "بيانات الأسئلة غير صالحة" });
+          res.status(400).json({ error: "بيانات الأسئلة غير صالحة" });
+          return;
         }
       } else if (req.body.questions && Array.isArray(req.body.questions)) {
         questionsToProcess = req.body.questions;
@@ -4824,7 +4829,8 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
         questionsToProcess = parsed.questions;
         warnings = parsed.warnings;
       } else {
-        return res.status(400).json({ error: "يرجى اختيار ملف أو إرسال نص الأسئلة" });
+        res.status(400).json({ error: "يرجى اختيار ملف أو إرسال نص الأسئلة" });
+        return;
       }
 
       const validQuestions = questionsToProcess.filter(
@@ -4833,7 +4839,7 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
 
       if (validQuestions.length === 0) {
         if (previewOnly) {
-          return res.json({
+          res.json({
             preview: true,
             totalDetected: 0,
             questions: [],
@@ -4843,21 +4849,24 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
               "تم وضع النص المستخرج في محرر 'نص مباشر' بالأسفل لتتمكن من مراجعته وتعديل تنسيقه بسهولة.",
             ],
           });
+          return;
         }
-        return res.status(422).json({
+        res.status(422).json({
           error: "لم يتم التعرف على أي أسئلة صالحة. تأكد من وجود نص السؤال والخيارات والإجابة الصحيحة.",
           extractedTextSnippet: extractedText.slice(0, 300),
         });
+        return;
       }
 
       if (previewOnly) {
-        return res.json({
+        res.json({
           preview: true,
           totalDetected: validQuestions.length,
           warnings,
           questions: validQuestions,
           extractedText: extractedText.trim(),
         });
+        return;
       }
 
       // 1. Deduplicate within this uploaded batch
@@ -4892,7 +4901,7 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
       );
 
       if (nonDuplicates.length === 0) {
-        return res.status(200).json({
+        res.status(200).json({
           success: true,
           count: 0,
           warnings: [...warnings, "جميع الأسئلة كانت موجودة بالفعل في بنك هذا الدرس (تم تخطي التكرار)."],
@@ -4900,6 +4909,7 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
           unit,
           lesson,
         });
+        return;
       }
 
       // Insert non-duplicate questions into question bank
@@ -4929,7 +4939,7 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
         )
         .returning();
 
-      return res.status(201).json({
+      res.status(201).json({
         success: true,
         count: inserted.length,
         skippedDuplicates: validQuestions.length - nonDuplicates.length,
@@ -4938,6 +4948,7 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
         unit,
         lesson,
       });
+      return;
     } catch (error) {
       next(error);
     }
@@ -4969,7 +4980,8 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
     } = req.body;
 
     if (!title || !title.trim()) {
-      return res.status(400).json({ error: "عنوان الاختبار مطلوب" });
+      res.status(400).json({ error: "عنوان الاختبار مطلوب" });
+      return;
     }
 
     const cleanedLessons: string[] = Array.isArray(lessons)
@@ -5042,7 +5054,8 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
     }
 
     if (uniqueAvailable.length === 0) {
-      return res.status(404).json({ error: "لا توجد أسئلة متوفرة في بنك الأسئلة لهذا النطاق (المرحلة/الوحدة/الدروس المختارة)" });
+      res.status(404).json({ error: "لا توجد أسئلة متوفرة في بنك الأسئلة لهذا النطاق (المرحلة/الوحدة/الدروس المختارة)" });
+      return;
     }
 
     let selectedRows: typeof uniqueAvailable = [];
@@ -5155,7 +5168,8 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
     }
 
     if (selectedRows.length === 0) {
-      return res.status(404).json({ error: "تعذر اختيار أسئلة للاختبار" });
+      res.status(404).json({ error: "تعذر اختيار أسئلة للاختبار" });
+      return;
     }
 
     const finalQuestions: QuizQuestion[] = [];
@@ -5262,7 +5276,7 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
       }
     }
 
-    return res.status(201).json({
+    res.status(201).json({
       ...newQuiz,
       requestedCount: targetCount,
       actualCount: finalQuestions.length,
@@ -5321,7 +5335,8 @@ router.put("/admin/learning/question-bank/:id", requireAdmin, async (req, res, n
 
     const [existing] = await db.select().from(questionBankTable).where(eq(questionBankTable.id, id)).limit(1);
     if (!existing) {
-      return res.status(404).json({ error: "السؤال غير موجود" });
+      res.status(404).json({ error: "السؤال غير موجود" });
+      return;
     }
 
     const updatedQuestion = {
@@ -5357,7 +5372,8 @@ router.delete("/admin/learning/test-bank/clear-lesson", requireAdmin, async (req
   try {
     const { stage, unit, lesson } = req.body;
     if (!stage || !unit) {
-      return res.status(400).json({ error: "المرحلة والوحدة مطلوبة للحذف" });
+      res.status(400).json({ error: "المرحلة والوحدة مطلوبة للحذف" });
+      return;
     }
 
     const conditions = [
@@ -5451,11 +5467,12 @@ router.post("/admin/learning/question-bank/batch-import", requireAdmin, async (r
     );
 
     if (nonDuplicates.length === 0) {
-      return res.status(200).json({
+      res.status(200).json({
         count: 0,
         skippedDuplicates: validQuestions.length,
         message: "جميع هذه الأسئلة موجودة بالفعل في بنك هذا الدرس (تم تخطي التكرار)",
       });
+      return;
     }
 
     const inserted = await db
