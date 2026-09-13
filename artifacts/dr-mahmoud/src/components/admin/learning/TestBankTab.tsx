@@ -30,7 +30,14 @@ import {
   CheckSquare,
   ArrowRight,
   Lock,
-  Globe
+  Globe,
+  Bot,
+  Send,
+  MessageSquare,
+  ExternalLink,
+  ShieldCheck,
+  Zap,
+  Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -100,7 +107,7 @@ export function TestBankTab({
   onNavigateToQuizzes?: () => void;
 }) {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"explorer" | "upload" | "generate">("explorer");
+  const [activeTab, setActiveTab] = useState<"explorer" | "upload" | "generate" | "auto_daily">("explorer");
 
   // Tree & Statistics
   const [treeData, setTreeData] = useState<StageNode[]>([]);
@@ -209,6 +216,126 @@ export function TestBankTab({
   const [candidateQuestions, setCandidateQuestions] = useState<any[]>([]);
   const [loadingCandidates, setLoadingCandidates] = useState<boolean>(false);
   const [candidateSearch, setCandidateSearch] = useState<string>("");
+
+  // Daily Auto-Exam State
+  const [autoSettings, setAutoSettings] = useState<{
+    enabled: boolean;
+    timeOfDay: string;
+    questionsCount: number;
+    passingScore: number;
+    durationMinutes: number;
+    targetCourseId: number | null;
+    targetStage: string;
+    difficultyDistribution: {
+      easy: number;
+      medium: number;
+      hard: number;
+    };
+    telegram: {
+      enabled: boolean;
+      botToken: string;
+      chatId: string;
+    };
+    whatsapp: {
+      enabled: boolean;
+      phoneNumber: string;
+      webhookUrl: string;
+    };
+    lastRunDate?: string;
+    lastGeneratedQuizId?: number;
+  }>({
+    enabled: false,
+    timeOfDay: "08:00",
+    questionsCount: 10,
+    passingScore: 60,
+    durationMinutes: 20,
+    targetCourseId: null,
+    targetStage: "all",
+    difficultyDistribution: {
+      easy: 3,
+      medium: 5,
+      hard: 2,
+    },
+    telegram: {
+      enabled: false,
+      botToken: "",
+      chatId: "",
+    },
+    whatsapp: {
+      enabled: false,
+      phoneNumber: "",
+      webhookUrl: "",
+    },
+  });
+  const [loadingAutoSettings, setLoadingAutoSettings] = useState<boolean>(false);
+  const [savingAutoSettings, setSavingAutoSettings] = useState<boolean>(false);
+  const [triggeringAutoExam, setTriggeringAutoExam] = useState<boolean>(false);
+  const [triggerResult, setTriggerResult] = useState<any | null>(null);
+
+  const loadAutoSettings = async () => {
+    setLoadingAutoSettings(true);
+    try {
+      const res = await adminApi<any>("/api/admin/learning/auto-exam/settings");
+      if (res && res.settings) {
+        setAutoSettings(res.settings);
+      }
+    } catch (err: any) {
+      // silently handle
+    } finally {
+      setLoadingAutoSettings(false);
+    }
+  };
+
+  const handleSaveAutoSettings = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setSavingAutoSettings(true);
+    try {
+      const res = await adminApi<any>("/api/admin/learning/auto-exam/settings", {
+        method: "PUT",
+        body: JSON.stringify(autoSettings),
+      });
+      if (res.settings) {
+        setAutoSettings(res.settings);
+      }
+      toast({
+        title: "تم حفظ إعدادات الاختبار اليومي بنجاح! 💾",
+        description: autoSettings.enabled
+          ? `النظام التلقائي مفعل يومياً الساعة ${autoSettings.timeOfDay} (توقيت القاهرة).`
+          : "تم حفظ الإعدادات (النظام التلقائي متوقف حالياً).",
+      });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "خطأ", description: err.message || "تعذر حفظ الإعدادات" });
+    } finally {
+      setSavingAutoSettings(false);
+    }
+  };
+
+  const handleTriggerAutoExam = async () => {
+    setTriggeringAutoExam(true);
+    setTriggerResult(null);
+    try {
+      const res = await adminApi<any>("/api/admin/learning/auto-exam/trigger", {
+        method: "POST",
+        body: JSON.stringify(autoSettings),
+      });
+      setTriggerResult(res);
+      toast({
+        title: "تم توليد النموذج التجريبي وإرساله بنجاح! 🚀",
+        description: `تم حفظ الاختبار #${res.quiz?.id} كمسودة وإرسال المعاينة لقنواتك المختارة.`,
+      });
+      loadTree();
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "خطأ أثناء التوليد التجريبي", description: err.message || "تعذر التوليد" });
+    } finally {
+      setTriggeringAutoExam(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "auto_daily") {
+      loadAutoSettings();
+    }
+  }, [activeTab]);
 
   // Load Tree Data from Backend
   const loadTree = async () => {
@@ -1018,6 +1145,19 @@ export function TestBankTab({
         >
           <Sparkles className="h-4 w-4" />
           <span>٣. توليد اختبار ذكي من البنك 🚀</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("auto_daily")}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+            activeTab === "auto_daily"
+              ? "bg-amber-600 text-white shadow-md"
+              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+          }`}
+        >
+          <Bot className="h-4 w-4" />
+          <span>٤. التوليد اليومي والإشعار الذكي 🤖</span>
         </button>
       </div>
 
@@ -2963,6 +3103,481 @@ export function TestBankTab({
                 )}
               </Button>
             </form>
+          )}
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* TAB 4: DAILY AUTO-EXAM & SMART NOTIFICATIONS                 */}
+      {/* ============================================================ */}
+      {activeTab === "auto_daily" && (
+        <div className="space-y-6">
+          {/* Header Card */}
+          <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-card to-background p-6 sm:p-8 shadow-md">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/15 px-3 py-1 text-xs font-black text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                  <Bot className="h-4 w-4" />
+                  <span>نظام التوليد اليومي الآلي الذكي</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-foreground">
+                  توليد اختبار يومي تلقائي وإرساله لمراجعتك قبل النشر 🤖
+                </h3>
+                <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
+                  يقوم النظام يومياً في الموعد المحدد بسحب باقة أسئلة متوازنة من بنك الأسئلة دون تكرار للأسئلة الحديثة، ثم ينشئ الاختبار <strong className="text-foreground">كمسودة خاصة سرية (مخفية عن الطلاب)</strong>، ويرسل لك ملخص الأسئلة وإجاباتها النموذجية عبر <strong className="text-primary">تليجرام أو واتساب</strong> مع رابط وزر للاعتماد والنشر بضغطة زر واحدة فقط.
+                </p>
+              </div>
+
+              {/* Status Indicator & Activation Toggle */}
+              <div className="shrink-0 flex flex-col items-end gap-3 bg-card p-4 rounded-2xl border border-border shadow-xs">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-extrabold text-foreground">حالة النظام التلقائي:</span>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black ${
+                      autoSettings.enabled
+                        ? "bg-emerald-500/15 text-emerald-600 border border-emerald-500/30"
+                        : "bg-muted text-muted-foreground border border-border"
+                    }`}
+                  >
+                    <span className={`h-2 w-2 rounded-full ${autoSettings.enabled ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground"}`} />
+                    {autoSettings.enabled ? "مفعّل ويعمل يومياً" : "متوقف مؤقتاً"}
+                  </span>
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={() => setAutoSettings({ ...autoSettings, enabled: !autoSettings.enabled })}
+                  className={`w-full h-10 px-5 rounded-xl font-black text-xs cursor-pointer shadow-xs gap-2 ${
+                    autoSettings.enabled
+                      ? "bg-rose-600 hover:bg-rose-700 text-white"
+                      : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  }`}
+                >
+                  <Zap className="h-3.5 w-3.5" />
+                  <span>{autoSettings.enabled ? "إيقاف التوليد التلقائي" : "تفعيل التوليد التلقائي الآن"}</span>
+                </Button>
+
+                {autoSettings.lastRunDate && (
+                  <span className="text-[11px] text-muted-foreground font-medium">
+                    آخر تشغيل: {autoSettings.lastRunDate} {autoSettings.lastGeneratedQuizId ? `(اختبار #${autoSettings.lastGeneratedQuizId})` : ""}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <form onSubmit={handleSaveAutoSettings} className="space-y-6">
+            {/* Settings Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* 1. Schedule & Criteria Box */}
+              <div className="rounded-3xl border border-border bg-card p-6 shadow-sm space-y-5">
+                <div className="flex items-center gap-2 pb-3 border-b border-border">
+                  <Sliders className="h-5 w-5 text-primary" />
+                  <h4 className="text-sm font-black text-foreground">١. معايير وموعد توليد الاختبار اليومي</h4>
+                </div>
+
+                {/* Time of Day */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-foreground flex items-center justify-between">
+                    <span>موعد التوليد اليومي (توقيت القاهرة 🇪🇬):</span>
+                    <span className="text-[11px] text-primary font-black">{autoSettings.timeOfDay}</span>
+                  </label>
+                  <input
+                    type="time"
+                    value={autoSettings.timeOfDay}
+                    onChange={(e) => setAutoSettings({ ...autoSettings, timeOfDay: e.target.value })}
+                    className="w-full h-11 px-4 rounded-xl border border-border bg-background text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    سيقوم السيرفر بفحص الموعد وتوليد الاختبار وإرسال الإشعار لهاتفك في هذا التوقيت يومياً.
+                  </p>
+                </div>
+
+                {/* Target Stage */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-foreground">المرحلة الدراسية المستهدفة:</label>
+                  <select
+                    value={autoSettings.targetStage}
+                    onChange={(e) => setAutoSettings({ ...autoSettings, targetStage: e.target.value })}
+                    className="w-full h-11 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground"
+                  >
+                    <option value="all">كل المراحل (تدوير تلقائي ذكي حسب الدروس)</option>
+                    {availableStages.map((st) => (
+                      <option key={st} value={st}>
+                        {st}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Target Course */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-foreground">الكورس المستهدف:</label>
+                  <select
+                    value={autoSettings.targetCourseId ? String(autoSettings.targetCourseId) : "all"}
+                    onChange={(e) =>
+                      setAutoSettings({
+                        ...autoSettings,
+                        targetCourseId: e.target.value === "all" ? null : Number(e.target.value),
+                      })
+                    }
+                    className="w-full h-11 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground"
+                  >
+                    <option value="all">كل الكورسات (تدوير تلقائي ذكي)</option>
+                    {courses.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Numbers Grid */}
+                <div className="grid grid-cols-3 gap-3 pt-2">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-muted-foreground">عدد الأسئلة</label>
+                    <input
+                      type="number"
+                      min={3}
+                      max={50}
+                      value={autoSettings.questionsCount}
+                      onChange={(e) =>
+                        setAutoSettings({ ...autoSettings, questionsCount: Math.max(1, Number(e.target.value)) })
+                      }
+                      className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-bold text-center"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-muted-foreground">المدة (دقيقة)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={180}
+                      value={autoSettings.durationMinutes}
+                      onChange={(e) =>
+                        setAutoSettings({ ...autoSettings, durationMinutes: Number(e.target.value) })
+                      }
+                      className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-bold text-center"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-muted-foreground">درجة النجاح %</label>
+                    <input
+                      type="number"
+                      min={10}
+                      max={100}
+                      value={autoSettings.passingScore}
+                      onChange={(e) =>
+                        setAutoSettings({ ...autoSettings, passingScore: Number(e.target.value) })
+                      }
+                      className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-bold text-center"
+                    />
+                  </div>
+                </div>
+
+                {/* Difficulty Breakdown */}
+                <div className="space-y-2 pt-2 border-t border-border/50">
+                  <label className="text-xs font-bold text-foreground">توزيع الصعوبة داخل الاختبار اليومي:</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-2.5 text-center">
+                      <span className="block text-[11px] font-bold text-emerald-700 dark:text-emerald-400">سهل</span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={30}
+                        value={autoSettings.difficultyDistribution.easy}
+                        onChange={(e) =>
+                          setAutoSettings({
+                            ...autoSettings,
+                            difficultyDistribution: {
+                              ...autoSettings.difficultyDistribution,
+                              easy: Number(e.target.value),
+                            },
+                          })
+                        }
+                        className="w-full h-8 mt-1 text-center bg-background rounded-lg border border-border text-xs font-bold"
+                      />
+                    </div>
+
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 text-center">
+                      <span className="block text-[11px] font-bold text-amber-700 dark:text-amber-400">متوسط</span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={30}
+                        value={autoSettings.difficultyDistribution.medium}
+                        onChange={(e) =>
+                          setAutoSettings({
+                            ...autoSettings,
+                            difficultyDistribution: {
+                              ...autoSettings.difficultyDistribution,
+                              medium: Number(e.target.value),
+                            },
+                          })
+                        }
+                        className="w-full h-8 mt-1 text-center bg-background rounded-lg border border-border text-xs font-bold"
+                      />
+                    </div>
+
+                    <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-2.5 text-center">
+                      <span className="block text-[11px] font-bold text-rose-700 dark:text-rose-400">صعب</span>
+                      <input
+                        type="number"
+                        min={0}
+                        max={30}
+                        value={autoSettings.difficultyDistribution.hard}
+                        onChange={(e) =>
+                          setAutoSettings({
+                            ...autoSettings,
+                            difficultyDistribution: {
+                              ...autoSettings.difficultyDistribution,
+                              hard: Number(e.target.value),
+                            },
+                          })
+                        }
+                        className="w-full h-8 mt-1 text-center bg-background rounded-lg border border-border text-xs font-bold"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Notification Channels (Telegram & WhatsApp) */}
+              <div className="space-y-6">
+                {/* Telegram Bot Card */}
+                <div className="rounded-3xl border border-sky-500/30 bg-card p-6 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-border">
+                    <div className="flex items-center gap-2">
+                      <Send className="h-5 w-5 text-sky-500" />
+                      <h4 className="text-sm font-black text-foreground">قناة Telegram (موصى بها ومجانية 100%)</h4>
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={autoSettings.telegram.enabled}
+                        onChange={(e) =>
+                          setAutoSettings({
+                            ...autoSettings,
+                            telegram: { ...autoSettings.telegram, enabled: e.target.checked },
+                          })
+                        }
+                        className="h-4 w-4 accent-sky-500 rounded cursor-pointer"
+                      />
+                      <span className="text-xs font-bold text-foreground">تفعيل إشعار Telegram</span>
+                    </label>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-foreground">Telegram Bot Token:</label>
+                      <input
+                        type="text"
+                        dir="ltr"
+                        placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
+                        value={autoSettings.telegram.botToken}
+                        onChange={(e) =>
+                          setAutoSettings({
+                            ...autoSettings,
+                            telegram: { ...autoSettings.telegram, botToken: e.target.value.trim() },
+                          })
+                        }
+                        className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-mono text-left focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-foreground">Telegram Chat ID الخاص بك:</label>
+                      <input
+                        type="text"
+                        dir="ltr"
+                        placeholder="مثال: 987654321"
+                        value={autoSettings.telegram.chatId}
+                        onChange={(e) =>
+                          setAutoSettings({
+                            ...autoSettings,
+                            telegram: { ...autoSettings.telegram, chatId: e.target.value.trim() },
+                          })
+                        }
+                        className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-mono text-left focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      />
+                    </div>
+
+                    {/* Quick Telegram Setup Guide */}
+                    <div className="rounded-2xl bg-sky-500/10 border border-sky-500/20 p-3.5 text-xs text-sky-900 dark:text-sky-200 space-y-1.5 leading-relaxed">
+                      <p className="font-extrabold flex items-center gap-1.5">
+                        <Info className="h-3.5 w-3.5 text-sky-500 shrink-0" />
+                        <span>كيفية إنشاء البوت في دقيقة واحدة:</span>
+                      </p>
+                      <ol className="list-decimal list-inside space-y-1 text-[11px] font-medium pr-1">
+                        <li>
+                          ابحث في Telegram عن <strong className="font-mono text-sky-600 dark:text-sky-300">@BotFather</strong> وأرسل له الأمر <code className="px-1 py-0.5 bg-background/60 rounded">/newbot</code> ثم اختر اسماً ومعرفاً للبوت، وسيعطيك الـ <strong>Bot Token</strong> مباشرة.
+                        </li>
+                        <li>
+                          ابحث عن بوتك الجديد الذي أنشأته واضغط <code className="px-1 py-0.5 bg-background/60 rounded">Start</code> أو أرسل له أي كلمة لتسمح له بمراسلتك.
+                        </li>
+                        <li>
+                          لمعرفة رقم الـ <strong>Chat ID</strong> الخاص بك، ابحث عن <strong className="font-mono text-sky-600 dark:text-sky-300">@userinfobot</strong> وأرسل له أي رسالة وسيعطيك رقم الـ Id فوراً لتضعه في الحقل أعلاه.
+                        </li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+
+                {/* WhatsApp Webhook Card */}
+                <div className="rounded-3xl border border-emerald-500/30 bg-card p-6 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-border">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="h-5 w-5 text-emerald-600" />
+                      <h4 className="text-sm font-black text-foreground">قناة WhatsApp (عبر Webhook / Gateway)</h4>
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={autoSettings.whatsapp.enabled}
+                        onChange={(e) =>
+                          setAutoSettings({
+                            ...autoSettings,
+                            whatsapp: { ...autoSettings.whatsapp, enabled: e.target.checked },
+                          })
+                        }
+                        className="h-4 w-4 accent-emerald-600 rounded cursor-pointer"
+                      />
+                      <span className="text-xs font-bold text-foreground">تفعيل إشعار WhatsApp</span>
+                    </label>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-foreground">رقم الهاتف لاستقبال الرسالة:</label>
+                      <input
+                        type="text"
+                        dir="ltr"
+                        placeholder="01012345678 أو +201012345678"
+                        value={autoSettings.whatsapp.phoneNumber}
+                        onChange={(e) =>
+                          setAutoSettings({
+                            ...autoSettings,
+                            whatsapp: { ...autoSettings.whatsapp, phoneNumber: e.target.value.trim() },
+                          })
+                        }
+                        className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-mono text-left focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-foreground">رابط WhatsApp API Gateway / Webhook URL:</label>
+                      <input
+                        type="url"
+                        dir="ltr"
+                        placeholder="https://api.ultramsg.com/... أو بوابة الواتساب الخاصة بك"
+                        value={autoSettings.whatsapp.webhookUrl}
+                        onChange={(e) =>
+                          setAutoSettings({
+                            ...autoSettings,
+                            whatsapp: { ...autoSettings.whatsapp, webhookUrl: e.target.value.trim() },
+                          })
+                        }
+                        className="w-full h-10 px-3 rounded-xl border border-border bg-background text-xs font-mono text-left focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Actions Bar */}
+            <div className="rounded-3xl border border-border bg-card p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                <span className="text-xs font-bold text-muted-foreground">
+                  الأمان مضمون: لن يرى الطلاب أي اختبار تلقائي إلا بعد ضغطك على زر الاعتماد في الرسالة أو لوحة التحكم.
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <Button
+                  type="button"
+                  onClick={handleTriggerAutoExam}
+                  disabled={triggeringAutoExam}
+                  variant="outline"
+                  className="flex-1 sm:flex-none h-11 px-5 rounded-xl border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10 font-black text-xs cursor-pointer gap-2"
+                >
+                  <Sparkles className={`h-4 w-4 ${triggeringAutoExam ? "animate-spin" : ""}`} />
+                  <span>{triggeringAutoExam ? "جارٍ التوليد والإرسال..." : "توليد نموذج تجريبي وإرساله الآن لهاتفي 📲"}</span>
+                </Button>
+
+                <Button
+                  type="submit"
+                  disabled={savingAutoSettings}
+                  className="flex-1 sm:flex-none h-11 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-black text-xs cursor-pointer shadow-md gap-2"
+                >
+                  <Check className="h-4 w-4" />
+                  <span>{savingAutoSettings ? "جارٍ الحفظ..." : "حفظ الإعدادات 💾"}</span>
+                </Button>
+              </div>
+            </div>
+          </form>
+
+          {/* Trigger Result Banner */}
+          {triggerResult && (
+            <div className="rounded-3xl border border-emerald-500/40 bg-emerald-500/10 p-6 shadow-md space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                  <div>
+                    <h4 className="text-sm font-black text-foreground">
+                      تم توليد الاختبار التجريبي بنجاح! (#{triggerResult.quiz?.id}: {triggerResult.quiz?.title})
+                    </h4>
+                    <p className="text-xs text-muted-foreground">
+                      الكورس: {triggerResult.courseTitle} · الحالة: مسودة غير منشورة 🔒
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      setReviewingQuiz(triggerResult.quiz);
+                    }}
+                    className="h-9 px-4 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-black cursor-pointer shadow-xs gap-1.5"
+                  >
+                    <Eye className="h-4 w-4" />
+                    <span>مراجعة وتعديل الأسئلة هنا</span>
+                  </Button>
+
+                  <a
+                    href={triggerResult.approvalUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="h-9 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black inline-flex items-center gap-1.5 shadow-xs"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    <span>فتح رابط الاعتماد والنشر المباشر 🚀</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Delivery Status details */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-2 border-t border-emerald-500/20">
+                <div className="bg-card/80 rounded-xl p-3 border border-border flex items-center justify-between">
+                  <span className="font-bold text-foreground">حالة إرسال Telegram:</span>
+                  <span className="font-extrabold text-sky-600">
+                    {triggerResult.telegramResult?.success ? "تم الإرسال بنجاح بنقرة زر الاعتماد ✅" : (triggerResult.telegramResult?.error || "غير مفعل")}
+                  </span>
+                </div>
+
+                <div className="bg-card/80 rounded-xl p-3 border border-border flex items-center justify-between">
+                  <span className="font-bold text-foreground">حالة إرسال WhatsApp:</span>
+                  <span className="font-extrabold text-emerald-600">
+                    {triggerResult.whatsappResult?.success ? "تم الإرسال بنجاح ✅" : (triggerResult.whatsappResult?.error || "غير مفعل")}
+                  </span>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       )}

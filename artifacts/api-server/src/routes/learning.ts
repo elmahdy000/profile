@@ -54,6 +54,15 @@ import {
   resolveAcademicStageSelection,
 } from "../lib/academic-stages";
 import { fixedWindowRateLimit } from "../middleware/rate-limit";
+import {
+  getAutoExamSettings,
+  saveAutoExamSettings,
+  generateDailyDraftExam,
+  sendExamToTelegram,
+  sendExamToWhatsApp,
+  approveAndPublishQuiz,
+  isValidApprovalToken,
+} from "../services/auto-exam";
 
 const router: IRouter = Router();
 const require = createRequire(import.meta.url);
@@ -6502,5 +6511,173 @@ router.post(
     }
   }
 );
+
+// ── Auto-Exam Generator & Notification Endpoints ──
+
+// GET /api/admin/learning/auto-exam/settings - Get settings
+router.get("/admin/learning/auto-exam/settings", requireAdmin, async (_req, res, next) => {
+  try {
+    const settings = await getAutoExamSettings();
+    res.json(settings);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PUT /api/admin/learning/auto-exam/settings - Update settings
+router.put("/admin/learning/auto-exam/settings", requireAdmin, async (req, res, next) => {
+  try {
+    const current = await getAutoExamSettings();
+    const updated = {
+      ...current,
+      ...req.body,
+      difficultyDistribution: {
+        ...current.difficultyDistribution,
+        ...(req.body.difficultyDistribution || {}),
+      },
+      telegram: {
+        ...current.telegram,
+        ...(req.body.telegram || {}),
+      },
+      whatsapp: {
+        ...current.whatsapp,
+        ...(req.body.whatsapp || {}),
+      },
+    };
+    await saveAutoExamSettings(updated);
+    res.json({ success: true, settings: updated });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/learning/auto-exam/trigger - Trigger immediate test generation and review dispatch
+router.post("/admin/learning/auto-exam/trigger", requireAdmin, async (req, res, next) => {
+  try {
+    const settings = await getAutoExamSettings();
+    const overrideSettings = {
+      ...settings,
+      ...(req.body || {}),
+      difficultyDistribution: {
+        ...settings.difficultyDistribution,
+        ...(req.body.difficultyDistribution || {}),
+      },
+      telegram: {
+        ...settings.telegram,
+        ...(req.body.telegram || {}),
+      },
+      whatsapp: {
+        ...settings.whatsapp,
+        ...(req.body.whatsapp || {}),
+      },
+    };
+
+    const result = await generateDailyDraftExam(overrideSettings);
+    let telegramResult = null;
+    let whatsappResult = null;
+
+    if (overrideSettings.telegram.enabled && overrideSettings.telegram.botToken && overrideSettings.telegram.chatId) {
+      telegramResult = await sendExamToTelegram(
+        overrideSettings.telegram.botToken,
+        overrideSettings.telegram.chatId,
+        result.quiz,
+        result.approvalToken,
+        result.messageText,
+      );
+    }
+
+    if (overrideSettings.whatsapp.enabled && overrideSettings.whatsapp.webhookUrl) {
+      whatsappResult = await sendExamToWhatsApp(
+        overrideSettings.whatsapp.webhookUrl,
+        overrideSettings.whatsapp.phoneNumber,
+        result.messageText,
+      );
+    }
+
+    res.json({
+      success: true,
+      quiz: result.quiz,
+      courseTitle: result.courseTitle,
+      approvalToken: result.approvalToken,
+      approvalUrl: `https://drelmahdy.com/api/admin/learning/quizzes/${result.quiz.id}/quick-approve?token=${result.approvalToken}`,
+      telegramResult,
+      whatsappResult,
+    });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || "فشل توليد الاختبار التجريبي" });
+  }
+});
+
+// GET /api/admin/learning/quizzes/:id/quick-approve - One-click approval link from Telegram / WhatsApp
+router.get(["/admin/learning/quizzes/:id/quick-approve", "/learning/quizzes/:id/quick-approve"], async (req, res, next) => {
+  try {
+    const quizId = Number(req.params.id);
+    const token = String(req.query.token || "");
+
+    if (!Number.isInteger(quizId) || quizId <= 0 || !token) {
+      res.status(400).send(`
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head><meta charset="UTF-8"><title>خطأ في الطلب</title><style>body{font-family:sans-serif;background:#0b1329;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;} .card{background:#111e38;padding:32px;border-radius:24px;text-align:center;max-width:400px;border:1px solid #334155;}</style></head>
+        <body><div class="card"><h1 style="color:#ef4444;">❌ رابط غير صالح</h1><p style="color:#94a3b8;">الرابط أو رمز التحقق غير سليم.</p></div></body>
+        </html>
+      `);
+      return;
+    }
+
+    const valid = isValidApprovalToken(quizId, token);
+    if (!valid) {
+      res.status(403).send(`
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head><meta charset="UTF-8"><title>انتهت صلاحية الرابط</title><style>body{font-family:sans-serif;background:#0b1329;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;} .card{background:#111e38;padding:32px;border-radius:24px;text-align:center;max-width:420px;border:1px solid #334155;}</style></head>
+        <body><div class="card"><h1 style="color:#f59e0b;">⏳ انتهت صلاحية الرابط</h1><p style="color:#94a3b8;">عذراً، هذا الرابط منتهي الصلاحية أو تم استخدامه سابقاً (صلاحية الروابط 72 ساعة). يمكنك الاعتماد من لوحة التحكم مباشرة.</p><a href="/admin" style="display:inline-block;background:#2563eb;color:#fff;padding:10px 20px;border-radius:12px;text-decoration:none;font-weight:bold;margin-top:16px;">الذهاب للوحة التحكم</a></div></body>
+        </html>
+      `);
+      return;
+    }
+
+    const result = await approveAndPublishQuiz(quizId);
+    const quiz = result.quiz;
+    const qCount = Array.isArray(quiz.questions) ? quiz.questions.length : 0;
+
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="ar" dir="rtl">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>تم اعتماد ونشر الاختبار بنجاح</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0b1329; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
+          .card { background: #111e38; border: 1px solid #1e293b; border-radius: 24px; padding: 32px; max-width: 460px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+          .badge { width: 72px; height: 72px; background: rgba(16, 185, 129, 0.15); border: 2px solid #10b981; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 20px; color: #10b981; font-size: 36px; }
+          h1 { font-size: 20px; font-weight: 900; margin-bottom: 8px; color: #fff; }
+          p { font-size: 14px; color: #94a3b8; line-height: 1.6; margin-bottom: 24px; }
+          .info { background: rgba(255,255,255,0.04); border-radius: 16px; padding: 16px; margin-bottom: 24px; text-align: right; font-size: 13px; }
+          .info div { margin-bottom: 8px; display: flex; justify-content: space-between; }
+          .btn { display: inline-block; width: 100%; background: #2563eb; color: #fff; font-weight: 800; font-size: 15px; padding: 14px 0; border-radius: 16px; text-decoration: none; transition: background 0.2s; box-sizing: border-box; }
+          .btn:hover { background: #1d4ed8; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="badge">✓</div>
+          <h1>تم اعتماد ونشر الاختبار بنجاح!</h1>
+          <p>${result.alreadyPublished ? "هذا الاختبار كان معتمداً ومنشوراً بالفعل سابقاً." : "تم تفعيل الاختبار ونشره الآن لجميع الطلاب المؤهلين في الكورس، وتم إرسال إشعارات المنصة إليهم بنجاح."}</p>
+          <div class="info">
+            <div><span style="color:#94a3b8;">عنوان الاختبار:</span> <strong style="color:#fff;">${quiz.title}</strong></div>
+            <div><span style="color:#94a3b8;">عدد الأسئلة:</span> <strong style="color:#10b981;">${qCount} سؤال</strong></div>
+            <div><span style="color:#94a3b8;">الطلاب المستهدفين:</span> <strong style="color:#38bdf8;">${result.notifiedCount} طالب</strong></div>
+          </div>
+          <a href="/platform?tab=exams" class="btn">الانتقال للمنصة ومعاينة الاختبار ↗</a>
+        </div>
+      </body>
+      </html>
+    `);
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;

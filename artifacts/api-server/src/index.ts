@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { runAutoExamSchedulerTick } from "./services/auto-exam";
 
 const rawPort = process.env["PORT"];
 
@@ -22,4 +23,12 @@ app.listen(port, (err) => {
   }
 
   logger.info({ port }, "Server listening");
+
+  // Run auto-exam check every 60 seconds (and initial check after 15 seconds)
+  setTimeout(() => {
+    void runAutoExamSchedulerTick();
+    setInterval(() => {
+      void runAutoExamSchedulerTick();
+    }, 60 * 1000);
+  }, 15 * 1000);
 });
