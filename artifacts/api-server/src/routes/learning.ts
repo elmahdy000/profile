@@ -489,13 +489,18 @@ function isCompleteValidQuestion(q: QuizQuestion | undefined | null): boolean {
   if (prompt.length < 8) return false;
   if (/\b(?:ما فائدة|سؤال|Question)\b\s*$/.test(prompt)) return false;
   if (/\r?\n\s*[A-Da-dأابجده]\)\s*$/.test(prompt)) return false;
+  // Reject prompts ending in truncated letters, prepositions, or abrupt punctuation
+  if (/(?:^|\s)(?:ت|لت|ي|و|ف|ب|ك|ل|ال|دون)$/.test(prompt)) return false;
+  if (/[\—\-\:\/]\s*$/.test(prompt)) return false;
+
   if (!Array.isArray(q.options) || q.options.length < 2) return false;
   for (const rawOpt of q.options) {
     if (!rawOpt || typeof rawOpt !== "string") return false;
     const opt = cleanOptionString(rawOpt);
     if (opt.length < 2) return false;
-    // An option ending in standalone 'و' (Arabic 'and') was amputated by an overeager regex
-    if (/(?:^|\s)و$/.test(opt)) return false;
+    // Reject options ending in standalone truncated particles or dashes
+    if (/(?:^|\s)(?:ت|لت|و|ال)$/.test(opt)) return false;
+    if (/[\—\-]$/.test(opt)) return false;
   }
   return true;
 }
