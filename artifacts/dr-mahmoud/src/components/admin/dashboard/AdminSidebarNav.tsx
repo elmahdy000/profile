@@ -102,13 +102,6 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           onClick: () => {
             setActiveTab("learning");
             setLearningSubTab("students");
-            if (typeof window !== "undefined") {
-              const params = new URLSearchParams(window.location.search);
-              params.delete("mode");
-              params.delete("status");
-              window.history.replaceState(null, "", `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`);
-              window.dispatchEvent(new Event("popstate"));
-            }
           },
           active: activeTab === "learning" && learningSubTab === "students",
         },

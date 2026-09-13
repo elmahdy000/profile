@@ -89,7 +89,9 @@ function App() {
           <div className="font-sans min-h-screen text-foreground bg-background overflow-x-hidden selection:bg-accent selection:text-white">
             <Suspense fallback={<PageLoader />}>
               <Switch>
+                <Route path="/admin/:rest*" component={AdminDashboard} />
                 <Route path="/admin" component={AdminDashboard} />
+                <Route path="/subadmin/:rest*" component={SubAdminDashboard} />
                 <Route path="/subadmin" component={SubAdminDashboard} />
                 <Route path="/baccalaureate" component={BaccalaureatePage} />
                 <Route path="/booking">

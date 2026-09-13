@@ -1,7 +1,8 @@
 import { ParentsTab } from "./admin/dashboard/ParentsTab";
 import { SubscriptionsTab } from "./admin/SubscriptionsTab";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useListBookings,
@@ -126,7 +127,184 @@ const getYoutubeThumbnail = (url: string) => {
   return "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&w=400&q=80";
 };
 
+export type AdminTopTab =
+  | "courses"
+  | "podcasts"
+  | "curriculums"
+  | "videos"
+  | "upload-video"
+  | "learning"
+  | "student-analytics"
+  | "subscriptions"
+  | "parents"
+  | "settings";
+
+export function parseAdminUrl(pathname: string, search = ""): { activeTab: AdminTopTab; learningSubTab: AdminLearningTab } | null {
+  const clean = pathname.toLowerCase().replace(/\/+$/, "");
+  const params = new URLSearchParams(search);
+  const queryTab = (params.get("tab") || params.get("section") || "").toLowerCase();
+
+  const segments = clean.split("/").filter(Boolean);
+  let slug = "";
+  if (segments[0] === "admin") {
+    if (segments[1] === "learning" && segments[2]) {
+      slug = segments[2];
+    } else if (segments[1]) {
+      slug = segments[1];
+    }
+  }
+  if (!slug) {
+    slug = queryTab;
+  }
+
+  switch (slug) {
+    case "quizzes":
+    case "exams":
+    case "quiz":
+      return { activeTab: "learning", learningSubTab: "quizzes" };
+    case "testbank":
+    case "test-bank":
+    case "bank":
+      return { activeTab: "learning", learningSubTab: "testbank" };
+    case "students":
+    case "users":
+      return { activeTab: "learning", learningSubTab: "students" };
+    case "payments":
+    case "receipts":
+    case "payment":
+      return { activeTab: "learning", learningSubTab: "payments" };
+    case "subscriptions":
+    case "subs":
+      return { activeTab: "subscriptions", learningSubTab: "students" };
+    case "grades":
+    case "grades-sheet":
+      return { activeTab: "learning", learningSubTab: "grades-sheet" };
+    case "center-bookings":
+    case "bookings":
+      return { activeTab: "learning", learningSubTab: "center-bookings" };
+    case "files":
+    case "materials":
+      return { activeTab: "learning", learningSubTab: "files" };
+    case "notifications":
+    case "alerts":
+      return { activeTab: "learning", learningSubTab: "notifications" };
+    case "summaries":
+      return { activeTab: "learning", learningSubTab: "summaries" };
+    case "attendance":
+      return { activeTab: "learning", learningSubTab: "attendance" };
+    case "overview":
+    case "dashboard":
+      return { activeTab: "learning", learningSubTab: "overview" };
+    case "reports":
+      return { activeTab: "learning", learningSubTab: "reports" };
+    case "courses":
+      return { activeTab: "courses", learningSubTab: "students" };
+    case "curriculums":
+    case "curriculum":
+      return { activeTab: "curriculums", learningSubTab: "students" };
+    case "videos":
+      return { activeTab: "videos", learningSubTab: "students" };
+    case "upload-video":
+    case "upload":
+      return { activeTab: "upload-video", learningSubTab: "students" };
+    case "podcasts":
+      return { activeTab: "podcasts", learningSubTab: "students" };
+    case "parents":
+      return { activeTab: "parents", learningSubTab: "students" };
+    case "analytics":
+    case "student-analytics":
+      return { activeTab: "student-analytics", learningSubTab: "students" };
+    case "settings":
+      return { activeTab: "settings", learningSubTab: "students" };
+    default:
+      return null;
+  }
+}
+
+export function getAdminUrlForTab(activeTab: AdminTopTab, learningSubTab: AdminLearningTab): string {
+  if (activeTab === "learning") {
+    switch (learningSubTab) {
+      case "students": return "/admin/students";
+      case "quizzes": return "/admin/quizzes";
+      case "testbank": return "/admin/testbank";
+      case "payments": return "/admin/payments";
+      case "grades-sheet": return "/admin/grades-sheet";
+      case "center-bookings": return "/admin/center-bookings";
+      case "files": return "/admin/files";
+      case "notifications": return "/admin/notifications";
+      case "summaries": return "/admin/summaries";
+      case "attendance": return "/admin/attendance";
+      case "overview": return "/admin/overview";
+      case "reports": return "/admin/reports";
+      default: return "/admin/students";
+    }
+  }
+  switch (activeTab) {
+    case "courses": return "/admin/courses";
+    case "curriculums": return "/admin/curriculums";
+    case "videos": return "/admin/videos";
+    case "upload-video": return "/admin/upload-video";
+    case "podcasts": return "/admin/podcasts";
+    case "subscriptions": return "/admin/subscriptions";
+    case "parents": return "/admin/parents";
+    case "student-analytics": return "/admin/analytics";
+    case "settings": return "/admin/settings";
+    default: return "/admin";
+  }
+}
+
 export default function AdminDashboard() {
+  const [location, setLocation] = useLocation();
+
+  const initialRoute = useMemo(() => {
+    if (typeof window !== "undefined") {
+      return parseAdminUrl(window.location.pathname, window.location.search);
+    }
+    return null;
+  }, []);
+
+  const [activeTab, setActiveTabState] = useState<AdminTopTab>(initialRoute?.activeTab || "learning");
+  const [learningSubTab, setLearningSubTabState] = useState<AdminLearningTab>(initialRoute?.learningSubTab || "students");
+
+  useEffect(() => {
+    const search = typeof window !== "undefined" ? window.location.search : "";
+    const resolved = parseAdminUrl(location, search);
+    if (resolved) {
+      setActiveTabState(resolved.activeTab);
+      setLearningSubTabState(resolved.learningSubTab);
+    }
+  }, [location]);
+
+  const handleTabChange = useCallback(
+    (newTab: AdminTopTab) => {
+      setActiveTabState(newTab);
+      if (newTab !== "learning") {
+        const targetUrl = getAdminUrlForTab(newTab, "students");
+        if (location !== targetUrl) {
+          setLocation(targetUrl);
+        }
+      } else {
+        const targetUrl = getAdminUrlForTab("learning", learningSubTab);
+        if (location !== targetUrl) {
+          setLocation(targetUrl, { replace: true });
+        }
+      }
+    },
+    [learningSubTab, location, setLocation],
+  );
+
+  const handleLearningSubTabChange = useCallback(
+    (newSubTab: AdminLearningTab) => {
+      setActiveTabState("learning");
+      setLearningSubTabState(newSubTab);
+      const targetUrl = getAdminUrlForTab("learning", newSubTab);
+      if (location !== targetUrl) {
+        setLocation(targetUrl);
+      }
+    },
+    [location, setLocation],
+  );
+
   useEffect(() => {
     const previousTitle = document.title;
     const robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
@@ -139,26 +317,6 @@ export default function AdminDashboard() {
     };
   }, []);
 
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [passwordInput, setPasswordInput] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [authError, setAuthError] = useState("");
-  const [activeTab, setActiveTab] = useState<
-    | "courses"
-    | "podcasts"
-    | "curriculums"
-    | "videos"
-    | "upload-video"
-    | "learning"
-    | "student-analytics"
-    | "subscriptions"
-    | "parents"
-    | "settings"
-  >("learning");
-  const [learningSubTab, setLearningSubTab] = useState<AdminLearningTab>("students");
   const [bookingFilter, setBookingFilter] = useState<"pending" | "confirmed" | "completed" | "all">("pending");
   const [selectedSubjectFilter, setSelectedSubjectFilter] =
     useState<string>("all");
@@ -1585,9 +1743,9 @@ export default function AdminDashboard() {
 
       <AdminSidebarNav
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabChange}
         learningSubTab={learningSubTab}
-        setLearningSubTab={setLearningSubTab}
+        setLearningSubTab={handleLearningSubTabChange}
         isMobileSidebarOpen={isMobileSidebarOpen}
         setIsMobileSidebarOpen={setIsMobileSidebarOpen}
         openVideoModal={openVideoModal}
@@ -1722,12 +1880,18 @@ export default function AdminDashboard() {
                   learningFiles={learningFiles}
                   createVideoMutation={createVideoMutation}
                   updateVideoMutation={updateVideoMutation}
-                  setActiveTab={setActiveTab}
+                  setActiveTab={handleTabChange}
                 />
               )}
 
               {activeTab === "settings" && <AdminSettings role={adminRole} />}
-              {activeTab === "learning" && <AdminLearning role={adminRole} initialTab={learningSubTab} />}
+              {activeTab === "learning" && (
+                <AdminLearning
+                  role={adminRole}
+                  initialTab={learningSubTab}
+                  onTabChange={handleLearningSubTabChange}
+                />
+              )}
               {activeTab === "student-analytics" && <StudentAnalyticsTab />}
               {activeTab === "subscriptions" && <SubscriptionsTab />}
               {activeTab === "parents" && <ParentsTab role={adminRole} />}
