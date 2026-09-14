@@ -92,6 +92,19 @@ const getOptionLetter = (index: number, isEng: boolean): string => {
   return ["أ", "ب", "ج", "د", "هـ", "و"][index] || String(index + 1);
 };
 
+function normalizeQuestionPrompt(p?: string | null): string {
+  if (!p) return "";
+  return p
+    .toLowerCase()
+    .replace(/[\u064B-\u065F\u0670]/g, "")
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ة/g, "ه")
+    .replace(/ى/g, "ي")
+    .replace(/[؟?.,!،:;ـ_—\-\(\)\[\]\{\}«»"']/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function AppFilePreviewModal({ file, onClose }: { file: LearningFile | null; onClose: () => void }) {
   return <FilePreviewModal file={file} onClose={onClose} />;
 }
@@ -130,6 +143,25 @@ export function StudentPlatform() {
   const [dataError, setDataError] = useState("");
   const [autoOpenSummaryUpload, setAutoOpenSummaryUpload] = useState(false);
   const latestNotificationIdRef = useRef(0);
+
+  // Lock body scroll and handle Escape key when mobile sidebar is open
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [sidebarOpen]);
 
   // Quiz active states & Timer
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
@@ -248,11 +280,17 @@ export function StudentPlatform() {
     const originalTotal: number = firstQ?._originalTotal ?? activeQuiz.questions.length;
     const answersToSend = Array<number>(originalTotal).fill(-1);
 
-    activeQuiz.questions.forEach((q: any, i: number) => {
+    const detailedAnswers = activeQuiz.questions.map((q: any, i: number) => {
       const originalIdx: number = q._originalIndex !== undefined ? q._originalIndex : i;
       if (originalIdx >= 0 && originalIdx < originalTotal) {
         answersToSend[originalIdx] = quizAnswers[i] ?? -1;
       }
+      return {
+        prompt: q.prompt,
+        selectedOption: quizAnswers[i] ?? -1,
+        originalIndex: originalIdx,
+        questionIndex: i,
+      };
     });
 
     try {
@@ -263,12 +301,12 @@ export function StudentPlatform() {
         total: number;
         attemptsUsed: number;
         attemptsRemaining: number | null;
-        details?: Array<{ questionIndex: number; selectedOption: number; correctOption: number; isCorrect: boolean }>;
+        details?: Array<{ questionIndex: number; prompt?: string; selectedOption: number; correctOption: number; isCorrect: boolean }>;
       }>(
         `/api/learning/quizzes/${activeQuiz.id}/submit`,
         {
           method: "POST",
-          body: JSON.stringify({ answers: answersToSend, timeSpentSeconds }),
+          body: JSON.stringify({ answers: answersToSend, detailedAnswers, timeSpentSeconds }),
         },
       );
       setQuizResult(res);
@@ -561,22 +599,53 @@ export function StudentPlatform() {
       }}
     >
       <div className="mx-auto grid max-w-[1440px] lg:grid-cols-[248px_1fr]">
-        {sidebarOpen && <button className="fixed inset-0 z-40 bg-slate-950/40 lg:hidden" aria-label="إغلاق القائمة" onClick={() => setSidebarOpen(false)} />}
-        <aside className={`fixed inset-y-0 right-0 z-50 flex w-[248px] flex-col border-l border-slate-800/80 bg-[#0F1B2D] text-slate-100 transition-transform lg:sticky lg:top-0 lg:z-20 lg:min-h-screen ${sidebarOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0"}`}>
-          <button className="absolute left-3 top-3 grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-800 lg:hidden" onClick={() => setSidebarOpen(false)} aria-label="إغلاق القائمة"><X className="h-4 w-4" /></button>
-          <div className="flex items-center gap-3 border-b border-slate-800/80 px-4 py-4">
-            <img
-              src="/logo.webp"
-              alt="شعار منصة د. محمود المهدي"
-              className="h-8 w-8 rounded-lg object-cover ring-1 ring-white/10"
-            />
-            <div><strong className="block text-[13px] font-bold text-white">بوابة الطالب</strong><span className="text-[10px] text-slate-400">د. محمود المهدي</span></div>
+        {/* Backdrop for mobile drawer */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 z-[65] bg-slate-950/60 backdrop-blur-xs transition-opacity duration-200 lg:hidden"
+            aria-hidden="true"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        {/* Responsive Sidebar */}
+        <aside
+          aria-label="قائمة التنقل الجانبية"
+          className={`fixed inset-y-0 right-0 z-[70] flex h-dvh max-h-dvh w-[280px] max-w-[85vw] flex-col border-l border-slate-800/80 bg-[#0F1B2D] text-slate-100 shadow-2xl transition-all duration-300 ease-in-out lg:sticky lg:top-0 lg:z-20 lg:h-screen lg:w-[248px] lg:translate-x-0 lg:shadow-none ${
+            sidebarOpen
+              ? "translate-x-0 visible pointer-events-auto"
+              : "translate-x-full invisible pointer-events-none lg:visible lg:pointer-events-auto"
+          }`}
+        >
+          {/* Top Brand & Close Button Header */}
+          <div className="shrink-0 flex items-center justify-between border-b border-slate-800/80 px-4 py-3.5">
+            <div className="flex items-center gap-3">
+              <img
+                src="/logo.webp"
+                alt="شعار منصة د. محمود المهدي"
+                className="h-8 w-8 rounded-lg object-cover ring-1 ring-white/10"
+              />
+              <div>
+                <strong className="block text-[13px] font-bold text-white">بوابة الطالب</strong>
+                <span className="text-[10px] text-slate-400">د. محمود المهدي</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-800/80 hover:text-white transition lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="إغلاق القائمة"
+            >
+              <X className="h-4.5 w-4.5" />
+            </button>
           </div>
-          <div className="mx-3 mt-3 flex items-center gap-2.5 rounded-xl border border-slate-800/80 bg-[#14233A] p-2.5">
+
+          {/* Student Info Card */}
+          <div className="shrink-0 mx-3 mt-3 flex items-center gap-2.5 rounded-xl border border-slate-800/80 bg-[#14233A] p-2.5">
             <StudentAvatar name={student.name} src={student.avatarUrl} size="sm" />
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <strong className="block truncate text-[12px] font-bold text-white">{student.name}</strong>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-[10px] text-slate-400">طالب متفعّل</span>
                 {student.accessCode && (
                   <span className="font-mono text-[11px] font-extrabold text-[#60A5FA] bg-blue-950/60 px-1.5 py-0.5 rounded border border-blue-800/50 dir-ltr">
@@ -586,13 +655,19 @@ export function StudentPlatform() {
               </div>
             </div>
           </div>
-          <nav className="mt-4 space-y-1 px-2.5">
+
+          {/* Navigation Items (Scrollable middle section) */}
+          <nav className="flex-1 min-h-0 overflow-y-auto overscroll-contain py-3 px-2.5 space-y-1">
             {nav.map(([value, label, Icon]) => (
               <button
                 key={value}
-                onClick={() => { setTab(value); setSidebarOpen(false); }}
+                type="button"
+                onClick={() => {
+                  setTab(value);
+                  setSidebarOpen(false);
+                }}
                 aria-current={tab === value ? "page" : undefined}
-                className={`relative flex min-h-[40px] w-full items-center gap-3 rounded-xl px-3 text-right text-[13px] font-bold transition-all duration-150 cursor-pointer ${
+                className={`relative flex min-h-[42px] w-full items-center gap-3 rounded-xl px-3 text-right text-[13px] font-bold transition-all duration-150 cursor-pointer ${
                   tab === value
                     ? "bg-blue-600/15 text-[#3B82F6] font-extrabold border border-blue-500/30"
                     : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
@@ -601,12 +676,14 @@ export function StudentPlatform() {
                 {tab === value && (
                   <span className="absolute right-0 top-2 bottom-2 w-1 rounded-l-full bg-[#1769FF]" />
                 )}
-                <Icon className={`h-[18px] w-[18px] ${tab === value ? "text-[#3B82F6]" : "opacity-75"}`} />
-                {label}
+                <Icon className={`h-[18px] w-[18px] shrink-0 ${tab === value ? "text-[#3B82F6]" : "opacity-75"}`} />
+                <span className="truncate">{label}</span>
               </button>
             ))}
           </nav>
-          <div className="mt-auto space-y-2 px-3 pb-4 border-t border-slate-800/60 pt-3">
+
+          {/* Bottom Footer Actions */}
+          <div className="shrink-0 mt-auto space-y-2 border-t border-slate-800/60 bg-[#0F1B2D] p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
             <ThemeToggle className="h-9 w-full text-slate-300 shadow-none dark:border-slate-800 dark:bg-transparent" />
             <a
               href={`https://wa.me/201066711545?text=${encodeURIComponent(
@@ -619,8 +696,9 @@ export function StudentPlatform() {
               كلم الدعم / حجز كورس 💬
             </a>
             <button
+              type="button"
               onClick={logout}
-              className="flex h-9 w-full items-center justify-center gap-2 rounded-xl text-[12px] font-bold text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-400"
+              className="flex h-9 w-full items-center justify-center gap-2 rounded-xl text-[12px] font-bold text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-400 cursor-pointer"
             >
               <LogOut className="h-3.5 w-3.5" /> تسجيل الخروج
             </button>
@@ -750,24 +828,69 @@ export function StudentPlatform() {
         </section>
       </div>
 
+      {/* Mobile Bottom Navigation */}
       <nav
         aria-label="التنقل الرئيسي"
-        className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-sm lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-sm lg:hidden"
       >
         <div className="mx-auto grid max-w-lg grid-cols-5">
-          {nav.filter(([value]) => value !== "compiler").map(([value, label, Icon]) => (
-            <button
-              key={value}
-              onClick={() => { setTab(value); setSidebarOpen(false); }}
-              aria-current={tab === value ? "page" : undefined}
-              className={`my-1 flex min-h-[56px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-bold transition-colors active:scale-[.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${tab === value ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}
-            >
-              <Icon
-                className={`h-[23px] w-[23px] ${tab === value ? "stroke-[2.5]" : ""}`}
-              />
-              <span>{label}</span>
-            </button>
-          ))}
+          <button
+            type="button"
+            onClick={() => { setTab("dashboard"); setSidebarOpen(false); }}
+            aria-current={tab === "dashboard" ? "page" : undefined}
+            className={`my-1 flex min-h-[54px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-bold transition-colors active:scale-[.98] ${
+              tab === "dashboard" ? "bg-primary/10 text-primary font-black" : "text-muted-foreground"
+            }`}
+          >
+            <Home className={`h-[22px] w-[22px] ${tab === "dashboard" ? "stroke-[2.5]" : ""}`} />
+            <span>الرئيسية</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => { setTab("lessons"); setSidebarOpen(false); }}
+            aria-current={tab === "lessons" ? "page" : undefined}
+            className={`my-1 flex min-h-[54px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-bold transition-colors active:scale-[.98] ${
+              tab === "lessons" ? "bg-primary/10 text-primary font-black" : "text-muted-foreground"
+            }`}
+          >
+            <BookOpen className={`h-[22px] w-[22px] ${tab === "lessons" ? "stroke-[2.5]" : ""}`} />
+            <span>كورساتي</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => { setTab("quizzes"); setSidebarOpen(false); }}
+            aria-current={tab === "quizzes" ? "page" : undefined}
+            className={`my-1 flex min-h-[54px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-bold transition-colors active:scale-[.98] ${
+              tab === "quizzes" ? "bg-primary/10 text-primary font-black" : "text-muted-foreground"
+            }`}
+          >
+            <ClipboardCheck className={`h-[22px] w-[22px] ${tab === "quizzes" ? "stroke-[2.5]" : ""}`} />
+            <span>الاختبارات</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => { setTab("summaries"); setSidebarOpen(false); }}
+            aria-current={tab === "summaries" ? "page" : undefined}
+            className={`my-1 flex min-h-[54px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-bold transition-colors active:scale-[.98] ${
+              tab === "summaries" ? "bg-primary/10 text-primary font-black" : "text-muted-foreground"
+            }`}
+          >
+            <FileText className={`h-[22px] w-[22px] ${tab === "summaries" ? "stroke-[2.5]" : ""}`} />
+            <span>مذكراتي</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setSidebarOpen((prev) => !prev)}
+            aria-label="فتح القائمة الكاملة"
+            className={`my-1 flex min-h-[54px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-bold transition-colors active:scale-[.98] ${
+              sidebarOpen || ["files", "compiler", "profile"].includes(tab)
+                ? "bg-primary/10 text-primary font-black"
+                : "text-muted-foreground"
+            }`}
+          >
+            <Menu className="h-[22px] w-[22px]" />
+            <span>القائمة</span>
+          </button>
         </div>
       </nav>
 
@@ -966,10 +1089,15 @@ export function StudentPlatform() {
                 {/* Questions List */}
                 {activeQuiz.questions.map((q, qi) => {
                   const origIdx = (q as any)._originalIndex !== undefined ? (q as any)._originalIndex : qi;
-                  const details = (quizResult as any)?.details as Array<{ questionIndex: number; selectedOption: number; correctOption: number; isCorrect: boolean }> | undefined;
-                  const detail = details?.find((d: { questionIndex: number }) => d.questionIndex === origIdx);
+                  const details = (quizResult as any)?.details as Array<{ questionIndex: number; prompt?: string; selectedOption: number; correctOption: number; isCorrect: boolean }> | undefined;
+                  const normPrompt = normalizeQuestionPrompt(q.prompt);
+                  const detail = details?.find((d: any) => 
+                    (d.prompt && normalizeQuestionPrompt(d.prompt) === normPrompt) || 
+                    d.questionIndex === origIdx
+                  );
                   const isSelected = quizAnswers[qi] !== undefined && quizAnswers[qi] >= 0;
-                  const isCorrect = detail ? detail.isCorrect : Boolean(quizResult && quizAnswers[qi] === q.correctIndex);
+                  const correctOptionIndex = detail ? detail.correctOption : q.correctIndex;
+                  const isCorrect = detail ? detail.isCorrect : Boolean(quizResult && correctOptionIndex !== undefined && quizAnswers[qi] === correctOptionIndex);
                   const isWrong = quizResult && isSelected && !isCorrect;
                   const isEng = isEnglishQuestion(q.prompt, q.options);
 

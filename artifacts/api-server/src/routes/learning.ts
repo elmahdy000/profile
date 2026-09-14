@@ -547,6 +547,7 @@ const optionLabels: Record<string, number> = {
   "ج": 2,
   "د": 3,
   "ه": 4, "هـ": 4,
+  "و": 5,
   "ز": 6,
   "الأول": 0, "الاول": 0,
   "الثاني": 1, "الثانى": 1,
@@ -925,6 +926,26 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
       current.correctIndex = answerKeyMap.get(qIndex)!;
     }
 
+    // Smart fallback: check if explanation explicitly states the correct option or contains option text
+    if (current.correctIndex === null && current.explanation) {
+      const explMatch = current.explanation.match(/(?:(?:الإجابة|الاجابة)(?:\s+الصحيحة)?|الخيار(?:\s+الصحيح)?)\s*(?:هي|هو)?\s*[:：\-]?\s*[\(\[]?\s*([أابجدهإآهـA-Fa-f1-6])[\)\]]?/i);
+      if (explMatch) {
+        const idx = optionIndex(explMatch[1]);
+        if (idx !== null && idx < current.options.length) {
+          current.correctIndex = idx;
+        }
+      }
+      if (current.correctIndex === null) {
+        const matchedOptIdx = current.options.findIndex((opt) => {
+          const clean = opt.trim().toLowerCase();
+          return clean.length >= 8 && current!.explanation!.toLowerCase().includes(clean);
+        });
+        if (matchedOptIdx >= 0) {
+          current.correctIndex = matchedOptIdx;
+        }
+      }
+    }
+
     if (finalPrompt && current.options.length >= 2) {
       const validIndex =
         typeof current.correctIndex === "number" &&
@@ -960,7 +981,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   const EXPLANATION_HEADER_RE = /^\s*(?:explanation(?:\s*[\/\-]\s*steps)?|solution|reason|note|التوضيح(?:\s*[\/\-]\s*(?:خطوات|طريقة)\s*(?:الحل|الإجابة))?|التفسير(?:\s*[\/\-]\s*(?:خطوات|طريقة)\s*(?:الحل|الإجابة))?|(?:خطوات|طريقة)\s*(?:الحل|الإجابة)|تفسير\s+(?:الإجابة|الحل|السؤال)|توضيح\s+(?:الإجابة|الحل|السؤال)|الشرح(?:\s+والتوضيح)?|شرح\s+(?:الحل|الإجابة|السؤال)|سبب\s+(?:الإجابة|الحل|الاختيار)|ملاحظة)\s*[:：\-]\s*(.*)$/i;
 
   // EXPLICIT_QUESTION_RE: "سؤال 1", "س1:", "س1 /", "السؤال الأول", "Q1:"
-  const EXPLICIT_QUESTION_RE = /^\s*(?:(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-\/]?\s*\(?\d+\)?|السؤال\s+(?:الأول|الاول|الثاني|الثانى|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر)|#\d+)(?:\s*[:：\-\.\)\/]\s*(.*))?$/i;
+  const EXPLICIT_QUESTION_RE = /^\s*(?:(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-\/]?\s*\(?(\d+)\)?|السؤال\s+(?:الأول|الاول|الثاني|الثانى|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر)|#(\d+))(?:\s*[:：\-\.\)\/]\s*(.*))?$/i;
 
   // Generic Numbered line: "1- ...", "1. ...", "(1) ...", "1: ..."
   const NUMBERED_LINE_RE = /^\s*(?:\((\d+)\)|\b(\d+)\s*[\.\:\-\)\/\—\–])\s*(.*)$/;
@@ -973,7 +994,8 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
 
   let collectingExplanation = false;
   let hasFoundAnswer = false;
-  let questionCounter = 0;
+  let currentQNumber = 1;
+  let nextQCounter = 1;
 
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
@@ -981,12 +1003,14 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
     // 1. Explicit Question Header (e.g. "سؤال 1:", "س1 /", "السؤال الأول:", "Q1:")
     const explicitQMatch = line.match(EXPLICIT_QUESTION_RE);
     if (explicitQMatch) {
-      questionCounter += 1;
-      finishCurrent(questionCounter);
+      finishCurrent(currentQNumber);
+      const parsedNum = parseInt(explicitQMatch[1] || explicitQMatch[2] || "", 10);
+      currentQNumber = !isNaN(parsedNum) ? parsedNum : nextQCounter;
+      nextQCounter = currentQNumber + 1;
       collectingExplanation = false;
       hasFoundAnswer = false;
       current = {
-        prompt: explicitQMatch[1]?.trim() || "",
+        prompt: explicitQMatch[3]?.trim() || "",
         options: [],
         correctIndex: null,
       };
@@ -1001,8 +1025,9 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
 
     if (numMatch && !isNextSequentialChoice && (!current || current.options.length >= 2 || hasFoundAnswer || lineIsQuestion)) {
       const restOfLine = (numMatch[3] || "").trim();
-      questionCounter += 1;
-      finishCurrent(questionCounter);
+      finishCurrent(currentQNumber);
+      currentQNumber = !isNaN(numValue) ? numValue : nextQCounter;
+      nextQCounter = currentQNumber + 1;
       collectingExplanation = false;
       hasFoundAnswer = false;
       current = {
@@ -1026,8 +1051,9 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
       // If we see Option 0 ("أ" or "A" or "1") AND current already has 2+ choices:
       // it means a previous question has finished without an explicit header!
       if ((optIdx === 0) && current && current.options.length >= 2) {
-        questionCounter += 1;
-        finishCurrent(questionCounter);
+        finishCurrent(currentQNumber);
+        currentQNumber = nextQCounter;
+        nextQCounter += 1;
         hasFoundAnswer = false;
         collectingExplanation = false;
         current = { prompt: "", options: [], correctIndex: null };
@@ -1139,8 +1165,9 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
     } else if (!current.prompt) {
       current.prompt = line;
     } else if (hasFoundAnswer && !collectingExplanation) {
-      questionCounter += 1;
-      finishCurrent(questionCounter);
+      finishCurrent(currentQNumber);
+      currentQNumber = nextQCounter;
+      nextQCounter += 1;
       current = { prompt: line, options: [], correctIndex: null };
       hasFoundAnswer = false;
       collectingExplanation = false;
@@ -1159,8 +1186,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
     }
   }
 
-  questionCounter += 1;
-  finishCurrent(questionCounter);
+  finishCurrent(currentQNumber);
 
   // Deduplicate questions by prompt to prevent repeated questions
   const seenParsed = new Set<string>();
@@ -5647,10 +5673,39 @@ router.post(
           res.status(403).json({ error: `أكمل ${quiz.requiredProgress}% من الدرس قبل بدء الاختبار` }); return;
         }
       }
+      const rawDetailedAnswers = Array.isArray(req.body.detailedAnswers) ? req.body.detailedAnswers : [];
+      const promptToStudentAnswer = new Map<string, number>();
+      const origIndexToStudentAnswer = new Map<number, number>();
+
+      for (const item of rawDetailedAnswers) {
+        if (item && typeof item === "object") {
+          const opt = Number(item.selectedOption);
+          const validOpt = Number.isInteger(opt) ? opt : -1;
+          if (item.prompt && typeof item.prompt === "string") {
+            const pKey = normalizeQuestionPrompt(item.prompt);
+            if (pKey) promptToStudentAnswer.set(pKey, validOpt);
+          }
+          if (typeof item.originalIndex === "number" && item.originalIndex >= 0) {
+            origIndexToStudentAnswer.set(item.originalIndex, validOpt);
+          }
+        }
+      }
+
+      const getStudentAnswerForQuestion = (q: QuizQuestion, dbIndex: number): number => {
+        const pKey = normalizeQuestionPrompt(q.prompt);
+        if (pKey && promptToStudentAnswer.has(pKey)) {
+          return promptToStudentAnswer.get(pKey)!;
+        }
+        if (origIndexToStudentAnswer.has(dbIndex)) {
+          return origIndexToStudentAnswer.get(dbIndex)!;
+        }
+        if (answers[dbIndex] !== undefined) {
+          return answers[dbIndex];
+        }
+        return -1;
+      };
+
       // effectiveTotal = how many questions the student actually saw.
-      // Frontend sends answers as a FULL-LENGTH array (quiz.questions.length),
-      // with -1 for any questions not shown (shuffle+questionsToShow case).
-      // We score by iterating ALL questions and only counting non-(-1) answers.
       const effectiveTotal =
         quiz.questionsToShow && quiz.questionsToShow > 0 && quiz.questionsToShow < quiz.questions.length
           ? quiz.questionsToShow
@@ -5661,24 +5716,26 @@ router.post(
         return;
       }
 
-      // Iterate ALL original questions — answers[i] maps to quiz.questions[i].
-      // Questions NOT shown to the student have answers[i] === -1, so they won't match.
-      const correct = quiz.questions.reduce(
-        (count, question, index) =>
-          count + (answers[index] !== undefined && answers[index] >= 0 && answers[index] === question.correctIndex ? 1 : 0),
-        0,
-      );
+      // Build full resolved answers array (matching quiz.questions[i])
+      const resolvedAnswers = quiz.questions.map((q, i) => getStudentAnswerForQuestion(q, i));
 
+      // Build details with resolved student answer
+      const details = quiz.questions.map((question, index) => {
+        const selectedOption = resolvedAnswers[index];
+        const isCorrect = selectedOption >= 0 && selectedOption === question.correctIndex;
+        return {
+          questionIndex: index,
+          prompt: question.prompt,
+          selectedOption,
+          correctOption: question.correctIndex,
+          isCorrect,
+        };
+      });
+
+      const correct = details.reduce((count, d) => count + (d.isCorrect ? 1 : 0), 0);
       const score = Math.min(100, Math.round((correct / effectiveTotal) * 100));
       const passed = score >= quiz.passingScore;
       const timeSpentSeconds = Math.max(0, Math.round(Number(req.body.timeSpentSeconds ?? 0))) || 0;
-      // Build details for ALL original questions so the frontend can review answers
-      const details = quiz.questions.map((question, index) => ({
-        questionIndex: index,
-        selectedOption: answers[index] ?? -1,
-        correctOption: question.correctIndex,
-        isCorrect: answers[index] !== undefined && answers[index] >= 0 && answers[index] === question.correctIndex,
-      }));
 
       // Wrap check + insert in transaction to prevent race condition
       const result = await db.transaction(async (tx) => {
@@ -5691,7 +5748,7 @@ router.post(
           .values({
             quizId: quiz.id,
             studentId: student.id,
-            answers,
+            answers: resolvedAnswers,
             score,
             passed,
             timeSpentSeconds,
@@ -5704,6 +5761,17 @@ router.post(
       if (!result) {
         res.status(409).json({ error: "استخدمت كل المحاولات المتاحة لهذا الاختبار" });
         return;
+      }
+
+      // Update student activity timestamp
+      try {
+        const now = new Date();
+        await db
+          .update(studentsTable)
+          .set({ lastActiveAt: now, updatedAt: now })
+          .where(eq(studentsTable.id, student.id));
+      } catch (err) {
+        console.error("Failed to update student lastActiveAt:", err);
       }
 
       // Automatically create a notification for student and parent tracking
