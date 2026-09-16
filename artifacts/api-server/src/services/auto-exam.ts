@@ -472,14 +472,19 @@ export async function generateDraftExamForSchedule(
     }
   }
 
-  const finalQuestions: QuizQuestion[] = selectedRows.map((r) => ({
-    prompt: r.question.prompt.trim(),
-    options: r.question.options.map((opt) => String(opt).trim()),
-    correctIndex: r.question.correctIndex,
-    explanation: r.question.explanation || undefined,
-    imageUrl: r.question.imageUrl || undefined,
-    points: r.points || r.question.points || 1,
-  }));
+  const finalQuestions: QuizQuestion[] = selectedRows.map((r) => {
+    const correctAnswer = r.question.options[r.question.correctIndex]?.trim();
+
+    return {
+      prompt: r.question.prompt.trim(),
+      options: r.question.options.map((opt) => String(opt).trim()),
+      correctIndex: r.question.correctIndex,
+      correctAnswer: correctAnswer,  // ✅ حفظ النص الفعلي للإجابة الصحيحة
+      explanation: r.question.explanation || undefined,
+      imageUrl: r.question.imageUrl || undefined,
+      points: r.points || r.question.points || 1,
+    };
+  });
 
   const todayDateStr = new Date().toLocaleDateString("ar-EG", {
     weekday: "long",

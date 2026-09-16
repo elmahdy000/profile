@@ -67,3 +67,5 @@ artifacts/dr-mahmoud/admin_open.py
 
 # Local operational scripts (contain server/DB credentials — never commit)
 scripts/*.py
+scratch/
+*.db

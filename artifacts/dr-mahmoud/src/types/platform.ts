@@ -47,6 +47,7 @@ export type QuizQuestion = {
   prompt: string;
   options: string[];
   correctIndex?: number;
+  correctAnswer?: string;  // النص الفعلي للإجابة الصحيحة (أكثر أماناً من correctIndex)
   explanation?: string;
   imageUrl?: string;
 };

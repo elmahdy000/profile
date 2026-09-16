@@ -954,10 +954,13 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
           ? current.correctIndex
           : 0;
 
+      const correctAnswer = current.options[validIndex]?.trim();
+
       questions.push({
         prompt: finalPrompt,
         options: current.options,
         correctIndex: validIndex,
+        correctAnswer: correctAnswer,  // ✅ حفظ النص الفعلي
         explanation: current.explanation ? current.explanation.trim() : undefined,
       });
       if (current.correctIndex === null) {
@@ -3735,7 +3738,7 @@ router.get("/learning/quizzes", requireStudent, async (_req, res, next) => {
                 ? `أكمل ${quiz.requiredProgress}% من الدرس أولًا`
                 : null,
             questions: quiz.questions.map(
-              ({ correctIndex: _correctIndex, ...question }) => question,
+              ({ correctIndex: _correctIndex, correctAnswer: _correctAnswer, ...question }) => question,
             ),
           };
         }),
@@ -4477,18 +4480,22 @@ router.post("/admin/learning/quizzes/:id/replace-question", requireAdmin, async 
     let newQuestion: QuizQuestion | null = null;
 
     if (replacementQuestion && isCompleteValidQuestion(replacementQuestion)) {
+      const correctAnswer = replacementQuestion.options[replacementQuestion.correctIndex]?.trim();
       newQuestion = {
         ...replacementQuestion,
         prompt: replacementQuestion.prompt.replace(/[\n\s]+[A-Da-dأابجده]\)\s*$/, "").trim(),
         options: replacementQuestion.options.map(cleanOptionString),
+        correctAnswer: correctAnswer,  // ✅ حفظ النص الفعلي
       };
     } else if (replacementQuestionId) {
       const [bq] = await db.select().from(questionBankTable).where(eq(questionBankTable.id, Number(replacementQuestionId))).limit(1);
       if (bq && isCompleteValidQuestion(bq.question)) {
+        const correctAnswer = bq.question.options[bq.question.correctIndex]?.trim();
         newQuestion = {
           ...bq.question,
           prompt: bq.question.prompt.replace(/[\n\s]+[A-Da-dأابجده]\)\s*$/, "").trim(),
           options: bq.question.options.map(cleanOptionString),
+          correctAnswer: correctAnswer,  // ✅ حفظ النص الفعلي
         };
       }
     } else {
@@ -4514,10 +4521,12 @@ router.post("/admin/learning/quizzes/:id/replace-question", requireAdmin, async 
 
       if (available.length > 0) {
         const picked = available[0].question;
+        const correctAnswer = picked.options[picked.correctIndex]?.trim();
         newQuestion = {
           ...picked,
           prompt: picked.prompt.replace(/[\n\s]+[A-Da-dأابجده]\)\s*$/, "").trim(),
           options: picked.options.map(cleanOptionString),
+          correctAnswer: correctAnswer,  // ✅ حفظ النص الفعلي
         };
       }
     }
@@ -5238,13 +5247,27 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
       const pKey = normalizeQuestionPrompt(r.question.prompt);
       if (pKey && finalPrompts.has(pKey)) continue;
       if (pKey) finalPrompts.add(pKey);
+
+      // ✅ Validation: تأكد من صحة correctIndex
+      const q = r.question;
+      if (typeof q.correctIndex !== 'number' || q.correctIndex < 0 || q.correctIndex >= q.options.length) {
+        console.error(`❌ سؤال معطوب تم تخطيه - correctIndex=${q.correctIndex}, options.length=${q.options.length}, prompt="${q.prompt?.substring(0, 50)}..."`);
+        continue;
+      }
+
+      const correctAnswer = q.options[q.correctIndex]?.trim();
+      if (!correctAnswer) {
+        console.error(`❌ سؤال معطوب تم تخطيه - الإجابة الصحيحة فاضية, prompt="${q.prompt?.substring(0, 50)}..."`);
+        continue;
+      }
+
       finalQuestions.push({
         prompt: r.question.prompt,
         options: r.question.options,
         correctIndex: r.question.correctIndex,
+        correctAnswer: correctAnswer,  // ✅ حفظ النص الفعلي للإجابة الصحيحة
         explanation: r.question.explanation,
         imageUrl: r.question.imageUrl,
-        points: r.points || r.question.points || 1,
       });
     }
 
@@ -5722,7 +5745,22 @@ router.post(
       // Build details with resolved student answer
       const details = quiz.questions.map((question, index) => {
         const selectedOption = resolvedAnswers[index];
-        const isCorrect = selectedOption >= 0 && selectedOption === question.correctIndex;
+
+        // ✅ مطابقة بالنص الفعلي (أكثر أماناً من correctIndex)
+        let isCorrect = false;
+        if (selectedOption >= 0 && selectedOption < question.options.length) {
+          const selectedAnswer = question.options[selectedOption]?.trim();
+          const correctAnswer = question.correctAnswer?.trim() || question.options[question.correctIndex]?.trim();
+
+          if (correctAnswer && selectedAnswer) {
+            // Priority 1: مطابقة بالنص الفعلي
+            isCorrect = selectedAnswer === correctAnswer;
+          } else {
+            // Priority 2: Fallback للـ index (للأسئلة القديمة)
+            isCorrect = selectedOption === question.correctIndex;
+          }
+        }
+
         return {
           questionIndex: index,
           prompt: question.prompt,

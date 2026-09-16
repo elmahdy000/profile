@@ -86,6 +86,7 @@ export type QuizQuestion = {
   prompt: string;
   options: string[];
   correctIndex: number;
+  correctAnswer?: string;     // Text of the correct answer
   explanation?: string;       // Explanation/Feedback for why the correct answer is right
   imageUrl?: string;          // Optional image attachment for the question (e.g. code snippet, diagram)
   points?: number;            // Custom points for this question (default 1)
