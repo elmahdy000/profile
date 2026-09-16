@@ -447,7 +447,8 @@ export function StudentPlatform() {
         // SSE keeps retrying; the next poll provides an independent fallback.
       }
     };
-    const timer = window.setInterval(poll, 3000);
+    // Fallback polling every 30 seconds (SSE already provides instantaneous real-time push)
+    const timer = window.setInterval(poll, 30000);
     return () => window.clearInterval(timer);
   }, [student?.id, student?.status, student?.paymentStatus, JSON.stringify(student?.enrolledCourseIds)]);
   useEffect(() => {

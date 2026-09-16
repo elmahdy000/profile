@@ -118,7 +118,18 @@ function compressVideoInBackground(filePath: string) {
   try {
     const child = spawn(
       "ffmpeg",
-      ["-y", "-i", filePath, "-vcodec", "libx264", "-crf", "23", "-preset", "fast", "-acodec", "copy", tempPath],
+      [
+        "-y",
+        "-i", filePath,
+        "-vcodec", "libx264",
+        "-crf", "23",
+        "-preset", "veryfast",
+        "-g", "50",
+        "-keyint_min", "25",
+        "-movflags", "+faststart",
+        "-acodec", "copy",
+        tempPath,
+      ],
       { stdio: "ignore" }
     );
 
@@ -127,7 +138,8 @@ function compressVideoInBackground(filePath: string) {
         try {
           const origSize = fs.statSync(filePath).size;
           const compSize = fs.statSync(tempPath).size;
-          if (compSize < origSize && compSize > 0) {
+          // Accept optimized video if smaller OR within 10% size (since keyframe/faststart benefits outweigh minor size difference)
+          if (compSize > 0 && compSize <= origSize * 1.1) {
             fs.renameSync(tempPath, filePath);
           } else {
             fs.unlinkSync(tempPath);
