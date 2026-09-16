@@ -1092,8 +1092,8 @@ export function StudentPlatform() {
                   const details = (quizResult as any)?.details as Array<{ questionIndex: number; prompt?: string; selectedOption: number; correctOption: number; isCorrect: boolean }> | undefined;
                   const normPrompt = normalizeQuestionPrompt(q.prompt);
                   const detail = details?.find((d: any) => 
-                    (d.prompt && normalizeQuestionPrompt(d.prompt) === normPrompt) || 
-                    d.questionIndex === origIdx
+                    d.questionIndex === origIdx ||
+                    (d.prompt && normalizeQuestionPrompt(d.prompt) === normPrompt)
                   );
                   const isSelected = quizAnswers[qi] !== undefined && quizAnswers[qi] >= 0;
                   const correctOptionIndex = detail ? detail.correctOption : q.correctIndex;

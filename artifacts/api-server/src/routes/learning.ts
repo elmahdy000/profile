@@ -818,6 +818,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
             prompt,
             options,
             correctIndex,
+            correctAnswer: options[correctIndex]?.trim(),
           });
         }
       }
@@ -5715,12 +5716,12 @@ router.post(
       }
 
       const getStudentAnswerForQuestion = (q: QuizQuestion, dbIndex: number): number => {
+        if (origIndexToStudentAnswer.has(dbIndex)) {
+          return origIndexToStudentAnswer.get(dbIndex)!;
+        }
         const pKey = normalizeQuestionPrompt(q.prompt);
         if (pKey && promptToStudentAnswer.has(pKey)) {
           return promptToStudentAnswer.get(pKey)!;
-        }
-        if (origIndexToStudentAnswer.has(dbIndex)) {
-          return origIndexToStudentAnswer.get(dbIndex)!;
         }
         if (answers[dbIndex] !== undefined) {
           return answers[dbIndex];
@@ -5746,6 +5747,17 @@ router.post(
       const details = quiz.questions.map((question, index) => {
         const selectedOption = resolvedAnswers[index];
 
+        // 1. Resolve true correct option index from correctAnswer if possible
+        let resolvedCorrectOption = question.correctIndex;
+        if (question.correctAnswer) {
+          const matchIdx = question.options.findIndex(
+            (opt) => opt?.trim() === question.correctAnswer?.trim()
+          );
+          if (matchIdx >= 0) {
+            resolvedCorrectOption = matchIdx;
+          }
+        }
+
         // ✅ مطابقة بالنص الفعلي (أكثر أماناً من correctIndex)
         let isCorrect = false;
         if (selectedOption >= 0 && selectedOption < question.options.length) {
@@ -5757,7 +5769,7 @@ router.post(
             isCorrect = selectedAnswer === correctAnswer;
           } else {
             // Priority 2: Fallback للـ index (للأسئلة القديمة)
-            isCorrect = selectedOption === question.correctIndex;
+            isCorrect = selectedOption === resolvedCorrectOption;
           }
         }
 
@@ -5765,7 +5777,7 @@ router.post(
           questionIndex: index,
           prompt: question.prompt,
           selectedOption,
-          correctOption: question.correctIndex,
+          correctOption: resolvedCorrectOption,
           isCorrect,
         };
       });
