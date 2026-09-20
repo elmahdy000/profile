@@ -2029,6 +2029,17 @@ router.patch("/admin/payment-receipts/:id", requireAdmin, async (req, res, next)
             })
             .where(eq(studentsTable.id, receipt.studentId));
 
+          // Ensure automatic course assignments for approved student
+          try {
+            await ensureAutomaticCourseAssignments({
+              ...student,
+              status: "approved",
+              paymentStatus: "paid",
+            });
+          } catch (assignErr) {
+            console.error("Warning: Failed to ensure automatic course assignments on receipt approval:", assignErr);
+          }
+
           // A verified payment confirms any matching pending booking.
           await confirmPendingBookingsForPhone(student.phone);
 
@@ -2399,6 +2410,14 @@ router.post("/admin/students/bulk-status", requireAdmin, async (req, res, next) 
         .update(studentsTable)
         .set({ status })
         .where(ne(studentsTable.status, status));
+      if (status === "approved") {
+        try {
+          const allApproved = await db.select().from(studentsTable).where(eq(studentsTable.status, "approved"));
+          for (const s of allApproved) {
+            await ensureAutomaticCourseAssignments(s);
+          }
+        } catch {}
+      }
       return res.json({ success: true, message: `تم تحديث حالة كافة الطلاب إلى ${status}` });
     }
 
@@ -2407,6 +2426,17 @@ router.post("/admin/students/bulk-status", requireAdmin, async (req, res, next) 
         .update(studentsTable)
         .set({ status })
         .where(inArray(studentsTable.id, studentIds));
+      if (status === "approved") {
+        try {
+          const approvedStudents = await db
+            .select()
+            .from(studentsTable)
+            .where(inArray(studentsTable.id, studentIds));
+          for (const s of approvedStudents) {
+            await ensureAutomaticCourseAssignments(s);
+          }
+        } catch {}
+      }
       return res.json({ success: true, count: studentIds.length, message: `تم تحديث حالة ${studentIds.length} طالب` });
     }
 
@@ -3694,7 +3724,12 @@ router.get(["/learning/files/:id/preview", "/learning/files/:id/download"], asyn
 
 router.get("/learning/quizzes", requireStudent, async (_req, res, next) => {
   try {
-    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    let student = res.locals.student as typeof studentsTable.$inferSelect;
+    if (student.status === "approved" && (!(student.enrolledCourseIds?.length) || !(student.enrolledCategories?.length))) {
+      try {
+        student = await ensureAutomaticCourseAssignments(student);
+      } catch {}
+    }
     const [quizzes, attempts, progress, extraGrants] = await Promise.all([
       db.select().from(quizzesTable).where(eq(quizzesTable.isPublished, true)).orderBy(desc(quizzesTable.createdAt)),
       db.select({ id: quizAttemptsTable.id, quizId: quizAttemptsTable.quizId, score: quizAttemptsTable.score }).from(quizAttemptsTable).where(eq(quizAttemptsTable.studentId, student.id)),

@@ -36,6 +36,9 @@ export function canStudentAccessCategory(
   category: string,
 ): boolean {
   const normalized = normalizeCategory(category);
+  if (!normalized || normalized === "عام" || normalized === "general") {
+    return true;
+  }
   const allowed = getStudentAllowedCategories(student);
   if (allowed.some((value) => normalizeCategory(value) === normalized)) {
     return true;
@@ -44,49 +47,80 @@ export function canStudentAccessCategory(
     student.grade === "أخرى" ? student.otherGradeDetail : student.grade
   );
 
-  // Baccalaureate / Secondary track title aliases - MUST match specific grade
+  // Helper: check if category specifically contains a grade level indicator
+  const hasGradeMarker =
+    normalized.includes("أولى") ||
+    normalized.includes("الأول") ||
+    normalized.includes("تانية") ||
+    normalized.includes("الثاني") ||
+    normalized.includes("ثالثة") ||
+    normalized.includes("الثالث") ||
+    normalized.includes("رابعة") ||
+    normalized.includes("الرابع") ||
+    normalized.includes("إعدادي") ||
+    normalized.includes("prep") ||
+    normalized.includes("first") ||
+    normalized.includes("second") ||
+    normalized.includes("third") ||
+    normalized.includes("fourth") ||
+    normalized.includes("year_1") ||
+    normalized.includes("year_2") ||
+    normalized.includes("year_3") ||
+    normalized.includes("year_4");
+
+  // Baccalaureate / Secondary track title aliases
   if (
     normalized.includes("بكالوريا") ||
     normalized.includes("ثانوي") ||
     normalized.includes("baccalaureate")
   ) {
-    if (
-      (studentStage.includes("بكالوريا") ||
-        studentStage.includes("ثانوي") ||
-        studentStage.includes("baccalaureate")) &&
-      isGradeMatch(studentStage, category)
-    ) {
-      return true;
+    const isBaccalaureateStudent =
+      studentStage.includes("بكالوريا") ||
+      studentStage.includes("ثانوي") ||
+      studentStage.includes("baccalaureate") ||
+      student.educationSystem === "baccalaureate" ||
+      student.educationSystem === "general_secondary";
+
+    if (isBaccalaureateStudent) {
+      if (!hasGradeMarker || isGradeMatch(studentStage, category)) {
+        return true;
+      }
     }
   }
 
-  // Computer Science / University track title aliases - MUST match specific grade
+  // Computer Science / University track title aliases
   if (
     normalized.includes("حاسبات") ||
     normalized.includes("computer") ||
     normalized.includes("cs")
   ) {
-    if (
-      (studentStage.includes("حاسبات") ||
-        studentStage.includes("computer") ||
-        studentStage.includes("cs")) &&
-      isGradeMatch(studentStage, category)
-    ) {
-      return true;
+    const isCsStudent =
+      studentStage.includes("حاسبات") ||
+      studentStage.includes("computer") ||
+      studentStage.includes("cs") ||
+      student.academicTrack === "computer_science";
+
+    if (isCsStudent) {
+      if (!hasGradeMarker || isGradeMatch(studentStage, category)) {
+        return true;
+      }
     }
   }
 
-  // Engineering track title aliases - MUST match specific grade
+  // Engineering track title aliases
   if (
     normalized.includes("هندسة") ||
     normalized.includes("engineering")
   ) {
-    if (
-      (studentStage.includes("هندسة") ||
-        studentStage.includes("engineering")) &&
-      isGradeMatch(studentStage, category)
-    ) {
-      return true;
+    const isEngStudent =
+      studentStage.includes("هندسة") ||
+      studentStage.includes("engineering") ||
+      student.academicTrack === "engineering";
+
+    if (isEngStudent) {
+      if (!hasGradeMarker || isGradeMatch(studentStage, category)) {
+        return true;
+      }
     }
   }
 

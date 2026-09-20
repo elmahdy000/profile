@@ -509,7 +509,7 @@ export async function generateDraftExamForSchedule(
       courseId: targetCourse?.id || null,
       scope: "course",
       description: `اختبار مراجعة يومي تم توليده آلياً من جدول (${schedule.title}) لنطاق [${stageName} · ${unitName}]. بانتظار اعتماد المعلم.`,
-      category: targetCourse?.category || "عام",
+      category: targetCourse?.title || targetCourse?.category || "عام",
       stage: stageName,
       stages,
       durationMinutes: schedule.durationMinutes,
