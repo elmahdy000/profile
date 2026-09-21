@@ -148,6 +148,16 @@ export default function HonorBoardPage() {
     };
   };
 
+  const formatCenterName = (centerName?: string | null) => {
+    if (!centerName) return "";
+    return centerName
+      .replace(/\s*-\s*عربي/gi, "")
+      .replace(/\s*-\s*لغات/gi, "")
+      .replace(/\s*-\s*arabic/gi, "")
+      .replace(/\s*-\s*languages/gi, "")
+      .trim();
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 selection:bg-slate-900 selection:text-white" dir="rtl">
       {/* Top Header */}
@@ -323,7 +333,7 @@ export default function HonorBoardPage() {
                       {/* Center or School */}
                       {student.center_name && (
                         <p className="text-[11px] text-slate-400 font-medium mt-1 truncate">
-                          {student.center_name}
+                          {formatCenterName(student.center_name)}
                         </p>
                       )}
                     </div>
@@ -395,13 +405,23 @@ export default function HonorBoardPage() {
                   <h3 className="font-black text-base text-slate-900">
                     {selectedStudentForModal.student_name}
                   </h3>
-                  <p className="text-xs text-slate-500">
-                    متوسط الدرجات:{" "}
-                    <strong className="text-emerald-600 font-extrabold">
-                      {selectedStudentForModal.avg_score}%
-                    </strong>{" "}
-                    ({selectedStudentForModal.overall_grade})
-                  </p>
+                  <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                    {selectedStudentForModal.center_name && (
+                      <>
+                        <span className="font-medium text-slate-600">
+                          {formatCenterName(selectedStudentForModal.center_name)}
+                        </span>
+                        <span>•</span>
+                      </>
+                    )}
+                    <span>
+                      متوسط الدرجات:{" "}
+                      <strong className="text-emerald-600 font-extrabold">
+                        {selectedStudentForModal.avg_score}%
+                      </strong>{" "}
+                      ({selectedStudentForModal.overall_grade})
+                    </span>
+                  </div>
                 </div>
               </div>
 

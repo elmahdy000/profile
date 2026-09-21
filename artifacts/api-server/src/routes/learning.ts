@@ -7039,10 +7039,13 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
     const limit = Math.min(200, Math.max(1, parseInt(req.query.limit as string) || 100));
 
     let trackFilter = "";
+    let quizTrackFilter = "";
     if (track === "general" || track === "arabic" || track === "عام" || track === "عربي") {
       trackFilter = "WHERE track_group = 'general'";
+      quizTrackFilter = "AND NOT (q.stage ILIKE '%لغات%' OR q.stage ILIKE '%languages%' OR q.title ILIKE '%لغات%' OR q.title ILIKE '%languages%')";
     } else if (track === "languages" || track === "language" || track === "لغات") {
       trackFilter = "WHERE track_group = 'languages'";
+      quizTrackFilter = "AND (q.stage ILIKE '%لغات%' OR q.stage ILIKE '%languages%' OR q.title ILIKE '%لغات%' OR q.title ILIKE '%languages%')";
     }
 
     let searchFilter = "";
@@ -7064,7 +7067,7 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
               COUNT(qa.id) as attempts_count
           FROM quiz_attempts qa
           JOIN quizzes q ON qa.quiz_id = q.id
-          WHERE q.is_published = true
+          WHERE q.is_published = true ${quizTrackFilter}
           GROUP BY qa.student_id, qa.quiz_id, q.title, q.stage
       ),
       student_stats AS (
