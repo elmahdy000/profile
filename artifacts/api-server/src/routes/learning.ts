@@ -7054,6 +7054,8 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
       searchFilter = trackFilter ? `AND (student_name ILIKE '%${cleanSearch}%')` : `WHERE (student_name ILIKE '%${cleanSearch}%')`;
     }
 
+    const minQuizzes = typeof req.query.min_quizzes === "string" ? Math.max(1, parseInt(req.query.min_quizzes)) : 5;
+
     const query = `
       WITH best_attempts AS (
           SELECT 
@@ -7095,7 +7097,7 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
               ) as quizzes_details
           FROM best_attempts ba
           GROUP BY ba.student_id
-          HAVING COUNT(ba.quiz_id) >= 1
+          HAVING COUNT(ba.quiz_id) >= ${minQuizzes}
       ),
       classified_students AS (
           SELECT 
@@ -7119,8 +7121,8 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
                   WHEN ss.avg_score >= 65 THEN 'جيد'
                   ELSE 'مقبول'
               END as overall_grade,
-              DENSE_RANK() OVER(PARTITION BY CASE WHEN s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR COALESCE(s.school_type, '') ILIKE '%languages%' OR COALESCE(s.language_track, '') ILIKE '%لغات%' THEN 'languages' ELSE 'general' END ORDER BY ss.avg_score DESC, ss.quizzes_taken DESC) as track_rank,
-              DENSE_RANK() OVER(ORDER BY ss.avg_score DESC, ss.quizzes_taken DESC) as overall_rank,
+              DENSE_RANK() OVER(PARTITION BY CASE WHEN s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR COALESCE(s.school_type, '') ILIKE '%languages%' OR COALESCE(s.language_track, '') ILIKE '%لغات%' THEN 'languages' ELSE 'general' END ORDER BY ss.quizzes_taken DESC, ss.avg_score DESC) as track_rank,
+              DENSE_RANK() OVER(ORDER BY ss.quizzes_taken DESC, ss.avg_score DESC) as overall_rank,
               ss.quizzes_details
           FROM student_stats ss
           JOIN students s ON ss.student_id = s.id
@@ -7130,7 +7132,7 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
       FROM classified_students
       ${trackFilter}
       ${searchFilter}
-      ORDER BY avg_score DESC, quizzes_taken DESC, last_quiz_date DESC
+      ORDER BY quizzes_taken DESC, avg_score DESC, last_quiz_date DESC
       LIMIT ${limit};
     `;
 

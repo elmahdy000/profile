@@ -195,14 +195,14 @@ export default function HonorBoardPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold mb-4">
             <GraduationCap className="w-4 h-4 text-slate-700" />
-            <span>الترتيب التلقائي بمتوسط درجات الاختبارات</span>
+            <span>ترتيب الطلاب حسب عدد الاختبارات المنجزة ومتوسط الدرجات</span>
           </div>
 
           <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight mb-3">
             لوحة الشرف والتميز
           </h1>
           <p className="text-slate-600 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-            تكريم الطلاب أصحاب أعلى متوسطات الدرجات في جميع الاختبارات المنجزة على المنصة.
+            تكريم الطلاب الأكثر التزاماً وإنجازاً للاختبارات بأعلى متوسط درجات على مستوى المنصة.
           </p>
 
           {/* Clean Segmented Track Switcher (عام ولغات) */}
