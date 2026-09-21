@@ -5,17 +5,14 @@ import {
   BookOpen,
   Calendar,
   CheckCircle2,
-  ChevronDown,
-  ChevronUp,
   GraduationCap,
   Medal,
   Search,
   Sparkles,
-  TrendingUp,
-  User,
-  Users,
   ArrowRight,
-  Filter,
+  ExternalLink,
+  X,
+  SlidersHorizontal,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -47,29 +44,14 @@ interface RankedStudent {
   quizzes_details: QuizDetail[];
 }
 
-interface HonorBoardStats {
-  totalStudents: number;
-  generalStudents: number;
-  languagesStudents: number;
-  totalAttempts: number;
-  overallAvgScore: number;
-}
-
 export default function HonorBoardPage() {
-  const [activeTrack, setActiveTrack] = useState<"all" | "general" | "languages">("all");
+  // Default to General (عربي) as primary track, with clean toggle to Languages
+  const [activeTrack, setActiveTrack] = useState<"general" | "languages">("general");
   const [searchQuery, setSearchQuery] = useState("");
-  const [minQuizzes, setMinQuizzes] = useState<number>(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [students, setStudents] = useState<RankedStudent[]>([]);
-  const [stats, setStats] = useState<HonorBoardStats>({
-    totalStudents: 0,
-    generalStudents: 0,
-    languagesStudents: 0,
-    totalAttempts: 0,
-    overallAvgScore: 0,
-  });
-  const [expandedStudentId, setExpandedStudentId] = useState<number | null>(null);
+  const [selectedStudentForModal, setSelectedStudentForModal] = useState<RankedStudent | null>(null);
 
   useEffect(() => {
     document.title = "لوحة الشرف | د. محمود المهدي";
@@ -82,7 +64,7 @@ export default function HonorBoardPage() {
       setError("");
       try {
         const queryParams = new URLSearchParams();
-        if (activeTrack !== "all") queryParams.set("track", activeTrack);
+        queryParams.set("track", activeTrack);
         if (searchQuery.trim()) queryParams.set("search", searchQuery.trim());
 
         const res = await fetch(`/api/learning/honor-board?${queryParams.toString()}`);
@@ -90,7 +72,6 @@ export default function HonorBoardPage() {
         const data = await res.json();
         if (isMounted) {
           setStudents(data.students || []);
-          if (data.stats) setStats(data.stats);
         }
       } catch (err) {
         if (isMounted) setError((err as Error).message || "حدث خطأ أثناء جلب البيانات");
@@ -106,81 +87,91 @@ export default function HonorBoardPage() {
     };
   }, [activeTrack, searchQuery]);
 
-  const filteredStudents = useMemo(() => {
-    return students.filter((s) => s.quizzes_taken >= minQuizzes);
-  }, [students, minQuizzes]);
-
   const getRankBadge = (rank: number) => {
     if (rank === 1) {
       return (
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 font-bold text-sm shadow-xs">
-          <Medal className="w-4 h-4 text-amber-500" />
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-300 text-amber-900 font-bold text-xs shadow-xs">
+          <Medal className="w-3.5 h-3.5 text-amber-600" />
           <span>المركز الأول</span>
         </div>
       );
     }
     if (rank === 2) {
       return (
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-300 text-slate-700 font-bold text-sm shadow-xs">
-          <Medal className="w-4 h-4 text-slate-400" />
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-300 text-slate-800 font-bold text-xs shadow-xs">
+          <Medal className="w-3.5 h-3.5 text-slate-500" />
           <span>المركز الثاني</span>
         </div>
       );
     }
     if (rank === 3) {
       return (
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-900/10 border border-amber-700/20 text-amber-900 font-bold text-sm shadow-xs">
-          <Medal className="w-4 h-4 text-amber-700" />
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/10 border border-amber-800/30 text-amber-950 font-bold text-xs shadow-xs">
+          <Medal className="w-3.5 h-3.5 text-amber-800" />
           <span>المركز الثالث</span>
         </div>
       );
     }
     return (
-      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold text-sm border border-slate-200">
+      <div className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200">
         #{rank}
       </div>
     );
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 95) return "text-emerald-700 bg-emerald-50 border-emerald-200";
-    if (score >= 85) return "text-blue-700 bg-blue-50 border-blue-200";
-    if (score >= 75) return "text-indigo-700 bg-indigo-50 border-indigo-200";
-    if (score >= 65) return "text-amber-700 bg-amber-50 border-amber-200";
-    return "text-slate-700 bg-slate-50 border-slate-200";
-  };
-
-  const getScoreBadgeColor = (score: number) => {
-    if (score >= 95) return "bg-emerald-600 text-white";
-    if (score >= 85) return "bg-blue-600 text-white";
-    if (score >= 75) return "bg-indigo-600 text-white";
-    return "bg-slate-600 text-white";
+  const getScoreTheme = (score: number) => {
+    if (score >= 95) {
+      return {
+        badge: "bg-emerald-50 text-emerald-800 border-emerald-200",
+        ring: "text-emerald-600 border-emerald-500 bg-emerald-50/50 shadow-emerald-500/10",
+        text: "text-emerald-700",
+      };
+    }
+    if (score >= 85) {
+      return {
+        badge: "bg-blue-50 text-blue-800 border-blue-200",
+        ring: "text-blue-600 border-blue-500 bg-blue-50/50 shadow-blue-500/10",
+        text: "text-blue-700",
+      };
+    }
+    if (score >= 75) {
+      return {
+        badge: "bg-indigo-50 text-indigo-800 border-indigo-200",
+        ring: "text-indigo-600 border-indigo-500 bg-indigo-50/50 shadow-indigo-500/10",
+        text: "text-indigo-700",
+      };
+    }
+    return {
+      badge: "bg-slate-100 text-slate-800 border-slate-200",
+      ring: "text-slate-700 border-slate-400 bg-slate-50",
+      text: "text-slate-700",
+    };
   };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 selection:bg-slate-900 selection:text-white" dir="rtl">
-      {/* Top Professional Academic Header */}
-      <header className="border-b border-slate-200/80 bg-white shadow-xs sticky top-0 z-30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
+      {/* Top Header */}
+      <header className="border-b border-slate-200/80 bg-white sticky top-0 z-30 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
               href="/platform"
-              className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors"
             >
               <ArrowRight className="w-3.5 h-3.5" />
               <span>العودة للمنصة</span>
             </Link>
             <div className="h-4 w-px bg-slate-200" />
-            <div className="flex items-center gap-2 text-slate-800 font-bold text-sm sm:text-base">
-              <Award className="w-5 h-5 text-slate-700" />
-              <span>لوحة الشرف والتميز الأكاديمي</span>
+            <div className="flex items-center gap-2 text-slate-900 font-extrabold text-sm sm:text-base">
+              <Award className="w-5 h-5 text-slate-800" />
+              <span>لوحة الشرف</span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="text-xs font-medium text-slate-500 hover:text-slate-800 hidden sm:inline-block transition-colors"
+              className="text-xs font-semibold text-slate-500 hover:text-slate-900 hidden sm:inline-block transition-colors"
             >
               الصفحة الرئيسية
             </Link>
@@ -189,267 +180,196 @@ export default function HonorBoardPage() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="bg-gradient-to-b from-white to-[#F8FAFC] border-b border-slate-200/60 py-10 sm:py-14">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold mb-4">
-            <GraduationCap className="w-4 h-4 text-slate-600" />
-            <span>نظام التقييم والترتيب التلقائي المعتمد</span>
+      {/* Hero Section Without Total Counts */}
+      <section className="bg-gradient-to-b from-white to-[#F8FAFC] border-b border-slate-200/60 pt-10 pb-8 sm:pt-14 sm:pb-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold mb-4">
+            <GraduationCap className="w-4 h-4 text-slate-700" />
+            <span>الترتيب التلقائي بمتوسط درجات الاختبارات</span>
           </div>
 
-          <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
-            لوحة الشرف والتميز الأكاديمي
+          <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight mb-3">
+            لوحة الشرف والتميز
           </h1>
-          <p className="text-slate-600 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-            تكريم وترتيب الطلاب المتميزين وفقاً لمتوسط الدرجات المحققة في جميع الاختبارات والواجبات المنجزة على المنصة.
+          <p className="text-slate-600 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+            تكريم الطلاب أصحاب أعلى متوسطات الدرجات في جميع الاختبارات المنجزة على المنصة.
           </p>
 
-          {/* Key Metrics Strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto mt-8">
-            <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-xs">
-              <div className="text-2xl sm:text-3xl font-bold text-slate-900">{stats.totalStudents}</div>
-              <div className="text-xs text-slate-500 font-medium mt-1">إجمالي المتفوقين</div>
-            </div>
-            <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-xs">
-              <div className="text-2xl sm:text-3xl font-bold text-slate-900">{stats.generalStudents}</div>
-              <div className="text-xs text-slate-500 font-medium mt-1">طلاب المدارس العام (عربي)</div>
-            </div>
-            <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-xs">
-              <div className="text-2xl sm:text-3xl font-bold text-slate-900">{stats.languagesStudents}</div>
-              <div className="text-xs text-slate-500 font-medium mt-1">طلاب مدارس اللغات</div>
-            </div>
-            <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-xs">
-              <div className="text-2xl sm:text-3xl font-bold text-emerald-700">{stats.overallAvgScore}%</div>
-              <div className="text-xs text-slate-500 font-medium mt-1">متوسط درجات الطلاب العام</div>
+          {/* Clean Segmented Track Switcher (عام ولغات) */}
+          <div className="flex items-center justify-center mt-8">
+            <div className="inline-flex p-1.5 rounded-2xl bg-slate-200/80 border border-slate-200 shadow-inner">
+              <button
+                onClick={() => setActiveTrack("general")}
+                className={`px-8 py-2.5 rounded-xl text-sm font-extrabold transition-all cursor-pointer ${
+                  activeTrack === "general"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                قسم العام (عربي)
+              </button>
+              <button
+                onClick={() => setActiveTrack("languages")}
+                className={`px-8 py-2.5 rounded-xl text-sm font-extrabold transition-all cursor-pointer ${
+                  activeTrack === "languages"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                قسم اللغات (Languages)
+              </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Main Container */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-        {/* Track Partitioning Segmented Tabs (عام ولغات) */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6">
-          <div className="inline-flex p-1 rounded-xl bg-slate-200/70 border border-slate-200 w-full sm:w-auto">
-            <button
-              onClick={() => setActiveTrack("all")}
-              className={`flex-1 sm:flex-initial px-5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
-                activeTrack === "all"
-                  ? "bg-white text-slate-900 shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              الترتيب العام ({stats.totalStudents})
-            </button>
-            <button
-              onClick={() => setActiveTrack("general")}
-              className={`flex-1 sm:flex-initial px-5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
-                activeTrack === "general"
-                  ? "bg-white text-slate-900 shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              قسم العام / عربي ({stats.generalStudents})
-            </button>
-            <button
-              onClick={() => setActiveTrack("languages")}
-              className={`flex-1 sm:flex-initial px-5 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${
-                activeTrack === "languages"
-                  ? "bg-white text-slate-900 shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              قسم اللغات / Languages ({stats.languagesStudents})
-            </button>
+      {/* Main Grid Section (3 Cards Per Row) */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        {/* Search & Info Bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+          <div className="text-sm font-bold text-slate-700 flex items-center gap-2">
+            <SlidersHorizontal className="w-4 h-4 text-slate-500" />
+            <span>
+              عرض نتائج:{" "}
+              <strong className="text-slate-900">
+                {activeTrack === "general" ? "طلاب المدارس العام" : "طلاب مدارس اللغات"}
+              </strong>
+            </span>
           </div>
 
-          {/* Search Input */}
-          <div className="relative w-full sm:w-72">
+          <div className="relative w-full sm:w-80">
             <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
               placeholder="ابحث باسم الطالب..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-3 pr-10 py-2 rounded-xl bg-white border border-slate-200 text-sm placeholder:text-slate-400 text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-slate-400 focus:border-slate-400 shadow-xs"
+              className="w-full pl-3 pr-10 py-2.5 rounded-xl bg-white border border-slate-200 text-sm placeholder:text-slate-400 text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-slate-400 shadow-xs"
             />
           </div>
         </div>
 
-        {/* Optional Min Quizzes Filter Bar */}
-        <div className="flex items-center justify-between text-xs text-slate-500 mb-6 bg-white px-4 py-2.5 rounded-xl border border-slate-200/80 shadow-xs">
-          <div className="flex items-center gap-2">
-            <Filter className="w-3.5 h-3.5 text-slate-400" />
-            <span className="font-semibold text-slate-700">تصفية حسب عدد الاختبارات المنجزة:</span>
-            <div className="flex items-center gap-1 mr-2">
-              {[1, 3, 5, 8].map((num) => (
-                <button
-                  key={num}
-                  onClick={() => setMinQuizzes(num)}
-                  className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-colors ${
-                    minQuizzes === num
-                      ? "bg-slate-900 text-white"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  }`}
-                >
-                  {num}+ اختبار
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <span>المعروض: </span>
-            <strong className="text-slate-800">{filteredStudents.length} طالب</strong>
-          </div>
-        </div>
-
-        {/* Content State: Loading / Error / List */}
+        {/* Content State */}
         {loading ? (
-          <div className="py-20 text-center">
+          <div className="py-24 text-center">
             <div className="inline-block w-8 h-8 border-3 border-slate-300 border-t-slate-800 rounded-full animate-spin mb-3" />
-            <p className="text-sm font-medium text-slate-500">جاري جلب ترتيب لوحة الشرف المحدثة...</p>
+            <p className="text-sm font-semibold text-slate-500">جاري تحديث وترتيب الكروت...</p>
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center text-red-800">
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center text-red-800 max-w-lg mx-auto">
             <p className="font-bold mb-1">حدث خطأ</p>
             <p className="text-sm">{error}</p>
           </div>
-        ) : filteredStudents.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-xs">
+        ) : students.length === 0 ? (
+          <div className="bg-white rounded-3xl border border-slate-200 p-16 text-center shadow-xs max-w-md mx-auto">
             <Award className="w-12 h-12 text-slate-300 mx-auto mb-3" />
             <h3 className="text-base font-bold text-slate-800 mb-1">لا توجد نتائج مطابقة</h3>
-            <p className="text-xs text-slate-500">جرب تغيير شروط البحث أو اختيار قسم دراسي آخر.</p>
+            <p className="text-xs text-slate-500">جرب البحث باسم آخر.</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredStudents.map((student) => {
-              const currentRank = activeTrack === "all" ? student.overall_rank : student.track_rank;
-              const isExpanded = expandedStudentId === student.student_id;
-              const isTop3 = currentRank <= 3;
+          /* 3 Cards Per Row Grid - Elegant Square-proportioned White Cards */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {students.map((student) => {
+              const theme = getScoreTheme(student.avg_score);
+              const rank = student.track_rank;
 
               return (
-                /* Pure White Card with Distinct Elevation Shadow */
                 <article
                   key={student.student_id}
-                  className="bg-white rounded-2xl border border-slate-100 shadow-[0_4px_24px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_36px_rgba(0,0,0,0.11)] transition-all duration-300 overflow-hidden"
+                  className="bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.12)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between p-6 relative group"
                 >
-                  <div className="p-5 sm:p-6">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                      {/* Right: Student Identity */}
-                      <div className="flex items-center gap-3.5">
-                        {/* Rank Badge */}
-                        <div className="shrink-0">{getRankBadge(currentRank)}</div>
-
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
-                              {student.student_name}
-                            </h2>
-
-                            {/* Track Badge */}
-                            <span
-                              className={`text-[11px] font-bold px-2.5 py-0.5 rounded-md border ${
-                                student.track_group === "languages"
-                                  ? "bg-sky-50 text-sky-800 border-sky-200"
-                                  : "bg-slate-50 text-slate-700 border-slate-200"
-                              }`}
-                            >
-                              {student.track_group === "languages" ? "لغات · Languages" : "عربي · عام"}
-                            </span>
-
-                            {/* Center Name if present */}
-                            {student.center_name && (
-                              <span className="text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                                {student.center_name}
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-4 text-xs text-slate-500 mt-1">
-                            <span className="flex items-center gap-1">
-                              <BookOpen className="w-3.5 h-3.5 text-slate-400" />
-                              <span>{student.quizzes_taken} اختبارات منجزة</span>
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                              <span>آخر اختبار: {String(student.last_quiz_date || "").substring(0, 10)}</span>
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Left: Prominent Average Score Card Indicator */}
-                      <div className="flex items-center gap-3 self-end sm:self-center">
-                        <div className="text-left">
-                          <div className="text-xs text-slate-500 font-semibold mb-0.5">متوسط الدرجات</div>
-                          <span
-                            className={`inline-block text-xs font-bold px-2 py-0.5 rounded-md border ${getScoreColor(
-                              student.avg_score,
-                            )}`}
-                          >
-                            {student.overall_grade}
-                          </span>
-                        </div>
-
-                        <div
-                          className={`flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl font-black text-lg sm:text-xl shadow-xs border ${
-                            student.avg_score >= 95
-                              ? "bg-emerald-600 text-white border-emerald-500 shadow-emerald-600/20"
-                              : student.avg_score >= 85
-                              ? "bg-blue-600 text-white border-blue-500 shadow-blue-600/20"
-                              : "bg-slate-800 text-white border-slate-700"
-                          }`}
-                        >
-                          {student.avg_score}%
-                        </div>
-                      </div>
+                  {/* Card Header: Rank & Track */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      {getRankBadge(rank)}
+                      <span
+                        className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border ${
+                          student.track_group === "languages"
+                            ? "bg-sky-50 text-sky-800 border-sky-200"
+                            : "bg-slate-50 text-slate-700 border-slate-200"
+                        }`}
+                      >
+                        {student.track_group === "languages" ? "لغات · Languages" : "عربي · عام"}
+                      </span>
                     </div>
 
-                    {/* Divider */}
-                    <div className="h-px bg-slate-100 my-4" />
+                    {/* Center Circular Score Gauge & Name */}
+                    <div className="text-center my-3">
+                      {/* White Elevated Circular Metric */}
+                      <div className="inline-flex flex-col items-center justify-center w-24 h-24 rounded-full bg-white border-2 border-slate-100 shadow-md mx-auto mb-3.5 relative">
+                        <span className={`text-2xl font-black ${theme.text} tracking-tight`}>
+                          {student.avg_score}%
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400">متوسط الدرجات</span>
+                      </div>
 
-                    {/* Solved Exams Preview Header */}
-                    <div className="flex items-center justify-between text-xs mb-2.5">
-                      <span className="font-bold text-slate-700 flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>سجل درجات الاختبارات المؤداة:</span>
-                      </span>
+                      {/* Student Name */}
+                      <h2
+                        className="text-lg font-black text-slate-900 tracking-tight line-clamp-1 group-hover:text-blue-600 transition-colors"
+                        title={student.student_name}
+                      >
+                        {student.student_name}
+                      </h2>
 
-                      {student.quizzes_details.length > 3 && (
-                        <button
-                          onClick={() => setExpandedStudentId(isExpanded ? null : student.student_id)}
-                          className="text-slate-600 hover:text-slate-900 font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                      {/* Rating Label */}
+                      <div className="mt-1.5">
+                        <span
+                          className={`inline-block text-xs font-extrabold px-3 py-0.5 rounded-full border ${theme.badge}`}
                         >
-                          <span>{isExpanded ? "طي السجل" : `عرض باقي الاختبارات (${student.quizzes_details.length - 3})`}</span>
-                          {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                        </button>
+                          {student.overall_grade}
+                        </span>
+                      </div>
+
+                      {/* Center or School */}
+                      {student.center_name && (
+                        <p className="text-[11px] text-slate-400 font-medium mt-1 truncate">
+                          {student.center_name}
+                        </p>
                       )}
                     </div>
 
-                    {/* Exams Chips Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                      {(isExpanded ? student.quizzes_details : student.quizzes_details.slice(0, 3)).map((quiz, qIdx) => (
+                    {/* Compact Stats Strip */}
+                    <div className="flex items-center justify-center gap-4 bg-slate-50/80 border border-slate-100/90 rounded-2xl py-2 px-3 my-4 text-xs text-slate-600">
+                      <div className="flex items-center gap-1.5 font-bold">
+                        <BookOpen className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{student.quizzes_taken} اختبارات منجزة</span>
+                      </div>
+                      <div className="h-3 w-px bg-slate-200" />
+                      <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                        <Calendar className="w-3 h-3 text-slate-400" />
+                        <span>{String(student.last_quiz_date || "").substring(0, 10)}</span>
+                      </div>
+                    </div>
+
+                    {/* Quick Preview: 2 Solved Exams */}
+                    <div className="space-y-1.5 mb-2">
+                      <div className="text-[11px] font-bold text-slate-500 px-1">نماذج من درجاته:</div>
+                      {student.quizzes_details.slice(0, 2).map((quiz, qIdx) => (
                         <div
                           key={`${quiz.quiz_id}-${qIdx}`}
-                          className="flex items-center justify-between bg-slate-50/80 hover:bg-slate-100/90 border border-slate-100 rounded-xl px-3 py-2 text-xs transition-colors"
+                          className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl px-3 py-1.5 text-xs"
                         >
-                          <div className="truncate pl-2">
-                            <div className="font-semibold text-slate-800 truncate" title={quiz.quiz_title}>
-                              {quiz.quiz_title}
-                            </div>
-                            <div className="text-[10px] text-slate-400 mt-0.5">
-                              {String(quiz.date || "").substring(0, 10)}
-                            </div>
-                          </div>
-                          <div className="shrink-0 flex items-center gap-1.5">
-                            <span className="font-black text-slate-900 bg-white border border-slate-200 px-2 py-0.5 rounded-md shadow-2xs">
-                              {quiz.score}%
-                            </span>
-                          </div>
+                          <span className="truncate text-slate-700 font-medium max-w-[170px]" title={quiz.quiz_title}>
+                            {quiz.quiz_title}
+                          </span>
+                          <span className="font-extrabold text-slate-900 bg-white border border-slate-200 px-2 py-0.5 rounded-md text-[11px] shrink-0">
+                            {quiz.score}%
+                          </span>
                         </div>
                       ))}
                     </div>
+                  </div>
+
+                  {/* Card Bottom Button: Opens Full Exams Breakdown Modal */}
+                  <div className="mt-3 pt-3 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedStudentForModal(student)}
+                      className="w-full py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200/90 text-slate-800 font-bold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>عرض درجات كل الامتحانات ({student.quizzes_details.length})</span>
+                    </button>
                   </div>
                 </article>
               );
@@ -458,10 +378,102 @@ export default function HonorBoardPage() {
         )}
       </main>
 
-      {/* Footer Note */}
+      {/* Elegant Modal for Student Exam History Breakdown */}
+      {selectedStudentForModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div
+            className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-white border border-slate-200 flex items-center justify-center font-black text-slate-800 shadow-xs">
+                  #{selectedStudentForModal.track_rank}
+                </div>
+                <div>
+                  <h3 className="font-black text-base text-slate-900">
+                    {selectedStudentForModal.student_name}
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    متوسط الدرجات:{" "}
+                    <strong className="text-emerald-600 font-extrabold">
+                      {selectedStudentForModal.avg_score}%
+                    </strong>{" "}
+                    ({selectedStudentForModal.overall_grade})
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedStudentForModal(null)}
+                className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-slate-800 grid place-items-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body: Solved Quizzes List */}
+            <div className="p-5 overflow-y-auto space-y-2.5 flex-1">
+              <div className="text-xs font-bold text-slate-600 mb-2">
+                سجل كافة الاختبارات المؤداة ({selectedStudentForModal.quizzes_details.length} اختبار):
+              </div>
+
+              {selectedStudentForModal.quizzes_details.map((q, idx) => (
+                <div
+                  key={`${q.quiz_id}-${idx}`}
+                  className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs"
+                >
+                  <div className="max-w-[70%]">
+                    <div className="font-bold text-slate-800">{q.quiz_title}</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">
+                      تاريخ الحل: {String(q.date || "").substring(0, 10)}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-600">
+                      {q.grade_label}
+                    </span>
+                    <span
+                      className={`font-black text-xs px-2.5 py-1 rounded-lg text-white ${
+                        q.score >= 90
+                          ? "bg-emerald-600"
+                          : q.score >= 80
+                          ? "bg-blue-600"
+                          : q.score >= 70
+                          ? "bg-indigo-600"
+                          : "bg-slate-600"
+                      }`}
+                    >
+                      {q.score}%
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedStudentForModal(null)}
+                className="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs cursor-pointer transition-colors"
+              >
+                إغلاق
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
       <footer className="border-t border-slate-200/80 bg-white py-8 mt-16 text-center text-xs text-slate-500">
-        <p className="font-medium">منصة د. محمود المهدي للتعليم الإلكتروني والتميز الأكاديمي</p>
-        <p className="text-[11px] text-slate-400 mt-1">يتم تحديث الترتيب ولوحة الشرف آلياً فور انتهاء الطالب من الاختبار.</p>
+        <p className="font-bold">منصة د. محمود المهدي للتعليم الإلكتروني والتميز الأكاديمي</p>
+        <p className="text-[11px] text-slate-400 mt-1">
+          يتم احتساب الترتيب آلياً بناءً على متوسط أعلى درجات الاختبارات المنجزة.
+        </p>
       </footer>
     </div>
   );
