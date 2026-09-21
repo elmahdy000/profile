@@ -7103,7 +7103,7 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
               s.center_name,
               s.avatar_url,
               CASE 
-                  WHEN s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR s.school_type ILIKE '%languages%' OR s.language_track ILIKE '%لغات%' THEN 'languages'
+                  WHEN s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR COALESCE(s.school_type, '') ILIKE '%languages%' OR COALESCE(s.language_track, '') ILIKE '%لغات%' THEN 'languages'
                   ELSE 'general'
               END as track_group,
               ss.quizzes_taken,
@@ -7116,7 +7116,7 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
                   WHEN ss.avg_score >= 65 THEN 'جيد'
                   ELSE 'مقبول'
               END as overall_grade,
-              DENSE_RANK() OVER(PARTITION BY CASE WHEN s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR s.school_type ILIKE '%languages%' OR s.language_track ILIKE '%لغات%' THEN 'languages' ELSE 'general' END ORDER BY ss.avg_score DESC, ss.quizzes_taken DESC) as track_rank,
+              DENSE_RANK() OVER(PARTITION BY CASE WHEN s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR COALESCE(s.school_type, '') ILIKE '%languages%' OR COALESCE(s.language_track, '') ILIKE '%لغات%' THEN 'languages' ELSE 'general' END ORDER BY ss.avg_score DESC, ss.quizzes_taken DESC) as track_rank,
               DENSE_RANK() OVER(ORDER BY ss.avg_score DESC, ss.quizzes_taken DESC) as overall_rank,
               ss.quizzes_details
           FROM student_stats ss
@@ -7137,8 +7137,8 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
     const statsQuery = `
       SELECT 
         COUNT(DISTINCT qa.student_id) as total_active_students,
-        COUNT(DISTINCT CASE WHEN s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR s.school_type ILIKE '%languages%' OR s.language_track ILIKE '%لغات%' THEN qa.student_id END) as languages_students,
-        COUNT(DISTINCT CASE WHEN NOT (s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR s.school_type ILIKE '%languages%' OR s.language_track ILIKE '%لغات%') THEN qa.student_id END) as general_students,
+        COUNT(DISTINCT CASE WHEN (s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR COALESCE(s.school_type, '') ILIKE '%languages%' OR COALESCE(s.language_track, '') ILIKE '%لغات%') THEN qa.student_id END) as languages_students,
+        COUNT(DISTINCT CASE WHEN NOT (s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR COALESCE(s.school_type, '') ILIKE '%languages%' OR COALESCE(s.language_track, '') ILIKE '%لغات%') THEN qa.student_id END) as general_students,
         COUNT(qa.id) as total_attempts,
         ROUND(AVG(qa.score)::numeric, 1) as overall_avg_score
       FROM quiz_attempts qa
