@@ -176,8 +176,8 @@ export function StudentCardModal({ students, isOpen, onClose }: StudentCardModal
 
                       <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
                         <div className="rounded-xl bg-slate-50 border border-slate-200/60 p-2">
-                          <span className="text-[9px] text-slate-500 block">كود الطالب الخاص</span>
-                          <span className="font-mono font-bold text-blue-600 dir-ltr block text-right">{st.accessCode || (st as any).access_code || `STD-${studentId}`}</span>
+                          <span className="text-[9px] text-slate-500 block">رقم تعريف الطالب</span>
+                          <span className="font-mono font-bold text-blue-600 dir-ltr block text-right">#STD-{studentId}</span>
                         </div>
                         <div className="rounded-xl bg-indigo-50/60 border border-indigo-100 p-2">
                           <span className="text-[9px] text-indigo-700/80 block font-medium">المرحلة والمسار</span>
@@ -205,10 +205,10 @@ export function StudentCardModal({ students, isOpen, onClose }: StudentCardModal
                     {/* Right: QR Code */}
                     <div className="flex flex-col items-center justify-center space-y-1.5 border-r border-slate-100 pr-3">
                       <div className="rounded-2xl border-2 border-slate-900/10 p-1.5 bg-white shadow-xs">
-                        <QRCodeSVG value={st.accessCode || (st as any).access_code || `STD-${studentId}-${studentPhone}`} size={120} />
+                        <QRCodeSVG value={`STD-${studentId}-${studentPhone}`} size={120} />
                       </div>
-                      <span className="text-[9px] font-mono font-bold text-slate-400 tracking-wider">
-                        {st.accessCode || (st as any).access_code || `ID:${studentId}`}
+                      <span className="text-[9px] font-bold text-slate-500 tracking-wider">
+                        رمز الحضور الذكي 📷
                       </span>
                     </div>
                   </div>
