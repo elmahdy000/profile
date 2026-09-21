@@ -7032,4 +7032,137 @@ router.get(["/admin/learning/quizzes/:id/quick-approve", "/learning/quizzes/:id/
   }
 });
 
+router.get("/api/learning/honor-board", async (req, res, next) => {
+  try {
+    const track = typeof req.query.track === "string" ? req.query.track.trim().toLowerCase() : "all";
+    const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
+    const limit = Math.min(200, Math.max(1, parseInt(req.query.limit as string) || 100));
+
+    let trackFilter = "";
+    if (track === "general" || track === "arabic" || track === "عام" || track === "عربي") {
+      trackFilter = "WHERE track_group = 'general'";
+    } else if (track === "languages" || track === "language" || track === "لغات") {
+      trackFilter = "WHERE track_group = 'languages'";
+    }
+
+    let searchFilter = "";
+    if (search) {
+      const cleanSearch = search.replace(/'/g, "''");
+      searchFilter = trackFilter ? `AND (student_name ILIKE '%${cleanSearch}%')` : `WHERE (student_name ILIKE '%${cleanSearch}%')`;
+    }
+
+    const query = `
+      WITH best_attempts AS (
+          SELECT 
+              qa.student_id,
+              qa.quiz_id,
+              q.title as quiz_title,
+              q.stage as quiz_stage,
+              MAX(qa.score) as best_score,
+              BOOL_OR(qa.passed) as ever_passed,
+              MAX(qa.created_at) as latest_attempt_at,
+              COUNT(qa.id) as attempts_count
+          FROM quiz_attempts qa
+          JOIN quizzes q ON qa.quiz_id = q.id
+          WHERE q.is_published = true
+          GROUP BY qa.student_id, qa.quiz_id, q.title, q.stage
+      ),
+      student_stats AS (
+          SELECT
+              ba.student_id,
+              COUNT(ba.quiz_id) as quizzes_taken,
+              ROUND(AVG(ba.best_score)::numeric, 1) as avg_score,
+              MAX(ba.latest_attempt_at) as last_quiz_date,
+              json_agg(
+                  json_build_object(
+                      'quiz_id', ba.quiz_id,
+                      'quiz_title', ba.quiz_title,
+                      'quiz_stage', ba.quiz_stage,
+                      'score', ba.best_score,
+                      'passed', ba.ever_passed,
+                      'date', ba.latest_attempt_at,
+                      'grade_label', CASE 
+                          WHEN ba.best_score >= 95 THEN 'امتياز مرتفع'
+                          WHEN ba.best_score >= 85 THEN 'ممتاز'
+                          WHEN ba.best_score >= 75 THEN 'جيد جداً'
+                          WHEN ba.best_score >= 65 THEN 'جيد'
+                          ELSE 'مقبول'
+                      END
+                  ) ORDER BY ba.latest_attempt_at DESC
+              ) as quizzes_details
+          FROM best_attempts ba
+          GROUP BY ba.student_id
+          HAVING COUNT(ba.quiz_id) >= 1
+      ),
+      classified_students AS (
+          SELECT 
+              s.id as student_id,
+              s.name as student_name,
+              s.grade,
+              s.learning_mode,
+              s.center_name,
+              s.avatar_url,
+              CASE 
+                  WHEN s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR s.school_type ILIKE '%languages%' OR s.language_track ILIKE '%لغات%' THEN 'languages'
+                  ELSE 'general'
+              END as track_group,
+              ss.quizzes_taken,
+              ss.avg_score,
+              ss.last_quiz_date,
+              CASE 
+                  WHEN ss.avg_score >= 95 THEN 'امتياز مع مرتبة الشرف'
+                  WHEN ss.avg_score >= 85 THEN 'ممتاز'
+                  WHEN ss.avg_score >= 75 THEN 'جيد جداً'
+                  WHEN ss.avg_score >= 65 THEN 'جيد'
+                  ELSE 'مقبول'
+              END as overall_grade,
+              DENSE_RANK() OVER(PARTITION BY CASE WHEN s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR s.school_type ILIKE '%languages%' OR s.language_track ILIKE '%لغات%' THEN 'languages' ELSE 'general' END ORDER BY ss.avg_score DESC, ss.quizzes_taken DESC) as track_rank,
+              DENSE_RANK() OVER(ORDER BY ss.avg_score DESC, ss.quizzes_taken DESC) as overall_rank,
+              ss.quizzes_details
+          FROM student_stats ss
+          JOIN students s ON ss.student_id = s.id
+          WHERE s.status = 'approved'
+      )
+      SELECT *
+      FROM classified_students
+      ${trackFilter}
+      ${searchFilter}
+      ORDER BY avg_score DESC, quizzes_taken DESC, last_quiz_date DESC
+      LIMIT ${limit};
+    `;
+
+    const result = await db.execute(sql.raw(query));
+    const students = Array.isArray(result) ? result : (result as any)?.rows || [];
+
+    const statsQuery = `
+      SELECT 
+        COUNT(DISTINCT qa.student_id) as total_active_students,
+        COUNT(DISTINCT CASE WHEN s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR s.school_type ILIKE '%languages%' OR s.language_track ILIKE '%لغات%' THEN qa.student_id END) as languages_students,
+        COUNT(DISTINCT CASE WHEN NOT (s.grade ILIKE '%لغات%' OR s.grade ILIKE '%languages%' OR s.school_type ILIKE '%languages%' OR s.language_track ILIKE '%لغات%') THEN qa.student_id END) as general_students,
+        COUNT(qa.id) as total_attempts,
+        ROUND(AVG(qa.score)::numeric, 1) as overall_avg_score
+      FROM quiz_attempts qa
+      JOIN quizzes q ON qa.quiz_id = q.id
+      JOIN students s ON qa.student_id = s.id
+      WHERE q.is_published = true AND s.status = 'approved';
+    `;
+    const statsResult = await db.execute(sql.raw(statsQuery));
+    const statsRow = Array.isArray(statsResult) ? statsResult[0] : (statsResult as any)?.rows?.[0] || {};
+
+    res.json({
+      success: true,
+      stats: {
+        totalStudents: Number(statsRow?.total_active_students || 0),
+        generalStudents: Number(statsRow?.general_students || 0),
+        languagesStudents: Number(statsRow?.languages_students || 0),
+        totalAttempts: Number(statsRow?.total_attempts || 0),
+        overallAvgScore: Number(statsRow?.overall_avg_score || 0),
+      },
+      students,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

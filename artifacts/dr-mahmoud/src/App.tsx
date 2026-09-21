@@ -39,6 +39,7 @@ const UniversityPage = safeLazy(() => import("@/pages/UniversityPage"));
 const CurriculumPage = safeLazy(() => import("@/pages/CurriculumPage"));
 const PlatformPage = safeLazy(() => import("@/pages/PlatformPage"));
 const ParentPortalPage = safeLazy(() => import("@/pages/ParentPortalPage"));
+const HonorBoardPage = safeLazy(() => import("@/pages/HonorBoardPage"));
 const NotFound = safeLazy(() => import("@/pages/not-found"));
 
 const queryClient = new QueryClient({
@@ -107,6 +108,8 @@ function App() {
                 <Route path="/curriculum" component={CurriculumPage} />
                 <Route path="/platform" component={PlatformPage} />
                 <Route path="/parent" component={ParentPortalPage} />
+                <Route path="/honor-board" component={HonorBoardPage} />
+                <Route path="/leaderboard" component={HonorBoardPage} />
                 <Route path="/" component={HomePage} />
                 <Route component={NotFound} />
               </Switch>

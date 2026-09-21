@@ -681,6 +681,15 @@ export function StudentPlatform() {
                 <span className="truncate">{label}</span>
               </button>
             ))}
+            <a
+              href="/honor-board"
+              target="_blank"
+              rel="noreferrer"
+              className="flex min-h-[42px] w-full items-center gap-3 rounded-xl px-3 text-right text-[13px] font-bold text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/15 border border-amber-500/25 transition-all cursor-pointer mt-3 shadow-xs"
+            >
+              <Trophy className="h-[18px] w-[18px] shrink-0 text-amber-400" />
+              <span className="truncate">لوحة الشرف 🏆</span>
+            </a>
           </nav>
 
           {/* Bottom Footer Actions */}
