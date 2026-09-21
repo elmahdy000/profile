@@ -7032,7 +7032,7 @@ router.get(["/admin/learning/quizzes/:id/quick-approve", "/learning/quizzes/:id/
   }
 });
 
-router.get("/api/learning/honor-board", async (req, res, next) => {
+router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => {
   try {
     const track = typeof req.query.track === "string" ? req.query.track.trim().toLowerCase() : "all";
     const search = typeof req.query.search === "string" ? req.query.search.trim() : "";
