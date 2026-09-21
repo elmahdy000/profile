@@ -151,13 +151,15 @@ export function StudentCardModal({ students, isOpen, onClose }: StudentCardModal
 
                   {/* Header Badge */}
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white font-bold text-sm shadow-xs">
-                        💻
-                      </div>
+                    <div className="flex items-center gap-2.5">
+                      <img
+                        src="/assets/doctor_avatar.png"
+                        alt="Dr. Mahmoud Elmahdy"
+                        className="h-10 w-10 rounded-full border-2 border-blue-600 object-cover shadow-sm flex-shrink-0"
+                      />
                       <div>
-                        <h4 className="text-xs font-bold text-slate-900">أكاديمية البرمجة - د. محمود المهدي</h4>
-                        <span className="text-[10px] text-blue-600 font-semibold block">بطاقة حضور وتطوير كود الطالب 💻</span>
+                        <h4 className="text-sm font-black text-slate-900 leading-tight">د. محمود المهدي</h4>
+                        <span className="text-[10px] text-blue-600 font-bold block">Dr. Mahmoud Elmahdy · بطاقة حضور السنتر</span>
                       </div>
                     </div>
                     <span className="rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
