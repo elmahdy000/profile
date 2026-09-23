@@ -7271,7 +7271,18 @@ export function matchStudentToStage(
 router.get("/learning/self-assessment/taxonomy", async (req, res, next) => {
   try {
     const student = await getApprovedStudent(req);
-    let effectiveStudent = student;
+    type EffectiveStudent = {
+      id?: number;
+      name?: string;
+      phone?: string;
+      status?: string;
+      grade?: string | null;
+      educationGrade?: string | null;
+      languageTrack?: string | null;
+      academicTrack?: string | null;
+      schoolType?: string | null;
+    };
+    let effectiveStudent: EffectiveStudent | null = student;
     if (!effectiveStudent && req.query.phone) {
       const p = normalizeEgyptianPhone(String(req.query.phone));
       if (p.length >= 10) {
