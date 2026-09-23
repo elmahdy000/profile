@@ -217,6 +217,17 @@ export function SelfAssessmentTab({
   const currentStageObj = stages.find((s) => s.stage === selectedStageName) || stages[0];
   const currentUnitObj = currentStageObj?.units.find((u) => u.unit === selectedUnitName);
 
+  // Total available questions in selected unit/lessons
+  const availableQuestionsCount = React.useMemo(() => {
+    if (!currentUnitObj) return 0;
+    if (selectedLessons.length === 0) {
+      return currentUnitObj.totalQuestions || 0;
+    }
+    return currentUnitObj.lessons
+      .filter((l) => selectedLessons.includes(l.lesson))
+      .reduce((sum, l) => sum + (l.totalQuestions || 0), 0);
+  }, [currentUnitObj, selectedLessons]);
+
   // Toggle Lesson Selection
   const toggleLesson = (lessonName: string) => {
     if (selectedLessons.includes(lessonName)) {
@@ -674,26 +685,78 @@ export function SelfAssessmentTab({
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Question Count */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <Layers className="h-3.5 w-3.5 text-blue-600" />
-                  عدد الأسئلة المطلوبة:
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {[5, 10, 15, 20, 25, 30].map((num) => (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Layers className="h-3.5 w-3.5 text-blue-600" />
+                    عدد الأسئلة المطلوبة:
+                  </label>
+                  {availableQuestionsCount > 0 && (
+                    <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-lg border border-blue-200/60 dark:border-blue-900">
+                      المتاح في النطاق المختار: {availableQuestionsCount} سؤال
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {[10, 20, 30, 50].map((num) => {
+                    const isDisabled = availableQuestionsCount > 0 && num > availableQuestionsCount;
+                    return (
+                      <button
+                        key={num}
+                        type="button"
+                        disabled={isDisabled}
+                        onClick={() => setQuestionCount(num)}
+                        className={`h-9 px-3.5 rounded-xl text-xs font-bold border transition-all ${
+                          questionCount === num
+                            ? "border-blue-600 bg-blue-600 text-white shadow-xs"
+                            : isDisabled
+                            ? "border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/40 text-slate-400 cursor-not-allowed opacity-50"
+                            : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                        }`}
+                      >
+                        {num} سؤال
+                      </button>
+                    );
+                  })}
+
+                  {availableQuestionsCount > 0 && (
                     <button
-                      key={num}
                       type="button"
-                      onClick={() => setQuestionCount(num)}
-                      className={`h-9 px-3 rounded-xl text-xs font-bold border transition-all ${
-                        questionCount === num
-                          ? "border-blue-600 bg-blue-600 text-white shadow-xs"
-                          : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                      onClick={() => setQuestionCount(Math.min(availableQuestionsCount, 200))}
+                      className={`h-9 px-3.5 rounded-xl text-xs font-bold border transition-all ${
+                        questionCount === Math.min(availableQuestionsCount, 200)
+                          ? "border-indigo-600 bg-indigo-600 text-white shadow-xs"
+                          : "border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100"
                       }`}
                     >
-                      {num} سؤال
+                      🌟 كل الأسئلة المتاحة ({Math.min(availableQuestionsCount, 200)})
                     </button>
-                  ))}
+                  )}
+                </div>
+
+                {/* Custom Count Input */}
+                <div className="flex items-center gap-2 pt-1">
+                  <span className="text-xs text-slate-500 whitespace-nowrap">أو حدد رقماً مخصصاً:</span>
+                  <div className="relative w-28">
+                    <Input
+                      type="number"
+                      min={1}
+                      max={Math.min(availableQuestionsCount || 200, 200)}
+                      value={questionCount}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        if (!isNaN(val)) {
+                          const maxLimit = Math.min(availableQuestionsCount || 200, 200);
+                          setQuestionCount(Math.max(1, Math.min(val, maxLimit)));
+                        }
+                      }}
+                      className="h-8 text-center text-xs font-bold rounded-lg border-slate-200 dark:border-slate-700"
+                    />
+                  </div>
+                  <span className="text-[11px] text-slate-400">
+                    (من 1 إلى {Math.min(availableQuestionsCount || 200, 200)} سؤال)
+                  </span>
                 </div>
               </div>
 
@@ -710,6 +773,8 @@ export function SelfAssessmentTab({
                     { label: "15 د", value: 15 },
                     { label: "20 د", value: 20 },
                     { label: "30 د", value: 30 },
+                    { label: "45 د", value: 45 },
+                    { label: "60 د", value: 60 },
                   ].map((dur) => (
                     <button
                       key={dur.value}

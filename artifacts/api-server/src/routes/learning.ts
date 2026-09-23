@@ -495,19 +495,24 @@ function isCompleteValidQuestion(q: QuizQuestion | undefined | null): boolean {
   if (/\r?\n\s*[A-Da-dأابجده]\)\s*$/.test(prompt)) return false;
   // Reject prompts ending in any single Arabic letter, dangling prepositions, or abrupt endings
   if (/(?:^|\s)[\u0621-\u064A]$/.test(prompt)) return false;
-  if (/(?:^|\s)(?:ت|لت|ي|و|ف|ب|ك|ل|ال|دون|في|من|عن|إلى|مع|أو|أن|لل|على|التي|الذي|الذين|اللاتي|اللواتي|بأن|حيث|بما|مثل|تؤدي إلى|من الصعب)$/.test(prompt)) return false;
+  if (/(?:^|\s)(?:مر|فت|عص|حق|تق|ت|لت|ي|و|ف|ب|ك|ل|ال|دون|في|من|عن|إلى|مع|أو|أن|لل|على|التي|الذي|الذين|اللاتي|اللواتي|بأن|حيث|بما|مثل|تؤدي إلى|من الصعب)$/.test(prompt)) return false;
   if (/[\—\-\:\/]\s*$/.test(prompt)) return false;
 
   if (!Array.isArray(q.options) || q.options.length < 2) return false;
+  const cleanedList: string[] = [];
   for (const rawOpt of q.options) {
     if (!rawOpt || typeof rawOpt !== "string") return false;
     const opt = cleanOptionString(rawOpt);
     if (opt.length < 2) return false;
     // Reject options ending in standalone truncated single letters, particles or dashes
     if (/(?:^|\s)[\u0621-\u064A]$/.test(opt)) return false;
-    if (/(?:^|\s)(?:ت|لت|و|ال|في|من|عن|إلى|مع|أو|أن|لل|على)$/.test(opt)) return false;
+    if (/(?:^|\s)(?:مر|فت|ت|لت|و|ال|في|من|عن|إلى|مع|أو|أن|لل|على)$/.test(opt)) return false;
     if (/[\—\-]$/.test(opt)) return false;
+    cleanedList.push(opt);
   }
+  // Reject options if all or most are identical (like ["مر", "مر", "مر", "مر"])
+  const distinct = new Set(cleanedList);
+  if (distinct.size < Math.min(2, cleanedList.length)) return false;
   return true;
 }
 
@@ -7691,7 +7696,7 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
       }
     }
 
-    const targetCount = Math.max(5, Math.min(30, Number(count) || 10));
+    const targetCount = Math.max(5, Math.min(200, Number(count) || 10));
 
     let query = db.select().from(questionBankTable);
     const conditions = [];
@@ -7747,8 +7752,49 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
       return;
     }
 
-    const shuffled = [...validQuestions].sort(() => Math.random() - 0.5);
-    const pickedQuestions = shuffled.slice(0, Math.min(targetCount, shuffled.length));
+    // جلب الأسئلة التي اختبرها هذا الطالب في جلساته الأخيرة لمنع تكرار الأسئلة
+    const recentPrompts = new Set<string>();
+    try {
+      const recentSessions = await db
+        .select({ questions: selfAssessmentSessionsTable.questions })
+        .from(selfAssessmentSessionsTable)
+        .where(
+          or(
+            activePhone ? eq(selfAssessmentSessionsTable.phone, activePhone) : undefined,
+            studentId ? eq(selfAssessmentSessionsTable.studentId, studentId) : undefined
+          )
+        )
+        .orderBy(desc(selfAssessmentSessionsTable.id))
+        .limit(3);
+
+      for (const s of recentSessions) {
+        const sQuestions = (s.questions as QuizQuestion[]) || [];
+        for (const sq of sQuestions) {
+          const norm = normalizeQuestionPrompt(sq.prompt);
+          if (norm) recentPrompts.add(norm);
+        }
+      }
+    } catch {
+      // Ignore lookup failure
+    }
+
+    // فرز الأسئلة غير المكررة (التي لم يرها الطالب في جلساته الأخيرة)
+    const freshQuestions = validQuestions.filter((q) => !recentPrompts.has(normalizeQuestionPrompt(q.prompt)));
+    const freshShuffled = [...freshQuestions].sort(() => Math.random() - 0.5);
+
+    let pickedQuestions: QuizQuestion[] = [];
+    if (freshShuffled.length >= targetCount) {
+      // إذا كان عدد الأسئلة الجديدة كافياً، نأخذ منها حصراً لمنع التكرار تماماً
+      pickedQuestions = freshShuffled.slice(0, targetCount);
+    } else {
+      // إذا لم يكن كافياً، نأخذ كل الأسئلة الجديدة أولاً ونكمل الباقي عشوائياً بدون تكرار داخل الاختبار
+      const remainderNeeded = targetCount - freshShuffled.length;
+      const seenSet = new Set(freshShuffled.map((q) => normalizeQuestionPrompt(q.prompt)));
+      const otherQuestions = [...validQuestions]
+        .filter((q) => !seenSet.has(normalizeQuestionPrompt(q.prompt)))
+        .sort(() => Math.random() - 0.5);
+      pickedQuestions = [...freshShuffled, ...otherQuestions.slice(0, remainderNeeded)];
+    }
 
     const sessionId = randomBytes(16).toString("hex");
 
@@ -8035,6 +8081,83 @@ router.post("/admin/learning/self-assessment/grant-attempts", requireAdmin, asyn
       success: true,
       message: `تم تفعيل ${countToAdd} محاولات بنجاح لرقم ${phone}. الرصيد الحالي: ${updatedRecord.paidAttemptsBalance} محاولات`,
       entitlement: updatedRecord,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 8. GET /api/admin/learning/self-assessment/sessions - سجل ونتائج اختبارات الطلاب وإحصائيات التقييم الذاتي للأدمن
+router.get("/admin/learning/self-assessment/sessions", requireAdmin, async (req, res, next) => {
+  try {
+    const search = req.query.search ? String(req.query.search).trim() : "";
+    const status = req.query.status ? String(req.query.status).trim() : "completed";
+
+    let conditions = [];
+    if (status && status !== "all") {
+      conditions.push(eq(selfAssessmentSessionsTable.status, status));
+    }
+    if (search) {
+      conditions.push(
+        or(
+          ilike(selfAssessmentSessionsTable.phone, `%${search}%`),
+          ilike(selfAssessmentSessionsTable.studentName, `%${search}%`)
+        )
+      );
+    }
+
+    const sessionsQuery = db
+      .select({
+        id: selfAssessmentSessionsTable.id,
+        sessionId: selfAssessmentSessionsTable.sessionId,
+        studentId: selfAssessmentSessionsTable.studentId,
+        studentName: selfAssessmentSessionsTable.studentName,
+        phone: selfAssessmentSessionsTable.phone,
+        stage: selfAssessmentSessionsTable.stage,
+        unit: selfAssessmentSessionsTable.unit,
+        lessons: selfAssessmentSessionsTable.lessons,
+        questionsCount: selfAssessmentSessionsTable.questionsCount,
+        score: selfAssessmentSessionsTable.score,
+        totalPoints: selfAssessmentSessionsTable.totalPoints,
+        percentage: selfAssessmentSessionsTable.percentage,
+        passed: selfAssessmentSessionsTable.passed,
+        timeSpentSeconds: selfAssessmentSessionsTable.timeSpentSeconds,
+        status: selfAssessmentSessionsTable.status,
+        createdAt: selfAssessmentSessionsTable.createdAt,
+        completedAt: selfAssessmentSessionsTable.completedAt,
+      })
+      .from(selfAssessmentSessionsTable);
+
+    const sessions = await (conditions.length ? sessionsQuery.where(and(...conditions)) : sessionsQuery)
+      .orderBy(desc(selfAssessmentSessionsTable.id))
+      .limit(200);
+
+    // حساب الإحصائيات العامة
+    const allCompleted = await db
+      .select({
+        percentage: selfAssessmentSessionsTable.percentage,
+        passed: selfAssessmentSessionsTable.passed,
+        phone: selfAssessmentSessionsTable.phone,
+      })
+      .from(selfAssessmentSessionsTable)
+      .where(eq(selfAssessmentSessionsTable.status, "completed"));
+
+    const totalCompleted = allCompleted.length;
+    const uniquePhones = new Set(allCompleted.map((s) => s.phone).filter(Boolean));
+    const passedCount = allCompleted.filter((s) => s.passed).length;
+    const sumPercentage = allCompleted.reduce((acc, s) => acc + (s.percentage || 0), 0);
+
+    const stats = {
+      totalCompleted,
+      uniqueStudents: uniquePhones.size,
+      averageScore: totalCompleted > 0 ? Math.round(sumPercentage / totalCompleted) : 0,
+      passRate: totalCompleted > 0 ? Math.round((passedCount / totalCompleted) * 100) : 0,
+    };
+
+    res.json({
+      success: true,
+      sessions,
+      stats,
     });
   } catch (error) {
     next(error);
