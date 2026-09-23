@@ -7194,9 +7194,106 @@ function normalizeEgyptianPhone(raw: unknown): string {
   return digits;
 }
 
+// دالة تحديد مسار الطالب التعليمي: عربي (ar) أم لغات (en)
+export function getStudentTrack(student: {
+  languageTrack?: string | null;
+  academicTrack?: string | null;
+  schoolType?: string | null;
+  grade?: string | null;
+}): "en" | "ar" {
+  const isLanguages = Boolean(
+    (student.languageTrack && (student.languageTrack.toLowerCase().includes("lang") || student.languageTrack.includes("لغات"))) ||
+    (student.academicTrack && (student.academicTrack.toLowerCase().includes("lang") || student.academicTrack.includes("لغات"))) ||
+    (student.schoolType && (student.schoolType.toLowerCase().includes("lang") || student.schoolType.includes("لغات"))) ||
+    (student.grade && (student.grade.toLowerCase().includes("لغات") || student.grade.toLowerCase().includes("languages")))
+  );
+  return isLanguages ? "en" : "ar";
+}
+
+// دالة مطابقة مرحلة الطالب بدقة: التحقق من المسار التعليمي (عربي/لغات) والصف الدراسي
+export function matchStudentToStage(
+  stageName: string,
+  student: {
+    grade?: string | null;
+    educationGrade?: string | null;
+    languageTrack?: string | null;
+    academicTrack?: string | null;
+    schoolType?: string | null;
+  }
+): boolean {
+  const studentTrack = getStudentTrack(student);
+  const isStageLanguages = stageName.toLowerCase().includes("لغات") || stageName.toLowerCase().includes("languages");
+  const stageTrack = isStageLanguages ? "en" : "ar";
+
+  // 1. التطابق الصارم للمسار (طالب عربي يرى عربي فقط، وطالب لغات يرى لغات فقط)
+  if (studentTrack !== stageTrack) {
+    return false;
+  }
+
+  // 2. التطابق للصف الدراسي (الصف الأول، الثاني، الثالث، الجامعة)
+  const stGradeStr = [
+    student.grade,
+    student.educationGrade,
+    student.academicTrack,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  const isGrade1 = stGradeStr.includes("أولى") || stGradeStr.includes("الأول") || stGradeStr.includes("first");
+  const isGrade2 = stGradeStr.includes("تانية") || stGradeStr.includes("ثانية") || stGradeStr.includes("الثاني") || stGradeStr.includes("second");
+  const isGrade3 = stGradeStr.includes("ثالثة") || stGradeStr.includes("الثالث") || stGradeStr.includes("third");
+  const isUni = stGradeStr.includes("جامع") || stGradeStr.includes("حاسبات") || stGradeStr.includes("هندس");
+
+  const stg = stageName.toLowerCase();
+  if (isGrade1) {
+    return stg.includes("أولى") || stg.includes("الأول") || stg.includes("first");
+  }
+  if (isGrade2) {
+    return stg.includes("تانية") || stg.includes("ثانية") || stg.includes("الثاني") || stg.includes("second");
+  }
+  if (isGrade3) {
+    return stg.includes("ثالثة") || stg.includes("الثالث") || stg.includes("third");
+  }
+  if (isUni) {
+    return stg.includes("جامع") || stg.includes("حاسبات") || stg.includes("هندس");
+  }
+
+  // في حال لم يحدد الصف نصياً، التحقق من التطابق الجزئي
+  if (student.grade && (stg.includes(student.grade.toLowerCase()) || student.grade.toLowerCase().includes(stg))) {
+    return true;
+  }
+
+  return true;
+}
+
 // 1. GET /api/learning/self-assessment/taxonomy - إرجاع قائمة شجرية بالوحدات والدروس المتاحة للتقييم الذاتي
 router.get("/learning/self-assessment/taxonomy", async (req, res, next) => {
   try {
+    const student = await getApprovedStudent(req);
+    let effectiveStudent = student;
+    if (!effectiveStudent && req.query.phone) {
+      const p = normalizeEgyptianPhone(String(req.query.phone));
+      if (p.length >= 10) {
+        const [existing] = await db
+          .select({
+            id: studentsTable.id,
+            name: studentsTable.name,
+            phone: studentsTable.phone,
+            status: studentsTable.status,
+            grade: studentsTable.grade,
+            educationGrade: studentsTable.educationGrade,
+            languageTrack: studentsTable.languageTrack,
+            academicTrack: studentsTable.academicTrack,
+            schoolType: studentsTable.schoolType,
+          })
+          .from(studentsTable)
+          .where(and(eq(studentsTable.phone, p), eq(studentsTable.status, "approved")))
+          .limit(1);
+        if (existing) effectiveStudent = existing;
+      }
+    }
+
     const stageQuery = req.query.stage ? String(req.query.stage).trim() : undefined;
 
     let query = db
@@ -7294,9 +7391,32 @@ router.get("/learning/self-assessment/taxonomy", async (req, res, next) => {
       })),
     }));
 
+    // إذا كان الطالب مسجلاً، يتم قفل وعرض مرحلته ومساره (عربي / لغات) فقط
+    let finalStagesList = stagesList;
+    let studentTrack: "ar" | "en" | undefined;
+    let isEnrolled = false;
+
+    if (effectiveStudent) {
+      isEnrolled = true;
+      studentTrack = getStudentTrack(effectiveStudent);
+      const filtered = stagesList.filter((st) => matchStudentToStage(st.stage, effectiveStudent!));
+      if (filtered.length > 0) {
+        finalStagesList = filtered;
+      } else {
+        const trackMatches = stagesList.filter((st) => st.track === studentTrack);
+        if (trackMatches.length > 0) {
+          finalStagesList = trackMatches;
+        }
+      }
+    }
+
     res.json({
       success: true,
-      stages: stagesList,
+      stages: finalStagesList,
+      isEnrolled,
+      studentTrack,
+      studentGrade: effectiveStudent?.grade,
+      enrolledStage: finalStagesList[0]?.stage,
     });
   } catch (error) {
     next(error);
@@ -7308,6 +7428,7 @@ router.get("/learning/self-assessment/eligibility", async (req, res, next) => {
   try {
     const student = await getApprovedStudent(req);
     if (student) {
+      const stTrack = getStudentTrack(student);
       res.json({
         success: true,
         isEnrolled: true,
@@ -7316,6 +7437,8 @@ router.get("/learning/self-assessment/eligibility", async (req, res, next) => {
         studentId: student.id,
         studentName: student.name,
         studentPhone: student.phone,
+        studentGrade: student.grade,
+        studentTrack: stTrack,
         message: "متاح لك تقييم ذاتي مجاني غير محدود كطالب مسجل بالمنصة 🎉",
       });
       return;
@@ -7340,12 +7463,23 @@ router.get("/learning/self-assessment/eligibility", async (req, res, next) => {
     }
 
     const [existingStudent] = await db
-      .select({ id: studentsTable.id, name: studentsTable.name, phone: studentsTable.phone, status: studentsTable.status })
+      .select({
+        id: studentsTable.id,
+        name: studentsTable.name,
+        phone: studentsTable.phone,
+        status: studentsTable.status,
+        grade: studentsTable.grade,
+        educationGrade: studentsTable.educationGrade,
+        languageTrack: studentsTable.languageTrack,
+        academicTrack: studentsTable.academicTrack,
+        schoolType: studentsTable.schoolType,
+      })
       .from(studentsTable)
       .where(eq(studentsTable.phone, phone))
       .limit(1);
 
     if (existingStudent && existingStudent.status === "approved") {
+      const stTrack = getStudentTrack(existingStudent);
       res.json({
         success: true,
         isEnrolled: true,
@@ -7354,6 +7488,8 @@ router.get("/learning/self-assessment/eligibility", async (req, res, next) => {
         studentId: existingStudent.id,
         studentName: existingStudent.name,
         studentPhone: existingStudent.phone,
+        studentGrade: existingStudent.grade,
+        studentTrack: stTrack,
         message: "مرحباً بك! أنت مسجل كطالب في المنصة ومتاح لك تقييم ذاتي مجاني غير محدود 🎉",
       });
       return;
@@ -7441,6 +7577,7 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
     let activePhone = "";
     let activeName = String(studentName || "").trim();
     let isFreeTrialSession = false;
+    let matchedStudent: any = null;
 
     const loggedStudent = await getApprovedStudent(req);
     if (loggedStudent) {
@@ -7448,6 +7585,7 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
       studentId = loggedStudent.id;
       activePhone = loggedStudent.phone;
       activeName = loggedStudent.name;
+      matchedStudent = loggedStudent;
     } else {
       const rawPhone = req.body.phone;
       activePhone = normalizeEgyptianPhone(rawPhone);
@@ -7460,7 +7598,17 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
       }
 
       const [existingStudent] = await db
-        .select()
+        .select({
+          id: studentsTable.id,
+          name: studentsTable.name,
+          phone: studentsTable.phone,
+          status: studentsTable.status,
+          grade: studentsTable.grade,
+          educationGrade: studentsTable.educationGrade,
+          languageTrack: studentsTable.languageTrack,
+          academicTrack: studentsTable.academicTrack,
+          schoolType: studentsTable.schoolType,
+        })
         .from(studentsTable)
         .where(eq(studentsTable.phone, activePhone))
         .limit(1);
@@ -7469,6 +7617,7 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
         isEnrolledStudent = true;
         studentId = existingStudent.id;
         activeName = existingStudent.name;
+        matchedStudent = existingStudent;
       } else {
         const [entitlement] = await db
           .select()
@@ -7513,16 +7662,32 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
       }
     }
 
+    // قفل والتحقق من مرحلة ومسار الطالب المسجل (عربي / لغات)
+    let enforcedStage = stage;
+    if (matchedStudent) {
+      const stageMatches = stage && matchStudentToStage(stage, matchedStudent);
+      if (!stageMatches) {
+        const allStages = await db
+          .select({ stage: questionBankTable.stage })
+          .from(questionBankTable)
+          .groupBy(questionBankTable.stage);
+        const candidate = allStages.find((s) => s.stage && matchStudentToStage(s.stage, matchedStudent));
+        if (candidate?.stage) {
+          enforcedStage = candidate.stage;
+        }
+      }
+    }
+
     const targetCount = Math.max(5, Math.min(30, Number(count) || 10));
 
     let query = db.select().from(questionBankTable);
     const conditions = [];
 
-    if (stage && stage !== "all") {
+    if (enforcedStage && enforcedStage !== "all") {
       conditions.push(
         or(
-          eq(questionBankTable.stage, stage),
-          sql`${questionBankTable.stages}::jsonb @> ${JSON.stringify([stage])}::jsonb`
+          eq(questionBankTable.stage, enforcedStage),
+          sql`${questionBankTable.stages}::jsonb @> ${JSON.stringify([enforcedStage])}::jsonb`
         )
       );
     }
@@ -7579,7 +7744,7 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
       studentId: studentId,
       phone: activePhone,
       studentName: activeName,
-      stage: stage || null,
+      stage: enforcedStage || null,
       unit: cleanedUnit,
       lessons: rawLessons,
       questionsCount: pickedQuestions.length,

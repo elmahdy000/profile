@@ -20,6 +20,7 @@ import {
   Send,
   ArrowRight,
   FileCheck2,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -113,44 +114,44 @@ export function SelfAssessmentTab({
   const [reviewDetails, setReviewDetails] = useState<ReviewDetail[]>([]);
   const [showOnlyErrors, setShowOnlyErrors] = useState(false);
 
+  // Check if enrolled student
+  const isEnrolled = Boolean(student || eligibilityData.isEnrolled);
+
+  // Language track calculation
+  const isStudentLanguages = Boolean(
+    (student?.languageTrack && (student.languageTrack.toLowerCase().includes("lang") || student.languageTrack.includes("لغات"))) ||
+    (student?.academicTrack && (student.academicTrack.toLowerCase().includes("lang") || student.academicTrack.includes("لغات"))) ||
+    (student?.schoolType && (student.schoolType.toLowerCase().includes("lang") || student.schoolType.includes("لغات"))) ||
+    (student?.grade && (student.grade.toLowerCase().includes("لغات") || student.grade.toLowerCase().includes("languages"))) ||
+    (eligibilityData?.studentTrack === "en")
+  );
+
   // 1. Fetch Taxonomy on Mount
-  useEffect(() => {
-    async function loadTaxonomy() {
-      try {
-        setTaxonomyLoading(true);
-        const res = await fetch("/api/learning/self-assessment/taxonomy", { credentials: "include" });
-        const data = await res.json();
-        if (data.stages && data.stages.length > 0) {
-          setStages(data.stages);
+  const loadTaxonomy = async (targetPhone?: string) => {
+    try {
+      setTaxonomyLoading(true);
+      const p = targetPhone || student?.phone || "";
+      const url = `/api/learning/self-assessment/taxonomy${p ? `?phone=${encodeURIComponent(p)}` : ""}`;
+      const res = await fetch(url, { credentials: "include" });
+      const data = await res.json();
+      if (data.stages && data.stages.length > 0) {
+        setStages(data.stages);
 
-          // Default stage selection based on student profile or first available
-          if (student) {
-            const isStudentLanguages =
-              student.grade?.toLowerCase().includes("لغات") ||
-              student.schoolType?.toLowerCase().includes("languages") ||
-              student.languageTrack?.toLowerCase().includes("لغات");
-
-            const matched = data.stages.find((s: StageTaxonomy) =>
-              isStudentLanguages ? s.track === "en" : s.track === "ar"
-            );
-            const defaultStage = matched || data.stages[0];
-            setSelectedStageName(defaultStage.stage);
-            if (defaultStage.units.length > 0) {
-              setSelectedUnitName(defaultStage.units[0].unit);
-            }
-          } else {
-            setSelectedStageName(data.stages[0].stage);
-            if (data.stages[0].units.length > 0) {
-              setSelectedUnitName(data.stages[0].units[0].unit);
-            }
-          }
+        const defaultStage = data.stages[0];
+        setSelectedStageName(defaultStage.stage);
+        if (defaultStage.units.length > 0) {
+          setSelectedUnitName(defaultStage.units[0].unit);
+          setSelectedLessons([]);
         }
-      } catch (err) {
-        toast({ variant: "destructive", title: "خطأ", description: "تعذر تحميل قائمة المنهج والوحدات" });
-      } finally {
-        setTaxonomyLoading(false);
       }
+    } catch (err) {
+      toast({ variant: "destructive", title: "خطأ", description: "تعذر تحميل قائمة المنهج والوحدات" });
+    } finally {
+      setTaxonomyLoading(false);
     }
+  };
+
+  useEffect(() => {
     void loadTaxonomy();
   }, [student]);
 
@@ -163,6 +164,12 @@ export function SelfAssessmentTab({
       const data = await res.json();
       setEligibilityData(data);
       setEligibilityChecked(true);
+
+      if (data.isEnrolled) {
+        if (data.studentName) setGuestName(data.studentName);
+        void loadTaxonomy(qPhone);
+      }
+
       return data;
     } catch {
       return null;
@@ -360,17 +367,17 @@ export function SelfAssessmentTab({
           </div>
 
           {/* Access / Entitlement Badge */}
-          {student ? (
+          {isEnrolled ? (
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 dark:bg-emerald-950/30 dark:border-emerald-800 p-4 flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
                 <Award className="h-5 w-5" />
               </div>
               <div className="text-xs sm:text-sm">
                 <strong className="text-emerald-900 dark:text-emerald-300 font-bold block">
-                  مرحباً بك يا {student.name} (طالب مسجل بالمنصة) 🎉
+                  مرحباً بك يا {student?.name || eligibilityData.studentName || guestName || "طالبنا المتميز"} (طالب مسجل بالمنصة) 🎉
                 </strong>
                 <span className="text-emerald-700 dark:text-emerald-400">
-                  متاح لك إجراء أي عدد من اختبارات التقييم الذاتي مجاناً وبلا حدود.
+                  متاح لك إجراء أي عدد من اختبارات التقييم الذاتي مجاناً وبلا حدود لمرحلتك ومسارك الدراسي ({isStudentLanguages ? "مدارس لغات 🇬🇧" : "مدارس عربي 🇪🇬"}).
                 </span>
               </div>
             </div>
@@ -468,14 +475,50 @@ export function SelfAssessmentTab({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {/* Step 1: Stage & Track */}
             <div className="rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3">
-              <div className="flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/60 text-xs">1</span>
-                المرحلة والمسار التعليمي
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/60 text-xs">1</span>
+                  المرحلة والمسار التعليمي
+                </div>
+                {isEnrolled && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                    <Lock className="h-3 w-3" />
+                    مُقفل لحسابك
+                  </span>
+                )}
               </div>
 
               {taxonomyLoading ? (
-                <div className="py-6 text-center text-xs text-slate-400">جاري تحميل المراحل...</div>
+                <div className="py-6 text-center text-xs text-slate-400">جاري تحميل المرحلة والمسار...</div>
+              ) : isEnrolled ? (
+                /* بطاقة مقفلة ومعتمدة خصيصاً لمرحلة ومسار الطالب المسجل */
+                <div className="space-y-3">
+                  <div className="p-3.5 rounded-2xl border-2 border-emerald-500/80 bg-emerald-50/70 dark:bg-emerald-950/40 text-right shadow-xs">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="inline-flex items-center gap-1.5 font-bold text-xs text-emerald-900 dark:text-emerald-200">
+                        {isStudentLanguages ? "🇬🇧 مسار اللغات (Languages)" : "🇪🇬 مسار عام (عربي)"}
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white shadow-xs">
+                        مسار معتمد
+                      </span>
+                    </div>
+                    <div className="font-bold text-sm text-slate-900 dark:text-white leading-snug">
+                      {selectedStageName || (stages[0]?.stage) || "المرحلة الدراسية الخاصة بك"}
+                    </div>
+                    <p className="text-[11px] text-emerald-700 dark:text-emerald-400 mt-2 font-medium leading-relaxed">
+                      ✓ تم قفل وتثبيت مرحلتك ومسارك الدراسي تلقائياً طبقاً لبيانات اشتراكك بالمنصة ({isStudentLanguages ? "مدارس لغات" : "مدارس عربي"}).
+                    </p>
+                  </div>
+
+                  {currentStageObj && (
+                    <div className="text-[11px] text-slate-500 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                      <span>إجمالي الأسئلة المتاحة لمرحلتك:</span>
+                      <span className="font-bold text-blue-600 dark:text-blue-400">{currentStageObj.totalQuestions} سؤال</span>
+                    </div>
+                  )}
+                </div>
               ) : (
+                /* قائمة اختيار المراحل للزوار */
                 <div className="space-y-2">
                   {stages.map((st) => (
                     <button
