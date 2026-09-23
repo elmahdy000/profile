@@ -61,6 +61,24 @@ interface ReviewDetail {
   imageUrl?: string;
 }
 
+interface EligibilityData {
+  canTakeTest?: boolean;
+  isEnrolled?: boolean;
+  isFreeTrial?: boolean;
+  remainingPaid?: number;
+  packageCost?: number;
+  packageAttempts?: number;
+  requiresTopup?: boolean;
+  message?: string;
+  studentId?: number;
+  studentName?: string;
+  studentPhone?: string;
+  studentGrade?: string;
+  studentTrack?: string;
+  unlimited?: boolean;
+  needPhone?: boolean;
+}
+
 export function SelfAssessmentTab({
   student,
   onBackToDashboard,
@@ -85,16 +103,7 @@ export function SelfAssessmentTab({
   const [guestPhone, setGuestPhone] = useState("");
   const [guestName, setGuestName] = useState("");
   const [eligibilityChecked, setEligibilityChecked] = useState(false);
-  const [eligibilityData, setEligibilityData] = useState<{
-    canTakeTest?: boolean;
-    isEnrolled?: boolean;
-    isFreeTrial?: boolean;
-    remainingPaid?: number;
-    packageCost?: number;
-    packageAttempts?: number;
-    requiresTopup?: boolean;
-    message?: string;
-  }>({});
+  const [eligibilityData, setEligibilityData] = useState<EligibilityData>({});
 
   // Active quiz session
   const [generating, setGenerating] = useState(false);
