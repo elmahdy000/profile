@@ -182,6 +182,10 @@ export function parseAdminUrl(pathname: string, search = ""): { activeTab: Admin
     case "center-bookings":
     case "bookings":
       return { activeTab: "learning", learningSubTab: "center-bookings" };
+    case "self-assessment":
+    case "self-assessment-packs":
+    case "assessment-packs":
+      return { activeTab: "learning", learningSubTab: "self-assessment-packs" };
     case "files":
     case "materials":
       return { activeTab: "learning", learningSubTab: "files" };
@@ -236,6 +240,7 @@ export function getAdminUrlForTab(activeTab: AdminTopTab, learningSubTab: AdminL
       case "attendance": return "/admin/attendance";
       case "overview": return "/admin/overview";
       case "reports": return "/admin/reports";
+      case "self-assessment-packs": return "/admin/self-assessment-packs";
       default: return "/admin/students";
     }
   }

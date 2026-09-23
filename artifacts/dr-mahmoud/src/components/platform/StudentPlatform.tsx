@@ -49,6 +49,7 @@ import { DashboardTab } from "./tabs/DashboardTab";
 import { AccessScreen } from "./tabs/AccessScreen";
 import { StudentSummariesTab } from "./tabs/StudentSummariesTab";
 import { IncompleteProfileModal } from "./tabs/IncompleteProfileModal";
+import { SelfAssessmentTab } from "./tabs/SelfAssessmentTab";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { FilePreviewModal } from "./FilePreviewModal";
 
@@ -129,7 +130,7 @@ export function StudentPlatform() {
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<
-    "dashboard" | "lessons" | "summaries" | "compiler" | "files" | "quizzes" | "profile"
+    "dashboard" | "lessons" | "summaries" | "compiler" | "files" | "quizzes" | "self-assessment" | "profile"
   >("dashboard");
   const [files, setFiles] = useState<LearningFile[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -583,6 +584,7 @@ export function StudentPlatform() {
     ["compiler", "محرر C++", Code2],
     ["files", "الملفات", FolderOpen],
     ["quizzes", "الاختبارات", ClipboardCheck],
+    ["self-assessment", "التقييم الذاتي 🎯", Sparkles],
     ["profile", "حسابي", User],
   ] as const;
   return (
@@ -832,6 +834,8 @@ export function StudentPlatform() {
             <FilesTab files={files} />
           ) : tab === "quizzes" ? (
             <QuizzesTab quizzes={quizzes} onStartQuiz={startQuiz} />
+          ) : tab === "self-assessment" ? (
+            <SelfAssessmentTab student={student} onBackToDashboard={() => setTab("dashboard")} />
           ) : (
             <ProfileTab student={student} onStudentChange={setStudent} />
           )}</div>

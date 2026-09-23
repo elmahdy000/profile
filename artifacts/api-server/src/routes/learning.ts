@@ -32,6 +32,10 @@ import {
   siteSettingsTable,
   monthlySubscriptionsTable,
   studentLessonSummariesTable,
+  selfAssessmentEntitlementsTable,
+  selfAssessmentSessionsTable,
+  type SelfAssessmentEntitlement,
+  type SelfAssessmentSession,
   type QuizQuestion,
 } from "@workspace/db";
 import { getAdminIdentity, getAdminRole, isAdminRequest, requireAdmin, requireSuperAdmin } from "../middleware/auth";
@@ -7164,6 +7168,690 @@ router.get(["/learning/honor-board", "/honor-board"], async (req, res, next) => 
         overallAvgScore: Number(statsRow?.overall_avg_score || 0),
       },
       students,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ─────────────────────────────────────────────────────────
+// 🎯 خدمة التقييم الذاتي حسب الطلب (On-Demand Self-Assessment)
+// ─────────────────────────────────────────────────────────
+
+function normalizeEgyptianPhone(raw: unknown): string {
+  if (!raw) return "";
+  let str = String(raw).trim();
+  const arabicDigits = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+  for (let i = 0; i < 10; i++) {
+    str = str.replace(new RegExp(arabicDigits[i], "g"), String(i));
+  }
+  let digits = str.replace(/\D/g, "");
+  if (digits.startsWith("201") && digits.length === 12) {
+    digits = digits.substring(1);
+  } else if (digits.startsWith("00201") && digits.length === 14) {
+    digits = digits.substring(3);
+  }
+  return digits;
+}
+
+// 1. GET /api/learning/self-assessment/taxonomy - إرجاع قائمة شجرية بالوحدات والدروس المتاحة للتقييم الذاتي
+router.get("/learning/self-assessment/taxonomy", async (req, res, next) => {
+  try {
+    const stageQuery = req.query.stage ? String(req.query.stage).trim() : undefined;
+
+    let query = db
+      .select({
+        id: questionBankTable.id,
+        stage: questionBankTable.stage,
+        unit: questionBankTable.unit,
+        lesson: questionBankTable.lesson,
+        difficulty: questionBankTable.difficulty,
+        question: questionBankTable.question,
+      })
+      .from(questionBankTable);
+
+    const conditions = [];
+    if (stageQuery && stageQuery !== "all") {
+      conditions.push(
+        or(
+          eq(questionBankTable.stage, stageQuery),
+          sql`${questionBankTable.stages}::jsonb @> ${JSON.stringify([stageQuery])}::jsonb`
+        )
+      );
+    }
+
+    const allQuestions = await (conditions.length ? query.where(and(...conditions)) : query);
+
+    const taxonomy: Record<
+      string,
+      {
+        stage: string;
+        track: "ar" | "en";
+        totalQuestions: number;
+        units: Record<
+          string,
+          {
+            unit: string;
+            totalQuestions: number;
+            lessons: Record<
+              string,
+              {
+                lesson: string;
+                totalQuestions: number;
+              }
+            >;
+          }
+        >;
+      }
+    > = {};
+
+    for (const row of allQuestions) {
+      if (!row.unit || !row.unit.trim()) continue;
+      if (!isCompleteValidQuestion(row.question)) continue;
+
+      const stage = String(row.stage || "عام").trim();
+      const unit = String(row.unit).trim();
+      const lesson = String(row.lesson || "شامل الوحدة").trim();
+      const isEnglish = stage.toLowerCase().includes("لغات") || stage.toLowerCase().includes("languages");
+
+      if (!taxonomy[stage]) {
+        taxonomy[stage] = {
+          stage,
+          track: isEnglish ? "en" : "ar",
+          totalQuestions: 0,
+          units: {},
+        };
+      }
+
+      if (!taxonomy[stage].units[unit]) {
+        taxonomy[stage].units[unit] = {
+          unit,
+          totalQuestions: 0,
+          lessons: {},
+        };
+      }
+
+      if (!taxonomy[stage].units[unit].lessons[lesson]) {
+        taxonomy[stage].units[unit].lessons[lesson] = {
+          lesson,
+          totalQuestions: 0,
+        };
+      }
+
+      taxonomy[stage].totalQuestions++;
+      taxonomy[stage].units[unit].totalQuestions++;
+      taxonomy[stage].units[unit].lessons[lesson].totalQuestions++;
+    }
+
+    const stagesList = Object.values(taxonomy).map((st) => ({
+      stage: st.stage,
+      track: st.track,
+      totalQuestions: st.totalQuestions,
+      units: Object.values(st.units).map((u) => ({
+        unit: u.unit,
+        totalQuestions: u.totalQuestions,
+        lessons: Object.values(u.lessons),
+      })),
+    }));
+
+    res.json({
+      success: true,
+      stages: stagesList,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 2. GET /api/learning/self-assessment/eligibility - فحص أحقية الطالب والمحاولات المتاحة
+router.get("/learning/self-assessment/eligibility", async (req, res, next) => {
+  try {
+    const student = await getApprovedStudent(req);
+    if (student) {
+      res.json({
+        success: true,
+        isEnrolled: true,
+        canTakeTest: true,
+        unlimited: true,
+        studentId: student.id,
+        studentName: student.name,
+        studentPhone: student.phone,
+        message: "متاح لك تقييم ذاتي مجاني غير محدود كطالب مسجل بالمنصة 🎉",
+      });
+      return;
+    }
+
+    const rawPhone = req.query.phone;
+    if (!rawPhone) {
+      res.json({
+        success: true,
+        isEnrolled: false,
+        canTakeTest: false,
+        needPhone: true,
+        message: "يرجى إدخال رقم الهاتف للمتابعة",
+      });
+      return;
+    }
+
+    const phone = normalizeEgyptianPhone(rawPhone);
+    if (phone.length < 10) {
+      res.status(400).json({ error: "رقم الهاتف غير صحيح، يرجى كتابة رقم هاتف مصري صالح (مثال: 010...)" });
+      return;
+    }
+
+    const [existingStudent] = await db
+      .select({ id: studentsTable.id, name: studentsTable.name, phone: studentsTable.phone, status: studentsTable.status })
+      .from(studentsTable)
+      .where(eq(studentsTable.phone, phone))
+      .limit(1);
+
+    if (existingStudent && existingStudent.status === "approved") {
+      res.json({
+        success: true,
+        isEnrolled: true,
+        canTakeTest: true,
+        unlimited: true,
+        studentId: existingStudent.id,
+        studentName: existingStudent.name,
+        studentPhone: existingStudent.phone,
+        message: "مرحباً بك! أنت مسجل كطالب في المنصة ومتاح لك تقييم ذاتي مجاني غير محدود 🎉",
+      });
+      return;
+    }
+
+    const [entitlement] = await db
+      .select()
+      .from(selfAssessmentEntitlementsTable)
+      .where(eq(selfAssessmentEntitlementsTable.phone, phone))
+      .limit(1);
+
+    if (!entitlement) {
+      res.json({
+        success: true,
+        isEnrolled: false,
+        canTakeTest: true,
+        isFreeTrial: true,
+        remainingPaid: 0,
+        message: "أهلاً بك! لديك 1 محاولة تجريبية مجانية لاختبار نفسك واكتشاف قوة المنصة 🎁",
+      });
+      return;
+    }
+
+    if (!entitlement.freeAttemptUsed) {
+      res.json({
+        success: true,
+        isEnrolled: false,
+        canTakeTest: true,
+        isFreeTrial: true,
+        remainingPaid: entitlement.paidAttemptsBalance,
+        studentName: entitlement.studentName,
+        message: "لديك محاولة تجريبية مجانية واحدة متاحة 🎁",
+      });
+      return;
+    }
+
+    if (entitlement.paidAttemptsBalance > 0) {
+      res.json({
+        success: true,
+        isEnrolled: false,
+        canTakeTest: true,
+        isFreeTrial: false,
+        remainingPaid: entitlement.paidAttemptsBalance,
+        studentName: entitlement.studentName,
+        message: `متاح لك ${entitlement.paidAttemptsBalance} محاولات متبقية من باقتك.`,
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      isEnrolled: false,
+      canTakeTest: false,
+      isFreeTrial: false,
+      remainingPaid: 0,
+      studentName: entitlement.studentName,
+      packageCost: 50,
+      packageAttempts: 3,
+      requiresTopup: true,
+      message: "لقد استهلكت محاولتك المجانية. للاستمرار، يمكنك الحصول على باقة (3 محاولات بـ 50 جنيه) وتفعيلها سريعاً عبر التواصل مع المساعدين أو الإدارة.",
+    });
+    return;
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 3. POST /api/learning/self-assessment/generate - توليد اختبار التقييم الذاتي المخصص وسحب الأسئلة
+router.post("/learning/self-assessment/generate", async (req, res, next) => {
+  try {
+    const { stage, unit, lessons, count, studentName } = req.body;
+
+    if (!unit || !String(unit).trim()) {
+      res.status(400).json({ error: "يجب اختيار الوحدة الدراسية لتوليد الاختبار" });
+      return;
+    }
+
+    const cleanedUnit = String(unit).trim();
+    const rawLessons: string[] = Array.isArray(lessons)
+      ? lessons.map((l: any) => String(l || "").trim()).filter(Boolean)
+      : [];
+
+    let isEnrolledStudent = false;
+    let studentId: number | null = null;
+    let activePhone = "";
+    let activeName = String(studentName || "").trim();
+    let isFreeTrialSession = false;
+
+    const loggedStudent = await getApprovedStudent(req);
+    if (loggedStudent) {
+      isEnrolledStudent = true;
+      studentId = loggedStudent.id;
+      activePhone = loggedStudent.phone;
+      activeName = loggedStudent.name;
+    } else {
+      const rawPhone = req.body.phone;
+      activePhone = normalizeEgyptianPhone(rawPhone);
+      if (!activePhone || activePhone.length < 10) {
+        res.status(400).json({ error: "رقم الهاتف مطلوب للزوار لتفعيل محاولة الاختبار" });
+        return;
+      }
+      if (!activeName) {
+        activeName = "طالب زائر";
+      }
+
+      const [existingStudent] = await db
+        .select()
+        .from(studentsTable)
+        .where(eq(studentsTable.phone, activePhone))
+        .limit(1);
+
+      if (existingStudent && existingStudent.status === "approved") {
+        isEnrolledStudent = true;
+        studentId = existingStudent.id;
+        activeName = existingStudent.name;
+      } else {
+        const [entitlement] = await db
+          .select()
+          .from(selfAssessmentEntitlementsTable)
+          .where(eq(selfAssessmentEntitlementsTable.phone, activePhone))
+          .limit(1);
+
+        if (!entitlement) {
+          await db.insert(selfAssessmentEntitlementsTable).values({
+            phone: activePhone,
+            studentName: activeName,
+            freeAttemptUsed: true,
+            paidAttemptsBalance: 0,
+            totalPurchasedAttempts: 0,
+          });
+          isFreeTrialSession = true;
+        } else if (!entitlement.freeAttemptUsed) {
+          await db
+            .update(selfAssessmentEntitlementsTable)
+            .set({ freeAttemptUsed: true, studentName: activeName || entitlement.studentName, updatedAt: new Date() })
+            .where(eq(selfAssessmentEntitlementsTable.id, entitlement.id));
+          isFreeTrialSession = true;
+        } else if (entitlement.paidAttemptsBalance > 0) {
+          await db
+            .update(selfAssessmentEntitlementsTable)
+            .set({
+              paidAttemptsBalance: entitlement.paidAttemptsBalance - 1,
+              studentName: activeName || entitlement.studentName,
+              updatedAt: new Date(),
+            })
+            .where(eq(selfAssessmentEntitlementsTable.id, entitlement.id));
+          isFreeTrialSession = false;
+        } else {
+          res.status(403).json({
+            error: "لقد استهلكت محاولاتك المجانية. يمكنك شحن باقة (3 محاولات بـ 50 جنيه) للتفعيل من الإدارة أو المساعدين.",
+            requiresTopup: true,
+            packageCost: 50,
+            packageAttempts: 3,
+          });
+          return;
+        }
+      }
+    }
+
+    const targetCount = Math.max(5, Math.min(30, Number(count) || 10));
+
+    let query = db.select().from(questionBankTable);
+    const conditions = [];
+
+    if (stage && stage !== "all") {
+      conditions.push(
+        or(
+          eq(questionBankTable.stage, stage),
+          sql`${questionBankTable.stages}::jsonb @> ${JSON.stringify([stage])}::jsonb`
+        )
+      );
+    }
+
+    conditions.push(eq(questionBankTable.unit, cleanedUnit));
+
+    if (rawLessons.length > 0 && !rawLessons.includes("الوحدة بالكامل") && !rawLessons.includes("all")) {
+      conditions.push(inArray(questionBankTable.lesson, rawLessons));
+    }
+
+    const availableRows = await query.where(and(...conditions));
+
+    const seenPrompts = new Set<string>();
+    const validQuestions: QuizQuestion[] = [];
+
+    for (const r of availableRows) {
+      const q = r.question;
+      if (!isCompleteValidQuestion(q)) continue;
+
+      const pKey = normalizeQuestionPrompt(q.prompt);
+      if (pKey && seenPrompts.has(pKey)) continue;
+      if (pKey) seenPrompts.add(pKey);
+
+      const cleanedOptions = (q.options || []).map(cleanOptionString);
+      const cIdx = typeof q.correctIndex === "number" ? q.correctIndex : 0;
+      const cAns = cleanedOptions[cIdx]?.trim() || "";
+      if (!cAns) continue;
+
+      validQuestions.push({
+        prompt: q.prompt.replace(/\r?\n\s*[A-Da-dأابجده]\)\s*$/, "").trim(),
+        options: cleanedOptions,
+        correctIndex: cIdx,
+        correctAnswer: cAns,
+        explanation: q.explanation || "لا يوجد شرح تفصيلي إضافي لهذا السؤال.",
+        imageUrl: q.imageUrl,
+        points: r.points || 1,
+      });
+    }
+
+    if (validQuestions.length === 0) {
+      res.status(404).json({
+        error: "لم يتم العثور على أسئلة مكتملة في بنك الأسئلة للوحدة أو الدروس المحددة.",
+      });
+      return;
+    }
+
+    const shuffled = [...validQuestions].sort(() => Math.random() - 0.5);
+    const pickedQuestions = shuffled.slice(0, Math.min(targetCount, shuffled.length));
+
+    const sessionId = randomBytes(16).toString("hex");
+
+    await db.insert(selfAssessmentSessionsTable).values({
+      sessionId,
+      studentId: studentId,
+      phone: activePhone,
+      studentName: activeName,
+      stage: stage || null,
+      unit: cleanedUnit,
+      lessons: rawLessons,
+      questionsCount: pickedQuestions.length,
+      questions: pickedQuestions,
+      answers: [],
+      score: 0,
+      totalPoints: pickedQuestions.reduce((acc, q) => acc + (q.points || 1), 0),
+      percentage: 0,
+      status: "in_progress",
+      isGuest: !isEnrolledStudent,
+      isFreeTrial: isFreeTrialSession,
+    });
+
+    const clientQuestions = pickedQuestions.map((q, idx) => ({
+      index: idx,
+      prompt: q.prompt,
+      options: q.options,
+      imageUrl: q.imageUrl,
+      points: q.points || 1,
+    }));
+
+    const durationMinutes = Math.max(10, Math.ceil(pickedQuestions.length * 1.5));
+
+    res.json({
+      success: true,
+      sessionId,
+      unit: cleanedUnit,
+      lessons: rawLessons.length > 0 ? rawLessons : ["الوحدة كاملة"],
+      questionsCount: pickedQuestions.length,
+      durationMinutes,
+      questions: clientQuestions,
+      isFreeTrial: isFreeTrialSession,
+      isEnrolled: isEnrolledStudent,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 4. POST /api/learning/self-assessment/submit - تسليم الاختبار والتصحيح اللحظي مع الشرح التفصيلي
+router.post("/learning/self-assessment/submit", async (req, res, next) => {
+  try {
+    const { sessionId, answers, timeSpentSeconds } = req.body;
+
+    if (!sessionId) {
+      res.status(400).json({ error: "معرف الجلسة مطلوب" });
+      return;
+    }
+
+    const [session] = await db
+      .select()
+      .from(selfAssessmentSessionsTable)
+      .where(eq(selfAssessmentSessionsTable.sessionId, sessionId))
+      .limit(1);
+
+    if (!session) {
+      res.status(404).json({ error: "جلسة التقييم غير موجودة" });
+      return;
+    }
+
+    if (session.status === "completed" && session.details) {
+      res.json({
+        success: true,
+        alreadyCompleted: true,
+        score: session.score,
+        totalPoints: session.totalPoints,
+        percentage: session.percentage,
+        passed: session.passed,
+        timeSpentSeconds: session.timeSpentSeconds,
+        details: session.details,
+      });
+      return;
+    }
+
+    const storedQuestions = (session.questions as QuizQuestion[]) || [];
+    const studentAnswers: Record<string, number> =
+      typeof answers === "object" && answers !== null ? answers : {};
+
+    let earnedScore = 0;
+    let totalPossible = 0;
+
+    const reviewDetails = storedQuestions.map((q, idx) => {
+      const qPoints = q.points || 1;
+      totalPossible += qPoints;
+
+      const selected =
+        studentAnswers[String(idx)] !== undefined
+          ? Number(studentAnswers[String(idx)])
+          : studentAnswers[idx] !== undefined
+          ? Number(studentAnswers[idx])
+          : -1;
+
+      const isCorrect = selected === q.correctIndex;
+      if (isCorrect) earnedScore += qPoints;
+
+      return {
+        questionIndex: idx,
+        prompt: q.prompt,
+        options: q.options,
+        selectedOption: selected,
+        correctOption: q.correctIndex,
+        correctAnswer: q.correctAnswer || q.options[q.correctIndex] || "",
+        isCorrect,
+        explanation: q.explanation || "لا يوجد شرح تفصيلي مضاف لهذا السؤال.",
+        imageUrl: q.imageUrl,
+      };
+    });
+
+    const percentage = totalPossible > 0 ? Math.round((earnedScore / totalPossible) * 100) : 0;
+    const passed = percentage >= 60;
+    const spentTime = Math.max(0, Number(timeSpentSeconds) || 0);
+
+    await db
+      .update(selfAssessmentSessionsTable)
+      .set({
+        answers: Object.values(studentAnswers) as any,
+        score: earnedScore,
+        totalPoints: totalPossible,
+        percentage,
+        passed,
+        timeSpentSeconds: spentTime,
+        status: "completed",
+        details: reviewDetails as any,
+        completedAt: new Date(),
+      })
+      .where(eq(selfAssessmentSessionsTable.id, session.id));
+
+    res.json({
+      success: true,
+      score: earnedScore,
+      totalPoints: totalPossible,
+      percentage,
+      passed,
+      timeSpentSeconds: spentTime,
+      review: reviewDetails,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 5. GET /api/learning/self-assessment/session/:sessionId - جلب مراجعة جلسة سابقة
+router.get("/learning/self-assessment/session/:sessionId", async (req, res, next) => {
+  try {
+    const { sessionId } = req.params;
+    const [session] = await db
+      .select()
+      .from(selfAssessmentSessionsTable)
+      .where(eq(selfAssessmentSessionsTable.sessionId, sessionId))
+      .limit(1);
+
+    if (!session) {
+      res.status(404).json({ error: "جلسة التقييم غير موجودة" });
+      return;
+    }
+
+    res.json({
+      success: true,
+      session: {
+        sessionId: session.sessionId,
+        studentName: session.studentName,
+        unit: session.unit,
+        lessons: session.lessons,
+        status: session.status,
+        score: session.score,
+        totalPoints: session.totalPoints,
+        percentage: session.percentage,
+        passed: session.passed,
+        timeSpentSeconds: session.timeSpentSeconds,
+        details: session.details,
+        createdAt: session.createdAt,
+        completedAt: session.completedAt,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 6. GET /api/admin/learning/self-assessment/entitlements - قائمة باقات ومحاولات الزوار للأدمن والمساعد
+router.get("/admin/learning/self-assessment/entitlements", requireAdmin, async (req, res, next) => {
+  try {
+    const search = req.query.search ? String(req.query.search).trim() : "";
+
+    let query = db.select().from(selfAssessmentEntitlementsTable);
+    if (search) {
+      query = query.where(
+        or(
+          ilike(selfAssessmentEntitlementsTable.phone, `%${search}%`),
+          ilike(selfAssessmentEntitlementsTable.studentName, `%${search}%`)
+        )
+      ) as any;
+    }
+
+    const list = await query.orderBy(desc(selfAssessmentEntitlementsTable.updatedAt)).limit(100);
+
+    res.json({
+      success: true,
+      entitlements: list,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 7. POST /api/admin/learning/self-assessment/grant-attempts - تفعيل باقة 3 محاولات (50 ج.م) أو رصيد مخصص من الأدمن أو المساعد
+router.post("/admin/learning/self-assessment/grant-attempts", requireAdmin, async (req, res, next) => {
+  try {
+    const { phone: rawPhone, studentName, attemptsCount = 3, notes } = req.body;
+
+    const phone = normalizeEgyptianPhone(rawPhone);
+    if (!phone || phone.length < 10) {
+      res.status(400).json({ error: "رقم هاتف صالح مطلوب لتفعيل الباقة" });
+      return;
+    }
+
+    const countToAdd = Math.max(1, Math.min(50, Number(attemptsCount) || 3));
+    const adminObj = getAdminIdentity(req);
+    const adminIdentity = adminObj ? `${adminObj.username} (${adminObj.role})` : "الأدمن / المساعد";
+
+    const [existing] = await db
+      .select()
+      .from(selfAssessmentEntitlementsTable)
+      .where(eq(selfAssessmentEntitlementsTable.phone, phone))
+      .limit(1);
+
+    let updatedRecord: any;
+
+    if (existing) {
+      const [updated] = await db
+        .update(selfAssessmentEntitlementsTable)
+        .set({
+          paidAttemptsBalance: existing.paidAttemptsBalance + countToAdd,
+          totalPurchasedAttempts: existing.totalPurchasedAttempts + countToAdd,
+          studentName: studentName ? String(studentName).trim() : existing.studentName,
+          lastGrantedBy: adminIdentity,
+          lastGrantedAt: new Date(),
+          notes: notes ? String(notes).trim() : existing.notes,
+          updatedAt: new Date(),
+        })
+        .where(eq(selfAssessmentEntitlementsTable.id, existing.id))
+        .returning();
+      updatedRecord = updated;
+    } else {
+      const [inserted] = await db
+        .insert(selfAssessmentEntitlementsTable)
+        .values({
+          phone,
+          studentName: studentName ? String(studentName).trim() : "",
+          freeAttemptUsed: true,
+          paidAttemptsBalance: countToAdd,
+          totalPurchasedAttempts: countToAdd,
+          lastGrantedBy: adminIdentity,
+          lastGrantedAt: new Date(),
+          notes: notes ? String(notes).trim() : "تفعيل باقة محاولات من الإدارة",
+        })
+        .returning();
+      updatedRecord = inserted;
+    }
+
+    await logAudit(
+      req,
+      "GRANT_SELF_ASSESSMENT_ATTEMPTS",
+      "self_assessment_entitlements",
+      String(updatedRecord.id),
+      `تم شحن ${countToAdd} محاولات تقييم ذاتي لرقم ${phone} (${updatedRecord.studentName || "بدون اسم"}) بواسطة ${adminIdentity}`
+    );
+
+    res.json({
+      success: true,
+      message: `تم تفعيل ${countToAdd} محاولات بنجاح لرقم ${phone}. الرصيد الحالي: ${updatedRecord.paidAttemptsBalance} محاولات`,
+      entitlement: updatedRecord,
     });
   } catch (error) {
     next(error);

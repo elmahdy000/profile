@@ -34,6 +34,7 @@ import {
   CreditCard,
   FileSpreadsheet,
   QrCode,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -51,6 +52,7 @@ import { StudentSummariesAdminTab } from "./admin/learning/StudentSummariesAdmin
 import { StudentQuizGradesSheet } from "./platform/tabs/StudentQuizGradesSheet";
 import { AttendanceScannerTab } from "./admin/attendance/AttendanceScannerTab";
 import { TestBankTab } from "./admin/learning/TestBankTab";
+import { SelfAssessmentAdminTab } from "./admin/learning/SelfAssessmentAdminTab";
 
 type Student = PlatformStudent & {
   accessCode?: string | null;
@@ -231,7 +233,8 @@ export type AdminLearningTab =
   | "testbank"
   | "quizzes"
   | "subscriptions"
-  | "reports";
+  | "reports"
+  | "self-assessment-packs";
 
 export function AdminLearning({
   role = "superadmin",
@@ -1247,12 +1250,13 @@ export function AdminLearning({
     ["files", "الملفات", Folder],
     ["testbank", "بنك الأسئلة الشامل 📚", BookOpen],
     ["quizzes", "الاختبارات", ClipboardCheck],
+    ["self-assessment-packs", "باقات التقييم الذاتي ⚡", Sparkles],
     ["notifications", "إرسال إشعار", Bell],
     ["reports", "التقارير", BarChart3],
   ];
 
-  // Subadmin has access to student management, attendance scanner & daily activity reports
-  const SUBADMIN_TABS = new Set(["attendance", "students", "center-bookings", "summaries", "grades-sheet", "subscriptions", "payments", "reports"]);
+  // Subadmin has access to student management, attendance scanner, daily reports & self-assessment packs
+  const SUBADMIN_TABS = new Set(["attendance", "students", "center-bookings", "summaries", "grades-sheet", "subscriptions", "payments", "reports", "self-assessment-packs"]);
   const tabs = role === "subadmin"
     ? allTabs.filter(([value]) => SUBADMIN_TABS.has(value))
     : allTabs;
@@ -1270,6 +1274,7 @@ export function AdminLearning({
     testbank: ["بنك الأسئلة الشامل وتوليد الامتحانات", "تنظيم الأسئلة هرمياً: المرحلة ⬅️ الوحدة ⬅️ الدرس، رفع الملفات (Word/PDF/نص) وتوليد الامتحانات تلقائياً."],
     quizzes: ["بناء وإدارة الاختبارات", "أنشئ الاختبارات وحدد الجمهور والإعدادات والأسئلة ثم انشرها."],
     reports: ["التقارير والمتابعة", "راقب نشاط الطلاب والتقدم ومؤشرات الأداء التعليمية."],
+    "self-assessment-packs": ["إدارة وتفعيل باقات التقييم الذاتي (3 محاولات بـ 50 ج.م)", "متابعة طلبات الزوار وتفعيل باقات المحاولات فورياً للطلاب والزوار بمجرد تأكيد الدفع."],
   };
   return (
     <div className="admin-learning-workspace space-y-6 text-[#0F172A]" dir="rtl">
@@ -2413,6 +2418,9 @@ export function AdminLearning({
                 </table>
               </section>
             </div>
+          )}
+          {tab === "self-assessment-packs" && (
+            <SelfAssessmentAdminTab role={role} />
           )}
         </>
       )}

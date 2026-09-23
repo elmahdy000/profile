@@ -139,7 +139,7 @@ export function StudentCardModal({ students, isOpen, onClose }: StudentCardModal
                 (st.languageTrack && st.languageTrack.toLowerCase().includes("lang")) ||
                 (st.academicTrack && st.academicTrack.toLowerCase().includes("lang")) ||
                 (st.schoolType && st.schoolType.toLowerCase().includes("lang")) ||
-                (st.school_type && st.school_type.toLowerCase().includes("lang"));
+                (Boolean((st as any).school_type) && String((st as any).school_type).toLowerCase().includes("lang"));
               const resolvedTrack = isLanguages ? "لغات (Languages)" : "عام (عربي)";
 
               return (

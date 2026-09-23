@@ -528,7 +528,7 @@ export function DashboardTab({
   dataLoading: boolean;
   dataError: string;
   onRetry: () => void;
-  onOpen: (tab: "lessons" | "compiler" | "files" | "quizzes" | "summaries") => void;
+  onOpen: (tab: "lessons" | "compiler" | "files" | "quizzes" | "summaries" | "self-assessment") => void;
 }) {
   const academicTrack = getTrackForStage(student.grade);
   const safeFiles = Array.isArray(files) ? files : [];
@@ -664,6 +664,31 @@ export function DashboardTab({
         completedQuizzes={completedQuizzesCount}
         totalQuizzes={safeQuizzes.length}
       />
+
+      {/* 🎯 Self-Assessment CTA Card */}
+      <div className="rounded-2xl border border-blue-200 dark:border-blue-900/60 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white p-5 sm:p-6 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-4 text-right">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm text-white shadow-inner">
+            <Sparkles className="h-6 w-6 text-amber-300" />
+          </div>
+          <div>
+            <h3 className="text-base sm:text-lg font-black tracking-tight">
+              خدمة التقييم الذاتي المخصص (Self-Assessment) 🎯
+            </h3>
+            <p className="text-xs sm:text-sm text-blue-100 mt-0.5 leading-relaxed">
+              اختر أي وحدة أو دروس معينة، واختبر نفسك فورياً من بنك الأسئلة مع تصحيح لحظي وشرح لكل خطأ!
+            </p>
+          </div>
+        </div>
+        <Button
+          type="button"
+          onClick={() => onOpen("self-assessment")}
+          className="h-11 px-6 rounded-xl bg-white text-blue-900 hover:bg-blue-50 font-bold text-xs shrink-0 shadow-sm cursor-pointer"
+        >
+          <span>ابدأ اختبارك الآن</span>
+          <ChevronLeft className="h-4 w-4 mr-1" />
+        </Button>
+      </div>
 
       {/* 4 & 5. Continue Learning & Next Steps Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-[1.4fr_1fr] gap-4">

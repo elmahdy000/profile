@@ -383,3 +383,62 @@ export const studentAttendanceTable = pgTable("student_attendance", {
 export type InsertStudentAttendance = typeof studentAttendanceTable.$inferInsert;
 export type StudentAttendance = typeof studentAttendanceTable.$inferSelect;
 
+export const selfAssessmentEntitlementsTable = pgTable("self_assessment_entitlements", {
+  id: serial("id").primaryKey(),
+  phone: varchar("phone", { length: 20 }).notNull().unique(),
+  studentName: text("student_name").notNull().default(""),
+  freeAttemptUsed: boolean("free_attempt_used").notNull().default(false),
+  paidAttemptsBalance: integer("paid_attempts_balance").notNull().default(0),
+  totalPurchasedAttempts: integer("total_purchased_attempts").notNull().default(0),
+  lastGrantedBy: text("last_granted_by"),
+  lastGrantedAt: timestamp("last_granted_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  phoneIdx: index("idx_self_assessment_entitlements_phone").on(table.phone),
+}));
+
+export type InsertSelfAssessmentEntitlement = typeof selfAssessmentEntitlementsTable.$inferInsert;
+export type SelfAssessmentEntitlement = typeof selfAssessmentEntitlementsTable.$inferSelect;
+
+export const selfAssessmentSessionsTable = pgTable("self_assessment_sessions", {
+  id: serial("id").primaryKey(),
+  sessionId: text("session_id").notNull().unique(),
+  studentId: integer("student_id").references(() => studentsTable.id, { onDelete: "set null" }),
+  phone: varchar("phone", { length: 20 }),
+  studentName: text("student_name").notNull().default(""),
+  stage: text("stage"),
+  unit: text("unit"),
+  lessons: jsonb("lessons").$type<string[]>().notNull().default([]),
+  questionsCount: integer("questions_count").notNull().default(10),
+  questions: jsonb("questions").$type<QuizQuestion[]>().notNull(),
+  answers: jsonb("answers").$type<number[]>().notNull().default([]),
+  score: integer("score"),
+  totalPoints: integer("total_points"),
+  percentage: integer("percentage"),
+  passed: boolean("passed"),
+  timeSpentSeconds: integer("time_spent_seconds").notNull().default(0),
+  status: text("status").notNull().default("in_progress"),
+  details: jsonb("details").$type<Array<{
+    questionIndex: number;
+    prompt: string;
+    options: string[];
+    selectedOption: number;
+    correctOption: number;
+    isCorrect: boolean;
+    explanation?: string;
+  }>>(),
+  isGuest: boolean("is_guest").notNull().default(false),
+  isFreeTrial: boolean("is_free_trial").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  completedAt: timestamp("completed_at"),
+}, (table) => ({
+  sessionIdIdx: index("idx_self_assessment_sessions_session_id").on(table.sessionId),
+  phoneIdx: index("idx_self_assessment_sessions_phone").on(table.phone),
+  studentIdx: index("idx_self_assessment_sessions_student_id").on(table.studentId),
+}));
+
+export type InsertSelfAssessmentSession = typeof selfAssessmentSessionsTable.$inferInsert;
+export type SelfAssessmentSession = typeof selfAssessmentSessionsTable.$inferSelect;
+
