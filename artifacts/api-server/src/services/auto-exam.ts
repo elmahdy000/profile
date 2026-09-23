@@ -390,12 +390,16 @@ export async function generateDraftExamForSchedule(
     if (matching) targetCourse = matching;
   }
 
-  // 3. Automated Quality Filter: Ensure questions are complete, have >= 2 choices, and valid correctIndex
+  // 3. Automated Quality Filter: Ensure questions are complete, have valid choices, and valid correctIndex
+  const TRUNCATED_ENDINGS = [' لل', ' ت', ' لت', ' ال', ' في', ' من', ' عن', ' إلى', ' مع', ' أو', ' أن', ' و', '—', '-'];
   const qualityQuestions = rawQuestions.filter((row) => {
     const q = row.question;
     if (!q || typeof q.prompt !== "string" || !q.prompt.trim()) return false;
+    const promptTrim = q.prompt.trim();
+    if (TRUNCATED_ENDINGS.some((t) => promptTrim.endsWith(t)) || promptTrim.endsWith('من الصعب')) return false;
     if (!Array.isArray(q.options) || q.options.length < 2) return false;
     if (q.options.some((opt) => !String(opt || "").trim())) return false;
+    if (q.options.some((opt) => TRUNCATED_ENDINGS.some((t) => String(opt || "").trim().endsWith(t)))) return false;
     if (typeof q.correctIndex !== "number" || q.correctIndex < 0 || q.correctIndex >= q.options.length) return false;
     return true;
   });

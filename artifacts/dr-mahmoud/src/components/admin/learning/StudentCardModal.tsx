@@ -133,94 +133,102 @@ export function StudentCardModal({ students, isOpen, onClose }: StudentCardModal
               const studentId = st.id || index;
               const studentName = st.name || "طالب";
               const studentPhone = st.phone || "—";
-              const rawSchool = st.schoolName || st.school_name || "";
-              const resolvedSchool = (rawSchool && rawSchool !== "arabic" && rawSchool !== "languages") ? rawSchool : "مدارس الزقازيق";
-              const resolvedCenter = st.centerName || st.center_name || "حضور أونلاين / السنتر";
-              const resolvedSlot = st.appointmentSlot || st.appointment_slot || "موعد المجموعة المتاح";
-              const resolvedParentPhone = st.parentPhone || st.parent_phone || studentPhone;
-              const resolvedTrack = st.languageTrack || st.language_track || (st.academicTrack === "languages" ? "لغات (إنجليزي)" : "عربي (عام)");
+              const resolvedCenter = st.centerName || st.center_name || "سنتر معتمد";
+              const resolvedParentPhone = st.parentPhone || st.parent_phone || "—";
+              const isLanguages = 
+                (st.languageTrack && st.languageTrack.toLowerCase().includes("lang")) ||
+                (st.academicTrack && st.academicTrack.toLowerCase().includes("lang")) ||
+                (st.schoolType && st.schoolType.toLowerCase().includes("lang")) ||
+                (st.school_type && st.school_type.toLowerCase().includes("lang"));
+              const resolvedTrack = isLanguages ? "لغات (Languages)" : "عام (عربي)";
 
               return (
                 <div
                   key={studentId}
-                  className="print-card-item relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-5 shadow-md transition-all text-right"
+                  className="print-card-item relative overflow-hidden rounded-2xl border border-slate-300 bg-white p-4 shadow-sm text-right"
+                  style={{ minHeight: "240px" }}
                 >
-                  {/* Decorative Background Elements */}
-                  <div className="absolute top-0 right-0 h-28 w-28 -mr-8 -mt-8 rounded-full bg-blue-500/10 blur-xl pointer-events-none" />
-                  <div className="absolute bottom-0 left-0 h-28 w-28 -ml-8 -mb-8 rounded-full bg-indigo-500/10 blur-xl pointer-events-none" />
+                  {/* Top Gradient Accent */}
+                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-900 via-blue-600 to-cyan-500" />
 
-                  {/* Header Badge */}
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                    <div className="flex items-center gap-2.5">
+                  {/* Header */}
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2.5 pt-1">
+                    <div className="flex items-center gap-2">
                       <img
                         src="/assets/doctor_avatar.png"
-                        alt="Dr. Mahmoud Elmahdy"
-                        className="h-10 w-10 rounded-full border-2 border-blue-600 object-cover shadow-sm flex-shrink-0"
+                        alt="د. محمود المهدي"
+                        className="h-9 w-9 rounded-full border border-blue-600 object-cover shadow-xs flex-shrink-0"
                       />
                       <div>
                         <h4 className="text-sm font-black text-slate-900 leading-tight">د. محمود المهدي</h4>
-                        <span className="text-[10px] text-blue-600 font-bold block">Dr. Mahmoud Elmahdy · بطاقة حضور السنتر</span>
+                        <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium">
+                          <span>فيزياء الثانوية العامة</span>
+                          <span>•</span>
+                          <span className="text-blue-600 font-bold dir-ltr">Dr. Mahmoud Elmahdy</span>
+                        </div>
                       </div>
                     </div>
-                    <span className="rounded-full bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
-                      حساب نشط
+                    <span className="inline-flex items-center gap-1 rounded-md bg-slate-50 border border-slate-200 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      بطاقة طالب رسمية
                     </span>
                   </div>
 
+                  {/* Hero Student Name */}
+                  <div className="rounded-lg bg-slate-50 border border-slate-200 border-r-4 border-r-blue-600 px-3 py-1.5 mb-2.5">
+                    <div className="flex items-center justify-between text-[9px] font-bold text-slate-500 mb-0.5">
+                      <span className="text-blue-700 font-extrabold">اسم الطالب</span>
+                      <span className="text-slate-400 font-mono tracking-wider dir-ltr">STUDENT FULL NAME</span>
+                    </div>
+                    <h3 className="text-sm font-black text-slate-900 truncate leading-snug">{studentName}</h3>
+                  </div>
+
                   {/* Card Content Grid */}
-                  <div className="grid grid-cols-[1fr_auto] gap-4 items-center">
-                    {/* Left: Info */}
-                    <div className="space-y-2 text-xs">
-                      <div>
-                        <span className="text-[10px] font-bold text-slate-500 block">اسم الطالب</span>
-                        <h3 className="text-sm font-extrabold text-slate-900 truncate">{studentName}</h3>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
-                        <div className="rounded-xl bg-slate-50 border border-slate-200/60 p-2">
-                          <span className="text-[9px] text-slate-500 block">رقم تعريف الطالب</span>
-                          <span className="font-mono font-bold text-blue-600 dir-ltr block text-right">#STD-{studentId}</span>
+                  <div className="grid grid-cols-[1fr_auto] gap-3 items-stretch">
+                    {/* Details Column */}
+                    <div className="flex flex-col justify-between gap-1.5">
+                      <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                        <div className="rounded-lg bg-slate-50 border border-slate-200/80 p-1.5">
+                          <span className="text-[8px] text-slate-500 block font-bold">السنتر التعليمي</span>
+                          <span className="font-extrabold text-slate-800 block truncate">{resolvedCenter}</span>
                         </div>
-                        <div className="rounded-xl bg-indigo-50/60 border border-indigo-100 p-2">
-                          <span className="text-[9px] text-indigo-700/80 block font-medium">المرحلة والمسار</span>
-                          <span className="font-bold text-indigo-900 block truncate">{resolvedTrack}</span>
+                        <div className={`rounded-lg border p-1.5 ${isLanguages ? "bg-emerald-50/80 border-emerald-200 text-emerald-800" : "bg-blue-50/80 border-blue-200 text-blue-800"}`}>
+                          <span className="text-[8px] opacity-75 block font-bold">المسار الدراسي</span>
+                          <span className="font-extrabold block truncate">{resolvedTrack}</span>
                         </div>
                       </div>
 
-                      <div className="rounded-xl bg-blue-50/70 border border-blue-100 p-2.5 space-y-1">
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span className="text-slate-500 font-semibold">📍 السنتر:</span>
-                          <strong className="text-blue-700 font-bold">{resolvedCenter}</strong>
+                      <div className="rounded-lg bg-slate-50 border border-slate-200/80 px-2 py-1.5 flex items-center justify-between text-[10px] dir-rtl">
+                        <div className="flex items-center gap-1">
+                          <span className="text-slate-500 font-bold text-[9px]">هاتف الطالب:</span>
+                          <span className="font-mono font-bold text-slate-900 dir-ltr">{studentPhone}</span>
                         </div>
-                        <div className="flex items-center justify-between text-[10px]">
-                          <span className="text-slate-500">⏱️ الموعد:</span>
-                          <strong className="text-slate-800">{resolvedSlot}</strong>
+                        <div className="w-[1px] h-3 bg-slate-200" />
+                        <div className="flex items-center gap-1">
+                          <span className="text-slate-500 font-bold text-[9px]">ولي الأمر:</span>
+                          <span className="font-mono font-bold text-slate-900 dir-ltr">{resolvedParentPhone}</span>
                         </div>
-                      </div>
-
-                      <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1">
-                        <span>📱 تليفون الطالب: <strong className="dir-ltr text-slate-800">{studentPhone}</strong></span>
-                        <span>👨‍👩‍👦 ولي الأمر: <strong className="dir-ltr text-slate-800">{resolvedParentPhone}</strong></span>
                       </div>
                     </div>
 
-                    {/* Right: QR Code */}
-                    <div className="flex flex-col items-center justify-center space-y-1.5 border-r border-slate-100 pr-3">
-                      <div className="rounded-2xl border-2 border-slate-900/10 p-1.5 bg-white shadow-xs">
-                        <QRCodeSVG value={`STD-${studentId}-${studentPhone}`} size={120} />
+                    {/* QR Code Column */}
+                    <div className="flex flex-col items-center justify-center gap-1 flex-shrink-0">
+                      <div className="rounded-lg border border-slate-900 p-1 bg-white shadow-xs">
+                        <QRCodeSVG value={`STD-${studentId}-${studentPhone}`} size={85} />
                       </div>
-                      <span className="text-[9px] font-bold text-slate-500 tracking-wider">
-                        رمز الحضور الذكي 📷
+                      <span className="text-[8px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
+                        رمز الحضور الذكي
                       </span>
                     </div>
                   </div>
 
                   {/* Card Footer Bar */}
-                  <div className="mt-4 pt-2.5 border-t border-dashed border-slate-200 flex items-center justify-between text-[9px] text-slate-400 font-medium">
-                    <span>منصة د. محمود المهدي للبرمجة وعلوم الحاسب 💻 2026</span>
-                    <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold">
-                      <ShieldCheck className="h-3 w-3" /> بطاقة معتمدة للسنتر
+                  <div className="mt-2.5 pt-1.5 border-t border-dashed border-slate-200 flex items-center justify-between text-[9px] text-slate-500">
+                    <span className="inline-flex items-center gap-1 text-emerald-600 font-bold">
+                      <Check className="h-3 w-3" /> معتمد رسمياً بالسنتر
                     </span>
+                    <span className="font-semibold text-slate-400">العام الدراسي 2024 - 2025</span>
+                    <span className="font-medium text-slate-500">منصة د. محمود المهدي التعليمية</span>
                   </div>
                 </div>
               );
