@@ -98,6 +98,9 @@ export function SelfAssessmentTab({
   const [selectedUnitName, setSelectedUnitName] = useState<string>("");
   const [selectedLessons, setSelectedLessons] = useState<string[]>([]); // empty = whole unit
   const [questionCount, setQuestionCount] = useState<number>(10);
+  const [selectedDurationMinutes, setSelectedDurationMinutes] = useState<number>(0); // 0 = open / unlimited
+  const [isUntimed, setIsUntimed] = useState<boolean>(true);
+  const [showSubmitModal, setShowSubmitModal] = useState<boolean>(false);
 
   // Guest details (if not logged in)
   const [guestPhone, setGuestPhone] = useState("");
@@ -196,17 +199,19 @@ export function SelfAssessmentTab({
     if (step !== "taking") return;
     const timer = setInterval(() => {
       setTotalSecondsSpent((prev) => prev + 1);
-      setTimeRemainingSeconds((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          void handleSubmitTest(true);
-          return 0;
-        }
-        return prev - 1;
-      });
+      if (!isUntimed) {
+        setTimeRemainingSeconds((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            void handleSubmitTest(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }
     }, 1000);
     return () => clearInterval(timer);
-  }, [step]);
+  }, [step, isUntimed]);
 
   // Selected Stage & Unit Objects
   const currentStageObj = stages.find((s) => s.stage === selectedStageName) || stages[0];
@@ -246,6 +251,7 @@ export function SelfAssessmentTab({
           count: questionCount,
           phone: guestPhone,
           studentName: guestName,
+          durationMinutes: selectedDurationMinutes,
         }),
       });
 
@@ -267,13 +273,16 @@ export function SelfAssessmentTab({
       setQuestions(data.questions || []);
       setAnswers({});
       setCurrentQIndex(0);
-      setTimeRemainingSeconds((data.durationMinutes || 15) * 60);
+      const dur = typeof data.durationMinutes === "number" ? data.durationMinutes : selectedDurationMinutes;
+      setIsUntimed(dur === 0);
+      setTimeRemainingSeconds(dur > 0 ? dur * 60 : 0);
       setTotalSecondsSpent(0);
       setStep("taking");
+      window.scrollTo({ top: 0, behavior: "smooth" });
 
       toast({
         title: "بدأ الاختبار بالتوفيق! 🎯",
-        description: `تم سحب ${data.questionsCount} سؤال للتقييم الذاتي.`,
+        description: `تم سحب ${data.questionsCount} سؤال للتقييم الذاتي (${dur === 0 ? "وقت مفتوح" : `${dur} دقيقة`}).`,
       });
     } catch (err) {
       toast({
@@ -309,8 +318,11 @@ export function SelfAssessmentTab({
       setTotalPoints(data.totalPoints || 0);
       setPercentage(data.percentage || 0);
       setPassed(Boolean(data.passed));
-      setReviewDetails(data.review || []);
+      const rList = data.review || data.details || [];
+      setReviewDetails(rList);
+      setShowSubmitModal(false);
       setStep("results");
+      window.scrollTo({ top: 0, behavior: "smooth" });
 
       if (isAuto) {
         toast({ title: "انتهى الوقت", description: "تم تسليم إجاباتك وإظهار تقرير التقييم الذاتي." });
@@ -658,45 +670,90 @@ export function SelfAssessmentTab({
             </div>
           </div>
 
-          {/* Question Count & Start Action */}
-          <div className="rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 p-5 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                عدد الأسئلة:
-              </span>
-              <div className="flex items-center gap-2">
-                {[10, 15, 20].map((num) => (
-                  <button
-                    key={num}
-                    type="button"
-                    onClick={() => setQuestionCount(num)}
-                    className={`h-9 px-3.5 rounded-xl text-xs font-bold border transition-all ${
-                      questionCount === num
-                        ? "border-blue-600 bg-blue-600 text-white shadow-xs"
-                        : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100"
-                    }`}
-                  >
-                    {num} سؤال ({Math.ceil(num * 1.5)} د)
-                  </button>
-                ))}
+          {/* Question Count & Duration Config */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Question Count */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <Layers className="h-3.5 w-3.5 text-blue-600" />
+                  عدد الأسئلة المطلوبة:
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {[5, 10, 15, 20, 25, 30].map((num) => (
+                    <button
+                      key={num}
+                      type="button"
+                      onClick={() => setQuestionCount(num)}
+                      className={`h-9 px-3 rounded-xl text-xs font-bold border transition-all ${
+                        questionCount === num
+                          ? "border-blue-600 bg-blue-600 text-white shadow-xs"
+                          : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                      }`}
+                    >
+                      {num} سؤال
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Timer Duration */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-emerald-600" />
+                  توقيت الاختبار (المدة):
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { label: "وقت مفتوح (بدون توقيت) ⏱️", value: 0 },
+                    { label: "10 د", value: 10 },
+                    { label: "15 د", value: 15 },
+                    { label: "20 د", value: 20 },
+                    { label: "30 د", value: 30 },
+                  ].map((dur) => (
+                    <button
+                      key={dur.value}
+                      type="button"
+                      onClick={() => setSelectedDurationMinutes(dur.value)}
+                      className={`h-9 px-3 rounded-xl text-xs font-bold border transition-all ${
+                        selectedDurationMinutes === dur.value
+                          ? "border-emerald-600 bg-emerald-600 text-white shadow-xs"
+                          : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                      }`}
+                    >
+                      {dur.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
-            <Button
-              size="lg"
-              disabled={generating || !selectedUnitName}
-              onClick={handleStartExam}
-              className="w-full sm:w-auto px-8 h-12 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm shadow-md shadow-blue-500/25 transition-all"
-            >
-              {generating ? (
-                <>جاري تحضير الأسئلة...</>
-              ) : (
-                <>
-                  <Play className="h-4 w-4 ml-2 fill-white" />
-                  ابدأ اختبار التقييم الذاتي الآن
-                </>
-              )}
-            </Button>
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="text-xs text-slate-500">
+                <span>سيتم توليد اختبار مخصص يتضمن </span>
+                <strong className="text-blue-600 dark:text-blue-400 font-bold">{questionCount} سؤالاً</strong>
+                <span> مع </span>
+                <strong className="text-emerald-600 dark:text-emerald-400 font-bold">
+                  {selectedDurationMinutes === 0 ? "وقت مفتوح دون انقطاع ⏱️" : `${selectedDurationMinutes} دقيقة للحل ⏳`}
+                </strong>
+              </div>
+
+              <Button
+                size="lg"
+                disabled={generating || !selectedUnitName}
+                onClick={handleStartExam}
+                className="w-full sm:w-auto px-8 h-11 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm shadow-md shadow-blue-500/25 transition-all"
+              >
+                {generating ? (
+                  <>جاري تحضير الأسئلة...</>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 ml-2 fill-white" />
+                    ابدأ اختبار التقييم الذاتي الآن
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -716,26 +773,30 @@ export function SelfAssessmentTab({
             </div>
 
             <div className="flex items-center gap-3">
-              <div
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold ${
-                  timeRemainingSeconds < 120
-                    ? "bg-red-50 border-red-200 text-red-600 animate-pulse"
-                    : "bg-slate-50 border-slate-200 text-slate-700"
-                }`}
-              >
-                <Clock className="h-3.5 w-3.5" />
-                <span>الوقت المتبقي: {formatTimer(timeRemainingSeconds)}</span>
-              </div>
+              {isUntimed ? (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold bg-blue-50/80 border-blue-200 text-blue-700 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-300">
+                  <Clock className="h-3.5 w-3.5 text-blue-600" />
+                  <span>الوقت المنقضي: {formatTimer(totalSecondsSpent)}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-200/70 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-sans mr-1">وقت مفتوح</span>
+                </div>
+              ) : (
+                <div
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold ${
+                    timeRemainingSeconds < 120
+                      ? "bg-red-50 border-red-200 text-red-600 animate-pulse dark:bg-red-950/40 dark:border-red-800"
+                      : "bg-slate-50 border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
+                  }`}
+                >
+                  <Clock className="h-3.5 w-3.5" />
+                  <span>الوقت المتبقي: {formatTimer(timeRemainingSeconds)}</span>
+                </div>
+              )}
 
               <Button
                 variant="default"
                 size="sm"
                 disabled={submitting}
-                onClick={() => {
-                  if (confirm("هل أنت متأكد من تسليم الإجابات وعرض النتيجة؟")) {
-                    void handleSubmitTest(false);
-                  }
-                }}
+                onClick={() => setShowSubmitModal(true)}
                 className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-9 px-4 shadow-xs"
               >
                 {submitting ? "جاري التصحيح..." : "تسليم الاختبار 🏁"}
@@ -845,11 +906,7 @@ export function SelfAssessmentTab({
                     <Button
                       size="sm"
                       disabled={submitting}
-                      onClick={() => {
-                        if (confirm("هل انتهيت وترغب في تسليم الاختبار الآن؟")) {
-                          void handleSubmitTest(false);
-                        }
-                      }}
+                      onClick={() => setShowSubmitModal(true)}
                       className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-5 font-bold"
                     >
                       تسليم الاختبار وعرض النتيجة
@@ -1012,6 +1069,74 @@ export function SelfAssessmentTab({
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ────────────────── SUBMISSION CONFIRMATION MODAL ────────────────── */}
+      {showSubmitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+          <div
+            className="w-full max-w-md rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-2xl space-y-5 text-right"
+            dir="rtl"
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-300 flex items-center justify-center shrink-0">
+                <FileCheck2 className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  تأكيد تسليم الاختبار
+                </h3>
+                <p className="text-xs text-slate-500">
+                  هل انتهيت وترغب في إنهاء الاختبار وتصحيح إجاباتك الآن؟
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-2 text-xs">
+              <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
+                <span>إجمالي عدد الأسئلة:</span>
+                <span className="font-bold">{questions.length} سؤال</span>
+              </div>
+              <div className="flex justify-between items-center text-emerald-700 dark:text-emerald-400">
+                <span>الأسئلة التي تمت الإجابة عليها:</span>
+                <span className="font-bold font-mono">
+                  {Object.keys(answers).length} من {questions.length}
+                </span>
+              </div>
+              {Object.keys(answers).length < questions.length && (
+                <div className="flex justify-between items-center text-amber-700 dark:text-amber-400">
+                  <span>أسئلة لم تتم الإجابة عليها:</span>
+                  <span className="font-bold font-mono">
+                    {questions.length - Object.keys(answers).length} سؤال
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between items-center text-slate-600 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-700">
+                <span>الوقت المستغرق حتى الآن:</span>
+                <span className="font-bold font-mono">{formatTimer(totalSecondsSpent)}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 pt-1">
+              <Button
+                variant="default"
+                disabled={submitting}
+                onClick={() => void handleSubmitTest(false)}
+                className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-10 shadow-sm"
+              >
+                {submitting ? "جاري التصحيح وحساب النتيجة..." : "نعم، تسليم الاختبار والنتيجة 🏁"}
+              </Button>
+              <Button
+                variant="outline"
+                disabled={submitting}
+                onClick={() => setShowSubmitModal(false)}
+                className="rounded-xl text-xs h-10 px-4"
+              >
+                متابعة الحل
+              </Button>
+            </div>
           </div>
         </div>
       )}

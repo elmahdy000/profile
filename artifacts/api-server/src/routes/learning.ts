@@ -490,11 +490,12 @@ function cleanOptionString(opt: string): string {
 function isCompleteValidQuestion(q: QuizQuestion | undefined | null): boolean {
   if (!q || !q.prompt || typeof q.prompt !== "string") return false;
   const prompt = q.prompt.trim();
-  if (prompt.length < 8) return false;
+  if (prompt.length < 10) return false;
   if (/\b(?:ما فائدة|سؤال|Question)\b\s*$/.test(prompt)) return false;
   if (/\r?\n\s*[A-Da-dأابجده]\)\s*$/.test(prompt)) return false;
-  // Reject prompts ending in truncated letters, prepositions, or abrupt punctuation
-  if (/(?:^|\s)(?:ت|لت|ي|و|ف|ب|ك|ل|ال|دون)$/.test(prompt)) return false;
+  // Reject prompts ending in any single Arabic letter, dangling prepositions, or abrupt endings
+  if (/(?:^|\s)[\u0621-\u064A]$/.test(prompt)) return false;
+  if (/(?:^|\s)(?:ت|لت|ي|و|ف|ب|ك|ل|ال|دون|في|من|عن|إلى|مع|أو|أن|لل|على|التي|الذي|الذين|اللاتي|اللواتي|بأن|حيث|بما|مثل|تؤدي إلى|من الصعب)$/.test(prompt)) return false;
   if (/[\—\-\:\/]\s*$/.test(prompt)) return false;
 
   if (!Array.isArray(q.options) || q.options.length < 2) return false;
@@ -502,8 +503,9 @@ function isCompleteValidQuestion(q: QuizQuestion | undefined | null): boolean {
     if (!rawOpt || typeof rawOpt !== "string") return false;
     const opt = cleanOptionString(rawOpt);
     if (opt.length < 2) return false;
-    // Reject options ending in standalone truncated particles or dashes
-    if (/(?:^|\s)(?:ت|لت|و|ال)$/.test(opt)) return false;
+    // Reject options ending in standalone truncated single letters, particles or dashes
+    if (/(?:^|\s)[\u0621-\u064A]$/.test(opt)) return false;
+    if (/(?:^|\s)(?:ت|لت|و|ال|في|من|عن|إلى|مع|أو|أن|لل|على)$/.test(opt)) return false;
     if (/[\—\-]$/.test(opt)) return false;
   }
   return true;
@@ -7571,7 +7573,7 @@ router.get("/learning/self-assessment/eligibility", async (req, res, next) => {
 // 3. POST /api/learning/self-assessment/generate - توليد اختبار التقييم الذاتي المخصص وسحب الأسئلة
 router.post("/learning/self-assessment/generate", async (req, res, next) => {
   try {
-    const { stage, unit, lessons, count, studentName } = req.body;
+    const { stage, unit, lessons, count, studentName, durationMinutes } = req.body;
 
     if (!unit || !String(unit).trim()) {
       res.status(400).json({ error: "يجب اختيار الوحدة الدراسية لتوليد الاختبار" });
@@ -7777,7 +7779,10 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
       points: q.points || 1,
     }));
 
-    const durationMinutes = Math.max(10, Math.ceil(pickedQuestions.length * 1.5));
+    const reqDuration = durationMinutes !== undefined ? Number(durationMinutes) : undefined;
+    const finalDurationMinutes = reqDuration !== undefined && !isNaN(reqDuration) && reqDuration >= 0
+      ? reqDuration
+      : Math.max(10, Math.ceil(pickedQuestions.length * 1.5));
 
     res.json({
       success: true,
@@ -7785,7 +7790,7 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
       unit: cleanedUnit,
       lessons: rawLessons.length > 0 ? rawLessons : ["الوحدة كاملة"],
       questionsCount: pickedQuestions.length,
-      durationMinutes,
+      durationMinutes: finalDurationMinutes,
       questions: clientQuestions,
       isFreeTrial: isFreeTrialSession,
       isEnrolled: isEnrolledStudent,
@@ -7826,6 +7831,7 @@ router.post("/learning/self-assessment/submit", async (req, res, next) => {
         passed: session.passed,
         timeSpentSeconds: session.timeSpentSeconds,
         details: session.details,
+        review: session.details,
       });
       return;
     }
@@ -7891,6 +7897,7 @@ router.post("/learning/self-assessment/submit", async (req, res, next) => {
       passed,
       timeSpentSeconds: spentTime,
       review: reviewDetails,
+      details: reviewDetails,
     });
   } catch (error) {
     next(error);
