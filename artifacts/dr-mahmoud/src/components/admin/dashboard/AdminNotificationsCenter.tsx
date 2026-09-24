@@ -92,13 +92,48 @@ export function AdminNotificationsCenter({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
-  const totalUrgent =
-    counts.pendingReceipts +
-    counts.pendingStudents +
-    counts.pendingRecovery +
-    bookingsCount;
+  const [visitedCategories, setVisitedCategories] = useState<Record<string, number>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("admin_visited_notifications_v1") || "{}");
+    } catch {
+      return {};
+    }
+  });
 
-  const handleAction = (tab: string, subTab?: string) => {
+  const markCategoryVisited = (key: string, currentVal: number) => {
+    setVisitedCategories((prev) => {
+      const next = { ...prev, [key]: currentVal };
+      try {
+        localStorage.setItem("admin_visited_notifications_v1", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const clearAllNotifications = () => {
+    const next = {
+      pendingReceipts: counts.pendingReceipts,
+      pendingStudents: counts.pendingStudents,
+      pendingRecovery: counts.pendingRecovery,
+      bookings: bookingsCount,
+    };
+    setVisitedCategories(next);
+    try {
+      localStorage.setItem("admin_visited_notifications_v1", JSON.stringify(next));
+    } catch {}
+  };
+
+  const unreadReceipts = Math.max(0, counts.pendingReceipts - (visitedCategories.pendingReceipts || 0));
+  const unreadStudents = Math.max(0, counts.pendingStudents - (visitedCategories.pendingStudents || 0));
+  const unreadRecovery = Math.max(0, counts.pendingRecovery - (visitedCategories.pendingRecovery || 0));
+  const unreadBookings = Math.max(0, bookingsCount - (visitedCategories.bookings || 0));
+
+  const totalUrgent = unreadReceipts + unreadStudents + unreadRecovery + unreadBookings;
+
+  const handleAction = (tab: string, subTab?: string, categoryKey?: string, currentCount?: number) => {
+    if (categoryKey && currentCount !== undefined) {
+      markCategoryVisited(categoryKey, currentCount);
+    }
     setIsOpen(false);
     onNavigate(tab, subTab);
   };
@@ -149,6 +184,15 @@ export function AdminNotificationsCenter({
               </div>
             </div>
             <div className="flex items-center gap-1">
+              {totalUrgent > 0 && (
+                <button
+                  type="button"
+                  onClick={clearAllNotifications}
+                  className="text-[10px] font-bold text-primary hover:bg-primary/10 px-2 py-1 rounded-lg transition-colors"
+                >
+                  تحديد الكل كمقروء
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => void fetchLiveCounts()}
@@ -173,9 +217,9 @@ export function AdminNotificationsCenter({
             {/* 1. Payment Receipts */}
             <button
               type="button"
-              onClick={() => handleAction("learning", "payments")}
+              onClick={() => handleAction("learning", "payments", "pendingReceipts", counts.pendingReceipts)}
               className={`w-full flex items-center justify-between gap-3 p-3 rounded-xl text-right transition-all cursor-pointer ${
-                counts.pendingReceipts > 0
+                unreadReceipts > 0
                   ? "bg-amber-50/80 hover:bg-amber-100/80 border border-amber-200/80 text-amber-950 dark:bg-amber-950/30 dark:border-amber-800/40 dark:text-amber-200"
                   : "hover:bg-slate-50 text-slate-600 dark:hover:bg-slate-800/50 dark:text-slate-300"
               }`}
@@ -183,7 +227,7 @@ export function AdminNotificationsCenter({
               <div className="flex items-center gap-2.5 min-w-0">
                 <span
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-                    counts.pendingReceipts > 0
+                    unreadReceipts > 0
                       ? "bg-amber-500 text-white shadow-xs"
                       : "bg-slate-100 text-slate-500 dark:bg-slate-800"
                   }`}
@@ -193,15 +237,15 @@ export function AdminNotificationsCenter({
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
                     <strong className="block text-xs font-bold truncate">إيصالات التحويل البنكي</strong>
-                    {counts.pendingReceipts > 0 && (
+                    {unreadReceipts > 0 && (
                       <span className="text-[10px] font-black bg-amber-600 text-white px-1.5 py-0.2 rounded-full">
-                        {counts.pendingReceipts} معلق
+                        {unreadReceipts} جديد
                       </span>
                     )}
                   </div>
                   <p className="text-[11px] opacity-80 truncate">
-                    {counts.pendingReceipts > 0
-                      ? `يوجد ${counts.pendingReceipts} إيصالات سداد تنتظر المراجعة والتأكيد`
+                    {unreadReceipts > 0
+                      ? `يوجد ${unreadReceipts} إيصالات سداد تنتظر المراجعة والتأكيد`
                       : "لا توجد إيصالات سداد معلقة حالياً"}
                   </p>
                 </div>
@@ -212,9 +256,9 @@ export function AdminNotificationsCenter({
             {/* 2. Pending Student Approvals */}
             <button
               type="button"
-              onClick={() => handleAction("learning", "students")}
+              onClick={() => handleAction("learning", "students", "pendingStudents", counts.pendingStudents)}
               className={`w-full flex items-center justify-between gap-3 p-3 rounded-xl text-right transition-all cursor-pointer ${
-                counts.pendingStudents > 0
+                unreadStudents > 0
                   ? "bg-blue-50/80 hover:bg-blue-100/80 border border-blue-200/80 text-blue-950 dark:bg-blue-950/30 dark:border-blue-800/40 dark:text-blue-200"
                   : "hover:bg-slate-50 text-slate-600 dark:hover:bg-slate-800/50 dark:text-slate-300"
               }`}
@@ -222,7 +266,7 @@ export function AdminNotificationsCenter({
               <div className="flex items-center gap-2.5 min-w-0">
                 <span
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-                    counts.pendingStudents > 0
+                    unreadStudents > 0
                       ? "bg-[#0B63CE] text-white shadow-xs"
                       : "bg-slate-100 text-slate-500 dark:bg-slate-800"
                   }`}
@@ -232,15 +276,15 @@ export function AdminNotificationsCenter({
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
                     <strong className="block text-xs font-bold truncate">تسجيلات الطلاب الجديدة</strong>
-                    {counts.pendingStudents > 0 && (
+                    {unreadStudents > 0 && (
                       <span className="text-[10px] font-black bg-[#0B63CE] text-white px-1.5 py-0.2 rounded-full">
-                        {counts.pendingStudents} جديد
+                        {unreadStudents} جديد
                       </span>
                     )}
                   </div>
                   <p className="text-[11px] opacity-80 truncate">
-                    {counts.pendingStudents > 0
-                      ? `يوجد ${counts.pendingStudents} طلاب بانتظار الاعتماد وتفعيل الكورسات`
+                    {unreadStudents > 0
+                      ? `يوجد ${unreadStudents} طلاب بانتظار الاعتماد وتفعيل الكورسات`
                       : "كل حسابات الطلاب معتمدة ومفعلة"}
                   </p>
                 </div>
@@ -251,9 +295,9 @@ export function AdminNotificationsCenter({
             {/* 3. Code Recovery Requests */}
             <button
               type="button"
-              onClick={() => handleAction("learning", "reports")}
+              onClick={() => handleAction("learning", "reports", "pendingRecovery", counts.pendingRecovery)}
               className={`w-full flex items-center justify-between gap-3 p-3 rounded-xl text-right transition-all cursor-pointer ${
-                counts.pendingRecovery > 0
+                unreadRecovery > 0
                   ? "bg-rose-50/80 hover:bg-rose-100/80 border border-rose-200/80 text-rose-950 dark:bg-rose-950/30 dark:border-rose-800/40 dark:text-rose-200"
                   : "hover:bg-slate-50 text-slate-600 dark:hover:bg-slate-800/50 dark:text-slate-300"
               }`}
@@ -261,7 +305,7 @@ export function AdminNotificationsCenter({
               <div className="flex items-center gap-2.5 min-w-0">
                 <span
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-                    counts.pendingRecovery > 0
+                    unreadRecovery > 0
                       ? "bg-rose-600 text-white shadow-xs"
                       : "bg-slate-100 text-slate-500 dark:bg-slate-800"
                   }`}
@@ -271,15 +315,15 @@ export function AdminNotificationsCenter({
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
                     <strong className="block text-xs font-bold truncate">استرجاع أكواد الدخول</strong>
-                    {counts.pendingRecovery > 0 && (
+                    {unreadRecovery > 0 && (
                       <span className="text-[10px] font-black bg-rose-600 text-white px-1.5 py-0.2 rounded-full">
-                        {counts.pendingRecovery} طلب
+                        {unreadRecovery} طلب
                       </span>
                     )}
                   </div>
                   <p className="text-[11px] opacity-80 truncate">
-                    {counts.pendingRecovery > 0
-                      ? `يوجد ${counts.pendingRecovery} طلاب طلبوا إعادة إرسال كود الدخول`
+                    {unreadRecovery > 0
+                      ? `يوجد ${unreadRecovery} طلاب طلبوا إعادة إرسال كود الدخول`
                       : "لا توجد طلبات استرجاع أكواد معلقة"}
                   </p>
                 </div>
@@ -290,9 +334,9 @@ export function AdminNotificationsCenter({
             {/* 4. Bookings */}
             <button
               type="button"
-              onClick={() => handleAction("bookings")}
+              onClick={() => handleAction("bookings", undefined, "bookings", bookingsCount)}
               className={`w-full flex items-center justify-between gap-3 p-3 rounded-xl text-right transition-all cursor-pointer ${
-                bookingsCount > 0
+                unreadBookings > 0
                   ? "bg-purple-50/80 hover:bg-purple-100/80 border border-purple-200/80 text-purple-950 dark:bg-purple-950/30 dark:border-purple-800/40 dark:text-purple-200"
                   : "hover:bg-slate-50 text-slate-600 dark:hover:bg-slate-800/50 dark:text-slate-300"
               }`}
@@ -300,7 +344,7 @@ export function AdminNotificationsCenter({
               <div className="flex items-center gap-2.5 min-w-0">
                 <span
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-                    bookingsCount > 0
+                    unreadBookings > 0
                       ? "bg-purple-600 text-white shadow-xs"
                       : "bg-slate-100 text-slate-500 dark:bg-slate-800"
                   }`}
@@ -310,15 +354,15 @@ export function AdminNotificationsCenter({
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
                     <strong className="block text-xs font-bold truncate">حجوزات السنتر والاستشارات</strong>
-                    {bookingsCount > 0 && (
+                    {unreadBookings > 0 && (
                       <span className="text-[10px] font-black bg-purple-600 text-white px-1.5 py-0.2 rounded-full">
-                        {bookingsCount} معلق
+                        {unreadBookings} معلق
                       </span>
                     )}
                   </div>
                   <p className="text-[11px] opacity-80 truncate">
-                    {bookingsCount > 0
-                      ? `يوجد ${bookingsCount} حجز ينتظر التواصل والتأكيد`
+                    {unreadBookings > 0
+                      ? `يوجد ${unreadBookings} حجز ينتظر التواصل والتأكيد`
                       : "لا توجد حجوزات جديدة معلقة"}
                   </p>
                 </div>

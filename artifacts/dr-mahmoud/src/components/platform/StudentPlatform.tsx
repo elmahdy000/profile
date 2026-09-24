@@ -743,25 +743,23 @@ export function StudentPlatform() {
     window.dispatchEvent(new Event("student-auth-changed"));
   };
   const markNotificationRead = async (notification: StudentNotification) => {
+    // Instantly remove notification from list so it disappears and doesn't linger
+    setNotifications((current) => current.filter((item) => item.id !== notification.id));
     if (notification.readAt) return;
     try {
-      const updated = await api<StudentNotification>(
+      await api<StudentNotification>(
         `/api/learning/notifications/${notification.id}/read`,
         { method: "PATCH" },
-      );
-      setNotifications((current) =>
-        current.map((item) => (item.id === updated.id ? updated : item)),
       );
     } catch {
       // Reading notifications should never interrupt the learning experience.
     }
   };
   const markAllNotificationsRead = async () => {
+    // Instantly clear all notifications from list
+    setNotifications([]);
     try {
       await api("/api/learning/notifications/read-all", { method: "POST" });
-      setNotifications((current) =>
-        current.map((item) => ({ ...item, readAt: item.readAt || new Date().toISOString() })),
-      );
     } catch {
       // Reading notifications should never interrupt the learning experience.
     }
@@ -994,18 +992,24 @@ export function StudentPlatform() {
 
                       <div className="max-h-80 overflow-y-auto p-1.5 space-y-1">
                         {notifications.length === 0 ? (
-                          <p className="p-8 text-center text-[13px] text-muted-foreground">مفيش إشعارات جديدة</p>
+                          <div className="py-8 text-center text-muted-foreground space-y-1">
+                            <CheckCircle2 className="h-6 w-6 mx-auto text-emerald-500/70" />
+                            <p className="text-[13px] font-semibold text-foreground">مفيش إشعارات جديدة</p>
+                            <p className="text-[11px]">تم قراءة ومراجعة جميع التنبيهات</p>
+                          </div>
                         ) : notifications.map((notification) => {
                           const target = getNotificationTarget(notification);
                           return (
-                            <button
+                            <div
                               key={notification.id}
-                              type="button"
-                              onClick={() => handleNotificationClick(notification)}
-                              className={`group mb-0.5 w-full rounded-xl p-3 text-right transition-all hover:bg-primary/5 active:scale-[0.99] cursor-pointer ${notification.readAt ? "opacity-75 bg-muted/30" : "bg-primary/5 border border-primary/20"}`}
+                              className="group mb-0.5 flex items-start gap-1.5 rounded-xl bg-primary/5 border border-primary/20 p-2.5 transition-all hover:bg-primary/10"
                             >
-                              <span className="flex items-start gap-2.5">
-                                <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${notification.readAt ? "bg-border" : "bg-primary animate-pulse"}`} />
+                              <button
+                                type="button"
+                                onClick={() => handleNotificationClick(notification)}
+                                className="flex-1 text-right flex items-start gap-2.5 cursor-pointer min-w-0"
+                              >
+                                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary animate-pulse" />
                                 <span className="flex-1 min-w-0">
                                   <div className="flex items-center justify-between gap-1.5 mb-1">
                                     <strong className="block text-[13px] font-bold text-foreground truncate">{notification.title}</strong>
@@ -1017,8 +1021,19 @@ export function StudentPlatform() {
                                   <span className="block text-[12px] leading-5 text-muted-foreground line-clamp-2">{notification.message}</span>
                                   <span className="mt-1 block text-[10px] text-muted-foreground/70">{new Date(notification.createdAt).toLocaleDateString("ar-EG")}</span>
                                 </span>
-                              </span>
-                            </button>
+                              </button>
+                              <button
+                                type="button"
+                                title="إخفاء الإشعار"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  void markNotificationRead(notification);
+                                }}
+                                className="grid h-6 w-6 place-items-center rounded-lg text-muted-foreground/60 hover:text-foreground hover:bg-muted transition-colors shrink-0"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           );
                         })}
                       </div>
