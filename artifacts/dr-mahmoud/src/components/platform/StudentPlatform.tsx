@@ -328,6 +328,37 @@ export function StudentPlatform() {
     } catch {}
   };
 
+  // Automatically request push notification permission from browser on login/visit
+  useEffect(() => {
+    if (!student || !isPushSupported) return;
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+      const autoPrompt = async () => {
+        try {
+          await subscribeToPush();
+        } catch {}
+      };
+
+      // Attempt prompt immediately
+      void autoPrompt();
+
+      // Also trigger on first user interaction anywhere on the platform
+      const onFirstTap = () => {
+        if (Notification.permission === "default") {
+          void autoPrompt();
+        }
+        window.removeEventListener("click", onFirstTap);
+        window.removeEventListener("touchstart", onFirstTap);
+      };
+
+      window.addEventListener("click", onFirstTap, { once: true });
+      window.addEventListener("touchstart", onFirstTap, { once: true });
+      return () => {
+        window.removeEventListener("click", onFirstTap);
+        window.removeEventListener("touchstart", onFirstTap);
+      };
+    }
+  }, [student?.id, isPushSupported, subscribeToPush]);
+
   // Lock body scroll and handle Escape key when mobile sidebar is open
   useEffect(() => {
     if (!sidebarOpen) return;
@@ -572,29 +603,73 @@ export function StudentPlatform() {
     const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
     const stream = new EventSource(`/api/learning/notifications/stream${deviceId ? `?deviceId=${encodeURIComponent(deviceId)}` : ""}`, { withCredentials: true });
     const refresh = (event: Event) => {
-      const latestId = Number(JSON.parse((event as MessageEvent).data || "{}").latestId || 0);
-      if (latestId) latestNotificationIdRef.current = latestId;
-      playNotificationSound();
-      void loadLearningData();
-      toast({
-        title: "محتوى جديد متاح لك 🚀",
-        description: "تم تحديث الدروس والملفات والاختبارات المتاحة لك.",
-        action: (
-          <ToastAction
-            altText="مشاهدة الدروس"
-            onClick={() => {
+      try {
+        const payload = JSON.parse((event as MessageEvent).data || "{}");
+        const latestId = Number(payload.latestId || 0);
+        if (latestId) latestNotificationIdRef.current = latestId;
+        const notif: StudentNotification | undefined = payload.notification;
+
+        playNotificationSound();
+        void loadLearningData();
+
+        if (notif && notif.title) {
+          // Prepend to notifications list
+          setNotifications((prev) => {
+            if (prev.some((item) => item.id === notif.id)) return prev;
+            return [notif, ...prev];
+          });
+
+          const target = getNotificationTarget(notif);
+          toast({
+            title: `🔔 ${notif.title}`,
+            description: notif.message,
+            action: (
+              <ToastAction
+                altText="فتح"
+                onClick={() => handleNotificationClickRef.current(notif)}
+              >
+                {target.label} ←
+              </ToastAction>
+            ),
+            onClick: () => handleNotificationClickRef.current(notif),
+          });
+
+          // Also trigger browser OS notification if window is minimized or inactive
+          if (
+            typeof Notification !== "undefined" &&
+            Notification.permission === "granted" &&
+            document.visibilityState !== "visible"
+          ) {
+            try {
+              new Notification(notif.title, {
+                body: notif.message,
+                icon: "/logo.webp",
+                tag: `notif-${notif.id}`,
+              });
+            } catch {}
+          }
+        } else {
+          toast({
+            title: "تحديث جديد متاح 🚀",
+            description: "تم تحديث محتوى الحساب والدروس الآن.",
+            action: (
+              <ToastAction
+                altText="مشاهدة الدروس"
+                onClick={() => {
+                  setTab("lessons");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              >
+                مشاهدة الدروس ←
+              </ToastAction>
+            ),
+            onClick: () => {
               setTab("lessons");
               window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-          >
-            مشاهدة الدروس ←
-          </ToastAction>
-        ),
-        onClick: () => {
-          setTab("lessons");
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        },
-      });
+            },
+          });
+        }
+      } catch {}
     };
     stream.addEventListener("refresh", refresh);
     return () => {

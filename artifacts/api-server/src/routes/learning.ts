@@ -6,7 +6,7 @@ import path from "path";
 import zlib from "zlib";
 import multer from "multer";
 import mammoth from "mammoth";
-import { and, desc, eq, ilike, inArray, isNull, ne, or, sql } from "drizzle-orm";
+import { and, desc, eq, gt, ilike, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import {
   auditLogsTable,
   codeRecoveryRequestsTable,
@@ -3143,8 +3143,17 @@ router.get("/learning/notifications/stream", requireStudent, async (req, res, ne
           .orderBy(desc(studentNotificationsTable.id))
           .limit(1))[0]?.id ?? 0;
         if (currentId > latestId) {
+          const newest = (await db
+            .select()
+            .from(studentNotificationsTable)
+            .where(and(
+              eq(studentNotificationsTable.studentId, student.id),
+              gt(studentNotificationsTable.id, latestId)
+            ))
+            .orderBy(desc(studentNotificationsTable.id))
+            .limit(1))[0];
           latestId = currentId;
-          res.write(`event: refresh\ndata: ${JSON.stringify({ latestId })}\n\n`);
+          res.write(`event: refresh\ndata: ${JSON.stringify({ latestId, notification: newest || null })}\n\n`);
         } else {
           res.write(": keep-alive\n\n");
         }
@@ -3206,7 +3215,7 @@ router.post("/admin/notifications/broadcast", requireAdmin, async (req, res, nex
     const allApproved = await db
       .select({ id: studentsTable.id, grade: studentsTable.grade })
       .from(studentsTable)
-      .where(eq(studentsTable.status, "approved"));
+      .where(ne(studentsTable.status, "suspended"));
 
     let targets = allApproved;
     // If specific studentIds provided, use them directly
