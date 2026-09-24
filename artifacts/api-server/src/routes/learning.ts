@@ -7903,11 +7903,17 @@ router.post("/learning/self-assessment/submit", async (req, res, next) => {
       const isCorrect = selected === q.correctIndex;
       if (isCorrect) earnedScore += qPoints;
 
+      const studentAnsText =
+        selected >= 0 && q.options && q.options[selected]
+          ? q.options[selected]
+          : "لم يجب الطالب";
+
       return {
         questionIndex: idx,
         prompt: q.prompt,
         options: q.options,
         selectedOption: selected,
+        studentAnswer: studentAnsText,
         correctOption: q.correctIndex,
         correctAnswer: q.correctAnswer || q.options[q.correctIndex] || "",
         isCorrect,
@@ -8169,7 +8175,31 @@ router.get("/admin/learning/self-assessment/sessions", requireAdmin, async (req,
         studentByPhone
       );
       const studentName = (sess.studentName && sess.studentName !== "طالب زائر" ? sess.studentName : "") || studentByPhone?.name || sess.studentName || "طالب";
-      const details = (sess.details as any[]) || [];
+      const rawDetails = (sess.details as any[]) || [];
+      const details = rawDetails.map((d: any, dIdx: number) => {
+        const studentAnswer =
+          d.studentAnswer && d.studentAnswer !== "لم يجب الطالب"
+            ? d.studentAnswer
+            : d.options && typeof d.selectedOption === "number" && d.selectedOption >= 0 && d.options[d.selectedOption]
+            ? d.options[d.selectedOption]
+            : d.selectedOption === -1
+            ? "لم يجب الطالب"
+            : d.studentAnswer || "لم يجب الطالب";
+
+        const correctAnswer =
+          d.correctAnswer ||
+          (d.options && typeof d.correctOption === "number" && d.options[d.correctOption]
+            ? d.options[d.correctOption]
+            : "");
+
+        return {
+          ...d,
+          questionId: d.questionId || (d.questionIndex !== undefined ? d.questionIndex + 1 : dIdx + 1),
+          studentAnswer,
+          correctAnswer,
+        };
+      });
+
       return {
         ...sess,
         studentName,

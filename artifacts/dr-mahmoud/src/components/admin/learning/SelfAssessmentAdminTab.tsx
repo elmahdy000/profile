@@ -40,12 +40,15 @@ interface EntitlementItem {
 
 interface ExamReviewItem {
   questionId: number;
+  questionIndex?: number;
   prompt: string;
-  studentAnswer: string;
+  studentAnswer?: string;
   correctAnswer: string;
   isCorrect: boolean;
   explanation?: string;
   options?: string[];
+  selectedOption?: number;
+  correctOption?: number;
 }
 
 interface ExamSessionItem {
@@ -771,14 +774,22 @@ export function SelfAssessmentAdminTab({ role = "superadmin" }: { role?: "supera
                             q.isCorrect ? "text-emerald-700" : "text-red-600 line-through"
                           }`}
                         >
-                          {q.studentAnswer || "لم يجب الطالب"}
+                          {(() => {
+                            if (q.studentAnswer && q.studentAnswer !== "لم يجب الطالب") return q.studentAnswer;
+                            const sel = q.selectedOption;
+                            if (q.options && typeof sel === "number" && sel >= 0 && q.options[sel]) {
+                              return q.options[sel];
+                            }
+                            if (sel === -1) return "لم يجب الطالب";
+                            return q.studentAnswer || "لم يجب الطالب";
+                          })()}
                         </span>
                       </div>
 
                       <div className="p-2 rounded-xl bg-white border border-slate-100">
                         <span className="text-[10px] text-slate-400 block mb-0.5">الإجابة النموذجية:</span>
                         <span className="font-semibold text-emerald-700">
-                          {q.correctAnswer}
+                          {q.correctAnswer || (q.options && typeof q.correctOption === "number" && q.options[q.correctOption] ? q.options[q.correctOption] : "—")}
                         </span>
                       </div>
                     </div>
