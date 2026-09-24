@@ -9,6 +9,7 @@ import {
   MapPin,
   BarChart3,
   QrCode,
+  Sparkles,
 } from "lucide-react";
 import { AdminLearning, type AdminLearningTab } from "./AdminLearning";
 
@@ -183,6 +184,30 @@ export function SubAdminDashboard() {
             >
               <MapPin className="h-4 w-4" />
               <span>حجوزات السناتر والمواعيد 📍</span>
+            </button>
+
+            {/* Self Assessment Packs */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileSidebarOpen(false);
+                setCurrentTab("self-assessment-packs");
+                if (typeof window !== "undefined") {
+                  const params = new URLSearchParams(window.location.search);
+                  params.delete("mode");
+                  params.delete("status");
+                  window.history.replaceState(null, "", `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`);
+                  window.dispatchEvent(new Event("popstate"));
+                }
+              }}
+              className={`w-full flex items-center gap-3 rounded-xl px-3.5 py-3 text-xs font-bold transition-all shadow-xs ${
+                currentTab === "self-assessment-packs"
+                  ? "bg-indigo-600 text-white shadow-indigo-600/30"
+                  : "bg-white text-[#0F172A] hover:bg-[#F6F8FC] border border-[#E4EAF2]"
+              }`}
+            >
+              <Sparkles className="h-4 w-4" />
+              <span>باقات التقييم الذاتي ⚡</span>
             </button>
           </nav>
 

@@ -27,6 +27,7 @@ import {
   FileDown,
   FileSpreadsheet,
   MapPin,
+  Sparkles,
 } from "lucide-react";
 
 interface AdminSidebarNavProps {
@@ -195,6 +196,16 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
             setLearningSubTab("quizzes");
           },
           active: activeTab === "learning" && learningSubTab === "quizzes",
+        },
+        {
+          id: "self-assessment-packs",
+          label: "باقات التقييم الذاتي ⚡",
+          icon: Sparkles,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("self-assessment-packs");
+          },
+          active: activeTab === "learning" && learningSubTab === "self-assessment-packs",
         },
         {
           id: "grades-sheet",
