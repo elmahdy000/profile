@@ -8123,14 +8123,61 @@ router.get("/admin/learning/self-assessment/sessions", requireAdmin, async (req,
         passed: selfAssessmentSessionsTable.passed,
         timeSpentSeconds: selfAssessmentSessionsTable.timeSpentSeconds,
         status: selfAssessmentSessionsTable.status,
+        details: selfAssessmentSessionsTable.details,
+        isGuest: selfAssessmentSessionsTable.isGuest,
         createdAt: selfAssessmentSessionsTable.createdAt,
         completedAt: selfAssessmentSessionsTable.completedAt,
       })
       .from(selfAssessmentSessionsTable);
 
-    const sessions = await (conditions.length ? sessionsQuery.where(and(...conditions)) : sessionsQuery)
+    const rawSessions = await (conditions.length ? sessionsQuery.where(and(...conditions)) : sessionsQuery)
       .orderBy(desc(selfAssessmentSessionsTable.id))
       .limit(200);
+
+    const studentIds = rawSessions
+      .map((s) => s.studentId)
+      .filter((id): id is number => typeof id === "number" && id > 0);
+    const phones = rawSessions
+      .map((s) => s.phone)
+      .filter((p): p is string => Boolean(p && p.trim()));
+
+    const studentConditions = [];
+    if (studentIds.length) studentConditions.push(inArray(studentsTable.id, studentIds));
+    if (phones.length) studentConditions.push(inArray(studentsTable.phone, phones));
+
+    const enrolledStudents = studentConditions.length
+      ? await db
+          .select({
+            id: studentsTable.id,
+            phone: studentsTable.phone,
+            name: studentsTable.name,
+            status: studentsTable.status,
+          })
+          .from(studentsTable)
+          .where(or(...studentConditions))
+      : [];
+
+    const enrolledIdSet = new Set(enrolledStudents.map((s) => s.id));
+    const enrolledPhoneMap = new Map(enrolledStudents.map((s) => [s.phone, s]));
+
+    const sessions = rawSessions.map((sess) => {
+      const studentByPhone = sess.phone ? enrolledPhoneMap.get(sess.phone) : undefined;
+      const isEnrolled = Boolean(
+        !sess.isGuest ||
+        (sess.studentId && enrolledIdSet.has(sess.studentId)) ||
+        (sess.studentId && sess.studentId > 0) ||
+        studentByPhone
+      );
+      const studentName = (sess.studentName && sess.studentName !== "طالب زائر" ? sess.studentName : "") || studentByPhone?.name || sess.studentName || "طالب";
+      const details = (sess.details as any[]) || [];
+      return {
+        ...sess,
+        studentName,
+        isEnrolledStudent: isEnrolled,
+        reviewCount: details.length || sess.questionsCount || 0,
+        details,
+      };
+    });
 
     // حساب الإحصائيات العامة
     const allCompleted = await db

@@ -51,6 +51,7 @@ interface ExamReviewItem {
 interface ExamSessionItem {
   id: number;
   sessionId: string;
+  studentId?: number | null;
   phone: string;
   studentName: string;
   isEnrolledStudent: boolean;
@@ -396,7 +397,7 @@ export function SelfAssessmentAdminTab({ role = "superadmin" }: { role?: "supera
                         <td className="p-3">
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-slate-900">{sess.studentName || "طالب"}</span>
-                            {sess.isEnrolledStudent ? (
+                            {sess.isEnrolledStudent || (sess.studentId && sess.studentId > 0) ? (
                               <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold">
                                 طالب بالمنصة
                               </span>
@@ -474,7 +475,7 @@ export function SelfAssessmentAdminTab({ role = "superadmin" }: { role?: "supera
                             className="h-8 px-2.5 rounded-xl border-blue-200 text-blue-700 hover:bg-blue-50 font-bold text-[11px]"
                           >
                             <Eye className="h-3.5 w-3.5 ml-1" />
-                            تفاصيل الإجابات ({sess.reviewCount})
+                            تفاصيل الإجابات ({sess.reviewCount || sess.details?.length || sess.questionsCount || 0})
                           </Button>
                         </td>
                       </tr>
