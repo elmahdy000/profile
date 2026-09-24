@@ -80,6 +80,7 @@ import { AdminSettings } from "./AdminSettings";
 import { AdminLearning, type AdminLearningTab } from "./AdminLearning";
 import { StudentAnalyticsTab } from "./admin/learning/StudentAnalyticsTab";
 import { AdminSidebarNav } from "./admin/dashboard/AdminSidebarNav";
+import { AdminNotificationsCenter } from "./admin/dashboard/AdminNotificationsCenter";
 import { PodcastsTab } from "./admin/dashboard/PodcastsTab";
 import { CoursesTab } from "./admin/dashboard/CoursesTab";
 import { CurriculumsTab } from "./admin/dashboard/CurriculumsTab";
@@ -1737,21 +1738,30 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="hidden items-center gap-2 sm:flex">
-            <a
-              href="/"
-              target="_blank"
-              rel="noreferrer"
-              className="px-4 py-2 border border-border rounded-xl text-xs hover:bg-muted/50 transition-colors flex items-center gap-1.5"
-            >
-              <ExternalLink className="w-4 h-4" /> عرض الموقع
-            </a>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-xl text-xs transition-colors flex items-center gap-1.5"
-            >
-              <LogOut className="w-4 h-4" /> تسجيل الخروج
-            </button>
+          <div className="flex items-center gap-2">
+            <AdminNotificationsCenter
+              onNavigate={(tab, subTab) => {
+                handleTabChange(tab);
+                if (subTab) handleLearningSubTabChange(subTab as any);
+              }}
+              bookingsCount={(bookingsQuery.data || []).filter((b) => b.status === "pending").length}
+            />
+            <div className="hidden items-center gap-2 sm:flex">
+              <a
+                href="/"
+                target="_blank"
+                rel="noreferrer"
+                className="px-4 py-2 border border-border rounded-xl text-xs hover:bg-muted/50 transition-colors flex items-center gap-1.5"
+              >
+                <ExternalLink className="w-4 h-4" /> عرض الموقع
+              </a>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-xl text-xs transition-colors flex items-center gap-1.5"
+              >
+                <LogOut className="w-4 h-4" /> تسجيل الخروج
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -1800,6 +1810,13 @@ export default function AdminDashboard() {
 
               {/* Action shortcuts */}
               <div className="flex items-center gap-2">
+                <AdminNotificationsCenter
+                  onNavigate={(tab, subTab) => {
+                    handleTabChange(tab);
+                    if (subTab) handleLearningSubTabChange(subTab as any);
+                  }}
+                  bookingsCount={(bookingsQuery.data || []).filter((b) => b.status === "pending").length}
+                />
                 <button
                   type="button"
                   onClick={() => openCourseModal("add")}

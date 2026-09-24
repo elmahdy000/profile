@@ -30,10 +30,12 @@ import {
   Code2,
   Maximize2,
   ExternalLink,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VideoLessonsSection } from "@/components/YoutubeSection";
 import { toast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import { getTrack, getTrackForStage } from "@/data/academic";
 import {
   RegistrationStageSelector,
@@ -126,6 +128,145 @@ async function cropAvatar(file: File): Promise<Blob> {
 }
 
 
+export function getNotificationTarget(notification: { title: string; message: string; type?: string | null }): {
+  tab: "dashboard" | "lessons" | "summaries" | "compiler" | "files" | "quizzes" | "self-assessment" | "profile" | "external";
+  label: string;
+  url?: string;
+} {
+  const type = (notification.type || "").toLowerCase();
+  const titleMsg = (notification.title + " " + notification.message).toLowerCase();
+
+  // 1. Direct external links
+  const urlMatch = notification.message.match(/https?:\/\/[^\s]+/) || notification.title.match(/https?:\/\/[^\s]+/);
+  if (urlMatch) {
+    return { tab: "external", label: "رابط خارجي 🔗", url: urlMatch[0] };
+  }
+
+  // 2. Honor Board
+  if (
+    titleMsg.includes("لوحة الشرف") ||
+    titleMsg.includes("شرف") ||
+    titleMsg.includes("أوائل") ||
+    titleMsg.includes("متفوق") ||
+    titleMsg.includes("تكريم")
+  ) {
+    return { tab: "external", label: "لوحة الشرف 🏆", url: "/honor-board" };
+  }
+
+  // 3. Self-Assessment (باقات التقييم والتدريب الذاتي)
+  if (
+    type === "self-assessment" ||
+    type === "self_assessment" ||
+    type === "assessment" ||
+    titleMsg.includes("تقييم") ||
+    titleMsg.includes("باقة") ||
+    titleMsg.includes("بنك") ||
+    titleMsg.includes("اسئلة") ||
+    titleMsg.includes("أسئلة")
+  ) {
+    return { tab: "self-assessment", label: "التقييم الذاتي 🎯" };
+  }
+
+  // 4. Quizzes & Exams (امتحانات واختبارات)
+  if (
+    type === "quiz" ||
+    type === "exam" ||
+    type === "test" ||
+    titleMsg.includes("امتحان") ||
+    titleMsg.includes("اختبار") ||
+    titleMsg.includes("كويز") ||
+    titleMsg.includes("واجب") ||
+    titleMsg.includes("درجة") ||
+    titleMsg.includes("درجات") ||
+    titleMsg.includes("سؤال") ||
+    titleMsg.includes("نتيجة")
+  ) {
+    return { tab: "quizzes", label: "الاختبارات 📝" };
+  }
+
+  // 5. Lessons & Videos (فيديوهات وشروحات الكورسات)
+  if (
+    type === "lesson" ||
+    type === "video" ||
+    type === "course" ||
+    titleMsg.includes("درس") ||
+    titleMsg.includes("فيديو") ||
+    titleMsg.includes("محاضرة") ||
+    titleMsg.includes("شرح") ||
+    titleMsg.includes("كورس") ||
+    titleMsg.includes("فصل") ||
+    titleMsg.includes("وحدة")
+  ) {
+    return { tab: "lessons", label: "كورساتي 📚" };
+  }
+
+  // 6. Summaries & Notes (كشكول الطالب والتلخيصات)
+  if (
+    type === "summary" ||
+    type === "notebook" ||
+    type === "note" ||
+    titleMsg.includes("كشكول") ||
+    titleMsg.includes("تلخيص") ||
+    titleMsg.includes("تلخيصات") ||
+    titleMsg.includes("مذكرة") ||
+    titleMsg.includes("مذكراتي") ||
+    titleMsg.includes("ملاحظة") ||
+    titleMsg.includes("تعديل مطلوب")
+  ) {
+    return { tab: "summaries", label: "مذكراتي 📝" };
+  }
+
+  // 7. Files & Attachments (ملازم وملفات PDF)
+  if (
+    type === "file" ||
+    type === "pdf" ||
+    type === "attachment" ||
+    titleMsg.includes("ملزمة") ||
+    titleMsg.includes("ملف") ||
+    titleMsg.includes("pdf") ||
+    titleMsg.includes("مستند") ||
+    titleMsg.includes("مذكرات")
+  ) {
+    return { tab: "files", label: "الملفات 📁" };
+  }
+
+  // 8. Account & Subscription & Devices (الحساب، الاشتراكات، الأجهزة)
+  if (
+    type === "subscription" ||
+    type === "payment" ||
+    type === "receipt" ||
+    type === "center" ||
+    type === "device" ||
+    titleMsg.includes("اشتراك") ||
+    titleMsg.includes("دفع") ||
+    titleMsg.includes("إيصال") ||
+    titleMsg.includes("حسابك") ||
+    titleMsg.includes("تفعيل") ||
+    titleMsg.includes("سنتر") ||
+    titleMsg.includes("كود") ||
+    titleMsg.includes("جهاز") ||
+    titleMsg.includes("أجهزة") ||
+    titleMsg.includes("بيانات")
+  ) {
+    return { tab: "profile", label: "حسابي 👤" };
+  }
+
+  // 9. C++ Compiler (محرر الأكواد)
+  if (
+    type === "compiler" ||
+    type === "code" ||
+    type === "cpp" ||
+    titleMsg.includes("محرر") ||
+    titleMsg.includes("كود") ||
+    titleMsg.includes("برمجة") ||
+    titleMsg.includes("c++")
+  ) {
+    return { tab: "compiler", label: "محرر C++ 💻" };
+  }
+
+  return { tab: "dashboard", label: "الرئيسية 🏠" };
+}
+
 export function StudentPlatform() {
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
@@ -144,6 +285,7 @@ export function StudentPlatform() {
   const [dataError, setDataError] = useState("");
   const [autoOpenSummaryUpload, setAutoOpenSummaryUpload] = useState(false);
   const latestNotificationIdRef = useRef(0);
+  const handleNotificationClickRef = useRef<(n: StudentNotification) => void>(() => {});
 
   // Lock body scroll and handle Escape key when mobile sidebar is open
   useEffect(() => {
@@ -393,7 +535,25 @@ export function StudentPlatform() {
       if (latestId) latestNotificationIdRef.current = latestId;
       playNotificationSound();
       void loadLearningData();
-      toast({ title: "محتوى جديد", description: "تم تحديث الدروس والملفات والاختبارات المتاحة لك." });
+      toast({
+        title: "محتوى جديد متاح لك 🚀",
+        description: "تم تحديث الدروس والملفات والاختبارات المتاحة لك.",
+        action: (
+          <ToastAction
+            altText="مشاهدة الدروس"
+            onClick={() => {
+              setTab("lessons");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          >
+            مشاهدة الدروس ←
+          </ToastAction>
+        ),
+        onClick: () => {
+          setTab("lessons");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        },
+      });
     };
     stream.addEventListener("refresh", refresh);
     return () => {
@@ -420,13 +580,45 @@ export function StudentPlatform() {
             playNotificationSound();
             if (coursesChanged) {
               toast({
-                title: "تم تفعيل المواد الدراسية الخاصة بك",
+                title: "تم تفعيل المواد الدراسية الخاصة بك 🎓",
                 description: "قام الأدمن بتحديث وتحديد الكورسات المتاحة لك، تم فتح المحتوى بنجاح.",
+                variant: "success",
+                action: (
+                  <ToastAction
+                    altText="فتح الكورسات"
+                    onClick={() => {
+                      setTab("lessons");
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                  >
+                    فتح الكورسات ←
+                  </ToastAction>
+                ),
+                onClick: () => {
+                  setTab("lessons");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                },
               });
             } else if (statusChanged) {
               toast({
-                title: "تم تحديث حسابك",
+                title: "تم تحديث وتفعيل حسابك ✅",
                 description: "تم تفعيل الاشتراك وفك تشغيل باقي الدروس والاختبارات بنجاح.",
+                variant: "success",
+                action: (
+                  <ToastAction
+                    altText="بدء التعلم"
+                    onClick={() => {
+                      setTab("lessons");
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                  >
+                    بدء التعلم ←
+                  </ToastAction>
+                ),
+                onClick: () => {
+                  setTab("lessons");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                },
               });
             }
           }
@@ -439,7 +631,23 @@ export function StudentPlatform() {
           setNotifications(rows);
           playNotificationSound();
           void loadLearningData();
-          toast({ title: "محتوى جديد", description: "تم تحديث المحتوى المتاح لك تلقائيًا." });
+          const newest = rows[0];
+          if (newest) {
+            const target = getNotificationTarget(newest);
+            toast({
+              title: `🔔 ${newest.title}`,
+              description: newest.message,
+              action: (
+                <ToastAction
+                  altText="فتح"
+                  onClick={() => handleNotificationClickRef.current(newest)}
+                >
+                  {target.label} ←
+                </ToastAction>
+              ),
+              onClick: () => handleNotificationClickRef.current(newest),
+            });
+          }
         } else {
           latestNotificationIdRef.current = latestId;
           setNotifications(rows);
@@ -522,59 +730,22 @@ export function StudentPlatform() {
     void markNotificationRead(notification);
     setShowNotifications(false);
 
-    const type = (notification.type || "").toLowerCase();
-    const titleMsg = (notification.title + " " + notification.message).toLowerCase();
-
-    // 1. Direct type matching
-    if (type === "lesson" || type === "video" || type === "course") {
-      setTab("lessons");
-      return;
-    }
-    if (type === "file" || type === "pdf" || type === "attachment") {
-      setTab("files");
-      return;
-    }
-    if (type === "quiz" || type === "exam" || type === "test") {
-      setTab("quizzes");
-      return;
-    }
-    if (type === "summary" || type === "notebook" || type === "note") {
-      setTab("summaries");
-      return;
-    }
-    if (type === "subscription" || type === "payment" || type === "receipt" || type === "center") {
-      setTab("profile");
-      return;
-    }
-    if (type === "compiler" || type === "code" || type === "cpp") {
-      setTab("compiler");
+    const target = getNotificationTarget(notification);
+    if (target.tab === "external" && target.url) {
+      if (target.url.startsWith("http")) {
+        window.open(target.url, "_blank");
+      } else {
+        window.location.href = target.url;
+      }
       return;
     }
 
-    // 2. Intelligent Text Fallback matching
-    if (titleMsg.includes("درس") || titleMsg.includes("فيديو") || titleMsg.includes("محاضرة") || titleMsg.includes("شرح") || titleMsg.includes("كورس")) {
-      setTab("lessons");
-      return;
+    if (target.tab !== "external") {
+      setTab(target.tab);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
-    if (titleMsg.includes("كشكول") || titleMsg.includes("تلخيص") || titleMsg.includes("تلخيصات") || titleMsg.includes("مذكرة") || titleMsg.includes("مذكراتي") || titleMsg.includes("ملاحظة") || titleMsg.includes("تعديل مطلوب")) {
-      setTab("summaries");
-      return;
-    }
-    if (titleMsg.includes("ملزمة") || titleMsg.includes("ملف") || titleMsg.includes("pdf") || titleMsg.includes("مستند")) {
-      setTab("files");
-      return;
-    }
-    if (titleMsg.includes("اشتراك") || titleMsg.includes("دفع") || titleMsg.includes("إيصال") || titleMsg.includes("حسابك") || titleMsg.includes("تفعيل") || titleMsg.includes("سنتر")) {
-      setTab("profile");
-      return;
-    }
-    if (titleMsg.includes("محرر") || titleMsg.includes("كود") || titleMsg.includes("برمجة") || titleMsg.includes("c++")) {
-      setTab("compiler");
-      return;
-    }
-
-    setTab("dashboard");
   };
+  handleNotificationClickRef.current = handleNotificationClick;
 
   const unreadNotifications = notifications.filter((item) => !item.readAt).length;
   const nav = [
@@ -759,26 +930,35 @@ export function StudentPlatform() {
                           </button>
                         )}
                       </div>
-                      <div className="max-h-80 overflow-y-auto p-1.5">
+                      <div className="max-h-80 overflow-y-auto p-1.5 space-y-1">
                         {notifications.length === 0 ? (
                           <p className="p-8 text-center text-[13px] text-muted-foreground">مفيش إشعارات جديدة</p>
-                        ) : notifications.map((notification) => (
-                          <button
-                            key={notification.id}
-                            type="button"
-                            onClick={() => handleNotificationClick(notification)}
-                            className={`mb-0.5 w-full rounded-xl p-3 text-right transition-colors hover:bg-muted ${notification.readAt ? "opacity-60" : "bg-primary/5"}`}
-                          >
-                            <span className="flex items-start gap-2.5">
-                              <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${notification.readAt ? "bg-border" : "bg-primary"}`} />
-                              <span>
-                                <strong className="block text-[13px] font-bold text-foreground">{notification.title}</strong>
-                                <span className="mt-0.5 block text-[12px] leading-5 text-muted-foreground">{notification.message}</span>
-                                <span className="mt-1 block text-[10px] text-muted-foreground/70">{new Date(notification.createdAt).toLocaleDateString("ar-EG")}</span>
+                        ) : notifications.map((notification) => {
+                          const target = getNotificationTarget(notification);
+                          return (
+                            <button
+                              key={notification.id}
+                              type="button"
+                              onClick={() => handleNotificationClick(notification)}
+                              className={`group mb-0.5 w-full rounded-xl p-3 text-right transition-all hover:bg-primary/5 active:scale-[0.99] cursor-pointer ${notification.readAt ? "opacity-75 bg-muted/30" : "bg-primary/5 border border-primary/20"}`}
+                            >
+                              <span className="flex items-start gap-2.5">
+                                <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${notification.readAt ? "bg-border" : "bg-primary animate-pulse"}`} />
+                                <span className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between gap-1.5 mb-1">
+                                    <strong className="block text-[13px] font-bold text-foreground truncate">{notification.title}</strong>
+                                    <span className="shrink-0 text-[10px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full flex items-center gap-1 group-hover:bg-primary group-hover:text-white transition-colors">
+                                      <span>{target.label}</span>
+                                      <ArrowLeft className="h-2.5 w-2.5" />
+                                    </span>
+                                  </div>
+                                  <span className="block text-[12px] leading-5 text-muted-foreground line-clamp-2">{notification.message}</span>
+                                  <span className="mt-1 block text-[10px] text-muted-foreground/70">{new Date(notification.createdAt).toLocaleDateString("ar-EG")}</span>
+                                </span>
                               </span>
-                            </span>
-                          </button>
-                        ))}
+                            </button>
+                          );
+                        })}
                       </div>
                     </motion.div>
                   )}

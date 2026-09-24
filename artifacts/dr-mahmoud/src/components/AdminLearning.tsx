@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import { ExamWizard } from "./ExamWizard";
 import { ACADEMIC_TRACKS, getStagesForTrack, getTrack } from "@/data/academic";
 import type { Student as PlatformStudent } from "@/types/platform";
@@ -516,6 +517,16 @@ export function AdminLearning({
           toast({
             title: "💳 إشعار جديد: إيصال تحويل مرفوع للمراجعة!",
             description: "قام طالب برفع إيصال تحويل جديد ينتظر موافقتك وتأكيد التفعيل.",
+            variant: "warning",
+            action: (
+              <ToastAction
+                altText="مراجعة الإيصالات"
+                onClick={() => setTab("payments")}
+              >
+                مراجعة الإيصالات ←
+              </ToastAction>
+            ),
+            onClick: () => setTab("payments"),
           });
         }
         if (newPendingStudents > lastCountsRef.current.pendingStudents!) {
@@ -523,6 +534,21 @@ export function AdminLearning({
           toast({
             title: "👤 إشعار جديد: طالب جديد ينتظر التفعيل!",
             description: "قام طالب جديد بالتسجيل وينتظر مراجعة حسابه وتفعيله.",
+            action: (
+              <ToastAction
+                altText="مراجعة الطلاب"
+                onClick={() => {
+                  setStudentStatusFilter("pending");
+                  setTab("students");
+                }}
+              >
+                عرض الطلاب ←
+              </ToastAction>
+            ),
+            onClick: () => {
+              setStudentStatusFilter("pending");
+              setTab("students");
+            },
           });
         }
         if (newPendingRecovery > lastCountsRef.current.pendingRecovery!) {
@@ -530,6 +556,16 @@ export function AdminLearning({
           toast({
             title: "🔑 إشعار جديد: طلب استرجاع كود!",
             description: "وصل طلب جديد لاسترجاع كود الدخول من أحد الطلاب.",
+            variant: "destructive",
+            action: (
+              <ToastAction
+                altText="استرجاع الأكواد"
+                onClick={() => setTab("reports")}
+              >
+                عرض الطلب ←
+              </ToastAction>
+            ),
+            onClick: () => setTab("reports"),
           });
         }
       }
