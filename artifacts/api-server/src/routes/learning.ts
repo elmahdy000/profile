@@ -2396,7 +2396,7 @@ router.get("/admin/payment-receipts/:id/image", requireAdmin, async (req, res, n
   }
 });
 
-router.get("/admin/students", requireAdmin, async (_req, res, next) => {
+router.get(["/admin/students", "/admin/learning/students"], requireAdmin, async (_req, res, next) => {
   try {
     await processSubscriptionExpirations();
     const students = await db

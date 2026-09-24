@@ -40,7 +40,7 @@ export function AdminNotificationsCenter({
         fetch("/api/admin/payment-receipts", { credentials: "include" })
           .then((r) => (r.ok ? r.json() : []))
           .catch(() => []),
-        fetch("/api/admin/learning/students", { credentials: "include" })
+        fetch("/api/admin/students", { credentials: "include" })
           .then((r) => (r.ok ? r.json() : []))
           .catch(() => []),
         fetch("/api/admin/recovery-requests", { credentials: "include" })
