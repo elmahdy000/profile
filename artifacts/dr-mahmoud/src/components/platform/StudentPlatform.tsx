@@ -31,6 +31,7 @@ import {
   Maximize2,
   ExternalLink,
   ArrowLeft,
+  BellRing,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VideoLessonsSection } from "@/components/YoutubeSection";
@@ -44,6 +45,7 @@ import {
 import { EmptyState, PageHeader, ProfileInfoRow, StatisticCard, StatusBadge, StudentAvatar } from "./StudentDashboardUI";
 import { CppCompilerPanel } from "./CppCompilerPanel";
 import { useNotificationSound } from "@/hooks/use-notification-sound";
+import { useWebPush } from "@/hooks/use-web-push";
 import { ProfileTab } from "./tabs/ProfileTab";
 import { FilesTab } from "./tabs/FilesTab";
 import { QuizzesTab } from "./tabs/QuizzesTab";
@@ -286,6 +288,45 @@ export function StudentPlatform() {
   const [autoOpenSummaryUpload, setAutoOpenSummaryUpload] = useState(false);
   const latestNotificationIdRef = useRef(0);
   const handleNotificationClickRef = useRef<(n: StudentNotification) => void>(() => {});
+
+  const {
+    isSupported: isPushSupported,
+    permission: pushPermission,
+    isSubscribed: isPushSubscribed,
+    loading: pushLoading,
+    subscribeToPush,
+  } = useWebPush(student?.id);
+
+  const [dismissedPushBanner, setDismissedPushBanner] = useState(() => {
+    try {
+      return localStorage.getItem("dr_mahmoud_dismissed_push_v1") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const handleEnablePush = async () => {
+    const success = await subscribeToPush();
+    if (success) {
+      toast({
+        title: "تم تفعيل الإشعارات الفورية بنجاح 🎉",
+        description: "ستصلك الآن تنبيهات الكورسات والاختبارات وملاحظات الدكتور حتى لو كنت قافل الموقع تماماً!",
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "تعذر تفعيل الإشعارات",
+        description: "يرجى السماح بالإشعارات من إعدادات المتصفح أو أيقونة القفل بجانب رابط الموقع.",
+      });
+    }
+  };
+
+  const handleDismissPushBanner = () => {
+    setDismissedPushBanner(true);
+    try {
+      localStorage.setItem("dr_mahmoud_dismissed_push_v1", "true");
+    } catch {}
+  };
 
   // Lock body scroll and handle Escape key when mobile sidebar is open
   useEffect(() => {
@@ -930,6 +971,27 @@ export function StudentPlatform() {
                           </button>
                         )}
                       </div>
+
+                      {/* Push Notification Prompt in Dropdown */}
+                      {isPushSupported && !isPushSubscribed && (
+                        <div className="mx-2 my-2 rounded-xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-sky-500/10 border border-blue-500/20 p-2.5 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <BellRing className="h-4 w-4 text-blue-500 shrink-0 animate-bounce" />
+                            <span className="text-[11px] font-semibold text-foreground">
+                              تنبيهات فورية حتى لو قفلت الموقع
+                            </span>
+                          </div>
+                          <Button
+                            size="sm"
+                            disabled={pushLoading}
+                            onClick={handleEnablePush}
+                            className="h-6 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold shrink-0"
+                          >
+                            {pushLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : "تفعيل"}
+                          </Button>
+                        </div>
+                      )}
+
                       <div className="max-h-80 overflow-y-auto p-1.5 space-y-1">
                         {notifications.length === 0 ? (
                           <p className="p-8 text-center text-[13px] text-muted-foreground">مفيش إشعارات جديدة</p>
@@ -977,7 +1039,51 @@ export function StudentPlatform() {
               </button>
             </div>
           </div>
-          <div className="mx-auto max-w-[1440px] p-4 pb-8 sm:p-6 lg:p-8">{tab === "dashboard" ? (
+          <div className="mx-auto max-w-[1440px] p-4 pb-8 sm:p-6 lg:p-8">
+            {/* Offline Push Notifications Prompt Banner */}
+            {isPushSupported && pushPermission === "default" && !dismissedPushBanner && (
+              <div className="mb-6 rounded-2xl border border-blue-200/80 bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 p-4 sm:p-5 text-white shadow-lg shadow-blue-500/15 relative overflow-hidden">
+                <div className="absolute -left-10 -bottom-10 h-32 w-32 rounded-full bg-white/10 blur-xl pointer-events-none" />
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
+                  <div className="flex items-center gap-3.5">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-xs text-white shadow-inner">
+                      <BellRing className="h-6 w-6 animate-pulse" />
+                    </div>
+                    <div>
+                      <strong className="block text-sm sm:text-base font-bold">
+                        فعّل إشعارات المنصة الفورية على جهازك 🔔
+                      </strong>
+                      <p className="text-xs sm:text-[13px] text-blue-100 mt-0.5 leading-relaxed">
+                        لتصلك تنبيهات الدروس الجديدة، ونتائج الامتحانات، وملاحظات د. محمود حتى لو كان المتصفح أو الموقع مغلقاً تماماً.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                    <button
+                      type="button"
+                      onClick={handleDismissPushBanner}
+                      className="text-xs text-blue-100 hover:text-white px-3 py-1.5 rounded-xl hover:bg-white/10 transition-colors"
+                    >
+                      لاحقاً
+                    </button>
+                    <Button
+                      size="sm"
+                      disabled={pushLoading}
+                      onClick={handleEnablePush}
+                      className="h-9 px-4 rounded-xl bg-white text-blue-700 hover:bg-blue-50 font-bold text-xs shadow-md"
+                    >
+                      {pushLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin ml-1" />
+                      ) : (
+                        <Sparkles className="h-3.5 w-3.5 ml-1 text-blue-600" />
+                      )}
+                      تفعيل الإشعارات الآن
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {tab === "dashboard" ? (
             <DashboardTab
               student={student}
               files={files}

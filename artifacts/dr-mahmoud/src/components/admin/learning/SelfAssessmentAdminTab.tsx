@@ -379,87 +379,85 @@ export function SelfAssessmentAdminTab({ role = "superadmin" }: { role?: "supera
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-right text-xs">
-                  <thead className="bg-slate-100/70 text-slate-700 font-semibold border-b border-slate-200">
-                    <tr>
-                      <th className="p-3">الطالب</th>
-                      <th className="p-3">رقم الهاتف</th>
-                      <th className="p-3">المرحلة والوحدة</th>
-                      <th className="p-3 text-center">عدد الأسئلة</th>
-                      <th className="p-3 text-center">الدرجة والنسبة</th>
-                      <th className="p-3 text-center">الحالة</th>
-                      <th className="p-3 text-center">الوقت المستغرق</th>
-                      <th className="p-3">التاريخ والوقت</th>
-                      <th className="p-3 text-center">الإجراءات</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-600">
-                    {sessions.map((sess) => (
-                      <tr key={sess.id} className="hover:bg-blue-50/30 transition-colors">
-                        <td className="p-3">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-900">{sess.studentName || "طالب"}</span>
+              <>
+                {/* Mobile & Tablet Card View (< lg screens) */}
+                <div className="block lg:hidden divide-y divide-slate-100">
+                  {sessions.map((sess) => (
+                    <div key={sess.id} className="p-4 space-y-3 hover:bg-slate-50/60 transition-colors">
+                      {/* Card Header: Student & Status */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-slate-900 text-sm">{sess.studentName || "طالب"}</span>
                             {sess.isEnrolledStudent || (sess.studentId && sess.studentId > 0) ? (
-                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold">
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold whitespace-nowrap">
                                 طالب بالمنصة
                               </span>
                             ) : (
-                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium whitespace-nowrap">
                                 زائر
                               </span>
                             )}
                           </div>
-                        </td>
-                        <td className="p-3 font-mono text-slate-700" dir="ltr">
-                          {sess.phone}
-                        </td>
-                        <td className="p-3">
-                          <div className="max-w-[200px]">
-                            <span className="font-bold text-slate-800 block truncate">{sess.unit}</span>
-                            <span className="text-[11px] text-slate-400 block truncate">{sess.stage}</span>
-                          </div>
-                        </td>
-                        <td className="p-3 text-center">
-                          <span className="px-2 py-1 rounded-lg bg-slate-100 font-bold text-slate-700">
-                            {sess.questionsCount || sess.totalQuestions} س
+                          <p className="text-xs font-mono text-slate-500" dir="ltr">
+                            {sess.phone}
+                          </p>
+                        </div>
+                        {sess.passed ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
+                            <CheckCircle2 className="h-3.5 w-3.5" /> ناجح
                           </span>
-                        </td>
-                        <td className="p-3 text-center">
-                          <div className="inline-flex flex-col items-center">
-                            <span className="font-black text-xs text-slate-900">
-                              {sess.score} / {sess.totalPoints}
-                            </span>
-                            <span
-                              className={`text-[11px] font-bold ${
-                                sess.percentage >= 85
-                                  ? "text-emerald-600"
-                                  : sess.percentage >= 65
-                                  ? "text-blue-600"
-                                  : sess.percentage >= 50
-                                  ? "text-amber-600"
-                                  : "text-red-600"
-                              }`}
-                            >
-                              ({sess.percentage}%)
-                            </span>
-                          </div>
-                        </td>
-                        <td className="p-3 text-center">
-                          {sess.passed ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              <CheckCircle2 className="h-3 w-3" /> ناجح
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-50 text-red-700 border border-red-200">
-                              <AlertCircle className="h-3 w-3" /> يحتاج تحسين
-                            </span>
-                          )}
-                        </td>
-                        <td className="p-3 text-center font-mono text-[11px] text-slate-500">
-                          {formatDuration(sess.timeSpentSeconds)}
-                        </td>
-                        <td className="p-3 text-[11px] text-slate-500">
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200 whitespace-nowrap">
+                            <AlertCircle className="h-3.5 w-3.5" /> يحتاج تحسين
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Course / Unit info */}
+                      <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100">
+                        <span className="font-bold text-slate-800 text-xs block leading-tight">{sess.unit}</span>
+                        <span className="text-[11px] text-slate-400 block mt-0.5 leading-tight">{sess.stage}</span>
+                      </div>
+
+                      {/* Quick metrics grid */}
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div className="bg-slate-50/80 rounded-xl p-2 border border-slate-100">
+                          <span className="text-[10px] text-slate-400 block mb-0.5">الدرجة والنسبة</span>
+                          <span className="font-black text-xs text-slate-900 block">
+                            {sess.score} / {sess.totalPoints}
+                          </span>
+                          <span
+                            className={`text-[11px] font-bold block ${
+                              sess.percentage >= 85
+                                ? "text-emerald-600"
+                                : sess.percentage >= 65
+                                ? "text-blue-600"
+                                : sess.percentage >= 50
+                                ? "text-amber-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            ({sess.percentage}%)
+                          </span>
+                        </div>
+                        <div className="bg-slate-50/80 rounded-xl p-2 border border-slate-100">
+                          <span className="text-[10px] text-slate-400 block mb-0.5">عدد الأسئلة</span>
+                          <span className="font-bold text-xs text-slate-800 block mt-1">
+                            {sess.questionsCount || sess.totalQuestions} سؤال
+                          </span>
+                        </div>
+                        <div className="bg-slate-50/80 rounded-xl p-2 border border-slate-100">
+                          <span className="text-[10px] text-slate-400 block mb-0.5">الوقت المستغرق</span>
+                          <span className="font-mono text-xs text-slate-700 block mt-1">
+                            {formatDuration(sess.timeSpentSeconds)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Card Footer: Date & Action */}
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 text-xs">
+                        <span className="text-[11px] text-slate-400">
                           {sess.completedAt
                             ? new Date(sess.completedAt).toLocaleString("ar-EG", {
                                 dateStyle: "short",
@@ -469,23 +467,132 @@ export function SelfAssessmentAdminTab({ role = "superadmin" }: { role?: "supera
                                 dateStyle: "short",
                                 timeStyle: "short",
                               })}
-                        </td>
-                        <td className="p-3 text-center">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setSelectedSessionForReview(sess)}
-                            className="h-8 px-2.5 rounded-xl border-blue-200 text-blue-700 hover:bg-blue-50 font-bold text-[11px]"
-                          >
-                            <Eye className="h-3.5 w-3.5 ml-1" />
-                            تفاصيل الإجابات ({sess.reviewCount || sess.details?.length || sess.questionsCount || 0})
-                          </Button>
-                        </td>
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSelectedSessionForReview(sess)}
+                          className="h-8 px-3 rounded-xl border-blue-200 text-blue-700 hover:bg-blue-50 font-bold text-xs"
+                        >
+                          <Eye className="h-3.5 w-3.5 ml-1" />
+                          تفاصيل الإجابات ({sess.reviewCount || sess.details?.length || sess.questionsCount || 0})
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop Full Table (>= lg screens) */}
+                <div className="hidden lg:block overflow-x-auto">
+                  <table className="w-full text-right text-xs min-w-[1100px]">
+                    <thead className="bg-slate-100/70 text-slate-700 font-semibold border-b border-slate-200 whitespace-nowrap">
+                      <tr>
+                        <th className="p-3">الطالب</th>
+                        <th className="p-3">رقم الهاتف</th>
+                        <th className="p-3">المرحلة والوحدة</th>
+                        <th className="p-3 text-center">عدد الأسئلة</th>
+                        <th className="p-3 text-center">الدرجة والنسبة</th>
+                        <th className="p-3 text-center">الحالة</th>
+                        <th className="p-3 text-center">الوقت المستغرق</th>
+                        <th className="p-3">التاريخ والوقت</th>
+                        <th className="p-3 text-center">الإجراءات</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-slate-600">
+                      {sessions.map((sess) => (
+                        <tr key={sess.id} className="hover:bg-blue-50/30 transition-colors">
+                          <td className="p-3 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-900">{sess.studentName || "طالب"}</span>
+                              {sess.isEnrolledStudent || (sess.studentId && sess.studentId > 0) ? (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold whitespace-nowrap">
+                                  طالب بالمنصة
+                                </span>
+                              ) : (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium whitespace-nowrap">
+                                  زائر
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-3 font-mono text-slate-700 whitespace-nowrap" dir="ltr">
+                            {sess.phone}
+                          </td>
+                          <td className="p-3 min-w-[200px] max-w-[260px]">
+                            <div className="space-y-0.5">
+                              <span className="font-bold text-slate-800 block truncate" title={sess.unit}>{sess.unit}</span>
+                              <span className="text-[11px] text-slate-400 block truncate" title={sess.stage}>{sess.stage}</span>
+                            </div>
+                          </td>
+                          <td className="p-3 text-center whitespace-nowrap">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 font-bold text-slate-700 text-xs whitespace-nowrap">
+                              {sess.questionsCount || sess.totalQuestions} سؤال
+                            </span>
+                          </td>
+                          <td className="p-3 text-center whitespace-nowrap">
+                            <div className="inline-flex flex-col items-center">
+                              <span className="font-black text-xs text-slate-900">
+                                {sess.score} / {sess.totalPoints}
+                              </span>
+                              <span
+                                className={`text-[11px] font-bold ${
+                                  sess.percentage >= 85
+                                    ? "text-emerald-600"
+                                    : sess.percentage >= 65
+                                    ? "text-blue-600"
+                                    : sess.percentage >= 50
+                                    ? "text-amber-600"
+                                    : "text-red-600"
+                                }`}
+                              >
+                                ({sess.percentage}%)
+                              </span>
+                            </div>
+                          </td>
+                          <td className="p-3 text-center whitespace-nowrap">
+                            {sess.passed ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
+                                <CheckCircle2 className="h-3 w-3" /> ناجح
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-red-50 text-red-700 border border-red-200 whitespace-nowrap">
+                                <AlertCircle className="h-3 w-3" /> يحتاج تحسين
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-3 text-center font-mono text-[11px] text-slate-500 whitespace-nowrap">
+                            {formatDuration(sess.timeSpentSeconds)}
+                          </td>
+                          <td className="p-3 text-[11px] text-slate-500 whitespace-nowrap">
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-slate-700">
+                                {new Date(sess.completedAt || sess.createdAt).toLocaleDateString("ar-EG")}
+                              </span>
+                              <span className="text-[10px] text-slate-400">
+                                {new Date(sess.completedAt || sess.createdAt).toLocaleTimeString("ar-EG", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="p-3 text-center whitespace-nowrap">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setSelectedSessionForReview(sess)}
+                              className="h-8 px-2.5 rounded-xl border-blue-200 text-blue-700 hover:bg-blue-50 font-bold text-[11px] whitespace-nowrap"
+                            >
+                              <Eye className="h-3.5 w-3.5 ml-1" />
+                              تفاصيل الإجابات ({sess.reviewCount || sess.details?.length || sess.questionsCount || 0})
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -602,90 +709,163 @@ export function SelfAssessmentAdminTab({ role = "superadmin" }: { role?: "supera
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-right text-xs">
-                  <thead className="bg-slate-100/70 text-slate-700 font-semibold border-b border-slate-200">
-                    <tr>
-                      <th className="p-3">الطالب / الزائر</th>
-                      <th className="p-3">رقم الهاتف</th>
-                      <th className="p-3 text-center">المحاولة المجانية</th>
-                      <th className="p-3 text-center">الرصيد المتبقي</th>
-                      <th className="p-3 text-center">إجمالي المشترى</th>
-                      <th className="p-3">آخر تفعيل بواسطة</th>
-                      <th className="p-3 text-center">إجراء سريع</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-600">
-                    {entitlements.map((item) => (
-                      <tr key={item.id} className="hover:bg-blue-50/30 transition-colors">
-                        <td className="p-3 font-semibold text-slate-900">
-                          {item.studentName || "طالب زائر"}
-                        </td>
-                        <td className="p-3 font-mono text-slate-700" dir="ltr">
-                          {item.phone}
-                        </td>
-                        <td className="p-3 text-center">
-                          {item.freeAttemptUsed ? (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                              تم استهلاكها
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                              <CheckCircle2 className="h-3 w-3" /> متاحة مجاناً
-                            </span>
-                          )}
-                        </td>
-                        <td className="p-3 text-center">
-                          <span
-                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-bold text-xs ${
-                              item.paidAttemptsBalance > 0
-                                ? "bg-blue-100 text-blue-800 border border-blue-200"
-                                : "bg-amber-50 text-amber-800 border border-amber-200"
-                            }`}
-                          >
-                            <Coins className="h-3.5 w-3.5" />
-                            {item.paidAttemptsBalance} محاولات
+              <>
+                {/* Mobile & Tablet Card View (< lg screens) */}
+                <div className="block lg:hidden divide-y divide-slate-100">
+                  {entitlements.map((item) => (
+                    <div key={item.id} className="p-4 space-y-3 hover:bg-slate-50/60 transition-colors">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="space-y-0.5">
+                          <span className="font-bold text-slate-900 text-sm block">
+                            {item.studentName || "طالب زائر"}
                           </span>
-                        </td>
-                        <td className="p-3 text-center font-medium text-slate-700">
-                          {item.totalPurchasedAttempts || 0}
-                        </td>
-                        <td className="p-3 text-[11px] text-slate-500">
-                          {item.lastGrantedBy ? (
-                            <div>
-                              <span className="font-semibold text-slate-700">{item.lastGrantedBy}</span>
-                              {item.lastGrantedAt && (
-                                <span className="block text-[10px] text-slate-400">
-                                  {new Date(item.lastGrantedAt).toLocaleDateString("ar-EG")}
-                                </span>
-                              )}
-                            </div>
+                          <span className="text-xs font-mono text-slate-500 block" dir="ltr">
+                            {item.phone}
+                          </span>
+                        </div>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-bold text-xs whitespace-nowrap ${
+                            item.paidAttemptsBalance > 0
+                              ? "bg-blue-100 text-blue-800 border border-blue-200"
+                              : "bg-amber-50 text-amber-800 border border-amber-200"
+                          }`}
+                        >
+                          <Coins className="h-3.5 w-3.5" />
+                          {item.paidAttemptsBalance} محاولات
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-center">
+                        <div className="bg-slate-50/80 rounded-xl p-2 border border-slate-100">
+                          <span className="text-[10px] text-slate-400 block mb-0.5">المحاولة المجانية</span>
+                          {item.freeAttemptUsed ? (
+                            <span className="text-[11px] font-semibold text-slate-500 block">تم استهلاكها</span>
                           ) : (
-                            "—"
+                            <span className="text-[11px] font-semibold text-emerald-700 block">متاحة مجاناً</span>
                           )}
-                        </td>
-                        <td className="p-3 text-center">
-                          <Button
-                            size="sm"
-                            disabled={activatingPhone === item.phone}
-                            onClick={() => handleGrantAttempts(item.phone, item.studentName, 3)}
-                            className="h-8 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-xs"
-                          >
-                            {activatingPhone === item.phone ? (
-                              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <>
-                                <Plus className="h-3.5 w-3.5 ml-1" />
-                                +3 محاولات (50 ج)
-                              </>
-                            )}
-                          </Button>
-                        </td>
+                        </div>
+                        <div className="bg-slate-50/80 rounded-xl p-2 border border-slate-100">
+                          <span className="text-[10px] text-slate-400 block mb-0.5">إجمالي المشترى</span>
+                          <span className="text-xs font-bold text-slate-800 block">
+                            {item.totalPurchasedAttempts || 0} محاولة
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
+                        <div className="text-[11px] text-slate-400">
+                          {item.lastGrantedBy ? (
+                            <span>آخر شحن: <strong className="text-slate-600 font-semibold">{item.lastGrantedBy}</strong></span>
+                          ) : (
+                            <span>لم يتم شحن رصيد إضافي</span>
+                          )}
+                        </div>
+                        <Button
+                          size="sm"
+                          disabled={activatingPhone === item.phone}
+                          onClick={() => handleGrantAttempts(item.phone, item.studentName, 3)}
+                          className="h-8 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs"
+                        >
+                          {activatingPhone === item.phone ? (
+                            <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <>
+                              <Plus className="h-3.5 w-3.5 ml-1" />
+                              +3 محاولات (50 ج)
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop Full Table (>= lg screens) */}
+                <div className="hidden lg:block overflow-x-auto">
+                  <table className="w-full text-right text-xs min-w-[950px]">
+                    <thead className="bg-slate-100/70 text-slate-700 font-semibold border-b border-slate-200 whitespace-nowrap">
+                      <tr>
+                        <th className="p-3">الطالب / الزائر</th>
+                        <th className="p-3">رقم الهاتف</th>
+                        <th className="p-3 text-center">المحاولة المجانية</th>
+                        <th className="p-3 text-center">الرصيد المتبقي</th>
+                        <th className="p-3 text-center">إجمالي المشترى</th>
+                        <th className="p-3">آخر تفعيل بواسطة</th>
+                        <th className="p-3 text-center">إجراء سريع</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-slate-600">
+                      {entitlements.map((item) => (
+                        <tr key={item.id} className="hover:bg-blue-50/30 transition-colors">
+                          <td className="p-3 font-semibold text-slate-900 whitespace-nowrap">
+                            {item.studentName || "طالب زائر"}
+                          </td>
+                          <td className="p-3 font-mono text-slate-700 whitespace-nowrap" dir="ltr">
+                            {item.phone}
+                          </td>
+                          <td className="p-3 text-center whitespace-nowrap">
+                            {item.freeAttemptUsed ? (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                                تم استهلاكها
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                                <CheckCircle2 className="h-3 w-3" /> متاحة مجاناً
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-3 text-center whitespace-nowrap">
+                            <span
+                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-bold text-xs ${
+                                item.paidAttemptsBalance > 0
+                                  ? "bg-blue-100 text-blue-800 border border-blue-200"
+                                  : "bg-amber-50 text-amber-800 border border-amber-200"
+                              }`}
+                            >
+                              <Coins className="h-3.5 w-3.5" />
+                              {item.paidAttemptsBalance} محاولات
+                            </span>
+                          </td>
+                          <td className="p-3 text-center font-medium text-slate-700 whitespace-nowrap">
+                            {item.totalPurchasedAttempts || 0}
+                          </td>
+                          <td className="p-3 text-[11px] text-slate-500 whitespace-nowrap">
+                            {item.lastGrantedBy ? (
+                              <div>
+                                <span className="font-semibold text-slate-700">{item.lastGrantedBy}</span>
+                                {item.lastGrantedAt && (
+                                  <span className="block text-[10px] text-slate-400">
+                                    {new Date(item.lastGrantedAt).toLocaleDateString("ar-EG")}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              "—"
+                            )}
+                          </td>
+                          <td className="p-3 text-center whitespace-nowrap">
+                            <Button
+                              size="sm"
+                              disabled={activatingPhone === item.phone}
+                              onClick={() => handleGrantAttempts(item.phone, item.studentName, 3)}
+                              className="h-8 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-xs"
+                            >
+                              {activatingPhone === item.phone ? (
+                                <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <>
+                                  <Plus className="h-3.5 w-3.5 ml-1" />
+                                  +3 محاولات (50 ج)
+                                </>
+                              )}
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
         </div>

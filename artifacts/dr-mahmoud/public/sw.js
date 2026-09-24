@@ -84,32 +84,58 @@ self.addEventListener("fetch", (event) => {
   }
 });
 
-// ── Push Notifications (future use) ─────────────────────────────────────────
+// ── Web Push Notifications (active even when browser/site is closed!) ────────
 self.addEventListener("push", (event) => {
-  if (!event.data) return;
   let data = {};
-  try { data = event.data.json(); } catch { data = { title: "إشعار جديد", body: event.data.text() }; }
-  const { title = "د. محمود المهدي", body = "لديك إشعار جديد" } = data;
-  event.waitUntil(
-    self.registration.showNotification(title, {
-      body,
-      icon: "/web-app-manifest-192x192.png",
-      badge: "/favicon-96x96.png",
-      dir: "rtl",
-      lang: "ar",
-      vibrate: [200, 100, 200],
-      tag: "drelmahdy-notification",
-    }),
-  );
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch {
+      data = { title: "أكاديمية د. محمود المهدي", body: event.data.text() };
+    }
+  }
+
+  const title = data.title || "أكاديمية د. محمود المهدي";
+  const options = {
+    body: data.body || "لديك إشعار وتحديث جديد في حسابك",
+    icon: data.icon || "/web-app-manifest-192x192.png",
+    badge: data.badge || "/favicon-96x96.png",
+    dir: "rtl",
+    lang: "ar",
+    vibrate: [250, 100, 250],
+    tag: data.tag || `drelmahdy-${Date.now()}`,
+    renotify: true,
+    data: {
+      url: data.url || "/platform",
+      timestamp: Date.now(),
+    },
+    actions: [
+      { action: "open", title: "فتح المنصة 🚀" },
+    ],
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || "/platform";
+
   event.waitUntil(
-    self.clients.matchAll({ type: "window" }).then((clients) => {
-      const client = clients.find((c) => c.url.includes(self.location.origin));
-      if (client) return client.focus();
-      return self.clients.openWindow("/");
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      // Focus existing tab if open
+      for (const client of clients) {
+        if (client.url.includes(self.location.origin) && "focus" in client) {
+          if ("navigate" in client) {
+            client.navigate(targetUrl);
+          }
+          return client.focus();
+        }
+      }
+      // Otherwise open a new window
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
+      }
     }),
   );
 });

@@ -223,6 +223,23 @@ export const codeRecoveryRequestsTable = pgTable("code_recovery_requests", {
   statusIndex: index("code_recovery_requests_status_idx").on(table.status),
 }));
 
+export const pushSubscriptionsTable = pgTable("push_subscriptions", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").references(() => studentsTable.id, { onDelete: "cascade" }),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  studentIdx: index("idx_push_subscriptions_student").on(table.studentId),
+  endpointIdx: index("idx_push_subscriptions_endpoint").on(table.endpoint),
+}));
+
+export type PushSubscriptionRow = typeof pushSubscriptionsTable.$inferSelect;
+export type InsertPushSubscriptionRow = typeof pushSubscriptionsTable.$inferInsert;
+
 export const paymentReceiptsTable = pgTable("payment_receipts", {
   id: serial("id").primaryKey(),
   studentId: integer("student_id").references(() => studentsTable.id, { onDelete: "set null" }),

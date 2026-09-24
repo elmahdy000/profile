@@ -39,6 +39,13 @@ import {
   type QuizQuestion,
 } from "@workspace/db";
 import { getAdminIdentity, getAdminRole, isAdminRequest, requireAdmin, requireSuperAdmin } from "../middleware/auth";
+import {
+  VAPID_PUBLIC_KEY,
+  savePushSubscription,
+  removePushSubscription,
+  sendPushToStudent,
+  sendPushToAllStudents,
+} from "../services/push-notifications";
 
 import { logAudit } from "../lib/audit";
 export { logAudit };
@@ -3224,11 +3231,61 @@ router.post("/admin/notifications/broadcast", requireAdmin, async (req, res, nex
       })),
     );
 
+    // Trigger OS-level Web Push even if student has closed the website!
+    void sendPushToAllStudents(
+      {
+        title: title.trim(),
+        body: message.trim(),
+        url: "/platform",
+        tag: `broadcast-${Date.now()}`,
+      },
+      targetGrade !== "all" ? targetGrade : undefined
+    );
+
     res.json({
       success: true,
       count: targets.length,
       message: `تم إرسال الإشعار بنجاح إلى ${targets.length} طالب`,
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ── Web Push Notifications Endpoints ──────────────────────────────────────────
+router.get("/push/vapid-public-key", (_req, res) => {
+  res.json({ publicKey: VAPID_PUBLIC_KEY });
+});
+
+router.post("/push/subscribe", async (req, res, next) => {
+  try {
+    const student = await getApprovedStudent(req);
+    const { subscription, studentId: explicitStudentId } = req.body;
+    if (!subscription || !subscription.endpoint || !subscription.keys) {
+      res.status(400).json({ error: "بيانات الاشتراك غير مكتملة" });
+      return;
+    }
+    const userAgent = req.headers["user-agent"] || "";
+    await savePushSubscription({
+      studentId: student ? student.id : (explicitStudentId || null),
+      endpoint: subscription.endpoint,
+      p256dh: subscription.keys.p256dh,
+      auth: subscription.keys.auth,
+      userAgent,
+    });
+    res.json({ success: true, message: "تم تسجيل اشتراك الإشعارات بنجاح" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/push/unsubscribe", async (req, res, next) => {
+  try {
+    const { endpoint } = req.body;
+    if (endpoint) {
+      await removePushSubscription(endpoint);
+    }
+    res.json({ success: true });
   } catch (error) {
     next(error);
   }
