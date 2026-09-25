@@ -86,6 +86,19 @@ interface EligibilityData {
   needPhone?: boolean;
 }
 
+function parseUnitOrder(name: string): number {
+  if (!name) return 999;
+  const s = name.toLowerCase();
+  if (/(\b1\b|الأولى|الاولى|unit\s*1|first)/i.test(s)) return 1;
+  if (/(\b2\b|الثانية|التانية|unit\s*2|second)/i.test(s)) return 2;
+  if (/(\b3\b|الثالثة|التالتة|unit\s*3|third)/i.test(s)) return 3;
+  if (/(\b4\b|الرابعة|الرابعه|unit\s*4|fourth)/i.test(s)) return 4;
+  if (/(\b5\b|الخامسة|الخامسه|unit\s*5|fifth)/i.test(s)) return 5;
+  const m = s.match(/\b(\d+)\b/);
+  if (m) return parseInt(m[1], 10);
+  return 99;
+}
+
 function parseLessonOrder(name: string): number {
   const matchDash = name.match(/(\d+)\s*[-_.]\s*(\d+)/);
   if (matchDash) {
@@ -228,7 +241,8 @@ export function SelfAssessmentTab({
         const defaultStage = data.stages[0];
         setSelectedStageName(defaultStage.stage);
         if (defaultStage.units.length > 0) {
-          setSelectedUnitName(defaultStage.units[0].unit);
+          const sortedUnits = defaultStage.units.slice().sort((a: any, b: any) => parseUnitOrder(a.unit) - parseUnitOrder(b.unit));
+          setSelectedUnitName(sortedUnits[0].unit);
           setSelectedLessons([]);
         }
       }
@@ -296,6 +310,18 @@ export function SelfAssessmentTab({
   // Selected Stage & Unit Objects
   const currentStageObj = stages.find((s) => s.stage === selectedStageName) || stages[0];
   const currentUnitObj = currentStageObj?.units.find((u) => u.unit === selectedUnitName);
+
+  // Auto-select first sorted unit if current selectedUnitName is invalid or missing in active stage
+  useEffect(() => {
+    if (currentStageObj && currentStageObj.units && currentStageObj.units.length > 0) {
+      const exists = currentStageObj.units.some((u) => u.unit === selectedUnitName);
+      if (!exists) {
+        const sortedUnits = currentStageObj.units.slice().sort((a, b) => parseUnitOrder(a.unit) - parseUnitOrder(b.unit));
+        setSelectedUnitName(sortedUnits[0].unit);
+        setSelectedLessons([]);
+      }
+    }
+  }, [currentStageObj, selectedUnitName]);
 
   // Total available questions in selected unit/lessons
   const availableQuestionsCount = React.useMemo(() => {
@@ -764,7 +790,8 @@ export function SelfAssessmentTab({
                         onClick={() => {
                           setSelectedStageName(st.stage);
                           if (st.units.length > 0) {
-                            setSelectedUnitName(st.units[0].unit);
+                            const sortedUnits = st.units.slice().sort((a, b) => parseUnitOrder(a.unit) - parseUnitOrder(b.unit));
+                            setSelectedUnitName(sortedUnits[0].unit);
                             setSelectedLessons([]);
                           }
                         }}
@@ -821,7 +848,10 @@ export function SelfAssessmentTab({
                 <div className="py-8 text-center text-xs text-slate-400">لا توجد وحدات متاحة لهذا المسار</div>
               ) : (
                 <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-0.5">
-                  {currentStageObj.units.map((u) => {
+                  {(currentStageObj.units || [])
+                    .slice()
+                    .sort((a, b) => parseUnitOrder(a.unit) - parseUnitOrder(b.unit))
+                    .map((u) => {
                     const isSelected = selectedUnitName === u.unit;
                     return (
                       <button

@@ -4897,12 +4897,15 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
     const tree = Object.values(stagesMap).map((st) => ({
       stage: st.stage,
       totalQuestions: st.totalQuestions,
-      units: Object.values(st.units).map((u) => ({
-        unit: u.unit,
-        totalQuestions: u.totalQuestions,
-        difficulty: u.difficulty,
-        lessons: Object.values(u.lessons),
-      })),
+      units: Object.values(st.units)
+        .sort((a, b) => parseUnitSortOrder(a.unit) - parseUnitSortOrder(b.unit))
+        .map((u) => ({
+          unit: u.unit,
+          totalQuestions: u.totalQuestions,
+          difficulty: u.difficulty,
+          lessons: Object.values(u.lessons)
+            .sort((a, b) => parseLessonSortOrder(a.lesson) - parseLessonSortOrder(b.lesson)),
+        })),
     }));
 
     res.json({
@@ -5224,15 +5227,22 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
     if (isMultiLesson) {
       conditions.push(inArray(questionBankTable.lesson, cleanedLessons));
     } else if (lesson && lesson !== "all") {
+      const cleanLes = lesson.trim();
       if (resolvedVideoId) {
         conditions.push(
           or(
             eq(questionBankTable.lessonId, resolvedVideoId),
-            eq(questionBankTable.lesson, lesson)
+            eq(questionBankTable.lesson, cleanLes),
+            ilike(questionBankTable.lesson, `%${cleanLes}%`)
           )
         );
       } else {
-        conditions.push(eq(questionBankTable.lesson, lesson));
+        conditions.push(
+          or(
+            eq(questionBankTable.lesson, cleanLes),
+            ilike(questionBankTable.lesson, `%${cleanLes}%`)
+          )
+        );
       }
     } else if (resolvedVideoId) {
       conditions.push(eq(questionBankTable.lessonId, resolvedVideoId));
@@ -7370,6 +7380,37 @@ export function matchStudentToStage(
   return true;
 }
 
+export function parseUnitSortOrder(unitName: string): number {
+  if (!unitName) return 999;
+  const s = unitName.toLowerCase();
+  if (/(\b1\b|الأولى|الاولى|unit\s*1|first)/i.test(s)) return 1;
+  if (/(\b2\b|الثانية|التانية|unit\s*2|second)/i.test(s)) return 2;
+  if (/(\b3\b|الثالثة|التالتة|unit\s*3|third)/i.test(s)) return 3;
+  if (/(\b4\b|الرابعة|الرابعه|unit\s*4|fourth)/i.test(s)) return 4;
+  if (/(\b5\b|الخامسة|الخامسه|unit\s*5|fifth)/i.test(s)) return 5;
+  const m = s.match(/\b(\d+)\b/);
+  if (m) return parseInt(m[1], 10);
+  return 99;
+}
+
+export function parseLessonSortOrder(lessonName: string): number {
+  if (!lessonName) return 999;
+  const s = lessonName.toLowerCase();
+  const matchDash = s.match(/(\d+)\s*[-_.]\s*(\d+)/);
+  if (matchDash) {
+    return parseInt(matchDash[1], 10) * 100 + parseInt(matchDash[2], 10);
+  }
+  if (s.includes("شامل")) return 9999;
+  if (/(\b1\b|الأول|الاول\b|first)/i.test(s)) return 10;
+  if (/(\b2\b|الثاني|الثانى\b|second)/i.test(s)) return 20;
+  if (/(\b3\b|الثالث\b|third)/i.test(s)) return 30;
+  if (/(\b4\b|الرابع\b|fourth)/i.test(s)) return 40;
+  if (/(\b5\b|الخامس\b|fifth)/i.test(s)) return 50;
+  const m = s.match(/\b(\d+)\b/);
+  if (m) return parseInt(m[1], 10) * 10;
+  return 100;
+}
+
 // 1. GET /api/learning/self-assessment/taxonomy - إرجاع قائمة شجرية بالوحدات والدروس المتاحة للتقييم الذاتي
 router.get("/learning/self-assessment/taxonomy", async (req, res, next) => {
   try {
@@ -7494,16 +7535,21 @@ router.get("/learning/self-assessment/taxonomy", async (req, res, next) => {
       taxonomy[stage].units[unit].lessons[lesson].totalQuestions++;
     }
 
-    const stagesList = Object.values(taxonomy).map((st) => ({
-      stage: st.stage,
-      track: st.track,
-      totalQuestions: st.totalQuestions,
-      units: Object.values(st.units).map((u) => ({
-        unit: u.unit,
-        totalQuestions: u.totalQuestions,
-        lessons: Object.values(u.lessons),
-      })),
-    }));
+    const stagesList = Object.values(taxonomy)
+      .sort((a, b) => (a.track === "ar" ? -1 : 1))
+      .map((st) => ({
+        stage: st.stage,
+        track: st.track,
+        totalQuestions: st.totalQuestions,
+        units: Object.values(st.units)
+          .sort((a, b) => parseUnitSortOrder(a.unit) - parseUnitSortOrder(b.unit))
+          .map((u) => ({
+            unit: u.unit,
+            totalQuestions: u.totalQuestions,
+            lessons: Object.values(u.lessons)
+              .sort((a, b) => parseLessonSortOrder(a.lesson) - parseLessonSortOrder(b.lesson)),
+          })),
+      }));
 
     // إذا كان الطالب مسجلاً، يتم قفل وعرض مرحلته ومساره (عربي / لغات) فقط
     let finalStagesList = stagesList;
@@ -8391,12 +8437,19 @@ router.get("/admin/learning/self-assessment/curriculum", requireAdmin, async (re
       structure[stage].units[unit].lessons.push({ lesson, count });
     }
 
-    const result = Object.values(structure).map((st) => ({
-      stage: st.stage,
-      track: st.track,
-      totalQuestions: st.totalQuestions,
-      units: Object.values(st.units),
-    }));
+    const result = Object.values(structure)
+      .sort((a, b) => (a.track === "ar" ? -1 : 1))
+      .map((st) => ({
+        stage: st.stage,
+        track: st.track,
+        totalQuestions: st.totalQuestions,
+        units: Object.values(st.units)
+          .sort((a, b) => parseUnitSortOrder(a.unit) - parseUnitSortOrder(b.unit))
+          .map((u) => ({
+            ...u,
+            lessons: u.lessons.sort((a, b) => parseLessonSortOrder(a.lesson) - parseLessonSortOrder(b.lesson)),
+          })),
+      }));
 
     res.json({ success: true, curriculum: result });
   } catch (error) {

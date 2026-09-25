@@ -99,6 +99,37 @@ export const getOptionLabel = (index: number, isEnglish: boolean): string => {
   return ["أ", "ب", "ج", "د", "هـ", "و"][index] || String(index + 1);
 };
 
+export function parseUnitSortOrder(unitName: string): number {
+  if (!unitName) return 999;
+  const s = unitName.toLowerCase();
+  if (/(\b1\b|الأولى|الاولى|unit\s*1|first)/i.test(s)) return 1;
+  if (/(\b2\b|الثانية|التانية|unit\s*2|second)/i.test(s)) return 2;
+  if (/(\b3\b|الثالثة|التالتة|unit\s*3|third)/i.test(s)) return 3;
+  if (/(\b4\b|الرابعة|الرابعه|unit\s*4|fourth)/i.test(s)) return 4;
+  if (/(\b5\b|الخامسة|الخامسه|unit\s*5|fifth)/i.test(s)) return 5;
+  const m = s.match(/\b(\d+)\b/);
+  if (m) return parseInt(m[1], 10);
+  return 99;
+}
+
+export function parseLessonSortOrder(lessonName: string): number {
+  if (!lessonName) return 999;
+  const s = lessonName.toLowerCase();
+  const matchDash = s.match(/(\d+)\s*[-_.]\s*(\d+)/);
+  if (matchDash) {
+    return parseInt(matchDash[1], 10) * 100 + parseInt(matchDash[2], 10);
+  }
+  if (s.includes("شامل")) return 9999;
+  if (/(\b1\b|الأول|الاول\b|first)/i.test(s)) return 10;
+  if (/(\b2\b|الثاني|الثانى\b|second)/i.test(s)) return 20;
+  if (/(\b3\b|الثالث\b|third)/i.test(s)) return 30;
+  if (/(\b4\b|الرابع\b|fourth)/i.test(s)) return 40;
+  if (/(\b5\b|الخامس\b|fifth)/i.test(s)) return 50;
+  const m = s.match(/\b(\d+)\b/);
+  if (m) return parseInt(m[1], 10) * 10;
+  return 100;
+}
+
 export function TestBankTab({
   adminApi,
   onNavigateToQuizzes,
@@ -985,14 +1016,18 @@ export function TestBankTab({
   // Suggested units & lessons for upload tab based on uploadStage
   const suggestedUnits = useMemo(() => {
     const st = treeData.find((s) => s.stage === uploadStage);
-    return st ? st.units.map((u) => u.unit) : [];
+    return st
+      ? st.units.slice().sort((a, b) => parseUnitSortOrder(a.unit) - parseUnitSortOrder(b.unit)).map((u) => u.unit)
+      : [];
   }, [treeData, uploadStage]);
 
   const suggestedLessons = useMemo(() => {
     const st = treeData.find((s) => s.stage === uploadStage);
     if (!st) return [];
     const u = st.units.find((unit) => unit.unit === uploadUnit);
-    return u ? u.lessons.map((l) => l.lesson) : [];
+    return u
+      ? u.lessons.slice().sort((a, b) => parseLessonSortOrder(a.lesson) - parseLessonSortOrder(b.lesson)).map((l) => l.lesson)
+      : [];
   }, [treeData, uploadStage, uploadUnit]);
 
   // Lessons list for currently selected course in Upload Tab
@@ -1010,14 +1045,18 @@ export function TestBankTab({
   // Units list for currently selected generator stage
   const generatorUnits = useMemo(() => {
     const st = treeData.find((s) => s.stage === genStage);
-    return st ? st.units : [];
+    return st
+      ? st.units.slice().sort((a, b) => parseUnitSortOrder(a.unit) - parseUnitSortOrder(b.unit))
+      : [];
   }, [treeData, genStage]);
 
   // Lessons list for currently selected generator unit
   const generatorLessons = useMemo(() => {
     if (genUnit === "all") return [];
     const u = generatorUnits.find((unit) => unit.unit === genUnit);
-    return u ? u.lessons : [];
+    return u
+      ? u.lessons.slice().sort((a, b) => parseLessonSortOrder(a.lesson) - parseLessonSortOrder(b.lesson))
+      : [];
   }, [generatorUnits, genUnit]);
 
   // Lessons list for multi-lesson selection in Generator
@@ -1030,9 +1069,11 @@ export function TestBankTab({
       totalQuestions: number;
       difficulty: { easy: number; medium: number; hard: number };
     }[] = [];
-    for (const u of st.units) {
+    const sortedUnits = st.units.slice().sort((a, b) => parseUnitSortOrder(a.unit) - parseUnitSortOrder(b.unit));
+    for (const u of sortedUnits) {
       if (genUnit !== "all" && u.unit !== genUnit) continue;
-      for (const l of u.lessons) {
+      const sortedLessons = u.lessons.slice().sort((a, b) => parseLessonSortOrder(a.lesson) - parseLessonSortOrder(b.lesson));
+      for (const l of sortedLessons) {
         list.push({
           lesson: l.lesson,
           unit: u.unit,
@@ -1318,7 +1359,7 @@ export function TestBankTab({
                 </div>
               ) : (
                 <div className="space-y-3 max-h-[700px] overflow-y-auto pr-1">
-                  {currentStageNode.units.map((unitObj, uIdx) => (
+                  {(currentStageNode.units || []).slice().sort((a, b) => parseUnitSortOrder(a.unit) - parseUnitSortOrder(b.unit)).map((unitObj, uIdx) => (
                     <div
                       key={uIdx}
                       className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs"
@@ -1361,7 +1402,7 @@ export function TestBankTab({
                           </span>
                         </button>
 
-                        {unitObj.lessons.map((lessonObj, lIdx) => {
+                        {(unitObj.lessons || []).slice().sort((a, b) => parseLessonSortOrder(a.lesson) - parseLessonSortOrder(b.lesson)).map((lessonObj, lIdx) => {
                           const isSelected =
                             selectedUnit === unitObj.unit && selectedLesson === lessonObj.lesson;
                           return (
