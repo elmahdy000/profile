@@ -22,8 +22,19 @@ function handleChunkError(error: unknown) {
     }
   }
 }
-window.addEventListener("error", (event) => handleChunkError(event.error || event.message));
-window.addEventListener("unhandledrejection", (event) => handleChunkError(event.reason));
+window.addEventListener("error", (event) => {
+  const msg = String(event.error?.message || event.message || "");
+  if (msg.includes("M_ID")) return;
+  handleChunkError(event.error || event.message);
+});
+window.addEventListener("unhandledrejection", (event) => {
+  const msg = String(event.reason?.message || event.reason || "");
+  if (msg.includes("M_ID")) {
+    event.preventDefault();
+    return;
+  }
+  handleChunkError(event.reason);
+});
 
 // ── PWA Service Worker Registration ─────────────────────────────────────────
 if ("serviceWorker" in navigator) {
