@@ -100,6 +100,7 @@ function parseUnitOrder(name: string): number {
 }
 
 function parseLessonOrder(name: string): number {
+  if (name.includes("شامل") || name.toLowerCase().includes("comprehensive")) return 9999;
   const matchDash = name.match(/(\d+)\s*[-_.]\s*(\d+)/);
   if (matchDash) {
     return parseInt(matchDash[1], 10) * 100 + parseInt(matchDash[2], 10);
@@ -127,7 +128,6 @@ function parseLessonOrder(name: string): number {
   for (const [word, num] of Object.entries(arabicNumbers)) {
     if (name.includes(word)) return num * 10;
   }
-  if (name.includes("شامل")) return 999;
   return 50;
 }
 
