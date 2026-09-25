@@ -5115,53 +5115,132 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
         (q) => !existingPrompts.has(String(q.prompt).trim().toLowerCase())
       );
 
-      if (nonDuplicates.length === 0) {
-        res.status(200).json({
-          success: true,
-          count: 0,
-          warnings: [...warnings, "جميع الأسئلة كانت موجودة بالفعل في بنك هذا الدرس (تم تخطي التكرار)."],
-          stage,
-          unit,
-          lesson,
-        });
-        return;
+      let insertedCount = 0;
+      if (nonDuplicates.length > 0) {
+        // Insert non-duplicate questions into question bank
+        const inserted = await db
+          .insert(questionBankTable)
+          .values(
+            nonDuplicates.map((q) => ({
+              courseId,
+              category: "عام",
+              stage,
+              stages: [stage],
+              unit,
+              lesson,
+              lessonId: lessonId || null,
+              difficulty: (q as any).difficulty || defaultDifficulty,
+              points: q.points || defaultPoints,
+              tags: [stage, unit, lesson].filter(Boolean),
+              question: {
+                prompt: String(q.prompt).trim(),
+                options: q.options.map((o: unknown) => String(o).trim()),
+                correctIndex: Math.max(0, Math.min(q.options.length - 1, Number(q.correctIndex) || 0)),
+                explanation: String(q.explanation || "").trim() || undefined,
+                imageUrl: String(q.imageUrl || "").trim() || undefined,
+                points: q.points || defaultPoints,
+              },
+            }))
+          )
+          .returning();
+        insertedCount = inserted.length;
       }
 
-      // Insert non-duplicate questions into question bank
-      const inserted = await db
-        .insert(questionBankTable)
-        .values(
-          nonDuplicates.map((q) => ({
-            courseId,
-            category: "عام",
-            stage,
-            stages: [stage],
-            unit,
-            lesson,
-            lessonId: lessonId || null,
-            difficulty: (q as any).difficulty || defaultDifficulty,
-            points: q.points || defaultPoints,
-            tags: [stage, unit, lesson].filter(Boolean),
-            question: {
-              prompt: String(q.prompt).trim(),
-              options: q.options.map((o: unknown) => String(o).trim()),
-              correctIndex: Math.max(0, Math.min(q.options.length - 1, Number(q.correctIndex) || 0)),
-              explanation: String(q.explanation || "").trim() || undefined,
-              imageUrl: String(q.imageUrl || "").trim() || undefined,
-              points: q.points || defaultPoints,
-            },
-          }))
-        )
-        .returning();
+      // Optional: Direct Quiz Creation on the fly
+      let createdQuiz: any = null;
+      if (req.body.createQuiz === true || req.body.createQuiz === "true") {
+        const quizTitle = String(req.body.quizTitle || "").trim() || (lesson === "شامل الوحدة" ? `اختبار شامل على ${unit}` : `اختبار على ${lesson}`);
+        const durationMinutes = Number(req.body.durationMinutes) || 30;
+        const passingScore = Number(req.body.passingScore) || 60;
+        const maxAttempts = Number(req.body.maxAttempts) || 3;
+        const isPublished = req.body.isPublished !== false && req.body.isPublished !== "false";
+        
+        let quizCategory = stage || "عام";
+        let resolvedCourseId = courseId;
+        let resolvedVideoId = lessonId;
+        
+        if (resolvedVideoId) {
+          const [video] = await db.select().from(videosTable).where(eq(videosTable.id, resolvedVideoId)).limit(1);
+          if (video) {
+            resolvedCourseId = video.courseId ?? resolvedCourseId;
+            quizCategory = video.category || quizCategory;
+          }
+        }
+        
+        let finalStages = [stage];
+        if (resolvedCourseId) {
+          const [course] = await db.select().from(coursesTable).where(eq(coursesTable.id, resolvedCourseId)).limit(1);
+          if (course) {
+            quizCategory = course.title;
+            if (Array.isArray(course.stages) && course.stages.length) {
+              finalStages = Array.from(new Set([...finalStages, ...course.stages]));
+            }
+          }
+        }
+
+        const isLessonScope = Boolean(resolvedVideoId);
+        const quizQuestionsFormatted = validQuestions.map((q) => {
+          const cIdx = Math.max(0, Math.min(q.options.length - 1, Number(q.correctIndex) || 0));
+          return {
+            prompt: String(q.prompt).trim(),
+            options: q.options.map((o: unknown) => String(o).trim()),
+            correctIndex: cIdx,
+            correctAnswer: q.options[cIdx]?.trim() || "",
+            explanation: String(q.explanation || "").trim() || undefined,
+            imageUrl: String(q.imageUrl || "").trim() || undefined,
+          };
+        });
+
+        const [newQuiz] = await db
+          .insert(quizzesTable)
+          .values({
+            title: quizTitle,
+            courseId: resolvedCourseId,
+            videoId: isLessonScope ? resolvedVideoId : null,
+            scope: isLessonScope ? "lesson" : "course",
+            description: `اختبار تم إنشاؤه ورفعه مباشرة (${stage} - ${unit} - ${lesson})`,
+            category: quizCategory,
+            stage: finalStages[0] || stage,
+            stages: finalStages,
+            durationMinutes,
+            passingScore,
+            maxAttempts,
+            shuffleQuestions: true,
+            showExplanations: true,
+            requiredProgress: isLessonScope ? 80 : 0,
+            questions: quizQuestionsFormatted,
+            isPublished,
+          })
+          .returning();
+
+        if (isLessonScope && resolvedVideoId && newQuiz) {
+          await db
+            .update(quizzesTable)
+            .set({ videoId: null })
+            .where(and(eq(quizzesTable.videoId, resolvedVideoId), ne(quizzesTable.id, newQuiz.id)));
+          await db
+            .update(videosTable)
+            .set({ quizId: newQuiz.id })
+            .where(eq(videosTable.id, resolvedVideoId));
+        }
+
+        createdQuiz = newQuiz;
+      }
+
+      const skippedDuplicates = validQuestions.length - nonDuplicates.length;
+      if (skippedDuplicates > 0 && nonDuplicates.length === 0 && !createdQuiz) {
+        warnings.push("جميع الأسئلة كانت موجودة بالفعل في بنك هذا الدرس (تم تخطي التكرار).");
+      }
 
       res.status(201).json({
         success: true,
-        count: inserted.length,
-        skippedDuplicates: validQuestions.length - nonDuplicates.length,
+        count: insertedCount,
+        skippedDuplicates,
         warnings,
         stage,
         unit,
         lesson,
+        quiz: createdQuiz,
       });
       return;
     } catch (error) {
