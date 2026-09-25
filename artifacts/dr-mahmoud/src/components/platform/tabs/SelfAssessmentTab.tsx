@@ -21,6 +21,7 @@ import {
   ArrowRight,
   FileCheck2,
   Lock,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,6 +78,48 @@ interface EligibilityData {
   studentTrack?: string;
   unlimited?: boolean;
   needPhone?: boolean;
+}
+
+function parseLessonOrder(name: string): number {
+  const matchDash = name.match(/(\d+)\s*[-_.]\s*(\d+)/);
+  if (matchDash) {
+    return parseInt(matchDash[1], 10) * 100 + parseInt(matchDash[2], 10);
+  }
+  const arabicNumbers: Record<string, number> = {
+    "الاول": 1,
+    "الأول": 1,
+    "الاولى": 1,
+    "الأولى": 1,
+    "الثانى": 2,
+    "الثاني": 2,
+    "الثانية": 2,
+    "التانية": 2,
+    "الثالث": 3,
+    "الثالثة": 3,
+    "الرابع": 4,
+    "الرابعة": 4,
+    "الخامس": 5,
+    "الخامسة": 5,
+  };
+  const matchSingle = name.match(/\b(\d+)\b/);
+  if (matchSingle) {
+    return parseInt(matchSingle[1], 10) * 10;
+  }
+  for (const [word, num] of Object.entries(arabicNumbers)) {
+    if (name.includes(word)) return num * 10;
+  }
+  if (name.includes("شامل")) return 999;
+  return 50;
+}
+
+function formatUnitLabel(unitName: string): string {
+  if (unitName.includes("لغات")) {
+    return "الوحدة الأولى : الذكاء الاصطناعي (Unit 1: Artificial Intelligence)";
+  }
+  if (unitName.includes("عام") || unitName.includes("عربى")) {
+    return "الوحدة الأولى والثانية : الذكاء الاصطناعي والأمن السيبراني";
+  }
+  return unitName;
 }
 
 export function SelfAssessmentTab({
@@ -610,7 +653,7 @@ export function SelfAssessmentTab({
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold">{u.unit}</span>
+                        <span className="font-bold">{formatUnitLabel(u.unit)}</span>
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-white dark:bg-slate-800 border text-slate-500">
                           {u.totalQuestions} سؤال
                         </span>
@@ -649,34 +692,39 @@ export function SelfAssessmentTab({
 
                 <div className="text-[11px] font-bold text-slate-400 pt-1">أو حدد دروساً معينة:</div>
 
-                {currentUnitObj?.lessons.map((les) => {
-                  const isChecked = selectedLessons.includes(les.lesson);
-                  return (
-                    <button
-                      key={les.lesson}
-                      type="button"
-                      onClick={() => toggleLesson(les.lesson)}
-                      className={`w-full text-right p-2.5 rounded-xl border text-xs transition-all ${
-                        isChecked
-                          ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 font-semibold"
-                          : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="truncate max-w-[200px]">{les.lesson}</span>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] text-slate-400">{les.totalQuestions} ق</span>
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={() => {}}
-                            className="rounded text-blue-600"
-                          />
+                {(currentUnitObj?.lessons || [])
+                  .slice()
+                  .sort((a, b) => parseLessonOrder(a.lesson) - parseLessonOrder(b.lesson))
+                  .map((les) => {
+                    const isChecked = selectedLessons.includes(les.lesson);
+                    return (
+                      <button
+                        key={les.lesson}
+                        type="button"
+                        onClick={() => toggleLesson(les.lesson)}
+                        className={`w-full text-right p-2.5 rounded-xl border text-xs transition-all ${
+                          isChecked
+                            ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 font-semibold"
+                            : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="truncate max-w-[200px]">{les.lesson}</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                              {les.totalQuestions} سؤال
+                            </span>
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => {}}
+                              className="rounded text-blue-600 pointer-events-none"
+                            />
+                          </div>
                         </div>
-                      </div>
-                    </button>
-                  );
-                })}
+                      </button>
+                    );
+                  })}
               </div>
             </div>
           </div>
@@ -699,7 +747,7 @@ export function SelfAssessmentTab({
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  {[10, 20, 30, 50].map((num) => {
+                  {[10, 15, 25, 50, 100].map((num) => {
                     const isDisabled = availableQuestionsCount > 0 && num > availableQuestionsCount;
                     return (
                       <button
@@ -730,7 +778,9 @@ export function SelfAssessmentTab({
                           : "border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100"
                       }`}
                     >
-                      🌟 كل الأسئلة المتاحة ({Math.min(availableQuestionsCount, 200)})
+                      {availableQuestionsCount <= 200
+                        ? `🌟 كل الأسئلة المتاحة (${availableQuestionsCount} سؤال)`
+                        : `🌟 الحد الأقصى المتاح (200 سؤال)`}
                     </button>
                   )}
                 </div>
@@ -762,19 +812,33 @@ export function SelfAssessmentTab({
 
               {/* Timer Duration */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5 text-emerald-600" />
-                  توقيت الاختبار (المدة):
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5 text-emerald-600" />
+                    توقيت الاختبار (المدة):
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const rec = questionCount <= 10 ? 15 : questionCount <= 20 ? 30 : questionCount <= 30 ? 45 : questionCount <= 50 ? 60 : questionCount <= 100 ? 90 : 120;
+                      setSelectedDurationMinutes(rec);
+                    }}
+                    className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-lg px-2.5 py-1 flex items-center gap-1 transition hover:bg-emerald-100"
+                  >
+                    <Sparkles className="h-3 w-3 text-emerald-600" />
+                    مقترح: {questionCount <= 10 ? 15 : questionCount <= 20 ? 30 : questionCount <= 30 ? 45 : questionCount <= 50 ? 60 : questionCount <= 100 ? 90 : 120} د
+                  </button>
+                </div>
+
                 <div className="flex flex-wrap gap-2">
                   {[
                     { label: "وقت مفتوح (بدون توقيت) ⏱️", value: 0 },
-                    { label: "10 د", value: 10 },
                     { label: "15 د", value: 15 },
-                    { label: "20 د", value: 20 },
                     { label: "30 د", value: 30 },
                     { label: "45 د", value: 45 },
                     { label: "60 د", value: 60 },
+                    { label: "90 د", value: 90 },
+                    { label: "120 د", value: 120 },
                   ].map((dur) => (
                     <button
                       key={dur.value}
@@ -790,6 +854,15 @@ export function SelfAssessmentTab({
                     </button>
                   ))}
                 </div>
+
+                {selectedDurationMinutes > 0 && Math.round((selectedDurationMinutes * 60) / questionCount) < 30 && (
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs">
+                    <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
+                    <span>
+                      تنبيه: الوقت المختار يمنحك فقط {Math.round((selectedDurationMinutes * 60) / questionCount)} ثانية لكل سؤال! قد لا يكفي الوقت لقراءة الأسئلة وحلها. يُنصح بزيادة الوقت أو اختيار وقت مفتوح.
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -799,7 +872,9 @@ export function SelfAssessmentTab({
                 <strong className="text-blue-600 dark:text-blue-400 font-bold">{questionCount} سؤالاً</strong>
                 <span> مع </span>
                 <strong className="text-emerald-600 dark:text-emerald-400 font-bold">
-                  {selectedDurationMinutes === 0 ? "وقت مفتوح دون انقطاع ⏱️" : `${selectedDurationMinutes} دقيقة للحل ⏳`}
+                  {selectedDurationMinutes === 0
+                    ? "وقت مفتوح دون انقطاع ⏱️"
+                    : `${selectedDurationMinutes} دقيقة للحل (بمعدل ${Math.round((selectedDurationMinutes * 60) / questionCount)} ثانية/سؤال) ⏳`}
                 </strong>
               </div>
 
