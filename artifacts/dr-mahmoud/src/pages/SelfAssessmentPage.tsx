@@ -38,15 +38,15 @@ export default function SelfAssessmentPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Link href="/platform">
-              <Button variant="outline" size="sm" className="rounded-xl text-xs font-bold border-slate-200">
-                منصة الطلاب
-              </Button>
-            </Link>
             <Link href="/">
-              <Button size="sm" className="rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white">
+              <Button size="sm" className="rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs">
                 <Home className="h-3.5 w-3.5 ml-1" />
                 الرئيسية
+              </Button>
+            </Link>
+            <Link href="/platform">
+              <Button variant="outline" size="sm" className="rounded-xl text-xs font-bold border-slate-200">
+                منصة الطالب
               </Button>
             </Link>
           </div>
@@ -59,8 +59,19 @@ export default function SelfAssessmentPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 dark:border-slate-800 py-6 text-center text-xs text-slate-400">
-        منصة د. محمود المهدي التعليمية • جميع الحقوق محفوظة {new Date().getFullYear()} ©
+      <footer className="border-t border-slate-200 dark:border-slate-800 py-6 text-xs text-slate-400 bg-white/50 dark:bg-slate-900/50">
+        <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-4 font-semibold text-slate-500">
+            <Link href="/platform" className="hover:text-blue-600 transition">منصة الطالب</Link>
+            <span>|</span>
+            <Link href="/" className="hover:text-blue-600 transition">الرئيسية</Link>
+            <span>|</span>
+            <a href="https://wa.me/201061803732" target="_blank" rel="noreferrer" className="hover:text-blue-600 transition">الدعم الفني</a>
+          </div>
+          <div>
+            © منصة التقييم الذاتي - محمود المهدي 2024 | جميع الحقوق محفوظة
+          </div>
+        </div>
       </footer>
     </div>
   );

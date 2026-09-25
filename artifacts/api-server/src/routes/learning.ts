@@ -7674,7 +7674,7 @@ router.get("/learning/self-assessment/eligibility", async (req, res, next) => {
 // 3. POST /api/learning/self-assessment/generate - توليد اختبار التقييم الذاتي المخصص وسحب الأسئلة
 router.post("/learning/self-assessment/generate", async (req, res, next) => {
   try {
-    const { stage, unit, lessons, count, studentName, durationMinutes } = req.body;
+    const { stage, unit, lessons, count, studentName, durationMinutes, governorate, city } = req.body;
 
     if (!unit || !String(unit).trim()) {
       res.status(400).json({ error: "يجب اختيار الوحدة الدراسية لتوليد الاختبار" });
@@ -7899,6 +7899,8 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
       studentId: studentId,
       phone: activePhone,
       studentName: activeName,
+      governorate: governorate ? String(governorate).trim() : null,
+      city: city ? String(city).trim() : null,
       stage: enforcedStage || null,
       unit: cleanedUnit,
       lessons: rawLessons,
@@ -8215,6 +8217,8 @@ router.get("/admin/learning/self-assessment/sessions", requireAdmin, async (req,
         studentId: selfAssessmentSessionsTable.studentId,
         studentName: selfAssessmentSessionsTable.studentName,
         phone: selfAssessmentSessionsTable.phone,
+        governorate: selfAssessmentSessionsTable.governorate,
+        city: selfAssessmentSessionsTable.city,
         stage: selfAssessmentSessionsTable.stage,
         unit: selfAssessmentSessionsTable.unit,
         lessons: selfAssessmentSessionsTable.lessons,
@@ -8332,6 +8336,124 @@ router.get("/admin/learning/self-assessment/sessions", requireAdmin, async (req,
       sessions,
       stats,
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 9. GET /api/admin/learning/self-assessment/curriculum - جلب الهيكل الحالي للوحدات والدروس وعدد الأسئلة للأدمن
+router.get("/admin/learning/self-assessment/curriculum", requireAdmin, async (req, res, next) => {
+  try {
+    const rows = await db
+      .select({
+        stage: questionBankTable.stage,
+        unit: questionBankTable.unit,
+        lesson: questionBankTable.lesson,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(questionBankTable)
+      .groupBy(questionBankTable.stage, questionBankTable.unit, questionBankTable.lesson)
+      .orderBy(questionBankTable.stage, questionBankTable.unit, questionBankTable.lesson);
+
+    const structure: Record<
+      string,
+      {
+        stage: string;
+        track: "ar" | "en";
+        totalQuestions: number;
+        units: Record<
+          string,
+          {
+            unit: string;
+            totalQuestions: number;
+            lessons: Array<{ lesson: string; count: number }>;
+          }
+        >;
+      }
+    > = {};
+
+    for (const r of rows) {
+      if (!r.stage || !r.unit) continue;
+      const stage = r.stage.trim();
+      const unit = r.unit.trim();
+      const lesson = (r.lesson || "شامل الوحدة").trim();
+      const count = Number(r.count) || 0;
+      const isEnglish = stage.toLowerCase().includes("لغات") || stage.toLowerCase().includes("languages");
+
+      if (!structure[stage]) {
+        structure[stage] = { stage, track: isEnglish ? "en" : "ar", totalQuestions: 0, units: {} };
+      }
+      if (!structure[stage].units[unit]) {
+        structure[stage].units[unit] = { unit, totalQuestions: 0, lessons: [] };
+      }
+      structure[stage].totalQuestions += count;
+      structure[stage].units[unit].totalQuestions += count;
+      structure[stage].units[unit].lessons.push({ lesson, count });
+    }
+
+    const result = Object.values(structure).map((st) => ({
+      stage: st.stage,
+      track: st.track,
+      totalQuestions: st.totalQuestions,
+      units: Object.values(st.units),
+    }));
+
+    res.json({ success: true, curriculum: result });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 10. POST /api/admin/learning/self-assessment/curriculum/rename-unit - تعديل اسم وحدة دراسية
+router.post("/admin/learning/self-assessment/curriculum/rename-unit", requireAdmin, async (req, res, next) => {
+  try {
+    const { stage, oldUnit, newUnit } = req.body;
+    if (!stage || !oldUnit || !newUnit || !String(newUnit).trim()) {
+      res.status(400).json({ error: "بيانات تعديل اسم الوحدة غير مكتملة" });
+      return;
+    }
+
+    const trimmedNewUnit = String(newUnit).trim();
+    await db
+      .update(questionBankTable)
+      .set({ unit: trimmedNewUnit })
+      .where(
+        and(
+          eq(questionBankTable.stage, String(stage).trim()),
+          eq(questionBankTable.unit, String(oldUnit).trim())
+        )
+      );
+
+    res.json({ success: true, message: `تم تحديث اسم الوحدة إلى "${trimmedNewUnit}" بنجاح.` });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 11. POST /api/admin/learning/self-assessment/curriculum/rename-lesson - تعديل اسم درس أو نقله لوحدة أخرى
+router.post("/admin/learning/self-assessment/curriculum/rename-lesson", requireAdmin, async (req, res, next) => {
+  try {
+    const { stage, unit, oldLesson, newLesson, targetUnit } = req.body;
+    if (!stage || !unit || !oldLesson || !newLesson || !String(newLesson).trim()) {
+      res.status(400).json({ error: "بيانات تعديل الدرس غير مكتملة" });
+      return;
+    }
+
+    const finalUnit = targetUnit && String(targetUnit).trim() ? String(targetUnit).trim() : String(unit).trim();
+    const finalLesson = String(newLesson).trim();
+
+    await db
+      .update(questionBankTable)
+      .set({ lesson: finalLesson, unit: finalUnit })
+      .where(
+        and(
+          eq(questionBankTable.stage, String(stage).trim()),
+          eq(questionBankTable.unit, String(unit).trim()),
+          eq(questionBankTable.lesson, String(oldLesson).trim())
+        )
+      );
+
+    res.json({ success: true, message: `تم تحديث بيانات الدرس بنجاح.` });
   } catch (error) {
     next(error);
   }

@@ -19,6 +19,10 @@ import {
   Award,
   Clock,
   Check,
+  MapPin,
+  Edit3,
+  FolderTree,
+  ArrowRightLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,6 +61,8 @@ interface ExamSessionItem {
   studentId?: number | null;
   phone: string;
   studentName: string;
+  governorate?: string | null;
+  city?: string | null;
   isEnrolledStudent: boolean;
   stage: string;
   unit: string;
@@ -83,9 +89,27 @@ interface SessionStats {
   passRate: number;
 }
 
+interface LessonItem {
+  lesson: string;
+  count: number;
+}
+
+interface UnitItem {
+  unit: string;
+  totalQuestions: number;
+  lessons: LessonItem[];
+}
+
+interface StageCurriculum {
+  stage: string;
+  track: "ar" | "en";
+  totalQuestions: number;
+  units: UnitItem[];
+}
+
 export function SelfAssessmentAdminTab({ role = "superadmin" }: { role?: "superadmin" | "subadmin" }) {
   const { toast } = useToast();
-  const [activeSubTab, setActiveSubTab] = useState<"results" | "entitlements">("results");
+  const [activeSubTab, setActiveSubTab] = useState<"results" | "entitlements" | "curriculum">("results");
 
   // ── Results & Sessions State ──
   const [sessions, setSessions] = useState<ExamSessionItem[]>([]);
@@ -110,6 +134,19 @@ export function SelfAssessmentAdminTab({ role = "superadmin" }: { role?: "supera
   const [manualName, setManualName] = useState("");
   const [manualCount, setManualCount] = useState<number>(3);
   const [submittingManual, setSubmittingManual] = useState(false);
+
+  // ── Curriculum Management State ──
+  const [curriculum, setCurriculum] = useState<StageCurriculum[]>([]);
+  const [loadingCurriculum, setLoadingCurriculum] = useState(false);
+  const [editingUnit, setEditingUnit] = useState<{ stage: string; oldUnit: string; newUnit: string } | null>(null);
+  const [editingLesson, setEditingLesson] = useState<{
+    stage: string;
+    unit: string;
+    oldLesson: string;
+    newLesson: string;
+    targetUnit: string;
+  } | null>(null);
+  const [savingCurriculum, setSavingCurriculum] = useState(false);
 
   // ── 1. Fetch Sessions & Exam Results ──
   const fetchSessions = async (silent = false) => {
@@ -232,6 +269,81 @@ export function SelfAssessmentAdminTab({ role = "superadmin" }: { role?: "supera
     setSubmittingManual(false);
   };
 
+  // ── Curriculum Fetcher & Handlers ──
+  const fetchCurriculum = async (silent = false) => {
+    if (!silent) setLoadingCurriculum(true);
+    try {
+      const res = await fetch("/api/admin/learning/self-assessment/curriculum", { credentials: "include" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "تعذر جلب هيكل الوحدات والدروس");
+      setCurriculum(data.curriculum || []);
+    } catch (err) {
+      toast({ variant: "destructive", title: "خطأ", description: (err as Error).message });
+    } finally {
+      if (!silent) setLoadingCurriculum(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeSubTab === "curriculum" && curriculum.length === 0) {
+      void fetchCurriculum();
+    }
+  }, [activeSubTab]);
+
+  const handleSaveUnitRename = async () => {
+    if (!editingUnit || !editingUnit.newUnit.trim()) return;
+    setSavingCurriculum(true);
+    try {
+      const res = await fetch("/api/admin/learning/self-assessment/curriculum/rename-unit", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          stage: editingUnit.stage,
+          oldUnit: editingUnit.oldUnit,
+          newUnit: editingUnit.newUnit.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "فشل تعديل اسم الوحدة");
+      toast({ title: "تم بنجاح! 🎉", description: data.message });
+      setEditingUnit(null);
+      await fetchCurriculum(true);
+    } catch (err) {
+      toast({ variant: "destructive", title: "خطأ", description: (err as Error).message });
+    } finally {
+      setSavingCurriculum(false);
+    }
+  };
+
+  const handleSaveLessonRename = async () => {
+    if (!editingLesson || !editingLesson.newLesson.trim()) return;
+    setSavingCurriculum(true);
+    try {
+      const res = await fetch("/api/admin/learning/self-assessment/curriculum/rename-lesson", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          stage: editingLesson.stage,
+          unit: editingLesson.unit,
+          oldLesson: editingLesson.oldLesson,
+          newLesson: editingLesson.newLesson.trim(),
+          targetUnit: editingLesson.targetUnit.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "فشل تعديل الدرس");
+      toast({ title: "تم بنجاح! 🎉", description: data.message });
+      setEditingLesson(null);
+      await fetchCurriculum(true);
+    } catch (err) {
+      toast({ variant: "destructive", title: "خطأ", description: (err as Error).message });
+    } finally {
+      setSavingCurriculum(false);
+    }
+  };
+
   const formatDuration = (seconds: number) => {
     if (!seconds || seconds <= 0) return "—";
     const mins = Math.floor(seconds / 60);
@@ -244,7 +356,7 @@ export function SelfAssessmentAdminTab({ role = "superadmin" }: { role?: "supera
     <div className="space-y-6" dir="rtl">
       {/* ── Sub Navigation Tabs ── */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
-        <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl w-full sm:w-auto">
+        <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl w-full sm:w-auto flex-wrap">
           <button
             type="button"
             onClick={() => setActiveSubTab("results")}
@@ -276,6 +388,22 @@ export function SelfAssessmentAdminTab({ role = "superadmin" }: { role?: "supera
               {entitlements.length}
             </span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveSubTab("curriculum");
+              if (curriculum.length === 0) void fetchCurriculum();
+            }}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all ${
+              activeSubTab === "curriculum"
+                ? "bg-white text-emerald-700 shadow-xs border border-slate-200/80"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <BookOpen className="h-4 w-4 text-emerald-600" />
+            هيكلة وتعديل الوحدات والدروس
+          </button>
         </div>
 
         <Button
@@ -283,13 +411,14 @@ export function SelfAssessmentAdminTab({ role = "superadmin" }: { role?: "supera
           size="sm"
           onClick={() => {
             if (activeSubTab === "results") void fetchSessions(false);
-            else void fetchEntitlements(false);
+            else if (activeSubTab === "entitlements") void fetchEntitlements(false);
+            else void fetchCurriculum(false);
           }}
           className="rounded-xl border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold self-end sm:self-auto"
         >
           <RefreshCw
             className={`h-4 w-4 ml-1.5 ${
-              (activeSubTab === "results" ? loadingSessions : loadingEntitlements) ? "animate-spin text-blue-600" : "text-slate-500"
+              (activeSubTab === "results" ? loadingSessions : activeSubTab === "entitlements" ? loadingEntitlements : loadingCurriculum) ? "animate-spin text-blue-600" : "text-slate-500"
             }`}
           />
           تحديث البيانات
@@ -415,9 +544,17 @@ export function SelfAssessmentAdminTab({ role = "superadmin" }: { role?: "supera
                       </div>
 
                       {/* Course / Unit info */}
-                      <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100">
+                      <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100 space-y-1">
                         <span className="font-bold text-slate-800 text-xs block leading-tight">{sess.unit}</span>
-                        <span className="text-[11px] text-slate-400 block mt-0.5 leading-tight">{sess.stage}</span>
+                        <div className="flex items-center justify-between text-[11px] text-slate-400">
+                          <span>{sess.stage}</span>
+                          {(sess.governorate || sess.city) && (
+                            <span className="flex items-center gap-1 text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200">
+                              <MapPin className="h-3 w-3 text-blue-500" />
+                              {sess.governorate || "—"} {sess.city ? `• ${sess.city}` : ""}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       {/* Quick metrics grid */}
@@ -489,6 +626,7 @@ export function SelfAssessmentAdminTab({ role = "superadmin" }: { role?: "supera
                       <tr>
                         <th className="p-3">الطالب</th>
                         <th className="p-3">رقم الهاتف</th>
+                        <th className="p-3">المحافظة والمدينة</th>
                         <th className="p-3">المرحلة والوحدة</th>
                         <th className="p-3 text-center">عدد الأسئلة</th>
                         <th className="p-3 text-center">الدرجة والنسبة</th>
@@ -517,6 +655,13 @@ export function SelfAssessmentAdminTab({ role = "superadmin" }: { role?: "supera
                           </td>
                           <td className="p-3 font-mono text-slate-700 whitespace-nowrap" dir="ltr">
                             {sess.phone}
+                          </td>
+                          <td className="p-3 whitespace-nowrap">
+                            <div className="flex items-center gap-1.5 text-slate-700">
+                              <MapPin className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                              <span className="font-medium">{sess.governorate || "—"}</span>
+                              {sess.city && <span className="text-slate-400 text-[11px]">({sess.city})</span>}
+                            </div>
                           </td>
                           <td className="p-3 min-w-[200px] max-w-[260px]">
                             <div className="space-y-0.5">
@@ -871,6 +1016,153 @@ export function SelfAssessmentAdminTab({ role = "superadmin" }: { role?: "supera
         </div>
       )}
 
+      {/* ────────────────────────────────────────────────────────── */}
+      {/* ── TAB 3: CURRICULUM MANAGEMENT (الوحدات والدروس) ───────── */}
+      {/* ────────────────────────────────────────────────────────── */}
+      {activeSubTab === "curriculum" && (
+        <div className="space-y-6">
+          {/* Header Banner */}
+          <div className="rounded-2xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-teal-50/50 to-white p-5 sm:p-6 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-md shadow-emerald-500/25">
+                  <BookOpen className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-lg sm:text-xl font-bold text-slate-900">
+                    هيكلة وإدارة الوحدات والدروس في بنك الأسئلة
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
+                    يمكنك تعديل أسماء الوحدات أو تعديل أسماء الدروس ونقلها بين الوحدات مباشرة وستنعكس فوراً على صفحة اختبار الطالب.
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void fetchCurriculum(false)}
+                className="rounded-xl border-emerald-200 text-emerald-800 hover:bg-emerald-50 font-bold text-xs shrink-0 self-start sm:self-auto"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ml-1.5 ${loadingCurriculum ? "animate-spin" : ""}`} />
+                تحديث الهيكل
+              </Button>
+            </div>
+          </div>
+
+          {loadingCurriculum ? (
+            <div className="py-16 text-center text-slate-500 bg-white rounded-2xl border border-slate-200">
+              <RefreshCw className="h-8 w-8 animate-spin mx-auto text-emerald-500 mb-2" />
+              <p className="text-xs font-semibold">جاري تحميل شجرة المنهج والوحدات...</p>
+            </div>
+          ) : curriculum.length === 0 ? (
+            <div className="py-14 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
+              <FolderTree className="h-10 w-10 mx-auto text-slate-300 mb-2" />
+              <p className="text-sm font-semibold text-slate-600">لا توجد وحدات أو دروس مسجلة</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {curriculum.map((st) => (
+                <div key={st.stage} className="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-xs space-y-4 p-5 sm:p-6">
+                  {/* Stage Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-2xl bg-blue-50 text-blue-700 font-bold flex items-center justify-center text-sm border border-blue-100">
+                        {st.track === "en" ? "EN" : "AR"}
+                      </div>
+                      <div>
+                        <h3 className="font-black text-slate-900 text-base flex items-center gap-2">
+                          <span>{st.stage}</span>
+                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                            {st.track === "en" ? "🇬🇧 مسار لغات" : "🇪🇬 مسار عام عربي"}
+                          </span>
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          إجمالي الأسئلة في هذا المسار: <strong className="text-slate-700 font-bold">{st.totalQuestions} سؤال</strong>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-xs text-slate-500 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100 self-start sm:self-auto font-medium">
+                      يتضمن <strong>{st.units.length}</strong> وحدات دراسية
+                    </div>
+                  </div>
+
+                  {/* Units Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-1">
+                    {st.units.map((u) => (
+                      <div key={u.unit} className="rounded-2xl border border-slate-200/90 bg-slate-50/40 p-4 space-y-3 hover:border-blue-300 transition-colors">
+                        {/* Unit Card Header */}
+                        <div className="flex items-start justify-between gap-2 border-b border-slate-200/60 pb-2.5">
+                          <div className="space-y-1">
+                            <span className="font-bold text-sm text-slate-900 block leading-snug">
+                              {u.unit}
+                            </span>
+                            <span className="text-[11px] text-slate-500 block">
+                              {u.totalQuestions} سؤال موزعة على {u.lessons.length} درس
+                            </span>
+                          </div>
+
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setEditingUnit({ stage: st.stage, oldUnit: u.unit, newUnit: u.unit })}
+                            className="h-8 px-2.5 rounded-xl border-slate-200 hover:border-blue-300 text-blue-700 hover:bg-blue-50 text-xs font-semibold shrink-0"
+                          >
+                            <Edit3 className="h-3.5 w-3.5 ml-1" />
+                            تعديل الوحدة
+                          </Button>
+                        </div>
+
+                        {/* Lessons List inside Unit */}
+                        <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+                          {u.lessons.map((les) => (
+                            <div
+                              key={les.lesson}
+                              className="flex items-center justify-between gap-2 p-2 rounded-xl bg-white border border-slate-100 text-xs hover:bg-blue-50/30 transition-colors"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                                <span className="font-medium text-slate-800 truncate" title={les.lesson}>
+                                  {les.lesson}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                                  {les.count} سؤال
+                                </span>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() =>
+                                    setEditingLesson({
+                                      stage: st.stage,
+                                      unit: u.unit,
+                                      oldLesson: les.lesson,
+                                      newLesson: les.lesson,
+                                      targetUnit: u.unit,
+                                    })
+                                  }
+                                  className="h-7 px-2 rounded-lg text-slate-600 hover:text-blue-700 hover:bg-blue-50 text-[11px]"
+                                >
+                                  <Edit3 className="h-3 w-3 ml-1" />
+                                  تعديل / نقل
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── MODAL: EXAM DETAILS & ANSWERS REVIEW ── */}
       {selectedSessionForReview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
@@ -888,6 +1180,15 @@ export function SelfAssessmentAdminTab({ role = "superadmin" }: { role?: "supera
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                   <span>الوحدة: <strong>{selectedSessionForReview.unit}</strong></span>
+                  {(selectedSessionForReview.governorate || selectedSessionForReview.city) && (
+                    <>
+                      <span>•</span>
+                      <span className="inline-flex items-center gap-1 text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                        <MapPin className="h-3 w-3" />
+                        {selectedSessionForReview.governorate || "—"}{selectedSessionForReview.city ? ` / ${selectedSessionForReview.city}` : ""}
+                      </span>
+                    </>
+                  )}
                   <span>•</span>
                   <span>
                     الدرجة:{" "}
@@ -994,6 +1295,151 @@ export function SelfAssessmentAdminTab({ role = "superadmin" }: { role?: "supera
                 className="rounded-xl px-5 text-xs font-semibold"
               >
                 إغلاق
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: EDIT UNIT NAME ── */}
+      {editingUnit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                <Edit3 className="h-4 w-4 text-blue-600" />
+                تعديل اسم الوحدة الدراسية
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingUnit(null)}
+                className="h-8 w-8 rounded-lg hover:bg-slate-100 text-slate-400 flex items-center justify-center"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="text-slate-500 block mb-1">المرحلة الدراسية:</label>
+                <span className="font-bold text-slate-700 block">{editingUnit.stage}</span>
+              </div>
+
+              <div>
+                <label className="text-slate-500 block mb-1">الاسم الحالي:</label>
+                <span className="text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-200 block">
+                  {editingUnit.oldUnit}
+                </span>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-800 block">الاسم الجديد للوحدة *</label>
+                <Input
+                  value={editingUnit.newUnit}
+                  onChange={(e) => setEditingUnit({ ...editingUnit, newUnit: e.target.value })}
+                  placeholder="اكتب اسم الوحدة الجديد..."
+                  className="rounded-xl text-xs h-10 border-slate-200 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditingUnit(null)}
+                className="rounded-xl px-4 text-xs"
+              >
+                إلغاء
+              </Button>
+              <Button
+                size="sm"
+                disabled={savingCurriculum || !editingUnit.newUnit.trim()}
+                onClick={handleSaveUnitRename}
+                className="rounded-xl px-5 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
+              >
+                {savingCurriculum ? "جاري الحفظ..." : "حفظ التعديل"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: EDIT / MOVE LESSON ── */}
+      {editingLesson && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                <Edit3 className="h-4 w-4 text-blue-600" />
+                تعديل اسم الدرس أو نقله لوحدة أخرى
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingLesson(null)}
+                className="h-8 w-8 rounded-lg hover:bg-slate-100 text-slate-400 flex items-center justify-center"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="text-slate-500 block mb-1">المرحلة الدراسية:</label>
+                <span className="font-bold text-slate-700 block">{editingLesson.stage}</span>
+              </div>
+
+              <div>
+                <label className="text-slate-500 block mb-1">اسم الدرس الحالي:</label>
+                <span className="text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-200 block">
+                  {editingLesson.oldLesson}
+                </span>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-800 block">اسم الدرس الجديد *</label>
+                <Input
+                  value={editingLesson.newLesson}
+                  onChange={(e) => setEditingLesson({ ...editingLesson, newLesson: e.target.value })}
+                  placeholder="اكتب اسم الدرس الجديد..."
+                  className="rounded-xl text-xs h-10 border-slate-200 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-800 block">الوحدة التابع لها (يمكنك نقله لوحدة أخرى):</label>
+                <select
+                  value={editingLesson.targetUnit}
+                  onChange={(e) => setEditingLesson({ ...editingLesson, targetUnit: e.target.value })}
+                  className="w-full h-10 px-3 rounded-xl text-xs font-medium border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                >
+                  {curriculum
+                    .find((s) => s.stage === editingLesson.stage)
+                    ?.units.map((u) => (
+                      <option key={u.unit} value={u.unit}>
+                        {u.unit}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditingLesson(null)}
+                className="rounded-xl px-4 text-xs"
+              >
+                إلغاء
+              </Button>
+              <Button
+                size="sm"
+                disabled={savingCurriculum || !editingLesson.newLesson.trim()}
+                onClick={handleSaveLessonRename}
+                className="rounded-xl px-5 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
+              >
+                {savingCurriculum ? "جاري الحفظ..." : "حفظ التعديلات"}
               </Button>
             </div>
           </div>

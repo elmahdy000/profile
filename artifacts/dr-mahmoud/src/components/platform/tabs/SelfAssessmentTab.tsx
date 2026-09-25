@@ -22,6 +22,12 @@ import {
   FileCheck2,
   Lock,
   AlertTriangle,
+  MapPin,
+  Building2,
+  GraduationCap,
+  Settings,
+  Check,
+  Infinity as InfinityIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -112,13 +118,37 @@ function parseLessonOrder(name: string): number {
   return 50;
 }
 
+const EGYPT_GOVERNORATES: Record<string, string[]> = {
+  "القاهرة": ["مدينة نصر", "المعادي", "مصر الجديدة", "التجمع الخامس", "حلوان", "شبرا", "وسط البلد", "المرج", "المطرية", "عين شمس", "الزيتون", "النزهة", "المقطم", "الوايلي", "الساحل", "الزمالك", "العباسية", "بدر", "الشروق", "مدينتي", "الرحاب"],
+  "الجيزة": ["الدقي", "المهندسين", "العجوزة", "الهرم", "فيصل", "6 أكتوبر", "الشيخ زايد", "العمرانية", "بولاق الدكرور", "الحوامدية", "أوسيم", "البدرشين", "الصف", "أطفيح", "كرداسة", "أبو النمرس"],
+  "الإسكندرية": ["سموحة", "ميامي", "سيدي بشر", "لوران", "الإبراهيمية", "العجمي", "العامرية", "المنتزه", "الرمل", "محرم بك", "المنشية", "سيدي جابر", "جناكليس", "كفر عبده", "برج العرب"],
+  "القليوبية": ["بنها", "شبرا الخيمة", "قليوب", "القناطر الخيرية", "الخانكة", "طوخ", "كفر شكر", "العبور", "شبين القناطر", "قها"],
+  "الدقهلية": ["المنصورة", "ميت غمر", "السنبلاوين", "دكرنس", "طلخا", "بلقاس", "شربين", "المنزلة", "أجا", "بني عبيد", "منية النصر", "نبروه", "الجمالية"],
+  "الشرقية": ["الزقازيق", "العاشر من رمضان", "بلبيس", "منيا القمح", "فاقوس", "أبو حماد", "ديرب نجم", "ههيا", "الحسينية", "أبو كبير", "كفر صقر", "مشتول السوق", "الإبراهيمية"],
+  "الغربية": ["طنطا", "المحلة الكبرى", "كفر الزيات", "زفتى", "بسيون", "سمنود", "قطور", "السنطة"],
+  "المنوفية": ["شبين الكوم", "منوف", "أشمون", "قويسنا", "بركة السبع", "تلا", "الشهداء", "السادات", "سرس الليان"],
+  "البحيرة": ["دمنهور", "كفر الدوار", "إيتاي البارود", "أبو حمص", "حوش عيسى", "رشيد", "إدكو", "الدلنجات", "وادي النطرون", "كوم حمادة", "شبراخيت", "المحمودية"],
+  "كفر الشيخ": ["كفر الشيخ", "دسوق", "فوه", "مطوبس", "بيلا", "الحامول", "سيدي سالم", "الرياض", "قلين", "بلطيم"],
+  "دمياط": ["دمياط", "دمياط الجديدة", "رأس البر", "كفر سعد", "فارسكور", "الزرقا", "كفر البطيخ", "السرو", "ميت أبو غالب"],
+  "بورسعيد": ["حي الشرق", "حي العرب", "حي المناخ", "حي الزهور", "بورفؤاد", "حي الضواحي", "حي الجنوب"],
+  "الإسماعيلية": ["الإسماعيلية", "فايد", "القنطرة شرق", "القنطرة غرب", "التل الكبير", "أبو صوير", "القصاصين"],
+  "السويس": ["حي السويس", "حي الأربعين", "حي فيصل", "حي عتاقة", "الجناين"],
+  "بني سويف": ["بني سويف", "ناصر", "ببا", "الواسطى", "إهناسيا", "الفشن", "سمسطا", "بني سويف الجديدة"],
+  "الفيوم": ["الفيوم", "إطسا", "طامية", "سنورس", "أبشواي", "يوسف الصديق", "الفيوم الجديدة"],
+  "المنيا": ["المنيا", "ملوي", "بني مزار", "مغاغة", "سمالوط", "أبو قرقاص", "مطاي", "دير مواس", "العدوة", "المنيا الجديدة"],
+  "أسيوط": ["أسيوط", "ديروط", "القوصية", "منفلوط", "أبنوب", "الفتح", "صدفا", "الغنايم", "ساحل سليم", "البداري", "أسيوط الجديدة"],
+  "سوهاج": ["سوهاج", "أخميم", "طهطا", "جرجا", "المراغة", "طما", "المنشأة", "البلينا", "دار السلام", "جهينة", "سوهاج الجديدة", "ساقلتة"],
+  "قنا": ["قنا", "نجع حمادي", "دشنا", "قوص", "فرشوط", "أبو تشت", "الوقف", "نقادة", "قفط", "قنا الجديدة"],
+  "الأقصر": ["الأقصر", "إسنا", "أرمنت", "القرنة", "الزينية", "البياضية", "الطود", "طيبة الجديدة"],
+  "أسوان": ["أسوان", "إدفو", "كوم أمبو", "دراو", "نصر النوبة", "أسوان الجديدة", "كلابشة"],
+  "البحر الأحمر": ["الغردقة", "رأس غارب", "سفاجا", "القصير", "مرسى علم", "شلاتين", "حلايب"],
+  "الوادي الجديد": ["الخارجة", "الداخلة", "الفرافرة", "باريس", "بلاط"],
+  "مطروح": ["مرسى مطروح", "الحمام", "العلمين", "الضبعة", "النجيلة", "براني", "السلوم", "سيوة"],
+  "شمال سيناء": ["العريش", "الشيخ زويد", "رفح", "بئر العبد", "الحسنة", "نخل"],
+  "جنوب سيناء": ["شرم الشيخ", "طور سيناء", "دهب", "نويبع", "طابا", "رأس سدر", "سانت كاترين", "أبو رديس", "أبو زنيمة"]
+};
+
 function formatUnitLabel(unitName: string): string {
-  if (unitName.includes("لغات")) {
-    return "الوحدة الأولى : الذكاء الاصطناعي (Unit 1: Artificial Intelligence)";
-  }
-  if (unitName.includes("عام") || unitName.includes("عربى")) {
-    return "الوحدة الأولى والثانية : الذكاء الاصطناعي والأمن السيبراني";
-  }
   return unitName;
 }
 
@@ -141,13 +171,16 @@ export function SelfAssessmentTab({
   const [selectedUnitName, setSelectedUnitName] = useState<string>("");
   const [selectedLessons, setSelectedLessons] = useState<string[]>([]); // empty = whole unit
   const [questionCount, setQuestionCount] = useState<number>(10);
-  const [selectedDurationMinutes, setSelectedDurationMinutes] = useState<number>(0); // 0 = open / unlimited
-  const [isUntimed, setIsUntimed] = useState<boolean>(true);
+  const [selectedDurationMinutes, setSelectedDurationMinutes] = useState<number>(45); // default 45 mins matching mockup
+  const [isUntimed, setIsUntimed] = useState<boolean>(false);
   const [showSubmitModal, setShowSubmitModal] = useState<boolean>(false);
 
   // Guest details (if not logged in)
   const [guestPhone, setGuestPhone] = useState("");
   const [guestName, setGuestName] = useState("");
+  const [guestGovernorate, setGuestGovernorate] = useState(student?.governorate || "");
+  const [guestCity, setGuestCity] = useState(student?.city || "");
+  const [customCity, setCustomCity] = useState("");
   const [eligibilityChecked, setEligibilityChecked] = useState(false);
   const [eligibilityData, setEligibilityData] = useState<EligibilityData>({});
 
@@ -222,6 +255,8 @@ export function SelfAssessmentTab({
 
       if (data.isEnrolled) {
         if (data.studentName) setGuestName(data.studentName);
+        if (data.governorate) setGuestGovernorate(data.governorate);
+        if (data.city) setGuestCity(data.city);
         void loadTaxonomy(qPhone);
       }
 
@@ -233,6 +268,8 @@ export function SelfAssessmentTab({
 
   useEffect(() => {
     if (student) {
+      if (student.governorate) setGuestGovernorate(student.governorate);
+      if (student.city) setGuestCity(student.city);
       void checkEligibility("");
     }
   }, [student]);
@@ -294,6 +331,7 @@ export function SelfAssessmentTab({
 
     setGenerating(true);
     try {
+      const finalCity = guestCity === "أخرى" ? customCity : guestCity;
       const res = await fetch("/api/learning/self-assessment/generate", {
         method: "POST",
         credentials: "include",
@@ -305,6 +343,8 @@ export function SelfAssessmentTab({
           count: questionCount,
           phone: guestPhone,
           studentName: guestName,
+          governorate: guestGovernorate,
+          city: finalCity,
           durationMinutes: selectedDurationMinutes,
         }),
       });
@@ -410,288 +450,458 @@ export function SelfAssessmentTab({
       {/* ────────────────── STEP 1: SETUP ────────────────── */}
       {step === "setup" && (
         <div className="space-y-6">
-          {/* Header Banner */}
-          <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-indigo-900 via-blue-950 to-slate-900 text-white p-6 sm:p-8 shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
-              <div className="space-y-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-xs font-semibold">
+          {/* Header Hero Banner matching Mockup */}
+          <div className="rounded-3xl border border-blue-900/40 bg-gradient-to-r from-[#0B1536] via-[#102464] to-[#14328E] text-white p-6 sm:p-8 shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="space-y-3 flex-1 text-right">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/25 text-blue-200 border border-blue-400/30 text-xs font-semibold">
                   <Sparkles className="h-3.5 w-3.5 text-amber-300" />
-                  خدمة التقييم الذاتي الفوري حسب الطلب
+                  خدمة التقييم الذاتي الفوري لطلبة المدارس ✨
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-                  اختبر نفسك وقيّم مستواك في أي وحدة أو درس 🎯
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-snug">
+                  اختبر نفسك وقيّم مستواك <br className="hidden sm:inline" />
+                  في أي وحدة أو درس 🎯
                 </h1>
-                <p className="text-slate-300 text-xs sm:text-sm max-w-2xl leading-relaxed">
-                  اختر الوحدة أو الدروس التي ترغب في مراجعتها، وسيتم توليد اختبار مخصص فوراً من بنك الأسئلة
-                  مع إظهار درجاتك وتوضيح الإجابة الصحيحة وشرح تفصيلي لكل خطأ تقع فيه!
+                <p className="text-blue-100/80 text-xs sm:text-sm max-w-xl leading-relaxed">
+                  اختر الوحدة أو الدرس الذي ترغب في مراجعته، وسيقوم النظام باختبار مخصص فوراً من بنك الأسئلة مع إظهار درجتك وتوضيح الإجابات الصحيحة وشرح تفصيلي لكل سؤال لتتعلم بثقة أكبر.
                 </p>
+
+                {/* 4 Feature Pills */}
+                <div className="flex flex-wrap items-center gap-2 pt-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-xs text-white backdrop-blur-xs transition">
+                    <Layers className="h-3.5 w-3.5 text-blue-300" /> اختبارات مخصصة
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-xs text-white backdrop-blur-xs transition">
+                    <Zap className="h-3.5 w-3.5 text-amber-300" /> تقييم فوري
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-xs text-white backdrop-blur-xs transition">
+                    <BookOpen className="h-3.5 w-3.5 text-emerald-300" /> إجابات تفصيلية
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-xs text-white backdrop-blur-xs transition">
+                    <GraduationCap className="h-3.5 w-3.5 text-purple-300" /> تعلم أكثر بثقة
+                  </span>
+                </div>
               </div>
 
-              {onBackToDashboard && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onBackToDashboard}
-                  className="rounded-2xl border-white/20 bg-white/10 hover:bg-white/20 text-white text-xs shrink-0"
-                >
-                  <ArrowRight className="h-4 w-4 ml-1.5" /> العودة للوحة التحكم
-                </Button>
-              )}
+              {/* Visual Decorative Graphic Card */}
+              <div className="hidden md:flex flex-col items-center justify-center p-3 relative shrink-0">
+                <div className="w-56 h-48 rounded-2xl bg-gradient-to-tr from-blue-700/40 via-indigo-600/30 to-white/10 border border-white/20 backdrop-blur-md p-4 flex flex-col justify-between shadow-2xl relative">
+                  <div className="flex items-center justify-between">
+                    <span className="h-8 w-8 rounded-xl bg-blue-500/40 flex items-center justify-center text-white shadow-inner">
+                      <GraduationCap className="h-5 w-5 text-cyan-200" />
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/25 text-emerald-200 border border-emerald-400/30">
+                      دقة 100%
+                    </span>
+                  </div>
+                  <div className="space-y-2 py-2">
+                    <div className="h-2 w-3/4 bg-white/40 rounded-full" />
+                    <div className="h-2 w-1/2 bg-white/25 rounded-full" />
+                    <div className="h-2 w-5/6 bg-blue-400/40 rounded-full" />
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs font-bold text-blue-100">
+                    <span>بنك أسئلة متكامل</span>
+                    <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Access / Entitlement Badge */}
-          {isEnrolled ? (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 dark:bg-emerald-950/30 dark:border-emerald-800 p-4 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
-                <Award className="h-5 w-5" />
+          {/* Student Info Card (بيانات الطالب لاختيار التقييم الذاتي) */}
+          <div className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm relative overflow-hidden space-y-4">
+            {/* Top Badge */}
+            <div className="flex justify-center -mt-2">
+              <span className="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-xs font-bold shadow-xs">
+                <User className="h-3.5 w-3.5" />
+                {isEnrolled ? "طالب مسجل بالمنصة 🎉" : "طالب جديد 👤+"}
+              </span>
+            </div>
+
+            <div className="text-center">
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+                بيانات الطالب لاختيار التقييم الذاتي
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                أول خطوة لبدء تجربة تقييم مخصصة لك وفقاً لخطتك التعليمية
+              </p>
+            </div>
+
+            {/* 4 Input Fields */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-2">
+              {/* 1. اسم الطالب */}
+              <div className="space-y-1.5 text-right">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                  اسم الطالب
+                </label>
+                <div className="relative">
+                  <User className="absolute right-3 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
+                  <Input
+                    type="text"
+                    placeholder="ادخل اسمك الثلاثي"
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    className="pr-9 h-11 rounded-xl text-xs border-slate-200 dark:border-slate-800 focus:ring-blue-500"
+                  />
+                </div>
               </div>
-              <div className="text-xs sm:text-sm">
-                <strong className="text-emerald-900 dark:text-emerald-300 font-bold block">
-                  مرحباً بك يا {student?.name || eligibilityData.studentName || guestName || "طالبنا المتميز"} (طالب مسجل بالمنصة) 🎉
-                </strong>
-                <span className="text-emerald-700 dark:text-emerald-400">
-                  متاح لك إجراء أي عدد من اختبارات التقييم الذاتي مجاناً وبلا حدود لمرحلتك ومسارك الدراسي ({isStudentLanguages ? "مدارس لغات 🇬🇧" : "مدارس عربي 🇪🇬"}).
+
+              {/* 2. رقم الهاتف */}
+              <div className="space-y-1.5 text-right">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                  رقم الهاتف (للتواصل/الإستشاري)
+                </label>
+                <div className="relative">
+                  <Phone className="absolute right-3 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
+                  <Input
+                    type="tel"
+                    placeholder="مثال: 01012345678"
+                    value={guestPhone}
+                    onChange={(e) => {
+                      setGuestPhone(e.target.value);
+                      if (e.target.value.length >= 11) {
+                        void checkEligibility(e.target.value);
+                      }
+                    }}
+                    className="pr-9 h-11 rounded-xl text-xs border-slate-200 dark:border-slate-800 text-left font-mono"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+
+              {/* 3. المحافظة */}
+              <div className="space-y-1.5 text-right">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                  المحافظة
+                </label>
+                <div className="relative">
+                  <MapPin className="absolute right-3 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
+                  <select
+                    value={guestGovernorate}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setGuestGovernorate(val);
+                      setGuestCity("");
+                      setCustomCity("");
+                    }}
+                    className="w-full h-11 pr-9 pl-3 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none"
+                  >
+                    <option value="">اختر المحافظة</option>
+                    {Object.keys(EGYPT_GOVERNORATES).map((gov) => (
+                      <option key={gov} value={gov}>
+                        {gov}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronLeft className="absolute left-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none -rotate-90" />
+                </div>
+              </div>
+
+              {/* 4. المدينة */}
+              <div className="space-y-1.5 text-right">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                  المدينة
+                </label>
+                <div className="relative">
+                  <Building2 className="absolute right-3 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
+                  {guestGovernorate && EGYPT_GOVERNORATES[guestGovernorate]?.length > 0 ? (
+                    <select
+                      value={guestCity}
+                      onChange={(e) => setGuestCity(e.target.value)}
+                      className="w-full h-11 pr-9 pl-3 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none"
+                    >
+                      <option value="">اختر المدينة</option>
+                      {EGYPT_GOVERNORATES[guestGovernorate].map((city) => (
+                        <option key={city} value={city}>
+                          {city}
+                        </option>
+                      ))}
+                      <option value="أخرى">أخرى / كتابة يدوية...</option>
+                    </select>
+                  ) : (
+                    <Input
+                      type="text"
+                      placeholder="ادخل المدينة"
+                      value={guestCity}
+                      onChange={(e) => setGuestCity(e.target.value)}
+                      className="pr-9 h-11 rounded-xl text-xs border-slate-200 dark:border-slate-800"
+                    />
+                  )}
+                  {guestGovernorate && EGYPT_GOVERNORATES[guestGovernorate]?.length > 0 && (
+                    <ChevronLeft className="absolute left-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none -rotate-90" />
+                  )}
+                </div>
+                {guestCity === "أخرى" && (
+                  <Input
+                    type="text"
+                    placeholder="اكتب اسم مدينتك..."
+                    value={customCity}
+                    onChange={(e) => setCustomCity(e.target.value)}
+                    className="h-9 mt-1 rounded-xl text-xs border-slate-200 dark:border-slate-800"
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Eligibility Alert Status if applicable */}
+            {eligibilityChecked && (
+              <div className="pt-2">
+                {eligibilityData.canTakeTest ? (
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/40 p-3 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <span>{eligibilityData.message || "محاولتك جاهزة ومتاحة الآن!"}</span>
+                  </div>
+                ) : eligibilityData.requiresTopup ? (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/40 p-4 text-xs text-amber-900 dark:text-amber-200 space-y-2">
+                    <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300">
+                      <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
+                      <span>انتهت محاولتك المجانية</span>
+                    </div>
+                    <p className="leading-relaxed">
+                      يمكنك شحن باقة <strong>(3 محاولات بـ 50 جنيه فقط)</strong> لمواصلة التقييم الذاتي
+                      وحفظ نتائجك. يتم التفعيل الفوري من المساعد أو الأدمن.
+                    </p>
+                    <div className="pt-2">
+                      <a
+                        href="https://wa.me/201061803732?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D9%81%D9%8A%20%D8%AA%D9%81%D8%B9%D9%8A%D9%84%20%D8%A8%D8%A7%D9%82%D8%A9%203%20%D9%85%D8%AD%D8%A7%D9%88%D9%84%D8%A7%D8%AA%20%D8%AA%D9%82%D9%8A%D9%8A%D9%85%20%D8%B0%D8%A7%D8%AA%D9%8A%20(50%20%D8%AC%D9%86%D9%8A%D9%87)"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        تواصل مع المساعد لتفعيل الباقة
+                      </a>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </div>
+
+          {/* Stepper Progress Bar matching Mockup */}
+          <div className="relative py-2">
+            <div className="absolute top-1/2 left-4 right-4 h-0.5 bg-blue-200 dark:bg-blue-900/60 -translate-y-1/2 z-0" />
+            <div className="relative z-10 flex items-center justify-between max-w-3xl mx-auto px-4">
+              {/* Step 1 */}
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-md shadow-blue-500/30">
+                  1
+                </div>
+                <span className="text-xs font-bold text-blue-700 dark:text-blue-300">
+                  المرحلة والمسار التعليمي
+                </span>
+              </div>
+
+              {/* Step 2 */}
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-900 border-2 border-blue-600 text-blue-600 font-bold text-xs flex items-center justify-center shadow-xs">
+                  2
+                </div>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  الوحدة الدراسية
+                </span>
+              </div>
+
+              {/* Step 3 */}
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-900 border-2 border-blue-400 text-blue-500 font-bold text-xs flex items-center justify-center shadow-xs">
+                  3
+                </div>
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
+                  نطاق الاختبار (الوحدة أو الدروس)
                 </span>
               </div>
             </div>
-          ) : (
-            <div className="rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-4">
+          </div>
+
+          {/* 3 Selection Column Cards matching Mockup */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* ── CARD 1: Stage & Track ── */}
+            <div className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3.5">
               <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-600 flex items-center justify-center">
-                  <User className="h-4 w-4" />
+                <div className="w-9 h-9 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center shrink-0">
+                  <GraduationCap className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                    بيانات الطالب لاختبار التقييم الذاتي
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    أول محاولة تجريبية مجانية 100% لجميع الزوار للتجربة واكتشاف قوة المنصة!
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    رقم الهاتف (فودافون/أورنج/اتصالات/وي) *
-                  </label>
-                  <div className="relative">
-                    <Phone className="absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
-                    <Input
-                      placeholder="مثال: 01012345678"
-                      value={guestPhone}
-                      onChange={(e) => {
-                        setGuestPhone(e.target.value);
-                        if (e.target.value.length >= 11) {
-                          void checkEligibility(e.target.value);
-                        }
-                      }}
-                      className="pr-9 rounded-xl text-xs h-10 border-slate-200"
-                      dir="ltr"
-                    />
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
+                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center">1</span>
+                    المرحلة والمسار التعليمي
                   </div>
+                  <p className="text-[11px] text-slate-400">اختر المرحلة الدراسية ثم المسار المناسب</p>
                 </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    اسم الطالب
-                  </label>
-                  <div className="relative">
-                    <User className="absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
-                    <Input
-                      placeholder="اكتب اسمك الثلاثي"
-                      value={guestName}
-                      onChange={(e) => setGuestName(e.target.value)}
-                      className="pr-9 rounded-xl text-xs h-10 border-slate-200"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Status Notice for Guests */}
-              {eligibilityChecked && (
-                <div className="pt-1">
-                  {eligibilityData.canTakeTest ? (
-                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/40 p-3 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                      <span>{eligibilityData.message || "محاولتك جاهزة ومتاحة الآن!"}</span>
-                    </div>
-                  ) : eligibilityData.requiresTopup ? (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/40 p-4 text-xs text-amber-900 dark:text-amber-200 space-y-2">
-                      <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300">
-                        <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
-                        <span>انتهت محاولتك المجانية</span>
-                      </div>
-                      <p className="leading-relaxed">
-                        يمكنك شحن باقة <strong>(3 محاولات بـ 50 جنيه فقط)</strong> لمواصلة التقييم الذاتي
-                        وحفظ نتائجك. يتم التفعيل الفوري من المساعد أو الأدمن.
-                      </p>
-                      <div className="pt-2 flex flex-wrap items-center gap-2.5">
-                        <a
-                          href="https://wa.me/201061803732?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D9%81%D9%8A%20%D8%AA%D9%81%D8%B9%D9%8A%D9%84%20%D8%A8%D8%A7%D9%82%D8%A9%203%20%D9%85%D8%AD%D8%A7%D9%88%D9%84%D8%A7%D8%AA%20%D8%AA%D9%82%D9%8A%D9%8A%D9%85%20%D8%B0%D8%A7%D8%AA%D9%8A%20(50%20%D8%AC%D9%86%D9%8A%D9%87)"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors"
-                        >
-                          <MessageCircle className="h-4 w-4" />
-                          تواصل مع المساعد لتفعيل الباقة
-                        </a>
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Stepper Wizard: Selection */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {/* Step 1: Stage & Track */}
-            <div className="rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/60 text-xs">1</span>
-                  المرحلة والمسار التعليمي
-                </div>
-                {isEnrolled && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
-                    <Lock className="h-3 w-3" />
-                    مُقفل لحسابك
-                  </span>
-                )}
               </div>
 
               {taxonomyLoading ? (
-                <div className="py-6 text-center text-xs text-slate-400">جاري تحميل المرحلة والمسار...</div>
+                <div className="py-8 text-center text-xs text-slate-400">جاري تحميل المسارات...</div>
               ) : isEnrolled ? (
-                /* بطاقة مقفلة ومعتمدة خصيصاً لمرحلة ومسار الطالب المسجل */
-                <div className="space-y-3">
-                  <div className="p-3.5 rounded-2xl border-2 border-emerald-500/80 bg-emerald-50/70 dark:bg-emerald-950/40 text-right shadow-xs">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="inline-flex items-center gap-1.5 font-bold text-xs text-emerald-900 dark:text-emerald-200">
-                        {isStudentLanguages ? "🇬🇧 مسار اللغات (Languages)" : "🇪🇬 مسار عام (عربي)"}
-                      </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white shadow-xs">
-                        مسار معتمد
-                      </span>
-                    </div>
-                    <div className="font-bold text-sm text-slate-900 dark:text-white leading-snug">
-                      {selectedStageName || (stages[0]?.stage) || "المرحلة الدراسية الخاصة بك"}
-                    </div>
-                    <p className="text-[11px] text-emerald-700 dark:text-emerald-400 mt-2 font-medium leading-relaxed">
-                      ✓ تم قفل وتثبيت مرحلتك ومسارك الدراسي تلقائياً طبقاً لبيانات اشتراكك بالمنصة ({isStudentLanguages ? "مدارس لغات" : "مدارس عربي"}).
-                    </p>
+                <div className="p-3.5 rounded-2xl border-2 border-emerald-500/80 bg-emerald-50/70 dark:bg-emerald-950/40 text-right space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs text-emerald-900 dark:text-emerald-200">
+                      {isStudentLanguages ? "🇬🇧 مسار اللغات (Languages)" : "🇪🇬 مسار عام (عربي)"}
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white">
+                      معتمد
+                    </span>
                   </div>
-
-                  {currentStageObj && (
-                    <div className="text-[11px] text-slate-500 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                      <span>إجمالي الأسئلة المتاحة لمرحلتك:</span>
-                      <span className="font-bold text-blue-600 dark:text-blue-400">{currentStageObj.totalQuestions} سؤال</span>
-                    </div>
-                  )}
+                  <div className="font-bold text-xs text-slate-800 dark:text-slate-200">
+                    {selectedStageName || stages[0]?.stage}
+                  </div>
+                  <p className="text-[10px] text-emerald-700 dark:text-emerald-400">
+                    ✓ مثبت تلقائياً طبقاً لاشتراكك بالمنصة.
+                  </p>
                 </div>
               ) : (
-                /* قائمة اختيار المراحل للزوار */
-                <div className="space-y-2">
-                  {stages.map((st) => (
-                    <button
-                      key={st.stage}
-                      type="button"
-                      onClick={() => {
-                        setSelectedStageName(st.stage);
-                        if (st.units.length > 0) {
-                          setSelectedUnitName(st.units[0].unit);
-                          setSelectedLessons([]);
-                        }
-                      }}
-                      className={`w-full text-right p-3 rounded-xl border text-xs font-semibold transition-all ${
-                        selectedStageName === st.stage
-                          ? "border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 shadow-xs"
-                          : "border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span>{st.track === "en" ? "🇬🇧 لغات (Languages)" : "🇪🇬 عام (عربي)"}</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white dark:bg-slate-800 border text-slate-500">
-                          {st.totalQuestions} سؤال
-                        </span>
-                      </div>
-                      <span className="block text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
-                        {st.stage}
-                      </span>
-                    </button>
-                  ))}
+                <div className="space-y-2.5">
+                  {stages.map((st) => {
+                    const isSelected = selectedStageName === st.stage;
+                    return (
+                      <button
+                        key={st.stage}
+                        type="button"
+                        onClick={() => {
+                          setSelectedStageName(st.stage);
+                          if (st.units.length > 0) {
+                            setSelectedUnitName(st.units[0].unit);
+                            setSelectedLessons([]);
+                          }
+                        }}
+                        className={`w-full text-right p-3.5 rounded-2xl border-2 transition-all flex items-center justify-between gap-3 ${
+                          isSelected
+                            ? "border-blue-600 bg-blue-50/60 dark:bg-blue-950/40 shadow-xs"
+                            : "border-slate-200 dark:border-slate-800 hover:border-blue-200 bg-white dark:bg-slate-900"
+                        }`}
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 font-bold text-xs text-slate-900 dark:text-white">
+                            <span>{st.track === "en" ? "🇬🇧 GB (Languages)" : "🇪🇬 EG عام (عربي)"}</span>
+                          </div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                            المرحلة: {st.stage}
+                          </div>
+                          <div className="text-[10px] text-blue-600 dark:text-blue-400">
+                            المسار: {st.track === "en" ? "دروس (Languages)" : "دروس عربي"}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                              isSelected ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300"
+                            }`}
+                          >
+                            {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
-            {/* Step 2: Unit Selection */}
-            <div className="rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3">
-              <div className="flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/60 text-xs">2</span>
-                الوحدة الدراسية
+            {/* ── CARD 2: Unit Selection ── */}
+            <div className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3.5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center shrink-0">
+                  <BookOpen className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
+                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center">2</span>
+                    الوحدة الدراسية
+                  </div>
+                  <p className="text-[11px] text-slate-400">اختر الوحدة المطلوبة من المنهج</p>
+                </div>
               </div>
 
               {!currentStageObj || currentStageObj.units.length === 0 ? (
-                <div className="py-6 text-center text-xs text-slate-400">لا توجد وحدات متاحة لهذا المسار</div>
+                <div className="py-8 text-center text-xs text-slate-400">لا توجد وحدات متاحة لهذا المسار</div>
               ) : (
-                <div className="space-y-2">
-                  {currentStageObj.units.map((u) => (
-                    <button
-                      key={u.unit}
-                      type="button"
-                      onClick={() => {
-                        setSelectedUnitName(u.unit);
-                        setSelectedLessons([]);
-                      }}
-                      className={`w-full text-right p-3 rounded-xl border text-xs font-semibold transition-all ${
-                        selectedUnitName === u.unit
-                          ? "border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 shadow-xs"
-                          : "border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold">{formatUnitLabel(u.unit)}</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white dark:bg-slate-800 border text-slate-500">
-                          {u.totalQuestions} سؤال
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-slate-500 font-normal">
-                        يتضمن {u.lessons.length} دروس رئيسية
-                      </span>
-                    </button>
-                  ))}
+                <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-0.5">
+                  {currentStageObj.units.map((u) => {
+                    const isSelected = selectedUnitName === u.unit;
+                    return (
+                      <button
+                        key={u.unit}
+                        type="button"
+                        onClick={() => {
+                          setSelectedUnitName(u.unit);
+                          setSelectedLessons([]);
+                        }}
+                        className={`w-full text-right p-3.5 rounded-2xl border-2 transition-all flex items-center justify-between gap-3 ${
+                          isSelected
+                            ? "border-blue-600 bg-blue-50/60 dark:bg-blue-950/40 shadow-xs"
+                            : "border-slate-200 dark:border-slate-800 hover:border-blue-200 bg-white dark:bg-slate-900"
+                        }`}
+                      >
+                        <div className="space-y-1 flex-1">
+                          <div className="font-bold text-xs text-slate-900 dark:text-white leading-snug">
+                            {formatUnitLabel(u.unit)}
+                          </div>
+                          <div className="text-[10px] text-slate-500">
+                            يتضمن {u.lessons.length} دروس رئيسية
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-end gap-2 shrink-0">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
+                            {u.totalQuestions} سؤال
+                          </span>
+                          <div
+                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                              isSelected ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300"
+                            }`}
+                          >
+                            {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
-            {/* Step 3: Specific Lessons or All Unit */}
-            <div className="rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3">
-              <div className="flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/60 text-xs">3</span>
-                نطاق الاختبار (الوحدة أو الدروس)
+            {/* ── CARD 3: Exam Scope (Unit or Lessons) ── */}
+            <div className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3.5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center shrink-0">
+                  <Layers className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
+                    <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center">3</span>
+                    نطاق الاختبار (الوحدة أو الدروس)
+                  </div>
+                  <p className="text-[11px] text-slate-400">حدد نطاق الاختبار من الوحدة المختارة</p>
+                </div>
               </div>
 
-              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-[380px] overflow-y-auto pr-0.5">
+                {/* Option 1: Whole unit */}
                 <button
                   type="button"
                   onClick={() => setSelectedLessons([])}
-                  className={`w-full text-right p-2.5 rounded-xl border text-xs font-semibold transition-all ${
+                  className={`w-full text-right p-3 rounded-2xl border-2 transition-all flex items-center justify-between gap-2 ${
                     selectedLessons.length === 0
-                      ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300"
+                      ? "border-emerald-500 bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 font-bold shadow-xs"
                       : "border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
                   }`}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs">
                     <span>🌟 شامل الوحدة بالكامل (كل الدروس)</span>
-                    {selectedLessons.length === 0 && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
                   </div>
+                  {selectedLessons.length === 0 ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  ) : (
+                    <div className="w-4 h-4 rounded-full border border-slate-300 shrink-0" />
+                  )}
                 </button>
 
-                <div className="text-[11px] font-bold text-slate-400 pt-1">أو حدد دروساً معينة:</div>
-
+                {/* Individual Lessons */}
                 {(currentUnitObj?.lessons || [])
                   .slice()
                   .sort((a, b) => parseLessonOrder(a.lesson) - parseLessonOrder(b.lesson))
@@ -702,26 +912,24 @@ export function SelfAssessmentTab({
                         key={les.lesson}
                         type="button"
                         onClick={() => toggleLesson(les.lesson)}
-                        className={`w-full text-right p-2.5 rounded-xl border text-xs transition-all ${
+                        className={`w-full text-right p-3 rounded-2xl border transition-all flex items-center justify-between gap-2 text-xs ${
                           isChecked
-                            ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300 font-semibold"
-                            : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50"
+                            ? "border-blue-600 bg-blue-50/60 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200 font-bold"
+                            : "border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50"
                         }`}
                       >
-                        <div className="flex items-center justify-between">
-                          <span className="truncate max-w-[200px]">{les.lesson}</span>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                              {les.totalQuestions} سؤال
-                            </span>
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={() => {}}
-                              className="rounded text-blue-600 pointer-events-none"
-                            />
-                          </div>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => {}}
+                            className="rounded h-4 w-4 text-blue-600 pointer-events-none shrink-0"
+                          />
+                          <span className="truncate">{les.lesson}</span>
                         </div>
+                        <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full shrink-0">
+                          {les.totalQuestions} سؤال
+                        </span>
                       </button>
                     );
                   })}
@@ -729,38 +937,45 @@ export function SelfAssessmentTab({
             </div>
           </div>
 
-          {/* Question Count & Duration Config */}
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Question Count */}
+          {/* Exam Settings Card (إعدادات الاختبار) matching Mockup */}
+          <div className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm space-y-5">
+            <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="w-9 h-9 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center shrink-0">
+                <Settings className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white">إعدادات الاختبار</h3>
+                <p className="text-xs text-slate-400">حدد عدد الأسئلة والوقت المخصص للاختبار</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Question Count (Right Side in RTL) */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <Layers className="h-3.5 w-3.5 text-blue-600" />
+                  <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Layers className="h-4 w-4 text-blue-600" />
                     عدد الأسئلة المطلوبة:
                   </label>
                   {availableQuestionsCount > 0 && (
-                    <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-lg border border-blue-200/60 dark:border-blue-900">
-                      المتاح في النطاق المختار: {availableQuestionsCount} سؤال
+                    <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-900">
+                      النتائج في نطاق اختبار {availableQuestionsCount} سؤال
                     </span>
                   )}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  {[10, 15, 25, 50, 100].map((num) => {
-                    const isDisabled = availableQuestionsCount > 0 && num > availableQuestionsCount;
+                  {[10, 20, 30, 50].map((num) => {
+                    const isSelected = questionCount === num;
                     return (
                       <button
                         key={num}
                         type="button"
-                        disabled={isDisabled}
                         onClick={() => setQuestionCount(num)}
-                        className={`h-9 px-3.5 rounded-xl text-xs font-bold border transition-all ${
-                          questionCount === num
+                        className={`h-9 px-4 rounded-xl text-xs font-bold border transition-all ${
+                          isSelected
                             ? "border-blue-600 bg-blue-600 text-white shadow-xs"
-                            : isDisabled
-                            ? "border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/40 text-slate-400 cursor-not-allowed opacity-50"
-                            : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                            : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100"
                         }`}
                       >
                         {num} سؤال
@@ -772,128 +987,116 @@ export function SelfAssessmentTab({
                     <button
                       type="button"
                       onClick={() => setQuestionCount(Math.min(availableQuestionsCount, 200))}
-                      className={`h-9 px-3.5 rounded-xl text-xs font-bold border transition-all ${
+                      className={`h-9 px-4 rounded-xl text-xs font-bold border transition-all ${
                         questionCount === Math.min(availableQuestionsCount, 200)
                           ? "border-indigo-600 bg-indigo-600 text-white shadow-xs"
-                          : "border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100"
+                          : "border-indigo-200 dark:border-indigo-800 bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100"
                       }`}
                     >
-                      {availableQuestionsCount <= 200
-                        ? `🌟 كل الأسئلة المتاحة (${availableQuestionsCount} سؤال)`
-                        : `🌟 الحد الأقصى المتاح (200 سؤال)`}
+                      🌟 كل الأسئلة المتاحة ({Math.min(availableQuestionsCount, 200)})
                     </button>
                   )}
                 </div>
 
                 {/* Custom Count Input */}
-                <div className="flex items-center gap-2 pt-1">
-                  <span className="text-xs text-slate-500 whitespace-nowrap">أو حدد رقماً مخصصاً:</span>
-                  <div className="relative w-28">
-                    <Input
-                      type="number"
-                      min={1}
-                      max={Math.min(availableQuestionsCount || 200, 200)}
-                      value={questionCount}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value, 10);
-                        if (!isNaN(val)) {
-                          const maxLimit = Math.min(availableQuestionsCount || 200, 200);
-                          setQuestionCount(Math.max(1, Math.min(val, maxLimit)));
-                        }
-                      }}
-                      className="h-8 text-center text-xs font-bold rounded-lg border-slate-200 dark:border-slate-700"
-                    />
-                  </div>
+                <div className="flex items-center gap-2 pt-1 text-xs">
+                  <span className="text-slate-500 whitespace-nowrap">أو عدد رقماً مخصص:</span>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={Math.min(availableQuestionsCount || 200, 200)}
+                    value={questionCount}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      if (!isNaN(val)) {
+                        const maxLimit = Math.min(availableQuestionsCount || 200, 200);
+                        setQuestionCount(Math.max(1, Math.min(val, maxLimit)));
+                      }
+                    }}
+                    className="h-8 w-20 text-center font-bold text-xs rounded-xl border-slate-200 dark:border-slate-800"
+                  />
                   <span className="text-[11px] text-slate-400">
                     (من 1 إلى {Math.min(availableQuestionsCount || 200, 200)} سؤال)
                   </span>
                 </div>
               </div>
 
-              {/* Timer Duration */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5 text-emerald-600" />
-                    توقيت الاختبار (المدة):
-                  </label>
+              {/* Exam Duration (Left Side in RTL) */}
+              <div className="space-y-3">
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <Clock className="h-4 w-4 text-emerald-600" />
+                  توقيت الاختبار (بالدقيقة):
+                </label>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {[10, 15, 20, 30, 45, 60].map((dur) => {
+                    const isSelected = selectedDurationMinutes === dur && !isUntimed;
+                    return (
+                      <button
+                        key={dur}
+                        type="button"
+                        onClick={() => {
+                          setSelectedDurationMinutes(dur);
+                          setIsUntimed(false);
+                        }}
+                        className={`h-9 px-3.5 rounded-xl text-xs font-bold border transition-all ${
+                          isSelected
+                            ? "border-emerald-600 bg-emerald-600 text-white shadow-xs"
+                            : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100"
+                        }`}
+                      >
+                        {dur} د
+                      </button>
+                    );
+                  })}
+
                   <button
                     type="button"
                     onClick={() => {
-                      const rec = questionCount <= 10 ? 15 : questionCount <= 20 ? 30 : questionCount <= 30 ? 45 : questionCount <= 50 ? 60 : questionCount <= 100 ? 90 : 120;
-                      setSelectedDurationMinutes(rec);
+                      setSelectedDurationMinutes(0);
+                      setIsUntimed(true);
                     }}
-                    className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-lg px-2.5 py-1 flex items-center gap-1 transition hover:bg-emerald-100"
+                    className={`h-9 px-4 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 ${
+                      isUntimed || selectedDurationMinutes === 0
+                        ? "border-blue-600 bg-blue-600 text-white shadow-xs"
+                        : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100"
+                    }`}
                   >
-                    <Sparkles className="h-3 w-3 text-emerald-600" />
-                    مقترح: {questionCount <= 10 ? 15 : questionCount <= 20 ? 30 : questionCount <= 30 ? 45 : questionCount <= 50 ? 60 : questionCount <= 100 ? 90 : 120} د
+                    <span>وقت مفتوح (بدون توقيت)</span>
+                    <InfinityIcon className="h-3.5 w-3.5" />
                   </button>
                 </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { label: "وقت مفتوح (بدون توقيت) ⏱️", value: 0 },
-                    { label: "15 د", value: 15 },
-                    { label: "30 د", value: 30 },
-                    { label: "45 د", value: 45 },
-                    { label: "60 د", value: 60 },
-                    { label: "90 د", value: 90 },
-                    { label: "120 د", value: 120 },
-                  ].map((dur) => (
-                    <button
-                      key={dur.value}
-                      type="button"
-                      onClick={() => setSelectedDurationMinutes(dur.value)}
-                      className={`h-9 px-3 rounded-xl text-xs font-bold border transition-all ${
-                        selectedDurationMinutes === dur.value
-                          ? "border-emerald-600 bg-emerald-600 text-white shadow-xs"
-                          : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50"
-                      }`}
-                    >
-                      {dur.label}
-                    </button>
-                  ))}
-                </div>
-
-                {selectedDurationMinutes > 0 && Math.round((selectedDurationMinutes * 60) / questionCount) < 30 && (
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs">
-                    <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
-                    <span>
-                      تنبيه: الوقت المختار يمنحك فقط {Math.round((selectedDurationMinutes * 60) / questionCount)} ثانية لكل سؤال! قد لا يكفي الوقت لقراءة الأسئلة وحلها. يُنصح بزيادة الوقت أو اختيار وقت مفتوح.
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
+          </div>
 
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div className="text-xs text-slate-500">
-                <span>سيتم توليد اختبار مخصص يتضمن </span>
-                <strong className="text-blue-600 dark:text-blue-400 font-bold">{questionCount} سؤالاً</strong>
-                <span> مع </span>
-                <strong className="text-emerald-600 dark:text-emerald-400 font-bold">
-                  {selectedDurationMinutes === 0
-                    ? "وقت مفتوح دون انقطاع ⏱️"
-                    : `${selectedDurationMinutes} دقيقة للحل (بمعدل ${Math.round((selectedDurationMinutes * 60) / questionCount)} ثانية/سؤال) ⏳`}
-                </strong>
-              </div>
+          {/* Full-Width Start Exam Button matching Mockup */}
+          <div className="space-y-2 text-center pt-2">
+            <Button
+              size="lg"
+              disabled={generating || !selectedUnitName}
+              onClick={handleStartExam}
+              className="w-full h-14 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-black text-base shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              {generating ? (
+                <>جاري تحضير أسئلة الاختبار...</>
+              ) : (
+                <>
+                  <span>ابدأ اختبار التقييم الذاتي الآن</span>
+                  <Play className="h-5 w-5 fill-white" />
+                </>
+              )}
+            </Button>
 
-              <Button
-                size="lg"
-                disabled={generating || !selectedUnitName}
-                onClick={handleStartExam}
-                className="w-full sm:w-auto px-8 h-11 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm shadow-md shadow-blue-500/25 transition-all"
-              >
-                {generating ? (
-                  <>جاري تحضير الأسئلة...</>
-                ) : (
-                  <>
-                    <Play className="h-4 w-4 ml-2 fill-white" />
-                    ابدأ اختبار التقييم الذاتي الآن
-                  </>
-                )}
-              </Button>
-            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              سيتم توليد اختبار مخصص يتضمن{" "}
+              <strong className="text-blue-600 dark:text-blue-400 font-bold">{questionCount} سؤال</strong>{" "}
+              في{" "}
+              <strong className="text-emerald-600 dark:text-emerald-400 font-bold">
+                {selectedDurationMinutes === 0 ? "وقت مفتوح" : `${selectedDurationMinutes} دقيقة أقصى`}
+              </strong>{" "}
+              🏆
+            </p>
           </div>
         </div>
       )}
