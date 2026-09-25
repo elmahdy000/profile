@@ -359,6 +359,7 @@ export function StudentPlatform() {
         window.removeEventListener("touchstart", onFirstTap);
       };
     }
+    return undefined;
   }, [student?.id, isPushSupported, subscribeToPush]);
 
   // Lock body scroll and handle Escape key when mobile sidebar is open

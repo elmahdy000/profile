@@ -1746,8 +1746,13 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-2">
             <AdminNotificationsCenter
               onNavigate={(tab, subTab) => {
-                handleTabChange(tab);
-                if (subTab) handleLearningSubTabChange(subTab as any);
+                if (tab === "bookings" || tab === "center-bookings") {
+                  handleTabChange("learning");
+                  handleLearningSubTabChange("center-bookings");
+                } else {
+                  handleTabChange(tab as AdminTopTab);
+                  if (subTab) handleLearningSubTabChange(subTab as AdminLearningTab);
+                }
               }}
               bookingsCount={(bookingsQuery.data || []).filter((b) => b.status === "pending").length}
             />
@@ -1817,8 +1822,13 @@ export default function AdminDashboard() {
               <div className="flex items-center gap-2">
                 <AdminNotificationsCenter
                   onNavigate={(tab, subTab) => {
-                    handleTabChange(tab);
-                    if (subTab) handleLearningSubTabChange(subTab as any);
+                    if (tab === "bookings" || tab === "center-bookings") {
+                      handleTabChange("learning");
+                      handleLearningSubTabChange("center-bookings");
+                    } else {
+                      handleTabChange(tab as AdminTopTab);
+                      if (subTab) handleLearningSubTabChange(subTab as AdminLearningTab);
+                    }
                   }}
                   bookingsCount={(bookingsQuery.data || []).filter((b) => b.status === "pending").length}
                 />

@@ -334,7 +334,7 @@ export function AdminNotificationsCenter({
             {/* 4. Bookings */}
             <button
               type="button"
-              onClick={() => handleAction("bookings", undefined, "bookings", bookingsCount)}
+              onClick={() => handleAction("learning", "center-bookings", "bookings", bookingsCount)}
               className={`w-full flex items-center justify-between gap-3 p-3 rounded-xl text-right transition-all cursor-pointer ${
                 unreadBookings > 0
                   ? "bg-purple-50/80 hover:bg-purple-100/80 border border-purple-200/80 text-purple-950 dark:bg-purple-950/30 dark:border-purple-800/40 dark:text-purple-200"
