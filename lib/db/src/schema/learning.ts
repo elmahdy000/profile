@@ -412,10 +412,16 @@ export const selfAssessmentEntitlementsTable = pgTable("self_assessment_entitlem
   lastGrantedBy: text("last_granted_by"),
   lastGrantedAt: timestamp("last_granted_at"),
   notes: text("notes"),
+  activationCode: varchar("activation_code", { length: 50 }),
+  codeExpiresAt: timestamp("code_expires_at"),
+  receiptUrl: text("receipt_url"),
+  receiptStatus: varchar("receipt_status", { length: 20 }).default("none"),
+  receiptUploadedAt: timestamp("receipt_uploaded_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => ({
   phoneIdx: index("idx_self_assessment_entitlements_phone").on(table.phone),
+  codeIdx: index("idx_self_assessment_code").on(table.activationCode),
 }));
 
 export type InsertSelfAssessmentEntitlement = typeof selfAssessmentEntitlementsTable.$inferInsert;

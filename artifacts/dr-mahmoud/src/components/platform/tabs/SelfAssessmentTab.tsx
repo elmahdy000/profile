@@ -28,6 +28,12 @@ import {
   Settings,
   Check,
   Infinity as InfinityIcon,
+  Upload,
+  Key,
+  History,
+  TrendingUp,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,6 +90,27 @@ interface EligibilityData {
   studentTrack?: string;
   unlimited?: boolean;
   needPhone?: boolean;
+  isFixedPool?: boolean;
+  hasActiveCode?: boolean;
+  activationCode?: string;
+  codeExpiresAt?: string;
+  remainingDays?: number;
+  receiptPending?: boolean;
+  isExpired?: boolean;
+}
+
+interface HistorySession {
+  sessionId: string;
+  unit: string;
+  lessons: string[];
+  questionsCount: number;
+  score: number;
+  totalPoints: number;
+  percentage: number;
+  passed: boolean;
+  createdAt: string;
+  status: string;
+  details?: any[];
 }
 
 function parseUnitOrder(name: string): number {
@@ -204,6 +231,19 @@ export function SelfAssessmentTab({
   const [eligibilityChecked, setEligibilityChecked] = useState(false);
   const [eligibilityData, setEligibilityData] = useState<EligibilityData>({});
 
+  // Activation code & receipt upload state
+  const [activationCodeInput, setActivationCodeInput] = useState("");
+  const [activationChecking, setActivationChecking] = useState(false);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptUploading, setReceiptUploading] = useState(false);
+  const [receiptUploaded, setReceiptUploaded] = useState(false);
+  const receiptInputRef = useRef<HTMLInputElement>(null);
+
+  // History
+  const [historyData, setHistoryData] = useState<HistorySession[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+
   // Active quiz session
   const [generating, setGenerating] = useState(false);
   const [sessionId, setSessionId] = useState<string>("");
@@ -294,6 +334,86 @@ export function SelfAssessmentTab({
       void checkEligibility("");
     }
   }, [student]);
+
+  // Apply activation code
+  const handleApplyCode = async () => {
+    const code = activationCodeInput.trim().toUpperCase();
+    if (!code) return;
+    setActivationChecking(true);
+    try {
+      const res = await fetch(`/api/learning/self-assessment/eligibility?code=${encodeURIComponent(code)}`, {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.hasActiveCode) {
+        setEligibilityData({ ...data, canTakeTest: true });
+        setEligibilityChecked(true);
+        toast({ title: "تم التفعيل! 🎉", description: data.message });
+      } else {
+        toast({ variant: "destructive", title: "الكود غير صالح أو منتهي", description: data.message || "يرجى التحقق من الكود أو رفع إيصال جديد." });
+      }
+    } catch {
+      toast({ variant: "destructive", description: "تعذر التحقق من الكود" });
+    } finally {
+      setActivationChecking(false);
+    }
+  };
+
+  // Upload receipt
+  const handleReceiptUpload = async () => {
+    if (!receiptFile) return;
+    const phone = student?.phone || guestPhone;
+    if (!phone || phone.length < 10) {
+      toast({ variant: "destructive", description: "يرجى إدخال رقم الهاتف أولاً" });
+      return;
+    }
+    setReceiptUploading(true);
+    try {
+      const form = new FormData();
+      form.append("receipt", receiptFile);
+      form.append("phone", phone);
+      form.append("studentName", guestName || student?.name || "");
+      form.append("governorate", guestGovernorate || "");
+      form.append("city", guestCity || "");
+      const res = await fetch("/api/learning/self-assessment/upload-receipt", {
+        method: "POST",
+        credentials: "include",
+        body: form,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "فشل رفع الإيصال");
+      setReceiptUploaded(true);
+      setEligibilityData((prev) => ({ ...prev, receiptPending: true }));
+      toast({ title: "تم رفع الإيصال ✅", description: data.message });
+    } catch (err) {
+      toast({ variant: "destructive", title: "خطأ", description: (err as Error).message });
+    } finally {
+      setReceiptUploading(false);
+    }
+  };
+
+  // Load history
+  const loadHistory = async () => {
+    const phone = student?.phone || guestPhone;
+    if (!phone && !student) return;
+    setHistoryLoading(true);
+    try {
+      const url = `/api/learning/self-assessment/my-history${phone ? `?phone=${encodeURIComponent(phone)}` : ""}`;
+      const res = await fetch(url, { credentials: "include" });
+      const data = await res.json();
+      if (data.sessions) setHistoryData(data.sessions);
+    } catch {
+      /* ignore */
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const handleToggleHistory = () => {
+    const next = !showHistory;
+    setShowHistory(next);
+    if (next && historyData.length === 0) void loadHistory();
+  };
 
   // Timer Effect during Test Taking
   useEffect(() => {
@@ -1107,6 +1227,115 @@ export function SelfAssessmentTab({
             </div>
           </div>
 
+          {/* ── Guest Activation Banner ── */}
+          {eligibilityChecked && eligibilityData.isFixedPool && !eligibilityData.isEnrolled && (
+            <div className="rounded-3xl border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-950/30 p-5 space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-100 dark:bg-amber-900/60 flex items-center justify-center shrink-0">
+                  <Lock className="h-5 w-5 text-amber-600" />
+                </div>
+                <div className="space-y-1 flex-1">
+                  <h3 className="text-sm font-black text-amber-900 dark:text-amber-200">وضع التجربة – 50 سؤال ثابت من الوحدة الأولى</h3>
+                  <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                    {eligibilityData.receiptPending || receiptUploaded
+                      ? "✅ تم استلام إيصالك وجارٍ المراجعة لإصدار كود التفعيل (100 ج). سيتم التفعيل في أقرب وقت."
+                      : eligibilityData.isExpired
+                      ? "⏰ انتهت صلاحية كودك. جدد بـ 100 جنيه لفتح الوحدتين 10 أيام إضافية."
+                      : "لتفعيل بنك الأسئلة الكامل للوحدتين بدون قيود، ادفع 100 جنيه وارفع الإيصال أو أدخل كود التفعيل."}
+                  </p>
+                </div>
+              </div>
+
+              {!(eligibilityData.receiptPending || receiptUploaded) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Activation Code */}
+                  <div className="rounded-2xl border border-amber-200 dark:border-amber-700/40 bg-white dark:bg-slate-900 p-4 space-y-2.5">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                      <Key className="h-4 w-4 text-blue-600" /> أدخل كود التفعيل
+                    </div>
+                    <p className="text-[11px] text-slate-500">إذا حصلت على كود من الإدارة أدخله هنا</p>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="مثال: CAP-A1B2C3"
+                        value={activationCodeInput}
+                        onChange={(e) => setActivationCodeInput(e.target.value.toUpperCase())}
+                        className="h-9 rounded-xl text-xs font-mono text-left border-slate-200 dark:border-slate-700 flex-1"
+                        dir="ltr"
+                        onKeyDown={(e) => e.key === "Enter" && void handleApplyCode()}
+                      />
+                      <Button
+                        size="sm"
+                        disabled={activationChecking || !activationCodeInput.trim()}
+                        onClick={() => void handleApplyCode()}
+                        className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs h-9 px-4 shrink-0"
+                      >
+                        {activationChecking ? "..." : "تفعيل"}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Receipt Upload */}
+                  <div className="rounded-2xl border border-amber-200 dark:border-amber-700/40 bg-white dark:bg-slate-900 p-4 space-y-2.5">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                      <Upload className="h-4 w-4 text-emerald-600" /> ارفع إيصال 100 جنيه
+                    </div>
+                    <p className="text-[11px] text-slate-500">حوّل 100 ج وارفع صورة الإيصال لتفعيل الكود</p>
+                    <input
+                      ref={receiptInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+                    />
+                    {receiptFile ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-emerald-700 dark:text-emerald-400 truncate flex-1">{receiptFile.name}</span>
+                        <Button
+                          size="sm"
+                          disabled={receiptUploading}
+                          onClick={() => void handleReceiptUpload()}
+                          className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-9 px-3 shrink-0"
+                        >
+                          {receiptUploading ? "..." : "رفع"}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => receiptInputRef.current?.click()}
+                        className="w-full rounded-xl border-dashed border-emerald-400 text-emerald-700 dark:text-emerald-400 text-xs h-9"
+                      >
+                        <Upload className="h-3.5 w-3.5 ml-1" /> اختر صورة الإيصال
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* WhatsApp Contact */}
+              <a
+                href={`https://wa.me/201061803732?text=${encodeURIComponent("مرحباً، أريد تفعيل كود قياس القدرات (100 جنيه) للتقييم الذاتي")}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition"
+              >
+                <MessageCircle className="h-4 w-4" /> تواصل مع المساعد عبر واتساب
+              </a>
+            </div>
+          )}
+
+          {/* Active Code Badge */}
+          {eligibilityData.hasActiveCode && (
+            <div className="rounded-2xl border border-emerald-300 bg-emerald-50 dark:bg-emerald-950/30 px-4 py-3 flex items-center gap-3 text-xs">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+              <div className="flex-1">
+                <span className="font-bold text-emerald-900 dark:text-emerald-200">{eligibilityData.message}</span>
+                <span className="block text-emerald-700 dark:text-emerald-400 font-mono text-[11px] mt-0.5">الكود: {eligibilityData.activationCode} | متبقي: {eligibilityData.remainingDays} يوم</span>
+              </div>
+            </div>
+          )}
+
           {/* Full-Width Start Exam Button matching Mockup */}
           <div className="space-y-2 text-center pt-2">
             <Button
@@ -1119,22 +1348,82 @@ export function SelfAssessmentTab({
                 <>جاري تحضير أسئلة الاختبار...</>
               ) : (
                 <>
-                  <span>ابدأ اختبار التقييم الذاتي الآن</span>
+                  <span>{eligibilityData.isFixedPool && !eligibilityData.hasActiveCode ? "ابدأ تجربة 50 سؤال من الوحدة الأولى" : "ابدأ اختبار التقييم الذاتي الآن"}</span>
                   <Play className="h-5 w-5 fill-white" />
                 </>
               )}
             </Button>
 
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              سيتم توليد اختبار مخصص يتضمن{" "}
-              <strong className="text-blue-600 dark:text-blue-400 font-bold">{questionCount} سؤال</strong>{" "}
-              في{" "}
-              <strong className="text-emerald-600 dark:text-emerald-400 font-bold">
-                {selectedDurationMinutes === 0 ? "وقت مفتوح" : `${selectedDurationMinutes} دقيقة أقصى`}
-              </strong>{" "}
-              🏆
+              {eligibilityData.isFixedPool && !eligibilityData.hasActiveCode
+                ? <span className="text-amber-600 dark:text-amber-400 font-bold">وضع التجربة: 50 سؤال ثابت من الوحدة الأولى فقط 🔒</span>
+                : <><strong className="text-blue-600 dark:text-blue-400 font-bold">{questionCount} سؤال</strong> في <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{selectedDurationMinutes === 0 ? "وقت مفتوح" : `${selectedDurationMinutes} دقيقة أقصى`}</strong> 🏆</>}
             </p>
           </div>
+
+          {/* History Section */}
+          {(student || (eligibilityChecked && guestPhone.length >= 10)) && (
+            <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+              <button
+                type="button"
+                onClick={handleToggleHistory}
+                className="w-full flex items-center justify-between p-5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition text-right"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 flex items-center justify-center">
+                    <History className="h-5 w-5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-black text-slate-900 dark:text-white">سجل اختباراتي السابقة</div>
+                    <div className="text-[11px] text-slate-400">{historyData.length > 0 ? `${historyData.length} اختبار سابق` : "اضغط لعرض سجل اختباراتك"}</div>
+                  </div>
+                </div>
+                {showHistory ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+              </button>
+
+              {showHistory && (
+                <div className="border-t border-slate-100 dark:border-slate-800 p-4 space-y-3">
+                  {historyLoading ? (
+                    <p className="text-center text-xs text-slate-400 py-4">جاري تحميل السجل...</p>
+                  ) : historyData.length === 0 ? (
+                    <p className="text-center text-xs text-slate-400 py-4">لا توجد اختبارات سابقة حتى الآن 📭</p>
+                  ) : (
+                    historyData.map((s) => {
+                      const d = new Date(s.createdAt);
+                      const dateStr = d.toLocaleDateString("ar-EG", { day: "numeric", month: "short", year: "numeric" });
+                      const pct = s.percentage || 0;
+                      const barColor = pct >= 80 ? "bg-emerald-500" : pct >= 60 ? "bg-blue-500" : pct >= 40 ? "bg-amber-500" : "bg-red-500";
+                      return (
+                        <div key={s.sessionId} className="rounded-2xl border border-slate-100 dark:border-slate-800 p-4 space-y-2.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="space-y-0.5">
+                              <div className="text-xs font-bold text-slate-800 dark:text-slate-200">{s.unit}</div>
+                              <div className="text-[10px] text-slate-400">{dateStr}</div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <span className={`text-sm font-black ${ pct >= 60 ? "text-emerald-600" : "text-red-500"}`}>{pct}%</span>
+                              <div className="text-[10px] text-slate-400">{s.score}/{s.totalPoints} درجة</div>
+                            </div>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5">
+                            <div className={`${barColor} h-1.5 rounded-full transition-all`} style={{ width: `${pct}%` }} />
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] text-slate-500">
+                            <span>{s.questionsCount} سؤال</span>
+                            <span>•</span>
+                            <span className={s.passed ? "text-emerald-600 font-bold" : "text-red-500 font-bold"}>{s.passed ? "ناجح ✓" : "يحتاج مراجعة ✗"}</span>
+                            {s.details && s.details.length > 0 && (
+                              <><span>•</span><span className="text-red-500">{s.details.filter((d: any) => !d.isCorrect).length} خطأ</span></>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
