@@ -222,6 +222,29 @@ export function canStudentAccessContent(
     student.grade === "أخرى" ? student.otherGradeDetail : student.grade;
   const contentStages = stages?.length ? stages : stage ? [stage] : [];
   
+  // 1. Strict School Type Check (عربي vs لغات)
+  // Arabic students must NEVER access content exclusively targeted to Languages.
+  // Languages students must NEVER access content exclusively targeted to Arabic.
+  const studentSchoolType = student.schoolType || 
+    (studentStage?.includes("لغات") ? "languages" : studentStage?.includes("عربي") ? "arabic" : null);
+
+  if (studentSchoolType) {
+    const isStrictLanguagesContent = 
+      (stage && (stage.includes("لغات") || stage.includes("Languages")) && !stage.includes("عربي")) ||
+      (contentStages.length > 0 && contentStages.every(s => (s.includes("لغات") || s.includes("Languages")) && !s.includes("عربي")));
+    
+    const isStrictArabicContent = 
+      (stage && (stage.includes("عربي") || stage.includes("عربى")) && !stage.includes("لغات")) ||
+      (contentStages.length > 0 && contentStages.every(s => (s.includes("عربي") || s.includes("عربى")) && !s.includes("لغات")));
+
+    if (studentSchoolType === "arabic" && isStrictLanguagesContent) {
+      return false;
+    }
+    if (studentSchoolType === "languages" && isStrictArabicContent) {
+      return false;
+    }
+  }
+
   const isGeneralContent = contentStages.length === 0;
   const hasCategoryGeneralStage = contentStages.some(
     (value) => normalizeCategory(value) === "عام",
@@ -246,25 +269,22 @@ export function canStudentAccessContent(
 
   const categoryMatches =
     assignedCourse || canStudentAccessCategory(student, category);
-  const courseMatches = courseId
-    ? assignedCourseId || categoryMatches
-    : categoryMatches;
 
   // Content with specific target stages MUST match the student's registered stage,
-  // UNLESS the student was explicitly enrolled in this specific course or category by an admin.
+  // even if the student is enrolled in a multi-stage course (e.g. C++ Programming).
   if (!isGeneralContent && !hasCategoryGeneralStage) {
-    if (!stageMatches && !assignedCourseId && !assignedCourse) return false;
+    if (!stageMatches) return false;
   }
 
   // Accounts with explicit course assignments match assigned courses OR any content matching their registered stage
   if (hasExplicitCourseAssignments) {
-    if (assignedCourseId || assignedCourse) return true;
-    if (stageMatches && canStudentAccessCategory(student, category)) return true;
+    if (stageMatches && (assignedCourseId || assignedCourse || canStudentAccessCategory(student, category))) {
+      return true;
+    }
     return false;
   }
 
   if (isGeneralContent || hasCategoryGeneralStage) {
-    // General content still requires matching category unless the student stage explicitly matches
     return categoryMatches || (stageMatches && canStudentAccessCategory(student, category));
   }
   return stageMatches && categoryMatches;

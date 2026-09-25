@@ -384,7 +384,10 @@ export async function generateDraftExamForSchedule(
 
   if (!targetCourse && schedule.stage && schedule.stage !== "all") {
     const allCourses = await db.select().from(coursesTable);
+    // Prioritize dedicated single-stage course (e.g. Course 18 for Languages, Course 17 for Arabic)
     const matching = allCourses.find((c) =>
+      Array.isArray(c.stages) && c.stages.length === 1 && c.stages.includes(schedule.stage),
+    ) || allCourses.find((c) =>
       Array.isArray(c.stages) ? c.stages.includes(schedule.stage) : false,
     );
     if (matching) targetCourse = matching;
@@ -503,7 +506,9 @@ export async function generateDraftExamForSchedule(
   const lessonName = schedule.lesson && schedule.lesson !== "all" ? schedule.lesson : "شامل الوحدة";
 
   const examTitle = `${schedule.title} (${todayDateStr})`;
-  const stages = targetCourse?.stages?.length ? targetCourse.stages : [stageName];
+  const stages = schedule.stage && schedule.stage !== "all"
+    ? [schedule.stage]
+    : (targetCourse?.stages?.length ? targetCourse.stages : [stageName]);
 
   // 6. Insert as DRAFT (isPublished = false)
   const [createdQuiz] = await db
