@@ -15,10 +15,14 @@ def q(sql):
     out = stdout.read().decode('utf-8', errors='replace')
     return out
 
-out = q("SELECT count(*) FROM question_bank;")
-print("TOTAL QUESTIONS IN BANK:", out.strip())
+out = q("""
+SELECT unit, lesson, count(*), min(id), max(id)
+FROM question_bank
+WHERE id BETWEEN 520 AND 604
+GROUP BY unit, lesson;
+""")
 
-out2 = q("SELECT count(*) FROM quizzes;")
-print("TOTAL QUIZZES:", out2.strip())
+print("BATCH 520-604 GROUP BY UNIT/LESSON:")
+print(out)
 
 c.close()

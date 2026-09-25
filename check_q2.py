@@ -15,10 +15,18 @@ def q(sql):
     out = stdout.read().decode('utf-8', errors='replace')
     return out
 
-out = q("SELECT count(*) FROM question_bank;")
-print("TOTAL QUESTIONS IN BANK:", out.strip())
+out = q("""
+SELECT json_build_object(
+    'id', id,
+    'unit', unit,
+    'lesson', lesson,
+    'question', question
+)::text
+FROM question_bank
+WHERE question::text LIKE '%الفكرة الأساسية للمعالجة المتوازية%'
+LIMIT 1;
+""")
 
-out2 = q("SELECT count(*) FROM quizzes;")
-print("TOTAL QUIZZES:", out2.strip())
-
+print("RESULT:")
+print(out)
 c.close()

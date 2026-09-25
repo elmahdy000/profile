@@ -15,10 +15,14 @@ def q(sql):
     out = stdout.read().decode('utf-8', errors='replace')
     return out
 
-out = q("SELECT count(*) FROM question_bank;")
-print("TOTAL QUESTIONS IN BANK:", out.strip())
+out = q("""
+SELECT date_trunc('minute', created_at) as created_minute, count(*), min(id), max(id)
+FROM question_bank
+GROUP BY 1
+ORDER BY 1 DESC;
+""")
 
-out2 = q("SELECT count(*) FROM quizzes;")
-print("TOTAL QUIZZES:", out2.strip())
+print("BATCH TIMESTAMPS:")
+print(out)
 
 c.close()

@@ -15,10 +15,15 @@ def q(sql):
     out = stdout.read().decode('utf-8', errors='replace')
     return out
 
-out = q("SELECT count(*) FROM question_bank;")
-print("TOTAL QUESTIONS IN BANK:", out.strip())
+out = q("""
+SELECT id, title
+FROM quizzes
+WHERE questions::text LIKE '%ما أثر تيار التسرب الذي قد يظهر مع تصغير المكونات%'
+   OR questions::text LIKE '%ما الفكرة الأساسية للمعالجة المتوازية%'
+   OR questions::text LIKE '%أي مجموعة تضم تحولات اجتماعية وردت في الدرس%';
+""")
 
-out2 = q("SELECT count(*) FROM quizzes;")
-print("TOTAL QUIZZES:", out2.strip())
+print("QUIZZES CONTAINING THESE QUESTIONS:")
+print(out)
 
 c.close()

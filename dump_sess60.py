@@ -15,10 +15,21 @@ def q(sql):
     out = stdout.read().decode('utf-8', errors='replace')
     return out
 
-out = q("SELECT count(*) FROM question_bank;")
-print("TOTAL QUESTIONS IN BANK:", out.strip())
+out = q("""
+SELECT json_build_object(
+    'id', id,
+    'details', details
+)::text
+FROM self_assessment_sessions
+WHERE id = 60;
+""")
 
-out2 = q("SELECT count(*) FROM quizzes;")
-print("TOTAL QUIZZES:", out2.strip())
+data = json.loads(out.strip())
+details = data['details']
+print(f"Session 60 has {len(details)} questions.")
 
+with open("session_60_all_details.json", "w", encoding="utf-8") as f:
+    json.dump(details, f, ensure_ascii=False, indent=2)
+
+print("Saved to session_60_all_details.json")
 c.close()

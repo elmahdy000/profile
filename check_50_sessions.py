@@ -15,10 +15,15 @@ def q(sql):
     out = stdout.read().decode('utf-8', errors='replace')
     return out
 
-out = q("SELECT count(*) FROM question_bank;")
-print("TOTAL QUESTIONS IN BANK:", out.strip())
+out = q("""
+SELECT id, session_id, student_name, created_at
+FROM self_assessment_sessions
+WHERE questions_count = 50 AND status = 'completed'
+ORDER BY id DESC
+LIMIT 5;
+""")
 
-out2 = q("SELECT count(*) FROM quizzes;")
-print("TOTAL QUIZZES:", out2.strip())
+print("COMPLETED 50-QUESTION SESSIONS:")
+print(out)
 
 c.close()
