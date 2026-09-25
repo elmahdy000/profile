@@ -459,3 +459,67 @@ export const selfAssessmentSessionsTable = pgTable("self_assessment_sessions", {
 export type InsertSelfAssessmentSession = typeof selfAssessmentSessionsTable.$inferInsert;
 export type SelfAssessmentSession = typeof selfAssessmentSessionsTable.$inferSelect;
 
+// ── Essay / Written Exams System (نظام الاختبارات المقالية والحل المثالي) ──────
+export interface EssayQuestion {
+  id: string; // e.g. "eq-1"
+  prompt: string; // نص السؤال المقالي
+  points: number; // درجات السؤال
+  modelAnswer: string; // الحل النموذجي والمثالي
+  modelAnswerImageUrl?: string; // صورة توضيحية للحل النموذجي (معادلات أو رسم بياني)
+  explanation?: string; // إرشادات وخطوات توزيع الدرجات
+  imageUrl?: string; // صورة مساعدة مع السؤال
+}
+
+export interface EssayAnswer {
+  questionId: string;
+  writtenText?: string; // النص المكتوب من الطالب
+  attachmentUrl?: string; // صورة الحل الورقي المرفوعة بخط اليد
+}
+
+export const essayExamsTable = pgTable("essay_exams", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").references(() => coursesTable.id, { onDelete: "set null" }),
+  videoId: integer("video_id"),
+  title: text("title").notNull(),
+  description: text("description"),
+  stage: text("stage"),
+  stages: jsonb("stages").$type<string[]>().notNull().default([]),
+  category: text("category").notNull().default("عام"),
+  durationMinutes: integer("duration_minutes").notNull().default(60), // ساعة واحدة كإعداد قياسي
+  totalPoints: integer("total_points").notNull().default(20),
+  questions: jsonb("questions").$type<EssayQuestion[]>().notNull().default([]),
+  allowImageUpload: boolean("allow_image_upload").notNull().default(true),
+  isPublished: boolean("is_published").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  courseIdx: index("idx_essay_exams_course_id").on(table.courseId),
+  categoryIdx: index("idx_essay_exams_category").on(table.category),
+}));
+
+export type InsertEssayExam = typeof essayExamsTable.$inferInsert;
+export type EssayExam = typeof essayExamsTable.$inferSelect;
+
+export const essayExamSubmissionsTable = pgTable("essay_exam_submissions", {
+  id: serial("id").primaryKey(),
+  examId: integer("exam_id").notNull().references(() => essayExamsTable.id, { onDelete: "cascade" }),
+  studentId: integer("student_id").references(() => studentsTable.id, { onDelete: "cascade" }),
+  studentName: text("student_name").notNull().default(""),
+  studentPhone: varchar("student_phone", { length: 20 }),
+  answers: jsonb("answers").$type<EssayAnswer[]>().notNull().default([]),
+  timeSpentSeconds: integer("time_spent_seconds").notNull().default(0),
+  startedAt: timestamp("started_at").notNull().defaultNow(),
+  submittedAt: timestamp("submitted_at"),
+  status: text("status").notNull().default("submitted"), // "in_progress", "submitted", "reviewed"
+  adminScore: integer("admin_score"),
+  adminFeedback: text("admin_feedback"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  examIdx: index("idx_essay_exam_submissions_exam_id").on(table.examId),
+  studentIdx: index("idx_essay_exam_submissions_student_id").on(table.studentId),
+}));
+
+export type InsertEssayExamSubmission = typeof essayExamSubmissionsTable.$inferInsert;
+export type EssayExamSubmission = typeof essayExamSubmissionsTable.$inferSelect;
+

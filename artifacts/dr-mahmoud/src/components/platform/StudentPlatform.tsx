@@ -32,6 +32,7 @@ import {
   ExternalLink,
   ArrowLeft,
   BellRing,
+  FileEdit,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VideoLessonsSection } from "@/components/YoutubeSection";
@@ -54,6 +55,7 @@ import { AccessScreen } from "./tabs/AccessScreen";
 import { StudentSummariesTab } from "./tabs/StudentSummariesTab";
 import { IncompleteProfileModal } from "./tabs/IncompleteProfileModal";
 import { SelfAssessmentTab } from "./tabs/SelfAssessmentTab";
+import { EssayExamsTab } from "./tabs/EssayExamsTab";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { FilePreviewModal } from "./FilePreviewModal";
 
@@ -273,7 +275,7 @@ export function StudentPlatform() {
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<
-    "dashboard" | "lessons" | "summaries" | "compiler" | "files" | "quizzes" | "self-assessment" | "profile"
+    "dashboard" | "lessons" | "essay-exams" | "summaries" | "compiler" | "files" | "quizzes" | "self-assessment" | "profile"
   >("dashboard");
   const [files, setFiles] = useState<LearningFile[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -865,10 +867,11 @@ export function StudentPlatform() {
   const nav = [
     ["dashboard", "الرئيسية", Home],
     ["lessons", "كورساتي", BookOpen],
+    ["essay-exams", "الامتحانات المقالية ✍️", FileEdit],
+    ["quizzes", "الاختبارات", ClipboardCheck],
     ["summaries", "مذكراتي 📝", FileText],
     ["compiler", "محرر C++", Code2],
     ["files", "الملفات", FolderOpen],
-    ["quizzes", "الاختبارات", ClipboardCheck],
     ["self-assessment", "التقييم الذاتي 🎯", Sparkles],
     ["profile", "حسابي", User],
   ] as const;
@@ -1196,6 +1199,8 @@ export function StudentPlatform() {
               quizzes={quizzes}
               onStartQuiz={startQuiz}
             />
+          ) : tab === "essay-exams" ? (
+            <EssayExamsTab student={student} onBackToDashboard={() => setTab("dashboard")} />
           ) : tab === "summaries" ? (
             <StudentSummariesTab
               student={student}
