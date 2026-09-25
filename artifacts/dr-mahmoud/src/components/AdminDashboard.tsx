@@ -316,6 +316,42 @@ export default function AdminDashboard() {
     [location, setLocation],
   );
 
+  const handleNavigateFromNotification = useCallback(
+    (tab: string, subTab?: string) => {
+      if (tab === "bookings" || tab === "center-bookings" || subTab === "center-bookings") {
+        handleLearningSubTabChange("center-bookings");
+        return;
+      }
+      if (subTab) {
+        handleLearningSubTabChange(subTab as AdminLearningTab);
+        return;
+      }
+      const knownLearningSubTabs: AdminLearningTab[] = [
+        "overview",
+        "attendance",
+        "students",
+        "summaries",
+        "grades-sheet",
+        "center-bookings",
+        "payments",
+        "notifications",
+        "files",
+        "testbank",
+        "quizzes",
+        "essay-exams",
+        "subscriptions",
+        "reports",
+        "self-assessment-packs",
+      ];
+      if (knownLearningSubTabs.includes(tab as AdminLearningTab)) {
+        handleLearningSubTabChange(tab as AdminLearningTab);
+        return;
+      }
+      handleTabChange(tab as AdminTopTab);
+    },
+    [handleLearningSubTabChange, handleTabChange],
+  );
+
   useEffect(() => {
     const previousTitle = document.title;
     const robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
@@ -1745,15 +1781,7 @@ export default function AdminDashboard() {
 
           <div className="flex items-center gap-2">
             <AdminNotificationsCenter
-              onNavigate={(tab, subTab) => {
-                if (tab === "bookings" || tab === "center-bookings") {
-                  handleTabChange("learning");
-                  handleLearningSubTabChange("center-bookings");
-                } else {
-                  handleTabChange(tab as AdminTopTab);
-                  if (subTab) handleLearningSubTabChange(subTab as AdminLearningTab);
-                }
-              }}
+              onNavigate={handleNavigateFromNotification}
               bookingsCount={(bookingsQuery.data || []).filter((b) => b.status === "pending").length}
             />
             <div className="hidden items-center gap-2 sm:flex">
@@ -1821,15 +1849,7 @@ export default function AdminDashboard() {
               {/* Action shortcuts */}
               <div className="flex items-center gap-2">
                 <AdminNotificationsCenter
-                  onNavigate={(tab, subTab) => {
-                    if (tab === "bookings" || tab === "center-bookings") {
-                      handleTabChange("learning");
-                      handleLearningSubTabChange("center-bookings");
-                    } else {
-                      handleTabChange(tab as AdminTopTab);
-                      if (subTab) handleLearningSubTabChange(subTab as AdminLearningTab);
-                    }
-                  }}
+                  onNavigate={handleNavigateFromNotification}
                   bookingsCount={(bookingsQuery.data || []).filter((b) => b.status === "pending").length}
                 />
                 <button
