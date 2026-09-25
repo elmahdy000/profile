@@ -504,12 +504,12 @@ export function SelfAssessmentTab({
 
       const data = await res.json();
       if (!res.ok) {
-        if (data.requiresTopup) {
+        if (data.requiresTopup || data.hasUsedFreeAttempt) {
           setEligibilityData({
             canTakeTest: false,
             requiresTopup: true,
-            packageCost: 50,
-            packageAttempts: 3,
+            packageCost: 100,
+            packageAttempts: 10,
             message: data.error,
           });
         }
@@ -805,31 +805,30 @@ export function SelfAssessmentTab({
                 {eligibilityData.canTakeTest ? (
                   <div className="rounded-xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/40 p-3 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                    <span>{eligibilityData.message || "محاولتك جاهزة ومتاحة الآن!"}</span>
+                    <span>{eligibilityData.message || "محاولتك التجريبية متاحة الآن!"}</span>
                   </div>
-                ) : eligibilityData.requiresTopup ? (
-                  <div className="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/40 p-4 text-xs text-amber-900 dark:text-amber-200 space-y-2">
+                ) : (
+                  <div className="rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-950/40 p-4 text-xs text-amber-900 dark:text-amber-200 space-y-2">
                     <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300">
                       <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
-                      <span>انتهت محاولتك المجانية</span>
+                      <span>انتهت محاولتك التجريبية المجانية الوحيدة</span>
                     </div>
                     <p className="leading-relaxed">
-                      يمكنك شحن باقة <strong>(3 محاولات بـ 50 جنيه فقط)</strong> لمواصلة التقييم الذاتي
-                      وحفظ نتائجك. يتم التفعيل الفوري من المساعد أو الأدمن.
+                      {eligibilityData.message || "يمكنك تفعيل باقة (10 أيام بـ 100 جنيه فقط) لاختبار كل الوحدات والدروس من بنك الأسئلة بالكامل بدون قيود وحفظ نتائجك."}
                     </p>
-                    <div className="pt-2">
+                    <div className="pt-2 flex flex-wrap items-center gap-2">
                       <a
-                        href="https://wa.me/201061803732?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D9%81%D9%8A%20%D8%AA%D9%81%D8%B9%D9%8A%D9%84%20%D8%A8%D8%A7%D9%82%D8%A9%203%20%D9%85%D8%AD%D8%A7%D9%88%D9%84%D8%A7%D8%AA%20%D8%AA%D9%82%D9%8A%D9%8A%D9%85%20%D8%B0%D8%A7%D8%AA%D9%8A%20(50%20%D8%AC%D9%86%D9%8A%D9%87)"
+                        href="https://wa.me/201061803732?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D9%81%D9%8A%20%D8%AA%D9%81%D8%B9%D9%8A%D9%84%20%D8%A8%D8%A7%D9%82%D8%A9%2010%20%D8%A3%D9%8A%D8%A7%D9%85%20%D8%AA%D9%82%D9%8A%D9%8A%D9%85%20%D8%B0%D8%A7%D8%AA%D9%8A%20(100%20%D8%AC%D9%86%D9%8A%D9%87)"
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors"
                       >
                         <MessageCircle className="h-4 w-4" />
-                        تواصل مع المساعد لتفعيل الباقة
+                        تواصل لتفعيل باقة الـ 10 أيام (100 ج)
                       </a>
                     </div>
                   </div>
-                ) : null}
+                )}
               </div>
             )}
           </div>
@@ -1340,24 +1339,37 @@ export function SelfAssessmentTab({
           <div className="space-y-2 text-center pt-2">
             <Button
               size="lg"
-              disabled={generating || !selectedUnitName}
+              disabled={generating || !selectedUnitName || eligibilityData.canTakeTest === false}
               onClick={handleStartExam}
-              className="w-full h-14 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-black text-base shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className={`w-full h-14 rounded-2xl font-black text-base shadow-lg transition-all flex items-center justify-center gap-2 ${
+                eligibilityData.canTakeTest === false
+                  ? "bg-slate-300 dark:bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-300 dark:border-slate-700 shadow-none"
+                  : "bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white shadow-blue-600/30 cursor-pointer"
+              }`}
             >
               {generating ? (
                 <>جاري تحضير أسئلة الاختبار...</>
+              ) : eligibilityData.canTakeTest === false ? (
+                <>
+                  <Lock className="h-5 w-5" />
+                  <span>استنفدت المحاولة المجانية • فعّل باقة الـ 10 أيام بـ 100 ج</span>
+                </>
               ) : (
                 <>
-                  <span>{eligibilityData.isFixedPool && !eligibilityData.hasActiveCode ? "ابدأ تجربة 50 سؤال من الوحدة الأولى" : "ابدأ اختبار التقييم الذاتي الآن"}</span>
+                  <span>{eligibilityData.isFixedPool && !eligibilityData.hasActiveCode ? "ابدأ محاولتك التجريبية (50 سؤال من الوحدة الأولى)" : "ابدأ اختبار التقييم الذاتي الآن"}</span>
                   <Play className="h-5 w-5 fill-white" />
                 </>
               )}
             </Button>
 
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              {eligibilityData.isFixedPool && !eligibilityData.hasActiveCode
-                ? <span className="text-amber-600 dark:text-amber-400 font-bold">وضع التجربة: 50 سؤال ثابت من الوحدة الأولى فقط 🔒</span>
-                : <><strong className="text-blue-600 dark:text-blue-400 font-bold">{questionCount} سؤال</strong> في <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{selectedDurationMinutes === 0 ? "وقت مفتوح" : `${selectedDurationMinutes} دقيقة أقصى`}</strong> 🏆</>}
+              {eligibilityData.canTakeTest === false ? (
+                <span className="text-amber-600 dark:text-amber-400 font-bold">استنفدت المحاولة المجانية الوحيدة. ارفع الإيصال بـ 100 جنيه لتفعيل الاختبارات 10 أيام بدون قيود 🔒</span>
+              ) : eligibilityData.isFixedPool && !eligibilityData.hasActiveCode ? (
+                <span className="text-amber-600 dark:text-amber-400 font-bold">وضع التجربة: محاولة واحدة فقط (50 سؤال من الوحدة الأولى) 🔒</span>
+              ) : (
+                <><strong className="text-blue-600 dark:text-blue-400 font-bold">{questionCount} سؤال</strong> في <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{selectedDurationMinutes === 0 ? "وقت مفتوح" : `${selectedDurationMinutes} دقيقة أقصى`}</strong> 🏆</>
+              )}
             </p>
           </div>
 
@@ -1631,6 +1643,46 @@ export function SelfAssessmentTab({
                 <span className="text-xs text-slate-400 font-semibold">إجمالي الدرجات</span>
               </div>
             </div>
+
+            {!isEnrolled && !eligibilityData.hasActiveCode && (
+              <div className="rounded-2xl border-2 border-amber-300 dark:border-amber-700 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/40 p-4 text-right space-y-2 mt-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-amber-600 shrink-0" />
+                  <span className="font-bold text-amber-950 dark:text-amber-200 text-xs sm:text-sm">
+                    انتهت محاولتك التجريبية المجانية الوحيدة 🎓
+                  </span>
+                </div>
+                <p className="text-xs text-amber-900/90 dark:text-amber-200/90 leading-relaxed">
+                  تم عرض نتيجتك وتفاصيل الإجابات كاملة. إذا رغبت في مواصلة التقييم الذاتي غير المحدود وفتح بنك الأسئلة بالكامل لجميع الوحدات والدروس، يمكنك <strong>تفعيل باقة الـ 10 أيام بـ 100 جنيه فقط</strong>!
+                </p>
+                <div className="pt-1 flex flex-wrap items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setStep("setup");
+                      setTimeout(() => {
+                        window.scrollTo({ top: 900, behavior: "smooth" });
+                      }, 100);
+                    }}
+                    className="rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold text-xs shadow-xs"
+                  >
+                    <Key className="h-3.5 w-3.5 ml-1.5" />
+                    تفعيل باقة 10 أيام (100 جنيه)
+                  </Button>
+                  <a
+                    href={`https://wa.me/201061803732?text=${encodeURIComponent(
+                      "مرحباً د. محمود، أرغب في تفعيل باقة الـ 10 أيام للتقييم الذاتي بـ 100 جنيه"
+                    )}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500 bg-white dark:bg-slate-900 hover:bg-emerald-50 text-emerald-800 dark:text-emerald-200 text-xs font-bold transition"
+                  >
+                    <MessageCircle className="h-3.5 w-3.5 text-emerald-600" />
+                    تواصل واتساب للتفعيل الفوري
+                  </a>
+                </div>
+              </div>
+            )}
 
             <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
               <Button

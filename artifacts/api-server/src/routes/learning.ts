@@ -7781,13 +7781,28 @@ router.get("/learning/self-assessment/eligibility", async (req, res, next) => {
     const hasPaidAttempts = !hasActiveCode && (entitlement?.paidAttemptsBalance ?? 0) > 0;
     const remainingAttempts = entitlement?.paidAttemptsBalance ?? 0;
 
+    // فحص المحاولات السابقة للطالب الزائر للتأكد من منحه محاولة واحدة فقط
+    const [pastSessions] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(selfAssessmentSessionsTable)
+      .where(
+        and(
+          eq(selfAssessmentSessionsTable.phone, phone),
+          eq(selfAssessmentSessionsTable.status, "completed")
+        )
+      );
+    const completedSessionsCount = Number(pastSessions?.count || 0);
+    const hasUsedFreeAttempt = Boolean(entitlement?.freeAttemptUsed || completedSessionsCount >= 1);
+    const canTakeTest = hasActiveCode || hasPaidAttempts || !hasUsedFreeAttempt;
+
     res.json({
       success: true,
       isEnrolled: false,
       hasActiveCode,
       hasPaidAttempts,
       remainingAttempts,
-      canTakeTest: true,
+      canTakeTest,
+      hasUsedFreeAttempt,
       isFixedPool: !hasActiveCode && !hasPaidAttempts,
       activationCode: entitlement?.activationCode || null,
       codeExpiresAt: entitlement?.codeExpiresAt || null,
@@ -7796,15 +7811,18 @@ router.get("/learning/self-assessment/eligibility", async (req, res, next) => {
       studentName: entitlement?.studentName || "",
       isExpired,
       packageCost: 100,
+      durationDays: 10,
       message: hasActiveCode
         ? `كود قياس القدرات مفعّل بنجاح! متبقي لك ${remainingDays} يوم لاختبار كل الوحدات والدروس بدون قيود 🎉`
         : hasPaidAttempts
         ? `متاح لك ${remainingAttempts} محاولة كاملة في بنك الأسئلة بالكامل 🎉`
         : isPending
-        ? "تم استلام إيصال التحويل (100 ج) وجارٍ مراجعته من الإدارة لتفعيل الكود الخاص بك."
+        ? "تم استلام إيصال التحويل (100 ج) وجارٍ مراجعته من الإدارة لتفعيل باقة الـ 10 أيام الخاصة بك."
         : isExpired
-        ? "انتهت صلاحية كود قياس القدرات الخاص بك (10 أيام). يرجى رفع إيصال التجديد بـ 100 جنيه للمتابعة."
-        : "متاح لك 50 سؤالاً ثابتاً من الوحدة الأولى لتجربة المنصة. لتفعيل بنك الأسئلة بالكامل للوحدتين، اطلب كود قياس القدرات (100 ج).",
+        ? "انتهت صلاحية باقة الـ 10 أيام السابقة. يرجى رفع إيصال التجديد بـ 100 جنيه للمتابعة."
+        : hasUsedFreeAttempt
+        ? "لقد استنفدت محاولتك التجريبية المجانية الوحيدة. للحصول على وصول غير محدود لمدة 10 أيام في بنك الأسئلة بالكامل، يرجى تفعيل كود قياس القدرات (100 جنيه)."
+        : "متاح لك محاولة تجريبية واحدة مجاناً (الوحدة الأولى). لتفعيل بنك الأسئلة بالكامل لجميع الوحدات لمدة 10 أيام بـ 100 جنيه، اطلب كود قياس القدرات.",
     });
     return;
   } catch (error) {
@@ -7906,17 +7924,49 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
             .where(eq(selfAssessmentEntitlementsTable.id, entitlement!.id));
         }
 
-        // طالب جديد تماماً بدون أي سجل → أنشئ له record لتتبع المحاولات المجانية
-        if (!hasActiveCode && !hasPaidAttempts && !entitlement) {
-          await db.insert(selfAssessmentEntitlementsTable).values({
-            phone: activePhone,
-            studentName: activeName,
-            freeAttemptUsed: true,
-            paidAttemptsBalance: 0,
-            totalPurchasedAttempts: 0,
-          });
+        // فحص حاسم للمحاولة المجانية الوحيدة للطلاب من الخارج
+        if (!hasActiveCode && !hasPaidAttempts) {
+          const [pastSessions] = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(selfAssessmentSessionsTable)
+            .where(
+              and(
+                eq(selfAssessmentSessionsTable.phone, activePhone),
+                eq(selfAssessmentSessionsTable.status, "completed")
+              )
+            );
+          const completedSessionsCount = Number(pastSessions?.count || 0);
+          const alreadyUsed = Boolean(entitlement?.freeAttemptUsed || completedSessionsCount >= 1);
+
+          if (alreadyUsed) {
+            res.status(403).json({
+              error: "لقد استنفدت محاولتك التجريبية المجانية الوحيدة. للحصول على وصول غير محدود لمدة 10 أيام في بنك الأسئلة بالكامل لجميع الوحدات، يرجى تفعيل كود قياس القدرات (100 جنيه).",
+              requiresTopup: true,
+              hasUsedFreeAttempt: true,
+              canTakeTest: false,
+              packageCost: 100,
+              durationDays: 10,
+            });
+            return;
+          }
+
+          // تسجيل استخدام المحاولة المجانية فور بدء الجلسة
+          if (!entitlement) {
+            await db.insert(selfAssessmentEntitlementsTable).values({
+              phone: activePhone,
+              studentName: activeName,
+              freeAttemptUsed: true,
+              paidAttemptsBalance: 0,
+              totalPurchasedAttempts: 0,
+            });
+          } else {
+            await db
+              .update(selfAssessmentEntitlementsTable)
+              .set({ freeAttemptUsed: true, updatedAt: new Date() })
+              .where(eq(selfAssessmentEntitlementsTable.id, entitlement.id));
+          }
+          isFreeTrialSession = true;
         }
-        isFreeTrialSession = !hasActiveCode && !hasPaidAttempts;
       }
     }
 
@@ -8198,6 +8248,39 @@ router.post("/learning/self-assessment/submit", async (req, res, next) => {
       })
       .where(eq(selfAssessmentSessionsTable.id, session.id));
 
+    let isEnrolledStudent = Boolean(session.studentId);
+    let hasActiveCode = false;
+
+    if (session.phone) {
+      const [existingEnt] = await db
+        .select()
+        .from(selfAssessmentEntitlementsTable)
+        .where(eq(selfAssessmentEntitlementsTable.phone, session.phone))
+        .limit(1);
+
+      const now = new Date();
+      if (existingEnt?.activationCode && existingEnt.codeExpiresAt && existingEnt.codeExpiresAt > now) {
+        hasActiveCode = true;
+      }
+
+      if (!isEnrolledStudent && !hasActiveCode) {
+        if (existingEnt) {
+          await db
+            .update(selfAssessmentEntitlementsTable)
+            .set({ freeAttemptUsed: true, updatedAt: now })
+            .where(eq(selfAssessmentEntitlementsTable.id, existingEnt.id));
+        } else {
+          await db.insert(selfAssessmentEntitlementsTable).values({
+            phone: session.phone,
+            studentName: session.studentName || "طالب زائر",
+            freeAttemptUsed: true,
+            paidAttemptsBalance: 0,
+            totalPurchasedAttempts: 0,
+          });
+        }
+      }
+    }
+
     res.json({
       success: true,
       score: earnedScore,
@@ -8207,6 +8290,11 @@ router.post("/learning/self-assessment/submit", async (req, res, next) => {
       timeSpentSeconds: spentTime,
       review: reviewDetails,
       details: reviewDetails,
+      isEnrolled: isEnrolledStudent,
+      hasActiveCode,
+      hasUsedFreeAttempt: !isEnrolledStudent && !hasActiveCode,
+      packageCost: 100,
+      durationDays: 10,
     });
   } catch (error) {
     next(error);
