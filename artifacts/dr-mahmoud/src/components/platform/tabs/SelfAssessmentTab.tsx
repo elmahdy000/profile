@@ -131,6 +131,13 @@ function parseLessonOrder(name: string): number {
   return 50;
 }
 
+function isEnglishQuestion(prompt?: string, options?: string[]): boolean {
+  const allText = ((prompt || "") + " " + (options || []).join(" ")).trim();
+  const arabicMatches = allText.match(/[\u0600-\u06FF]/g) || [];
+  const latinMatches = allText.match(/[a-zA-Z]/g) || [];
+  return latinMatches.length > arabicMatches.length;
+}
+
 const EGYPT_GOVERNORATES: Record<string, string[]> = {
   "القاهرة": ["مدينة نصر", "المعادي", "مصر الجديدة", "التجمع الخامس", "حلوان", "شبرا", "وسط البلد", "المرج", "المطرية", "عين شمس", "الزيتون", "النزهة", "المقطم", "الوايلي", "الساحل", "الزمالك", "العباسية", "بدر", "الشروق", "مدينتي", "الرحاب"],
   "الجيزة": ["الدقي", "المهندسين", "العجوزة", "الهرم", "فيصل", "6 أكتوبر", "الشيخ زايد", "العمرانية", "بولاق الدكرور", "الحوامدية", "أوسيم", "البدرشين", "الصف", "أطفيح", "كرداسة", "أبو النمرس"],
@@ -1205,6 +1212,7 @@ export function SelfAssessmentTab({
           {(() => {
             const currentQ = questions[currentQIndex];
             const currentAnswer = answers[currentQIndex];
+            const isEng = isEnglishQuestion(currentQ.prompt, currentQ.options);
 
             return (
               <div className="rounded-3xl border border-slate-200 bg-white dark:bg-slate-900 p-6 sm:p-8 shadow-xs space-y-6">
@@ -1214,7 +1222,12 @@ export function SelfAssessmentTab({
                     <span>1 درجة</span>
                   </div>
 
-                  <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 leading-relaxed">
+                  <h2
+                    dir={isEng ? "ltr" : "rtl"}
+                    className={`text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 leading-relaxed break-words whitespace-pre-line ${
+                      isEng ? "text-left font-sans" : "text-right"
+                    }`}
+                  >
                     {currentQ.prompt}
                   </h2>
 
@@ -1226,7 +1239,7 @@ export function SelfAssessmentTab({
                 </div>
 
                 {/* Options List */}
-                <div className="space-y-3 pt-2">
+                <div className="space-y-3 pt-2" dir={isEng ? "ltr" : "rtl"}>
                   {currentQ.options.map((optionText, optIdx) => {
                     const isSelected = currentAnswer === optIdx;
                     return (
@@ -1234,15 +1247,18 @@ export function SelfAssessmentTab({
                         key={optIdx}
                         type="button"
                         onClick={() => setAnswers({ ...answers, [currentQIndex]: optIdx })}
-                        className={`w-full text-right p-4 rounded-2xl border text-xs sm:text-sm font-medium transition-all flex items-center justify-between ${
+                        dir={isEng ? "ltr" : "rtl"}
+                        className={`w-full ${
+                          isEng ? "text-left font-sans" : "text-right"
+                        } p-4 rounded-2xl border text-xs sm:text-sm font-medium transition-all flex items-center justify-between gap-3 ${
                           isSelected
                             ? "border-blue-600 bg-blue-50/80 dark:bg-blue-950/50 text-blue-950 dark:text-blue-100 font-semibold shadow-xs"
                             : "border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                         }`}
                       >
-                        <span className="leading-relaxed">{optionText}</span>
+                        <span className="leading-relaxed flex-1" dir={isEng ? "ltr" : "rtl"}>{optionText}</span>
                         <div
-                          className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 mr-3 ${
+                          className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
                             isSelected
                               ? "border-blue-600 bg-blue-600 text-white"
                               : "border-slate-300 dark:border-slate-600"
@@ -1354,7 +1370,9 @@ export function SelfAssessmentTab({
               مراجعة الأسئلة والشروحات التفصيلية ({displayedReview.length} سؤال معروض):
             </h3>
 
-            {displayedReview.map((rev) => (
+            {displayedReview.map((rev) => {
+              const isRevEng = isEnglishQuestion(rev.prompt, rev.options);
+              return (
               <div
                 key={rev.questionIndex}
                 className={`rounded-2xl border p-5 sm:p-6 space-y-4 transition-all ${
@@ -1388,12 +1406,17 @@ export function SelfAssessmentTab({
                   </div>
                 </div>
 
-                <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 leading-relaxed">
+                <h4
+                  dir={isRevEng ? "ltr" : "rtl"}
+                  className={`text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 leading-relaxed break-words whitespace-pre-line ${
+                    isRevEng ? "text-left font-sans" : "text-right"
+                  }`}
+                >
                   {rev.prompt}
                 </h4>
 
                 {/* Options with Highlight */}
-                <div className="space-y-2 pt-1">
+                <div className="space-y-2 pt-1" dir={isRevEng ? "ltr" : "rtl"}>
                   {rev.options.map((opt, oIdx) => {
                     const isSelected = rev.selectedOption === oIdx;
                     const isTrueCorrect = rev.correctOption === oIdx;
@@ -1408,10 +1431,13 @@ export function SelfAssessmentTab({
                     return (
                       <div
                         key={oIdx}
-                        className={`p-3 rounded-xl border text-xs sm:text-sm flex items-center justify-between ${optClass}`}
+                        dir={isRevEng ? "ltr" : "rtl"}
+                        className={`p-3 rounded-xl border text-xs sm:text-sm flex items-center justify-between gap-3 ${
+                          isRevEng ? "text-left font-sans" : "text-right"
+                        } ${optClass}`}
                       >
-                        <span>{opt}</span>
-                        <div className="flex items-center gap-2">
+                        <span className="leading-relaxed flex-1" dir={isRevEng ? "ltr" : "rtl"}>{opt}</span>
+                        <div className="flex items-center gap-2 shrink-0">
                           {isSelected && (
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-800 font-semibold">
                               إجابتك
@@ -1435,13 +1461,14 @@ export function SelfAssessmentTab({
                       <HelpCircle className="h-3.5 w-3.5" />
                       الشرح التوضيحي للحل الصحيح:
                     </div>
-                    <p className="leading-relaxed text-slate-700 dark:text-slate-300 font-normal">
+                    <p dir="auto" className="leading-relaxed text-slate-700 dark:text-slate-300 font-normal">
                       {rev.explanation}
                     </p>
                   </div>
                 )}
               </div>
-            ))}
+            );
+          })}
           </div>
         </div>
       )}
