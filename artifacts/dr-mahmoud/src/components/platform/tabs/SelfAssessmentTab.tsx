@@ -88,6 +88,8 @@ interface EligibilityData {
   studentPhone?: string;
   studentGrade?: string;
   studentTrack?: string;
+  governorate?: string;
+  city?: string;
   unlimited?: boolean;
   needPhone?: boolean;
   isFixedPool?: boolean;
@@ -302,6 +304,12 @@ export function SelfAssessmentTab({
 
   useEffect(() => {
     void loadTaxonomy();
+    if (student) {
+      if (student.governorate) setGuestGovernorate(student.governorate);
+      if (student.city) setGuestCity(student.city);
+    }
+    // فحص تلقائي للأحقية وجلسة الطالب المسجل
+    void checkEligibility(student?.phone || "");
   }, [student]);
 
   // 2. Check Eligibility (if student or when guest phone entered)
@@ -316,9 +324,10 @@ export function SelfAssessmentTab({
 
       if (data.isEnrolled) {
         if (data.studentName) setGuestName(data.studentName);
+        if (data.studentPhone && !guestPhone) setGuestPhone(data.studentPhone);
         if (data.governorate) setGuestGovernorate(data.governorate);
         if (data.city) setGuestCity(data.city);
-        void loadTaxonomy(qPhone);
+        void loadTaxonomy(qPhone || data.studentPhone);
       }
 
       return data;
@@ -326,14 +335,6 @@ export function SelfAssessmentTab({
       return null;
     }
   };
-
-  useEffect(() => {
-    if (student) {
-      if (student.governorate) setGuestGovernorate(student.governorate);
-      if (student.city) setGuestCity(student.city);
-      void checkEligibility("");
-    }
-  }, [student]);
 
   // Apply activation code
   const handleApplyCode = async () => {
@@ -372,9 +373,9 @@ export function SelfAssessmentTab({
       const form = new FormData();
       form.append("receipt", receiptFile);
       form.append("phone", phone);
-      form.append("studentName", guestName || student?.name || "");
-      form.append("governorate", guestGovernorate || "");
-      form.append("city", guestCity || "");
+      form.append("studentName", student?.name || guestName || "");
+      form.append("governorate", student?.governorate || guestGovernorate || "");
+      form.append("city", student?.city || guestCity || "");
       const res = await fetch("/api/learning/self-assessment/upload-receipt", {
         method: "POST",
         credentials: "include",
@@ -477,14 +478,19 @@ export function SelfAssessmentTab({
       return;
     }
 
-    if (!student && (!guestPhone || guestPhone.trim().length < 10)) {
+    if (!isEnrolled && (!guestPhone || guestPhone.trim().length < 10)) {
       toast({ variant: "destructive", description: "يرجى كتابة رقم الهاتف للمتابعة" });
       return;
     }
 
     setGenerating(true);
     try {
-      const finalCity = guestCity === "أخرى" ? customCity : guestCity;
+      // للطالب المسجل: استخدم بياناته تلقائياً بدون ما يدخل حاجة
+      const effectivePhone = student?.phone || eligibilityData.studentPhone || guestPhone;
+      const effectiveName = student?.name || eligibilityData.studentName || guestName || "طالب المنصة";
+      const effectiveGovernorate = student?.governorate || eligibilityData.governorate || guestGovernorate || "";
+      const effectiveCity = student?.city || eligibilityData.city || (guestCity === "أخرى" ? customCity : guestCity) || "";
+
       const res = await fetch("/api/learning/self-assessment/generate", {
         method: "POST",
         credentials: "include",
@@ -494,10 +500,10 @@ export function SelfAssessmentTab({
           unit: selectedUnitName,
           lessons: selectedLessons.length > 0 ? selectedLessons : ["all"],
           count: questionCount,
-          phone: guestPhone,
-          studentName: guestName,
-          governorate: guestGovernorate,
-          city: finalCity,
+          phone: effectivePhone,
+          studentName: effectiveName,
+          governorate: effectiveGovernorate,
+          city: effectiveCity,
           durationMinutes: selectedDurationMinutes,
         }),
       });
@@ -664,174 +670,207 @@ export function SelfAssessmentTab({
             </div>
           </div>
 
-          {/* Student Info Card (بيانات الطالب لاختيار التقييم الذاتي) */}
-          <div className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm relative overflow-hidden space-y-4">
-            {/* Top Badge */}
-            <div className="flex justify-center -mt-2">
-              <span className="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-xs font-bold shadow-xs">
-                <User className="h-3.5 w-3.5" />
-                {isEnrolled ? "طالب مسجل بالمنصة 🎉" : "طالب جديد 👤+"}
-              </span>
+          {/* Student Info Card - يظهر فقط للطلاب الخارجيين (الغير مسجلين) */}
+          {isEnrolled ? (
+            /* ── طالب مسجل بالمنصة: كارت ترحيب بسيط بدون طلب بيانات ── */
+            <div className="rounded-3xl border border-emerald-200/80 dark:border-emerald-800/50 bg-gradient-to-r from-emerald-50 via-white to-emerald-50 dark:from-emerald-950/30 dark:via-slate-900 dark:to-emerald-950/30 p-5 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="relative z-10 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center shadow-sm border border-emerald-200 dark:border-emerald-800">
+                  <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10px] font-bold">
+                      <User className="h-3 w-3" />
+                      طالب مسجل بالمنصة ✅
+                    </span>
+                    {(eligibilityData.unlimited || isEnrolled) && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[10px] font-bold">
+                        <InfinityIcon className="h-3 w-3" />
+                        محاولات غير محدودة
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1">
+                    أهلاً {(student?.name || eligibilityData.studentName || guestName || "يا بطل").split(" ")[0]} 👋
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    اختر الوحدة والدرس اللي عايز تختبر نفسك فيه وابدأ فوراً - بياناتك محفوظة ومربوطة بحسابك تلقائياً
+                  </p>
+                </div>
+              </div>
             </div>
-
-            <div className="text-center">
-              <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
-                بيانات الطالب لاختيار التقييم الذاتي
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                أول خطوة لبدء تجربة تقييم مخصصة لك وفقاً لخطتك التعليمية
-              </p>
-            </div>
-
-            {/* 4 Input Fields */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-2">
-              {/* 1. اسم الطالب */}
-              <div className="space-y-1.5 text-right">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                  اسم الطالب
-                </label>
-                <div className="relative">
-                  <User className="absolute right-3 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
-                  <Input
-                    type="text"
-                    placeholder="ادخل اسمك الثلاثي"
-                    value={guestName}
-                    onChange={(e) => setGuestName(e.target.value)}
-                    className="pr-9 h-11 rounded-xl text-xs border-slate-200 dark:border-slate-800 focus:ring-blue-500"
-                  />
-                </div>
+          ) : (
+            /* ── طالب خارجي / زائر: فورم إدخال البيانات ── */
+            <div className="rounded-3xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm relative overflow-hidden space-y-4">
+              {/* Top Badge */}
+              <div className="flex justify-center -mt-2">
+                <span className="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-xs font-bold shadow-xs">
+                  <User className="h-3.5 w-3.5" />
+                  {eligibilityData.isEnrolled ? "طالب مسجل بالمنصة 🎉" : "طالب جديد 👤+"}
+                </span>
               </div>
 
-              {/* 2. رقم الهاتف */}
-              <div className="space-y-1.5 text-right">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                  رقم الهاتف (للتواصل/الإستشاري)
-                </label>
-                <div className="relative">
-                  <Phone className="absolute right-3 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
-                  <Input
-                    type="tel"
-                    placeholder="مثال: 01012345678"
-                    value={guestPhone}
-                    onChange={(e) => {
-                      setGuestPhone(e.target.value);
-                      if (e.target.value.length >= 11) {
-                        void checkEligibility(e.target.value);
-                      }
-                    }}
-                    className="pr-9 h-11 rounded-xl text-xs border-slate-200 dark:border-slate-800 text-left font-mono"
-                    dir="ltr"
-                  />
-                </div>
+              <div className="text-center">
+                <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+                  بيانات الطالب لاختيار التقييم الذاتي
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  أول خطوة لبدء تجربة تقييم مخصصة لك وفقاً لخطتك التعليمية
+                </p>
               </div>
 
-              {/* 3. المحافظة */}
-              <div className="space-y-1.5 text-right">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                  المحافظة
-                </label>
-                <div className="relative">
-                  <MapPin className="absolute right-3 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
-                  <select
-                    value={guestGovernorate}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setGuestGovernorate(val);
-                      setGuestCity("");
-                      setCustomCity("");
-                    }}
-                    className="w-full h-11 pr-9 pl-3 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none"
-                  >
-                    <option value="">اختر المحافظة</option>
-                    {Object.keys(EGYPT_GOVERNORATES).map((gov) => (
-                      <option key={gov} value={gov}>
-                        {gov}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronLeft className="absolute left-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none -rotate-90" />
-                </div>
-              </div>
-
-              {/* 4. المدينة */}
-              <div className="space-y-1.5 text-right">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
-                  المدينة
-                </label>
-                <div className="relative">
-                  <Building2 className="absolute right-3 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
-                  {guestGovernorate && EGYPT_GOVERNORATES[guestGovernorate]?.length > 0 ? (
-                    <select
-                      value={guestCity}
-                      onChange={(e) => setGuestCity(e.target.value)}
-                      className="w-full h-11 pr-9 pl-3 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none"
-                    >
-                      <option value="">اختر المدينة</option>
-                      {EGYPT_GOVERNORATES[guestGovernorate].map((city) => (
-                        <option key={city} value={city}>
-                          {city}
-                        </option>
-                      ))}
-                      <option value="أخرى">أخرى / كتابة يدوية...</option>
-                    </select>
-                  ) : (
+              {/* 4 Input Fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-2">
+                {/* 1. اسم الطالب */}
+                <div className="space-y-1.5 text-right">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    اسم الطالب
+                  </label>
+                  <div className="relative">
+                    <User className="absolute right-3 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
                     <Input
                       type="text"
-                      placeholder="ادخل المدينة"
-                      value={guestCity}
-                      onChange={(e) => setGuestCity(e.target.value)}
-                      className="pr-9 h-11 rounded-xl text-xs border-slate-200 dark:border-slate-800"
+                      placeholder="ادخل اسمك الثلاثي"
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      className="pr-9 h-11 rounded-xl text-xs border-slate-200 dark:border-slate-800 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* 2. رقم الهاتف */}
+                <div className="space-y-1.5 text-right">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    رقم الهاتف (للتواصل/الإستشاري)
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute right-3 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
+                    <Input
+                      type="tel"
+                      placeholder="مثال: 01012345678"
+                      value={guestPhone}
+                      onChange={(e) => {
+                        setGuestPhone(e.target.value);
+                        if (e.target.value.length >= 11) {
+                          void checkEligibility(e.target.value);
+                        }
+                      }}
+                      className="pr-9 h-11 rounded-xl text-xs border-slate-200 dark:border-slate-800 text-left font-mono"
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
+
+                {/* 3. المحافظة */}
+                <div className="space-y-1.5 text-right">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    المحافظة
+                  </label>
+                  <div className="relative">
+                    <MapPin className="absolute right-3 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
+                    <select
+                      value={guestGovernorate}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setGuestGovernorate(val);
+                        setGuestCity("");
+                        setCustomCity("");
+                      }}
+                      className="w-full h-11 pr-9 pl-3 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none"
+                    >
+                      <option value="">اختر المحافظة</option>
+                      {Object.keys(EGYPT_GOVERNORATES).map((gov) => (
+                        <option key={gov} value={gov}>
+                          {gov}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronLeft className="absolute left-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none -rotate-90" />
+                  </div>
+                </div>
+
+                {/* 4. المدينة */}
+                <div className="space-y-1.5 text-right">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    المدينة
+                  </label>
+                  <div className="relative">
+                    <Building2 className="absolute right-3 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
+                    {guestGovernorate && EGYPT_GOVERNORATES[guestGovernorate]?.length > 0 ? (
+                      <select
+                        value={guestCity}
+                        onChange={(e) => setGuestCity(e.target.value)}
+                        className="w-full h-11 pr-9 pl-3 rounded-xl text-xs font-medium border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none"
+                      >
+                        <option value="">اختر المدينة</option>
+                        {EGYPT_GOVERNORATES[guestGovernorate].map((city) => (
+                          <option key={city} value={city}>
+                            {city}
+                          </option>
+                        ))}
+                        <option value="أخرى">أخرى / كتابة يدوية...</option>
+                      </select>
+                    ) : (
+                      <Input
+                        type="text"
+                        placeholder="ادخل المدينة"
+                        value={guestCity}
+                        onChange={(e) => setGuestCity(e.target.value)}
+                        className="pr-9 h-11 rounded-xl text-xs border-slate-200 dark:border-slate-800"
+                      />
+                    )}
+                    {guestGovernorate && EGYPT_GOVERNORATES[guestGovernorate]?.length > 0 && (
+                      <ChevronLeft className="absolute left-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none -rotate-90" />
+                    )}
+                  </div>
+                  {guestCity === "أخرى" && (
+                    <Input
+                      type="text"
+                      placeholder="اكتب اسم مدينتك..."
+                      value={customCity}
+                      onChange={(e) => setCustomCity(e.target.value)}
+                      className="h-9 mt-1 rounded-xl text-xs border-slate-200 dark:border-slate-800"
                     />
                   )}
-                  {guestGovernorate && EGYPT_GOVERNORATES[guestGovernorate]?.length > 0 && (
-                    <ChevronLeft className="absolute left-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none -rotate-90" />
+                </div>
+              </div>
+
+              {/* Eligibility Alert Status if applicable */}
+              {eligibilityChecked && (
+                <div className="pt-2">
+                  {eligibilityData.canTakeTest ? (
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/40 p-3 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <span>{eligibilityData.message || "محاولتك التجريبية متاحة الآن!"}</span>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-950/40 p-4 text-xs text-amber-900 dark:text-amber-200 space-y-2">
+                      <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300">
+                        <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
+                        <span>انتهت محاولتك التجريبية المجانية الوحيدة</span>
+                      </div>
+                      <p className="leading-relaxed">
+                        {eligibilityData.message || "يمكنك تفعيل باقة (10 أيام بـ 100 جنيه فقط) لاختبار كل الوحدات والدروس من بنك الأسئلة بالكامل بدون قيود وحفظ نتائجك."}
+                      </p>
+                      <div className="pt-2 flex flex-wrap items-center gap-2">
+                        <a
+                          href="https://wa.me/201061803732?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D9%81%D9%8A%20%D8%AA%D9%81%D8%B9%D9%8A%D9%84%20%D8%A8%D8%A7%D9%82%D8%A9%2010%20%D8%A3%D9%8A%D8%A7%D9%85%20%D8%AA%D9%82%D9%8A%D9%8A%D9%85%20%D8%B0%D8%A7%D8%AA%D9%8A%20(100%20%D8%AC%D9%86%D9%8A%D9%87)"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                          تواصل لتفعيل باقة الـ 10 أيام (100 ج)
+                        </a>
+                      </div>
+                    </div>
                   )}
                 </div>
-                {guestCity === "أخرى" && (
-                  <Input
-                    type="text"
-                    placeholder="اكتب اسم مدينتك..."
-                    value={customCity}
-                    onChange={(e) => setCustomCity(e.target.value)}
-                    className="h-9 mt-1 rounded-xl text-xs border-slate-200 dark:border-slate-800"
-                  />
-                )}
-              </div>
+              )}
             </div>
-
-            {/* Eligibility Alert Status if applicable */}
-            {eligibilityChecked && (
-              <div className="pt-2">
-                {eligibilityData.canTakeTest ? (
-                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/40 p-3 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                    <span>{eligibilityData.message || "محاولتك التجريبية متاحة الآن!"}</span>
-                  </div>
-                ) : (
-                  <div className="rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-950/40 p-4 text-xs text-amber-900 dark:text-amber-200 space-y-2">
-                    <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300">
-                      <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
-                      <span>انتهت محاولتك التجريبية المجانية الوحيدة</span>
-                    </div>
-                    <p className="leading-relaxed">
-                      {eligibilityData.message || "يمكنك تفعيل باقة (10 أيام بـ 100 جنيه فقط) لاختبار كل الوحدات والدروس من بنك الأسئلة بالكامل بدون قيود وحفظ نتائجك."}
-                    </p>
-                    <div className="pt-2 flex flex-wrap items-center gap-2">
-                      <a
-                        href="https://wa.me/201061803732?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D9%81%D9%8A%20%D8%AA%D9%81%D8%B9%D9%8A%D9%84%20%D8%A8%D8%A7%D9%82%D8%A9%2010%20%D8%A3%D9%8A%D8%A7%D9%85%20%D8%AA%D9%82%D9%8A%D9%8A%D9%85%20%D8%B0%D8%A7%D8%AA%D9%8A%20(100%20%D8%AC%D9%86%D9%8A%D9%87)"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors"
-                      >
-                        <MessageCircle className="h-4 w-4" />
-                        تواصل لتفعيل باقة الـ 10 أيام (100 ج)
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          )}
 
           {/* Stepper Progress Bar matching Mockup */}
           <div className="relative py-2">

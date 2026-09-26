@@ -7678,6 +7678,8 @@ router.get("/learning/self-assessment/eligibility", async (req, res, next) => {
         studentPhone: student.phone,
         studentGrade: student.grade,
         studentTrack: stTrack,
+        governorate: (student as any).governorate || "",
+        city: (student as any).city || "",
         message: "متاح لك تقييم ذاتي مجاني غير محدود كطالب مسجل بالمنصة 🎉",
       });
       return;
@@ -7745,6 +7747,8 @@ router.get("/learning/self-assessment/eligibility", async (req, res, next) => {
         languageTrack: studentsTable.languageTrack,
         academicTrack: studentsTable.academicTrack,
         schoolType: studentsTable.schoolType,
+        governorate: studentsTable.governorate,
+        city: studentsTable.city,
       })
       .from(studentsTable)
       .where(eq(studentsTable.phone, phone))
@@ -7762,6 +7766,8 @@ router.get("/learning/self-assessment/eligibility", async (req, res, next) => {
         studentPhone: existingStudent.phone,
         studentGrade: existingStudent.grade,
         studentTrack: stTrack,
+        governorate: existingStudent.governorate || "",
+        city: existingStudent.city || "",
         message: "مرحباً بك! أنت مسجل كطالب في المنصة ومتاح لك تقييم ذاتي مجاني غير محدود 🎉",
       });
       return;
