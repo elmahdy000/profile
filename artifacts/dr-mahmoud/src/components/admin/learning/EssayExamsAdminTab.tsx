@@ -161,20 +161,22 @@ export function EssayExamsAdminTab({
         });
         if (!res.ok) throw new Error("تعذر جلب الإجابات");
         const data = await res.json();
-        setSubmissions(Array.isArray(data) ? data : []);
+        const subsList: EssaySubmission[] = Array.isArray(data) ? data : (data?.submissions || []);
+        setSubmissions(subsList);
       } else {
         // Aggregate across exams
         const res = await fetch("/api/admin/learning/essay-exams", { credentials: "include" });
         if (res.ok) {
           const examsData: EssayExam[] = await res.json();
           let allSubs: EssaySubmission[] = [];
-          for (const ex of examsData) {
+          for (const ex of (Array.isArray(examsData) ? examsData : [])) {
             const sRes = await fetch(`/api/admin/learning/essay-exams/${ex.id}/submissions`, {
               credentials: "include",
             });
             if (sRes.ok) {
-              const sData: EssaySubmission[] = await sRes.json();
-              allSubs = [...allSubs, ...sData.map((s) => ({ ...s, examTitle: ex.title }))];
+              const sData = await sRes.json();
+              const subsList: EssaySubmission[] = Array.isArray(sData) ? sData : (sData?.submissions || []);
+              allSubs = [...allSubs, ...subsList.map((s) => ({ ...s, examTitle: ex.title }))];
             }
           }
           setSubmissions(allSubs);

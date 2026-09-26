@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 const publicRoutes = [
-  { path: "/", title: /د\. محمود المهدي/, heading: /اتعلم برمجة البكالوريا/, hasImage: true },
+  { path: "/", title: /د\. محمود المهدي/, heading: /اتعلم البرمجة وعلوم الحاسب/, hasImage: true },
   { path: "/baccalaureate", title: /البكالوريا/, heading: /شرح برمجة البكالوريا/, hasImage: true },
   { path: "/university", title: /حاسبات|البرمجة/, heading: /شرح وتبسيط.*حاسبات ومعلومات/, hasImage: false },
   { path: "/curriculum", title: /المناهج/, heading: /مكتبة المناهج/, hasImage: true },

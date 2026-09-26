@@ -9430,7 +9430,7 @@ router.patch("/api/admin/learning/essay-exams/:id", requireAdmin, async (req, re
 });
 
 // 10. DELETE /api/admin/learning/essay-exams/:id - حذف اختبار مقالي
-router.delete("/api/admin/learning/essay-exams/:id", requireAdmin, async (req, res, next) => {
+router.delete("/admin/learning/essay-exams/:id", requireAdmin, async (req, res, next) => {
   try {
     await ensureEssayExamsTables();
     const id = Number(req.params.id);
@@ -9443,7 +9443,7 @@ router.delete("/api/admin/learning/essay-exams/:id", requireAdmin, async (req, r
 });
 
 // 11. GET /api/admin/learning/essay-exams/:id/submissions - استعراض تسليمات وإجابات الطلاب
-router.get("/api/admin/learning/essay-exams/:id/submissions", requireAdmin, async (req, res, next) => {
+router.get("/admin/learning/essay-exams/:id/submissions", requireAdmin, async (req, res, next) => {
   try {
     await ensureEssayExamsTables();
     const examId = Number(req.params.id);
@@ -9478,17 +9478,14 @@ router.get("/api/admin/learning/essay-exams/:id/submissions", requireAdmin, asyn
       .where(eq(essayExamSubmissionsTable.examId, examId))
       .orderBy(desc(essayExamSubmissionsTable.submittedAt));
 
-    res.json({
-      exam,
-      submissions,
-    });
+    res.json(submissions);
   } catch (error) {
     next(error);
   }
 });
 
 // 12. POST /api/admin/learning/essay-exams/submissions/:id/grade - تصحيح إجابة طالب وإرسال الملاحظات والدرجة
-router.post("/api/admin/learning/essay-exams/submissions/:id/grade", requireAdmin, async (req, res, next) => {
+router.post("/admin/learning/essay-exams/submissions/:id/grade", requireAdmin, async (req, res, next) => {
   try {
     await ensureEssayExamsTables();
     const submissionId = Number(req.params.id);

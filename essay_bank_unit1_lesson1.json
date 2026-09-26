@@ -1,0 +1,369 @@
+{
+  "unit": "Unit 1 – Information Technology and Society",
+  "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation",
+  "course_id": 18,
+  "video_id": 23,
+  "total_questions": 40,
+  "questions": [
+    {
+      "id": "eq-1",
+      "prompt": "Explain the five major stages in the development of information technology and state the main impact of each stage.",
+      "points": 5,
+      "modelAnswer": "1. 1940s–60s: Birth of the computer; mainly used for military and scientific computation.\n2. 1970s–80s: Spread of personal computers (PCs); beginning of personal computer use.\n3. 1990s: Commercialization of the Internet and the Web; globalization of information and spread of email.\n4. 2000s: Rise of smartphones; explosive spread of mobile Internet.\n5. 2010s onward: Spread of cloud computing; large-scale data analysis, AI, and “IT as a service.”",
+      "explanation": "Key Elements / Grading Guide: The five time periods, their major technologies/events, and their impact on society.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-2",
+      "prompt": "Compare the role of computers in the 1940s–1960s with the role of personal computers in the 1970s–1980s.",
+      "points": 5,
+      "modelAnswer": "1. In the 1940s–60s, early computers were mainly used for military and scientific computation.\n2. Early computers were very large and could fill a whole room.\n3. In the 1970s–80s, personal computers (PCs) became widespread.\n4. This period marked the beginning of personal computer use.",
+      "explanation": "Key Elements / Grading Guide: Military/scientific use, large early computers, spread of PCs, personal computer use.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-3",
+      "prompt": "Compare the contribution of the Internet and Web stage in the 1990s with the smartphone stage in the 2000s.",
+      "points": 5,
+      "modelAnswer": "1. In the 1990s, the Internet was commercialized and the Web spread.\n2. Information became global and email use expanded.\n3. In the 2000s, smartphones rose in popularity.\n4. Mobile Internet spread explosively.",
+      "explanation": "Key Elements / Grading Guide: Internet/Web, globalization of information, email, smartphones, mobile Internet.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-4",
+      "prompt": "Explain the importance of cloud computing in the development of information technology from the 2010s onward.",
+      "points": 5,
+      "modelAnswer": "1. Cloud computing spread from the 2010s onward.\n2. It supported large-scale data analysis and AI.\n3. “IT as a service” became widespread.\n4. Cloud computing means IT delivered as a service over the Internet.",
+      "explanation": "Key Elements / Grading Guide: Cloud computing, data analysis, AI, IT as a service, Internet.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-5",
+      "prompt": "Explain Moore’s Law and clarify what changes approximately every two years.",
+      "points": 5,
+      "modelAnswer": "1. Moore’s Law is an empirical observation.\n2. It states that the number of transistors on an integrated circuit doubles approximately every two years.\n3. It remained largely accurate for many years.\n4. Computing power increased dramatically.",
+      "explanation": "Key Elements / Grading Guide: Empirical observation, number of transistors, integrated circuit, approximately every two years.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-6",
+      "prompt": "Explain why the continued miniaturization of transistors is becoming difficult.",
+      "points": 5,
+      "modelAnswer": "1. Miniaturization of transistors is approaching a physical limit.\n2. Quantum tunneling may occur, in which electrons slip through barriers.\n3. Leakage current may occur, in which current escapes unintentionally.\n4. This makes it difficult to achieve both higher performance and lower power consumption at the same time.",
+      "explanation": "Key Elements / Grading Guide: Physical limit, quantum tunneling, leakage current, performance, power consumption.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-7",
+      "prompt": "Compare parallel processing and quantum computing as directions for improving computing performance when transistor miniaturization becomes more difficult.",
+      "points": 5,
+      "modelAnswer": "1. Parallel processing uses multiple processor cores.\n2. Quantum computers use the principles of quantum mechanics.\n3. Both are new directions for performance improvement when transistor miniaturization becomes difficult.",
+      "explanation": "Key Elements / Grading Guide: Multiple processor cores, quantum mechanics, new directions for performance improvement.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-8",
+      "prompt": "Explain five major social changes caused by the development of information technology.",
+      "points": 5,
+      "modelAnswer": "1. Social Networking Service (SNS): allows users to connect, post, and share information.\n2. E-commerce: buying and selling goods and services through the Internet.\n3. Remote work: work performed from home or other remote locations using the Internet.\n4. Online learning: classes and study materials delivered using the Internet.\n5. Cashless payment: payments made using electronic money, QR codes, and similar methods without using cash.",
+      "explanation": "Key Elements / Grading Guide: SNS, e-commerce, remote work, online learning, cashless payment.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-9",
+      "prompt": "Compare SNS and e-commerce in terms of their main purposes and their effects on society.",
+      "points": 5,
+      "modelAnswer": "1. SNS allows users to connect with each other and post and share information.\n2. SNS is highly effective at spreading information rapidly.\n3. E-commerce means buying and selling goods and services through the Internet.\n4. Examples of e-commerce include online shops such as Amazon and eBay.",
+      "explanation": "Key Elements / Grading Guide: SNS definition/function, rapid information sharing, e-commerce definition, examples.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-10",
+      "prompt": "Compare remote work and online learning as examples of social change caused by information technology.",
+      "points": 5,
+      "modelAnswer": "1. Remote work is a working style in which work is performed from home or other remote locations using the Internet.\n2. Online learning is a learning style in which classes and study materials are delivered using the Internet.\n3. Both depend on the Internet.",
+      "explanation": "Key Elements / Grading Guide: Remote work definition, online learning definition, use of the Internet.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-11",
+      "prompt": "Explain how cashless payment illustrates the effect of information technology on daily life.",
+      "points": 5,
+      "modelAnswer": "1. Cashless payment is a system for making payments without using cash.\n2. It uses methods such as electronic money and QR codes.\n3. Examples include credit cards, debit cards, and mobile payment apps.",
+      "explanation": "Key Elements / Grading Guide: Payment without cash, electronic money/QR codes, correct examples.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-12",
+      "prompt": "Explain how an autonomous driving system operates from detecting its surroundings until controlling the vehicle.",
+      "points": 5,
+      "modelAnswer": "1. Autonomous driving uses AI to drive a vehicle without human operation.\n2. Cameras and sensors recognize the surroundings.\n3. The system makes driving decisions.\n4. The system controls the vehicle.",
+      "explanation": "Key Elements / Grading Guide: AI, cameras and sensors, recognizing surroundings, decisions, vehicle control.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-13",
+      "prompt": "Justify the use of edge computing in autonomous driving systems.",
+      "points": 5,
+      "modelAnswer": "1. A delay of even 0.1 seconds can lead to an accident.\n2. Edge computing processes data instantly on the vehicle itself.\n3. It avoids sending the data to the cloud for judgment.\n4. The vehicle can make an immediate driving response.",
+      "explanation": "Key Elements / Grading Guide: 0.1-second delay, processing on the vehicle, no waiting for cloud judgment, immediate response.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-14",
+      "prompt": "Compare cloud computing and edge computing, especially in the context of autonomous driving.",
+      "points": 5,
+      "modelAnswer": "1. Cloud computing delivers IT as a service over the Internet.\n2. Edge computing places processing on the device itself.\n3. For an immediate driving response, an autonomous vehicle must not wait for a cloud decision.",
+      "explanation": "Key Elements / Grading Guide: Cloud computing definition, edge computing definition, immediate autonomous-driving response.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-15",
+      "prompt": "A self-driving car suddenly detects an obstacle directly in front of it. Explain how the system should respond and why processing the decision locally is important.",
+      "points": 5,
+      "modelAnswer": "1. Cameras and sensors recognize the surroundings.\n2. The system makes a driving decision.\n3. The system controls the vehicle.\n4. Edge computing processes the data instantly on the vehicle itself.\n5. The vehicle does not have to wait for a cloud decision.",
+      "explanation": "Key Elements / Grading Guide: Recognition, decision, control, processing on the vehicle, no cloud delay.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-16",
+      "prompt": "Compare Augmented Reality (AR) and Virtual Reality (VR).",
+      "points": 5,
+      "modelAnswer": "1. AR overlays digital information on real-world images.\n2. In AR, the real world remains visible with a digital layer added.\n3. VR allows users to immerse themselves in a virtual space generated by a computer.\n4. VR provides a computer-generated environment.",
+      "explanation": "Key Elements / Grading Guide: AR overlay, real world remains visible, VR immersion, computer-generated virtual space.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-17",
+      "prompt": "A learner uses one application that displays digital labels over a real object and another application that places the learner inside a computer-generated environment. Identify the technology used in each case and justify your answer.",
+      "points": 5,
+      "modelAnswer": "1. The first application uses Augmented Reality (AR).\n2. AR overlays digital information on real-world images.\n3. The second application uses Virtual Reality (VR).\n4. VR immerses the user in a virtual space generated by a computer.",
+      "explanation": "Key Elements / Grading Guide: Correct identification of AR and VR with their definitions.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-18",
+      "prompt": "Explain the basic idea of quantum computing and how it differs conceptually from traditional computing.",
+      "points": 5,
+      "modelAnswer": "1. Quantum computing uses the principles of quantum mechanics.\n2. It is expected to dramatically speed up computations that are difficult or impossible for traditional computers.\n3. A classical bit holds one state at a time.\n4. A qubit uses quantum superposition.",
+      "explanation": "Key Elements / Grading Guide: Quantum mechanics, difficult computations, classical bit, qubit, superposition.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-19",
+      "prompt": "Analyze and correct the following three misconceptions: “E-commerce means buying with cash in a physical store,” “Moore’s Law guarantees unlimited transistor miniaturization,” and “VR means faster computer processing.”",
+      "points": 5,
+      "modelAnswer": "1. E-commerce means buying and selling goods and services through the Internet.\n2. Moore’s Law does not guarantee unlimited miniaturization because transistor miniaturization is approaching a physical limit.\n3. VR allows users to immerse themselves in a virtual space generated by a computer.\n4. Faster difficult computations are associated with quantum computing.",
+      "explanation": "Key Elements / Grading Guide: Correct meaning of e-commerce, physical limits of miniaturization, correct VR definition, quantum computing.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-20",
+      "prompt": "Analyze how the development of information technology has changed society from the early computer era to modern emerging technologies. Support your answer with examples from the lesson.",
+      "points": 5,
+      "modelAnswer": "1. Early computers were mainly used for military and scientific computation.\n2. Personal computers introduced personal computer use.\n3. The Internet and Web globalized information and expanded email.\n4. Smartphones caused the explosive spread of mobile Internet, while cloud computing supported data analysis, AI, and IT as a service.\n5. Information technology also brought social changes and emerging technologies such as SNS, e-commerce, autonomous driving, AR/VR, and quantum computing.",
+      "explanation": "Key Elements / Grading Guide: Historical stages, social changes, emerging technologies.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-21",
+      "prompt": "Explain the development of information technology from the 1940s to the 1960s, indicating its main use during that period.",
+      "points": 5,
+      "modelAnswer": "1. ENIAC and vacuum-tube computers appeared.\n2. Early computers could fill a whole room.\n3. They were mainly used for military and scientific computation.",
+      "explanation": "Key Elements / Grading Guide: ENIAC/vacuum-tube computers, large size, military and scientific computation.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-22",
+      "prompt": "Explain what is meant by \"Moore's Law.\" Is it a fixed physical law? Justify your answer.",
+      "points": 5,
+      "modelAnswer": "1. Moore’s Law is an empirical observation.\n2. It states that the number of transistors on an integrated circuit doubles approximately every two years.\n3. Continued miniaturization is approaching a physical limit.\n4. Problems include quantum tunneling and leakage current.",
+      "explanation": "Key Elements / Grading Guide: Empirical observation, transistor count, two years, physical limits.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-23",
+      "prompt": "Mention three social changes resulting from information technology.",
+      "points": 5,
+      "modelAnswer": "1. Social Networking Services (SNS).\n2. E-commerce.\n3. Remote work.\n4. Other correct examples from the lesson are online learning and cashless payment.",
+      "explanation": "Key Elements / Grading Guide: Any three of the five social changes stated in the lesson.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-24",
+      "prompt": "What is meant by \"e-commerce\"? Explain with two examples.",
+      "points": 5,
+      "modelAnswer": "1. E-commerce is buying and selling goods and services through the Internet.\n2. Amazon is an example.\n3. eBay is an example.",
+      "explanation": "Key Elements / Grading Guide: Correct definition, Amazon, eBay.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-25",
+      "prompt": "Explain how edge computing enhances safety and decision speed in autonomous driving without the need to send data to the cloud.",
+      "points": 5,
+      "modelAnswer": "1. A delay of even 0.1 seconds can lead to an accident.\n2. Edge computing processes data instantly on the vehicle itself.\n3. It does not send the data to the cloud for judgment.\n4. This allows an immediate driving response.",
+      "explanation": "Key Elements / Grading Guide: Delay risk, local processing, no cloud judgment, immediate response.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-26",
+      "prompt": "Briefly compare Augmented Reality (AR) and Virtual Reality (VR) in terms of definition and how each works.",
+      "points": 5,
+      "modelAnswer": "1. AR overlays digital information on real-world images.\n2. The real world remains visible with a digital layer added.\n3. VR allows users to immerse themselves in a virtual space generated by a computer.\n4. VR provides a computer-generated environment.",
+      "explanation": "Key Elements / Grading Guide: AR definition, real-world layer, VR definition, virtual environment.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-27",
+      "prompt": "Explain the principle of the qubit in quantum computing and how it differs from the classical bit.",
+      "points": 5,
+      "modelAnswer": "1. A classical bit holds one state.\n2. A qubit uses quantum superposition.\n3. Quantum computing uses the principles of quantum mechanics.",
+      "explanation": "Key Elements / Grading Guide: Classical bit, qubit, superposition, quantum mechanics.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-28",
+      "prompt": "How did the spread of cloud computing from the 2010s onward change the way information-technology resources are provided?",
+      "points": 5,
+      "modelAnswer": "1. Cloud computing spread from the 2010s onward.\n2. “IT as a service” became widespread.\n3. IT could be delivered as a service over the Internet.\n4. Cloud computing supported large-scale data analysis and AI.",
+      "explanation": "Key Elements / Grading Guide: 2010s onward, IT as a service, Internet, data analysis and AI.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-29",
+      "prompt": "Explain the historical stages in the development of information technology from the emergence of electronic computers in the 1940s through the 1960s, stating their main purpose at that time.",
+      "points": 5,
+      "modelAnswer": "1. ENIAC and vacuum-tube computers appeared.\n2. Early computers could fill a whole room.\n3. Their main purpose was military and scientific computation.",
+      "explanation": "Key Elements / Grading Guide: ENIAC/vacuum tubes, large computers, military and scientific computation.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-30",
+      "prompt": "Explain Moore's Law, what it describes, and the engineering and physical challenges facing continued miniaturization of circuit components.",
+      "points": 5,
+      "modelAnswer": "1. Moore’s Law states that the number of transistors on an integrated circuit doubles approximately every two years.\n2. Miniaturization of transistors is approaching a physical limit.\n3. Quantum tunneling can occur when electrons slip through barriers.\n4. Leakage current occurs when current escapes unintentionally.\n5. These problems make it difficult to achieve both higher performance and lower power consumption at the same time.",
+      "explanation": "Key Elements / Grading Guide: Moore’s Law, physical limit, quantum tunneling, leakage current, performance/power problem.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-31",
+      "prompt": "Enumerate the five social transformations resulting from information technology. Explain the meanings of remote work and e-commerce.",
+      "points": 5,
+      "modelAnswer": "1. The five transformations are SNS, e-commerce, remote work, online learning, and cashless payment.\n2. Remote work is a working style in which work is performed from home or other remote locations using the Internet.\n3. E-commerce is buying and selling goods and services through the Internet.",
+      "explanation": "Key Elements / Grading Guide: Five transformations, remote work definition, e-commerce definition.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-32",
+      "prompt": "Explain the characteristics and uses of the three notable emerging technologies in the lesson: autonomous driving, AR/VR, and quantum computing.",
+      "points": 5,
+      "modelAnswer": "1. Autonomous driving uses AI to drive a vehicle without human operation.\n2. Cameras and sensors recognize the surroundings, and the system makes decisions and controls the vehicle.\n3. AR overlays digital information on real-world images.\n4. VR immerses users in a virtual space generated by a computer.\n5. Quantum computing uses principles of quantum mechanics to speed up difficult or impossible computations for traditional computers.",
+      "explanation": "Key Elements / Grading Guide: Autonomous driving, AR, VR, quantum computing.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-33",
+      "prompt": "Explain how the emergence of personal computers (PCs) and the spread of access to information and email affected society in the 1970s and 1980s.",
+      "points": 5,
+      "modelAnswer": "1. Personal computers (PCs) became widespread in the 1970s–80s.\n2. This marked the beginning of personal computer use.\n3. The globalization of information and spread of email occurred in the 1990s with the commercialization of the Internet and the Web.",
+      "explanation": "Key Elements / Grading Guide: PCs in the 1970s–80s, beginning of personal computer use, correct placement of information/email in the 1990s.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-34",
+      "prompt": "Explain how continued miniaturization of circuit components under Moore's Law creates engineering and physical challenges such as leakage current, quantum effects, and quantum tunneling.",
+      "points": 5,
+      "modelAnswer": "1. Miniaturization of transistors is approaching a physical limit.\n2. Quantum tunneling occurs when electrons slip through barriers.\n3. Leakage current occurs when current escapes unintentionally.\n4. These problems make it difficult to achieve higher performance and lower power consumption at the same time.",
+      "explanation": "Key Elements / Grading Guide: Physical limit, quantum tunneling, leakage current, performance and power consumption.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-35",
+      "prompt": "Briefly explain Social Networking Services (SNS), online learning, and cashless payment as social transformations.",
+      "points": 5,
+      "modelAnswer": "1. SNS allows users to connect with each other and post and share information.\n2. SNS is highly effective at spreading information rapidly.\n3. Online learning is a learning style in which classes and study materials are delivered using the Internet.\n4. Cashless payment is a system for making payments without using cash.\n5. Examples include credit cards, debit cards, and mobile payment apps.",
+      "explanation": "Key Elements / Grading Guide: SNS, online learning, cashless payment, examples.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-36",
+      "prompt": "Explain how edge computing processes data locally and instantly on board an autonomous vehicle to reduce response time and improve safety.",
+      "points": 5,
+      "modelAnswer": "1. Edge computing processes data instantly on the vehicle itself.\n2. It does not send the data to the cloud for judgment.\n3. A delay of even 0.1 seconds can lead to an accident.\n4. The vehicle must not wait for a cloud decision when an immediate driving response is required.",
+      "explanation": "Key Elements / Grading Guide: Processing on the vehicle, no cloud judgment, delay risk, immediate response.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-37",
+      "prompt": "Discuss the impact of the Web and the spread of the Internet in the 1990s on the commercial and global availability of information.",
+      "points": 5,
+      "modelAnswer": "1. The Internet was commercialized in the 1990s.\n2. The Web spread.\n3. Information became global.\n4. Email use expanded.",
+      "explanation": "Key Elements / Grading Guide: Commercialization of the Internet, Web, global information, email.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-38",
+      "prompt": "Explain why autonomous driving is considered a notable emerging technology.",
+      "points": 5,
+      "modelAnswer": "1. Autonomous driving uses AI to drive a vehicle without human operation.\n2. Cameras and sensors recognize the surroundings.\n3. The system makes driving decisions.\n4. The system controls the vehicle.\n5. Edge computing can process data instantly on the vehicle itself.",
+      "explanation": "Key Elements / Grading Guide: AI, no human operation, cameras/sensors, decisions and control, edge computing.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-39",
+      "prompt": "Explain the concepts of e-commerce and cashless payment.",
+      "points": 5,
+      "modelAnswer": "1. E-commerce is buying and selling goods and services through the Internet.\n2. Examples include online shops such as Amazon and eBay.\n3. Cashless payment is a system for making payments without using cash.\n4. Examples include credit cards, debit cards, and mobile payment apps.",
+      "explanation": "Key Elements / Grading Guide: E-commerce definition/examples, cashless payment definition/examples.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    },
+    {
+      "id": "eq-40",
+      "prompt": "Explain the fundamental differences between the classical bit and the qubit, using the concept of quantum superposition.",
+      "points": 5,
+      "modelAnswer": "1. A classical bit holds one state.\n2. A qubit uses quantum superposition.\n3. Quantum computing uses the principles of quantum mechanics.\n4. It is expected to speed up computations that are difficult or impossible for traditional computers.",
+      "explanation": "Key Elements / Grading Guide: Classical bit, qubit, superposition, quantum mechanics.",
+      "unit": "Unit 1 – Information Technology and Society",
+      "lesson": "Lesson 1-1 – Development of Information Technology and Social Transformation"
+    }
+  ]
+}

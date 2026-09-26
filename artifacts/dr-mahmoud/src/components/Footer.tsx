@@ -106,13 +106,13 @@ export function Footer() {
                 <span className="leading-snug">{address}</span>
               </div>
               <div className="flex flex-col gap-2 pt-1">
-                <a href="tel:01025131212" className="flex items-center gap-2 text-white/80 hover:text-primary transition-colors">
+                <a href={toTelephoneUrl(phone2)} className="flex items-center gap-2 text-white/80 hover:text-primary transition-colors">
                   <Phone className="w-4 h-4 text-primary shrink-0" />
-                  <span className="font-mono text-xs font-bold text-white tracking-wide" dir="ltr">01025131212</span>
+                  <span className="font-mono text-xs font-bold text-white tracking-wide" dir="ltr">{phone2}</span>
                 </a>
-                <a href="tel:01066711545" className="flex items-center gap-2 text-white/80 hover:text-primary transition-colors">
+                <a href={toTelephoneUrl(phone1)} className="flex items-center gap-2 text-white/80 hover:text-primary transition-colors">
                   <Phone className="w-4 h-4 text-primary shrink-0" />
-                  <span className="font-mono text-xs font-bold text-white tracking-wide" dir="ltr">01066711545</span>
+                  <span className="font-mono text-xs font-bold text-white tracking-wide" dir="ltr">{phone1}</span>
                 </a>
               </div>
             </div>

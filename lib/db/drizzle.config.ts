@@ -1,5 +1,15 @@
+import * as process from "node:process";
 import { defineConfig } from "drizzle-kit";
-import path from "path";
+
+if (!process.env.DATABASE_URL) {
+  try {
+    process.loadEnvFile?.("../../.env");
+  } catch {
+    try {
+      process.loadEnvFile?.(".env");
+    } catch {}
+  }
+}
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL, ensure the database is provisioned");
