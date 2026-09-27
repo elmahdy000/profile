@@ -234,13 +234,35 @@ export function canStudentAccessContent(
     (studentStage?.includes("لغات") ? "languages" : studentStage?.includes("عربي") ? "arabic" : null);
 
   if (studentSchoolType) {
-    const isStrictLanguagesContent = 
-      (stage && (stage.includes("لغات") || stage.includes("Languages")) && !stage.includes("عربي")) ||
-      (contentStages.length > 0 && contentStages.every(s => (s.includes("لغات") || s.includes("Languages")) && !s.includes("عربي")));
-    
-    const isStrictArabicContent = 
-      (stage && (stage.includes("عربي") || stage.includes("عربى")) && !stage.includes("لغات")) ||
-      (contentStages.length > 0 && contentStages.every(s => (s.includes("عربي") || s.includes("عربى")) && !s.includes("لغات")));
+    const isStrictLanguagesContent =
+      contentStages.length > 0
+        ? contentStages.every(
+            (s) =>
+              (s.includes("لغات") || s.includes("Languages")) &&
+              !s.includes("عربي") &&
+              !s.includes("عربى"),
+          )
+        : Boolean(
+            stage &&
+              (stage.includes("لغات") || stage.includes("Languages")) &&
+              !stage.includes("عربي") &&
+              !stage.includes("عربى"),
+          );
+
+    const isStrictArabicContent =
+      contentStages.length > 0
+        ? contentStages.every(
+            (s) =>
+              (s.includes("عربي") || s.includes("عربى")) &&
+              !s.includes("لغات") &&
+              !s.includes("Languages"),
+          )
+        : Boolean(
+            stage &&
+              (stage.includes("عربي") || stage.includes("عربى")) &&
+              !stage.includes("لغات") &&
+              !stage.includes("Languages"),
+          );
 
     if (studentSchoolType === "arabic" && isStrictLanguagesContent) {
       return false;
