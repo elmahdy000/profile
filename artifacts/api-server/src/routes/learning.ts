@@ -66,6 +66,7 @@ import {
   STUDENT_COOKIE,
 } from "../middleware/student-auth";
 import {
+  getAcademicStageDimensions,
   isAcademicStageAllowedForTrack,
   isAcceptedAcademicStage,
   resolveAcademicStageSelection,
@@ -2729,16 +2730,48 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
       requestedCategories = [MANUAL_EMPTY_ENROLLMENT];
     }
 
+    const newGrade = req.body.grade !== undefined ? String(req.body.grade).trim() : undefined;
+    const gradeChanged = Boolean(newGrade && newGrade !== current.grade);
+    let newEduSystem = current.educationSystem;
+    let newEduGrade = current.educationGrade;
+    let newSchoolType = current.schoolType;
+    let newTrack = current.academicTrack;
+
+    if (newGrade) {
+      const dims = getAcademicStageDimensions(newGrade);
+      if (dims) {
+        newEduSystem = dims.system;
+        newEduGrade = dims.grade;
+        if (dims.schoolType) newSchoolType = dims.schoolType;
+        if (dims.track) newTrack = dims.track;
+      }
+    }
+    if (req.body.schoolType !== undefined) {
+      newSchoolType = String(req.body.schoolType).trim();
+    }
+
+    let finalCourseIds = requestedCourseIds;
+    let finalCategories = requestedCategories;
+    if (gradeChanged && !adminExplicitlySetEnrollment) {
+      finalCourseIds = [];
+      finalCategories = [];
+    }
+
     let [student] = await db
       .update(studentsTable)
       .set({
+        grade: newGrade !== undefined ? newGrade : current.grade,
+        educationSystem: newEduSystem,
+        educationGrade: newEduGrade,
+        schoolType: newSchoolType,
+        academicTrack: newTrack,
         status: req.body.status !== undefined ? status : current.status,
         accessCode:
           status === "approved"
             ? current.accessCode || await generateAccessCode()
             : current.accessCode,
-        enrolledCategories: requestedCategories,
-        enrolledCourseIds: requestedCourseIds,
+        enrolledCategories: finalCategories,
+        enrolledCourseIds: finalCourseIds,
         learningMode:
           req.body.learningMode !== undefined &&
           ["online", "offline"].includes(String(req.body.learningMode))
@@ -2825,6 +2858,13 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
         title: "تم تحديث كورساتك",
         message: "الكورسات والدروس المتاحة لك اتحدثت تلقائيًا. تقدر تبدأ المشاهدة دلوقتي.",
       });
+    } else if (gradeChanged) {
+      await db.insert(studentNotificationsTable).values({
+        studentId: id,
+        type: "info",
+        title: "تم تحديث مرحلتك الدراسية",
+        message: `تم تغيير مرحلتك الدراسية إلى (${newGrade})، وتم تحديث المقررات المتاحة لك تلقائيًا.`,
+      });
     } else if (req.body.learningMode !== undefined && student.learningMode !== current.learningMode) {
       await db.insert(studentNotificationsTable).values({
         studentId: id,
@@ -2834,6 +2874,9 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
       });
     }
     const changes: string[] = [];
+    if (gradeChanged) {
+      changes.push(`المرحلة التعليمية: من [${current.grade}] إلى [${newGrade}]`);
+    }
     if (req.body.status !== undefined && req.body.status !== current.status) {
       changes.push(`الحالة: من [${current.status}] إلى [${req.body.status}]`);
     }
