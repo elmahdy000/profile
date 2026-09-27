@@ -1488,6 +1488,11 @@ export function AdminLearning({
                   toast({ variant: "destructive", description: (err as Error).message });
                 }
               }}
+              onStudentUpdated={(updatedStudent) => {
+                setStudents((prev) =>
+                  prev.map((item) => (item.id === updatedStudent.id ? { ...item, ...updatedStudent } : item))
+                );
+              }}
             />
             </div>
           )}

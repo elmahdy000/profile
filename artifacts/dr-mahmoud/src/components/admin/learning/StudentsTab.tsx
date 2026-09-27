@@ -56,6 +56,7 @@ interface StudentsTabProps {
   onApproveReceipt?: (receiptId: number) => void;
   onNavigateToReports?: () => void;
   onUpdateStatusBulk?: (studentIds: number[] | "all", status: "approved" | "suspended" | "pending") => Promise<void> | void;
+  onStudentUpdated?: (student: ExtendedStudent) => void;
 }
 
 export function StudentsTab({
@@ -77,6 +78,7 @@ export function StudentsTab({
   onApproveReceipt,
   onNavigateToReports,
   onUpdateStatusBulk,
+  onStudentUpdated,
 }: StudentsTabProps) {
   // Read initial parameters from URL Search Params if available
   const getInitialParam = (key: string, fallback: string) => {
@@ -103,8 +105,9 @@ export function StudentsTab({
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
-  // Drawer
+  // Drawer & Modals
   const [activeDrawerStudent, setActiveDrawerStudent] = useState<ExtendedStudent | null>(null);
+  const [stageModalTarget, setStageModalTarget] = useState<ExtendedStudent | null>(null);
 
   // Keep an open profile in sync after a successful parent-list update.
   useEffect(() => {
@@ -970,9 +973,20 @@ export function StudentsTab({
 
                     {/* Stage */}
                     <td className="max-w-[140px] border-b border-[#E2E8F0] px-2.5 py-2">
-                      <span className="line-clamp-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] px-2 py-1 text-[11px] font-medium leading-5 text-[#475569]" title={effectiveStage}>
-                        {effectiveStage}
-                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setStageModalTarget(s);
+                        }}
+                        className="w-full text-right group/stg text-[11px] font-medium leading-5"
+                        title="اضغط لتعديل المرحلة الدراسية للطالب"
+                      >
+                        <span className="line-clamp-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] px-2 py-1 text-[#475569] group-hover/stg:border-[#BFDBFE] group-hover/stg:bg-[#EFF6FF] group-hover/stg:text-[#2563EB] transition-colors flex items-center justify-between gap-1">
+                          <span className="truncate">{effectiveStage}</span>
+                          <GraduationCap className="h-3 w-3 opacity-0 group-hover/stg:opacity-100 transition-opacity text-[#2563EB] shrink-0" />
+                        </span>
+                      </button>
                     </td>
 
                     {/* Enrolled Courses Badge */}
@@ -1191,6 +1205,17 @@ export function StudentsTab({
                             <button
                               type="button"
                               onClick={() => {
+                                setStageModalTarget(s);
+                                setOpenDropdownId(null);
+                              }}
+                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-[#2563EB] hover:bg-[#EFF6FF]"
+                            >
+                              <GraduationCap className="h-3.5 w-3.5 text-[#2563EB]" />
+                              <span>تعديل المرحلة الدراسية</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
                                 onSetMaxDevices(s);
                                 setOpenDropdownId(null);
                               }}
@@ -1311,7 +1336,23 @@ export function StudentsTab({
         onDeleteStudent={onDeleteStudent}
         onUpdateStudentCourses={onUpdateStudentCourses}
         onApproveReceipt={onApproveReceipt}
-        onStudentUpdated={(updatedStudent) => setActiveDrawerStudent(updatedStudent)}
+        onStudentUpdated={(updatedStudent) => {
+          setActiveDrawerStudent(updatedStudent);
+          onStudentUpdated?.(updatedStudent);
+        }}
+      />
+
+      {/* 6. Quick Change Student Stage Modal */}
+      <ChangeStudentStageModal
+        isOpen={Boolean(stageModalTarget)}
+        onClose={() => setStageModalTarget(null)}
+        student={stageModalTarget}
+        onStageUpdated={(updated) => {
+          onStudentUpdated?.(updated);
+          if (activeDrawerStudent?.id === updated.id) {
+            setActiveDrawerStudent(updated);
+          }
+        }}
       />
     </div>
   );
