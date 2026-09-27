@@ -208,7 +208,12 @@ function isStructuredStageMatch(
   if (content.system === "university") {
     return Boolean(student.academicTrack) && content.track === student.academicTrack;
   }
-  return Boolean(student.schoolType) && content.schoolType === student.schoolType;
+  const effectiveSchoolType =
+    student.schoolType === "arabic" || student.schoolType === "languages"
+      ? student.schoolType
+      : (student.grade?.includes("لغات") ? "languages" : student.grade?.includes("عربي") ? "arabic" : student.schoolType);
+
+  return Boolean(effectiveSchoolType) && content.schoolType === effectiveSchoolType;
 }
 
 export function canStudentAccessContent(
