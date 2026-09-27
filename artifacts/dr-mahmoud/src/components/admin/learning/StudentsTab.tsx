@@ -28,10 +28,12 @@ import {
   RotateCcw,
   MapPin,
   BarChart3,
+  GraduationCap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { PaymentReceipt } from "./PaymentsTab";
 import { StudentDrawer, type ExtendedStudent } from "./StudentDrawer";
+import { ChangeStudentStageModal } from "./LearningHelpers";
 
 interface StudentsTabProps {
   students: ExtendedStudent[];

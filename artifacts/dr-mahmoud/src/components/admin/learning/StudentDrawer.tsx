@@ -30,6 +30,7 @@ import {
   MapPin,
   Sparkles,
   ExternalLink,
+  GraduationCap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -38,6 +39,7 @@ import type { PaymentReceipt } from "./PaymentsTab";
 import { AdminConfirmDialog } from "../dashboard/AdminConfirmDialog";
 import { defaultOfflineCenters } from "../settings/CentersTab";
 import { StudentCardModal } from "./StudentCardModal";
+import { StageSelectOptions, ChangeStudentStageModal } from "./LearningHelpers";
 
 const centerMap = new Map<string, { name: string; location: string }>();
 defaultOfflineCenters.forEach((c) => {
@@ -178,7 +180,9 @@ export function StudentDrawer({
   // Edit center booking modal state
   const [isEditingBooking, setIsEditingBooking] = useState(false);
   const [isSavingBooking, setIsSavingBooking] = useState(false);
+  const [isEditingGradeQuickModal, setIsEditingGradeQuickModal] = useState(false);
   const [editFormData, setEditFormData] = useState({
+    grade: "",
     centerName: "",
     appointmentSlot: "",
     schoolName: "",
@@ -341,6 +345,7 @@ export function StudentDrawer({
 
   const handleOpenEditBooking = () => {
     setEditFormData({
+      grade: currentStudent.grade || "",
       centerName: resolvedCenterName || "",
       appointmentSlot: resolvedAppointmentSlot || "",
       schoolName: resolvedSchoolName,
@@ -360,6 +365,7 @@ export function StudentDrawer({
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
+          grade: editFormData.grade.trim() || null,
           centerName: editFormData.centerName.trim() || null,
           appointmentSlot: editFormData.appointmentSlot.trim() || null,
           parentPhone: editFormData.parentPhone.trim() || null,
@@ -665,8 +671,17 @@ export function StudentDrawer({
                     </Button>
                   </div>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 space-y-1.5">
-                      <span className="text-[11px] text-[#64748B]">المرحلة التعليمية</span>
+                    <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 space-y-1.5 relative group hover:border-blue-200 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-[#64748B]">المرحلة التعليمية</span>
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingGradeQuickModal(true)}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-[#2563EB] hover:text-[#1D4ED8] hover:underline"
+                        >
+                          <GraduationCap className="h-3.5 w-3.5" /> تعديل المرحلة
+                        </button>
+                      </div>
                       <p className="text-sm font-bold text-[#0F172A]">{currentStudent.grade === "أخرى" ? currentStudent.otherGradeDetail || currentStudent.grade : currentStudent.grade || "غير محدد"}</p>
                     </div>
                     <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 space-y-1.5">
@@ -1355,6 +1370,18 @@ export function StudentDrawer({
                 <span className="text-[#64748B] text-[11px] mr-2">({currentStudent.phone})</span>
               </div>
 
+              {/* Educational Stage */}
+              <div className="space-y-1.5">
+                <label className="block text-[#475569]">المرحلة التعليمية والدراسية</label>
+                <select
+                  value={editFormData.grade}
+                  onChange={(e) => setEditFormData({ ...editFormData, grade: e.target.value })}
+                  className="h-11 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 text-[#0F172A] font-bold outline-none focus:border-[#2563EB]"
+                >
+                  <StageSelectOptions currentGrade={currentStudent.grade} />
+                </select>
+              </div>
+
               {/* Learning Mode */}
               <div className="space-y-1.5">
                 <label className="block text-[#475569]">نظام الحضور والدراسة</label>
@@ -1488,6 +1515,18 @@ export function StudentDrawer({
         students={currentStudent ? [currentStudent] : []}
         isOpen={isCardModalOpen}
         onClose={() => setIsCardModalOpen(false)}
+      />
+
+      {/* Quick Change Student Stage Modal */}
+      <ChangeStudentStageModal
+        isOpen={isEditingGradeQuickModal}
+        onClose={() => setIsEditingGradeQuickModal(false)}
+        student={currentStudent}
+        onStageUpdated={(updated) => {
+          const updatedStudent = { ...currentStudent, ...updated };
+          setLocalStudent(updatedStudent);
+          onStudentUpdated?.(updatedStudent);
+        }}
       />
     </>
   );
