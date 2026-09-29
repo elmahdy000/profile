@@ -326,13 +326,17 @@ export function StudentsTab({
   };
 
   const handleSuspendAllFiltered = async () => {
+    if (role !== "superadmin") {
+      alert("عفواً: هذه الصلاحية قاصرة على المدير الرئيسي (Superadmin) فقط.");
+      return;
+    }
     const targetStudents = filteredStudents.filter((s) => s.status !== "suspended");
     if (targetStudents.length === 0) {
       alert("جميع الطلاب المعروضين موقوفون بالفعل.");
       return;
     }
     const confirmed = window.confirm(
-      `هل أنت تأكيد من إيقاف حسابات جميع الطلاب المعروضين وعددهم (${targetStudents.length} طالب)؟\n\nتنويه: يمكنك أنت أو المساعد إعادة تفعيل أي طالب لاحقاً بسهولة.`
+      `هل أنت متأكد من إيقاف حسابات جميع الطلاب المعروضين وعددهم (${targetStudents.length} طالب)؟\n\nتنويه: يمكنك أنت أو المساعد إعادة تفعيل أي طالب لاحقاً بسهولة.`
     );
     if (confirmed) {
       const targetIds = targetStudents.map((s) => s.id);
@@ -345,20 +349,26 @@ export function StudentsTab({
   };
 
   const handleSuspendAllStudents = async () => {
+    if (role !== "superadmin") {
+      alert("عفواً: هذه العملية مخصصة للمدير الرئيسي (Superadmin) فقط.");
+      return;
+    }
     const activeStudents = students.filter((s) => s.status !== "suspended");
     if (activeStudents.length === 0) {
       alert("جميع الطلاب (الأونلاين والأوفلاين) موقوفون بالفعل حالياً.");
       return;
     }
-    const confirmed = window.confirm(
-      `⚠️ إجراء حاسم:\nهل أنت متأكد من إيقاف حسابات كافة الطلاب بالكامل (أونلاين + أوفلاين) وعددهم (${activeStudents.length} طالب)؟\n\nتنويه: لن يتمكن أي طالب من الدخول للمنصة إلا بعد تفعيله يدويًا منك أو من المشرف المساعد.`
+    const input = window.prompt(
+      `⚠️ إجراء حاسم وخاص بالمدير الرئيسي فقط:\nهل أنت متأكد من إيقاف حسابات كافة الطلاب بالكامل (أونلاين + أوفلاين) وعددهم (${activeStudents.length} طالب)؟\n\nتنويه: لن يتمكن أي طالب من الدخول للمنصة إلا بعد تفعيله يدويًا.\n\nلتأكيد هذا الإجراء، يرجى كتابة "إيقاف الكل" في المربع أدناه:`
     );
-    if (confirmed) {
+    if (input === "إيقاف الكل") {
       if (onUpdateStatusBulk) {
         await onUpdateStatusBulk("all", "suspended");
       } else {
         activeStudents.forEach((s) => onUpdateStatus(s.id, "suspended"));
       }
+    } else if (input !== null) {
+      alert("تم إلغاء الإجراء لعدم تطابق عبارة التأكيد.");
     }
   };
 
@@ -595,7 +605,7 @@ export function StudentsTab({
               <span>المنقطعين (لم يدخلوا من أسبوع) ⚠️</span>
             </button>
 
-            {activityFilter !== "all" && (
+            {activityFilter !== "all" && role === "superadmin" && (
               <button
                 type="button"
                 onClick={handleSuspendAllFiltered}
@@ -606,16 +616,18 @@ export function StudentsTab({
               </button>
             )}
 
-            {/* Suspend All Students (Online + Offline) Button */}
-            <button
-              type="button"
-              onClick={handleSuspendAllStudents}
-              className="shrink-0 inline-flex items-center gap-1.5 h-10 rounded-xl bg-rose-700 hover:bg-rose-800 text-white px-3 text-xs font-bold transition-all shadow-xs"
-              title="إيقاف جميع الطلاب (أونلاين وأوفلاين) لحين تفعيلهم يدويًا من الأدمن أو المشرف المساعد"
-            >
-              <UserX className="h-3.5 w-3.5" />
-              <span>إيقاف كافة الطلاب (أونلاين + أوفلاين) 🛑</span>
-            </button>
+            {/* Suspend All Students (Online + Offline) Button - Superadmin Only */}
+            {role === "superadmin" && (
+              <button
+                type="button"
+                onClick={handleSuspendAllStudents}
+                className="shrink-0 inline-flex items-center gap-1.5 h-10 rounded-xl bg-rose-700 hover:bg-rose-800 text-white px-3 text-xs font-bold transition-all shadow-xs"
+                title="إجراء حاسم خاص بالمدير الرئيسي فقط: إيقاف جميع الطلاب"
+              >
+                <UserX className="h-3.5 w-3.5" />
+                <span>إيقاف كافة الطلاب (خاص بالمدير) 🛑</span>
+              </button>
+            )}
           </div>
 
           {onNavigateToReports && (

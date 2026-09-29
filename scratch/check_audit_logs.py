@@ -1,15 +1,20 @@
-import sys
-import paramiko
+import paramiko, sys
+sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
-if hasattr(sys.stdout, 'reconfigure'):
-    sys.stdout.reconfigure(encoding='utf-8')
+c = paramiko.SSHClient()
+c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+c.connect('72.62.27.196', port=22, username='root', password='e#LWhcSAa6B&R8s', timeout=10)
 
-ssh = paramiko.SSHClient()
-ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect('72.62.27.196', username='root', password='e#LWhcSAa6B&R8s')
+def run(cmd):
+    i, o, e = c.exec_command(cmd, timeout=10)
+    out = o.read().decode('utf-8', 'replace').strip()
+    err = e.read().decode('utf-8', 'replace').strip()
+    return out or err
 
-cmd = """su - postgres -c "psql -d profile -c \\"SELECT id, action, entity_type, entity_id, details, created_at FROM audit_logs ORDER BY id DESC LIMIT 20;\\"" """
-stdin, stdout, stderr = ssh.exec_command(cmd)
-print(stdout.read().decode('utf-8', 'replace'))
+print('=== RECENT AUDIT LOGS ===')
+print(run("""sudo -u postgres psql -d profile -c "SELECT * FROM audit_logs ORDER BY id DESC LIMIT 20;" """))
 
-ssh.close()
+print('\n=== CHECK UPDATED_AT OF STUDENTS ===')
+print(run("""sudo -u postgres psql -d profile -c "SELECT date_trunc('minute', updated_at) as updated_minute, count(*) FROM students GROUP BY 1 ORDER BY 1 DESC LIMIT 10;" """))
+
+c.close()

@@ -98,6 +98,15 @@ export const defaultOfflineCenters: OfflineCenterItem[] = [
     color: "purple",
   },
   {
+    id: "qanayat-630pm",
+    name: "سنتر القنايات",
+    area: "القنايات",
+    grade: "تانية ثانوي (بكالوريا)",
+    timeStr: "6:30 مساءً",
+    daysStr: "حد - تلات - خميس",
+    color: "cyan",
+  },
+  {
     id: "rafal-academy-130pm",
     name: "سنتر رافال أكاديمي (Rafal Academy) - عربي",
     area: "بجوار الثانوية العسكرية",
@@ -302,7 +311,7 @@ export const CentersTab: React.FC<CentersTabProps> = ({
                       <div>
                         <label className="block text-[11px] font-bold text-muted-foreground mb-1">المنطقة / المكان</label>
                         <select
-                          value={["منطقة الفلل", "بجوار الثانوية العسكرية", "حي الزهور - الثانوية العسكرية", "حي القومية"].includes(editForm.area) ? editForm.area : "custom"}
+                          value={["منطقة الفلل", "بجوار الثانوية العسكرية", "حي الزهور - الثانوية العسكرية", "حي القومية", "القنايات"].includes(editForm.area) ? editForm.area : "custom"}
                           onChange={(e) => {
                             if (e.target.value === "custom") {
                               setEditForm({ ...editForm, area: "" });
@@ -315,9 +324,10 @@ export const CentersTab: React.FC<CentersTabProps> = ({
                           <option value="منطقة الفلل">منطقة الفلل</option>
                           <option value="بجوار الثانوية العسكرية">بجوار الثانوية العسكرية</option>
                           <option value="حي القومية">حي القومية</option>
+                          <option value="القنايات">القنايات</option>
                           <option value="custom">✍️ منطقة أخرى (يدوي)...</option>
                         </select>
-                        {!["منطقة الفلل", "بجوار الثانوية العسكرية", "حي الزهور - الثانوية العسكرية", "حي القومية"].includes(editForm.area) && (
+                        {!["منطقة الفلل", "بجوار الثانوية العسكرية", "حي الزهور - الثانوية العسكرية", "حي القومية", "القنايات"].includes(editForm.area) && (
                           <input
                             type="text"
                             value={editForm.area}
@@ -335,6 +345,7 @@ export const CentersTab: React.FC<CentersTabProps> = ({
                           onChange={(e) => setEditForm({ ...editForm, grade: e.target.value })}
                           className="w-full h-9 rounded-xl border border-border bg-background px-2 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
                         >
+                          <option value="تانية ثانوي (بكالوريا)">تانية ثانوي (بكالوريا)</option>
                           <option value="تانية ثانوي">تانية ثانوي</option>
                           <option value="أولى ثانوي">أولى ثانوي</option>
                           <option value="الكل">الكل (جميع المراحل)</option>

@@ -107,6 +107,13 @@ interface StageCurriculum {
   units: UnitItem[];
 }
 
+function isEnglishText(text?: string | null): boolean {
+  if (!text) return false;
+  const arabicMatches = text.match(/[\u0600-\u06FF]/g) || [];
+  const latinMatches = text.match(/[a-zA-Z]/g) || [];
+  return latinMatches.length > arabicMatches.length;
+}
+
 export function SelfAssessmentAdminTab({ role = "superadmin" }: { role?: "superadmin" | "subadmin" }) {
   const { toast } = useToast();
   const [activeSubTab, setActiveSubTab] = useState<"results" | "entitlements" | "curriculum">("results");
@@ -1220,69 +1227,105 @@ export function SelfAssessmentAdminTab({ role = "superadmin" }: { role?: "supera
                   <p className="text-xs">لا تتوفر تفاصيل تفصيلية لهذه الجلسة.</p>
                 </div>
               ) : (
-                selectedSessionForReview.details.map((q, idx) => (
-                  <div
-                    key={idx}
-                    className={`p-4 rounded-2xl border text-xs space-y-2.5 transition-all ${
-                      q.isCorrect
-                        ? "border-emerald-200 bg-emerald-50/40"
-                        : "border-red-200 bg-red-50/40"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-2 font-bold text-slate-900">
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-[10px]">
-                          {idx + 1}
-                        </span>
-                        <span>{q.prompt}</span>
-                      </div>
-                      {q.isCorrect ? (
-                        <span className="shrink-0 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                          <Check className="h-3 w-3" /> صحيحة (+1)
-                        </span>
-                      ) : (
-                        <span className="shrink-0 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800">
-                          <X className="h-3 w-3" /> خاطئة
-                        </span>
-                      )}
-                    </div>
+                selectedSessionForReview.details.map((q, idx) => {
+                  const isEngPrompt = isEnglishText(q.prompt);
+                  const studentAns = (() => {
+                    if (q.studentAnswer && q.studentAnswer !== "لم يجب الطالب") return q.studentAnswer;
+                    const sel = q.selectedOption;
+                    if (q.options && typeof sel === "number" && sel >= 0 && q.options[sel]) {
+                      return q.options[sel];
+                    }
+                    if (sel === -1) return "لم يجب الطالب";
+                    return q.studentAnswer || "لم يجب الطالب";
+                  })();
+                  const isEngStudentAns = isEnglishText(studentAns);
+                  const correctAns =
+                    q.correctAnswer ||
+                    (q.options && typeof q.correctOption === "number" && q.options[q.correctOption]
+                      ? q.options[q.correctOption]
+                      : "—");
+                  const isEngCorrectAns = isEnglishText(correctAns);
+                  const isEngExpl = isEnglishText(q.explanation);
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-slate-100">
-                      <div className="p-2 rounded-xl bg-white border border-slate-100">
-                        <span className="text-[10px] text-slate-400 block mb-0.5">إجابة الطالب:</span>
-                        <span
-                          className={`font-semibold ${
-                            q.isCorrect ? "text-emerald-700" : "text-red-600 line-through"
+                  return (
+                    <div
+                      key={idx}
+                      className={`p-4 rounded-2xl border text-xs space-y-2.5 transition-all ${
+                        q.isCorrect
+                          ? "border-emerald-200 bg-emerald-50/40"
+                          : "border-red-200 bg-red-50/40"
+                      }`}
+                    >
+                      <div className={`flex items-start justify-between gap-3 ${isEngPrompt ? "flex-row-reverse" : ""}`}>
+                        <div
+                          dir={isEngPrompt ? "ltr" : "rtl"}
+                          className={`flex items-start gap-2.5 font-bold text-slate-900 flex-1 ${
+                            isEngPrompt ? "text-left font-sans" : "text-right"
                           }`}
                         >
-                          {(() => {
-                            if (q.studentAnswer && q.studentAnswer !== "لم يجب الطالب") return q.studentAnswer;
-                            const sel = q.selectedOption;
-                            if (q.options && typeof sel === "number" && sel >= 0 && q.options[sel]) {
-                              return q.options[sel];
-                            }
-                            if (sel === -1) return "لم يجب الطالب";
-                            return q.studentAnswer || "لم يجب الطالب";
-                          })()}
-                        </span>
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-sans mt-0.5">
+                            {idx + 1}
+                          </span>
+                          <span
+                            dir={isEngPrompt ? "ltr" : "rtl"}
+                            className="leading-relaxed flex-1 break-words whitespace-pre-line"
+                          >
+                            {q.prompt}
+                          </span>
+                        </div>
+                        {q.isCorrect ? (
+                          <span className="shrink-0 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                            <Check className="h-3 w-3" /> صحيحة (+1)
+                          </span>
+                        ) : (
+                          <span className="shrink-0 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800">
+                            <X className="h-3 w-3" /> خاطئة
+                          </span>
+                        )}
                       </div>
 
-                      <div className="p-2 rounded-xl bg-white border border-slate-100">
-                        <span className="text-[10px] text-slate-400 block mb-0.5">الإجابة النموذجية:</span>
-                        <span className="font-semibold text-emerald-700">
-                          {q.correctAnswer || (q.options && typeof q.correctOption === "number" && q.options[q.correctOption] ? q.options[q.correctOption] : "—")}
-                        </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-slate-100">
+                        <div className="p-2 rounded-xl bg-white border border-slate-100">
+                          <span className="text-[10px] text-slate-400 block mb-0.5">إجابة الطالب:</span>
+                          <span
+                            dir={isEngStudentAns ? "ltr" : "rtl"}
+                            className={`font-semibold block break-words ${
+                              isEngStudentAns ? "text-left font-sans" : "text-right"
+                            } ${q.isCorrect ? "text-emerald-700" : "text-red-600 line-through"}`}
+                          >
+                            {studentAns}
+                          </span>
+                        </div>
+
+                        <div className="p-2 rounded-xl bg-white border border-slate-100">
+                          <span className="text-[10px] text-slate-400 block mb-0.5">الإجابة النموذجية:</span>
+                          <span
+                            dir={isEngCorrectAns ? "ltr" : "rtl"}
+                            className={`font-semibold block break-words text-emerald-700 ${
+                              isEngCorrectAns ? "text-left font-sans" : "text-right"
+                            }`}
+                          >
+                            {correctAns}
+                          </span>
+                        </div>
                       </div>
+
+                      {q.explanation && (
+                        <div className="p-2.5 rounded-xl bg-blue-50/60 border border-blue-100 text-blue-900 text-[11px] leading-relaxed">
+                          <strong className="font-bold block mb-0.5 text-blue-700">الشرح والتوضيح:</strong>
+                          <p
+                            dir={isEngExpl ? "ltr" : "rtl"}
+                            className={`leading-relaxed whitespace-pre-line break-words ${
+                              isEngExpl ? "text-left font-sans" : "text-right"
+                            }`}
+                          >
+                            {q.explanation}
+                          </p>
+                        </div>
+                      )}
                     </div>
-
-                    {q.explanation && (
-                      <div className="p-2.5 rounded-xl bg-blue-50/60 border border-blue-100 text-blue-900 text-[11px] leading-relaxed">
-                        <strong className="font-bold block mb-0.5 text-blue-700">الشرح والتوضيح:</strong>
-                        {q.explanation}
-                      </div>
-                    )}
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 
