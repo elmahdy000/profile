@@ -386,6 +386,7 @@ export function publicStudent(student: typeof studentsTable.$inferSelect) {
   return {
     id: student.id,
     name: student.name,
+    nameChanged: Boolean(student.nameChanged),
     phone: student.phone,
     email: student.email,
     avatarUrl: student.avatarUrl,

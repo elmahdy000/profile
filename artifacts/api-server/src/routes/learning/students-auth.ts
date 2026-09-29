@@ -612,29 +612,45 @@ router.patch("/student/profile", requireStudent, async (req, res, next) => {
     const appointmentSlot = req.body.appointmentSlot ? String(req.body.appointmentSlot).trim() : undefined;
     const confirmCenter = Boolean(req.body.confirmCenter);
 
-    if (
-      student.centerConfirmed &&
-      ((centerName !== undefined && centerName !== student.centerName) ||
-        (appointmentSlot !== undefined && appointmentSlot !== student.appointmentSlot))
-    ) {
-      res.status(403).json({
-        error: "تم تأكيد السنتر والميعاد مسبقاً، ولا يمكن تعديل السنتر إلا بعد موافقة د. محمود أو مساعد الأدمن.",
-      });
-      return;
-    }
-
     const updateData: Record<string, any> = {
       updatedAt: new Date(),
     };
-    if (name && name.length >= 2) updateData.name = name;
+
+    if (name !== undefined) {
+      if (name.length < 3) {
+        res.status(400).json({ error: "يجب ألا يقل الاسم عن 3 أحرف" });
+        return;
+      }
+      if (name !== student.name) {
+        if (student.nameChanged) {
+          res.status(403).json({
+            error: "عفواً، لقد قمت بتعديل اسمك لمرة واحدة مسبقاً، ولا يمكن تعديله مرة أخرى إلا عن طريق الإدارة.",
+          });
+          return;
+        }
+        updateData.name = name;
+        updateData.nameChanged = true;
+      }
+    }
+
     if (schoolName && schoolName !== "null") updateData.schoolName = schoolName;
     if (parentPhone && parentPhone !== "null" && parentPhone.length >= 10) updateData.parentPhone = parentPhone;
     if (governorate) updateData.governorate = governorate;
     if (city) updateData.city = city;
     if (grade) updateData.grade = grade;
-    if (centerName) updateData.centerName = centerName;
-    if (appointmentSlot) updateData.appointmentSlot = appointmentSlot;
-    if (confirmCenter || (centerName && appointmentSlot && !student.centerConfirmed)) {
+
+    if (centerName) {
+      updateData.centerName = centerName;
+      updateData.learningMode = "offline";
+      updateData.centerConfirmed = true;
+      updateData.centerConfirmedAt = new Date();
+    }
+    if (appointmentSlot) {
+      updateData.appointmentSlot = appointmentSlot;
+      updateData.centerConfirmed = true;
+      updateData.centerConfirmedAt = new Date();
+    }
+    if (confirmCenter && !updateData.centerConfirmed) {
       updateData.centerConfirmed = true;
       updateData.centerConfirmedAt = new Date();
     }
@@ -644,6 +660,13 @@ router.patch("/student/profile", requireStudent, async (req, res, next) => {
       .set(updateData)
       .where(eq(studentsTable.id, student.id))
       .returning();
+
+    if (updateData.name && updateData.name !== student.name) {
+      void logAudit(req, "student_name_change", "student", student.id, `قام الطالب (${student.name}) بتعديل اسمه إلى (${updateData.name}) - تعديل لمرة واحدة`, { role: "subadmin", username: `الطالب #${student.id}` });
+    }
+    if (updateData.centerName || updateData.appointmentSlot) {
+      void logAudit(req, "student_center_change", "student", student.id, `قام الطالب (${student.name}) بتعديل السنتر والميعاد إلى: ${updateData.centerName || student.centerName} (${updateData.appointmentSlot || student.appointmentSlot})`, { role: "subadmin", username: `الطالب #${student.id}` });
+    }
 
     res.json({ student: publicStudent(updated) });
   } catch (error) {

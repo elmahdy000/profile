@@ -1,6 +1,7 @@
 export type Student = {
   id: number;
   name: string;
+  nameChanged?: boolean;
   phone: string;
   email?: string | null;
   avatarUrl?: string | null;

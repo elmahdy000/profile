@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Camera, Trash2, MapPin, Clock, School, Phone, Building2, CalendarDays, ShieldCheck, Lock, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Camera, Trash2, MapPin, Clock, School, Phone, Building2, CalendarDays, ShieldCheck, Lock, AlertTriangle, CheckCircle2, Edit2, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import type { Student } from "@/types/platform";
@@ -30,6 +30,12 @@ export function ProfileTab({
   const [selectedSlot, setSelectedSlot] = useState<string>(student.appointmentSlot || "");
   const [confirmingCenter, setConfirmingCenter] = useState(false);
   const [showAllCenters, setShowAllCenters] = useState(false);
+  const [isChangingCenter, setIsChangingCenter] = useState(false);
+
+  // Name editing state (allowed once only)
+  const [editingName, setEditingName] = useState(false);
+  const [newName, setNewName] = useState(student.name || "");
+  const [savingName, setSavingName] = useState(false);
 
   const isCenterStudent = student.learningMode === "offline" || Boolean(student.centerName) || Boolean(student.appointmentSlot);
   const isConfirmed = Boolean(student.centerConfirmed);
@@ -43,6 +49,53 @@ export function ProfileTab({
     }
     return !center.grade?.includes("لغات") && !center.name.includes("لغات");
   });
+
+  const handleSaveName = async () => {
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed.length < 3) {
+      toast({ variant: "destructive", title: "يجب ألا يقل الاسم عن 3 أحرف" });
+      return;
+    }
+    if (trimmed === student.name.trim()) {
+      setEditingName(false);
+      return;
+    }
+    setSavingName(true);
+    try {
+      const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
+      const res = await fetch("/api/student/profile", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(deviceId ? { "X-Device-Id": deviceId } : {}),
+        },
+        credentials: "include",
+        body: JSON.stringify({ name: trimmed }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "تعذر تعديل الاسم");
+      }
+      onStudentChange({
+        ...student,
+        name: trimmed,
+        nameChanged: true,
+      });
+      setEditingName(false);
+      toast({
+        title: "تم تعديل الاسم بنجاح 🎉",
+        description: "تم تحديث اسمك في النظام (تغيير الاسم متاح لمرة واحدة فقط).",
+      });
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "تعذر تعديل الاسم",
+        description: err.message,
+      });
+    } finally {
+      setSavingName(false);
+    }
+  };
 
   const handleConfirmCenter = async () => {
     if (!selectedCenter || !selectedSlot) {
@@ -67,7 +120,7 @@ export function ProfileTab({
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "تعذر تأكيد السنتر");
+        throw new Error(data.error || "تعذر حفظ بيانات السنتر");
       }
       onStudentChange({
         ...student,
@@ -75,10 +128,12 @@ export function ProfileTab({
         appointmentSlot: selectedSlot,
         centerConfirmed: true,
         centerConfirmedAt: new Date().toISOString(),
+        learningMode: "offline",
       });
+      setIsChangingCenter(false);
       toast({
-        title: "تم تأكيد السنتر والميعاد بنجاح! 🔒",
-        description: "تم تثبيت مقعدك وسيتم تجهيز وطباعة كارنيه السنتر (ID) الخاص بك بواسطة الإدارة.",
+        title: "تم حفظ وتأكيد السنتر بنجاح! 📍",
+        description: "تم تحديث مقعدك وموعد حضورك بالسنتر.",
       });
     } catch (err: any) {
       toast({
@@ -144,9 +199,77 @@ export function ProfileTab({
             <StudentAvatar name={student.name} src={student.avatarUrl} size="lg" />
           </div>
           <div className="flex-1 min-w-0">
-            <StatusBadge>حساب متفعّل</StatusBadge>
-            <h2 className="mt-2 text-xl font-extrabold text-foreground truncate">{student.name}</h2>
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+              <StatusBadge>حساب متفعّل</StatusBadge>
+              {student.nameChanged ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-[10px] font-bold text-muted-foreground border border-border">
+                  <Lock className="h-3 w-3" /> تم تعديل الاسم (مرة واحدة)
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-900/40 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
+                  ✨ تعديل الاسم متاح (مرة واحدة)
+                </span>
+              )}
+            </div>
+            <div className="mt-2 flex flex-wrap items-center justify-center sm:justify-start gap-2">
+              <h2 className="text-xl font-extrabold text-foreground truncate">{student.name}</h2>
+              {!student.nameChanged && !editingName && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setNewName(student.name);
+                    setEditingName(true);
+                  }}
+                  className="h-7 px-2 text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/60 gap-1"
+                >
+                  <Edit2 className="h-3.5 w-3.5" /> تعديل الاسم
+                </Button>
+              )}
+            </div>
             <p className="text-[13px] text-muted-foreground">{student.grade || "طالب بمنصة د. محمود المهدي"}</p>
+
+            {/* Inline Name Editing Form */}
+            {editingName && (
+              <div className="mt-3 p-3.5 rounded-xl border border-blue-200 bg-blue-50/80 dark:border-blue-900/50 dark:bg-blue-950/40 space-y-2.5 text-right">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
+                    <Edit2 className="h-3.5 w-3.5 text-blue-600" />
+                    تعديل اسم الطالب (متاح لمرة واحدة فقط ⚠️)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setEditingName(false)}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    إلغاء
+                  </button>
+                </div>
+                <p className="text-[11px] text-blue-800/80 dark:text-blue-300/80 leading-relaxed">
+                  يرجى كتابة اسمك الحقيقي ثلاثياً أو رباعياً كما هو مدون في شهاداتك. بمجرد الحفظ يتم تثبيت الاسم ولا يمكن تغييره مجدداً بنفسك.
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    placeholder="اكتب الاسم الجديد ثلاثياً..."
+                    className="flex-1 h-9 rounded-xl border border-blue-300 dark:border-blue-700 bg-white dark:bg-card px-3 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={savingName || !newName.trim() || newName.trim().length < 3 || newName.trim() === student.name.trim()}
+                    onClick={handleSaveName}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-9 px-4 rounded-xl"
+                  >
+                    {savingName ? "جاري الحفظ..." : "حفظ الاسم"}
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <div className="mt-4 flex flex-wrap justify-center sm:justify-start gap-2">
               <input ref={inputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => void uploadAvatar(event.target.files?.[0])} />
               <Button type="button" variant="outline" size="sm" disabled={avatarLoading} onClick={() => inputRef.current?.click()}>
@@ -162,19 +285,30 @@ export function ProfileTab({
         </div>
       </article>
 
-      {/* Center Booking Section (for offline students) */}
-      {isCenterStudent && (
-        isConfirmed ? (
-          /* Confirmed State */
+      {/* Center Booking Section */}
+      {isCenterStudent ? (
+        (isConfirmed && !isChangingCenter) ? (
+          /* Confirmed State with Edit Option */
           <article className="rounded-2xl border border-emerald-200 bg-emerald-50/60 dark:border-emerald-500/30 dark:bg-emerald-950/30 p-5 shadow-xs space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-extrabold text-sm">
                 <MapPin className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                <span>📍 بيانات حجز السنتر والمواعيد الحضورية بالزقازيق</span>
+                <span>📍 بيانات حجز السنتر والمواعيد الحضورية</span>
               </div>
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-900/60 px-3 py-1 text-xs font-black text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700">
-                <ShieldCheck className="h-4 w-4" /> تم التأكيد النهائي 🔒
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-900/60 px-3 py-1 text-xs font-black text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700">
+                  <ShieldCheck className="h-4 w-4" /> معتمد في الكشوفات ✅
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsChangingCenter(true)}
+                  className="gap-1.5 font-bold text-xs bg-white dark:bg-card border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100/60 text-emerald-900 dark:text-emerald-200"
+                >
+                  <Edit2 className="h-3.5 w-3.5" /> تغيير السنتر أو الميعاد
+                </Button>
+              </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 text-xs">
               <div className="rounded-xl border border-emerald-200/80 dark:border-emerald-500/20 bg-white/80 dark:bg-background/60 p-3.5 space-y-1">
@@ -191,30 +325,36 @@ export function ProfileTab({
               </div>
             </div>
             <p className="text-[11px] text-muted-foreground bg-emerald-100/50 dark:bg-emerald-950/40 p-3 rounded-xl border border-emerald-200/50 dark:border-emerald-800/30 leading-relaxed">
-              ✅ <strong>تم تثبيت مقعدك بالسنتر بنجاح:</strong> ستقوم إدارة د. محمود المهدي بتجهيز وطباعة كارنيه السنتر (ID Card) الخاص بك لتسليمه لك في أول حصة حضورية بالسنتر. ولا يمكن تعديل السنتر أو الميعاد إلا بالرجوع للإدارة أو مساعد الأدمن.
+              ✅ <strong>تم تثبيت مقعدك بالسنتر:</strong> يمكنك تغيير السنتر أو موعد الحضور في أي وقت لتحديث كشف الحضور وطباعة كارنيه السنتر (ID Card).
             </p>
           </article>
         ) : (
-          /* Unconfirmed State - Interactive Selection */
-          <article className="rounded-2xl border-2 border-amber-400 bg-amber-50/80 dark:border-amber-500/40 dark:bg-amber-950/30 p-5 shadow-md space-y-4">
+          /* Interactive Selection (New or Editing) */
+          <article className="rounded-2xl border-2 border-blue-400 bg-blue-50/80 dark:border-blue-500/40 dark:bg-blue-950/30 p-5 shadow-md space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200 font-extrabold text-sm">
-                <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
-                <span>⚠️ تأكيد السنتر والميعاد الحضوري النهائي (إلزامي)</span>
+              <div className="flex items-center gap-2 text-blue-900 dark:text-blue-200 font-extrabold text-sm">
+                <MapPin className="h-5 w-5 shrink-0 text-blue-600 dark:text-blue-400" />
+                <span>{isConfirmed ? "✏️ تعديل السنتر والميعاد الحضوري" : "⚠️ اختيار وتأكيد السنتر والميعاد الحضوري"}</span>
               </div>
-              <div className="text-xs font-black text-amber-900 dark:text-amber-200 bg-amber-200/80 dark:bg-amber-900/60 px-3 py-1 rounded-xl border border-amber-300 dark:border-amber-700">
-                الاختيار متاح لمرة واحدة فقط 🔒
-              </div>
+              {isConfirmed && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsChangingCenter(false)}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" /> إلغاء
+                </Button>
+              )}
             </div>
 
-            <div className="rounded-xl bg-white/90 dark:bg-background/80 p-3.5 border border-amber-200 dark:border-amber-800/40 space-y-1.5 text-xs">
-              <p className="font-bold text-amber-900 dark:text-amber-200">
-                📌 تنبيه إلزامي لتثبيت مقعدك واعتماد قيدك بالسنتر:
+            <div className="rounded-xl bg-white/90 dark:bg-background/80 p-3.5 border border-blue-200 dark:border-blue-800/40 space-y-1.5 text-xs">
+              <p className="font-bold text-blue-900 dark:text-blue-200">
+                📌 اختر السنتر والميعاد المناسب لك:
               </p>
               <p className="text-muted-foreground leading-relaxed text-[11px]">
-                نظراً لقرب بدء الحصص الحضورية، يرجى اختيار السنتر والميعاد المناسب لك من المجموعات الرسمية أدناه، ثم الضغط على <strong>"تأكيد السنتر والميعاد النهائي"</strong> لتثبيت مقعدك حتى تتمكن الإدارة من إدراجك في كشوف السنتر وتجهيز وطباعة كارنيه الـ ID الخاص بك لتستلمه في أول حصة.
-                <br />
-                <span className="text-red-600 dark:text-red-400 font-bold">ملاحظة:</span> بمجرد الضغط على التأكيد يتم قفل الاختيار نهائياً ولا يمكنك تعديله إلا بالرجوع للإدارة أو مساعد الأدمن.
+                يرجى اختيار السنتر والميعاد المناسب لك من المجموعات الرسمية أدناه، ثم الضغط على <strong>"حفظ السنتر والميعاد"</strong> لتحديث مقعدك في كشوف السنتر وتجهيز كارنيه الـ ID الخاص بك.
               </p>
             </div>
 
@@ -267,7 +407,7 @@ export function ProfileTab({
             </div>
 
             {/* Actions */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-amber-200 dark:border-amber-800/40">
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-blue-200 dark:border-blue-800/40">
               <div className="text-[11px]">
                 {selectedCenter && selectedSlot ? (
                   <span className="text-foreground font-bold flex items-center gap-1.5">
@@ -275,20 +415,54 @@ export function ProfileTab({
                     المختار: {selectedCenter} — {selectedSlot}
                   </span>
                 ) : (
-                  <span className="text-amber-800 dark:text-amber-300 font-medium">👈 برجاء الضغط على أحد السناتر بالأعلى لاختياره</span>
+                  <span className="text-blue-800 dark:text-blue-300 font-medium">👈 برجاء الضغط على أحد السناتر بالأعلى لاختياره</span>
                 )}
               </div>
-              <Button
-                type="button"
-                disabled={!selectedCenter || !selectedSlot || confirmingCenter}
-                onClick={handleConfirmCenter}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-black text-xs h-10 px-5 rounded-xl shadow-md gap-2 cursor-pointer"
-              >
-                {confirmingCenter ? "جاري التأكيد..." : "🔒 تأكيد السنتر والميعاد النهائي (مرة واحدة)"}
-              </Button>
+              <div className="flex items-center gap-2">
+                {isConfirmed && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsChangingCenter(false)}
+                    className="text-xs h-10 px-4 rounded-xl"
+                  >
+                    إلغاء
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  disabled={!selectedCenter || !selectedSlot || confirmingCenter}
+                  onClick={handleConfirmCenter}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-black text-xs h-10 px-5 rounded-xl shadow-md gap-2 cursor-pointer"
+                >
+                  {confirmingCenter ? "جاري الحفظ..." : isConfirmed ? "حفظ وتحديث السنتر والميعاد" : "🔒 تأكيد السنتر والميعاد"}
+                </Button>
+              </div>
             </div>
           </article>
         )
+      ) : (
+        /* Online student who wants to switch to offline */
+        <article className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-blue-600" />
+              الدراسة حضورياً بالسنتر
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              نظامك الحالي أونلاين. هل ترغب في حجز مقعد وحضور الحصص بالسنتر؟
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsChangingCenter(true)}
+            className="gap-1.5 font-bold text-xs border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50"
+          >
+            <Plus className="h-3.5 w-3.5" /> اختيار سنتر وموعد الحضور
+          </Button>
+        </article>
       )}
 
       {/* Info Cards */}
@@ -296,7 +470,28 @@ export function ProfileTab({
         <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
           <h2 className="text-sm font-extrabold text-foreground mb-3">المعلومات الشخصية</h2>
           <dl className="divide-y divide-border">
-            <ProfileInfoRow label="الاسم" value={student.name} />
+            <div className="flex items-center justify-between py-2.5 text-xs">
+              <dt className="text-muted-foreground font-bold">الاسم</dt>
+              <dd className="flex items-center gap-2">
+                <span className="font-extrabold text-foreground">{student.name}</span>
+                {!student.nameChanged ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewName(student.name);
+                      setEditingName(true);
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 px-2 py-0.5 rounded-lg border border-blue-200 dark:border-blue-800 transition-colors"
+                  >
+                    <Edit2 className="h-3 w-3" /> تعديل
+                  </button>
+                ) : (
+                  <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-0.5 bg-muted/60 px-2 py-0.5 rounded-md">
+                    <Lock className="h-2.5 w-2.5" /> تم التعديل
+                  </span>
+                )}
+              </dd>
+            </div>
             <ProfileInfoRow label="رقم الموبايل" value={student.phone} />
             {student.parentPhone && <ProfileInfoRow label="رقم ولي الأمر" value={student.parentPhone} />}
             <ProfileInfoRow label="البريد الإلكتروني" value={student.email || "غير مضاف"} />
