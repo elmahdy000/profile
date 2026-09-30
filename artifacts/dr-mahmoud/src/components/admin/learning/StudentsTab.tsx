@@ -1201,6 +1201,31 @@ export function StudentsTab({
                                 <span>تفعيل الحساب</span>
                               </button>
                             )}
+                            {s.paymentStatus !== "paid" ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  onUpdatePaymentStatus(s, "paid");
+                                  setOpenDropdownId(null);
+                                }}
+                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50"
+                              >
+                                <CreditCard className="h-3.5 w-3.5 text-emerald-600" />
+                                <span>تأكيد دفع الشهر (30 يوم) ✅</span>
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  onUpdatePaymentStatus(s, "unpaid");
+                                  setOpenDropdownId(null);
+                                }}
+                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                              >
+                                <XCircle className="h-3.5 w-3.5 text-rose-500" />
+                                <span>تحويل للباقة المجانية</span>
+                              </button>
+                            )}
                             {s.status !== "suspended" && (
                               <button
                                 type="button"
