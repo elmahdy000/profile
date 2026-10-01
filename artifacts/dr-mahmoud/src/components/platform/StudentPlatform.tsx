@@ -12,6 +12,7 @@ import {
   FolderOpen,
   Home,
   Loader2,
+  Lock,
   LogOut,
   Play,
   ShieldCheck,
