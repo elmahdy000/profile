@@ -100,7 +100,7 @@ router.get("/learning/files", requireStudent, async (_req, res, next) => {
           : canStudentAccessContent(student, file.category, file.stage, file.stages, file.courseId))
         .map(({ storageName: _storageName, ...file }) => {
           const vList = linkedVideos.get(file.id) ?? [];
-          const isFreePreviewAttachment = vList.some((v) => v.isPublished && (v.order === 0 || v.order === 1));
+          const isFreePreviewAttachment = vList.some((v) => v.isPublished && v.order <= 2);
           const paymentLocked = isUnpaid && !isFreePreviewAttachment;
           return {
             ...file,
@@ -454,7 +454,7 @@ router.get(["/learning/files/:id/preview", "/learning/files/:id/download"], asyn
       ).map((row) => row.video);
 
       const isFreePreviewAttachment = linkedVideos.some(
-        (v) => v.isPublished && (v.order === 0 || v.order === 1)
+        (v) => v.isPublished && v.order <= 2
       );
 
       if (!isFreePreviewAttachment) {

@@ -401,8 +401,9 @@ router.get("/videos/:id/stream-url", async (req, res, next) => {
         }
       }
 
+      const courseKey = video.courseId ? eq(videosTable.courseId, video.courseId) : eq(videosTable.category, video.category);
       const firstTwoVideos = await db.select({ id: videosTable.id }).from(videosTable)
-        .where(video.courseId ? eq(videosTable.courseId, video.courseId) : eq(videosTable.category, video.category))
+        .where(and(courseKey, eq(videosTable.isPublished, true)))
         .orderBy(asc(videosTable.order), asc(videosTable.id)).limit(2);
       const isPreviewVideo = firstTwoVideos.some((row) => row.id === video.id);
       const suppliedKeys = String(req.headers["x-unlock-keys"] ?? "").toLowerCase()

@@ -1115,7 +1115,7 @@ export function VideoLessonsSection({
                 files={files}
                 quizzes={quizzes}
                 onStartQuiz={onStartQuiz}
-                onSelectLesson={setActivePlayer}
+                onSelectLesson={(lesson) => handlePlayClick(lesson)}
                 onClose={() => setActivePlayer(null)}
               />
             );

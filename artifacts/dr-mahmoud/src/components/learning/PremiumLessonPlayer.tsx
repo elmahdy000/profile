@@ -576,6 +576,11 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
   }, []);
 
   const refreshStreamUrl = async (retryCount = 0) => {
+    if (item.paymentLocked || item.youtubeUrl === "locked") {
+      setPlayerError(true);
+      setPlayerErrorMessage("هذا الدرس متاح فقط بعد سداد اشتراك الشهر الجديد وتأكيد الدفع من الإدارة.");
+      return;
+    }
     if (refreshAttempted.current && retryCount === 0) {
       return;
     }
@@ -1035,5 +1040,50 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
 }
 
 function Playlist({ lessons, active, onSelect }: { lessons: VideoItem[]; active: VideoItem; onSelect: (lesson: VideoItem) => void }) {
-  return <><div className="border-b border-white/10 p-4"><p className="text-xs font-bold text-sky-400">محتوى الكورس</p><p className="mt-1 text-sm text-slate-300">{lessons.length} درس</p></div><div className="min-h-0 flex-1 overflow-y-auto p-2">{lessons.map((lesson, index) => { const selected = lesson.id === active.id; const completed = lesson.id ? (readJson<Record<number,number>>("dr_mahmoud_watch_progress", {})[lesson.id] || 0) >= 90 : false; return <button key={lesson.id || lesson.title} onClick={() => onSelect(lesson)} aria-current={selected ? "true" : undefined} className={`mb-1 flex min-h-16 w-full items-center gap-3 rounded-xl p-3 text-right transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${selected ? "bg-sky-500/15 text-white" : "text-slate-300 hover:bg-white/5"}`}><span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg text-xs font-bold ${selected ? "bg-sky-500 text-slate-950" : completed ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5"}`}>{completed ? <Check className="h-4 w-4"/> : index + 1}</span><span className="min-w-0 flex-1"><span className="line-clamp-2 text-xs font-bold leading-5">{lesson.title}</span><span className="mt-0.5 block text-[10px] text-slate-500">{lesson.durationText || "فيديو"}</span></span>{selected && <Play className="h-4 w-4 fill-sky-400 text-sky-400"/>}</button>; })}</div></>;
+  return (
+    <>
+      <div className="border-b border-white/10 p-4">
+        <p className="text-xs font-bold text-sky-400">محتوى الكورس</p>
+        <p className="mt-1 text-sm text-slate-300">{lessons.length} درس</p>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto p-2">
+        {lessons.map((lesson, index) => {
+          const selected = lesson.id === active.id;
+          const completed = lesson.id ? (readJson<Record<number,number>>("dr_mahmoud_watch_progress", {})[lesson.id] || 0) >= 90 : false;
+          const isLocked = lesson.paymentLocked || lesson.youtubeUrl === "locked";
+          return (
+            <button
+              key={lesson.id || lesson.title}
+              onClick={() => onSelect(lesson)}
+              aria-current={selected ? "true" : undefined}
+              className={`mb-1 flex min-h-16 w-full items-center gap-3 rounded-xl p-3 text-right transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+                selected ? "bg-sky-500/15 text-white" : "text-slate-300 hover:bg-white/5"
+              }`}
+            >
+              <span
+                className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg text-xs font-bold ${
+                  selected
+                    ? "bg-sky-500 text-slate-950"
+                    : isLocked
+                    ? "bg-amber-500/20 text-amber-400"
+                    : completed
+                    ? "bg-emerald-500/20 text-emerald-400"
+                    : "bg-white/5"
+                }`}
+              >
+                {isLocked ? <Lock className="h-3.5 w-3.5 text-amber-400" /> : completed ? <Check className="h-4 w-4" /> : index + 1}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="line-clamp-2 text-xs font-bold leading-5">{lesson.title}</span>
+                <span className="mt-0.5 block text-[10px] text-slate-500">
+                  {isLocked ? "مقفول (يلزم الاشتراك)" : lesson.durationText || "فيديو"}
+                </span>
+              </span>
+              {selected && <Play className="h-4 w-4 fill-sky-400 text-sky-400" />}
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
 }

@@ -951,7 +951,15 @@ export function StudentPlatform() {
             <div className="min-w-0 flex-1">
               <strong className="block truncate text-[12px] font-bold text-white">{student.name}</strong>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[10px] text-slate-400">طالب متفعّل</span>
+                {isUnpaid ? (
+                  <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                    باقة المعاينة
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                    مشترك مفعّل ✅
+                  </span>
+                )}
                 {student.accessCode && (
                   <span className="font-mono text-[11px] font-extrabold text-[#60A5FA] bg-blue-950/60 px-1.5 py-0.5 rounded border border-blue-800/50 dir-ltr">
                     {student.accessCode}
@@ -963,28 +971,42 @@ export function StudentPlatform() {
 
           {/* Navigation Items (Scrollable middle section) */}
           <nav className="flex-1 min-h-0 overflow-y-auto overscroll-contain py-3 px-2.5 space-y-1">
-            {nav.map(([value, label, Icon]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => {
-                  setTab(value);
-                  setSidebarOpen(false);
-                }}
-                aria-current={tab === value ? "page" : undefined}
-                className={`relative flex min-h-[42px] w-full items-center gap-3 rounded-xl px-3 text-right text-[13px] font-bold transition-all duration-150 cursor-pointer ${
-                  tab === value
-                    ? "bg-blue-600/15 text-[#3B82F6] font-extrabold border border-blue-500/30"
-                    : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
-                }`}
-              >
-                {tab === value && (
-                  <span className="absolute right-0 top-2 bottom-2 w-1 rounded-l-full bg-[#1769FF]" />
-                )}
-                <Icon className={`h-[18px] w-[18px] shrink-0 ${tab === value ? "text-[#3B82F6]" : "opacity-75"}`} />
-                <span className="truncate">{label}</span>
-              </button>
-            ))}
+            {nav.map(([value, label, Icon]) => {
+              const isLockedTab = isUnpaid && ["quizzes", "essay-exams", "self-assessment", "files", "summaries", "compiler"].includes(value);
+              const isPreviewTab = isUnpaid && value === "lessons";
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => {
+                    setTab(value);
+                    setSidebarOpen(false);
+                  }}
+                  aria-current={tab === value ? "page" : undefined}
+                  className={`relative flex min-h-[42px] w-full items-center gap-3 rounded-xl px-3 text-right text-[13px] font-bold transition-all duration-150 cursor-pointer ${
+                    tab === value
+                      ? "bg-blue-600/15 text-[#3B82F6] font-extrabold border border-blue-500/30"
+                      : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+                  }`}
+                >
+                  {tab === value && (
+                    <span className="absolute right-0 top-2 bottom-2 w-1 rounded-l-full bg-[#1769FF]" />
+                  )}
+                  <Icon className={`h-[18px] w-[18px] shrink-0 ${tab === value ? "text-[#3B82F6]" : "opacity-75"}`} />
+                  <span className="truncate flex-1">{label}</span>
+                  {isLockedTab && (
+                    <span className="rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-400 border border-amber-500/20 flex items-center gap-1 shrink-0">
+                      <Lock className="h-3 w-3" /> مقفول
+                    </span>
+                  )}
+                  {isPreviewTab && (
+                    <span className="rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/20 shrink-0">
+                      معاينة مجانية ✨
+                    </span>
+                  )}
+                </button>
+              );
+            })}
             <a
               href="/honor-board"
               target="_blank"

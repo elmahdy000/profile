@@ -93,7 +93,7 @@ router.get("/learning/quizzes", requireStudent, async (_req, res, next) => {
               : progressLocked
                 ? `أكمل ${quiz.requiredProgress}% من الدرس أولًا`
                 : null,
-            questions: quiz.questions.map(
+            questions: paymentLocked ? [] : quiz.questions.map(
               ({ correctIndex: _correctIndex, correctAnswer: _correctAnswer, ...question }) => question,
             ),
           };
