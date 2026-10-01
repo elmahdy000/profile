@@ -257,9 +257,9 @@ router.get("/videos", async (req, res, next) => {
       }
     }
 
-    // Unpaid/Pending students get EXACTLY 1 free preview video per course (video #1 of each course).
+    // Unpaid/Pending students get EXACTLY 2 free preview videos per course (video #1 and #2 of each course).
     const isUnpaidStudent = approvedStudent.status !== "approved" || approvedStudent.paymentStatus !== "paid";
-    const maxAllowedFreeVideos = 1;
+    const maxAllowedFreeVideos = 2;
     const freePreviewIds = new Set<number>();
     if (isUnpaidStudent) {
       const videosByCourse: Record<string, typeof videos> = {};
@@ -302,12 +302,14 @@ router.get("/videos", async (req, res, next) => {
     // 5. Return masked videos to the student
     const studentVideos = allowedVideos.map((v) => {
       const isFirstVideo = firstVideoIds.has(v.id);
+      const isPreviewVideo = freePreviewIds.has(v.id);
       const isUnlocked =
         !v.isProtected ||
         isFirstVideo ||
+        isPreviewVideo ||
         (v.accessKey && studentKeys.includes(v.accessKey.toLowerCase().trim()));
 
-      // Payment gating: unpaid students only get 1 free preview video (video #1 of each course)
+      // Payment gating: unpaid students only get 2 free preview videos (videos #1 and #2 of each course)
       const paymentLocked = isUnpaidStudent && !freePreviewIds.has(v.id);
 
       const isLocalFile = v.youtubeUrl.startsWith("/uploads/");
@@ -399,26 +401,27 @@ router.get("/videos/:id/stream-url", async (req, res, next) => {
         }
       }
 
-      const firstVideo = await db.select({ id: videosTable.id }).from(videosTable)
+      const firstTwoVideos = await db.select({ id: videosTable.id }).from(videosTable)
         .where(video.courseId ? eq(videosTable.courseId, video.courseId) : eq(videosTable.category, video.category))
-        .orderBy(asc(videosTable.order), asc(videosTable.id)).limit(1).then((rows) => rows[0]);
+        .orderBy(asc(videosTable.order), asc(videosTable.id)).limit(2);
+      const isPreviewVideo = firstTwoVideos.some((row) => row.id === video.id);
       const suppliedKeys = String(req.headers["x-unlock-keys"] ?? "").toLowerCase()
         .split(/[\s,]+/).map((key) => key.trim()).filter(Boolean);
-      const unlocked = !video.isProtected || firstVideo?.id === video.id ||
+      const unlocked = !video.isProtected || isPreviewVideo ||
         Boolean(video.accessKey && suppliedKeys.includes(video.accessKey.toLowerCase().trim()));
       if (!unlocked) {
         res.status(403).json({ error: "This content is protected and locked." });
         return;
       }
 
-      if (student.status !== "approved" && student.paymentStatus !== "paid") {
-        const maxFree = student.educationSystem === "university" ? 1 : 2;
+      if (student.status !== "approved" || student.paymentStatus !== "paid") {
+        const maxFree = 2;
         const courseKey = video.courseId ? eq(videosTable.courseId, video.courseId) : eq(videosTable.category, video.category);
         const courseVideos = await db.select({ id: videosTable.id }).from(videosTable)
           .where(and(courseKey, eq(videosTable.isPublished, true)))
           .orderBy(asc(videosTable.order), asc(videosTable.id));
         if (courseVideos.findIndex((entry) => entry.id === video.id) >= maxFree) {
-          res.status(403).json({ error: "يلزم تأكيد الدفع لفتح هذا الفيديو", code: "PAYMENT_REQUIRED" });
+          res.status(403).json({ error: "يلزم تأكيد الدفع لفتح هذا الفيديو. متاح فقط أول فيديوهين للمعاينة المجانية.", code: "PAYMENT_REQUIRED" });
           return;
         }
       }

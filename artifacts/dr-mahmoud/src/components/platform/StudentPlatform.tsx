@@ -59,6 +59,7 @@ import { SelfAssessmentTab } from "./tabs/SelfAssessmentTab";
 import { EssayExamsTab } from "./tabs/EssayExamsTab";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { FilePreviewModal } from "./FilePreviewModal";
+import { LockedContentNotice } from "./tabs/LockedContentNotice";
 
 import type {
   Student,
@@ -291,6 +292,8 @@ export function StudentPlatform() {
   const [autoOpenSummaryUpload, setAutoOpenSummaryUpload] = useState(false);
   const latestNotificationIdRef = useRef(0);
   const handleNotificationClickRef = useRef<(n: StudentNotification) => void>(() => {});
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const isUnpaid = Boolean(student && (student.status !== "approved" || student.paymentStatus !== "paid"));
 
   const {
     isSupported: isPushSupported,
@@ -435,6 +438,15 @@ export function StudentPlatform() {
   }, [activeQuiz, quizResult]);
 
   const startQuiz = (quiz: Quiz) => {
+    if (isUnpaid) {
+      toast({
+        variant: "destructive",
+        title: "🔒 يلزم سداد اشتراك الشهر أولاً",
+        description: "تم قفل الاختبارات لحين سداد اشتراك الشهر الجديد وتأكيد الدفع. متاح لك فقط أول فيديوهين للمعاينة المجانية.",
+      });
+      setShowPaymentModal(true);
+      return;
+    }
     const hasAttemptLimit = quiz.maxAttempts !== undefined && quiz.maxAttempts !== null && quiz.maxAttempts > 0;
     if (quiz.locked || (hasAttemptLimit && (quiz.attemptsUsed || 0) >= (quiz.maxAttempts as number))) {
       toast({
@@ -1202,23 +1214,77 @@ export function StudentPlatform() {
               onStartQuiz={startQuiz}
             />
           ) : tab === "essay-exams" ? (
-            <EssayExamsTab student={student} onBackToDashboard={() => setTab("dashboard")} />
+            isUnpaid ? (
+              <LockedContentNotice
+                title="الامتحانات المقالية"
+                description="تم قفل الامتحانات المقالية ونماذج الإجابة لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
+                onGoToPreview={() => setTab("lessons")}
+                onOpenPayment={() => setShowPaymentModal(true)}
+              />
+            ) : (
+              <EssayExamsTab student={student} onBackToDashboard={() => setTab("dashboard")} />
+            )
           ) : tab === "summaries" ? (
-            <StudentSummariesTab
-              student={student}
-              courses={videos.map((v) => ({ id: v.id, title: v.title }))}
-              lessons={videos.map((v) => ({ id: v.id, title: v.title, courseId: v.courseId }))}
-              autoOpenUpload={autoOpenSummaryUpload}
-              onModalClosed={() => setAutoOpenSummaryUpload(false)}
-            />
+            isUnpaid ? (
+              <LockedContentNotice
+                title="ملخصات الطلاب ومذكرات الشرح"
+                description="تم قفل قسم ملخصات الطلاب والمذكرات لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
+                onGoToPreview={() => setTab("lessons")}
+                onOpenPayment={() => setShowPaymentModal(true)}
+              />
+            ) : (
+              <StudentSummariesTab
+                student={student}
+                courses={videos.map((v) => ({ id: v.id, title: v.title }))}
+                lessons={videos.map((v) => ({ id: v.id, title: v.title, courseId: v.courseId }))}
+                autoOpenUpload={autoOpenSummaryUpload}
+                onModalClosed={() => setAutoOpenSummaryUpload(false)}
+              />
+            )
           ) : tab === "compiler" ? (
-            <CppCompilerPanel />
+            isUnpaid ? (
+              <LockedContentNotice
+                title="مترجم ومحرر البرمجة C++"
+                description="تم قفل محرر ومترجم البرمجة C++ لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
+                onGoToPreview={() => setTab("lessons")}
+                onOpenPayment={() => setShowPaymentModal(true)}
+              />
+            ) : (
+              <CppCompilerPanel />
+            )
           ) : tab === "files" ? (
-            <FilesTab files={files} />
+            isUnpaid ? (
+              <LockedContentNotice
+                title="المذكرات والملفات التعليمية"
+                description="تم قفل المذكرات والملفات التعليمية الخاصة لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
+                onGoToPreview={() => setTab("lessons")}
+                onOpenPayment={() => setShowPaymentModal(true)}
+              />
+            ) : (
+              <FilesTab files={files} />
+            )
           ) : tab === "quizzes" ? (
-            <QuizzesTab quizzes={quizzes} onStartQuiz={startQuiz} />
+            isUnpaid ? (
+              <LockedContentNotice
+                title="الاختبارات الدورية والإلكترونية"
+                description="تم قفل الاختبارات والامتحانات التراكمية لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
+                onGoToPreview={() => setTab("lessons")}
+                onOpenPayment={() => setShowPaymentModal(true)}
+              />
+            ) : (
+              <QuizzesTab quizzes={quizzes} onStartQuiz={startQuiz} />
+            )
           ) : tab === "self-assessment" ? (
-            <SelfAssessmentTab student={student} onBackToDashboard={() => setTab("dashboard")} />
+            isUnpaid ? (
+              <LockedContentNotice
+                title="تقييم القدرات الذاتي وبنك الأسئلة"
+                description="تم قفل اختبارات تقييم القدرات وتحديد المستوى لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
+                onGoToPreview={() => setTab("lessons")}
+                onOpenPayment={() => setShowPaymentModal(true)}
+              />
+            ) : (
+              <SelfAssessmentTab student={student} onBackToDashboard={() => setTab("dashboard")} />
+            )
           ) : (
             <ProfileTab student={student} onStudentChange={setStudent} />
           )}</div>
@@ -1762,6 +1828,8 @@ export function StudentPlatform() {
         {student && (
           <MonthlyPaymentReminderModal
             student={student}
+            forceOpen={showPaymentModal}
+            onCloseForceOpen={() => setShowPaymentModal(false)}
             onReceiptUploaded={() => {
               void loadLearningData();
               api<{ student: Student | null }>("/api/student/me")

@@ -103,6 +103,7 @@ router.get("/learning/essay-exams", requireStudent, async (req, res, next) => {
       : [];
 
     const submissionMap = new Map(submissions.map((s) => [s.examId, s]));
+    const isUnpaid = student.status !== "approved" || student.paymentStatus !== "paid";
 
     const result = relevantExams.map((exam) => {
       const sub = submissionMap.get(exam.id);
@@ -123,6 +124,8 @@ router.get("/learning/essay-exams", requireStudent, async (req, res, next) => {
         questionsCount,
         allowImageUpload: exam.allowImageUpload,
         isSubmitted,
+        isLocked: isUnpaid,
+        lockedReason: isUnpaid ? "تم قفل الاختبارات المقالية لحين سداد اشتراك الشهر الجديد وتأكيد الدفع." : null,
         submission: sub
           ? {
               id: sub.id,
@@ -149,6 +152,14 @@ router.get("/learning/essay-exams/:id", requireStudent, async (req, res, next) =
     await ensureEssayExamsTables();
     const id = Number(req.params.id);
     const student = res.locals.student as typeof studentsTable.$inferSelect;
+
+    if (student.status !== "approved" || student.paymentStatus !== "paid") {
+      res.status(403).json({
+        error: "تم قفل الاختبارات المقالية لحين سداد اشتراك الشهر الجديد وتأكيد الدفع.",
+        code: "PAYMENT_REQUIRED",
+      });
+      return;
+    }
 
     const [exam] = await db
       .select()
@@ -209,6 +220,14 @@ router.post("/learning/essay-exams/:id/start", requireStudent, async (req, res, 
     const id = Number(req.params.id);
     const student = res.locals.student as typeof studentsTable.$inferSelect;
 
+    if (student.status !== "approved" || student.paymentStatus !== "paid") {
+      res.status(403).json({
+        error: "تم قفل الاختبارات المقالية لحين سداد اشتراك الشهر الجديد وتأكيد الدفع.",
+        code: "PAYMENT_REQUIRED",
+      });
+      return;
+    }
+
     const [exam] = await db
       .select()
       .from(essayExamsTable)
@@ -267,6 +286,15 @@ router.post("/learning/essay-exams/:id/submit", requireStudent, async (req, res,
     await ensureEssayExamsTables();
     const id = Number(req.params.id);
     const student = res.locals.student as typeof studentsTable.$inferSelect;
+
+    if (student.status !== "approved" || student.paymentStatus !== "paid") {
+      res.status(403).json({
+        error: "تم قفل الاختبارات المقالية لحين سداد اشتراك الشهر الجديد وتأكيد الدفع.",
+        code: "PAYMENT_REQUIRED",
+      });
+      return;
+    }
+
     const { answers, timeSpentSeconds } = req.body;
 
     const [exam] = await db

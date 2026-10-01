@@ -78,14 +78,17 @@ router.get("/learning/quizzes", requireStudent, async (_req, res, next) => {
           const unlimitedAttempts = !quiz.maxAttempts || quiz.maxAttempts <= 0;
           const effectiveMaxAttempts = unlimitedAttempts ? null : quiz.maxAttempts + extraGranted;
           const attemptsLocked = !unlimitedAttempts && attemptsUsed >= (effectiveMaxAttempts ?? 0);
+          const paymentLocked = student.status !== "approved" || student.paymentStatus !== "paid";
           return {
             ...quiz,
             maxAttempts: effectiveMaxAttempts,
             extraAttemptsGranted: extraGranted,
             attemptsUsed,
             bestScore,
-            locked: progressLocked || attemptsLocked,
-            lockedReason: attemptsLocked
+            locked: paymentLocked || progressLocked || attemptsLocked,
+            lockedReason: paymentLocked
+              ? "هذا الاختبار مقفل لحين سداد اشتراك الشهر الجديد وتأكيد الدفع"
+              : attemptsLocked
               ? "استخدمت كل المحاولات المتاحة"
               : progressLocked
                 ? `أكمل ${quiz.requiredProgress}% من الدرس أولًا`
@@ -977,6 +980,13 @@ router.post(
         return;
       }
       const student = res.locals.student as typeof studentsTable.$inferSelect;
+      if (student.status !== "approved" || student.paymentStatus !== "paid") {
+        res.status(403).json({
+          error: "تم قفل الاختبارات لحين سداد اشتراك الشهر الجديد وتأكيد الدفع.",
+          code: "PAYMENT_REQUIRED",
+        });
+        return;
+      }
       if (!canStudentAccessContent(student, quiz.category, quiz.stage, quiz.stages, quiz.courseId)) {
         res.status(403).json({ error: "الاختبار مش ضمن الكورس المسجل ليك" });
         return;

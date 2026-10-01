@@ -20,11 +20,15 @@ import type { Student } from "@/types/platform";
 interface MonthlyPaymentReminderModalProps {
   student: Student;
   onReceiptUploaded: () => void;
+  forceOpen?: boolean;
+  onCloseForceOpen?: () => void;
 }
 
 export function MonthlyPaymentReminderModal({
   student,
   onReceiptUploaded,
+  forceOpen,
+  onCloseForceOpen,
 }: MonthlyPaymentReminderModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showUploadBox, setShowUploadBox] = useState(false);
@@ -34,6 +38,10 @@ export function MonthlyPaymentReminderModal({
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    if (forceOpen) {
+      setIsOpen(true);
+      return;
+    }
     // Only show if student is not paid
     if (student.paymentStatus !== "paid") {
       const dismissed = sessionStorage.getItem("dr_mahmoud_october_payment_dismissed");
@@ -41,7 +49,7 @@ export function MonthlyPaymentReminderModal({
         setIsOpen(true);
       }
     }
-  }, [student.paymentStatus]);
+  }, [student.paymentStatus, forceOpen]);
 
   if (!isOpen || student.paymentStatus === "paid") {
     return null;
@@ -50,6 +58,7 @@ export function MonthlyPaymentReminderModal({
   const handleDismiss = () => {
     sessionStorage.setItem("dr_mahmoud_october_payment_dismissed", "true");
     setIsOpen(false);
+    onCloseForceOpen?.();
   };
 
   const handleFileSelect = (file: File) => {
@@ -145,30 +154,30 @@ export function MonthlyPaymentReminderModal({
           {/* Clarity Feature Comparison: What is Open vs Locked */}
           <div className="space-y-2.5">
             <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              📌 حالة الوصول لحسابك في الباقة المجانية:
+              📌 حالة الوصول لمحتوى المنصة بحسابك:
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
               <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 dark:border-emerald-900/40 dark:bg-emerald-950/20 p-3 space-y-1.5">
                 <span className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                  مفتوح ومتاح لك مجاناً:
+                  المتاح لك حالياً للمعاينة:
                 </span>
                 <ul className="list-disc list-inside text-[11px] text-emerald-900/80 dark:text-emerald-200/80 space-y-1 pr-1 font-medium">
-                  <li>أداء الاختبارات الإلكترونية (Quizzes)</li>
-                  <li>الامتحانات المقالية وتصحيحها</li>
-                  <li>اختبارات قياس القدرات وتحديد المستوى</li>
-                  <li>معاينة أول درسين من الكورس</li>
+                  <li>أول فيديوهين فقط كمعاينة مجانية (الدرس 1 و 2)</li>
                 </ul>
               </div>
 
-              <div className="rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/40 p-3 space-y-1.5">
-                <span className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <Lock className="h-4 w-4 text-amber-500 shrink-0" />
-                  يتطلب دفع الشهر الجديد:
+              <div className="rounded-xl border border-amber-200 bg-amber-50/60 dark:border-amber-900/40 dark:bg-amber-950/20 p-3 space-y-1.5">
+                <span className="font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                  <Lock className="h-4 w-4 text-amber-600 shrink-0" />
+                  مقفول لحين تأكيد الدفع:
                 </span>
-                <ul className="list-disc list-inside text-[11px] text-slate-600 dark:text-slate-400 space-y-1 pr-1 font-medium">
-                  <li>فتح جميع دروس وفيديوهات الشهر القادمة</li>
-                  <li>تحميل مذكرات الـ PDF والملفات الخاصة</li>
+                <ul className="list-disc list-inside text-[11px] text-amber-900/80 dark:text-amber-200/80 space-y-1 pr-1 font-medium">
+                  <li>باقي فيديوهات ودروس الكورس (من الدرس 3+)</li>
+                  <li>كافة الاختبارات والامتحانات الدورية</li>
+                  <li>الاختبارات المقالية ونماذج الإجابة</li>
+                  <li>تقييم القدرات الذاتي وبنك الأسئلة</li>
+                  <li>المذكرات والملفات التعليمية</li>
                 </ul>
               </div>
             </div>
@@ -191,7 +200,7 @@ export function MonthlyPaymentReminderModal({
                 onClick={handleDismiss}
                 className="w-full sm:w-auto h-11 text-xs font-bold rounded-xl border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                متابعة التصفح وأداء الاختبارات 🚀
+                مشاهدة فيديوهات المعاينة المجانية 🎥
               </Button>
             </div>
           ) : isPendingReview ? (

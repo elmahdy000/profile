@@ -211,6 +211,21 @@ router.get("/learning/self-assessment/eligibility", async (req, res, next) => {
   try {
     const student = await getApprovedStudent(req);
     if (student) {
+      if (student.status !== "approved" || student.paymentStatus !== "paid") {
+        res.json({
+          success: true,
+          isEnrolled: true,
+          canTakeTest: false,
+          paymentLocked: true,
+          unlimited: false,
+          studentId: student.id,
+          studentName: student.name,
+          studentPhone: student.phone,
+          studentGrade: student.grade,
+          message: "تم قفل التقييم الذاتي لحين سداد اشتراك الشهر الجديد وتأكيد الدفع.",
+        });
+        return;
+      }
       const stTrack = getStudentTrack(student);
       res.json({
         success: true,
@@ -406,6 +421,13 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
 
     const loggedStudent = await getApprovedStudent(req);
     if (loggedStudent) {
+      if (loggedStudent.status !== "approved" || loggedStudent.paymentStatus !== "paid") {
+        res.status(403).json({
+          error: "تم قفل التقييم الذاتي لحين سداد اشتراك الشهر الجديد وتأكيد الدفع.",
+          code: "PAYMENT_REQUIRED",
+        });
+        return;
+      }
       isEnrolledStudent = true;
       studentId = loggedStudent.id;
       activePhone = loggedStudent.phone;
@@ -428,6 +450,7 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
           name: studentsTable.name,
           phone: studentsTable.phone,
           status: studentsTable.status,
+          paymentStatus: studentsTable.paymentStatus,
           grade: studentsTable.grade,
           educationGrade: studentsTable.educationGrade,
           languageTrack: studentsTable.languageTrack,
@@ -439,6 +462,13 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
         .limit(1);
 
       if (existingStudent && existingStudent.status === "approved") {
+        if (existingStudent.paymentStatus !== "paid") {
+          res.status(403).json({
+            error: "تم قفل التقييم الذاتي لحين سداد اشتراك الشهر الجديد وتأكيد الدفع.",
+            code: "PAYMENT_REQUIRED",
+          });
+          return;
+        }
         isEnrolledStudent = true;
         studentId = existingStudent.id;
         activeName = existingStudent.name;
@@ -722,6 +752,21 @@ router.post("/learning/self-assessment/submit", async (req, res, next) => {
     if (!session) {
       res.status(404).json({ error: "جلسة التقييم غير موجودة" });
       return;
+    }
+
+    if (session.studentId) {
+      const [sessionStudent] = await db
+        .select({ status: studentsTable.status, paymentStatus: studentsTable.paymentStatus })
+        .from(studentsTable)
+        .where(eq(studentsTable.id, session.studentId))
+        .limit(1);
+      if (sessionStudent && (sessionStudent.status !== "approved" || sessionStudent.paymentStatus !== "paid")) {
+        res.status(403).json({
+          error: "تم قفل التقييم الذاتي لحين سداد اشتراك الشهر الجديد وتأكيد الدفع.",
+          code: "PAYMENT_REQUIRED",
+        });
+        return;
+      }
     }
 
     if (session.status === "completed" && session.details) {

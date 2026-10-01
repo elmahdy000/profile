@@ -88,6 +88,7 @@ router.get("/learning/files", requireStudent, async (_req, res, next) => {
     for (const link of links) {
       linkedVideos.set(link.fileId, [...(linkedVideos.get(link.fileId) ?? []), link.video]);
     }
+    const isUnpaid = student.status !== "approved" || student.paymentStatus !== "paid";
     res.json(
       files
         .filter((file) => file.targetType === "videos"
@@ -97,7 +98,16 @@ router.get("/learning/files", requireStudent, async (_req, res, next) => {
               ),
             )
           : canStudentAccessContent(student, file.category, file.stage, file.stages, file.courseId))
-        .map(({ storageName: _storageName, ...file }) => file),
+        .map(({ storageName: _storageName, ...file }) => {
+          const vList = linkedVideos.get(file.id) ?? [];
+          const isFreePreviewAttachment = vList.some((v) => v.isPublished && (v.order === 0 || v.order === 1));
+          const paymentLocked = isUnpaid && !isFreePreviewAttachment;
+          return {
+            ...file,
+            paymentLocked,
+            isLocked: paymentLocked,
+          };
+        }),
     );
   } catch (error) {
     next(error);
