@@ -54,6 +54,7 @@ import { DashboardTab } from "./tabs/DashboardTab";
 import { AccessScreen } from "./tabs/AccessScreen";
 import { StudentSummariesTab } from "./tabs/StudentSummariesTab";
 import { IncompleteProfileModal } from "./tabs/IncompleteProfileModal";
+import { MonthlyPaymentReminderModal } from "./tabs/MonthlyPaymentReminderModal";
 import { SelfAssessmentTab } from "./tabs/SelfAssessmentTab";
 import { EssayExamsTab } from "./tabs/EssayExamsTab";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -1756,6 +1757,17 @@ export function StudentPlatform() {
           <IncompleteProfileModal
             student={student}
             onStudentUpdated={(updatedStudent) => setStudent(updatedStudent)}
+          />
+        )}
+        {student && (
+          <MonthlyPaymentReminderModal
+            student={student}
+            onReceiptUploaded={() => {
+              void loadLearningData();
+              api<{ student: Student | null }>("/api/student/me")
+                .then((r) => setStudent(r.student))
+                .catch(() => {});
+            }}
           />
         )}
       </AnimatePresence>
