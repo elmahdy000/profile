@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   FileEdit,
   Plus,
@@ -21,10 +21,24 @@ import {
   ExternalLink,
   ChevronDown,
   Filter,
+  BookOpen,
+  FileText,
+  Check,
+  HelpCircle,
+  FolderTree,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ACADEMIC_TRACKS } from "@/data/academic";
+import { EssayBankTab, type EssayBankQuestion } from "./EssayBankTab";
+
+interface CurriculumTreeNode {
+  stage: string;
+  units: Array<{
+    unit: string;
+    lessons: string[];
+  }>;
+}
 
 interface EssayQuestion {
   id: string;
@@ -42,6 +56,8 @@ interface EssayExam {
   description?: string;
   stage?: string;
   stages?: string[];
+  unit?: string;
+  lesson?: string;
   category?: string;
   durationMinutes: number;
   totalPoints: number;
@@ -50,6 +66,7 @@ interface EssayExam {
   isPublished: boolean;
   submissionsCount?: number;
   pendingCount?: number;
+  submittedCount?: number;
   reviewedCount?: number;
   createdAt?: string;
 }
@@ -86,9 +103,86 @@ export function EssayExamsAdminTab({
   const [exams, setExams] = useState<EssayExam[]>([]);
   const [submissions, setSubmissions] = useState<EssaySubmission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeSubTab, setActiveSubTab] = useState<"exams" | "submissions">("exams");
+  const [activeSubTab, setActiveSubTab] = useState<"exams" | "submissions" | "bank">("exams");
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState<string>("all");
+  const [unitFilter, setUnitFilter] = useState<string>("all");
+  const [bankSelectorOpen, setBankSelectorOpen] = useState(false);
+
+  // Curriculum Tree (Real Platform Curriculum: Stage -> Unit -> Lessons)
+  const [curriculumTree, setCurriculumTree] = useState<CurriculumTreeNode[]>([]);
+  const [uploadingExamFile, setUploadingExamFile] = useState(false);
+  const examFileInputRef = useRef<HTMLInputElement>(null);
+  const [customUnitMode, setCustomUnitMode] = useState(false);
+  const [customLessonMode, setCustomLessonMode] = useState(false);
+
+  // Import questions from Essay Test Bank into Exam Form
+  const handleImportFromBank = (selectedFromBank: EssayBankQuestion[]) => {
+    if (selectedFromBank.length === 0) return;
+    const newQuestions: EssayQuestion[] = selectedFromBank.map((q, idx) => ({
+      id: `q_${Date.now()}_${idx}`,
+      prompt: q.prompt,
+      points: q.points || 5,
+      modelAnswer: q.modelAnswer,
+      explanation: q.explanation || "",
+      imageUrl: q.imageUrl || undefined,
+      modelAnswerImageUrl: q.modelAnswerImageUrl || undefined,
+    }));
+
+    setExamFormData((prev) => {
+      const existingValid = prev.questions.filter((q) => q.prompt.trim().length > 0);
+      return {
+        ...prev,
+        questions: [...existingValid, ...newQuestions],
+      };
+    });
+
+    toast({
+      title: "تم استيراد الأسئلة بنجاح",
+      description: `تم إدراج ${newQuestions.length} سؤال من بنك الأسئلة المقالية في هذا الامتحان`,
+    });
+
+    setBankSelectorOpen(false);
+  };
+
+  // Taxonomy & Curriculum Tree from Platform
+  const [taxonomy, setTaxonomy] = useState<{
+    stages: string[];
+    units: { unit: string; lessons: string[] }[];
+  }>({ stages: [], units: [] });
+
+  const loadTaxonomy = async () => {
+    try {
+      const res = await fetch("/api/admin/learning/essay-question-bank/taxonomy", {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTaxonomy({
+          stages: data.stages || [],
+          units: data.units || [],
+        });
+      }
+    } catch {
+      // Non-critical fallback
+    }
+  };
+
+  const loadCurriculumTree = async () => {
+    try {
+      const res = await fetch("/api/admin/learning/essay-exams/curriculum-tree", {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.tree)) {
+          setCurriculumTree(data.tree);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load curriculum tree", err);
+    }
+  };
 
   // Create / Edit Exam Modal
   const [examModalOpen, setExamModalOpen] = useState(false);
@@ -97,7 +191,8 @@ export function EssayExamsAdminTab({
     title: string;
     description: string;
     stage: string;
-    category: string;
+    unit: string;
+    lesson: string;
     durationMinutes: number;
     allowImageUpload: boolean;
     isPublished: boolean;
@@ -105,8 +200,9 @@ export function EssayExamsAdminTab({
   }>({
     title: "",
     description: "",
-    stage: "الصف الثالث الثانوي",
-    category: "الكيمياء العامة",
+    stage: ACADEMIC_TRACKS.flatMap((t) => t.stages)[0] || "",
+    unit: "",
+    lesson: "",
     durationMinutes: 60,
     allowImageUpload: true,
     isPublished: true,
@@ -139,7 +235,7 @@ export function EssayExamsAdminTab({
       const res = await fetch("/api/admin/learning/essay-exams", { credentials: "include" });
       if (!res.ok) throw new Error("تعذر جلب الامتحانات المقالية");
       const data = await res.json();
-      setExams(Array.isArray(data) ? data : []);
+      setExams(Array.isArray(data) ? data : (data?.exams || []));
     } catch (err: any) {
       toast({
         title: "خطأ",
@@ -167,9 +263,10 @@ export function EssayExamsAdminTab({
         // Aggregate across exams
         const res = await fetch("/api/admin/learning/essay-exams", { credentials: "include" });
         if (res.ok) {
-          const examsData: EssayExam[] = await res.json();
+          const rawData = await res.json();
+          const examsList: EssayExam[] = Array.isArray(rawData) ? rawData : (rawData?.exams || []);
           let allSubs: EssaySubmission[] = [];
-          for (const ex of (Array.isArray(examsData) ? examsData : [])) {
+          for (const ex of examsList) {
             const sRes = await fetch(`/api/admin/learning/essay-exams/${ex.id}/submissions`, {
               credentials: "include",
             });
@@ -195,6 +292,8 @@ export function EssayExamsAdminTab({
 
   useEffect(() => {
     loadExams();
+    loadTaxonomy();
+    loadCurriculumTree();
   }, []);
 
   useEffect(() => {
@@ -206,11 +305,21 @@ export function EssayExamsAdminTab({
   // Handle open create exam modal
   const handleOpenCreateModal = () => {
     setEditingExamId(null);
+    setCustomUnitMode(false);
+    setCustomLessonMode(false);
+
+    const initialStage =
+      curriculumTree[0]?.stage || taxonomy.stages[0] || ACADEMIC_TRACKS.flatMap((t) => t.stages)[0] || "";
+    const stageNode = curriculumTree.find((c) => c.stage === initialStage);
+    const initialUnit = stageNode?.units[0]?.unit || "";
+    const initialLesson = stageNode?.units[0]?.lessons[0] || "";
+
     setExamFormData({
-      title: "",
+      title: initialLesson ? `اختبار درس: ${initialLesson}` : "",
       description: "",
-      stage: "الصف الثالث الثانوي",
-      category: "الكيمياء العامة",
+      stage: initialStage,
+      unit: initialUnit,
+      lesson: initialLesson,
       durationMinutes: 60,
       allowImageUpload: true,
       isPublished: true,
@@ -230,11 +339,14 @@ export function EssayExamsAdminTab({
   // Handle open edit exam modal
   const handleOpenEditModal = (exam: EssayExam) => {
     setEditingExamId(exam.id);
+    setCustomUnitMode(false);
+    setCustomLessonMode(false);
     setExamFormData({
       title: exam.title,
       description: exam.description || "",
-      stage: exam.stage || "الصف الثالث الثانوي",
-      category: exam.category || "الكيمياء العامة",
+      stage: exam.stage || ACADEMIC_TRACKS.flatMap((t) => t.stages)[0] || "",
+      unit: exam.unit || "",
+      lesson: exam.lesson || "",
       durationMinutes: exam.durationMinutes || 60,
       allowImageUpload: exam.allowImageUpload ?? true,
       isPublished: exam.isPublished ?? true,
@@ -244,6 +356,86 @@ export function EssayExamsAdminTab({
       })),
     });
     setExamModalOpen(true);
+  };
+
+  // Handle upload full lesson questions file (.docx / .pdf / .txt)
+  const handleUploadQuestionsFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingExamFile(true);
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("defaultStage", examFormData.stage || "");
+      formData.append("defaultUnit", examFormData.unit || "");
+      formData.append("defaultLesson", examFormData.lesson || "");
+      formData.append("defaultPoints", "10");
+
+      const res = await fetch("/api/admin/learning/essay-exams/upload-parse", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "تعذر تحليل وقراءة الملف المرفوع");
+      }
+
+      const data = await res.json();
+      if (!data.questions || data.questions.length === 0) {
+        toast({
+          title: "لم يتم العثور على أسئلة",
+          description: "تأكد من أن الملف يحتوي على أسئلة وحلول نموذجية، أو استعن بالتنسيق التوضيحي",
+          variant: "warning",
+        });
+        return;
+      }
+
+      const importedQuestions: EssayQuestion[] = data.questions.map((q: any, idx: number) => ({
+        id: `q_${Date.now()}_${idx}`,
+        prompt: q.prompt || "",
+        points: Number(q.points) || 10,
+        modelAnswer: q.modelAnswer || "",
+        explanation: q.explanation || "",
+        imageUrl: q.imageUrl || undefined,
+        modelAnswerImageUrl: q.modelAnswerImageUrl || undefined,
+      }));
+
+      const detectedUnit = data.detectedUnit || examFormData.unit;
+      const detectedLesson = data.detectedLesson || examFormData.lesson;
+
+      setExamFormData((prev) => ({
+        ...prev,
+        unit: detectedUnit,
+        lesson: detectedLesson,
+        title: prev.title.trim()
+          ? prev.title
+          : detectedLesson
+          ? `اختبار درس: ${detectedLesson}`
+          : detectedUnit
+          ? `اختبار على: ${detectedUnit}`
+          : "اختبار مقالي تحريري",
+        questions: importedQuestions,
+      }));
+
+      toast({
+        title: "🎉 تم تحليل واستخراج الأسئلة بنجاح!",
+        description: `تم استخراج ${importedQuestions.length} سؤال مع الحلول النموذجية وسلم الدرجات. تم تحديث المعاينة الحية للدرس أدناه.`,
+      });
+    } catch (err: any) {
+      toast({
+        title: "خطأ في معالجة الملف",
+        description: err.message || "حدث خطأ أثناء قراءة ملف الأسئلة",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingExamFile(false);
+      if (examFileInputRef.current) {
+        examFileInputRef.current.value = "";
+      }
+    }
   };
 
   // Add question to builder
@@ -322,7 +514,8 @@ export function EssayExamsAdminTab({
         description: examFormData.description,
         stage: examFormData.stage,
         stages: [examFormData.stage],
-        category: examFormData.category,
+        unit: examFormData.unit,
+        lesson: examFormData.lesson,
         durationMinutes: examFormData.durationMinutes || 60,
         totalPoints: calculatedTotalPoints,
         questions: examFormData.questions,
@@ -349,7 +542,7 @@ export function EssayExamsAdminTab({
 
       toast({
         title: editingExamId ? "تم تحديث الامتحان بنجاح ✅" : "تم إنشاء الامتحان المقالي بنجاح 🎉",
-        description: "الامتحان متاح الآن للطلاب مع مؤقت الـ 60 دقيقة والحل النموذجي",
+        description: "الامتحان متاح الآن للطلاب مع مؤقت الـ 60 دقيقة والحل النموذجي للتقييم الذاتي",
       });
 
       setExamModalOpen(false);
@@ -384,8 +577,23 @@ export function EssayExamsAdminTab({
   };
 
   // Open grading modal for a student submission
-  const handleOpenGradingModal = (sub: EssaySubmission) => {
-    const parentExam = exams.find((e) => e.id === sub.examId);
+  const handleOpenGradingModal = async (sub: EssaySubmission) => {
+    let parentExam = exams.find((e) => e.id === sub.examId);
+    if (!parentExam || !parentExam.questions || parentExam.questions.length === 0) {
+      try {
+        const res = await fetch(`/api/admin/learning/essay-exams/${sub.examId}/submissions`, {
+          credentials: "include",
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.exam) {
+            parentExam = data.exam;
+          }
+        }
+      } catch {
+        // non-blocking fallback
+      }
+    }
     setGradingExam(parentExam || null);
     setGradingSubmission(sub);
 
@@ -414,6 +622,7 @@ export function EssayExamsAdminTab({
         body: JSON.stringify({
           adminScore: totalScore,
           adminFeedback: overallFeedback,
+          questionScores,
           status: "reviewed",
         }),
       });
@@ -447,18 +656,50 @@ export function EssayExamsAdminTab({
   // Metrics
   const totalExamsCount = exams.length;
   const totalSubmissionsCount = exams.reduce((acc, e) => acc + (e.submissionsCount || 0), 0);
-  const pendingReviewCount = exams.reduce((acc, e) => acc + (e.pendingCount || 0), 0);
+  const pendingReviewCount = exams.reduce((acc, e) => acc + (e.pendingCount ?? e.submittedCount ?? 0), 0);
+
+  // Computed stages, units, lessons for the creation form (Strictly Platform Curriculum)
+  const availableStages = useMemo(() => {
+    if (curriculumTree.length > 0) {
+      return curriculumTree.map((c) => c.stage);
+    }
+    return ACADEMIC_TRACKS.flatMap((t) => t.stages);
+  }, [curriculumTree]);
+
+  const currentStageUnits = useMemo(() => {
+    const node = curriculumTree.find((c) => c.stage === examFormData.stage);
+    if (node && Array.isArray(node.units)) return node.units;
+    return taxonomy.units || [];
+  }, [curriculumTree, examFormData.stage, taxonomy.units]);
+
+  const currentUnitLessons = useMemo(() => {
+    const unitNode = currentStageUnits.find((u) => u.unit === examFormData.unit);
+    return unitNode ? unitNode.lessons : [];
+  }, [currentStageUnits, examFormData.unit]);
+
+  const availableFilterUnits = useMemo(() => {
+    const set = new Set<string>();
+    exams.forEach((e) => {
+      if (e.unit && (stageFilter === "all" || e.stage === stageFilter)) {
+        set.add(e.unit);
+      }
+    });
+    return Array.from(set);
+  }, [exams, stageFilter]);
 
   // Filtered exams
   const filteredExams = useMemo(() => {
     return exams.filter((e) => {
       const matchSearch =
         e.title.toLowerCase().includes(search.toLowerCase()) ||
-        (e.description && e.description.toLowerCase().includes(search.toLowerCase()));
+        (e.description && e.description.toLowerCase().includes(search.toLowerCase())) ||
+        (e.unit && e.unit.toLowerCase().includes(search.toLowerCase())) ||
+        (e.lesson && e.lesson.toLowerCase().includes(search.toLowerCase()));
       const matchStage = stageFilter === "all" || e.stage === stageFilter;
-      return matchSearch && matchStage;
+      const matchUnit = unitFilter === "all" || e.unit === unitFilter;
+      return matchSearch && matchStage && matchUnit;
     });
-  }, [exams, search, stageFilter]);
+  }, [exams, search, stageFilter, unitFilter]);
 
   // Filtered submissions
   const filteredSubmissions = useMemo(() => {
@@ -509,7 +750,19 @@ export function EssayExamsAdminTab({
       {/* 2. Action Bar & SubTabs */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-border pb-4">
         {/* Subtabs switcher */}
-        <div className="flex items-center gap-1 rounded-2xl bg-muted/50 p-1 border border-border w-full sm:w-auto">
+        <div className="flex items-center gap-1 rounded-2xl bg-muted/50 p-1 border border-border w-full sm:w-auto flex-wrap">
+          <button
+            type="button"
+            onClick={() => setActiveSubTab("bank")}
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+              activeSubTab === "bank"
+                ? "bg-card text-foreground shadow-xs border border-border/80"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <BookOpen className="h-4 w-4 text-indigo-500" />
+            بنك الأسئلة المقالية (Essay Test Bank)
+          </button>
           <button
             type="button"
             onClick={() => setActiveSubTab("exams")}
@@ -563,41 +816,65 @@ export function EssayExamsAdminTab({
         </div>
       </div>
 
-      {/* 3. Search & Filter Bar */}
-      <div className="flex flex-col sm:flex-row items-center gap-3">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder={
-              activeSubTab === "exams"
-                ? "ابحث في الامتحانات المقالية بالاسم..."
-                : "ابحث باسم الطالب، رقم الهاتف، أو اسم الامتحان..."
-            }
-            className="w-full rounded-2xl border border-border bg-card pr-10 pl-4 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-xs"
-          />
-        </div>
+      {/* 3. Search & Filter Bar (Only for exams/submissions, as bank has its own filter bar) */}
+      {activeSubTab !== "bank" && (
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={
+                activeSubTab === "exams"
+                  ? "ابحث في الامتحانات المقالية بالاسم..."
+                  : "ابحث باسم الطالب، رقم الهاتف، أو اسم الامتحان..."
+              }
+              className="w-full rounded-2xl border border-border bg-card pr-10 pl-4 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-xs"
+            />
+          </div>
 
-        {activeSubTab === "exams" && (
-          <select
-            value={stageFilter}
-            onChange={(e) => setStageFilter(e.target.value)}
-            className="rounded-2xl border border-border bg-card px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-xs w-full sm:w-auto font-medium"
-          >
-            <option value="all">كل المراحل الدراسية</option>
-            {ACADEMIC_TRACKS.flatMap((t) => t.stages).map((st) => (
-              <option key={st} value={st}>
-                {st}
-              </option>
-            ))}
-          </select>
-        )}
-      </div>
+          {activeSubTab === "exams" && (
+            <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+              <select
+                value={stageFilter}
+                onChange={(e) => {
+                  setStageFilter(e.target.value);
+                  setUnitFilter("all");
+                }}
+                className="rounded-2xl border border-border bg-card px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-xs font-medium"
+              >
+                <option value="all">كل المراحل الدراسية</option>
+                {availableStages.map((st) => (
+                  <option key={st} value={st}>
+                    {st}
+                  </option>
+                ))}
+              </select>
+
+              {availableFilterUnits.length > 0 && (
+                <select
+                  value={unitFilter}
+                  onChange={(e) => setUnitFilter(e.target.value)}
+                  className="rounded-2xl border border-border bg-card px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-xs font-medium max-w-[200px] truncate"
+                >
+                  <option value="all">كل الوحدات</option>
+                  {availableFilterUnits.map((u) => (
+                    <option key={u} value={u}>
+                      {u}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 4. Tab Content */}
-      {loading ? (
+      {activeSubTab === "bank" ? (
+        <EssayBankTab />
+      ) : loading ? (
         <div className="grid place-items-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <span className="mt-2 text-xs font-semibold text-muted-foreground">جاري تحميل البيانات...</span>
@@ -619,11 +896,23 @@ export function EssayExamsAdminTab({
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2.5 py-0.5 text-xs font-bold">
-                      {exam.stage || "الكيمياء"}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2.5 py-0.5 text-xs font-bold">
+                        {exam.stage || "منهج البكالوريا"}
+                      </span>
+                      {exam.unit && (
+                        <span className="rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 text-[11px] font-semibold" title={exam.unit}>
+                          {exam.unit.length > 20 ? exam.unit.slice(0, 20) + "..." : exam.unit}
+                        </span>
+                      )}
+                      {exam.lesson && (
+                        <span className="rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2 py-0.5 text-[11px] font-semibold" title={exam.lesson}>
+                          {exam.lesson.length > 20 ? exam.lesson.slice(0, 20) + "..." : exam.lesson}
+                        </span>
+                      )}
+                    </div>
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                      className={`rounded-full px-2 py-0.5 text-[11px] font-bold shrink-0 ${
                         exam.isPublished
                           ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                           : "bg-muted text-muted-foreground"
@@ -769,14 +1058,21 @@ export function EssayExamsAdminTab({
 
                       <td className="p-3.5">
                         {isReviewed ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400">
-                            <CheckCircle2 className="h-3 w-3" />
-                            تم التصحيح ({sub.adminScore} درجة)
-                          </span>
+                          sub.adminFeedback?.includes("تقييم ذاتي") ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/10 border border-purple-500/20 px-2.5 py-0.5 text-[11px] font-extrabold text-purple-700 dark:text-purple-300">
+                              <Sparkles className="h-3 w-3" />
+                              تقييم ذاتي من الطالب ({sub.adminScore} درجة)
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400">
+                              <CheckCircle2 className="h-3 w-3" />
+                              تم الرصد ({sub.adminScore} درجة)
+                            </span>
+                          )
                         ) : (
                           <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-400">
                             <Clock className="h-3 w-3" />
-                            ينتظر المراجعة والتصحيح
+                            تم التسليم (بانتظار رصد التقييم الذاتي)
                           </span>
                         )}
                       </td>
@@ -792,7 +1088,7 @@ export function EssayExamsAdminTab({
                           }`}
                         >
                           <FileEdit className="h-3.5 w-3.5" />
-                          {isReviewed ? "تعديل التقييم" : "تصحيح الإجابة ✍️"}
+                          {isReviewed ? "معاينة التقييم والإجابة" : "معاينة ورقة الإجابة"}
                         </Button>
                       </td>
                     </tr>
@@ -831,7 +1127,193 @@ export function EssayExamsAdminTab({
               </button>
             </div>
 
-            {/* Exam Meta Fields */}
+            {/* 1. Platform Curriculum Hierarchy (Stage -> Unit -> Lesson) */}
+            <div className="rounded-2xl border border-border bg-muted/20 p-4 space-y-4">
+              <div className="flex items-center justify-between border-b border-border/60 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-bold text-foreground">
+                    تحديد المنهج الدراسي للدرس (المرحلة ⬅️ الوحدة ⬅️ الدرس)
+                  </span>
+                </div>
+                <span className="text-[11px] text-muted-foreground font-medium">
+                  مرتبط مباشرة بمقررات منصة المهدي المرفوعة
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* 1. Stage */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-foreground flex items-center gap-1">
+                    <span>1. المرحلة الدراسية *</span>
+                  </label>
+                  <select
+                    value={examFormData.stage}
+                    onChange={(e) => {
+                      const newStage = e.target.value;
+                      const stageNode = curriculumTree.find((c) => c.stage === newStage);
+                      const firstUnit = stageNode?.units[0]?.unit || "";
+                      const firstLesson = stageNode?.units[0]?.lessons[0] || "";
+                      setExamFormData((prev) => ({
+                        ...prev,
+                        stage: newStage,
+                        unit: firstUnit,
+                        lesson: firstLesson,
+                        title: prev.title.trim() ? prev.title : (firstLesson ? `اختبار درس: ${firstLesson}` : prev.title),
+                      }));
+                    }}
+                    className="w-full rounded-xl border border-border bg-background p-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-xs font-medium"
+                  >
+                    {availableStages.map((st) => (
+                      <option key={st} value={st}>
+                        {st}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 2. Unit */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-foreground">2. الوحدة الدراسية *</label>
+                    <button
+                      type="button"
+                      onClick={() => setCustomUnitMode((v) => !v)}
+                      className="text-[10px] text-primary hover:underline font-semibold"
+                    >
+                      {customUnitMode ? "اختيار من القائمة" : "+ إدخال يدوي"}
+                    </button>
+                  </div>
+                  {customUnitMode ? (
+                    <input
+                      type="text"
+                      value={examFormData.unit}
+                      onChange={(e) => setExamFormData({ ...examFormData, unit: e.target.value })}
+                      placeholder="اكتب اسم الوحدة..."
+                      className="w-full rounded-xl border border-border bg-background p-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-xs"
+                    />
+                  ) : (
+                    <select
+                      value={examFormData.unit}
+                      onChange={(e) => {
+                        const newUnit = e.target.value;
+                        const unitNode = currentStageUnits.find((u) => u.unit === newUnit);
+                        const firstLesson = unitNode?.lessons[0] || "";
+                        setExamFormData((prev) => ({
+                          ...prev,
+                          unit: newUnit,
+                          lesson: firstLesson,
+                          title: prev.title.trim() ? prev.title : (firstLesson ? `اختبار درس: ${firstLesson}` : prev.title),
+                        }));
+                      }}
+                      className="w-full rounded-xl border border-border bg-background p-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-xs font-medium"
+                    >
+                      <option value="">-- اختر الوحدة من المنهج --</option>
+                      {currentStageUnits.map((u) => (
+                        <option key={u.unit} value={u.unit}>
+                          {u.unit}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                {/* 3. Lesson */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-foreground">3. الدرس *</label>
+                    <button
+                      type="button"
+                      onClick={() => setCustomLessonMode((v) => !v)}
+                      className="text-[10px] text-primary hover:underline font-semibold"
+                    >
+                      {customLessonMode ? "اختيار من القائمة" : "+ إدخال يدوي"}
+                    </button>
+                  </div>
+                  {customLessonMode ? (
+                    <input
+                      type="text"
+                      value={examFormData.lesson}
+                      onChange={(e) => setExamFormData({ ...examFormData, lesson: e.target.value })}
+                      placeholder="اكتب اسم الدرس..."
+                      className="w-full rounded-xl border border-border bg-background p-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-xs"
+                    />
+                  ) : (
+                    <select
+                      value={examFormData.lesson}
+                      onChange={(e) => {
+                        const newLesson = e.target.value;
+                        setExamFormData((prev) => ({
+                          ...prev,
+                          lesson: newLesson,
+                          title: prev.title.trim() ? prev.title : (newLesson ? `اختبار درس: ${newLesson}` : prev.title),
+                        }));
+                      }}
+                      className="w-full rounded-xl border border-border bg-background p-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-xs font-medium"
+                    >
+                      <option value="">-- اختر الدرس من المنهج --</option>
+                      {currentUnitLessons.map((l) => (
+                        <option key={l} value={l}>
+                          {l}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 2. File Upload for Full Lesson Questions & Model Answers */}
+            <div className="rounded-2xl border-2 border-dashed border-primary/40 bg-gradient-to-r from-primary/5 via-indigo-500/5 to-purple-500/5 p-4 sm:p-5 text-center space-y-3">
+              <div className="flex flex-col items-center justify-center gap-2">
+                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary shadow-xs">
+                  {uploadingExamFile ? (
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  ) : (
+                    <Upload className="h-6 w-6 text-primary" />
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-foreground">
+                    رفع ملف أسئلة الدرس بالكامل مع الحلول النموذجية 📄
+                  </h4>
+                  <p className="text-xs text-muted-foreground max-w-lg mx-auto">
+                    ارفع ملف وورد (<strong className="text-foreground">.docx</strong>) أو <strong className="text-foreground">.pdf</strong> أو <strong className="text-foreground">.txt</strong> يحتوي على أسئلة هذا الدرس وإجاباتها النموذجية وسلم الدرجات، وسيتم استخراجها ومعاينتها فوراً.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                <input
+                  type="file"
+                  ref={examFileInputRef}
+                  onChange={handleUploadQuestionsFile}
+                  accept=".docx,.pdf,.txt"
+                  className="hidden"
+                  id="admin-exam-questions-file-input"
+                />
+                <Button
+                  type="button"
+                  onClick={() => examFileInputRef.current?.click()}
+                  disabled={uploadingExamFile}
+                  className="rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold gap-2 px-5 py-2.5 shadow-sm"
+                >
+                  {uploadingExamFile ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>جاري قراءة وتحليل الأسئلة...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4" />
+                      <span>اختر ملف أسئلة الدرس (.docx / .pdf / .txt)</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* 3. Exam Meta Fields */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1 sm:col-span-2">
                 <label className="text-xs font-bold text-foreground">عنوان الامتحان المقالي *</label>
@@ -839,24 +1321,9 @@ export function EssayExamsAdminTab({
                   type="text"
                   value={examFormData.title}
                   onChange={(e) => setExamFormData({ ...examFormData, title: e.target.value })}
-                  placeholder="مثال: امتحان مقالي شامل على الكيمياء العضوية ومعادلات تفاعل الألكينات"
+                  placeholder="مثال: اختبار مقالي على درس خوارزميات التفكير وحل المشكلات"
                   className="w-full rounded-xl border border-border bg-background p-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-xs"
                 />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-foreground">المرحلة الدراسية *</label>
-                <select
-                  value={examFormData.stage}
-                  onChange={(e) => setExamFormData({ ...examFormData, stage: e.target.value })}
-                  className="w-full rounded-xl border border-border bg-background p-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-xs"
-                >
-                  {ACADEMIC_TRACKS.flatMap((t) => t.stages).map((st) => (
-                    <option key={st} value={st}>
-                      {st}
-                    </option>
-                  ))}
-                </select>
               </div>
 
               <div className="space-y-1">
@@ -873,37 +1340,40 @@ export function EssayExamsAdminTab({
                 />
               </div>
 
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-foreground">خيارات النشر والإتاحة</label>
+                <div className="pt-2 space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-foreground">
+                    <input
+                      type="checkbox"
+                      checked={examFormData.allowImageUpload}
+                      onChange={(e) => setExamFormData({ ...examFormData, allowImageUpload: e.target.checked })}
+                      className="rounded h-4 w-4 text-primary"
+                    />
+                    <span>السماح برفع صورة ورقة الحل (للكود والخوارزميات أو الحل باليد)</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-foreground">
+                    <input
+                      type="checkbox"
+                      checked={examFormData.isPublished}
+                      onChange={(e) => setExamFormData({ ...examFormData, isPublished: e.target.checked })}
+                      className="rounded h-4 w-4 text-primary"
+                    />
+                    <span>نشر الامتحان وظهوره فوراً للطلاب</span>
+                  </label>
+                </div>
+              </div>
+
               <div className="space-y-1 sm:col-span-2">
-                <label className="text-xs font-bold text-foreground">وصف أو تعليمات الاختبار (اختياري)</label>
+                <label className="text-xs font-bold text-foreground">تعليمات أو توجيهات الاختبار للطلاب (اختياري)</label>
                 <textarea
                   value={examFormData.description}
                   onChange={(e) => setExamFormData({ ...examFormData, description: e.target.value })}
-                  placeholder="تعليمات للطالب، توجيهات كتابة المعادلات، الخ..."
+                  placeholder="تعليمات للطالب، توجيهات كتابة الكود أو الخوارزميات، الخ..."
                   rows={2}
                   className="w-full rounded-xl border border-border bg-background p-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-xs"
                 />
-              </div>
-
-              <div className="flex items-center gap-4 sm:col-span-2 pt-1">
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-foreground">
-                  <input
-                    type="checkbox"
-                    checked={examFormData.allowImageUpload}
-                    onChange={(e) => setExamFormData({ ...examFormData, allowImageUpload: e.target.checked })}
-                    className="rounded h-4 w-4 text-primary"
-                  />
-                  <span>السماح للطالب برفع صورة ورقة الحل (للمعادلات الكيميائية)</span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-foreground">
-                  <input
-                    type="checkbox"
-                    checked={examFormData.isPublished}
-                    onChange={(e) => setExamFormData({ ...examFormData, isPublished: e.target.checked })}
-                    className="rounded h-4 w-4 text-primary"
-                  />
-                  <span>نشر الامتحان وظهوره فوراً للطلاب</span>
-                </label>
               </div>
             </div>
 
@@ -911,21 +1381,35 @@ export function EssayExamsAdminTab({
             <div className="space-y-4 pt-4 border-t border-border">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-bold text-foreground">أسئلة الامتحان المقالي والحلول النموذجية</h4>
+                  <h4 className="text-sm font-bold text-foreground">
+                    معاينة وتعديل أسئلة الدرس والحلول النموذجية ({examFormData.questions.length} سؤال)
+                  </h4>
                   <span className="text-xs text-muted-foreground">
                     إجمالي الدرجات: <strong className="text-primary font-black">{calculatedTotalPoints}</strong> درجة
                   </span>
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddQuestion}
-                  className="rounded-xl text-xs font-bold gap-1"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  إضافة سؤال جديد
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setBankSelectorOpen(true)}
+                    className="rounded-xl text-xs font-bold gap-1.5 border-indigo-500/40 text-indigo-400 hover:bg-indigo-950/30"
+                  >
+                    <BookOpen className="h-3.5 w-3.5" />
+                    استيراد من بنك الأسئلة المقالية
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddQuestion}
+                    className="rounded-xl text-xs font-bold gap-1"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    إضافة سؤال يدوي
+                  </Button>
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -983,7 +1467,7 @@ export function EssayExamsAdminTab({
                         type="text"
                         value={q.imageUrl || ""}
                         onChange={(e) => handleUpdateQuestion(idx, "imageUrl", e.target.value)}
-                        placeholder="https://... أو مسار صورة المعادلة أو الرسم البياني"
+                        placeholder="https://... أو مسار صورة المخطط أو الكود"
                         className="w-full rounded-xl border border-border bg-background p-2 text-xs text-foreground"
                       />
                     </div>
@@ -997,9 +1481,16 @@ export function EssayExamsAdminTab({
                       <textarea
                         value={q.modelAnswer}
                         onChange={(e) => handleUpdateQuestion(idx, "modelAnswer", e.target.value)}
-                        placeholder="اكتب الحل النموذجي والمثالي الكامل بالخطوات والمعادلات والنتائج..."
+                        placeholder="اكتب الحل النموذجي والمثالي الكامل بالخطوات والكود والنتائج..."
                         rows={3}
                         className="w-full rounded-xl border border-emerald-500/30 bg-background p-2.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs leading-relaxed"
+                      />
+                      <input
+                        type="text"
+                        value={q.modelAnswerImageUrl || ""}
+                        onChange={(e) => handleUpdateQuestion(idx, "modelAnswerImageUrl", e.target.value)}
+                        placeholder="رابط صورة توضيحية للحل النموذجي (مخطط أو كود) - اختياري"
+                        className="w-full rounded-xl border border-emerald-500/20 bg-background p-2 text-xs text-foreground mt-2"
                       />
                     </div>
 
@@ -1010,7 +1501,7 @@ export function EssayExamsAdminTab({
                         type="text"
                         value={q.explanation || ""}
                         onChange={(e) => handleUpdateQuestion(idx, "explanation", e.target.value)}
-                        placeholder="مثال: خطوة كتابة المعادلة = درجتان، الوزن = درجتان، استنتاج الناتج = درجة..."
+                        placeholder="مثال: كتابة الشرط المنطقي = درجتان، تتبع التكرار = درجتان، الناتج النهائي = درجة..."
                         className="w-full rounded-xl border border-border bg-background p-2 text-xs text-foreground"
                       />
                     </div>
@@ -1039,6 +1530,37 @@ export function EssayExamsAdminTab({
                 {savingExam ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                 {editingExamId ? "حفظ التعديلات" : "نشر واعتماد الامتحان 🚀"}
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          MODAL 1.5: SELECT QUESTIONS FROM ESSAY QUESTION BANK
+      ───────────────────────────────────────────────────────────── */}
+      {bankSelectorOpen && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-indigo-400" />
+                <h3 className="text-base font-bold text-slate-100">
+                  اختر الأسئلة المقالية من البنك لإدراجها في الامتحان
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBankSelectorOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-5 overflow-y-auto flex-1">
+              <EssayBankTab
+                selectionMode
+                onSelectQuestions={handleImportFromBank}
+              />
             </div>
           </div>
         </div>

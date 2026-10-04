@@ -11,6 +11,7 @@ import questionBankRouter from "./learning/question-bank";
 import autoExamRouter from "./learning/auto-exam";
 import selfAssessmentRouter from "./learning/self-assessment";
 import essayExamsRouter from "./learning/essay-exams";
+import essayQuestionBankRouter from "./learning/essay-question-bank";
 
 const router: IRouter = Router();
 
@@ -25,6 +26,7 @@ router.use(questionBankRouter);
 router.use(autoExamRouter);
 router.use(selfAssessmentRouter);
 router.use(essayExamsRouter);
+router.use(essayQuestionBankRouter);
 
 // Re-exports for backward compatibility
 export { logAudit } from "../lib/audit";

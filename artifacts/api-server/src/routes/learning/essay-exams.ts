@@ -1,6 +1,9 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request } from "express";
+import { createRequire } from "module";
 import fs from "fs";
 import path from "path";
+import multer from "multer";
+import mammoth from "mammoth";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import {
   db,
@@ -8,6 +11,10 @@ import {
   essayExamSubmissionsTable,
   studentsTable,
   studentNotificationsTable,
+  questionBankTable,
+  essayQuestionBankTable,
+  coursesTable,
+  videosTable,
   type EssayExam,
   type EssayExamSubmission,
   type EssayQuestion,
@@ -16,7 +23,15 @@ import {
 import { requireAdmin } from "../../middleware/auth";
 import { requireStudent } from "../../middleware/student-auth";
 import { sendPushToStudent } from "../../services/push-notifications";
-import { essayAnswersDir, essayAnswerUpload, matchStudentToStage } from "./shared";
+import { essayAnswersDir, essayAnswerUpload, matchStudentToStage, parseUnitSortOrder, parseLessonSortOrder } from "./shared";
+import { parseEssayQuestionsFromText } from "./essay-question-bank";
+
+const require = createRequire(import.meta.url);
+const pdfParse = require("pdf-parse/lib/pdf-parse.js") as (data: Buffer) => Promise<{ text: string }>;
+const parseUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB
+});
 
 const router: IRouter = Router();
 
@@ -33,6 +48,8 @@ async function ensureEssayExamsTables() {
         description TEXT,
         stage TEXT,
         stages JSONB NOT NULL DEFAULT '[]'::jsonb,
+        unit TEXT,
+        lesson TEXT,
         category TEXT NOT NULL DEFAULT 'عام',
         duration_minutes INTEGER NOT NULL DEFAULT 60,
         total_points INTEGER NOT NULL DEFAULT 20,
@@ -42,8 +59,11 @@ async function ensureEssayExamsTables() {
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       );
+      ALTER TABLE essay_exams ADD COLUMN IF NOT EXISTS unit TEXT;
+      ALTER TABLE essay_exams ADD COLUMN IF NOT EXISTS lesson TEXT;
       CREATE INDEX IF NOT EXISTS idx_essay_exams_course_id ON essay_exams(course_id);
       CREATE INDEX IF NOT EXISTS idx_essay_exams_category ON essay_exams(category);
+      CREATE INDEX IF NOT EXISTS idx_essay_exams_stage_unit_lesson ON essay_exams(stage, unit, lesson);
 
       CREATE TABLE IF NOT EXISTS essay_exam_submissions (
         id SERIAL PRIMARY KEY,
@@ -118,6 +138,8 @@ router.get("/learning/essay-exams", requireStudent, async (req, res, next) => {
         description: exam.description,
         stage: exam.stage,
         stages: exam.stages,
+        unit: exam.unit,
+        lesson: exam.lesson,
         category: exam.category,
         durationMinutes: exam.durationMinutes || 60,
         totalPoints: exam.totalPoints,
@@ -201,12 +223,16 @@ router.get("/learning/essay-exams/:id", requireStudent, async (req, res, next) =
     });
 
     res.json({
+      ...exam,
+      questions,
+      mySubmission: submission || null,
+      submission: submission || null,
+      isSubmitted,
       exam: {
         ...exam,
         questions,
+        mySubmission: submission || null,
       },
-      submission: submission || null,
-      isSubmitted,
     });
   } catch (error) {
     next(error);
@@ -252,6 +278,8 @@ router.post("/learning/essay-exams/:id/start", requireStudent, async (req, res, 
       res.json({
         success: true,
         submission: existing,
+        submissionId: existing.id,
+        startedAt: existing.startedAt,
         alreadyStarted: true,
       });
       return;
@@ -273,6 +301,8 @@ router.post("/learning/essay-exams/:id/start", requireStudent, async (req, res, 
     res.json({
       success: true,
       submission: created,
+      submissionId: created.id,
+      startedAt: created.startedAt,
       alreadyStarted: false,
     });
   } catch (error) {
@@ -308,7 +338,34 @@ router.post("/learning/essay-exams/:id/submit", requireStudent, async (req, res,
       return;
     }
 
+    const examQuestions: EssayQuestion[] = Array.isArray(exam.questions) ? exam.questions : [];
     const validAnswers: EssayAnswer[] = Array.isArray(answers) ? answers : [];
+
+    // إجباري: التحقق من إجابة الطالب على كل سؤال (إما بكتابة الإجابة أو رفع صورة ورقة الحل)
+    const answeredMap = new Map<string, EssayAnswer>();
+    for (const a of validAnswers) {
+      const hasText = Boolean(a.writtenText && String(a.writtenText).trim().length > 0);
+      const hasPhoto = Boolean(a.attachmentUrl && String(a.attachmentUrl).trim().length > 0);
+      if (hasText || hasPhoto) {
+        answeredMap.set(String(a.questionId), a);
+      }
+    }
+
+    const missingQuestions: { index: number; prompt: string }[] = [];
+    examQuestions.forEach((q, idx) => {
+      if (!answeredMap.has(String(q.id))) {
+        missingQuestions.push({ index: idx + 1, prompt: q.prompt });
+      }
+    });
+
+    if (missingQuestions.length > 0) {
+      res.status(400).json({
+        error: `إجباري: يجب حل جميع الأسئلة أولاً (بكتابة الإجابة أو رفع صورة ورقة الحل) لكل سؤال حتى تتمكن من تسليم الاختبار والاطلاع على الحل النموذجي والمثالي. متبقي لديك (${missingQuestions.length}) سؤال بدون إجابة: ${missingQuestions.map((m) => `السؤال رقم ${m.index}`).join("، ")}.`,
+        missingCount: missingQuestions.length,
+        missingQuestionIndices: missingQuestions.map((m) => m.index),
+      });
+      return;
+    }
 
     const [existing] = await db
       .select()
@@ -362,19 +419,100 @@ router.post("/learning/essay-exams/:id/submit", requireStudent, async (req, res,
       submission = created;
     }
 
-    // Auto-create notification for student acknowledging submission
+    // إشعار الطالب بظهور الحل النموذجي لبدء التقييم الذاتي
     await db.insert(studentNotificationsTable).values({
       studentId: student.id,
       title: `تم تسليم ${exam.title} بنجاح ✅`,
-      message: `تم تسليم إجاباتك للاختبار المقالي. الحل النموذجي والمثالي متاح الآن للمراجعة، وسيتم رصد تقييم الدكتور قريباً.`,
-      type: "quiz",
+      message: `تم تسليم إجاباتك للاختبار المقالي. الحل النموذجي والمثالي وخطوات الحل وتوزيع الدرجات متاحة الآن لمقارنة إجابتك وتقييم أدائك ومعرفة ما ينقصك.`,
+      type: "essay",
     });
 
     res.json({
       success: true,
-      message: "تم تسليم إجاباتك بنجاح! متاح لك الآن مراجعة الحل المثالي والنموذجي.",
+      message: "تم تسليم إجاباتك بنجاح! تم فتح الحل النموذجي والمثالي وخطوات الحل الآن لمقارنة حلك وتقييم أدائك.",
       submission,
       modelAnswers: exam.questions,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 4.5. POST /api/learning/essay-exams/:id/self-assess - حفظ التقييم الذاتي للطالب بعد مراجعة الحل النموذجي
+router.post("/learning/essay-exams/:id/self-assess", requireStudent, async (req, res, next) => {
+  try {
+    await ensureEssayExamsTables();
+    const id = Number(req.params.id);
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+
+    const { questionScores, selfNotes } = req.body;
+
+    const [existing] = await db
+      .select()
+      .from(essayExamSubmissionsTable)
+      .where(and(
+        eq(essayExamSubmissionsTable.examId, id),
+        eq(essayExamSubmissionsTable.studentId, student.id),
+      ))
+      .limit(1);
+
+    if (!existing) {
+      res.status(404).json({ error: "لا يوجد تسليم سابق لهذا الاختبار" });
+      return;
+    }
+
+    // لا يُسمح بالتقييم الذاتي إذا اعتمد الأدمن الدرجة بالفعل (حتى لا يتم الكتابة فوق درجة المعلم)
+    if (existing.status === "reviewed" && !(existing.adminFeedback || "").startsWith("تقييم ذاتي") && existing.adminFeedback !== "تم التقييم الذاتي والمقارنة بالحل النموذجي") {
+      res.status(409).json({ error: "تم اعتماد درجة هذا الاختبار من المعلم ولا يمكن تعديلها" });
+      return;
+    }
+
+    const [examRow] = await db
+      .select({ questions: essayExamsTable.questions })
+      .from(essayExamsTable)
+      .where(eq(essayExamsTable.id, id))
+      .limit(1);
+    const maxPoints = new Map<string, number>(
+      (Array.isArray(examRow?.questions) ? examRow.questions : []).map((q) => [q.id, Number(q.points) || 0]),
+    );
+
+    let updatedAnswers = existing.answers;
+    let totalSelfScore = 0;
+    if (questionScores && typeof questionScores === "object") {
+      const existingAnswers: EssayAnswer[] = Array.isArray(existing.answers) ? existing.answers : [];
+      updatedAnswers = existingAnswers.map((ans) => {
+        const qScore = questionScores[ans.questionId];
+        const raw = qScore !== undefined && qScore !== null ? Number(qScore) : (ans.score ?? 0);
+        const max = maxPoints.get(ans.questionId);
+        const assigned = Math.max(0, Number.isFinite(raw) ? (max !== undefined ? Math.min(raw, max) : raw) : 0);
+        totalSelfScore += assigned;
+        return {
+          ...ans,
+          score: assigned,
+        };
+      });
+    }
+
+    const noteText = selfNotes ? String(selfNotes).trim() : "";
+    const feedbackText = noteText ? `تقييم ذاتي: ${noteText}` : "تم التقييم الذاتي والمقارنة بالحل النموذجي";
+
+    const [updated] = await db
+      .update(essayExamSubmissionsTable)
+      .set({
+        adminScore: totalSelfScore,
+        adminFeedback: feedbackText,
+        answers: updatedAnswers,
+        status: "reviewed",
+        updatedAt: new Date(),
+      })
+      .where(eq(essayExamSubmissionsTable.id, existing.id))
+      .returning();
+
+    res.json({
+      success: true,
+      message: "تم حفظ تقييمك الذاتي ورصد درجتك بنجاح 🎯",
+      submission: updated,
+      totalScore: totalSelfScore,
     });
   } catch (error) {
     next(error);
@@ -388,17 +526,20 @@ router.post("/learning/essay-exams/upload-answer-image", requireStudent, (req, r
       res.status(400).json({ error: err.message || "تعذر رفع صورة الإجابة" });
       return;
     }
-    if (!req.file) {
+    const files = req.files as Express.Multer.File[] | undefined;
+    const uploadedFile = req.file || (Array.isArray(files) && files.length > 0 ? files[0] : undefined);
+    if (!uploadedFile) {
       res.status(400).json({ error: "لم يتم اختيار صورة لرفعها" });
       return;
     }
 
-    const fileUrl = `/api/learning/essay-exams/attachment/${req.file.filename}`;
+    const fileUrl = `/api/learning/essay-exams/attachment/${uploadedFile.filename}`;
     res.json({
       success: true,
       url: fileUrl,
-      filename: req.file.filename,
-      size: req.file.size,
+      fileUrl,
+      filename: uploadedFile.filename,
+      size: uploadedFile.size,
     });
   });
 });
@@ -455,6 +596,7 @@ router.get("/admin/learning/essay-exams", requireAdmin, async (req, res, next) =
       ...exam,
       submissionsCount: statsMap.get(exam.id)?.total || 0,
       submittedCount: statsMap.get(exam.id)?.submitted || 0,
+      pendingCount: statsMap.get(exam.id)?.submitted || 0,
       reviewedCount: statsMap.get(exam.id)?.reviewed || 0,
       questionsCount: Array.isArray(exam.questions) ? exam.questions.length : 0,
     }));
@@ -474,6 +616,8 @@ router.post("/admin/learning/essay-exams", requireAdmin, async (req, res, next) 
       description,
       stage,
       stages,
+      unit,
+      lesson,
       category,
       courseId,
       videoId,
@@ -514,6 +658,8 @@ router.post("/admin/learning/essay-exams", requireAdmin, async (req, res, next) 
         description: description ? String(description).trim() : null,
         stage: stage || null,
         stages: Array.isArray(stages) ? stages : stage ? [stage] : [],
+        unit: unit ? String(unit).trim() : null,
+        lesson: lesson ? String(lesson).trim() : null,
         category: category || "عام",
         courseId: courseId ? Number(courseId) : null,
         videoId: videoId ? Number(videoId) : null,
@@ -532,7 +678,7 @@ router.post("/admin/learning/essay-exams", requireAdmin, async (req, res, next) 
 });
 
 // 9. PATCH /api/admin/learning/essay-exams/:id - تعديل اختبار مقالي
-router.patch("/api/admin/learning/essay-exams/:id", requireAdmin, async (req, res, next) => {
+router.patch("/admin/learning/essay-exams/:id", requireAdmin, async (req, res, next) => {
   try {
     await ensureEssayExamsTables();
     const id = Number(req.params.id);
@@ -541,6 +687,8 @@ router.patch("/api/admin/learning/essay-exams/:id", requireAdmin, async (req, re
       description,
       stage,
       stages,
+      unit,
+      lesson,
       category,
       courseId,
       videoId,
@@ -557,6 +705,8 @@ router.patch("/api/admin/learning/essay-exams/:id", requireAdmin, async (req, re
     if (description !== undefined) patch.description = description ? String(description).trim() : null;
     if (stage !== undefined) patch.stage = stage || null;
     if (stages !== undefined) patch.stages = Array.isArray(stages) ? stages : [];
+    if (unit !== undefined) patch.unit = unit ? String(unit).trim() : null;
+    if (lesson !== undefined) patch.lesson = lesson ? String(lesson).trim() : null;
     if (category !== undefined) patch.category = category || "عام";
     if (courseId !== undefined) patch.courseId = courseId ? Number(courseId) : null;
     if (videoId !== undefined) patch.videoId = videoId ? Number(videoId) : null;
@@ -657,7 +807,7 @@ router.post("/admin/learning/essay-exams/submissions/:id/grade", requireAdmin, a
   try {
     await ensureEssayExamsTables();
     const submissionId = Number(req.params.id);
-    const { adminScore, adminFeedback } = req.body;
+    const { adminScore, adminFeedback, questionScores } = req.body;
 
     const [submission] = await db
       .select()
@@ -670,11 +820,24 @@ router.post("/admin/learning/essay-exams/submissions/:id/grade", requireAdmin, a
       return;
     }
 
+    let updatedAnswers = submission.answers;
+    if (questionScores && typeof questionScores === "object") {
+      const existingAnswers: EssayAnswer[] = Array.isArray(submission.answers) ? submission.answers : [];
+      updatedAnswers = existingAnswers.map((ans) => {
+        const qScore = questionScores[ans.questionId];
+        return {
+          ...ans,
+          score: qScore !== undefined && qScore !== null ? Number(qScore) : ans.score,
+        };
+      });
+    }
+
     const [updated] = await db
       .update(essayExamSubmissionsTable)
       .set({
         adminScore: adminScore !== undefined && adminScore !== null ? Number(adminScore) : submission.adminScore,
         adminFeedback: adminFeedback !== undefined ? String(adminFeedback).trim() : submission.adminFeedback,
+        answers: updatedAnswers,
         status: "reviewed",
         updatedAt: new Date(),
       })
@@ -716,5 +879,169 @@ router.post("/admin/learning/essay-exams/submissions/:id/grade", requireAdmin, a
     next(error);
   }
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 13. GET /api/admin/learning/essay-exams/curriculum-tree
+// شجرة المنهج الفعلي المرفوع على المنصة: مراحل ⬅️ وحدات ⬅️ دروس
+// ─────────────────────────────────────────────────────────────────────────────
+router.get("/admin/learning/essay-exams/curriculum-tree", requireAdmin, async (_req, res, next) => {
+  try {
+    await ensureEssayExamsTables();
+
+    // 1. Fetch from Question Bank
+    const qbRows = await db
+      .select({
+        stage: questionBankTable.stage,
+        unit: questionBankTable.unit,
+        lesson: questionBankTable.lesson,
+      })
+      .from(questionBankTable);
+
+    // 2. Fetch from Essay Question Bank
+    const eqbRows = await db
+      .select({
+        stage: essayQuestionBankTable.stage,
+        unit: essayQuestionBankTable.unit,
+        lesson: essayQuestionBankTable.lesson,
+      })
+      .from(essayQuestionBankTable);
+
+    // 3. Fetch courses and videos uploaded to platform
+    const courses = await db.select().from(coursesTable);
+    const videos = await db.select().from(videosTable);
+
+    // Hierarchical map: Stage -> Unit -> Set of Lessons
+    const treeMap: Record<string, Record<string, Set<string>>> = {};
+
+    function addEntry(stage?: string | null, unit?: string | null, lesson?: string | null) {
+      const s = String(stage || "عام").trim();
+      const u = String(unit || "الوحدة الأولى").trim();
+      const l = lesson ? String(lesson).trim() : "";
+
+      if (!treeMap[s]) treeMap[s] = {};
+      if (!treeMap[s][u]) treeMap[s][u] = new Set();
+      if (l) treeMap[s][u].add(l);
+    }
+
+    qbRows.forEach((r) => addEntry(r.stage, r.unit, r.lesson));
+    eqbRows.forEach((r) => addEntry(r.stage, r.unit, r.lesson));
+
+    // Also include videos with course titles as units
+    videos.forEach((v) => {
+      const course = courses.find((c) => c.id === v.courseId);
+      const stage = v.stage || (course?.stages && course.stages[0]) || "عام";
+      const unit = course ? course.title : "الوحدة الأولى";
+      addEntry(stage, unit, v.title);
+    });
+
+    // Default canonical stages and real Unit 1 curriculum if database is completely empty
+    if (Object.keys(treeMap).length === 0) {
+      const u1Arabic = "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع";
+      const u1LessonsArabic = [
+        "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+        "الدرس الثاني: كيف يعمل الذكاء الاصطناعي",
+        "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+        "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+      ];
+      const stage1Ar = "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس عربي";
+      const stage2Ar = "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي";
+
+      for (const l of u1LessonsArabic) {
+        addEntry(stage1Ar, u1Arabic, l);
+        addEntry(stage2Ar, u1Arabic, l);
+      }
+
+      const stage1En = "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس لغات (Languages)";
+      const stage2En = "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)";
+      const u1English = "Unit 1 – Information Technology and Society";
+      const u1LessonsEnglish = [
+        "Lesson 1-1 – Development of Information Technology and Social Transformation",
+        "Lesson 1-2 – How AI Works",
+        "Lesson 1-3 – AI in Our Daily Life",
+        "Lesson 1-4 – AI Ethics",
+      ];
+      for (const l of u1LessonsEnglish) {
+        addEntry(stage1En, u1English, l);
+        addEntry(stage2En, u1English, l);
+      }
+    }
+
+    // Format as sorted tree
+    const tree = Object.entries(treeMap).map(([stage, unitsMap]) => ({
+      stage,
+      units: Object.entries(unitsMap)
+        .sort((a, b) => parseUnitSortOrder(a[0]) - parseUnitSortOrder(b[0]))
+        .map(([unit, lessonsSet]) => ({
+          unit,
+          lessons: Array.from(lessonsSet).sort((a, b) => parseLessonSortOrder(a) - parseLessonSortOrder(b)),
+        })),
+    }));
+
+    res.json({
+      success: true,
+      stages: Object.keys(treeMap),
+      tree,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 14. POST /api/admin/learning/essay-exams/upload-parse
+// رفع ملف كامل بأسئلة الدرس وإجاباتها النموذجية واستخراجها للمعاينة
+// ─────────────────────────────────────────────────────────────────────────────
+router.post(
+  "/admin/learning/essay-exams/upload-parse",
+  requireAdmin,
+  parseUpload.single("file"),
+  async (req: Request, res, next) => {
+    try {
+      let rawText = "";
+
+      if (req.file) {
+        const ext = req.file.originalname.split(".").pop()?.toLowerCase();
+        if (ext === "docx") {
+          const mammothResult = await mammoth.extractRawText({ buffer: req.file.buffer });
+          rawText = mammothResult.value;
+        } else if (ext === "pdf") {
+          const pdfResult = await pdfParse(req.file.buffer);
+          rawText = pdfResult.text;
+        } else {
+          rawText = req.file.buffer.toString("utf-8");
+        }
+      } else if (req.body.rawText) {
+        rawText = String(req.body.rawText);
+      } else {
+        res.status(400).json({ error: "برجاء رفع ملف (.docx أو .pdf أو .txt) أو إرسال نص أسئلة الدرس للتحليل" });
+        return;
+      }
+
+      const defaultStage = req.body.defaultStage ? String(req.body.defaultStage).trim() : undefined;
+      const defaultUnit = req.body.defaultUnit ? String(req.body.defaultUnit).trim() : undefined;
+      const defaultLesson = req.body.defaultLesson ? String(req.body.defaultLesson).trim() : undefined;
+      const defaultPoints = req.body.defaultPoints ? parseInt(String(req.body.defaultPoints), 10) || 5 : 5;
+
+      const parsed = parseEssayQuestionsFromText(rawText, {
+        stage: defaultStage,
+        unit: defaultUnit,
+        lesson: defaultLesson,
+        points: defaultPoints,
+      });
+
+      res.json({
+        success: true,
+        detectedStage: parsed.detectedStage,
+        detectedUnit: parsed.detectedUnit,
+        detectedLesson: parsed.detectedLesson,
+        count: parsed.questions.length,
+        validCount: parsed.questions.filter((q) => q.isValid).length,
+        questions: parsed.questions,
+      });
+    } catch (err: any) {
+      next(err);
+    }
+  }
+);
 
 export default router;

@@ -138,7 +138,7 @@ export const essayAnswerUpload = multer({
       cb(new Error("يرجى رفع صورة (JPG, PNG, WebP, HEIC) أو ملف PDF لورقة الإجابة."));
     }
   },
-}).single("photo");
+}).any();
 
 export const quizImportUpload = multer({
   storage: multer.memoryStorage(),

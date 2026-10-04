@@ -485,6 +485,8 @@ export interface EssayAnswer {
   questionId: string;
   writtenText?: string; // النص المكتوب من الطالب
   attachmentUrl?: string; // صورة الحل الورقي المرفوعة بخط اليد
+  score?: number; // درجة السؤال بعد التصحيح
+  feedback?: string; // ملاحظات الدكتور على السؤال
 }
 
 export const essayExamsTable = pgTable("essay_exams", {
@@ -495,6 +497,8 @@ export const essayExamsTable = pgTable("essay_exams", {
   description: text("description"),
   stage: text("stage"),
   stages: jsonb("stages").$type<string[]>().notNull().default([]),
+  unit: text("unit"),
+  lesson: text("lesson"),
   category: text("category").notNull().default("عام"),
   durationMinutes: integer("duration_minutes").notNull().default(60), // ساعة واحدة كإعداد قياسي
   totalPoints: integer("total_points").notNull().default(20),
@@ -506,6 +510,7 @@ export const essayExamsTable = pgTable("essay_exams", {
 }, (table) => ({
   courseIdx: index("idx_essay_exams_course_id").on(table.courseId),
   categoryIdx: index("idx_essay_exams_category").on(table.category),
+  stageUnitLessonIdx: index("idx_essay_exams_stage_unit_lesson").on(table.stage, table.unit, table.lesson),
 }));
 
 export type InsertEssayExam = typeof essayExamsTable.$inferInsert;
@@ -533,4 +538,33 @@ export const essayExamSubmissionsTable = pgTable("essay_exam_submissions", {
 
 export type InsertEssayExamSubmission = typeof essayExamSubmissionsTable.$inferInsert;
 export type EssayExamSubmission = typeof essayExamSubmissionsTable.$inferSelect;
+
+// ── Essay Question Bank (بنك الأسئلة المقالية المستقل) ────────────────────────
+export const essayQuestionBankTable = pgTable("essay_question_bank", {
+  id: serial("id").primaryKey(),
+  courseId: integer("course_id").references(() => coursesTable.id, { onDelete: "set null" }),
+  subject: text("subject"),
+  stage: text("stage"),
+  stages: jsonb("stages").$type<string[]>().notNull().default([]),
+  category: text("category").notNull().default("عام"),
+  unit: text("unit"), // اسم الوحدة
+  lesson: text("lesson"), // اسم الدرس
+  difficulty: text("difficulty").notNull().default("medium"), // easy | medium | hard
+  points: integer("points").notNull().default(5),
+  prompt: text("prompt").notNull(), // نص السؤال المقالي
+  modelAnswer: text("model_answer").notNull(), // الإجابة النموذجية والمثالية
+  explanation: text("explanation"), // إرشادات التصحيح وعناصر الدرجات
+  imageUrl: text("image_url"), // صورة السؤال إن وجدت
+  modelAnswerImageUrl: text("model_answer_image_url"), // صورة توضيحية للحل النموذجي إن وجدت
+  tags: jsonb("tags").$type<string[]>().notNull().default([]),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  stageUnitLessonIdx: index("idx_essay_question_bank_stage_unit_lesson").on(table.stage, table.unit, table.lesson),
+  courseIdx: index("idx_essay_question_bank_course_id").on(table.courseId),
+  categoryIdx: index("idx_essay_question_bank_category").on(table.category),
+}));
+
+export type InsertEssayQuestionBankItem = typeof essayQuestionBankTable.$inferInsert;
+export type EssayQuestionBankItem = typeof essayQuestionBankTable.$inferSelect;
 

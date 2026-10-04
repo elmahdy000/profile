@@ -21,6 +21,17 @@ import {
   HelpCircle,
   FileText,
   RotateCcw,
+  Check,
+  Plus,
+  Minus,
+  SlidersHorizontal,
+  BarChart3,
+  Tag,
+  Target,
+  Save,
+  CheckCheck,
+  TrendingUp,
+  Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -42,6 +53,8 @@ interface EssayExam {
   description?: string;
   stage?: string;
   stages?: string[];
+  unit?: string;
+  lesson?: string;
   category?: string;
   durationMinutes: number;
   totalPoints: number;
@@ -86,16 +99,24 @@ export function EssayExamsTab({
   const [viewMode, setViewMode] = useState<"list" | "exam_room" | "model_answer">("list");
   const [loadingExam, setLoadingExam] = useState(false);
 
-  // Student answers in exam room: map of questionId -> { writtenText, attachmentUrl }
-  const [answers, setAnswers] = useState<Record<string, { writtenText: string; attachmentUrl?: string }>>({});
+  // Student answers in exam room: map of questionId -> { writtenText, attachmentUrl, score }
+  const [answers, setAnswers] = useState<Record<string, { writtenText: string; attachmentUrl?: string; score?: number }>>({});
   const [uploadingForQuestion, setUploadingForQuestion] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
+
+  // Self-assessment state: student scores themselves and reflects on missing details
+  const [selfScores, setSelfScores] = useState<Record<string, number>>({});
+  const [selfNotes, setSelfNotes] = useState<string>("");
+  const [savingSelfScore, setSavingSelfScore] = useState<boolean>(false);
+  const [selfAssessedSuccess, setSelfAssessedSuccess] = useState<boolean>(false);
+  const [selectedTags, setSelectedTags] = useState<Record<string, string[]>>({});
 
   // Timer state
   const [remainingSeconds, setRemainingSeconds] = useState<number>(3600);
   const [timerExpired, setTimerExpired] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const autoSubmittedRef = useRef(false);
 
   // Image lightbox preview
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
@@ -107,7 +128,7 @@ export function EssayExamsTab({
       const res = await fetch("/api/learning/essay-exams", { credentials: "include" });
       if (!res.ok) throw new Error("تعذر تحميل الامتحانات المقالية");
       const data = await res.json();
-      setExams(Array.isArray(data) ? data : []);
+      setExams(Array.isArray(data) ? data : (data?.exams || []));
     } catch (err: any) {
       toast({
         title: "خطأ في التحميل",
@@ -129,23 +150,44 @@ export function EssayExamsTab({
       setLoadingExam(true);
       const res = await fetch(`/api/learning/essay-exams/${examId}`, { credentials: "include" });
       if (!res.ok) throw new Error("تعذر جلب تفاصيل الامتحان");
-      const examData: EssayExamDetail = await res.json();
+      const rawData = await res.json();
+      const examObj = rawData.exam || rawData;
+      const subObj = rawData.mySubmission || rawData.submission || examObj.mySubmission || null;
+      const examData: EssayExamDetail = {
+        ...examObj,
+        questions: examObj.questions || rawData.questions || [],
+        mySubmission: subObj,
+      };
       setActiveExam(examData);
 
       const submission = examData.mySubmission;
 
       if (submission?.status === "submitted" || submission?.status === "reviewed") {
         // Preload answers if reviewing
+        const map: Record<string, { writtenText: string; attachmentUrl?: string; score?: number }> = {};
+        const scores: Record<string, number> = {};
         if (submission.answers) {
-          const map: Record<string, { writtenText: string; attachmentUrl?: string }> = {};
           submission.answers.forEach((ans) => {
             map[ans.questionId] = {
               writtenText: ans.writtenText || "",
               attachmentUrl: ans.attachmentUrl,
+              score: ans.score,
             };
+            if (ans.score !== undefined && ans.score !== null) {
+              scores[ans.questionId] = ans.score;
+            }
           });
-          setAnswers(map);
         }
+        setAnswers(map);
+        setSelfScores(scores);
+        if (submission.adminFeedback?.startsWith("تقييم ذاتي:")) {
+          setSelfNotes(submission.adminFeedback.replace(/^تقييم ذاتي:\s*/, ""));
+        } else if (submission.adminFeedback) {
+          setSelfNotes(submission.adminFeedback);
+        } else {
+          setSelfNotes("");
+        }
+        setSelfAssessedSuccess(submission.status === "reviewed");
         setViewMode("model_answer");
       } else {
         // Either not started or in_progress
@@ -157,10 +199,11 @@ export function EssayExamsTab({
           });
           if (!startRes.ok) throw new Error("تعذر بدء مؤقت الامتحان");
           const startData = await startRes.json();
+          const startSub = startData.submission || {};
           examData.mySubmission = {
-            id: startData.submissionId,
+            id: startData.submissionId || startSub.id,
             status: "in_progress",
-            startedAt: startData.startedAt,
+            startedAt: startData.startedAt || startSub.startedAt,
           };
           setActiveExam({ ...examData });
         }
@@ -207,6 +250,7 @@ export function EssayExamsTab({
       return;
     }
 
+    autoSubmittedRef.current = false;
     timerRef.current = setInterval(() => {
       setRemainingSeconds((prev) => {
         if (prev <= 1) {
@@ -253,6 +297,7 @@ export function EssayExamsTab({
       setUploadingForQuestion(questionId);
       const formData = new FormData();
       formData.append("image", file);
+      formData.append("photo", file);
 
       const res = await fetch("/api/learning/essay-exams/upload-answer-image", {
         method: "POST",
@@ -270,7 +315,7 @@ export function EssayExamsTab({
         ...prev,
         [questionId]: {
           ...(prev[questionId] || { writtenText: "" }),
-          attachmentUrl: result.fileUrl,
+          attachmentUrl: result.fileUrl || result.url,
         },
       }));
 
@@ -299,9 +344,89 @@ export function EssayExamsTab({
     }));
   };
 
-  // 6. Submit exam
-  const handleSubmitExam = async () => {
+  // Calculated total self-assessed score
+  const totalSelfScore = useMemo(() => {
+    return Object.values(selfScores).reduce((sum, s) => sum + (Number(s) || 0), 0);
+  }, [selfScores]);
+
+  // Handle Save Student Self Assessment
+  const handleSaveSelfAssessment = async () => {
     if (!activeExam) return;
+    try {
+      setSavingSelfScore(true);
+      const res = await fetch(`/api/learning/essay-exams/${activeExam.id}/self-assess`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          questionScores: selfScores,
+          selfNotes,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "تعذر حفظ التقييم الذاتي");
+      }
+
+      const result = await res.json();
+      setSelfAssessedSuccess(true);
+      if (result.submission) {
+        setActiveExam((prev) => (prev ? { ...prev, mySubmission: result.submission } : prev));
+      }
+
+      toast({
+        title: "🎉 تم رصد تقييمك الذاتي بنجاح!",
+        description: `تم حفظ درجتك (${result.totalScore ?? totalSelfScore} / ${activeExam.totalPoints}) وملاحظاتك الذاتية للاستفادة منها.`,
+      });
+      loadExams();
+    } catch (err: any) {
+      toast({
+        title: "خطأ",
+        description: err.message || "حدث خطأ أثناء حفظ التقييم الذاتي",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingSelfScore(false);
+    }
+  };
+
+  // Helper to append deficiency diagnostic note to self-assessment
+  const handleAddDeficiencyTag = (questionNumber: number, tagText: string) => {
+    const snippet = `• س${questionNumber}: ${tagText}`;
+    setSelfNotes((prev) => {
+      if (prev.includes(snippet)) return prev;
+      return prev.trim() ? `${prev.trim()}\n${snippet}` : snippet;
+    });
+    toast({
+      title: "تم تسجيل الملاحظة ✍️",
+      description: snippet,
+    });
+  };
+
+  // 6. Submit exam
+  const handleSubmitExam = async (skipValidation = false) => {
+    if (!activeExam) return;
+
+    // Strict validation: student MUST solve every question (text or image) before submitting
+    if (!skipValidation) {
+      const unansweredQuestions = (activeExam.questions || []).filter((q) => {
+        const a = answers[q.id];
+        const hasText = a?.writtenText && a.writtenText.trim().length > 0;
+        const hasImage = Boolean(a?.attachmentUrl);
+        return !hasText && !hasImage;
+      });
+
+      if (unansweredQuestions.length > 0) {
+        toast({
+          title: "يجب حل جميع الأسئلة أولاً ⚠️",
+          description: `يتبقى لديك ${unansweredQuestions.length} سؤال بدون إجابة. يلزم كتابة نص الحل أو رفع صورة لورقة الإجابة لكل سؤال حتى يتاح لك التسليم والاطلاع على الإجابة النموذجية وتقييم نفسك.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     try {
       setSubmitting(true);
       const formattedAnswers = Object.entries(answers).map(([qId, ans]) => ({
@@ -342,12 +467,19 @@ export function EssayExamsTab({
         });
       }
 
+      // Initialize self-scores to 0 for each question
+      const initialScores: Record<string, number> = {};
+      (result.modelAnswers || activeExam.questions).forEach((q: EssayQuestion) => {
+        initialScores[q.id] = 0;
+      });
+      setSelfScores(initialScores);
+
       setConfirmSubmitOpen(false);
       setViewMode("model_answer");
 
       toast({
-        title: "🎉 تم تسليم الامتحان المقالي بنجاح!",
-        description: "ظهر لك الآن الحل النموذجي والمثالي المعتمد لكل سؤال",
+        title: "🎉 تم تسليم الامتحان بنجاح!",
+        description: "ظهر لك الآن الحل النموذجي المعتمد. يمكنك البدء في تقييم نفسك ومقارنة إجابتك.",
       });
 
       // Reload exams list in background
@@ -363,13 +495,20 @@ export function EssayExamsTab({
     }
   };
 
+  // Always call the latest handleSubmitExam (the timer interval captures stale state otherwise)
+  const submitExamRef = useRef(handleSubmitExam);
+  submitExamRef.current = handleSubmitExam;
+
   const handleAutoSubmitOnExpiry = () => {
+    if (autoSubmittedRef.current) return;
+    autoSubmittedRef.current = true;
     toast({
       title: "⏰ انتهى وقت الامتحان المحدد!",
-      description: "جاري تسليم إجاباتك تلقائياً وعرض الحل النموذجي...",
+      description: "جاري تسليم إجاباتك وعرض الحل النموذجي المعتمد...",
       variant: "warning",
     });
-    handleSubmitExam();
+    // Defer out of the setState updater so it isn't run as a side effect of rendering
+    setTimeout(() => submitExamRef.current(true), 0);
   };
 
   // Filtered exams list
@@ -408,7 +547,7 @@ export function EssayExamsTab({
               الامتحانات والواجبات المقالية
             </h1>
             <p className="text-sm text-blue-100/90 leading-relaxed">
-              اختبر مهاراتك في الحل التحريري وكتابة المعادلات والمسائل الكيميائية بالتفصيل. يبدأ عداد الوقت (ساعة كاملة) وفور انتهائك يظهر لك الحل النموذجي والمثالي المعتمد من د. محمود المهدي.
+              اختبر مهاراتك في الحل التحريري وتتبع الكود وكتابة الخوارزميات والبرمجة بالتفصيل. بعد تسليم إجاباتك، يفتح لك الحل النموذجي المعتمد لتقارن إجابتك وتقيّم نفسك وتتعرف على ما ينقصك.
             </p>
           </div>
           <div className="absolute -left-12 -bottom-12 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
@@ -471,17 +610,29 @@ export function EssayExamsTab({
                   <div className="space-y-3.5">
                     {/* Top badging */}
                     <div className="flex items-center justify-between gap-2">
-                      <span className="inline-flex items-center gap-1.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2.5 py-1 text-xs font-bold">
-                        <FileEdit className="h-3.5 w-3.5" />
-                        {exam.stage || "الكيمياء العامة"}
-                      </span>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="inline-flex items-center gap-1.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2.5 py-1 text-xs font-bold">
+                          <FileEdit className="h-3.5 w-3.5" />
+                          {exam.stage || "منهج البكالوريا"}
+                        </span>
+                        {exam.unit && (
+                          <span className="inline-flex items-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 text-[11px] font-semibold" title={exam.unit}>
+                            {exam.unit.length > 18 ? exam.unit.slice(0, 18) + "..." : exam.unit}
+                          </span>
+                        )}
+                        {exam.lesson && (
+                          <span className="inline-flex items-center rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2 py-0.5 text-[11px] font-semibold" title={exam.lesson}>
+                            {exam.lesson.length > 18 ? exam.lesson.slice(0, 18) + "..." : exam.lesson}
+                          </span>
+                        )}
+                      </div>
                       {isReviewed ? (
-                        <span className="inline-flex items-center gap-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-2.5 py-1 text-xs font-extrabold">
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                          تم التقييم: {sub.adminScore} / {exam.totalPoints}
+                        <span className="inline-flex items-center gap-1 rounded-xl bg-purple-500/15 text-purple-700 dark:text-purple-300 px-2.5 py-1 text-xs font-extrabold border border-purple-500/20 shrink-0">
+                          <Sparkles className="h-3.5 w-3.5" />
+                          تقييمك: {sub.adminScore} / {exam.totalPoints}
                         </span>
                       ) : isSubmitted ? (
-                        <span className="inline-flex items-center gap-1 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 px-2.5 py-1 text-xs font-bold">
+                        <span className="inline-flex items-center gap-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-2.5 py-1 text-xs font-bold shrink-0">
                           <CheckCircle2 className="h-3.5 w-3.5" />
                           تم التسليم ✅
                         </span>
@@ -700,13 +851,13 @@ export function EssayExamsTab({
                     />
                   </div>
 
-                  {/* Handwritten paper upload (Chemistry formulas / diagrams) */}
+                  {/* Handwritten paper upload (code tracing / diagrams) */}
                   {activeExam.allowImageUpload && (
                     <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-4 space-y-3">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div className="flex items-center gap-2 text-xs font-bold text-foreground">
                           <ImageIcon className="h-4 w-4 text-primary" />
-                          <span>صورة ورقة الإجابة المكتوبة بخط اليد (اختياري للمعادلات):</span>
+                          <span>صورة ورقة الإجابة المكتوبة بخط اليد (اختياري للكود وخطوات التتبع):</span>
                         </div>
 
                         {/* File input button */}
@@ -777,16 +928,37 @@ export function EssayExamsTab({
           <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
             <div className="text-xs">
               <span className="font-bold text-foreground block sm:inline">حالة الإجابة: </span>
-              <span className="font-semibold text-muted-foreground">
+              <span
+                className={`font-semibold ${
+                  answeredCount === activeExam.questions.length
+                    ? "text-emerald-600 dark:text-emerald-400 font-bold"
+                    : "text-amber-600 dark:text-amber-400"
+                }`}
+              >
                 أجبت على {answeredCount} من أصل {activeExam.questions.length} سؤال
+                {answeredCount < activeExam.questions.length && " (إجباري حل جميع الأسئلة للتسليم)"}
               </span>
             </div>
 
             <Button
               size="lg"
-              onClick={() => setConfirmSubmitOpen(true)}
+              onClick={() => {
+                if (answeredCount < activeExam.questions.length) {
+                  toast({
+                    title: "يجب حل جميع الأسئلة أولاً ⚠️",
+                    description: `أجبت على ${answeredCount} من ${activeExam.questions.length}. يجب حل جميع الأسئلة بكتابة الإجابة أو رفع صورة ورقة الحل لكل سؤال لتتمكن من التسليم.`,
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                setConfirmSubmitOpen(true);
+              }}
               disabled={submitting}
-              className="rounded-2xl bg-primary hover:bg-primary/90 text-white font-extrabold gap-2 px-6 shadow-md"
+              className={`rounded-2xl font-extrabold gap-2 px-6 shadow-md transition-all ${
+                answeredCount === activeExam.questions.length
+                  ? "bg-primary hover:bg-primary/90 text-white"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80 cursor-not-allowed"
+              }`}
             >
               {submitting ? (
                 <>
@@ -796,7 +968,11 @@ export function EssayExamsTab({
               ) : (
                 <>
                   <Send className="h-4 w-4" />
-                  <span>إنهاء وتسليم الاختبار المقالي 🚀</span>
+                  <span>
+                    {answeredCount === activeExam.questions.length
+                      ? "إنهاء وتسليم الاختبار وعرض الحل النموذجي 🚀"
+                      : `متبقي ${activeExam.questions.length - answeredCount} أسئلة لم تُحل`}
+                  </span>
                 </>
               )}
             </Button>
@@ -808,19 +984,13 @@ export function EssayExamsTab({
           <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-xs p-4">
             <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-2xl space-y-4">
               <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary mx-auto">
-                <AlertTriangle className="h-6 w-6 text-amber-500" />
+                <CheckCircle2 className="h-6 w-6 text-emerald-500" />
               </div>
               <div className="text-center space-y-1.5">
                 <h3 className="text-lg font-bold text-foreground">تأكيد تسليم الاختبار المقالي</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  لقد قمت بحل <strong className="text-foreground">{answeredCount}</strong> من أصل{" "}
-                  <strong className="text-foreground">{activeExam.questions.length}</strong> أسئلة.
-                  {answeredCount < activeExam.questions.length && (
-                    <span className="block mt-1 text-amber-600 dark:text-amber-400 font-bold">
-                      ⚠️ انتبه: توجد أسئلة لم تقم بالإجابة عليها بعد!
-                    </span>
-                  )}
-                  بمجرد التسليم سيتم غلق التعديل وعرض الحل النموذجي والمثالي فورياً.
+                  أحسنت! لقد قمت بحل جميع الأسئلة (<strong className="text-foreground">{answeredCount} من {activeExam.questions.length}</strong>).
+                  بمجرد النقر على "تأكيد التسليم"، سيتم إنهاء الامتحان وفتح الحل النموذجي والمثالي فورياً لمقارنة إجابتك وتقييم نفسك.
                 </p>
               </div>
 
@@ -831,10 +1001,10 @@ export function EssayExamsTab({
                   disabled={submitting}
                   className="rounded-xl text-xs font-bold"
                 >
-                  العودة للحل
+                  العودة للمراجعة
                 </Button>
                 <Button
-                  onClick={handleSubmitExam}
+                  onClick={() => handleSubmitExam()}
                   disabled={submitting}
                   className="rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold gap-1.5"
                 >
@@ -854,12 +1024,13 @@ export function EssayExamsTab({
   // ─────────────────────────────────────────────────────────────
   if (viewMode === "model_answer" && activeExam) {
     const sub = activeExam.mySubmission;
-    const isReviewed = sub?.status === "reviewed";
+    const isReviewed = sub?.status === "reviewed" || selfAssessedSuccess;
+    const percentScore = activeExam.totalPoints > 0 ? Math.round((totalSelfScore / activeExam.totalPoints) * 100) : 0;
 
     return (
-      <div className="space-y-6 pb-20" dir="rtl">
-        {/* Navigation back */}
-        <div className="flex items-center justify-between gap-3">
+      <div className="space-y-6 pb-28" dir="rtl">
+        {/* Navigation & Hierarchy Badges */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <Button
             variant="outline"
             size="sm"
@@ -870,83 +1041,159 @@ export function EssayExamsTab({
             الرجوع لقائمة الامتحانات المقالية
           </Button>
 
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            تم تسليم الاختبار بنجاح
-          </span>
-        </div>
-
-        {/* Hero Celebration / Model Answer Banner */}
-        <div className="rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-600 via-teal-600 to-sky-700 p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
-          <div className="relative z-10 space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-0.5 text-xs font-semibold backdrop-blur-md">
-              <Sparkles className="h-3.5 w-3.5 text-amber-300" />
-              <span>الحل النموذجي والمثالي المعتمد</span>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-black">
-              {activeExam.title}
-            </h1>
-            <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed">
-              إليك الإجابات النموذجية والشرح وخطوات الحل وتوزيع الدرجات المعتمدة من د. محمود المهدي لكل سؤال، لمقارنتها بإجابتك التحريرية ومعرفة نقاط القوة ومواطن التحسين.
-            </p>
-          </div>
-
-          <div className="absolute left-0 bottom-0 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-        </div>
-
-        {/* If reviewed by Dr. Mahmoud: show Score & Feedback card */}
-        {isReviewed && (
-          <div className="rounded-3xl border border-emerald-500/40 bg-card p-6 shadow-md space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-                  <Award className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-foreground">نتيجة وتقييم د. محمود المهدي</h3>
-                  <span className="text-xs text-muted-foreground">تم تصحيح وتدقيق إجاباتك يدوياً</span>
-                </div>
-              </div>
-
-              {/* Big Score Badge */}
-              <div className="flex items-center gap-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 px-4 py-2">
-                <span className="text-xs text-muted-foreground font-bold">الدرجة المستحقة:</span>
-                <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
-                  {sub?.adminScore}
-                </span>
-                <span className="text-xs text-muted-foreground font-bold">
-                  / {activeExam.totalPoints}
-                </span>
-              </div>
-            </div>
-
-            {/* Dr. Mahmoud's Feedback */}
-            {sub?.adminFeedback && (
-              <div className="rounded-2xl bg-muted/40 p-4 space-y-1.5 border border-border">
-                <span className="text-xs font-bold text-primary flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                  ملاحظات وتوجيهات د. محمود:
-                </span>
-                <p className="text-xs sm:text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                  {sub.adminFeedback}
-                </p>
-              </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {activeExam.stage && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-xs font-bold text-primary">
+                <BookOpen className="h-3.5 w-3.5" />
+                {activeExam.stage}
+              </span>
             )}
+            {activeExam.unit && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 px-3 py-1 text-xs font-bold text-blue-600 dark:text-blue-400">
+                <Layers className="h-3.5 w-3.5" />
+                {activeExam.unit}
+              </span>
+            )}
+            {activeExam.lesson && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 px-3 py-1 text-xs font-bold text-purple-600 dark:text-purple-400">
+                <FileText className="h-3.5 w-3.5" />
+                {activeExam.lesson}
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              تم التسليم بنجاح
+            </span>
           </div>
-        )}
+        </div>
+
+        {/* Hero Banner: Self-Assessment Control Center */}
+        <div className="rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+          <div className="relative z-10 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-3.5 py-1 text-xs font-bold text-emerald-300 backdrop-blur-md">
+                <Target className="h-4 w-4 text-emerald-300 animate-pulse" />
+                <span>لوحة التقييم الذاتي ومقارنة الحل النموذجي</span>
+              </div>
+
+              {isReviewed && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/30 border border-emerald-400/40 px-3 py-1 text-xs font-black text-emerald-200">
+                  <CheckCheck className="h-4 w-4 text-emerald-300" />
+                  تم اعتماد تقييمك الذاتي
+                </span>
+              )}
+            </div>
+
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-white">
+                {activeExam.title}
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-300 mt-1 leading-relaxed max-w-3xl">
+                بناءً على نظام المنصة: يمكنك الآن مقارنة إجابتك التحريرية والبرمجية بالحل النموذجي وخطوات التتبع والشرح المعتمد، ثم رصد درجتك المستحقة لكل سؤال وتدوين ما كان ينقصك في الملاحظات لاعتماد تقييمك الذاتي.
+              </p>
+            </div>
+
+            {/* Score & Reflection Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 pt-2">
+              {/* Score Display Card (4 cols) */}
+              <div className="lg:col-span-4 rounded-2xl bg-white/10 dark:bg-black/30 border border-white/15 p-5 flex flex-col justify-between backdrop-blur-md space-y-4">
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+                    <Award className="h-4 w-4" />
+                    مجموع درجتك المرصودة ذاتياً:
+                  </span>
+                  <div className="flex items-baseline gap-2 pt-1">
+                    <span className="text-3xl sm:text-4xl font-black text-white">
+                      {totalSelfScore}
+                    </span>
+                    <span className="text-sm font-bold text-slate-300">
+                      / {activeExam.totalPoints} درجة
+                    </span>
+                    <span className="mr-auto inline-flex items-center rounded-xl bg-emerald-500/25 border border-emerald-400/30 px-2.5 py-0.5 text-xs font-black text-emerald-200">
+                      {percentScore}%
+                    </span>
+                  </div>
+                </div>
+
+                {/* Progress bar */}
+                <div className="space-y-1.5">
+                  <div className="h-2.5 w-full bg-white/15 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-400 to-teal-300 transition-all duration-500"
+                      style={{ width: `${Math.min(100, Math.max(0, percentScore))}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between items-center text-[11px] text-slate-300 font-semibold">
+                    <span>
+                      {percentScore >= 90
+                        ? "🌟 إتقان ممتاز"
+                        : percentScore >= 75
+                        ? "👏 مستوى متميز وجيد جداً"
+                        : percentScore >= 50
+                        ? "👍 متوسط - راجع النواقص"
+                        : "⚠️ يحتاج مراجعة وتثبيت"}
+                    </span>
+                    <span>{percentScore}% إنجاز</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Self Reflection & Action Card (8 cols) */}
+              <div className="lg:col-span-8 rounded-2xl bg-white/10 dark:bg-black/30 border border-white/15 p-5 backdrop-blur-md flex flex-col justify-between gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+                    <FileEdit className="h-4 w-4" />
+                    ملاحظاتك الذاتية ومواطن النقص المستفادة (سجل ما تعلمته وما كان ينقصك):
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={selfNotes}
+                    onChange={(e) => setSelfNotes(e.target.value)}
+                    placeholder="سجل ملاحظاتك هنا: مثلاً (نسيت شرط التوقف في دالة التكرار، أو خطأ في نوع المتغير، أو نقص في تتبع خطوات المصفوفة...)"
+                    className="w-full rounded-xl bg-black/30 border border-white/20 p-3 text-xs sm:text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 resize-none"
+                  />
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                  <span className="text-[11px] text-slate-300">
+                    💡 يمكنك النقر على أوسمة التشخيص أسفل كل سؤال لإضافتها تلقائياً إلى ملاحظاتك.
+                  </span>
+                  <Button
+                    onClick={handleSaveSelfAssessment}
+                    disabled={savingSelfScore}
+                    className="rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black text-xs gap-2 px-5 py-2 shadow-lg"
+                  >
+                    {savingSelfScore ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                    {isReviewed ? "تحديث واعتماد تقييمي الذاتي 🏆" : "حفظ واعتماد تقييمي الذاتي 🏆"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="absolute left-0 bottom-0 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+        </div>
 
         {/* Questions comparison list */}
         <div className="space-y-8">
           {activeExam.questions.map((q, idx) => {
             const studentAns = answers[q.id];
+            const currentScore = selfScores[q.id] ?? (studentAns?.score ?? 0);
+
+            // Point buttons generator
+            const pointOptions = Array.from({ length: q.points + 1 }, (_, i) => i);
 
             return (
               <div
                 key={q.id}
                 className="rounded-3xl border border-border bg-card p-5 sm:p-7 shadow-xs space-y-6"
               >
-                {/* Question Title */}
-                <div className="flex items-center justify-between gap-3 border-b border-border/60 pb-3">
+                {/* Question Title & Points Header */}
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
                   <div className="flex items-center gap-2.5">
                     <span className="grid h-7 w-7 place-items-center rounded-xl bg-primary text-white text-xs font-bold">
                       {idx + 1}
@@ -955,14 +1202,20 @@ export function EssayExamsTab({
                       السؤال رقم ({idx + 1})
                     </h3>
                   </div>
-                  <span className="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-600 dark:text-amber-400">
-                    {q.points} درجات
-                  </span>
+
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-muted px-3 py-1 text-xs font-bold text-muted-foreground border border-border">
+                      الدرجة الكاملة: {q.points} درجات
+                    </span>
+                    <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 text-xs font-black text-emerald-600 dark:text-emerald-400">
+                      تقييمك: {currentScore} / {q.points}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Prompt */}
                 <div className="space-y-3">
-                  <p className="text-sm sm:text-base font-semibold text-foreground leading-relaxed select-text">
+                  <p className="text-sm sm:text-base font-semibold text-foreground leading-relaxed select-text font-mono">
                     {q.prompt}
                   </p>
                   {q.imageUrl && (
@@ -977,111 +1230,208 @@ export function EssayExamsTab({
                   )}
                 </div>
 
-                {/* Student's Submitted Answer Section */}
-                <div className="rounded-2xl border border-border/80 bg-muted/20 p-4 space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                      <FileText className="h-4 w-4 text-blue-500" />
-                      إجابتك التي قمت بتسليمها:
-                    </span>
+                {/* Side-by-Side Comparison: Student's Answer vs Model Answer */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                  {/* Student's Answer */}
+                  <div className="rounded-2xl border border-border/80 bg-muted/20 p-4 sm:p-5 space-y-3 flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-2 border-b border-border/60 pb-2">
+                        <span className="text-xs font-extrabold text-foreground flex items-center gap-1.5">
+                          <FileText className="h-4 w-4 text-blue-500" />
+                          إجابتك التحريرية التي سلمتها:
+                        </span>
+                      </div>
+
+                      {studentAns?.writtenText ? (
+                        <div className="text-xs sm:text-sm text-foreground whitespace-pre-wrap bg-card rounded-xl p-3.5 border border-border/60 leading-relaxed font-mono select-text">
+                          {studentAns.writtenText}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic block p-3 bg-card rounded-xl border border-border/40">
+                          (لم يتم إدخال نص إجابة - تم الاكتفاء بالصورة المرفوعة)
+                        </span>
+                      )}
+
+                      {/* Student uploaded handwritten image */}
+                      {studentAns?.attachmentUrl && (
+                        <div className="pt-2">
+                          <span className="text-[11px] font-bold text-muted-foreground block mb-1.5">
+                            ورقة الحل المرفوعة بخط يدك:
+                          </span>
+                          <div
+                            className="relative rounded-2xl overflow-hidden border border-border bg-card max-w-sm cursor-pointer group"
+                            onClick={() => setPreviewImageUrl(studentAns.attachmentUrl!)}
+                          >
+                            <img
+                              src={studentAns.attachmentUrl}
+                              alt="ورقة إجابة الطالب"
+                              className="w-full max-h-64 object-contain group-hover:scale-102 transition-transform"
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity grid place-items-center text-white text-xs font-bold gap-1">
+                              <Eye className="h-4 w-4" />
+                              <span>انقر لتكبير ورقة إجابتك</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  {studentAns?.writtenText ? (
-                    <p className="text-xs sm:text-sm text-foreground/90 whitespace-pre-wrap bg-card rounded-xl p-3 border border-border/60 leading-relaxed select-text">
-                      {studentAns.writtenText}
-                    </p>
-                  ) : (
-                    <span className="text-xs text-muted-foreground italic block">
-                      (لم يتم إدخال إجابة نصية)
-                    </span>
-                  )}
-
-                  {/* Student uploaded handwritten image */}
-                  {studentAns?.attachmentUrl && (
-                    <div className="pt-2">
-                      <span className="text-[11px] font-bold text-muted-foreground block mb-1.5">
-                        ورقة الحل المرفوعة بخط يدك:
-                      </span>
-                      <div
-                        className="relative rounded-2xl overflow-hidden border border-border bg-card max-w-sm cursor-pointer group"
-                        onClick={() => setPreviewImageUrl(studentAns.attachmentUrl!)}
-                      >
-                        <img
-                          src={studentAns.attachmentUrl}
-                          alt="ورقة إجابة الطالب"
-                          className="w-full max-h-64 object-contain group-hover:scale-102 transition-transform"
-                        />
-                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity grid place-items-center text-white text-xs font-bold gap-1">
-                          <Eye className="h-4 w-4" />
-                          <span>انقر لتكبير الصورة</span>
-                        </div>
+                  {/* Model Answer */}
+                  <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/20 p-4 sm:p-5 space-y-3 flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-2 border-b border-emerald-500/20 pb-2">
+                        <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                          <CheckCircle2 className="h-4 w-4" />
+                          الحل النموذجي والمثالي المعتمد:
+                        </span>
                       </div>
+
+                      {q.modelAnswer ? (
+                        <div className="text-xs sm:text-sm text-foreground font-mono leading-relaxed whitespace-pre-wrap bg-white dark:bg-[#0E1626] rounded-xl p-3.5 border border-emerald-500/25 shadow-2xs select-text">
+                          {q.modelAnswer}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">
+                          الحل النموذجي قيد التحديث
+                        </span>
+                      )}
+
+                      {/* Model Answer Image */}
+                      {q.modelAnswerImageUrl && (
+                        <div className="pt-2">
+                          <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 block mb-1.5">
+                            رسمة / ورقة الحل النموذجية التوضيحية:
+                          </span>
+                          <div
+                            className="rounded-2xl overflow-hidden border border-emerald-500/30 bg-card max-w-sm cursor-pointer hover:opacity-95"
+                            onClick={() => setPreviewImageUrl(q.modelAnswerImageUrl!)}
+                          >
+                            <img
+                              src={q.modelAnswerImageUrl}
+                              alt="صورة الحل النموذجي"
+                              className="w-full max-h-64 object-contain"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Step Explanation / Grading breakdown */}
+                      {q.explanation && (
+                        <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+                          <span className="font-bold flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+                            <Sparkles className="h-3.5 w-3.5" />
+                            توزيع الدرجات وخطوات التتبع:
+                          </span>
+                          <p className="leading-relaxed whitespace-pre-wrap">{q.explanation}</p>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
 
-                {/* Model / Ideal Answer Section (The Gold Standard) */}
-                <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/20 p-5 space-y-3.5">
-                  <div className="flex items-center gap-2 text-xs font-extrabold text-emerald-600 dark:text-emerald-400">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>الحل النموذجي والمثالي المعتمد من د. محمود:</span>
+                {/* Interactive Self-Scoring & Deficiency Diagnostics */}
+                <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:p-5 space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <span className="text-xs sm:text-sm font-bold text-foreground flex items-center gap-2">
+                      <Target className="h-4 w-4 text-primary" />
+                      كم درجة تستحق على هذا السؤال مقارنة بالحل النموذجي أعلاه؟
+                    </span>
+                    <span className="text-xs font-black text-primary bg-primary/10 px-3 py-1 rounded-xl">
+                      اختر درجتك: ({currentScore} من {q.points})
+                    </span>
                   </div>
 
-                  {q.modelAnswer ? (
-                    <div className="text-xs sm:text-sm text-foreground font-medium leading-relaxed whitespace-pre-wrap bg-white dark:bg-[#0E1626] rounded-xl p-4 border border-emerald-500/20 shadow-2xs select-text">
-                      {q.modelAnswer}
-                    </div>
-                  ) : (
-                    <span className="text-xs text-muted-foreground italic">
-                      الحل النموذجي قيد التحديث
+                  {/* Quick score buttons */}
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {pointOptions.map((pts) => {
+                      const isSelected = currentScore === pts;
+                      return (
+                        <button
+                          key={pts}
+                          type="button"
+                          onClick={() => {
+                            setSelfScores((prev) => ({ ...prev, [q.id]: pts }));
+                          }}
+                          className={`h-9 min-w-9 px-3 rounded-xl text-xs font-bold transition-all ${
+                            isSelected
+                              ? "bg-emerald-600 text-white shadow-md scale-105"
+                              : "bg-background border border-border text-foreground hover:bg-muted"
+                          }`}
+                        >
+                          {pts === 0 ? "0 (صفر)" : pts === q.points ? `${pts} (كاملة)` : pts}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Deficiency Diagnostic Quick Tags */}
+                  <div className="pt-2 border-t border-primary/10 space-y-2">
+                    <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1.5">
+                      <Tag className="h-3.5 w-3.5 text-primary" />
+                      انقر لتشخيص النواقص وتسجيلها في ملاحظاتك تلقائياً:
                     </span>
-                  )}
-
-                  {/* Model Answer Image (e.g., Doctor's handwritten formula or diagram) */}
-                  {q.modelAnswerImageUrl && (
-                    <div className="pt-2">
-                      <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 block mb-1.5">
-                        رسمة / ورقة الحل النموذجية التوضيحية:
-                      </span>
-                      <div
-                        className="rounded-2xl overflow-hidden border border-emerald-500/30 bg-card max-w-md cursor-pointer hover:opacity-95"
-                        onClick={() => setPreviewImageUrl(q.modelAnswerImageUrl!)}
-                      >
-                        <img
-                          src={q.modelAnswerImageUrl}
-                          alt="صورة الحل النموذجي"
-                          className="w-full max-h-72 object-contain"
-                        />
-                      </div>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { label: "🌟 إجابة نموذجية كاملة", text: "إجابة نموذجية مطابقة تماماً" },
+                        { label: "⚠️ نقص في خطوات الخوارزمية والتتبع", text: "نقص في تتبع المتغيرات أو خطوات الخوارزمية" },
+                        { label: "⚠️ خطأ في الشروط المنطقية أو الصياغة", text: "خطأ في الشرط المنطقي أو صياغة الأكواد" },
+                        { label: "❌ الناتج النهائي غير صحيح", text: "الناتج النهائي غير مطابق للحل النموذجي" },
+                        { label: "💡 سوء فهم لمطلوب السؤال", text: "سوء فهم لمطلوب المسألة" },
+                      ].map((chip) => (
+                        <button
+                          key={chip.label}
+                          type="button"
+                          onClick={() => handleAddDeficiencyTag(idx + 1, chip.text)}
+                          className="rounded-lg bg-background/80 hover:bg-background border border-border/80 px-2.5 py-1 text-[11px] font-medium text-foreground transition-all hover:border-primary/50"
+                        >
+                          {chip.label}
+                        </button>
+                      ))}
                     </div>
-                  )}
-
-                  {/* Step Explanation / Grading breakdown */}
-                  {q.explanation && (
-                    <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 text-xs text-amber-900 dark:text-amber-200 space-y-1">
-                      <span className="font-bold flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
-                        <Sparkles className="h-3.5 w-3.5" />
-                        توضيح وتوزيع الدرجات:
-                      </span>
-                      <p className="leading-relaxed whitespace-pre-wrap">{q.explanation}</p>
-                    </div>
-                  )}
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* Back to exams bottom button */}
-        <div className="text-center pt-6">
-          <Button
-            size="lg"
-            onClick={() => setViewMode("list")}
-            className="rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold gap-2 px-8"
-          >
-            <ChevronRight className="h-4 w-4" />
-            العودة للامتحانات المقالية
-          </Button>
+        {/* Floating Bottom Action Bar */}
+        <div className="sticky bottom-4 z-40 rounded-2xl border border-emerald-500/30 bg-card/95 backdrop-blur-md p-4 shadow-xl flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+              <Award className="h-5 w-5" />
+            </div>
+            <div>
+              <span className="text-xs text-muted-foreground block font-bold">الدرجة المرصودة ذاتياً:</span>
+              <span className="text-lg font-black text-foreground">
+                {totalSelfScore} <span className="text-xs text-muted-foreground">/ {activeExam.totalPoints}</span>
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className="rounded-xl text-xs font-bold"
+            >
+              العودة للقائمة
+            </Button>
+            <Button
+              onClick={handleSaveSelfAssessment}
+              disabled={savingSelfScore}
+              className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black gap-2 px-6 shadow-md"
+            >
+              {savingSelfScore ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {isReviewed ? "تحديث واعتماد التقييم 🏆" : "حفظ واعتماد التقييم الذاتي 🏆"}
+            </Button>
+          </div>
         </div>
       </div>
     );

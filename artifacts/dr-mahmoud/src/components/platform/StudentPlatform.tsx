@@ -136,7 +136,7 @@ async function cropAvatar(file: File): Promise<Blob> {
 
 
 export function getNotificationTarget(notification: { title: string; message: string; type?: string | null }): {
-  tab: "dashboard" | "lessons" | "summaries" | "compiler" | "files" | "quizzes" | "self-assessment" | "profile" | "external";
+  tab: "dashboard" | "lessons" | "essay-exams" | "summaries" | "compiler" | "files" | "quizzes" | "self-assessment" | "profile" | "external";
   label: string;
   url?: string;
 } {
@@ -172,6 +172,16 @@ export function getNotificationTarget(notification: { title: string; message: st
     titleMsg.includes("أسئلة")
   ) {
     return { tab: "self-assessment", label: "التقييم الذاتي 🎯" };
+  }
+
+  // 3.5. Essay Exams (الامتحانات المقالية)
+  if (
+    type === "essay" ||
+    type === "essay_exam" ||
+    titleMsg.includes("مقالي") ||
+    titleMsg.includes("مقال")
+  ) {
+    return { tab: "essay-exams", label: "الامتحانات المقالية ✍️" };
   }
 
   // 4. Quizzes & Exams (امتحانات واختبارات)
