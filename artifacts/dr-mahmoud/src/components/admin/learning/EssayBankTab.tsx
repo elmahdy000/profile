@@ -57,12 +57,14 @@ interface EssayBankTabProps {
   selectionMode?: boolean;
   onSelectQuestions?: (questions: EssayBankQuestion[]) => void;
   selectedIds?: number[];
+  onCreateExamFromBank?: (questions: EssayBankQuestion[]) => void;
 }
 
 export function EssayBankTab({
   selectionMode = false,
   onSelectQuestions,
   selectedIds = [],
+  onCreateExamFromBank,
 }: EssayBankTabProps) {
   const { toast } = useToast();
 
@@ -663,6 +665,48 @@ export function EssayBankTab({
         </div>
       )}
 
+      {/* ── Standalone Mode: Create Exam from Selected Questions Bar ── */}
+      {!selectionMode && Boolean(onCreateExamFromBank) && selectedBankIds.length > 0 && (
+        <div className="rounded-2xl border border-indigo-500/40 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-blue-500/10 p-4 flex items-center justify-between flex-wrap gap-3 shadow-xs animate-in fade-in">
+          <div className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-indigo-600 text-white font-bold text-sm shadow-xs">
+              {selectedBankIds.length}
+            </div>
+            <div>
+              <span className="text-xs font-bold text-foreground block">
+                تم تحديد {selectedBankIds.length} سؤال من بنك الأسئلة المقالية
+              </span>
+              <span className="text-[11px] text-muted-foreground">
+                اضغط لتجميع هذه الأسئلة وفتح شاشة إعداد الامتحان لضبط المدة والنشر
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setSelectedBankIds([])}
+              className="rounded-xl text-xs font-semibold"
+            >
+              إلغاء التحديد
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                if (onCreateExamFromBank) {
+                  const selectedObjects = questions.filter((q) => selectedBankIds.includes(q.id));
+                  onCreateExamFromBank(selectedObjects);
+                }
+              }}
+              className="rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white gap-2 shadow-xs"
+            >
+              <FileEdit className="w-4 h-4" />
+              إنشاء امتحان من الأسئلة المحددة ({selectedBankIds.length}) ✍️
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* ── Questions List ── */}
       {loading ? (
         <div className="rounded-2xl border border-border bg-card p-12 text-center">
@@ -711,7 +755,7 @@ export function EssayBankTab({
                 {/* Header Row */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2 flex-wrap">
-                    {selectionMode && (
+                    {(selectionMode || Boolean(onCreateExamFromBank)) && (
                       <input
                         type="checkbox"
                         checked={isSelected}

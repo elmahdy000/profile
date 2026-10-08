@@ -146,6 +146,38 @@ export function EssayExamsAdminTab({
     setBankSelectorOpen(false);
   };
 
+  // Create Exam directly from Essay Test Bank selected questions
+  const handleCreateExamFromBank = (selectedFromBank: EssayBankQuestion[]) => {
+    if (selectedFromBank.length === 0) return;
+    const firstStage = selectedFromBank[0]?.stage || "";
+    const firstUnit = selectedFromBank[0]?.unit || "";
+    const firstLesson = selectedFromBank[0]?.lesson || "";
+
+    const newQuestions: EssayQuestion[] = selectedFromBank.map((q, idx) => ({
+      id: `q_${Date.now()}_${idx}`,
+      prompt: q.prompt,
+      points: q.points || 10,
+      modelAnswer: q.modelAnswer,
+      explanation: q.explanation || "",
+      imageUrl: q.imageUrl || undefined,
+      modelAnswerImageUrl: q.modelAnswerImageUrl || undefined,
+    }));
+
+    setEditingExamId(null);
+    setExamFormData({
+      title: firstLesson ? `اختبار: ${firstLesson}` : firstUnit ? `اختبار: ${firstUnit}` : "امتحان مقالي جديد",
+      description: "",
+      stage: firstStage || curriculumTree[0]?.stage || taxonomy.stages[0] || "",
+      unit: firstUnit,
+      lesson: firstLesson,
+      durationMinutes: 60,
+      allowImageUpload: true,
+      isPublished: true,
+      questions: newQuestions,
+    });
+    setExamModalOpen(true);
+  };
+
   // Taxonomy & Curriculum Tree from Platform
   const [taxonomy, setTaxonomy] = useState<{
     stages: string[];
@@ -898,7 +930,7 @@ export function EssayExamsAdminTab({
 
       {/* 4. Tab Content */}
       {activeSubTab === "bank" ? (
-        <EssayBankTab />
+        <EssayBankTab onCreateExamFromBank={handleCreateExamFromBank} />
       ) : loading ? (
         <div className="grid place-items-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
