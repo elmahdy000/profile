@@ -114,6 +114,7 @@ export function EssayExamsTab({
 
   // Timer state
   const [remainingSeconds, setRemainingSeconds] = useState<number>(3600);
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [timerExpired, setTimerExpired] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const autoSubmittedRef = useRef(false);
@@ -225,9 +226,10 @@ export function EssayExamsTab({
           ? new Date(examData.mySubmission.startedAt).getTime()
           : Date.now();
         const durationSec = (examData.durationMinutes || 60) * 60;
-        const elapsedSec = Math.floor((Date.now() - startedTime) / 1000);
+        const elapsedSec = Math.max(0, Math.floor((Date.now() - startedTime) / 1000));
         const rem = Math.max(0, durationSec - elapsedSec);
 
+        setElapsedSeconds(elapsedSec);
         setRemainingSeconds(rem);
         setTimerExpired(rem <= 0);
         setViewMode("exam_room");
@@ -243,7 +245,7 @@ export function EssayExamsTab({
     }
   };
 
-  // 3. Countdown timer effect
+  // 3. Countdown timer effect & elapsed time tracker
   useEffect(() => {
     if (viewMode !== "exam_room") {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -252,6 +254,7 @@ export function EssayExamsTab({
 
     autoSubmittedRef.current = false;
     timerRef.current = setInterval(() => {
+      setElapsedSeconds((prev) => prev + 1);
       setRemainingSeconds((prev) => {
         if (prev <= 1) {
           clearInterval(timerRef.current!);
@@ -404,27 +407,24 @@ export function EssayExamsTab({
     });
   };
 
+  // 15-minute minimum solve period (cooldown) before revealing model answers
+  const MIN_COOLDOWN_SECONDS = 15 * 60; // 15 دقيقة
+  const cooldownRemainingSeconds = Math.max(0, MIN_COOLDOWN_SECONDS - elapsedSeconds);
+  const isCooldownOver = cooldownRemainingSeconds <= 0 || remainingSeconds <= 0;
+
   // 6. Submit exam
   const handleSubmitExam = async (skipValidation = false) => {
     if (!activeExam) return;
 
-    // Strict validation: student MUST solve every question (text or image) before submitting
-    if (!skipValidation) {
-      const unansweredQuestions = (activeExam.questions || []).filter((q) => {
-        const a = answers[q.id];
-        const hasText = a?.writtenText && a.writtenText.trim().length > 0;
-        const hasImage = Boolean(a?.attachmentUrl);
-        return !hasText && !hasImage;
+    // التحقق من انقضاء مدة الـ 15 دقيقة المقررة للحل الورقي
+    if (!isCooldownOver && !skipValidation) {
+      const remMins = Math.ceil(cooldownRemainingSeconds / 60);
+      toast({
+        title: "⏳ يرجى قضاء 15 دقيقة في الحل الورقي أولاً",
+        description: `متبقي ${remMins} دقيقة لتفعيل زر عرض الحل النموذجي (${formatTimer(cooldownRemainingSeconds)}). استغل هذا الوقت في حل الأسئلة في كشكولك أو ورقتك الخارجية بتركيز.`,
+        variant: "warning",
       });
-
-      if (unansweredQuestions.length > 0) {
-        toast({
-          title: "يجب حل جميع الأسئلة أولاً ⚠️",
-          description: `يتبقى لديك ${unansweredQuestions.length} سؤال بدون إجابة. يلزم كتابة نص الحل أو رفع صورة لورقة الإجابة لكل سؤال حتى يتاح لك التسليم والاطلاع على الإجابة النموذجية وتقييم نفسك.`,
-          variant: "destructive",
-        });
-        return;
-      }
+      return;
     }
 
     try {
@@ -436,7 +436,7 @@ export function EssayExamsTab({
       }));
 
       const totalDurationSec = (activeExam.durationMinutes || 60) * 60;
-      const timeSpent = Math.max(1, totalDurationSec - remainingSeconds);
+      const timeSpent = Math.max(elapsedSeconds, Math.max(1, totalDurationSec - remainingSeconds));
 
       const res = await fetch(`/api/learning/essay-exams/${activeExam.id}/submit`, {
         method: "POST",
@@ -744,44 +744,90 @@ export function EssayExamsTab({
                 {activeExam.title}
               </h2>
               <span className="text-[11px] text-muted-foreground">
-                تمت إجابة {answeredCount} من {activeExam.questions.length} سؤال
+                الأسئلة: {activeExam.questions.length} أسئلة • نظام الحل الورقي الذاتي 📝
               </span>
             </div>
           </div>
 
-          {/* Countdown Clock Display */}
-          <div className="flex items-center gap-3">
+          {/* Countdown Clock Display & Cooldown Status */}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {/* Exam remaining time */}
             <div
-              className={`flex items-center gap-2 rounded-2xl px-3.5 py-1.5 border font-mono text-sm font-extrabold shadow-xs transition-colors ${
+              className={`flex items-center gap-1.5 rounded-2xl px-3 py-1.5 border font-mono text-xs font-extrabold shadow-xs transition-colors ${
                 isWarning
                   ? "bg-red-500/15 border-red-500/40 text-red-600 dark:text-red-400 animate-pulse"
                   : "bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400"
               }`}
+              title="الوقت الكلي المتبقي للامتحان"
             >
-              <Clock className="h-4 w-4 shrink-0" />
+              <Clock className="h-3.5 w-3.5 shrink-0" />
               <span>{formatTimer(remainingSeconds)}</span>
               {isWarning && <span className="text-[10px] font-sans font-bold">باقي أقل من 5 دقائق!</span>}
             </div>
 
+            {/* 15-Minute Cooldown Status Badge */}
+            {!isCooldownOver ? (
+              <div className="flex items-center gap-1.5 rounded-2xl px-3 py-1.5 border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 font-mono text-xs font-bold shadow-xs">
+                <Clock className="h-3.5 w-3.5 animate-spin text-amber-600" />
+                <span>فتح الإجابة بعد: {formatTimer(cooldownRemainingSeconds)}</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 rounded-2xl px-3 py-1.5 border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold shadow-xs">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                <span>متاح عرض الإجابة الآن ✅</span>
+              </div>
+            )}
+
             <Button
-              onClick={() => setConfirmSubmitOpen(true)}
+              onClick={() => {
+                if (!isCooldownOver) {
+                  toast({
+                    title: "⏳ متبقي وقت للحل الورقي أولاً",
+                    description: `يُرجى قضاء 15 دقيقة في حل الأسئلة في ورقتك أولاً. متبقي ${Math.ceil(cooldownRemainingSeconds / 60)} دقيقة لفتح الإجابة النموذجية (${formatTimer(cooldownRemainingSeconds)}).`,
+                    variant: "warning",
+                  });
+                  return;
+                }
+                setConfirmSubmitOpen(true);
+              }}
               disabled={submitting}
-              className="rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold gap-1.5 shadow-xs"
+              className={`rounded-xl text-xs font-bold gap-1.5 shadow-xs transition-all ${
+                isCooldownOver
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white animate-pulse"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
             >
               <Send className="h-3.5 w-3.5" />
-              إنهاء وتسليم
+              {isCooldownOver ? "إنهاء ومقارنة بالحل النموذجي 🚀" : `متاح بعد (${formatTimer(cooldownRemainingSeconds)})`}
             </Button>
           </div>
         </div>
 
-        {/* Warning notification banner */}
-        <div className="rounded-2xl border border-amber-300/40 bg-amber-500/10 p-3.5 flex items-start gap-3 text-xs text-amber-800 dark:text-amber-300">
-          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600" />
-          <div className="space-y-1">
-            <strong className="font-bold">تعليمات هامة للاختبار المقالي:</strong>
-            <p className="text-[11px] leading-relaxed opacity-90">
-              يمكنك كتابة إجابتك نصياً في الخانة المخصصة، أو كتابتها بخط يدك في ورقة خارجية وتصويرها بالكاميرا ورفعها (موصى به جداً للمعادلات والرسومات). فور تسليمك للامتحان سيظهر لك الحل النموذجي والمثالي مباشرة!
-            </p>
+        {/* Paper Solving Instructions Banner */}
+        <div className="rounded-3xl border border-blue-400/30 bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-sky-600/10 p-5 flex items-start gap-3.5 text-xs text-foreground shadow-xs">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-blue-600/15 text-blue-600 dark:text-blue-400">
+            <BookOpen className="h-5 w-5" />
+          </div>
+          <div className="space-y-1.5 leading-relaxed flex-1">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <strong className="text-sm font-extrabold text-blue-700 dark:text-blue-300">
+                📝 نظام الامتحان المقالي الورقي والتقييم الذاتي:
+              </strong>
+              <span className="rounded-full bg-blue-500/15 border border-blue-500/20 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 dark:text-blue-300">
+                بدون رفع ملفات أو تصحيح يدوي معقد
+              </span>
+            </div>
+            <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+              <li>
+                <strong className="text-foreground">ابدأ الحل الآن:</strong> اقرأ الأسئلة وحلها بالكامل في كشكولك أو ورقتك الخارجية بقلمك.
+              </li>
+              <li>
+                <strong className="text-foreground">لا يُشترط رفع صور أو كتابة إجابات:</strong> تم إعفاؤك من كتابة النصوص الطويلة أو تصوير الأوراق.
+              </li>
+              <li>
+                <strong className="text-foreground">فتح الإجابات بعد 15 دقيقة:</strong> لضمان تركيزك وجدية محاولتك، سيتم تفعيل زر <span className="text-emerald-600 dark:text-emerald-400 font-bold">«إنهاء ومقارنة بالحل النموذجي»</span> تلقائياً بعد مرور 15 دقيقة لتطلع على الحل الرسمي وسلم الدرجات وتحدد مستواك بنفسك.
+              </li>
+            </ul>
           </div>
         </div>
 
@@ -839,15 +885,20 @@ export function EssayExamsTab({
                 <div className="mt-5 space-y-4 pt-4 border-t border-border/60">
                   {/* Text Answer */}
                   <div>
-                    <label className="block text-xs font-bold text-foreground mb-1.5">
-                      الإجابة التحريرية المكتوبة:
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-bold text-foreground">
+                        مسودة أو ملاحظات إلكترونية:
+                      </label>
+                      <span className="text-[11px] text-muted-foreground font-medium">
+                        (اختياري - يمكنك الاكتفاء بالحل في كشكولك الورقي)
+                      </span>
+                    </div>
                     <textarea
                       value={currentAnswer.writtenText}
                       onChange={(e) => handleTextChange(q.id, e.target.value)}
-                      placeholder="اكتب إجابتك هنا بالتفصيل أو الشرح النظري..."
-                      rows={4}
-                      className="w-full rounded-2xl border border-border bg-background p-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-xs leading-relaxed resize-y"
+                      placeholder="خانة مسودة اختيارية لكتابة ملاحظاتك أو كودك... (يمكنك حل السؤال بالكامل في كشكولك فقط)"
+                      rows={3}
+                      className="w-full rounded-2xl border border-border bg-background p-3.5 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-xs leading-relaxed resize-y"
                     />
                   </div>
 
@@ -857,7 +908,7 @@ export function EssayExamsTab({
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div className="flex items-center gap-2 text-xs font-bold text-foreground">
                           <ImageIcon className="h-4 w-4 text-primary" />
-                          <span>صورة ورقة الإجابة المكتوبة بخط اليد (اختياري للكود وخطوات التتبع):</span>
+                          <span>توثيق صورة ورقة الحل بالكاميرا (اختياري تماماً - لتوثيق حلك إن رغبت):</span>
                         </div>
 
                         {/* File input button */}
@@ -925,39 +976,47 @@ export function EssayExamsTab({
 
         {/* Floating Bottom Submit Bar */}
         <div className="fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-md border-t border-border p-3 sm:p-4 shadow-xl">
-          <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
-            <div className="text-xs">
-              <span className="font-bold text-foreground block sm:inline">حالة الإجابة: </span>
-              <span
-                className={`font-semibold ${
-                  answeredCount === activeExam.questions.length
-                    ? "text-emerald-600 dark:text-emerald-400 font-bold"
-                    : "text-amber-600 dark:text-amber-400"
-                }`}
-              >
-                أجبت على {answeredCount} من أصل {activeExam.questions.length} سؤال
-                {answeredCount < activeExam.questions.length && " (إجباري حل جميع الأسئلة للتسليم)"}
+          <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="text-xs text-center sm:text-right">
+              {!isCooldownOver ? (
+                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold">
+                  <Clock className="h-4 w-4 shrink-0 animate-spin" />
+                  <span>
+                    فترة الحل الورقي الذاتي: متبقي ({formatTimer(cooldownRemainingSeconds)}) لفتح زر الإجابة النموذجية
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  <span>
+                    انقضت فترة الـ 15 دقيقة! يمكنك الآن تسليم الاختبار والاطلاع على الإجابة النموذجية
+                  </span>
+                </div>
+              )}
+              <span className="text-[11px] text-muted-foreground block mt-0.5">
+                حل في كشكولك بدون الحاجة لرفع ملفات أو كتابة نصوص إجبارية
               </span>
             </div>
 
             <Button
               size="lg"
               onClick={() => {
-                if (answeredCount < activeExam.questions.length) {
+                if (!isCooldownOver) {
+                  const remMin = Math.ceil(cooldownRemainingSeconds / 60);
                   toast({
-                    title: "يجب حل جميع الأسئلة أولاً ⚠️",
-                    description: `أجبت على ${answeredCount} من ${activeExam.questions.length}. يجب حل جميع الأسئلة بكتابة الإجابة أو رفع صورة ورقة الحل لكل سؤال لتتمكن من التسليم.`,
-                    variant: "destructive",
+                    title: "⏳ متبقي وقت للحل الورقي أولاً",
+                    description: `يرجى قضاء 15 دقيقة على الأقل في المحاولة الورقية أولاً. متبقي ${remMin} دقيقة (${formatTimer(cooldownRemainingSeconds)}).`,
+                    variant: "warning",
                   });
                   return;
                 }
                 setConfirmSubmitOpen(true);
               }}
               disabled={submitting}
-              className={`rounded-2xl font-extrabold gap-2 px-6 shadow-md transition-all ${
-                answeredCount === activeExam.questions.length
-                  ? "bg-primary hover:bg-primary/90 text-white"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80 cursor-not-allowed"
+              className={`rounded-2xl font-extrabold gap-2 px-6 shadow-md transition-all w-full sm:w-auto ${
+                isCooldownOver
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20"
+                  : "bg-muted text-muted-foreground hover:bg-muted/90 cursor-not-allowed"
               }`}
             >
               {submitting ? (
@@ -965,14 +1024,15 @@ export function EssayExamsTab({
                   <Loader2 className="h-4 w-4 animate-spin" />
                   <span>جاري التسليم...</span>
                 </>
-              ) : (
+              ) : isCooldownOver ? (
                 <>
                   <Send className="h-4 w-4" />
-                  <span>
-                    {answeredCount === activeExam.questions.length
-                      ? "إنهاء وتسليم الاختبار وعرض الحل النموذجي 🚀"
-                      : `متبقي ${activeExam.questions.length - answeredCount} أسئلة لم تُحل`}
-                  </span>
+                  <span>إنهاء ومقارنة إجابتي بالحل النموذجي 🚀</span>
+                </>
+              ) : (
+                <>
+                  <Clock className="h-4 w-4" />
+                  <span>متاح بعد ({formatTimer(cooldownRemainingSeconds)})</span>
                 </>
               )}
             </Button>
@@ -983,14 +1043,15 @@ export function EssayExamsTab({
         {confirmSubmitOpen && (
           <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-xs p-4">
             <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-2xl space-y-4">
-              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/10 text-primary mx-auto">
-                <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-500/10 text-emerald-600 mx-auto">
+                <CheckCircle2 className="h-6 w-6" />
               </div>
-              <div className="text-center space-y-1.5">
-                <h3 className="text-lg font-bold text-foreground">تأكيد تسليم الاختبار المقالي</h3>
+              <div className="text-center space-y-2">
+                <h3 className="text-lg font-bold text-foreground">تأكيد إنهاء الاختبار المقالي</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  أحسنت! لقد قمت بحل جميع الأسئلة (<strong className="text-foreground">{answeredCount} من {activeExam.questions.length}</strong>).
-                  بمجرد النقر على "تأكيد التسليم"، سيتم إنهاء الامتحان وفتح الحل النموذجي والمثالي فورياً لمقارنة إجابتك وتقييم نفسك.
+                  هل انتهيت من محاولة حل جميع الأسئلة في كشكولك أو ورقتك الخارجية؟
+                  <br />
+                  بمجرد النقر على <strong className="text-foreground">«تأكيد وعرض الحل النموذجي»</strong>، سيتم إنهاء وقت الاختبار فوراً وفتح الإجابة النموذجية المعتمدة وسلم الدرجات والشرح الكامل لمقارنة ما كتبته وتقييم نفسك.
                 </p>
               </div>
 
@@ -1001,15 +1062,15 @@ export function EssayExamsTab({
                   disabled={submitting}
                   className="rounded-xl text-xs font-bold"
                 >
-                  العودة للمراجعة
+                  العودة للاختبار
                 </Button>
                 <Button
                   onClick={() => handleSubmitExam()}
                   disabled={submitting}
-                  className="rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold gap-1.5"
+                  className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold gap-1.5"
                 >
                   {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
-                  تأكيد وتسليم الآن
+                  تأكيد وعرض الحل النموذجي 🚀
                 </Button>
               </div>
             </div>
@@ -1247,8 +1308,8 @@ export function EssayExamsTab({
                           {studentAns.writtenText}
                         </div>
                       ) : (
-                        <span className="text-xs text-muted-foreground italic block p-3 bg-card rounded-xl border border-border/40">
-                          (لم يتم إدخال نص إجابة - تم الاكتفاء بالصورة المرفوعة)
+                        <span className="text-xs text-muted-foreground block p-3 bg-card rounded-xl border border-border/40">
+                          📝 حل ورقي في كشكولك الخارجي — قارن ما كتبته في ورقتك بالحل النموذجي المقابل.
                         </span>
                       )}
 

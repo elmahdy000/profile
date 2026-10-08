@@ -341,32 +341,12 @@ router.post("/learning/essay-exams/:id/submit", requireStudent, async (req, res,
     const examQuestions: EssayQuestion[] = Array.isArray(exam.questions) ? exam.questions : [];
     const validAnswers: EssayAnswer[] = Array.isArray(answers) ? answers : [];
 
-    // إجباري: التحقق من إجابة الطالب على كل سؤال (إما بكتابة الإجابة أو رفع صورة ورقة الحل)
-    const answeredMap = new Map<string, EssayAnswer>();
-    for (const a of validAnswers) {
-      const hasText = Boolean(a.writtenText && String(a.writtenText).trim().length > 0);
-      const hasPhoto = Boolean(a.attachmentUrl && String(a.attachmentUrl).trim().length > 0);
-      if (hasText || hasPhoto) {
-        answeredMap.set(String(a.questionId), a);
-      }
-    }
+    // مدة الـ 15 دقيقة الإلزامية كحد أدنى للمحاولة والحل الورقي قبل فتح الحل النموذجي
+    const MIN_ATTEMPT_SECONDS = 15 * 60; // 15 دقيقة = 900 ثانية
+    const examDurationSec = (exam.durationMinutes || 60) * 60;
+    const effectiveMinSeconds = Math.min(MIN_ATTEMPT_SECONDS, examDurationSec);
 
-    const missingQuestions: { index: number; prompt: string }[] = [];
-    examQuestions.forEach((q, idx) => {
-      if (!answeredMap.has(String(q.id))) {
-        missingQuestions.push({ index: idx + 1, prompt: q.prompt });
-      }
-    });
-
-    if (missingQuestions.length > 0) {
-      res.status(400).json({
-        error: `إجباري: يجب حل جميع الأسئلة أولاً (بكتابة الإجابة أو رفع صورة ورقة الحل) لكل سؤال حتى تتمكن من تسليم الاختبار والاطلاع على الحل النموذجي والمثالي. متبقي لديك (${missingQuestions.length}) سؤال بدون إجابة: ${missingQuestions.map((m) => `السؤال رقم ${m.index}`).join("، ")}.`,
-        missingCount: missingQuestions.length,
-        missingQuestionIndices: missingQuestions.map((m) => m.index),
-      });
-      return;
-    }
-
+    // التحقق من الوقت المنقضي منذ بدء الاختبار
     const [existing] = await db
       .select()
       .from(essayExamSubmissionsTable)
@@ -376,6 +356,23 @@ router.post("/learning/essay-exams/:id/submit", requireStudent, async (req, res,
       ))
       .limit(1);
 
+    const startedTime = existing?.startedAt ? new Date(existing.startedAt).getTime() : Date.now();
+    const elapsedSeconds = Math.max(0, Math.floor((Date.now() - startedTime) / 1000));
+    const reportedTimeSpent = Number(timeSpentSeconds) || elapsedSeconds;
+    const totalTimeSpent = Math.max(elapsedSeconds, reportedTimeSpent);
+
+    // إذا لم تنقضِ الـ 15 دقيقة بعد، ولم ينتهِ وقت الامتحان الكلي، يتم تنبيه الطالب
+    if (totalTimeSpent < effectiveMinSeconds) {
+      const remainingCooldown = effectiveMinSeconds - totalTimeSpent;
+      const remMinutes = Math.ceil(remainingCooldown / 60);
+      res.status(400).json({
+        error: `عزيزي الطالب: هذا الاختبار مخصص للحل والتدريب التحريري في ورقتك الخارجية. يُرجى قضاء 15 دقيقة على الأقل في محاولة الحل والتفكير قبل فتح الحل النموذجي. متبقي لديك (${remMinutes}) دقيقة.`,
+        cooldownRemainingSeconds: remainingCooldown,
+      });
+      return;
+    }
+
+    // قبول إجابات الطالب الورقية (لا يُشترط رفع صور أو نصوص)
     let submission: typeof essayExamSubmissionsTable.$inferSelect;
 
     if (existing) {
@@ -391,7 +388,7 @@ router.post("/learning/essay-exams/:id/submit", requireStudent, async (req, res,
         .update(essayExamSubmissionsTable)
         .set({
           answers: validAnswers,
-          timeSpentSeconds: Number(timeSpentSeconds) || existing.timeSpentSeconds,
+          timeSpentSeconds: totalTimeSpent,
           submittedAt: new Date(),
           status: "submitted",
           updatedAt: new Date(),
@@ -409,8 +406,8 @@ router.post("/learning/essay-exams/:id/submit", requireStudent, async (req, res,
           studentName: student.name || "",
           studentPhone: student.phone || null,
           answers: validAnswers,
-          timeSpentSeconds: Number(timeSpentSeconds) || 0,
-          startedAt: new Date(),
+          timeSpentSeconds: totalTimeSpent,
+          startedAt: new Date(Date.now() - totalTimeSpent * 1000),
           submittedAt: new Date(),
           status: "submitted",
         })
@@ -476,21 +473,41 @@ router.post("/learning/essay-exams/:id/self-assess", requireStudent, async (req,
       (Array.isArray(examRow?.questions) ? examRow.questions : []).map((q) => [q.id, Number(q.points) || 0]),
     );
 
-    let updatedAnswers = existing.answers;
+    let updatedAnswers: EssayAnswer[] = [];
     let totalSelfScore = 0;
     if (questionScores && typeof questionScores === "object") {
       const existingAnswers: EssayAnswer[] = Array.isArray(existing.answers) ? existing.answers : [];
-      updatedAnswers = existingAnswers.map((ans) => {
-        const qScore = questionScores[ans.questionId];
-        const raw = qScore !== undefined && qScore !== null ? Number(qScore) : (ans.score ?? 0);
-        const max = maxPoints.get(ans.questionId);
-        const assigned = Math.max(0, Number.isFinite(raw) ? (max !== undefined ? Math.min(raw, max) : raw) : 0);
-        totalSelfScore += assigned;
-        return {
-          ...ans,
-          score: assigned,
-        };
-      });
+      const examQuestionsList: EssayQuestion[] = Array.isArray(examRow?.questions) ? examRow.questions : [];
+      
+      // إذا لم يكن لدى الطالب إجابات سابقة مسجلة (لأنه حل في ورقته فقط)، ننشئ سجلات لكل سؤال
+      if (existingAnswers.length === 0) {
+        updatedAnswers = examQuestionsList.map((q) => {
+          const qScore = questionScores[q.id];
+          const raw = qScore !== undefined && qScore !== null ? Number(qScore) : 0;
+          const max = maxPoints.get(q.id) ?? Number(q.points) ?? 0;
+          const assigned = Math.max(0, Number.isFinite(raw) ? Math.min(raw, max) : 0);
+          totalSelfScore += assigned;
+          return {
+            questionId: q.id,
+            writtenText: "حل ورقي خارجي",
+            score: assigned,
+          };
+        });
+      } else {
+        updatedAnswers = existingAnswers.map((ans) => {
+          const qScore = questionScores[ans.questionId];
+          const raw = qScore !== undefined && qScore !== null ? Number(qScore) : (ans.score ?? 0);
+          const max = maxPoints.get(ans.questionId);
+          const assigned = Math.max(0, Number.isFinite(raw) ? (max !== undefined ? Math.min(raw, max) : raw) : 0);
+          totalSelfScore += assigned;
+          return {
+            ...ans,
+            score: assigned,
+          };
+        });
+      }
+    } else {
+      updatedAnswers = Array.isArray(existing.answers) ? existing.answers : [];
     }
 
     const noteText = selfNotes ? String(selfNotes).trim() : "";

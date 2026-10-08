@@ -163,9 +163,9 @@ export function parseEssayQuestionsFromText(
   // Split into question blocks
   // Delimiters:
   // [QUESTION_1], [QUESTION], [PROMPT],
-  // السؤال الأول:, السؤال 1:, س1:, سؤال 1:
-  // Q1:, Q 1:, Question 1:
-  const blockRegex = /(?:^|\n)(?=\[(?:QUESTION(?:_\d+)?|PROMPT)\]|السؤال\s*(?:\d+|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|رقم\s*\d+)[:：]|س\s*\d+[:：]|سؤال\s*\d+[:：]|(?:^|\n)Q\s*\d+[:：]|(?:^|\n)Question\s*\d+[:：])/i;
+  // س1., س1:, س 1., السؤال الأول:, السؤال 1:, سؤال 1:
+  // Q1:, Q1., Question 1:, 1.
+  const blockRegex = /(?:^|\n)(?=\[(?:QUESTION(?:_\d+)?|PROMPT)\]|السؤال\s*(?:\d+|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|رقم\s*\d+)[:：\.\-–—\)]|س\s*\d+[:：\.\-–—\)]|سؤال\s*\d+[:：\.\-–—\)]|(?:^|\n)Q\s*\d+[:：\.\-–—\)]|(?:^|\n)Question\s*\d+[:：\.\-–—\)]|(?:^|\n)\d+[\.\-–—\)]\s*(?:[^\n]+))/i;
 
   const rawBlocks = cleanText.split(blockRegex).map(b => b.trim()).filter(Boolean);
 
@@ -182,7 +182,8 @@ export function parseEssayQuestionsFromText(
       !block.includes("النموذجية") &&
       !block.includes("MODEL_ANSWER") &&
       !block.includes("Q:") &&
-      !block.includes("A:")
+      !block.includes("A:") &&
+      !block.match(/^(?:س\s*\d+|Q\s*\d+|\d+[\.\-–—\)])/i)
     ) {
       continue;
     }
@@ -217,10 +218,10 @@ export function parseEssayQuestionsFromText(
     } else {
       // 2. Arabic / Natural parsing
       // Extract points
-      const ptsMatch = block.match(/(?:الدرجة|الدرجات|النقاط|Points?|Score)\s*[:：]\s*(\d+)/i);
+      const ptsMatch = block.match(/(?:الدرجة|الدرجات|النقاط|\bPoints\b|\bScore\b)\s*[:：\.\-–—]?\s*(\d+)/i);
       if (ptsMatch) points = parseInt(ptsMatch[1], 10) || points;
 
-      const diffMatch = block.match(/(?:الصعوبة|مستوى الصعوبة|Difficulty)\s*[:：]\s*(سهل|متوسط|صعب|easy|medium|hard)/i);
+      const diffMatch = block.match(/(?:الصعوبة|مستوى الصعوبة|\bDifficulty\b)\s*[:：\.\-–—]?\s*(سهل|متوسط|صعب|easy|medium|hard)/i);
       if (diffMatch) {
         const d = diffMatch[1].toLowerCase();
         if (d === "easy" || d === "سهل") difficulty = "easy";
@@ -228,20 +229,20 @@ export function parseEssayQuestionsFromText(
         else difficulty = "medium";
       }
 
-      // Model answer pattern
-      const ansMatch = block.match(/(?:الإجابة النموذجية|الحل النموذجي|إجابة نموذجية|الإجابة|الحل|Model\s*Answer|Answer|A\s*\d*)\s*[:：]\s*([\s\S]*?)(?=(?:ملاحظات التصحيح|توزيع الدرجات|عناصر الإجابة|الإرشادات|الشرح|Rubric|Explanation|Key Elements)\s*[:：]|$)/i);
+      // Model answer pattern (strictly requires keyword with colon or dash, and word boundary on English words)
+      const ansMatch = block.match(/(?:الإجابة النموذجية|الحل النموذجي|إجابة نموذجية|الإجابة|الحل|\bModel\s*Answer\b|\bAnswer\b|\bA\d*\b)\s*[:：\.\-–—]\s*([\s\S]*?)(?=(?:ملاحظات التصحيح|توزيع الدرجات|عناصر الإجابة|الإرشادات|الشرح|Rubric|Explanation|Key Elements)\s*[:：\.\-–—]|$)/i);
       if (ansMatch) {
         modelAnswer = ansMatch[1].trim();
       }
 
       // Explanation / Rubric pattern
-      const expMatch = block.match(/(?:ملاحظات التصحيح|توزيع الدرجات|عناصر الإجابة|الإرشادات|الشرح|Rubric|Explanation|Key Elements)\s*[:：]\s*([\s\S]*?)$/i);
+      const expMatch = block.match(/(?:ملاحظات التصحيح|توزيع الدرجات|عناصر الإجابة|الإرشادات|الشرح|Rubric|Explanation|Key Elements)\s*[:：\.\-–—]\s*([\s\S]*?)$/i);
       if (expMatch) {
         explanation = expMatch[1].trim();
       }
 
       // Prompt is whatever is before the model answer or explicitly tagged
-      const promptExplicit = block.match(/(?:نص السؤال|السؤال)\s*[:：]\s*([\s\S]*?)(?=(?:الدرجة|الدرجات|الإجابة النموذجية|الحل النموذجي|Model\s*Answer|Answer)\s*[:：]|$)/i);
+      const promptExplicit = block.match(/(?:نص السؤال|السؤال)\s*[:：\.\-–—]\s*([\s\S]*?)(?=(?:الدرجة|الدرجات|الإجابة النموذجية|الحل النموذجي|\bModel\s*Answer\b|\bAnswer\b)\s*[:：\.\-–—]|$)/i);
       if (promptExplicit) {
         prompt = promptExplicit[1].trim();
       } else {
@@ -249,11 +250,11 @@ export function parseEssayQuestionsFromText(
         const lines = block.split("\n");
         const promptLines: string[] = [];
         for (const line of lines) {
-          if (line.match(/(?:الدرجة|الدرجات|الإجابة|الحل|Model Answer|Answer)\s*[:：]/i)) {
+          if (line.match(/(?:الدرجة|الدرجات|\bPoints\b|\bScore\b|الإجابة النموذجية|الحل النموذجي|إجابة نموذجية|الإجابة|الحل|\bModel\s*Answer\b|\bAnswer\b|\bA\d*\b)\s*[:：\.\-–—]/i)) {
             break;
           }
-          // Remove Question label if it starts line, e.g. "السؤال الأول: "
-          const cleanLine = line.replace(/^(?:السؤال\s*(?:\d+|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|رقم\s*\d+)[:：]|س\s*\d+[:：]|سؤال\s*\d+[:：]|Q\s*\d+[:：]|Question\s*\d+[:：])\s*/i, "").trim();
+          // Remove Question label if it starts line, e.g. "السؤال الأول: " or "س1. "
+          const cleanLine = line.replace(/^(?:السؤال\s*(?:\d+|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|رقم\s*\d+)[:：\.\-–—\)]|س\s*\d+[:：\.\-–—\)]|سؤال\s*\d+[:：\.\-–—\)]|Q\s*\d+[:：\.\-–—\)]|Question\s*\d+[:：\.\-–—\)]|\d+[\.\-–—\)])\s*/i, "").trim();
           if (cleanLine) promptLines.push(cleanLine);
         }
         prompt = promptLines.join("\n").trim();

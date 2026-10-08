@@ -26,6 +26,7 @@ import {
   Check,
   HelpCircle,
   FolderTree,
+  Copy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -227,6 +228,7 @@ export function EssayExamsAdminTab({
 
   // Lightbox Preview
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [showFormatGuide, setShowFormatGuide] = useState(false);
 
   // 1. Load exams
   const loadExams = async (silent = false) => {
@@ -436,6 +438,29 @@ export function EssayExamsAdminTab({
         examFileInputRef.current.value = "";
       }
     }
+  };
+
+  // Copy sample Word format template
+  const handleCopyWordTemplate = () => {
+    const template = `المرحلة: ${examFormData.stage || "الصف الثاني الثانوي - لغات"}
+الوحدة: ${examFormData.unit || "الوحدة الأولى"}
+الدرس: ${examFormData.lesson || "الدرس الأول"}
+
+السؤال الأول: اشرح الفرق الأساسي بين التكرار المحدد (for loop) والتكرار الشرطي (while loop) مع ذكر مثال توضيحي.
+الدرجة: 5
+الإجابة النموذجية: التكرار المحدد (for loop) يُستخدم عندما يكون عدد مرات التكرار معروفاً ومحدداً مسبقاً، بينما التكرار الشرطي (while loop) يستمر طالما أن الشرط المنطقي محقق ولا يُعرف عدد تكراراته مسبقاً.
+توزيع الدرجات: درجتان ونصف لشرح التكرار المحدد ومثاله، ودرجتان ونصف للتكرار الشرطي ومثاله.
+
+السؤال الثاني: ما هي شروط عمل الدالة العودية (Recursive Function) بنجاح ودون حدوث توقف؟
+الدرجة: 5
+الإجابة النموذجية: تتطلب الدالة العودية أمرين رئيسيين: أولاً وجود شرط التوقف الأساسي (Base Case) لإنهاء الاستدعاء، وثانياً استدعاء الدالة لنفسها مع تقريب المعاملات نحو شرط التوقف لتجنب التكرار اللانهائي وفيض الذاكرة.
+توزيع الدرجات: درجتان ونصف لشرط التوقف، ودرجتان ونصف لتقريب المعاملات ومنع الفيض.`;
+
+    navigator.clipboard.writeText(template);
+    toast({
+      title: "📋 تم نسخ النموذج بنجاح!",
+      description: "يمكنك الآن لصقه في ملف Word وتعديل الأسئلة والحلول النموذجية ثم حفظه ورفعه هنا.",
+    });
   };
 
   // Add question to builder
@@ -1288,7 +1313,7 @@ export function EssayExamsAdminTab({
                   type="file"
                   ref={examFileInputRef}
                   onChange={handleUploadQuestionsFile}
-                  accept=".docx,.pdf,.txt"
+                  accept=".docx,.pdf,.txt,.json"
                   className="hidden"
                   id="admin-exam-questions-file-input"
                 />
@@ -1306,11 +1331,96 @@ export function EssayExamsAdminTab({
                   ) : (
                     <>
                       <Upload className="h-4 w-4" />
-                      <span>اختر ملف أسئلة الدرس (.docx / .pdf / .txt)</span>
+                      <span>اختر ملف أسئلة الدرس (.docx / .pdf / .txt / .json)</span>
                     </>
                   )}
                 </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCopyWordTemplate}
+                  className="rounded-xl border-border hover:bg-muted/60 text-xs font-bold gap-1.5 px-3.5 py-2.5"
+                >
+                  <Copy className="h-3.5 w-3.5 text-blue-500" />
+                  <span>نسخ نموذج Word جاهز 📋</span>
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowFormatGuide((v) => !v)}
+                  className="rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground gap-1 px-3 py-2.5"
+                >
+                  <HelpCircle className="h-3.5 w-3.5 text-amber-500" />
+                  <span>{showFormatGuide ? "إخفاء دليل التنسيق" : "عرض دليل التنسيق 💡"}</span>
+                </Button>
               </div>
+
+              {/* Format Guidance Card */}
+              {showFormatGuide && (
+                <div className="mt-3 rounded-2xl border border-border bg-card p-4 text-right space-y-3 shadow-xs animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                    <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+                      <Sparkles className="h-4 w-4 text-amber-500" />
+                      <span>صيغ التنسيق المعتمدة لملف الأسئلة (Word / Text / PDF)</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowFormatGuide(false)}
+                      className="text-muted-foreground hover:text-foreground text-xs"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    يقوم النظام بقراءة الملف وتحليل الأسئلة والأجوبة النموذجية وسلم الدرجات تلقائياً. يمكنك استخدام أي من الصيغ التالية:
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                    {/* Format A: Arabic Natural */}
+                    <div className="rounded-xl bg-muted/30 border border-border/80 p-3 space-y-1.5">
+                      <div className="flex items-center justify-between font-bold text-primary text-[11px]">
+                        <span>الصيغة 1: العربية الطبيعية (موصى بها لـ Word)</span>
+                        <span className="text-[10px] bg-primary/10 px-1.5 py-0.5 rounded">شائعة جداً</span>
+                      </div>
+                      <pre className="text-[11px] font-mono bg-background/80 p-2 rounded-lg border border-border/60 overflow-x-auto whitespace-pre-wrap leading-relaxed text-foreground/90">
+{`السؤال الأول: اشرح الفرق بين TCP و UDP مع ذكر مثال.
+الدرجة: 5
+الإجابة النموذجية: بروتوكول TCP يعتمد على الاتصال والموثوقية، بينما UDP غير متصل وسريع للبث المباشر.
+توزيع الدرجات: درجتان ونصف لـ TCP، ودرجتان ونصف لـ UDP.`}
+                      </pre>
+                    </div>
+
+                    {/* Format B: Tagged Format */}
+                    <div className="rounded-xl bg-muted/30 border border-border/80 p-3 space-y-1.5">
+                      <div className="flex items-center justify-between font-bold text-indigo-500 text-[11px]">
+                        <span>الصيغة 2: الوسوم المنظمة (Tagged Format)</span>
+                        <span className="text-[10px] bg-indigo-500/10 px-1.5 py-0.5 rounded">دقيقة 100%</span>
+                      </div>
+                      <pre className="text-[11px] font-mono bg-background/80 p-2 rounded-lg border border-border/60 overflow-x-auto whitespace-pre-wrap leading-relaxed text-foreground/90">
+{`[PROMPT]: اشرح الفرق الأساسي بين التكرار for و while.
+[POINTS]: 5
+[MODEL_ANSWER]: يستخدم for لعدد تكرارات محدد مسبقاً، و while طالما أن الشرط محقق.
+[EXPLANATION]: 2.5 درجة للفرق و 2.5 درجة للأمثلة.`}
+                      </pre>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1 text-[11px] text-muted-foreground">
+                    <span>💡 يمكنك أيضاً كتابة <code className="bg-muted px-1 rounded text-foreground font-semibold">المرحلة:</code> و <code className="bg-muted px-1 rounded text-foreground font-semibold">الوحدة:</code> و <code className="bg-muted px-1 rounded text-foreground font-semibold">الدرس:</code> في أول سطرين بالملف لضبطهم تلقائياً.</span>
+                    <button
+                      type="button"
+                      onClick={handleCopyWordTemplate}
+                      className="text-primary hover:underline font-bold flex items-center gap-1 shrink-0 mr-2"
+                    >
+                      <Copy className="h-3 w-3" />
+                      نسخ هذا القالب
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 3. Exam Meta Fields */}
