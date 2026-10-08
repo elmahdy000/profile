@@ -951,35 +951,50 @@ router.get("/admin/learning/essay-exams/curriculum-tree", requireAdmin, async (_
       addEntry(stage, unit, v.title);
     });
 
-    // Default canonical stages and real Unit 1 curriculum if database is completely empty
-    if (Object.keys(treeMap).length === 0) {
-      const u1Arabic = "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع";
-      const u1LessonsArabic = [
-        "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
-        "الدرس الثاني: كيف يعمل الذكاء الاصطناعي",
-        "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
-        "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
-      ];
-      const stage1Ar = "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس عربي";
-      const stage2Ar = "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي";
-
-      for (const l of u1LessonsArabic) {
-        addEntry(stage1Ar, u1Arabic, l);
-        addEntry(stage2Ar, u1Arabic, l);
+    // Canonical stages and real Unit 1 curriculum guarantee
+    const u1Arabic = "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع";
+    const u1LessonsArabic = [
+      "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
+      "الدرس الثاني: كيف يعمل الذكاء الاصطناعي",
+      "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
+      "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
+    ];
+    const canonicalArabicStages = [
+      "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي",
+      "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس عربي",
+      "الصف الثاني الثانوي - عربي",
+      "الصف الأول الثانوي - عربي",
+      "تانية بكالوريا عربي",
+      "أولى بكالوريا عربي",
+    ];
+    for (const st of canonicalArabicStages) {
+      if (!treeMap[st] || Object.keys(treeMap[st]).length === 0) {
+        for (const l of u1LessonsArabic) {
+          addEntry(st, u1Arabic, l);
+        }
       }
+    }
 
-      const stage1En = "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس لغات (Languages)";
-      const stage2En = "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)";
-      const u1English = "Unit 1 – Information Technology and Society";
-      const u1LessonsEnglish = [
-        "Lesson 1-1 – Development of Information Technology and Social Transformation",
-        "Lesson 1-2 – How AI Works",
-        "Lesson 1-3 – AI in Our Daily Life",
-        "Lesson 1-4 – AI Ethics",
-      ];
-      for (const l of u1LessonsEnglish) {
-        addEntry(stage1En, u1English, l);
-        addEntry(stage2En, u1English, l);
+    const u1English = "Unit 1 – Information Technology and Society";
+    const u1LessonsEnglish = [
+      "Lesson 1-1 – Development of Information Technology and Social Transformation",
+      "Lesson 1-2 – How AI Works",
+      "Lesson 1-3 – AI in Our Daily Life",
+      "Lesson 1-4 – AI Ethics",
+    ];
+    const canonicalLanguageStages = [
+      "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)",
+      "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس لغات (Languages)",
+      "الصف الثاني الثانوي - لغات",
+      "الصف الأول الثانوي - لغات",
+      "تانية بكالوريا لغات",
+      "أولى بكالوريا لغات",
+    ];
+    for (const st of canonicalLanguageStages) {
+      if (!treeMap[st] || Object.keys(treeMap[st]).length === 0) {
+        for (const l of u1LessonsEnglish) {
+          addEntry(st, u1English, l);
+        }
       }
     }
 

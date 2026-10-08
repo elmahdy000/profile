@@ -16,9 +16,14 @@ import {
   Info,
   Copy,
   FolderOpen,
+  Eye,
+  EyeOff,
+  Sparkles,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { ACADEMIC_TRACKS } from "@/data/academic";
 
 export interface EssayBankQuestion {
   id: number;
@@ -37,6 +42,14 @@ export interface EssayBankQuestion {
   tags?: string[];
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface CurriculumTreeNode {
+  stage: string;
+  units: Array<{
+    unit: string;
+    lessons: string[];
+  }>;
 }
 
 export interface ParsedPreviewItem {
@@ -71,6 +84,7 @@ export function EssayBankTab({
   // State
   const [questions, setQuestions] = useState<EssayBankQuestion[]>([]);
   const [loading, setLoading] = useState(true);
+  const [curriculumTree, setCurriculumTree] = useState<CurriculumTreeNode[]>([]);
   const [taxonomy, setTaxonomy] = useState<{
     stages: string[];
     units: { unit: string; lessons: string[] }[];
@@ -90,6 +104,9 @@ export function EssayBankTab({
   const [formModalOpen, setFormModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<EssayBankQuestion | null>(null);
   const [savingItem, setSavingItem] = useState(false);
+  const [customFormUnit, setCustomFormUnit] = useState(false);
+  const [customFormLesson, setCustomFormLesson] = useState(false);
+  const [showManualPreview, setShowManualPreview] = useState(false);
   const [formData, setFormData] = useState({
     stage: "الصف الثاني الثانوي - لغات",
     unit: "",
@@ -111,6 +128,9 @@ export function EssayBankTab({
   const [defaultStage, setDefaultStage] = useState("تانية بكالوريا لغات");
   const [defaultUnit, setDefaultUnit] = useState("");
   const [defaultLesson, setDefaultLesson] = useState("");
+  const [customUploadUnit, setCustomUploadUnit] = useState(false);
+  const [customUploadLesson, setCustomUploadLesson] = useState(false);
+  const [previewViewMode, setPreviewViewMode] = useState<"cards" | "preview">("cards");
   const [defaultDifficulty, setDefaultDifficulty] = useState<"easy" | "medium" | "hard">("medium");
   const [defaultPoints, setDefaultPoints] = useState(5);
   const [copiedSample, setCopiedSample] = useState(false);
@@ -120,7 +140,24 @@ export function EssayBankTab({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 1. Fetch Taxonomy
+  // 1. Fetch Curriculum Tree
+  const loadCurriculumTree = async () => {
+    try {
+      const res = await fetch("/api/admin/learning/essay-exams/curriculum-tree", {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.tree) && data.tree.length > 0) {
+          setCurriculumTree(data.tree);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load curriculum tree in EssayBankTab", err);
+    }
+  };
+
+  // 2. Fetch Taxonomy
   const loadTaxonomy = async () => {
     try {
       const res = await fetch("/api/admin/learning/essay-question-bank/taxonomy", {
@@ -138,7 +175,183 @@ export function EssayBankTab({
     }
   };
 
-  // 2. Fetch Questions
+  // Combined available stages
+  const availableStages = useMemo(() => {
+    const treeStages = curriculumTree.map((c) => c.stage);
+    const taxStages = taxonomy.stages;
+    const academicStages = ACADEMIC_TRACKS.flatMap((t) => t.stages);
+    const all = Array.from(new Set([...treeStages, ...taxStages, ...academicStages])).filter(Boolean);
+    // Put "تانية بكالوريا لغات" / secondary language stages at top if present
+    return all.length > 0 ? all : ["تانية بكالوريا لغات", "الصف الثاني الثانوي - لغات", "أولى بكالوريا لغات"];
+  }, [curriculumTree, taxonomy.stages]);
+
+  // Dynamic Curriculum Helper: Get units for a stage
+  const getStageUnits = (stageName: string) => {
+    if (!stageName) return [];
+    const direct = curriculumTree.find((c) => c.stage === stageName);
+    if (direct && direct.units.length > 0) return direct.units;
+
+    // Fuzzy matching for Arabic vs Languages track
+    const isLang =
+      stageName.includes("لغات") ||
+      stageName.toLowerCase().includes("languages") ||
+      stageName.toLowerCase().includes("english");
+
+    const matched = curriculumTree.find((c) => {
+      const cLang =
+        c.stage.includes("لغات") ||
+        c.stage.toLowerCase().includes("languages") ||
+        c.stage.toLowerCase().includes("english");
+      return isLang === cLang;
+    });
+
+    if (matched && matched.units.length > 0) return matched.units;
+    return taxonomy.units || [];
+  };
+
+  // Dynamic Curriculum Helper: Get lessons for a unit in a stage
+  const getUnitLessons = (stageName: string, unitName: string) => {
+    if (!unitName) return [];
+    const units = getStageUnits(stageName);
+    const found = units.find((u) => u.unit === unitName);
+    if (found && found.lessons.length > 0) return found.lessons;
+
+    const taxFound = taxonomy.units.find((u) => u.unit === unitName);
+    return taxFound?.lessons || [];
+  };
+
+  // Upload modal computed units and lessons
+  const uploadUnits = useMemo(
+    () => getStageUnits(defaultStage),
+    [curriculumTree, taxonomy.units, defaultStage]
+  );
+  const uploadLessons = useMemo(
+    () => getUnitLessons(defaultStage, defaultUnit),
+    [curriculumTree, taxonomy.units, defaultStage, defaultUnit]
+  );
+
+  // Manual modal computed units and lessons
+  const formUnits = useMemo(
+    () => getStageUnits(formData.stage),
+    [curriculumTree, taxonomy.units, formData.stage]
+  );
+  const formLessons = useMemo(
+    () => getUnitLessons(formData.stage, formData.unit),
+    [curriculumTree, taxonomy.units, formData.stage, formData.unit]
+  );
+
+  // Filter bar computed units and lessons
+  const filterUnits = useMemo(() => {
+    if (selectedStage === "all") return taxonomy.units;
+    return getStageUnits(selectedStage);
+  }, [curriculumTree, taxonomy.units, selectedStage]);
+
+  const filterLessons = useMemo(() => {
+    if (selectedUnit === "all") return [];
+    return getUnitLessons(selectedStage, selectedUnit);
+  }, [curriculumTree, taxonomy.units, selectedStage, selectedUnit]);
+
+  // Handle stage change in Upload Modal
+  const handleUploadStageChange = (newStage: string) => {
+    setDefaultStage(newStage);
+    const units = getStageUnits(newStage);
+    const firstUnit = units[0]?.unit || "";
+    setDefaultUnit(firstUnit);
+    const lessons = getUnitLessons(newStage, firstUnit);
+    setDefaultLesson(lessons[0] || "");
+    setCustomUploadUnit(false);
+    setCustomUploadLesson(false);
+  };
+
+  // Handle unit change in Upload Modal
+  const handleUploadUnitChange = (newUnit: string) => {
+    setDefaultUnit(newUnit);
+    const lessons = getUnitLessons(defaultStage, newUnit);
+    setDefaultLesson(lessons[0] || "");
+    setCustomUploadLesson(false);
+  };
+
+  // Handle stage change in Manual Form Modal
+  const handleFormStageChange = (newStage: string) => {
+    const units = getStageUnits(newStage);
+    const firstUnit = units[0]?.unit || "";
+    const lessons = getUnitLessons(newStage, firstUnit);
+    setFormData((prev) => ({
+      ...prev,
+      stage: newStage,
+      unit: firstUnit,
+      lesson: lessons[0] || "",
+    }));
+    setCustomFormUnit(false);
+    setCustomFormLesson(false);
+  };
+
+  // Handle unit change in Manual Form Modal
+  const handleFormUnitChange = (newUnit: string) => {
+    const lessons = getUnitLessons(formData.stage, newUnit);
+    setFormData((prev) => ({
+      ...prev,
+      unit: newUnit,
+      lesson: lessons[0] || "",
+    }));
+    setCustomFormLesson(false);
+  };
+
+  // Handle open upload modal with guaranteed pre-selected stage & unit & lesson
+  const handleOpenUploadModal = () => {
+    setParsingStep("upload");
+    setUploadFile(null);
+    setParsedPreviewList([]);
+    setCustomUploadUnit(false);
+    setCustomUploadLesson(false);
+    setPreviewViewMode("cards");
+
+    const stageToUse = defaultStage || availableStages[0] || "تانية بكالوريا لغات";
+    setDefaultStage(stageToUse);
+    const units = getStageUnits(stageToUse);
+    const firstUnit = defaultUnit || units[0]?.unit || "";
+    setDefaultUnit(firstUnit);
+    const lessons = getUnitLessons(stageToUse, firstUnit);
+    setDefaultLesson(defaultLesson || lessons[0] || "");
+
+    setUploadModalOpen(true);
+  };
+
+  // Apply selected curriculum to all extracted questions in preview
+  const handleApplyCurriculumToAllPreview = () => {
+    setParsedPreviewList((prev) =>
+      prev.map((item) => ({
+        ...item,
+        stage: defaultStage,
+        unit: defaultUnit,
+        lesson: defaultLesson,
+      }))
+    );
+    toast({
+      title: "تم ربط الأسئلة بالمنهج المختار",
+      description: `تم تحديث المنهج لكل الأسئلة: (${defaultStage} ⬅️ ${defaultUnit || "عام"} ⬅️ ${defaultLesson || "عام"})`,
+    });
+  };
+
+  // Add an extra blank question to the preview list before saving
+  const handleAddNewPreviewItem = () => {
+    const newItem: ParsedPreviewItem = {
+      tempId: `manual_${Date.now()}_${parsedPreviewList.length + 1}`,
+      prompt: "",
+      modelAnswer: "",
+      explanation: "",
+      points: defaultPoints || 5,
+      stage: defaultStage,
+      unit: defaultUnit,
+      lesson: defaultLesson,
+      difficulty: defaultDifficulty || "medium",
+      isValid: false,
+      validationError: "يرجى كتابة نص السؤال والحل النموذجي",
+    };
+    setParsedPreviewList((prev) => [...prev, newItem]);
+  };
+
+  // 3. Fetch Questions
   const loadQuestions = async () => {
     try {
       setLoading(true);
@@ -169,18 +382,26 @@ export function EssayBankTab({
 
   useEffect(() => {
     loadTaxonomy();
+    loadCurriculumTree();
   }, []);
+
+  // Sync initial defaults once availableStages or curriculumTree loads
+  useEffect(() => {
+    if (availableStages.length > 0 && !defaultUnit) {
+      const stage = defaultStage || availableStages[0];
+      const units = getStageUnits(stage);
+      if (units.length > 0) {
+        setDefaultUnit(units[0].unit);
+        if (units[0].lessons.length > 0) {
+          setDefaultLesson(units[0].lessons[0]);
+        }
+      }
+    }
+  }, [availableStages, curriculumTree]);
 
   useEffect(() => {
     loadQuestions();
   }, [selectedStage, selectedUnit, selectedLesson, selectedDifficulty, search]);
-
-  // Derived available lessons for selected unit
-  const availableLessons = useMemo(() => {
-    if (selectedUnit === "all") return [];
-    const found = taxonomy.units.find((u) => u.unit === selectedUnit);
-    return found ? found.lessons : [];
-  }, [selectedUnit, taxonomy.units]);
 
   // Toggle card expansion
   const toggleExpand = (id: number) => {
@@ -190,10 +411,20 @@ export function EssayBankTab({
   // Handle open manual modal
   const handleOpenAdd = () => {
     setEditingItem(null);
+    setCustomFormUnit(false);
+    setCustomFormLesson(false);
+    setShowManualPreview(false);
+
+    const initialStage = selectedStage !== "all" ? selectedStage : (availableStages[0] || "الصف الثاني الثانوي - لغات");
+    const units = getStageUnits(initialStage);
+    const initialUnit = selectedUnit !== "all" ? selectedUnit : (units[0]?.unit || "");
+    const lessons = getUnitLessons(initialStage, initialUnit);
+    const initialLesson = selectedLesson !== "all" ? selectedLesson : (lessons[0] || "");
+
     setFormData({
-      stage: selectedStage !== "all" ? selectedStage : "الصف الثاني الثانوي - لغات",
-      unit: selectedUnit !== "all" ? selectedUnit : "",
-      lesson: selectedLesson !== "all" ? selectedLesson : "",
+      stage: initialStage,
+      unit: initialUnit,
+      lesson: initialLesson,
       difficulty: "medium",
       points: 5,
       prompt: "",
@@ -205,8 +436,11 @@ export function EssayBankTab({
 
   const handleOpenEdit = (q: EssayBankQuestion) => {
     setEditingItem(q);
+    setCustomFormUnit(false);
+    setCustomFormLesson(false);
+    setShowManualPreview(false);
     setFormData({
-      stage: q.stage || "الصف الثاني الثانوي - لغات",
+      stage: q.stage || availableStages[0] || "الصف الثاني الثانوي - لغات",
       unit: q.unit || "",
       lesson: q.lesson || "",
       difficulty: q.difficulty || "medium",
@@ -494,12 +728,7 @@ export function EssayBankTab({
 
             <Button
               size="sm"
-              onClick={() => {
-                setParsingStep("upload");
-                setUploadFile(null);
-                setParsedPreviewList([]);
-                setUploadModalOpen(true);
-              }}
+              onClick={handleOpenUploadModal}
               className="rounded-xl text-xs font-semibold gap-1.5 bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
             >
               <Upload className="w-3.5 h-3.5" />
@@ -571,11 +800,15 @@ export function EssayBankTab({
           <div>
             <select
               value={selectedStage}
-              onChange={(e) => setSelectedStage(e.target.value)}
+              onChange={(e) => {
+                setSelectedStage(e.target.value);
+                setSelectedUnit("all");
+                setSelectedLesson("all");
+              }}
               className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             >
               <option value="all">كل المراحل والصفوف</option>
-              {taxonomy.stages.map((st) => (
+              {availableStages.map((st) => (
                 <option key={st} value={st}>
                   {st}
                 </option>
@@ -594,13 +827,31 @@ export function EssayBankTab({
               className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             >
               <option value="all">كل الوحدات</option>
-              {taxonomy.units.map((u) => (
+              {filterUnits.map((u) => (
                 <option key={u.unit} value={u.unit}>
                   {u.unit}
                 </option>
               ))}
             </select>
           </div>
+
+          {/* Lesson Filter */}
+          {filterLessons.length > 0 && (
+            <div>
+              <select
+                value={selectedLesson}
+                onChange={(e) => setSelectedLesson(e.target.value)}
+                className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="all">كل الدروس</option>
+                {filterLessons.map((l) => (
+                  <option key={l} value={l}>
+                    {l}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Difficulty Filter */}
           <div>
@@ -971,37 +1222,94 @@ export function EssayBankTab({
                     />
                   </div>
 
-                  {/* Defaults Metadata Selection */}
+                  {/* Defaults Metadata Selection with Dynamic Cascading */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                      <label className="text-xs text-muted-foreground block mb-1 font-medium">المرحلة الدراسية</label>
-                      <input
-                        type="text"
+                    {/* 1. Stage */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs text-muted-foreground block font-bold">1. المرحلة الدراسية *</label>
+                      <select
                         value={defaultStage}
-                        onChange={(e) => setDefaultStage(e.target.value)}
-                        placeholder="مثال: تانية بكالوريا لغات"
-                        className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                      />
+                        onChange={(e) => handleUploadStageChange(e.target.value)}
+                        className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-medium"
+                      >
+                        {availableStages.map((st) => (
+                          <option key={st} value={st}>
+                            {st}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground block mb-1 font-medium">اسم الوحدة الافتراضية</label>
-                      <input
-                        type="text"
-                        value={defaultUnit}
-                        onChange={(e) => setDefaultUnit(e.target.value)}
-                        placeholder="مثال: Unit 1 – IT & Society"
-                        className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                      />
+
+                    {/* 2. Unit */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs text-muted-foreground block font-bold">2. اسم الوحدة الافتراضية *</label>
+                        <button
+                          type="button"
+                          onClick={() => setCustomUploadUnit((v) => !v)}
+                          className="text-[10px] text-primary hover:underline font-semibold"
+                        >
+                          {customUploadUnit ? "اختيار من المنهج" : "+ إدخال يدوي"}
+                        </button>
+                      </div>
+                      {customUploadUnit ? (
+                        <input
+                          type="text"
+                          value={defaultUnit}
+                          onChange={(e) => setDefaultUnit(e.target.value)}
+                          placeholder="اكتب اسم الوحدة..."
+                          className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-medium"
+                        />
+                      ) : (
+                        <select
+                          value={defaultUnit}
+                          onChange={(e) => handleUploadUnitChange(e.target.value)}
+                          className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-medium"
+                        >
+                          <option value="">-- اختر الوحدة من المنهج --</option>
+                          {uploadUnits.map((u) => (
+                            <option key={u.unit} value={u.unit}>
+                              {u.unit}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground block mb-1 font-medium">اسم الدرس الافتراضي</label>
-                      <input
-                        type="text"
-                        value={defaultLesson}
-                        onChange={(e) => setDefaultLesson(e.target.value)}
-                        placeholder="مثال: Lesson 1-1"
-                        className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                      />
+
+                    {/* 3. Lesson */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs text-muted-foreground block font-bold">3. اسم الدرس الافتراضي *</label>
+                        <button
+                          type="button"
+                          onClick={() => setCustomUploadLesson((v) => !v)}
+                          className="text-[10px] text-primary hover:underline font-semibold"
+                        >
+                          {customUploadLesson ? "اختيار من المنهج" : "+ إدخال يدوي"}
+                        </button>
+                      </div>
+                      {customUploadLesson ? (
+                        <input
+                          type="text"
+                          value={defaultLesson}
+                          onChange={(e) => setDefaultLesson(e.target.value)}
+                          placeholder="اكتب اسم الدرس..."
+                          className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-medium"
+                        />
+                      ) : (
+                        <select
+                          value={defaultLesson}
+                          onChange={(e) => setDefaultLesson(e.target.value)}
+                          className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-medium"
+                        >
+                          <option value="">-- اختر الدرس من المنهج --</option>
+                          {uploadLessons.map((l) => (
+                            <option key={l} value={l}>
+                              {l}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </div>
                   </div>
 
@@ -1087,115 +1395,266 @@ export function EssayBankTab({
               ) : (
                 /* Step 2: Live Preview & Verification */
                 <div className="space-y-4">
-                  <div className="rounded-xl border border-border bg-muted/20 p-3 flex items-center justify-between text-xs text-foreground">
-                    <span>
-                      تم استخراج{" "}
-                      <strong className="text-emerald-600 dark:text-emerald-400 font-bold">
-                        {parsedPreviewList.filter((q) => q.isValid).length}
-                      </strong>{" "}
-                      سؤال صالح من إجمالي {parsedPreviewList.length}
-                    </span>
-                    <button
-                      onClick={() => setParsingStep("upload")}
-                      className="text-blue-600 dark:text-blue-400 hover:underline font-semibold"
-                    >
-                      رفع ملف آخر
-                    </button>
+                  {/* Summary Header Card */}
+                  <div className="rounded-2xl border border-blue-500/30 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 p-4 space-y-3">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <h4 className="text-xs sm:text-sm font-extrabold text-foreground">
+                            معاينة وتأكيد الأسئلة قبل الحفظ في البنك
+                          </h4>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          تم استخراج{" "}
+                          <strong className="text-emerald-600 dark:text-emerald-400 font-bold">
+                            {parsedPreviewList.filter((q) => q.isValid).length}
+                          </strong>{" "}
+                          سؤال صالح من إجمالي {parsedPreviewList.length} سؤال • إجمالي الدرجات:{" "}
+                          <strong className="text-blue-600 dark:text-blue-400 font-bold">
+                            {parsedPreviewList.reduce((sum, q) => sum + (Number(q.points) || 0), 0)}
+                          </strong>{" "}
+                          درجة
+                        </p>
+                      </div>
+
+                      {/* View Mode Switcher */}
+                      <div className="flex items-center gap-1 bg-background/80 border border-border p-1 rounded-xl text-xs">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewViewMode("cards")}
+                          className={`px-2.5 py-1 rounded-lg font-bold transition-colors ${
+                            previewViewMode === "cards"
+                              ? "bg-blue-600 text-white shadow-xs"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          تعديل البطاقات
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPreviewViewMode("preview")}
+                          className={`px-2.5 py-1 rounded-lg font-bold transition-colors ${
+                            previewViewMode === "preview"
+                              ? "bg-blue-600 text-white shadow-xs"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          معاينة ورقة الاختبار 📄
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Target Curriculum Badges & Quick Batch Updater */}
+                    <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/50 text-xs">
+                      <span className="text-muted-foreground font-semibold">الربط بالمنهج:</span>
+                      <span className="inline-flex items-center gap-1 rounded-lg bg-background/90 border border-border px-2.5 py-1 text-[11px] font-bold text-foreground">
+                        🎓 {defaultStage}
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-lg bg-background/90 border border-border px-2.5 py-1 text-[11px] font-bold text-foreground">
+                        📁 {defaultUnit || "الوحدة غير محددة"}
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-lg bg-background/90 border border-border px-2.5 py-1 text-[11px] font-bold text-foreground">
+                        📖 {defaultLesson || "الدرس غير محدد"}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={handleApplyCurriculumToAllPreview}
+                        className="mr-auto text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                        title="تطبيق المرحلة والوحدة والدرس المختارين على كافة الأسئلة المستخرجة"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                        تطبيق هذا المنهج على كل الأسئلة
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
-                    {parsedPreviewList.map((item, idx) => (
-                      <div
-                        key={item.tempId}
-                        className={`rounded-2xl border p-3.5 space-y-2.5 bg-card ${
-                          item.isValid ? "border-border" : "border-red-500/40 bg-red-500/5"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-lg bg-muted text-muted-foreground">
-                              سؤال #{idx + 1}
-                            </span>
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-xs text-muted-foreground">الدرجة:</span>
-                              <input
-                                type="number"
-                                min="1"
-                                max="50"
-                                value={item.points}
+                  {/* Mode 1: Cards Editor Mode */}
+                  {previewViewMode === "cards" ? (
+                    <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
+                      {parsedPreviewList.map((item, idx) => (
+                        <div
+                          key={item.tempId}
+                          className={`rounded-2xl border p-3.5 space-y-2.5 bg-card transition-all ${
+                            item.isValid ? "border-border shadow-xs" : "border-red-500/40 bg-red-500/5"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-lg bg-muted text-muted-foreground">
+                                سؤال #{idx + 1}
+                              </span>
+
+                              {/* Points */}
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-muted-foreground font-medium">الدرجة:</span>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max="50"
+                                  value={item.points}
+                                  onChange={(e) =>
+                                    updatePreviewItem(item.tempId, {
+                                      points: parseInt(e.target.value, 10) || 5,
+                                    })
+                                  }
+                                  className="w-16 bg-background border border-border rounded-lg px-2 py-0.5 text-xs text-foreground text-center font-bold"
+                                />
+                              </div>
+
+                              {/* Difficulty */}
+                              <select
+                                value={item.difficulty}
                                 onChange={(e) =>
                                   updatePreviewItem(item.tempId, {
-                                    points: parseInt(e.target.value, 10) || 5,
+                                    difficulty: e.target.value as any,
                                   })
                                 }
-                                className="w-16 bg-background border border-border rounded-lg px-2 py-0.5 text-xs text-foreground text-center"
-                              />
+                                className="bg-background border border-border rounded-lg px-2 py-0.5 text-xs text-muted-foreground"
+                              >
+                                <option value="easy">سهل</option>
+                                <option value="medium">متوسط</option>
+                                <option value="hard">صعب</option>
+                              </select>
+
+                              {/* Unit / Lesson indicator */}
+                              <span className="text-[11px] text-muted-foreground truncate max-w-[200px]">
+                                {item.unit ? `[${item.unit}]` : ""} {item.lesson ? `[${item.lesson}]` : ""}
+                              </span>
                             </div>
+
+                            <button
+                              type="button"
+                              onClick={() => removePreviewItem(item.tempId)}
+                              className="text-muted-foreground hover:text-red-500 transition-colors p-1"
+                              title="حذف هذا السؤال من قائمة الحفظ"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
-                          <button
-                            onClick={() => removePreviewItem(item.tempId)}
-                            className="text-muted-foreground hover:text-red-500 transition-colors p-1"
-                            title="حذف هذا السؤال من قائمة الحفظ"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
 
-                        {/* Prompt Input */}
-                        <div>
-                          <label className="text-xs text-muted-foreground block mb-1 font-medium">نص السؤال:</label>
-                          <textarea
-                            rows={2}
-                            value={item.prompt}
-                            onChange={(e) =>
-                              updatePreviewItem(item.tempId, { prompt: e.target.value })
-                            }
-                            className="w-full bg-background border border-border rounded-xl p-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                          />
-                        </div>
-
-                        {/* Model Answer Input */}
-                        <div>
-                          <label className="text-xs text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
-                            الإجابة النموذجية والحل المثالي:
-                          </label>
-                          <textarea
-                            rows={3}
-                            value={item.modelAnswer}
-                            onChange={(e) =>
-                              updatePreviewItem(item.tempId, { modelAnswer: e.target.value })
-                            }
-                            className="w-full bg-background border border-border rounded-xl p-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                          />
-                        </div>
-
-                        {/* Explanation / Rubric */}
-                        <div>
-                          <label className="text-xs text-muted-foreground block mb-1 font-medium">
-                            إرشادات وتوزيع الدرجات (اختياري):
-                          </label>
-                          <input
-                            type="text"
-                            value={item.explanation || ""}
-                            onChange={(e) =>
-                              updatePreviewItem(item.tempId, { explanation: e.target.value })
-                            }
-                            placeholder="ملاحظات التصحيح أو العناصر الأساسية المطلوبة..."
-                            className="w-full bg-background border border-border rounded-xl px-2.5 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                          />
-                        </div>
-
-                        {!item.isValid && (
-                          <div className="text-xs text-red-500 flex items-center gap-1 font-medium">
-                            <AlertCircle className="w-3.5 h-3.5" />
-                            <span>{item.validationError || "يرجى إكمال السؤال والإجابة"}</span>
+                          {/* Prompt Input */}
+                          <div>
+                            <label className="text-xs text-muted-foreground block mb-1 font-medium">نص السؤال المقالي:</label>
+                            <textarea
+                              rows={2}
+                              value={item.prompt}
+                              onChange={(e) =>
+                                updatePreviewItem(item.tempId, { prompt: e.target.value })
+                              }
+                              className="w-full bg-background border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                              placeholder="اكتب نص السؤال..."
+                            />
                           </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-border">
+                          {/* Model Answer Input */}
+                          <div>
+                            <label className="text-xs text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
+                              الإجابة النموذجية والحل المثالي:
+                            </label>
+                            <textarea
+                              rows={3}
+                              value={item.modelAnswer}
+                              onChange={(e) =>
+                                updatePreviewItem(item.tempId, { modelAnswer: e.target.value })
+                              }
+                              className="w-full bg-background border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                              placeholder="اكتب الإجابة النموذجية المعتمدة..."
+                            />
+                          </div>
+
+                          {/* Explanation / Rubric */}
+                          <div>
+                            <label className="text-xs text-muted-foreground block mb-1 font-medium">
+                              إرشادات وتوزيع الدرجات (Rubric - اختياري):
+                            </label>
+                            <input
+                              type="text"
+                              value={item.explanation || ""}
+                              onChange={(e) =>
+                                updatePreviewItem(item.tempId, { explanation: e.target.value })
+                              }
+                              placeholder="ملاحظات التصحيح أو العناصر الأساسية المطلوبة..."
+                              className="w-full bg-background border border-border rounded-xl px-2.5 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                            />
+                          </div>
+
+                          {!item.isValid && (
+                            <div className="text-xs text-red-500 flex items-center gap-1 font-medium">
+                              <AlertCircle className="w-3.5 h-3.5" />
+                              <span>{item.validationError || "يرجى كتابة نص السؤال والحل النموذجي"}</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+
+                      {/* Add another item manually button */}
+                      <button
+                        type="button"
+                        onClick={handleAddNewPreviewItem}
+                        className="w-full border-2 border-dashed border-border hover:border-blue-500 rounded-2xl p-3 text-center text-xs font-bold text-blue-600 dark:text-blue-400 transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        <Plus className="w-4 h-4" />
+                        إضافة سؤال مقالي آخر للقائمة يدوياً قبل الحفظ
+                      </button>
+                    </div>
+                  ) : (
+                    /* Mode 2: Student Exam Paper Preview Mode */
+                    <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-1">
+                      {parsedPreviewList.map((item, idx) => (
+                        <div
+                          key={item.tempId}
+                          className="rounded-2xl border border-border bg-card p-4 space-y-3 shadow-xs"
+                        >
+                          <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-extrabold text-xs text-foreground bg-primary/10 text-primary px-2.5 py-1 rounded-lg">
+                                سؤال ({idx + 1})
+                              </span>
+                              <span className="text-xs font-bold text-muted-foreground">
+                                [{item.points} درجات]
+                              </span>
+                              <span className="text-[11px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                                {item.difficulty === "easy" ? "سهل" : item.difficulty === "hard" ? "صعب" : "متوسط"}
+                              </span>
+                            </div>
+                            <span className="text-[11px] text-muted-foreground font-medium">
+                              {item.unit || defaultUnit} {item.lesson ? `• ${item.lesson}` : ""}
+                            </span>
+                          </div>
+
+                          {/* Prompt display */}
+                          <div className="text-xs sm:text-sm font-bold text-foreground leading-relaxed whitespace-pre-wrap">
+                            {item.prompt || "(نص السؤال فارغ)"}
+                          </div>
+
+                          {/* Model Answer display */}
+                          <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 space-y-1">
+                            <span className="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400 block">
+                              💡 الإجابة النموذجية المعتمدة:
+                            </span>
+                            <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
+                              {item.modelAnswer || "(الإجابة النموذجية فارغة)"}
+                            </p>
+                          </div>
+
+                          {/* Rubric display */}
+                          {item.explanation && (
+                            <div className="rounded-xl border border-border bg-muted/20 p-2.5 text-xs text-muted-foreground">
+                              <span className="font-bold text-foreground block text-[11px] mb-0.5">
+                                📋 عناصر التقييم ومعايير الدرجات:
+                              </span>
+                              <p className="text-xs leading-relaxed">{item.explanation}</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Modal Footer Actions */}
+                  <div className="flex items-center justify-between pt-3 border-t border-border flex-wrap gap-2">
                     <Button
                       type="button"
                       variant="ghost"
@@ -1207,7 +1666,7 @@ export function EssayBankTab({
                     <Button
                       onClick={handleSaveBulk}
                       disabled={savingBulk || parsedPreviewList.filter((q) => q.isValid).length === 0}
-                      className="rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+                      className="rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
                     >
                       {savingBulk ? (
                         <>
@@ -1215,7 +1674,7 @@ export function EssayBankTab({
                           جاري الحفظ في البنك...
                         </>
                       ) : (
-                        `حفظ ${parsedPreviewList.filter((q) => q.isValid).length} سؤال في بنك الأسئلة المقالية`
+                        `حفظ ${parsedPreviewList.filter((q) => q.isValid).length} سؤال في بنك الأسئلة المقالية (${parsedPreviewList.reduce((sum, q) => sum + (Number(q.points) || 0), 0)} درجة)`
                       )}
                     </Button>
                   </div>
@@ -1231,9 +1690,35 @@ export function EssayBankTab({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
           <div className="rounded-2xl border border-border bg-card w-full max-w-2xl max-h-[90vh] flex flex-col shadow-xl overflow-hidden">
             <div className="p-4 border-b border-border flex items-center justify-between bg-muted/20">
-              <h3 className="text-sm font-bold text-foreground">
-                {editingItem ? "تعديل السؤال المقالي" : "إضافة سؤال مقالي جديد للبنك"}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-foreground">
+                  {editingItem ? "تعديل السؤال المقالي" : "إضافة سؤال مقالي جديد للبنك"}
+                </h3>
+
+                {/* Live Preview Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowManualPreview((v) => !v)}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold border transition-colors ${
+                    showManualPreview
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-background text-muted-foreground border-border hover:text-foreground"
+                  }`}
+                >
+                  {showManualPreview ? (
+                    <>
+                      <EyeOff className="w-3.5 h-3.5" />
+                      الرجوع للتعديل
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-3.5 h-3.5" />
+                      معاينة السؤال
+                    </>
+                  )}
+                </button>
+              </div>
+
               <button
                 onClick={() => setFormModalOpen(false)}
                 className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -1242,141 +1727,273 @@ export function EssayBankTab({
               </button>
             </div>
 
-            <form onSubmit={handleSaveSingle} className="p-5 overflow-y-auto flex-1 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1 font-medium">المرحلة الدراسية</label>
-                  <input
-                    type="text"
-                    value={formData.stage}
-                    onChange={(e) => setFormData({ ...formData, stage: e.target.value })}
-                    placeholder="الصف الدراسي"
-                    className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1 font-medium">الوحدة</label>
-                  <input
-                    type="text"
-                    value={formData.unit}
-                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                    placeholder="اسم الوحدة"
-                    className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1 font-medium">الدرس</label>
-                  <input
-                    type="text"
-                    value={formData.lesson}
-                    onChange={(e) => setFormData({ ...formData, lesson: e.target.value })}
-                    placeholder="اسم الدرس"
-                    className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                </div>
-              </div>
+            {showManualPreview ? (
+              /* Live Preview for Manual Question */
+              <div className="p-5 overflow-y-auto flex-1 space-y-4">
+                <div className="rounded-2xl border border-border bg-card p-4 space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between border-b border-border/60 pb-2 flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-xs text-foreground bg-primary/10 text-primary px-2.5 py-1 rounded-lg">
+                        معاينة السؤال المقالي
+                      </span>
+                      <span className="text-xs font-bold text-muted-foreground">
+                        [{formData.points} درجات]
+                      </span>
+                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                        {formData.difficulty === "easy" ? "سهل" : formData.difficulty === "hard" ? "صعب" : "متوسط"}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-muted-foreground font-medium">
+                      {formData.stage} • {formData.unit || "الوحدة عامة"} {formData.lesson ? `• ${formData.lesson}` : ""}
+                    </span>
+                  </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1 font-medium">مستوى الصعوبة</label>
-                  <select
-                    value={formData.difficulty}
-                    onChange={(e) =>
-                      setFormData({ ...formData, difficulty: e.target.value as any })
-                    }
-                    className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                  >
-                    <option value="easy">سهل (Easy)</option>
-                    <option value="medium">متوسط (Medium)</option>
-                    <option value="hard">صعب (Hard)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground block mb-1 font-medium">درجات السؤال</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="50"
-                    value={formData.points}
-                    onChange={(e) =>
-                      setFormData({ ...formData, points: parseInt(e.target.value, 10) || 5 })
-                    }
-                    className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                </div>
-              </div>
+                  <div className="text-sm font-bold text-foreground leading-relaxed whitespace-pre-wrap">
+                    {formData.prompt || "(لم يتم كتابة نص السؤال بعد)"}
+                  </div>
 
-              {/* Prompt */}
-              <div>
-                <label className="text-xs text-foreground font-bold block mb-1">
-                  نص السؤال المقالي *
-                </label>
-                <textarea
-                  rows={3}
-                  required
-                  value={formData.prompt}
-                  onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
-                  placeholder="اكتب نص السؤال المطلوب من الطالب بالتفصيل..."
-                  className="w-full bg-background border border-border rounded-xl p-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-              </div>
+                  <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 space-y-1">
+                    <span className="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400 block">
+                      💡 الإجابة النموذجية المعتمدة:
+                    </span>
+                    <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
+                      {formData.modelAnswer || "(لم يتم كتابة الإجابة النموذجية بعد)"}
+                    </p>
+                  </div>
 
-              {/* Model Answer */}
-              <div>
-                <label className="text-xs text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
-                  الإجابة النموذجية والحل المثالي *
-                </label>
-                <textarea
-                  rows={4}
-                  required
-                  value={formData.modelAnswer}
-                  onChange={(e) => setFormData({ ...formData, modelAnswer: e.target.value })}
-                  placeholder="اكتب الحل النموذجي والمثالي الذي يُقاس عليه حل الطالب..."
-                  className="w-full bg-background border border-border rounded-xl p-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                />
-              </div>
-
-              {/* Explanation / Rubric */}
-              <div>
-                <label className="text-xs text-muted-foreground block mb-1 font-medium">
-                  إرشادات التصحيح وعناصر توزيع الدرجات (Rubric)
-                </label>
-                <textarea
-                  rows={2}
-                  value={formData.explanation}
-                  onChange={(e) => setFormData({ ...formData, explanation: e.target.value })}
-                  placeholder="مثال: درجتان لذكر القانون، ودرجتان للخطوات، ودرجة للناتج النهائي..."
-                  className="w-full bg-background border border-border rounded-xl p-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-3 border-t border-border">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setFormModalOpen(false)}
-                  className="rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground"
-                >
-                  إلغاء
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={savingItem}
-                  className="rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  {savingItem ? (
-                    <>
-                      <RefreshCw className="w-3.5 h-3.5 ml-1.5 animate-spin" />
-                      جاري الحفظ...
-                    </>
-                  ) : editingItem ? (
-                    "تحديث السؤال"
-                  ) : (
-                    "حفظ في البنك"
+                  {formData.explanation && (
+                    <div className="rounded-xl border border-border bg-muted/20 p-2.5 text-xs text-muted-foreground">
+                      <span className="font-bold text-foreground block text-[11px] mb-0.5">
+                        📋 عناصر التقييم ومعايير الدرجات:
+                      </span>
+                      <p className="text-xs leading-relaxed">{formData.explanation}</p>
+                    </div>
                   )}
-                </Button>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2 border-t border-border">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setShowManualPreview(false)}
+                    className="rounded-xl text-xs font-semibold"
+                  >
+                    تعديل البيانات
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleSaveSingle}
+                    disabled={savingItem || !formData.prompt.trim() || !formData.modelAnswer.trim()}
+                    className="rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {savingItem ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 ml-1.5 animate-spin" />
+                        جاري الحفظ...
+                      </>
+                    ) : editingItem ? (
+                      "تحديث السؤال"
+                    ) : (
+                      "حفظ في البنك"
+                    )}
+                  </Button>
+                </div>
               </div>
-            </form>
+            ) : (
+              <form onSubmit={handleSaveSingle} className="p-5 overflow-y-auto flex-1 space-y-4">
+                {/* Dynamic Cascading Stage / Unit / Lesson */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* 1. Stage */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted-foreground block font-bold">1. المرحلة الدراسية *</label>
+                    <select
+                      value={formData.stage}
+                      onChange={(e) => handleFormStageChange(e.target.value)}
+                      className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-medium"
+                    >
+                      {availableStages.map((st) => (
+                        <option key={st} value={st}>
+                          {st}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* 2. Unit */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs text-muted-foreground block font-bold">2. الوحدة الدراسية *</label>
+                      <button
+                        type="button"
+                        onClick={() => setCustomFormUnit((v) => !v)}
+                        className="text-[10px] text-primary hover:underline font-semibold"
+                      >
+                        {customFormUnit ? "اختيار من المنهج" : "+ إدخال يدوي"}
+                      </button>
+                    </div>
+                    {customFormUnit ? (
+                      <input
+                        type="text"
+                        value={formData.unit}
+                        onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                        placeholder="اسم الوحدة..."
+                        className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-medium"
+                      />
+                    ) : (
+                      <select
+                        value={formData.unit}
+                        onChange={(e) => handleFormUnitChange(e.target.value)}
+                        className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-medium"
+                      >
+                        <option value="">-- اختر الوحدة من المنهج --</option>
+                        {formUnits.map((u) => (
+                          <option key={u.unit} value={u.unit}>
+                            {u.unit}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+
+                  {/* 3. Lesson */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs text-muted-foreground block font-bold">3. الدرس *</label>
+                      <button
+                        type="button"
+                        onClick={() => setCustomFormLesson((v) => !v)}
+                        className="text-[10px] text-primary hover:underline font-semibold"
+                      >
+                        {customFormLesson ? "اختيار من المنهج" : "+ إدخال يدوي"}
+                      </button>
+                    </div>
+                    {customFormLesson ? (
+                      <input
+                        type="text"
+                        value={formData.lesson}
+                        onChange={(e) => setFormData({ ...formData, lesson: e.target.value })}
+                        placeholder="اسم الدرس..."
+                        className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-medium"
+                      />
+                    ) : (
+                      <select
+                        value={formData.lesson}
+                        onChange={(e) => setFormData({ ...formData, lesson: e.target.value })}
+                        className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary font-medium"
+                      >
+                        <option value="">-- اختر الدرس من المنهج --</option>
+                        {formLessons.map((l) => (
+                          <option key={l} value={l}>
+                            {l}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1 font-medium">مستوى الصعوبة</label>
+                    <select
+                      value={formData.difficulty}
+                      onChange={(e) =>
+                        setFormData({ ...formData, difficulty: e.target.value as any })
+                      }
+                      className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                    >
+                      <option value="easy">سهل (Easy)</option>
+                      <option value="medium">متوسط (Medium)</option>
+                      <option value="hard">صعب (Hard)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1 font-medium">درجات السؤال</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="50"
+                      value={formData.points}
+                      onChange={(e) =>
+                        setFormData({ ...formData, points: parseInt(e.target.value, 10) || 5 })
+                      }
+                      className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+
+                {/* Prompt */}
+                <div>
+                  <label className="text-xs text-foreground font-bold block mb-1">
+                    نص السؤال المقالي *
+                  </label>
+                  <textarea
+                    rows={3}
+                    required
+                    value={formData.prompt}
+                    onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
+                    placeholder="اكتب نص السؤال المطلوب من الطالب بالتفصيل..."
+                    className="w-full bg-background border border-border rounded-xl p-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
+                {/* Model Answer */}
+                <div>
+                  <label className="text-xs text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
+                    الإجابة النموذجية والحل المثالي *
+                  </label>
+                  <textarea
+                    rows={4}
+                    required
+                    value={formData.modelAnswer}
+                    onChange={(e) => setFormData({ ...formData, modelAnswer: e.target.value })}
+                    placeholder="اكتب الحل النموذجي والمثالي الذي يُقاس عليه حل الطالب..."
+                    className="w-full bg-background border border-border rounded-xl p-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+
+                {/* Explanation / Rubric */}
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1 font-medium">
+                    إرشادات التصحيح وعناصر توزيع الدرجات (Rubric)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={formData.explanation}
+                    onChange={(e) => setFormData({ ...formData, explanation: e.target.value })}
+                    placeholder="مثال: درجتان لذكر القانون، ودرجتان للخطوات، ودرجة للناتج النهائي..."
+                    className="w-full bg-background border border-border rounded-xl p-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-3 border-t border-border">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setFormModalOpen(false)}
+                    className="rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground"
+                  >
+                    إلغاء
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={savingItem}
+                    className="rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {savingItem ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 ml-1.5 animate-spin" />
+                        جاري الحفظ...
+                      </>
+                    ) : editingItem ? (
+                      "تحديث السؤال"
+                    ) : (
+                      "حفظ في البنك"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
