@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   FileText,
+  FileEdit,
   Upload,
   Plus,
   Trash2,
