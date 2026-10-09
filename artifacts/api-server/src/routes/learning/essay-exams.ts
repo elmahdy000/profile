@@ -1136,6 +1136,7 @@ router.get("/admin/learning/essay-exams/curriculum-tree", requireAdmin, async (_
       return {
         stage,
         units: Object.entries(unitsMap)
+          .filter(([_, lessonsSet]) => lessonsSet.size > 0)
           .sort((a, b) => parseUnitSortOrder(a[0]) - parseUnitSortOrder(b[0]))
           .map(([unit, lessonsSet]) => ({
             unit,
