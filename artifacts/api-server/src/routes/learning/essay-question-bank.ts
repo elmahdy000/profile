@@ -14,8 +14,10 @@ import { requireAdmin, getAdminIdentity } from "../../middleware/auth";
 import { logAudit } from "../../lib/audit";
 import {
   PLATFORM_CANONICAL_STAGES,
+  CANONICAL_CURRICULUM_DATA,
   normalizeCanonicalStage,
   normalizeCanonicalUnit,
+  normalizeCanonicalLesson,
   getUnitAliases,
 } from "./shared";
 
@@ -289,10 +291,16 @@ export function parseEssayQuestionsFromText(
     }
   }
 
+  const normStage = normalizeCanonicalStage(detectedStage) || detectedStage;
+  const normUnit = detectedUnit ? normalizeCanonicalUnit(normStage, detectedUnit) : detectedUnit;
+  const normLesson = detectedLesson
+    ? (normalizeCanonicalLesson(normStage, normUnit, detectedLesson, { allowCustom: true }) || detectedLesson)
+    : detectedLesson;
+
   return {
-    detectedStage,
-    detectedUnit,
-    detectedLesson,
+    detectedStage: normStage,
+    detectedUnit: normUnit,
+    detectedLesson: normLesson,
     questions,
   };
 }
@@ -407,19 +415,30 @@ router.get("/admin/learning/essay-question-bank/taxonomy", requireAdmin, async (
         essayQuestionBankTable.difficulty
       );
 
-    const stagesSet = new Set<string>(PLATFORM_CANONICAL_STAGES);
+    // Pre-seed units and lessons from canonical curriculum
     const unitsMap = new Map<string, Set<string>>();
+    for (const stageItem of CANONICAL_CURRICULUM_DATA) {
+      for (const unitItem of stageItem.units) {
+        if (!unitsMap.has(unitItem.unit)) {
+          unitsMap.set(unitItem.unit, new Set(unitItem.lessons));
+        } else {
+          unitItem.lessons.forEach((l) => unitsMap.get(unitItem.unit)!.add(l));
+        }
+      }
+    }
 
     for (const r of rows) {
       const normStage = normalizeCanonicalStage(r.stage);
-      if (normStage) stagesSet.add(normStage);
       if (r.unit) {
         const normUnit = normalizeCanonicalUnit(normStage, r.unit);
         if (!unitsMap.has(normUnit)) {
           unitsMap.set(normUnit, new Set());
         }
         if (r.lesson) {
-          unitsMap.get(normUnit)!.add(r.lesson);
+          const normLesson = normalizeCanonicalLesson(normStage, normUnit, r.lesson, { allowCustom: true });
+          if (normLesson) {
+            unitsMap.get(normUnit)!.add(normLesson);
+          }
         }
       }
     }
@@ -432,6 +451,7 @@ router.get("/admin/learning/essay-question-bank/taxonomy", requireAdmin, async (
     res.json({
       success: true,
       stages: [...PLATFORM_CANONICAL_STAGES],
+      taxonomyTree: CANONICAL_CURRICULUM_DATA,
       units,
       summaryRows: rows,
     });
@@ -526,8 +546,13 @@ router.post("/admin/learning/essay-question-bank/bulk-save", requireAdmin, async
       const modelAnswer = String(q.modelAnswer ?? q.model_answer ?? "").trim();
       if (!prompt || !modelAnswer) continue;
 
-      const stage = q.stage ? String(q.stage).trim() : "عام";
+      const rawStage = q.stage ? String(q.stage).trim() : "عام";
+      const stage = normalizeCanonicalStage(rawStage) || rawStage;
       const stages = Array.isArray(q.stages) && q.stages.length > 0 ? q.stages : [stage];
+      const unit = q.unit ? normalizeCanonicalUnit(stage, q.unit) : null;
+      const lesson = q.lesson
+        ? (normalizeCanonicalLesson(stage, unit, q.lesson, { allowCustom: true }) || String(q.lesson).trim())
+        : null;
 
       validInserts.push({
         courseId: q.courseId ? Number(q.courseId) : null,
@@ -535,8 +560,8 @@ router.post("/admin/learning/essay-question-bank/bulk-save", requireAdmin, async
         stage,
         stages,
         category: q.category ? String(q.category).trim() : "عام",
-        unit: q.unit ? String(q.unit).trim() : null,
-        lesson: q.lesson ? String(q.lesson).trim() : null,
+        unit,
+        lesson,
         difficulty: (["easy", "medium", "hard"].includes(q.difficulty) ? q.difficulty : "medium") as any,
         points: Number(q.points) > 0 ? Number(q.points) : 5,
         prompt,
@@ -607,8 +632,13 @@ router.post("/admin/learning/essay-question-bank", requireAdmin, async (req, res
       return;
     }
 
-    const finalStage = stage ? String(stage).trim() : "عام";
+    const rawStage = stage ? String(stage).trim() : "عام";
+    const finalStage = normalizeCanonicalStage(rawStage) || rawStage;
     const finalStages = Array.isArray(stages) && stages.length > 0 ? stages : [finalStage];
+    const finalUnit = unit ? normalizeCanonicalUnit(finalStage, unit) : null;
+    const finalLesson = lesson
+      ? (normalizeCanonicalLesson(finalStage, finalUnit, lesson, { allowCustom: true }) || String(lesson).trim())
+      : null;
 
     const [newQuestion] = await db
       .insert(essayQuestionBankTable)
@@ -617,8 +647,8 @@ router.post("/admin/learning/essay-question-bank", requireAdmin, async (req, res
         stage: finalStage,
         stages: finalStages,
         category: category ? String(category).trim() : "عام",
-        unit: unit ? String(unit).trim() : null,
-        lesson: lesson ? String(lesson).trim() : null,
+        unit: finalUnit,
+        lesson: finalLesson,
         difficulty: (["easy", "medium", "hard"].includes(difficulty) ? difficulty : "medium") as any,
         points: Number(points) > 0 ? Number(points) : 5,
         prompt: String(prompt).trim(),
@@ -675,11 +705,20 @@ router.put("/admin/learning/essay-question-bank/:id", requireAdmin, async (req, 
     if (modelAnswer !== undefined) updateData.modelAnswer = String(modelAnswer).trim();
     if (explanation !== undefined) updateData.explanation = explanation ? String(explanation).trim() : null;
     if (points !== undefined) updateData.points = Number(points) || 5;
-    if (stage !== undefined) updateData.stage = String(stage).trim();
-    if (stages !== undefined) updateData.stages = Array.isArray(stages) ? stages : [updateData.stage || "عام"];
+    if (stage !== undefined) {
+      const rawStage = String(stage).trim();
+      updateData.stage = normalizeCanonicalStage(rawStage) || rawStage;
+      updateData.stages = Array.isArray(stages) ? stages : [updateData.stage || "عام"];
+    }
     if (category !== undefined) updateData.category = String(category).trim();
-    if (unit !== undefined) updateData.unit = unit ? String(unit).trim() : null;
-    if (lesson !== undefined) updateData.lesson = lesson ? String(lesson).trim() : null;
+    if (unit !== undefined) {
+      updateData.unit = unit ? normalizeCanonicalUnit(updateData.stage || undefined, unit) : null;
+    }
+    if (lesson !== undefined) {
+      updateData.lesson = lesson
+        ? (normalizeCanonicalLesson(updateData.stage || undefined, updateData.unit || undefined, lesson, { allowCustom: true }) || String(lesson).trim())
+        : null;
+    }
     if (difficulty !== undefined) {
       updateData.difficulty = (["easy", "medium", "hard"].includes(difficulty) ? difficulty : "medium") as any;
     }
