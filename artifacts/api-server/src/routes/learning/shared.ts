@@ -247,6 +247,147 @@ export function parseLessonSortOrder(lessonName: string): number {
   if (m) return parseInt(m[1], 10) * 10;
   return 100;
 }
+export const PLATFORM_CANONICAL_STAGES = [
+  "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي",
+  "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)",
+  "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس عربي",
+  "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس لغات (Languages)",
+  "المرحلة الجامعية · كلية حاسبات ومعلومات",
+] as const;
+
+export function normalizeCanonicalStage(raw?: string | null): string | null {
+  if (!raw) return null;
+  const s = raw.trim();
+  if ((PLATFORM_CANONICAL_STAGES as readonly string[]).includes(s)) return s;
+  if (s.includes("تانية") || s.includes("ثاني")) {
+    return s.includes("لغات") || s.toLowerCase().includes("languages") || s.toLowerCase().includes("english")
+      ? "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)"
+      : "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي";
+  }
+  if (s.includes("أولى") || s.includes("اولى") || s.includes("أول") || s.includes("اول")) {
+    return s.includes("لغات") || s.toLowerCase().includes("languages") || s.toLowerCase().includes("english")
+      ? "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس لغات (Languages)"
+      : "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس عربي";
+  }
+  if (
+    s.includes("جامع") ||
+    s.includes("حاسبات") ||
+    s.includes("هندس") ||
+    s.includes("الفرقة") ||
+    s.toLowerCase().includes("computer") ||
+    s.toLowerCase().includes("university")
+  ) {
+    return "المرحلة الجامعية · كلية حاسبات ومعلومات";
+  }
+  return null;
+}
+
+export function normalizeCanonicalUnit(stageName?: string | null, unitName?: string | null): string {
+  const stage = normalizeCanonicalStage(stageName);
+  const u = (unitName || "").trim();
+  const lower = u.toLowerCase();
+
+  // تانية بكالوريا عربي
+  if (!stage || stage === "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي") {
+    if (
+      u.includes("الثانية") ||
+      u.includes("التانية") ||
+      u.includes("السيبراني") ||
+      u.includes("التشفير") ||
+      u.includes("الشبكات") ||
+      lower.includes("unit 2") ||
+      lower.includes("unit2")
+    ) {
+      return "الوحدة الثانية: الأمن السيبراني والتشفير";
+    }
+    if (
+      u.includes("الأولى") ||
+      u.includes("الاولى") ||
+      u.includes("الذكاء") ||
+      u.includes("المعلومات") ||
+      lower.includes("unit 1") ||
+      lower.includes("unit1")
+    ) {
+      return "الوحدة الأولى: الذكاء الاصطناعي والمجتمع";
+    }
+    return "الوحدة الأولى: الذكاء الاصطناعي والمجتمع";
+  }
+
+  // تانية بكالوريا لغات
+  if (stage === "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)") {
+    if (
+      lower.includes("unit 2") ||
+      lower.includes("unit2") ||
+      lower.includes("cyber") ||
+      lower.includes("encryption") ||
+      lower.includes("network") ||
+      u.includes("الثانية") ||
+      u.includes("التانية")
+    ) {
+      return "الوحدة الثانية: الأمن السيبراني والتشفير (Unit 2: Cybersecurity & Encryption)";
+    }
+    if (
+      lower.includes("unit 1") ||
+      lower.includes("unit1") ||
+      lower.includes("ai") ||
+      lower.includes("intelligence") ||
+      lower.includes("information technology") ||
+      u.includes("الأولى") ||
+      u.includes("الاولى")
+    ) {
+      return "الوحدة الأولى: الذكاء الاصطناعي (Unit 1: Artificial Intelligence)";
+    }
+    return "الوحدة الأولى: الذكاء الاصطناعي (Unit 1: Artificial Intelligence)";
+  }
+
+  // أولى بكالوريا
+  if (stage.includes("الأول") || stage.includes("أولى")) {
+    if (stage.includes("لغات")) {
+      return "الوحدة الأولى: أساسيات البرمجة بلغة C++ (Unit 1: Programming Fundamentals in C++)";
+    }
+    return "الوحدة الأولى: أساسيات البرمجة بلغة C++";
+  }
+
+  // المرحلة الجامعية
+  if (stage.includes("جامع") || stage.includes("حاسبات")) {
+    if (lower.includes("logic") || u.includes("منطقي")) return "مادة التصميم المنطقي Logic Design";
+    if (lower.includes("oop") || u.includes("كائنية") || u.includes("كائنات")) return "مادة البرمجة الكائنية Object Oriented Programming (OOP)";
+    return "مادة لغة البرمجة C++ Programming";
+  }
+
+  return u || "الوحدة الأولى";
+}
+
+export function getUnitAliases(stageName?: string | null, canonicalUnit?: string | null): string[] {
+  if (!canonicalUnit) return [];
+  const u = canonicalUnit.trim();
+  const set = new Set<string>([u]);
+
+  if (u === "الوحدة الأولى: الذكاء الاصطناعي والمجتمع") {
+    set.add("الوحدة الأولى: تكنولوجيا المعلومات والمجتمع");
+    set.add("الوحدة الأولى: الذكاء الاصطناعي والمجتمع");
+    set.add("الوحدة الأولى");
+    set.add("الوحدة الاولى");
+    set.add("الوحدة الاولى: تكنولوجيا المعلومات والتحول الاجتماعى");
+  } else if (u === "الوحدة الثانية: الأمن السيبراني والتشفير") {
+    set.add("الوحدة الثانية: الأمن السيبراني والشبكات");
+    set.add("الوحدة الثانية: الأمن السيبراني والتشفير");
+    set.add("الوحدة الثانية");
+    set.add("الوحدة التانية");
+  } else if (u.includes("Unit 1: Artificial Intelligence") || u.includes("الذكاء الاصطناعي")) {
+    set.add("Unit 1 – Information Technology and Society");
+    set.add("Unit 1: Information Technology and Society");
+    set.add("Unit 1");
+    set.add("الوحدة الأولى: الذكاء الاصطناعي (Unit 1: Artificial Intelligence)");
+  } else if (u.includes("Unit 2: Cybersecurity") || u.includes("الأمن السيبراني والتشفير")) {
+    set.add("Unit 2 – Cybersecurity and Networks");
+    set.add("Unit 2: Cybersecurity and Networks");
+    set.add("Unit 2");
+    set.add("الوحدة الثانية: الأمن السيبراني والتشفير (Unit 2: Cybersecurity & Encryption)");
+  }
+
+  return Array.from(set);
+}
 
 export function normalizeQuestionPrompt(p?: string | null): string {
   if (!p) return "";

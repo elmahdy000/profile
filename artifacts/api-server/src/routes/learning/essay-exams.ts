@@ -23,7 +23,17 @@ import {
 import { requireAdmin } from "../../middleware/auth";
 import { requireStudent } from "../../middleware/student-auth";
 import { sendPushToStudent } from "../../services/push-notifications";
-import { essayAnswersDir, essayAnswerUpload, matchStudentToStage, parseUnitSortOrder, parseLessonSortOrder } from "./shared";
+import {
+  essayAnswersDir,
+  essayAnswerUpload,
+  matchStudentToStage,
+  parseUnitSortOrder,
+  parseLessonSortOrder,
+  PLATFORM_CANONICAL_STAGES,
+  normalizeCanonicalStage,
+  normalizeCanonicalUnit,
+  getUnitAliases,
+} from "./shared";
 import { parseEssayQuestionsFromText } from "./essay-question-bank";
 
 const require = createRequire(import.meta.url);
@@ -927,48 +937,6 @@ router.get("/admin/learning/essay-exams/curriculum-tree", requireAdmin, async (_
     const courses = await db.select().from(coursesTable);
     const videos = await db.select().from(videosTable);
 
-    // 5 Official Canonical Platform Stages (Strictly: University, 1st Sec Bac Ar/En, 2nd Sec Bac Ar/En)
-    const PLATFORM_CANONICAL_STAGES = [
-      "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي",
-      "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)",
-      "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس عربي",
-      "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس لغات (Languages)",
-      "المرحلة الجامعية · كلية حاسبات ومعلومات",
-    ] as const;
-
-    function normalizeToPlatformStage(rawStage?: string | null): string | null {
-      if (!rawStage) return null;
-      const s = rawStage.trim();
-      if ((PLATFORM_CANONICAL_STAGES as readonly string[]).includes(s)) return s;
-
-      if (s.includes("تانية") || s.includes("ثاني")) {
-        if (s.includes("لغات") || s.toLowerCase().includes("languages") || s.toLowerCase().includes("english")) {
-          return "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)";
-        }
-        return "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي";
-      }
-
-      if (s.includes("أولى") || s.includes("اولى") || s.includes("أول") || s.includes("اول")) {
-        if (s.includes("لغات") || s.toLowerCase().includes("languages") || s.toLowerCase().includes("english")) {
-          return "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس لغات (Languages)";
-        }
-        return "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس عربي";
-      }
-
-      if (
-        s.includes("جامع") ||
-        s.includes("حاسبات") ||
-        s.includes("هندس") ||
-        s.includes("الفرقة") ||
-        s.toLowerCase().includes("computer") ||
-        s.toLowerCase().includes("university")
-      ) {
-        return "المرحلة الجامعية · كلية حاسبات ومعلومات";
-      }
-
-      return null;
-    }
-
     // Hierarchical map: Stage -> Unit -> Set of Lessons
     const treeMap: Record<string, Record<string, Set<string>>> = {};
     for (const stage of PLATFORM_CANONICAL_STAGES) {
@@ -976,10 +944,10 @@ router.get("/admin/learning/essay-exams/curriculum-tree", requireAdmin, async (_
     }
 
     function addEntry(stage?: string | null, unit?: string | null, lesson?: string | null) {
-      const canonicalStage = normalizeToPlatformStage(stage);
+      const canonicalStage = normalizeCanonicalStage(stage);
       if (!canonicalStage) return; // Discard stages not part of platform
 
-      const u = String(unit || "الوحدة الأولى").trim();
+      const u = normalizeCanonicalUnit(canonicalStage, unit);
       const l = lesson ? String(lesson).trim() : "";
 
       if (!treeMap[canonicalStage]) treeMap[canonicalStage] = {};
@@ -994,7 +962,7 @@ router.get("/admin/learning/essay-exams/curriculum-tree", requireAdmin, async (_
     // 2. Add real video lessons linked directly to platform stages
     videos.forEach((v) => {
       const course = courses.find((c) => c.id === v.courseId);
-      let detectedStage = normalizeToPlatformStage(v.stage || (v.stages && v.stages[0]) || (course?.stages && course.stages[0]));
+      let detectedStage = normalizeCanonicalStage(v.stage || (v.stages && v.stages[0]) || (course?.stages && course.stages[0]));
 
       if (!detectedStage) {
         const cat = (v.category || "").toLowerCase();
@@ -1015,9 +983,13 @@ router.get("/admin/learning/essay-exams/curriculum-tree", requireAdmin, async (_
       const titleLower = v.title.toLowerCase();
 
       if (v.title.includes("الوحدة الثانية") || v.title.includes("الوحدة التانية") || titleLower.includes("unit 2") || titleLower.includes("unit2") || v.title.includes("التشفير")) {
-        unitName = isEnglish ? "Unit 2 – Cybersecurity and Networks" : "الوحدة الثانية: الأمن السيبراني والشبكات";
+        unitName = isEnglish
+          ? "الوحدة الثانية: الأمن السيبراني والتشفير (Unit 2: Cybersecurity & Encryption)"
+          : "الوحدة الثانية: الأمن السيبراني والتشفير";
       } else if (v.title.includes("الوحدة الاولى") || v.title.includes("الوحدة الأولى") || titleLower.includes("unit 1") || titleLower.includes("unit1") || v.title.includes("الذكاء الاصطناع")) {
-        unitName = isEnglish ? "Unit 1 – Information Technology and Society" : "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع";
+        unitName = isEnglish
+          ? "الوحدة الأولى: الذكاء الاصطناعي (Unit 1: Artificial Intelligence)"
+          : "الوحدة الأولى: الذكاء الاصطناعي والمجتمع";
       } else if (detectedStage === "المرحلة الجامعية · كلية حاسبات ومعلومات") {
         if (titleLower.includes("logic") || v.category?.includes("Logic")) {
           unitName = "مادة التصميم المنطقي Logic Design";
@@ -1029,7 +1001,9 @@ router.get("/admin/learning/essay-exams/curriculum-tree", requireAdmin, async (_
       } else if (detectedStage.includes("الأول")) {
         unitName = isEnglish ? "Unit 1 – Programming Fundamentals in C++" : "الوحدة الأولى: أساسيات البرمجة بلغة C++";
       } else {
-        unitName = isEnglish ? "Unit 1 – Information Technology and Society" : "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع";
+        unitName = isEnglish
+          ? "الوحدة الأولى: الذكاء الاصطناعي (Unit 1: Artificial Intelligence)"
+          : "الوحدة الأولى: الذكاء الاصطناعي والمجتمع";
       }
 
       addEntry(detectedStage, unitName, v.title);
@@ -1038,7 +1012,7 @@ router.get("/admin/learning/essay-exams/curriculum-tree", requireAdmin, async (_
     // 3. Guaranteed Standard Curriculum structure for each of the 5 Platform Stages
     // Stage 1: تانية بكالوريا عربي
     const stage2Ar = "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي";
-    const u1Ar = "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع";
+    const u1Ar = "الوحدة الأولى: الذكاء الاصطناعي والمجتمع";
     const u1LessonsAr = [
       "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
       "الدرس الثاني: كيف يعمل الذكاء الاصطناعي",
@@ -1047,7 +1021,7 @@ router.get("/admin/learning/essay-exams/curriculum-tree", requireAdmin, async (_
     ];
     u1LessonsAr.forEach((l) => addEntry(stage2Ar, u1Ar, l));
 
-    const u2Ar = "الوحدة الثانية: الأمن السيبراني والشبكات";
+    const u2Ar = "الوحدة الثانية: الأمن السيبراني والتشفير";
     const u2LessonsAr = [
       "الدرس الأول: التشفير والمصادقة",
       "الدرس الثاني: تقنيات تشفير الشبكات",
@@ -1057,7 +1031,7 @@ router.get("/admin/learning/essay-exams/curriculum-tree", requireAdmin, async (_
 
     // Stage 2: تانية بكالوريا لغات
     const stage2En = "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)";
-    const u1En = "Unit 1 – Information Technology and Society";
+    const u1En = "الوحدة الأولى: الذكاء الاصطناعي (Unit 1: Artificial Intelligence)";
     const u1LessonsEn = [
       "Lesson 1-1 – Development of Information Technology and Social Transformation",
       "Lesson 1-2 – How AI Works",
@@ -1066,7 +1040,7 @@ router.get("/admin/learning/essay-exams/curriculum-tree", requireAdmin, async (_
     ];
     u1LessonsEn.forEach((l) => addEntry(stage2En, u1En, l));
 
-    const u2En = "Unit 2 – Cybersecurity and Networks";
+    const u2En = "الوحدة الثانية: الأمن السيبراني والتشفير (Unit 2: Cybersecurity & Encryption)";
     const u2LessonsEn = [
       "Lesson 2-1 – Cryptographic and Authentications",
       "Lesson 2-2 – Network Security Design",

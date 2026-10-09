@@ -12,6 +12,12 @@ import {
 } from "@workspace/db";
 import { requireAdmin, getAdminIdentity } from "../../middleware/auth";
 import { logAudit } from "../../lib/audit";
+import {
+  PLATFORM_CANONICAL_STAGES,
+  normalizeCanonicalStage,
+  normalizeCanonicalUnit,
+  getUnitAliases,
+} from "./shared";
 
 const require = createRequire(import.meta.url);
 const pdfParse = require("pdf-parse/lib/pdf-parse.js") as (data: Buffer) => Promise<{ text: string }>;
@@ -310,16 +316,25 @@ router.get("/admin/learning/essay-question-bank", requireAdmin, async (req, res,
     const conditions: any[] = [];
 
     if (stage && stage !== "all") {
+      const canonical = normalizeCanonicalStage(stage) || stage;
       conditions.push(
         or(
           eq(essayQuestionBankTable.stage, stage),
-          sql`${essayQuestionBankTable.stages} @> ${JSON.stringify([stage])}::jsonb`
+          eq(essayQuestionBankTable.stage, canonical),
+          ilike(essayQuestionBankTable.stage, `%${canonical.split("·")[1]?.trim() || stage}%`),
+          sql`${essayQuestionBankTable.stages} @> ${JSON.stringify([stage])}::jsonb`,
+          sql`${essayQuestionBankTable.stages} @> ${JSON.stringify([canonical])}::jsonb`
         )
       );
     }
 
     if (unit && unit !== "all") {
-      conditions.push(eq(essayQuestionBankTable.unit, unit));
+      const aliases = getUnitAliases(stage, unit);
+      if (aliases.length > 1) {
+        conditions.push(inArray(essayQuestionBankTable.unit, aliases));
+      } else {
+        conditions.push(eq(essayQuestionBankTable.unit, unit));
+      }
     }
 
     if (lesson && lesson !== "all") {
@@ -392,46 +407,19 @@ router.get("/admin/learning/essay-question-bank/taxonomy", requireAdmin, async (
         essayQuestionBankTable.difficulty
       );
 
-    const PLATFORM_CANONICAL_STAGES = [
-      "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي",
-      "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)",
-      "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس عربي",
-      "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس لغات (Languages)",
-      "المرحلة الجامعية · كلية حاسبات ومعلومات",
-    ] as const;
-
-    function normalizeStage(raw?: string | null): string | null {
-      if (!raw) return null;
-      const s = raw.trim();
-      if ((PLATFORM_CANONICAL_STAGES as readonly string[]).includes(s)) return s;
-      if (s.includes("تانية") || s.includes("ثاني")) {
-        return (s.includes("لغات") || s.toLowerCase().includes("languages"))
-          ? "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)"
-          : "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي";
-      }
-      if (s.includes("أولى") || s.includes("اولى") || s.includes("أول") || s.includes("اول")) {
-        return (s.includes("لغات") || s.toLowerCase().includes("languages"))
-          ? "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس لغات (Languages)"
-          : "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس عربي";
-      }
-      if (s.includes("جامع") || s.includes("حاسبات") || s.includes("هندس")) {
-        return "المرحلة الجامعية · كلية حاسبات ومعلومات";
-      }
-      return null;
-    }
-
     const stagesSet = new Set<string>(PLATFORM_CANONICAL_STAGES);
     const unitsMap = new Map<string, Set<string>>();
 
     for (const r of rows) {
-      const normStage = normalizeStage(r.stage);
+      const normStage = normalizeCanonicalStage(r.stage);
       if (normStage) stagesSet.add(normStage);
       if (r.unit) {
-        if (!unitsMap.has(r.unit)) {
-          unitsMap.set(r.unit, new Set());
+        const normUnit = normalizeCanonicalUnit(normStage, r.unit);
+        if (!unitsMap.has(normUnit)) {
+          unitsMap.set(normUnit, new Set());
         }
         if (r.lesson) {
-          unitsMap.get(r.unit)!.add(r.lesson);
+          unitsMap.get(normUnit)!.add(r.lesson);
         }
       }
     }
