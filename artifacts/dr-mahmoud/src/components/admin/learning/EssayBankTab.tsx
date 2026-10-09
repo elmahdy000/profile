@@ -108,7 +108,7 @@ export function EssayBankTab({
   const [customFormLesson, setCustomFormLesson] = useState(false);
   const [showManualPreview, setShowManualPreview] = useState(false);
   const [formData, setFormData] = useState({
-    stage: "الصف الثاني الثانوي - لغات",
+    stage: "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي",
     unit: "",
     lesson: "",
     difficulty: "medium" as "easy" | "medium" | "hard",
@@ -125,7 +125,7 @@ export function EssayBankTab({
   const [parsingStep, setParsingStep] = useState<"upload" | "preview">("upload");
   const [parsedPreviewList, setParsedPreviewList] = useState<ParsedPreviewItem[]>([]);
   const [savingBulk, setSavingBulk] = useState(false);
-  const [defaultStage, setDefaultStage] = useState("تانية بكالوريا لغات");
+  const [defaultStage, setDefaultStage] = useState("البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي");
   const [defaultUnit, setDefaultUnit] = useState("");
   const [defaultLesson, setDefaultLesson] = useState("");
   const [customUploadUnit, setCustomUploadUnit] = useState(false);
@@ -175,15 +175,19 @@ export function EssayBankTab({
     }
   };
 
-  // Combined available stages
+  // 5 Official Platform Stages Only
+  const PLATFORM_CANONICAL_STAGES = [
+    "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي",
+    "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)",
+    "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس عربي",
+    "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس لغات (Languages)",
+    "المرحلة الجامعية · كلية حاسبات ومعلومات",
+  ] as const;
+
+  // Available stages restricted strictly to platform stages
   const availableStages = useMemo(() => {
-    const treeStages = curriculumTree.map((c) => c.stage);
-    const taxStages = taxonomy.stages;
-    const academicStages = ACADEMIC_TRACKS.flatMap((t) => t.stages);
-    const all = Array.from(new Set([...treeStages, ...taxStages, ...academicStages])).filter(Boolean);
-    // Put "تانية بكالوريا لغات" / secondary language stages at top if present
-    return all.length > 0 ? all : ["تانية بكالوريا لغات", "الصف الثاني الثانوي - لغات", "أولى بكالوريا لغات"];
-  }, [curriculumTree, taxonomy.stages]);
+    return [...PLATFORM_CANONICAL_STAGES];
+  }, []);
 
   // Dynamic Curriculum Helper: Get units for a stage
   const getStageUnits = (stageName: string) => {
@@ -191,18 +195,30 @@ export function EssayBankTab({
     const direct = curriculumTree.find((c) => c.stage === stageName);
     if (direct && direct.units.length > 0) return direct.units;
 
-    // Fuzzy matching for Arabic vs Languages track
+    // Precise matching for the 5 platform stages
     const isLang =
       stageName.includes("لغات") ||
       stageName.toLowerCase().includes("languages") ||
       stageName.toLowerCase().includes("english");
 
+    const isFirstSec =
+      stageName.includes("الأول") ||
+      stageName.includes("اولى") ||
+      stageName.includes("أولى");
+
+    const isUniv =
+      stageName.includes("جامع") ||
+      stageName.includes("حاسبات");
+
     const matched = curriculumTree.find((c) => {
+      if (isUniv) return c.stage.includes("جامع") || c.stage.includes("حاسبات");
       const cLang =
         c.stage.includes("لغات") ||
-        c.stage.toLowerCase().includes("languages") ||
-        c.stage.toLowerCase().includes("english");
-      return isLang === cLang;
+        c.stage.toLowerCase().includes("languages");
+      const cFirstSec =
+        c.stage.includes("الأول") ||
+        c.stage.includes("أولى");
+      return isLang === cLang && isFirstSec === cFirstSec;
     });
 
     if (matched && matched.units.length > 0) return matched.units;
@@ -306,7 +322,7 @@ export function EssayBankTab({
     setCustomUploadLesson(false);
     setPreviewViewMode("cards");
 
-    const stageToUse = defaultStage || availableStages[0] || "تانية بكالوريا لغات";
+    const stageToUse = defaultStage || availableStages[0] || "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي";
     setDefaultStage(stageToUse);
     const units = getStageUnits(stageToUse);
     const firstUnit = defaultUnit || units[0]?.unit || "";

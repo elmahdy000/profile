@@ -392,11 +392,40 @@ router.get("/admin/learning/essay-question-bank/taxonomy", requireAdmin, async (
         essayQuestionBankTable.difficulty
       );
 
-    const stagesSet = new Set<string>();
+    const PLATFORM_CANONICAL_STAGES = [
+      "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي",
+      "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)",
+      "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس عربي",
+      "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس لغات (Languages)",
+      "المرحلة الجامعية · كلية حاسبات ومعلومات",
+    ] as const;
+
+    function normalizeStage(raw?: string | null): string | null {
+      if (!raw) return null;
+      const s = raw.trim();
+      if ((PLATFORM_CANONICAL_STAGES as readonly string[]).includes(s)) return s;
+      if (s.includes("تانية") || s.includes("ثاني")) {
+        return (s.includes("لغات") || s.toLowerCase().includes("languages"))
+          ? "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)"
+          : "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي";
+      }
+      if (s.includes("أولى") || s.includes("اولى") || s.includes("أول") || s.includes("اول")) {
+        return (s.includes("لغات") || s.toLowerCase().includes("languages"))
+          ? "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس لغات (Languages)"
+          : "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس عربي";
+      }
+      if (s.includes("جامع") || s.includes("حاسبات") || s.includes("هندس")) {
+        return "المرحلة الجامعية · كلية حاسبات ومعلومات";
+      }
+      return null;
+    }
+
+    const stagesSet = new Set<string>(PLATFORM_CANONICAL_STAGES);
     const unitsMap = new Map<string, Set<string>>();
 
     for (const r of rows) {
-      if (r.stage) stagesSet.add(r.stage);
+      const normStage = normalizeStage(r.stage);
+      if (normStage) stagesSet.add(normStage);
       if (r.unit) {
         if (!unitsMap.has(r.unit)) {
           unitsMap.set(r.unit, new Set());
@@ -414,7 +443,7 @@ router.get("/admin/learning/essay-question-bank/taxonomy", requireAdmin, async (
 
     res.json({
       success: true,
-      stages: Array.from(stagesSet),
+      stages: [...PLATFORM_CANONICAL_STAGES],
       units,
       summaryRows: rows,
     });

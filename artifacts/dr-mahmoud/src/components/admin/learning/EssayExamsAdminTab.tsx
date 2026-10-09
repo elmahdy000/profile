@@ -233,7 +233,7 @@ export function EssayExamsAdminTab({
   }>({
     title: "",
     description: "",
-    stage: ACADEMIC_TRACKS.flatMap((t) => t.stages)[0] || "",
+    stage: "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي",
     unit: "",
     lesson: "",
     durationMinutes: 60,
@@ -343,7 +343,7 @@ export function EssayExamsAdminTab({
     setCustomLessonMode(false);
 
     const initialStage =
-      curriculumTree[0]?.stage || taxonomy.stages[0] || ACADEMIC_TRACKS.flatMap((t) => t.stages)[0] || "";
+      curriculumTree[0]?.stage || taxonomy.stages[0] || "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي";
     const stageNode = curriculumTree.find((c) => c.stage === initialStage);
     const initialUnit = stageNode?.units[0]?.unit || "";
     const initialLesson = stageNode?.units[0]?.lessons[0] || "";
@@ -378,7 +378,7 @@ export function EssayExamsAdminTab({
     setExamFormData({
       title: exam.title,
       description: exam.description || "",
-      stage: exam.stage || ACADEMIC_TRACKS.flatMap((t) => t.stages)[0] || "",
+      stage: exam.stage || "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي",
       unit: exam.unit || "",
       lesson: exam.lesson || "",
       durationMinutes: exam.durationMinutes || 60,
@@ -715,13 +715,16 @@ export function EssayExamsAdminTab({
   const totalSubmissionsCount = exams.reduce((acc, e) => acc + (e.submissionsCount || 0), 0);
   const pendingReviewCount = exams.reduce((acc, e) => acc + (e.pendingCount ?? e.submittedCount ?? 0), 0);
 
-  // Computed stages, units, lessons for the creation form (Strictly Platform Curriculum)
+  // Computed stages, units, lessons for the creation form (Strictly Platform Canonical Stages)
   const availableStages = useMemo(() => {
-    if (curriculumTree.length > 0) {
-      return curriculumTree.map((c) => c.stage);
-    }
-    return ACADEMIC_TRACKS.flatMap((t) => t.stages);
-  }, [curriculumTree]);
+    return [
+      "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي",
+      "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)",
+      "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس عربي",
+      "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس لغات (Languages)",
+      "المرحلة الجامعية · كلية حاسبات ومعلومات",
+    ];
+  }, []);
 
   const currentStageUnits = useMemo(() => {
     const node = curriculumTree.find((c) => c.stage === examFormData.stage);

@@ -927,93 +927,229 @@ router.get("/admin/learning/essay-exams/curriculum-tree", requireAdmin, async (_
     const courses = await db.select().from(coursesTable);
     const videos = await db.select().from(videosTable);
 
+    // 5 Official Canonical Platform Stages (Strictly: University, 1st Sec Bac Ar/En, 2nd Sec Bac Ar/En)
+    const PLATFORM_CANONICAL_STAGES = [
+      "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي",
+      "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)",
+      "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس عربي",
+      "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس لغات (Languages)",
+      "المرحلة الجامعية · كلية حاسبات ومعلومات",
+    ] as const;
+
+    function normalizeToPlatformStage(rawStage?: string | null): string | null {
+      if (!rawStage) return null;
+      const s = rawStage.trim();
+      if ((PLATFORM_CANONICAL_STAGES as readonly string[]).includes(s)) return s;
+
+      if (s.includes("تانية") || s.includes("ثاني")) {
+        if (s.includes("لغات") || s.toLowerCase().includes("languages") || s.toLowerCase().includes("english")) {
+          return "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)";
+        }
+        return "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي";
+      }
+
+      if (s.includes("أولى") || s.includes("اولى") || s.includes("أول") || s.includes("اول")) {
+        if (s.includes("لغات") || s.toLowerCase().includes("languages") || s.toLowerCase().includes("english")) {
+          return "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس لغات (Languages)";
+        }
+        return "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس عربي";
+      }
+
+      if (
+        s.includes("جامع") ||
+        s.includes("حاسبات") ||
+        s.includes("هندس") ||
+        s.includes("الفرقة") ||
+        s.toLowerCase().includes("computer") ||
+        s.toLowerCase().includes("university")
+      ) {
+        return "المرحلة الجامعية · كلية حاسبات ومعلومات";
+      }
+
+      return null;
+    }
+
     // Hierarchical map: Stage -> Unit -> Set of Lessons
     const treeMap: Record<string, Record<string, Set<string>>> = {};
+    for (const stage of PLATFORM_CANONICAL_STAGES) {
+      treeMap[stage] = {};
+    }
 
     function addEntry(stage?: string | null, unit?: string | null, lesson?: string | null) {
-      const s = String(stage || "عام").trim();
+      const canonicalStage = normalizeToPlatformStage(stage);
+      if (!canonicalStage) return; // Discard stages not part of platform
+
       const u = String(unit || "الوحدة الأولى").trim();
       const l = lesson ? String(lesson).trim() : "";
 
-      if (!treeMap[s]) treeMap[s] = {};
-      if (!treeMap[s][u]) treeMap[s][u] = new Set();
-      if (l) treeMap[s][u].add(l);
+      if (!treeMap[canonicalStage]) treeMap[canonicalStage] = {};
+      if (!treeMap[canonicalStage][u]) treeMap[canonicalStage][u] = new Set();
+      if (l) treeMap[canonicalStage][u].add(l);
     }
 
+    // 1. Add questions from question banks
     qbRows.forEach((r) => addEntry(r.stage, r.unit, r.lesson));
     eqbRows.forEach((r) => addEntry(r.stage, r.unit, r.lesson));
 
-    // Also include videos with course titles as units
+    // 2. Add real video lessons linked directly to platform stages
     videos.forEach((v) => {
       const course = courses.find((c) => c.id === v.courseId);
-      const stage = v.stage || (course?.stages && course.stages[0]) || "عام";
-      const unit = course ? course.title : "الوحدة الأولى";
-      addEntry(stage, unit, v.title);
+      let detectedStage = normalizeToPlatformStage(v.stage || (v.stages && v.stages[0]) || (course?.stages && course.stages[0]));
+
+      if (!detectedStage) {
+        const cat = (v.category || "").toLowerCase();
+        if (cat.includes("تانية") && (cat.includes("لغات") || cat.includes("languages"))) {
+          detectedStage = "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)";
+        } else if (cat.includes("تانية") || cat.includes("عربى") || cat.includes("عربي")) {
+          detectedStage = "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي";
+        } else if (cat.includes("logic") || cat.includes("oop") || cat.includes("object") || cat.includes("c++")) {
+          detectedStage = "المرحلة الجامعية · كلية حاسبات ومعلومات";
+        }
+      }
+
+      if (!detectedStage) return;
+
+      // Extract Unit intelligently
+      let unitName = "";
+      const isEnglish = detectedStage.includes("لغات");
+      const titleLower = v.title.toLowerCase();
+
+      if (v.title.includes("الوحدة الثانية") || v.title.includes("الوحدة التانية") || titleLower.includes("unit 2") || titleLower.includes("unit2") || v.title.includes("التشفير")) {
+        unitName = isEnglish ? "Unit 2 – Cybersecurity and Networks" : "الوحدة الثانية: الأمن السيبراني والشبكات";
+      } else if (v.title.includes("الوحدة الاولى") || v.title.includes("الوحدة الأولى") || titleLower.includes("unit 1") || titleLower.includes("unit1") || v.title.includes("الذكاء الاصطناع")) {
+        unitName = isEnglish ? "Unit 1 – Information Technology and Society" : "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع";
+      } else if (detectedStage === "المرحلة الجامعية · كلية حاسبات ومعلومات") {
+        if (titleLower.includes("logic") || v.category?.includes("Logic")) {
+          unitName = "مادة التصميم المنطقي Logic Design";
+        } else if (titleLower.includes("oop") || v.category?.includes("OOP")) {
+          unitName = "مادة البرمجة الكائنية Object Oriented Programming (OOP)";
+        } else {
+          unitName = "مادة لغة البرمجة C++ Programming";
+        }
+      } else if (detectedStage.includes("الأول")) {
+        unitName = isEnglish ? "Unit 1 – Programming Fundamentals in C++" : "الوحدة الأولى: أساسيات البرمجة بلغة C++";
+      } else {
+        unitName = isEnglish ? "Unit 1 – Information Technology and Society" : "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع";
+      }
+
+      addEntry(detectedStage, unitName, v.title);
     });
 
-    // Canonical stages and real Unit 1 curriculum guarantee
-    const u1Arabic = "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع";
-    const u1LessonsArabic = [
+    // 3. Guaranteed Standard Curriculum structure for each of the 5 Platform Stages
+    // Stage 1: تانية بكالوريا عربي
+    const stage2Ar = "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي";
+    const u1Ar = "الوحدة الأولى: تكنولوجيا المعلومات والمجتمع";
+    const u1LessonsAr = [
       "الدرس الأول: تطور تكنولوجيا المعلومات والتحول الاجتماعي",
       "الدرس الثاني: كيف يعمل الذكاء الاصطناعي",
       "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية",
       "الدرس الرابع: القضايا الأخلاقية المتعلقة بالذكاء الاصطناعي",
     ];
-    const canonicalArabicStages = [
-      "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي",
-      "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس عربي",
-      "الصف الثاني الثانوي - عربي",
-      "الصف الأول الثانوي - عربي",
-      "تانية بكالوريا عربي",
-      "أولى بكالوريا عربي",
-    ];
-    for (const st of canonicalArabicStages) {
-      if (!treeMap[st] || Object.keys(treeMap[st]).length === 0) {
-        for (const l of u1LessonsArabic) {
-          addEntry(st, u1Arabic, l);
-        }
-      }
-    }
+    u1LessonsAr.forEach((l) => addEntry(stage2Ar, u1Ar, l));
 
-    const u1English = "Unit 1 – Information Technology and Society";
-    const u1LessonsEnglish = [
+    const u2Ar = "الوحدة الثانية: الأمن السيبراني والشبكات";
+    const u2LessonsAr = [
+      "الدرس الأول: التشفير والمصادقة",
+      "الدرس الثاني: تقنيات تشفير الشبكات",
+      "الدرس الثالث: الاستجابة للحوادث وإدارة المخاطر",
+    ];
+    u2LessonsAr.forEach((l) => addEntry(stage2Ar, u2Ar, l));
+
+    // Stage 2: تانية بكالوريا لغات
+    const stage2En = "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)";
+    const u1En = "Unit 1 – Information Technology and Society";
+    const u1LessonsEn = [
       "Lesson 1-1 – Development of Information Technology and Social Transformation",
       "Lesson 1-2 – How AI Works",
       "Lesson 1-3 – AI in Our Daily Life",
       "Lesson 1-4 – AI Ethics",
     ];
-    const canonicalLanguageStages = [
-      "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)",
-      "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس لغات (Languages)",
-      "الصف الثاني الثانوي - لغات",
-      "الصف الأول الثانوي - لغات",
-      "تانية بكالوريا لغات",
-      "أولى بكالوريا لغات",
-    ];
-    for (const st of canonicalLanguageStages) {
-      if (!treeMap[st] || Object.keys(treeMap[st]).length === 0) {
-        for (const l of u1LessonsEnglish) {
-          addEntry(st, u1English, l);
-        }
-      }
-    }
+    u1LessonsEn.forEach((l) => addEntry(stage2En, u1En, l));
 
-    // Format as sorted tree
-    const tree = Object.entries(treeMap).map(([stage, unitsMap]) => ({
-      stage,
-      units: Object.entries(unitsMap)
-        .sort((a, b) => parseUnitSortOrder(a[0]) - parseUnitSortOrder(b[0]))
-        .map(([unit, lessonsSet]) => ({
-          unit,
-          lessons: Array.from(lessonsSet).sort((a, b) => parseLessonSortOrder(a) - parseLessonSortOrder(b)),
-        })),
-    }));
+    const u2En = "Unit 2 – Cybersecurity and Networks";
+    const u2LessonsEn = [
+      "Lesson 2-1 – Cryptographic and Authentications",
+      "Lesson 2-2 – Network Security Design",
+      "Lesson 2-3 – Security Incident Response",
+    ];
+    u2LessonsEn.forEach((l) => addEntry(stage2En, u2En, l));
+
+    // Stage 3: أولى بكالوريا عربي
+    const stage1Ar = "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس عربي";
+    const u1Sec1Ar = "الوحدة الأولى: أساسيات البرمجة بلغة C++";
+    const u1Sec1LessonsAr = [
+      "الدرس الأول: مقدمة في لغة C++ وبيئة العمل",
+      "الدرس الثاني: المتغيرات وأنواع البيانات",
+      "الدرس الثالث: العمليات الرياضية والمنطقية",
+      "الدرس الرابع: جمل التحكم والشروط (if & switch)",
+      "الدرس الخامس: حلقات التكرار (for & while)",
+      "الدرس السادس: المصفوفات (Arrays in C++)",
+    ];
+    u1Sec1LessonsAr.forEach((l) => addEntry(stage1Ar, u1Sec1Ar, l));
+
+    // Stage 4: أولى بكالوريا لغات
+    const stage1En = "البكالوريا · الصف الأول (أولى بكالوريا) · مدارس لغات (Languages)";
+    const u1Sec1En = "Unit 1 – Programming Fundamentals in C++";
+    const u1Sec1LessonsEn = [
+      "Lesson 1-1 – Introduction to C++ and Development Environment",
+      "Lesson 1-2 – Variables and Data Types",
+      "Lesson 1-3 – Operators and Expressions",
+      "Lesson 1-4 – Control Statements (if & switch)",
+      "Lesson 1-5 – Loops (for & while)",
+      "Lesson 1-6 – Arrays in C++",
+    ];
+    u1Sec1LessonsEn.forEach((l) => addEntry(stage1En, u1Sec1En, l));
+
+    // Stage 5: المرحلة الجامعية
+    const stageUniv = "المرحلة الجامعية · كلية حاسبات ومعلومات";
+    const oopUnit = "مادة البرمجة الكائنية Object Oriented Programming (OOP)";
+    const oopLessons = [
+      "الدرس الأول: مقدمة في الـ OOP وفلسفة الكائنات",
+      "الدرس الثاني: الـ Classes والـ Objects والـ Constructors",
+      "الدرس الثالث: الـ Encapsulation ومستويات الوصول",
+      "الدرس الرابع: الـ Inheritance والوراثة",
+      "الدرس الخامس: الـ Polymorphism وتعدد الأشكال",
+    ];
+    oopLessons.forEach((l) => addEntry(stageUniv, oopUnit, l));
+
+    const logicUnit = "مادة التصميم المنطقي Logic Design";
+    const logicLessons = [
+      "الدرس الأول: أنظمة الأعداد والتحويلات Number Systems",
+      "الدرس الثاني: بوابات المنطق الأساسية Logic Gates",
+      "الدرس الثالث: التبسيط وخرائط كارنوف Karnaugh Maps",
+      "الدرس الرابع: الدوائر التوافقية Combinational Circuits",
+    ];
+    logicLessons.forEach((l) => addEntry(stageUniv, logicUnit, l));
+
+    const cppUnit = "مادة لغة البرمجة C++ Programming";
+    const cppLessons = [
+      "الدرس الأول: الأساسيات وهيكلية البرنامج",
+      "الدرس الثاني: الدوال والوظائف Functions",
+      "الدرس الثالث: المؤشرات Pointers والذاكرة",
+      "الدرس الرابع: المصفوفات والـ Strings",
+    ];
+    cppLessons.forEach((l) => addEntry(stageUniv, cppUnit, l));
+
+    // Format tree in the strict PLATFORM_CANONICAL_STAGES order
+    const tree = PLATFORM_CANONICAL_STAGES.map((stage) => {
+      const unitsMap = treeMap[stage] || {};
+      return {
+        stage,
+        units: Object.entries(unitsMap)
+          .sort((a, b) => parseUnitSortOrder(a[0]) - parseUnitSortOrder(b[0]))
+          .map(([unit, lessonsSet]) => ({
+            unit,
+            lessons: Array.from(lessonsSet).sort((a, b) => parseLessonSortOrder(a) - parseLessonSortOrder(b)),
+          })),
+      };
+    });
 
     res.json({
       success: true,
-      stages: Object.keys(treeMap),
+      stages: [...PLATFORM_CANONICAL_STAGES],
       tree,
     });
+
   } catch (error) {
     next(error);
   }
