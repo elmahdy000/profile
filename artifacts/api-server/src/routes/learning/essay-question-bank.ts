@@ -19,6 +19,8 @@ import {
   normalizeCanonicalUnit,
   normalizeCanonicalLesson,
   getUnitAliases,
+  normalizeQuestionPrompt,
+  cleanEssayPrompt,
 } from "./shared";
 
 const require = createRequire(import.meta.url);
@@ -168,33 +170,30 @@ export function parseEssayQuestionsFromText(
     detectedLesson = lessonMatch[1].trim();
   }
 
-  // Split into question blocks
-  // Delimiters:
-  // [QUESTION_1], [QUESTION], [PROMPT],
-  // س1., س1:, س 1., السؤال الأول:, السؤال 1:, سؤال 1:
-  // Q1:, Q1., Question 1:, 1.
-  const blockRegex = /(?:^|\n)(?=\[(?:QUESTION(?:_\d+)?|PROMPT)\]|السؤال\s*(?:\d+|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|رقم\s*\d+)[:：\.\-–—\)]|س\s*\d+[:：\.\-–—\)]|سؤال\s*\d+[:：\.\-–—\)]|(?:^|\n)Q\s*\d+[:：\.\-–—\)]|(?:^|\n)Question\s*\d+[:：\.\-–—\)]|(?:^|\n)\d+[\.\-–—\)]\s*(?:[^\n]+))/i;
+  // Convert horizontal rules / divider lines to standard question separators
+  let workingText = cleanText.replace(/(?:^|\n)\s*[-=_]{3,}\s*(?=\n|$)/g, "\n[QUESTION_SEP]\n");
 
-  const rawBlocks = cleanText.split(blockRegex).map(b => b.trim()).filter(Boolean);
+  // Determine primary delimiter style:
+  // If [QUESTION_1] or [QUESTION 1] or [QUESTION] tags are present, NEVER split on [PROMPT]!
+  const hasTaggedQuestion = /\[QUESTION(?:[_\s]\d+)?\]/i.test(workingText);
+  const hasTaggedPrompt = /\[PROMPT\]/i.test(workingText);
 
-  const questions: ParsedEssayQuestionItem[] = [];
+  let blockRegex: RegExp;
+  if (hasTaggedQuestion) {
+    blockRegex = /(?:^|\n)(?=\[(?:QUESTION(?:[_\s]\d+)?|QUESTION_SEP)\])/i;
+  } else if (hasTaggedPrompt) {
+    blockRegex = /(?:^|\n)(?=\[(?:PROMPT|QUESTION_SEP)\])/i;
+  } else {
+    blockRegex = /(?:^|\n)(?=\[QUESTION_SEP\]|السؤال\s*(?:\d+|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|رقم\s*\d+)[:：\.\-–—\)]|س\s*\d+[:：\.\-–—\)]|سؤال\s*\d+[:：\.\-–—\)]|(?:^|\n)Q\s*\d+[:：\.\-–—\)]|(?:^|\n)Question\s*\d+[:：\.\-–—\)]|(?:^|\n)\d+[\.\-–—\)]\s*(?:[^\n]+))/i;
+  }
+
+  const rawBlocks = workingText.split(blockRegex).map((b) => b.trim()).filter(Boolean);
+  const rawParsedQuestions: ParsedEssayQuestionItem[] = [];
 
   for (let idx = 0; idx < rawBlocks.length; idx++) {
-    const block = rawBlocks[idx];
-
-    // Clean block from header tags if it was just top metadata
-    if (
-      !block.includes("[PROMPT]") &&
-      !block.includes("السؤال") &&
-      !block.includes("الإجابة") &&
-      !block.includes("النموذجية") &&
-      !block.includes("MODEL_ANSWER") &&
-      !block.includes("Q:") &&
-      !block.includes("A:") &&
-      !block.match(/^(?:س\s*\d+|Q\s*\d+|\d+[\.\-–—\)])/i)
-    ) {
-      continue;
-    }
+    let block = rawBlocks[idx];
+    block = block.replace(/^\[QUESTION_SEP\]\s*/i, "").trim();
+    if (!block) continue;
 
     let prompt = "";
     let modelAnswer = "";
@@ -223,9 +222,14 @@ export function parseEssayQuestionsFromText(
 
       const expMatch = block.match(/\[(?:EXPLANATION|KEY_ELEMENTS|RUBRIC)\]\s*[:：]?\s*([\s\S]*?)$/i);
       if (expMatch) explanation = expMatch[1].trim();
+
+      // If prompt was not in [PROMPT], extract whatever is before [MODEL_ANSWER]
+      if (!prompt) {
+        const topText = block.split(/\[(?:MODEL_ANSWER|POINTS|DIFFICULTY|EXPLANATION)\]/i)[0];
+        prompt = cleanEssayPrompt(topText);
+      }
     } else {
       // 2. Arabic / Natural parsing
-      // Extract points
       const ptsMatch = block.match(/(?:الدرجة|الدرجات|النقاط|\bPoints\b|\bScore\b)\s*[:：\.\-–—]?\s*(\d+)/i);
       if (ptsMatch) points = parseInt(ptsMatch[1], 10) || points;
 
@@ -237,31 +241,26 @@ export function parseEssayQuestionsFromText(
         else difficulty = "medium";
       }
 
-      // Model answer pattern (strictly requires keyword with colon or dash, and word boundary on English words)
       const ansMatch = block.match(/(?:الإجابة النموذجية|الحل النموذجي|إجابة نموذجية|الإجابة|الحل|\bModel\s*Answer\b|\bAnswer\b|\bA\d*\b)\s*[:：\.\-–—]\s*([\s\S]*?)(?=(?:ملاحظات التصحيح|توزيع الدرجات|عناصر الإجابة|الإرشادات|الشرح|Rubric|Explanation|Key Elements)\s*[:：\.\-–—]|$)/i);
       if (ansMatch) {
         modelAnswer = ansMatch[1].trim();
       }
 
-      // Explanation / Rubric pattern
       const expMatch = block.match(/(?:ملاحظات التصحيح|توزيع الدرجات|عناصر الإجابة|الإرشادات|الشرح|Rubric|Explanation|Key Elements)\s*[:：\.\-–—]\s*([\s\S]*?)$/i);
       if (expMatch) {
         explanation = expMatch[1].trim();
       }
 
-      // Prompt is whatever is before the model answer or explicitly tagged
       const promptExplicit = block.match(/(?:نص السؤال|السؤال)\s*[:：\.\-–—]\s*([\s\S]*?)(?=(?:الدرجة|الدرجات|الإجابة النموذجية|الحل النموذجي|\bModel\s*Answer\b|\bAnswer\b)\s*[:：\.\-–—]|$)/i);
       if (promptExplicit) {
         prompt = promptExplicit[1].trim();
       } else {
-        // Take lines from top of block up to Answer keyword or points
         const lines = block.split("\n");
         const promptLines: string[] = [];
         for (const line of lines) {
           if (line.match(/(?:الدرجة|الدرجات|\bPoints\b|\bScore\b|الإجابة النموذجية|الحل النموذجي|إجابة نموذجية|الإجابة|الحل|\bModel\s*Answer\b|\bAnswer\b|\bA\d*\b)\s*[:：\.\-–—]/i)) {
             break;
           }
-          // Remove Question label if it starts line, e.g. "السؤال الأول: " or "س1. "
           const cleanLine = line.replace(/^(?:السؤال\s*(?:\d+|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|رقم\s*\d+)[:：\.\-–—\)]|س\s*\d+[:：\.\-–—\)]|سؤال\s*\d+[:：\.\-–—\)]|Q\s*\d+[:：\.\-–—\)]|Question\s*\d+[:：\.\-–—\)]|\d+[\.\-–—\)])\s*/i, "").trim();
           if (cleanLine) promptLines.push(cleanLine);
         }
@@ -269,26 +268,60 @@ export function parseEssayQuestionsFromText(
       }
     }
 
-    const isValid = prompt.length > 0 && modelAnswer.length > 0;
+    prompt = cleanEssayPrompt(prompt);
+    if (!prompt && !modelAnswer) continue;
+
+    rawParsedQuestions.push({
+      tempId: `eq_${Date.now()}_${idx}`,
+      prompt: prompt || "(نص السؤال مفقود)",
+      modelAnswer: modelAnswer || "",
+      explanation,
+      points,
+      stage: detectedStage,
+      unit: detectedUnit,
+      lesson: detectedLesson,
+      difficulty,
+      isValid: false,
+    });
+  }
+
+  // 3. Prompt-based Deduplication & Merging:
+  const seenMap = new Map<string, number>();
+  const questions: ParsedEssayQuestionItem[] = [];
+
+  for (const q of rawParsedQuestions) {
+    const key = normalizeQuestionPrompt(cleanEssayPrompt(q.prompt));
+
+    if (key && seenMap.has(key)) {
+      const existingIdx = seenMap.get(key)!;
+      const existing = questions[existingIdx];
+      if (!existing.modelAnswer && q.modelAnswer) {
+        existing.modelAnswer = q.modelAnswer;
+        existing.isValid = Boolean(existing.prompt && existing.prompt !== "(نص السؤال مفقود)" && existing.modelAnswer);
+        existing.validationError = existing.isValid
+          ? undefined
+          : (!existing.prompt || existing.prompt === "(نص السؤال مفقود)" ? "لم يتم التعرف على نص السؤال" : "لم يتم التعرف على الإجابة النموذجية");
+      }
+      if (!existing.explanation && q.explanation) {
+        existing.explanation = q.explanation;
+      }
+      continue;
+    }
+
+    if (key) {
+      seenMap.set(key, questions.length);
+    }
+
+    const isValid = Boolean(q.prompt && q.prompt !== "(نص السؤال مفقود)" && q.modelAnswer);
     const validationError = !isValid
-      ? (!prompt ? "لم يتم التعرف على نص السؤال" : "لم يتم التعرف على الإجابة النموذجية")
+      ? (!q.prompt || q.prompt === "(نص السؤال مفقود)" ? "لم يتم التعرف على نص السؤال" : "لم يتم التعرف على الإجابة النموذجية")
       : undefined;
 
-    if (prompt || modelAnswer) {
-      questions.push({
-        tempId: `eq_${Date.now()}_${idx}`,
-        prompt: prompt || "(نص السؤال مفقود)",
-        modelAnswer: modelAnswer || "(الإجابة النموذجية مفقودة)",
-        explanation,
-        points,
-        stage: detectedStage,
-        unit: detectedUnit,
-        lesson: detectedLesson,
-        difficulty,
-        isValid,
-        validationError,
-      });
-    }
+    questions.push({
+      ...q,
+      isValid,
+      validationError,
+    });
   }
 
   const normStage = normalizeCanonicalStage(detectedStage) || detectedStage;
@@ -540,11 +573,16 @@ router.post("/admin/learning/essay-question-bank/bulk-save", requireAdmin, async
     }
 
     const validInserts: InsertEssayQuestionBankItem[] = [];
+    const seenPrompts = new Set<string>();
 
     for (const q of items) {
-      const prompt = String(q.prompt ?? "").trim();
+      const prompt = cleanEssayPrompt(String(q.prompt ?? "").trim());
       const modelAnswer = String(q.modelAnswer ?? q.model_answer ?? "").trim();
       if (!prompt || !modelAnswer) continue;
+
+      const pKey = normalizeQuestionPrompt(prompt);
+      if (pKey && seenPrompts.has(pKey)) continue;
+      if (pKey) seenPrompts.add(pKey);
 
       const rawStage = q.stage ? String(q.stage).trim() : "عام";
       const stage = normalizeCanonicalStage(rawStage) || rawStage;

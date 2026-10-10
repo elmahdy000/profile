@@ -23,6 +23,7 @@ import {
   normalizeEgyptianPhone,
   getStudentTrack,
   matchStudentToStage,
+  normalizeCanonicalStage,
   parseUnitSortOrder,
   parseLessonSortOrder,
   paymentReceiptUpload,
@@ -183,14 +184,7 @@ router.get("/learning/self-assessment/taxonomy", async (req, res, next) => {
       isEnrolled = true;
       studentTrack = getStudentTrack(effectiveStudent);
       const filtered = stagesList.filter((st) => matchStudentToStage(st.stage, effectiveStudent!));
-      if (filtered.length > 0) {
-        finalStagesList = filtered;
-      } else {
-        const trackMatches = stagesList.filter((st) => st.track === studentTrack);
-        if (trackMatches.length > 0) {
-          finalStagesList = trackMatches;
-        }
-      }
+      finalStagesList = filtered;
     }
 
     res.json({
@@ -554,7 +548,9 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
     let enforcedStage = stage;
     if (matchedStudent) {
       const stageMatches = stage && matchStudentToStage(stage, matchedStudent);
-      if (!stageMatches) {
+      if (stageMatches) {
+        enforcedStage = stage;
+      } else {
         const allStages = await db
           .select({ stage: questionBankTable.stage })
           .from(questionBankTable)
@@ -562,6 +558,8 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
         const candidate = allStages.find((s) => s.stage && matchStudentToStage(s.stage, matchedStudent));
         if (candidate?.stage) {
           enforcedStage = candidate.stage;
+        } else {
+          enforcedStage = normalizeCanonicalStage(matchedStudent.grade) || matchedStudent.grade || "NONE";
         }
       }
     }

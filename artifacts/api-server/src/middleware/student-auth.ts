@@ -277,6 +277,50 @@ export function canStudentAccessContent(
     (value) => normalizeCategory(value) === "عام",
   );
 
+  const normCategory = normalizeCategory(category);
+  const categoryHasGradeMarker =
+    normCategory.includes("تانية") ||
+    normCategory.includes("ثاني") ||
+    normCategory.includes("ثانى") ||
+    normCategory.includes("أولى") ||
+    normCategory.includes("اولى") ||
+    normCategory.includes("ثالثة") ||
+    normCategory.includes("ثالث") ||
+    normCategory.includes("جامع") ||
+    normCategory.includes("حاسبات") ||
+    normCategory.includes("هندس");
+
+  // If content has empty/general stage but its category specifies a distinct grade, enforce grade match
+  if ((isGeneralContent || hasCategoryGeneralStage) && categoryHasGradeMarker) {
+    if (!isGradeMatch(studentStage, category)) {
+      return false;
+    }
+  }
+
+  // Strict negative guards for 1st secondary students
+  const isStudent1stSec =
+    studentStage?.includes("أولى") ||
+    studentStage?.includes("اولى") ||
+    studentStage?.includes("الأول") ||
+    student.educationGrade === "first_secondary";
+
+  if (isStudent1stSec) {
+    const hasForeignStageMarker =
+      normCategory.includes("تانية") ||
+      normCategory.includes("ثاني") ||
+      normCategory.includes("ثانى") ||
+      normCategory.includes("جامع") ||
+      normCategory.includes("حاسبات") ||
+      normCategory.includes("هندس") ||
+      contentStages.some((s) => {
+        const ns = normalizeCategory(s);
+        return ns.includes("تانية") || ns.includes("ثاني") || ns.includes("جامع") || ns.includes("حاسبات") || ns.includes("هندس");
+      });
+    if (hasForeignStageMarker) {
+      return false;
+    }
+  }
+
   const stageMatches =
     isGeneralContent ||
     contentStages.some((value) => {

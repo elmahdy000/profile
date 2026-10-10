@@ -190,8 +190,11 @@ export function matchStudentToStage(
     schoolType?: string | null;
   }
 ): boolean {
+  if (!stageName || !stageName.trim()) return false;
+  const sStage = stageName.trim();
   const studentTrack = getStudentTrack(student);
-  const isStageLanguages = stageName.toLowerCase().includes("لغات") || stageName.toLowerCase().includes("languages");
+  const isStageLanguages = sStage.toLowerCase().includes("لغات") || sStage.toLowerCase().includes("languages");
+
   if (studentTrack === "en" && !isStageLanguages) {
     return false;
   }
@@ -199,22 +202,72 @@ export function matchStudentToStage(
     return false;
   }
 
-  const sStage = stageName.trim();
+  const normStudentStage = normalizeCanonicalStage(student.grade);
+  const normTargetStage = normalizeCanonicalStage(sStage);
+  if (normStudentStage && normTargetStage) {
+    return normStudentStage === normTargetStage;
+  }
+
   const sGrade = (student.grade || "").trim();
   const sEduGrade = (student.educationGrade || "").trim();
+
+  // 1. Strict 1st secondary check
+  const isStudent1stSec =
+    sEduGrade === "first_secondary" ||
+    sGrade.includes("أولى") || sGrade.includes("الاولى") || sGrade.includes("الأول") || sGrade.includes("الاول") || sGrade.toLowerCase().includes("first");
+
+  if (isStudent1stSec) {
+    const isTarget1stSec =
+      sStage.includes("أولى") || sStage.includes("الاولى") || sStage.includes("الأول") || sStage.includes("الاول") || sStage.toLowerCase().includes("first");
+    const isTarget2ndSec =
+      sStage.includes("تانية") || sStage.includes("الثاني") || sStage.includes("ثانية") || sStage.toLowerCase().includes("second");
+    const isTargetUniversity =
+      sStage.includes("جامع") || sStage.includes("حاسبات") || sStage.includes("هندس") || sStage.toLowerCase().includes("university");
+    if (isTarget2ndSec || isTargetUniversity) return false;
+    return isTarget1stSec;
+  }
+
+  // 2. Strict 2nd secondary check
+  const isStudent2ndSec =
+    sEduGrade === "second_secondary" || sEduGrade === "sec_2" || sEduGrade === "2nd_bac" ||
+    sGrade.includes("تانية") || sGrade.includes("الثاني") || sGrade.includes("ثانية") || sGrade.toLowerCase().includes("second");
+
+  if (isStudent2ndSec) {
+    const isTarget1stSec =
+      sStage.includes("أولى") || sStage.includes("الاولى") || sStage.includes("الأول") || sStage.includes("الاول") || sStage.toLowerCase().includes("first");
+    const isTargetUniversity =
+      sStage.includes("جامع") || sStage.includes("حاسبات") || sStage.includes("هندس") || sStage.toLowerCase().includes("university");
+    if (isTarget1stSec || isTargetUniversity) return false;
+    return sStage.includes("تانية") || sStage.includes("الثاني") || sStage.includes("ثانية") || sStage.toLowerCase().includes("second");
+  }
+
+  // 3. Strict 3rd secondary check
+  const isStudent3rdSec =
+    sEduGrade === "third_secondary" ||
+    sGrade.includes("تالتة") || sGrade.includes("الثالث") || sGrade.includes("ثالثة") || sGrade.toLowerCase().includes("third");
+
+  if (isStudent3rdSec) {
+    const isTarget3rdSec =
+      sStage.includes("تالتة") || sStage.includes("الثالث") || sStage.includes("ثالثة") || sStage.toLowerCase().includes("third");
+    return isTarget3rdSec;
+  }
+
+  // 4. Strict university check
+  const isStudentUniversity =
+    sEduGrade.startsWith("university") ||
+    sGrade.includes("جامع") || sGrade.includes("حاسبات") || sGrade.includes("هندس") || sGrade.toLowerCase().includes("university");
+
+  if (isStudentUniversity) {
+    const isTargetSecondary = sStage.includes("بكالوريا") || sStage.includes("ثانوي") || sStage.includes("الأول") || sStage.includes("الثاني");
+    if (isTargetSecondary) return false;
+    return sStage.includes("جامع") || sStage.includes("حاسبات") || sStage.includes("هندس") || sStage.toLowerCase().includes("university");
+  }
 
   if (sGrade && (sStage.includes(sGrade) || sGrade.includes(sStage))) {
     return true;
   }
 
-  if (sEduGrade) {
-    if (sEduGrade === "first_secondary" && (sStage.includes("أولى") || sStage.includes("الأول") || sStage.includes("اولى"))) return true;
-    if (sEduGrade === "second_secondary" && (sStage.includes("تانية") || sStage.includes("الثاني") || sStage.includes("ثانية"))) return true;
-    if (sEduGrade === "third_secondary" && (sStage.includes("تالتة") || sStage.includes("الثالث") || sStage.includes("ثالثة"))) return true;
-    if (sEduGrade.startsWith("university") && (sStage.includes("جامع") || sStage.includes("حاسبات") || sStage.includes("هندس"))) return true;
-  }
-
-  return true;
+  return false;
 }
 
 export function parseUnitSortOrder(unitName: string): number {
@@ -694,6 +747,15 @@ export function normalizeQuestionPrompt(p?: string | null): string {
     .replace(/[\s\r\n\t]+/g, " ")
     .replace(/[؟?.,!،:;ـ_—\-\(\)\[\]\{\}«»"']/g, "")
     .replace(/[^\p{L}\p{N}\s]/gu, "");
+}
+
+export function cleanEssayPrompt(p?: string | null): string {
+  if (!p) return "";
+  return p
+    .replace(/^\[(?:QUESTION(?:_\d+)?|PROMPT)\]\s*[:：]?\s*/i, "")
+    .replace(/^(?:السؤال\s*(?:\d+|الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|رقم\s*\d+)[:：\.\-–—\)]|س\s*\d+[:：\.\-–—\)]|سؤال\s*\d+[:：\.\-–—\)]|q\s*\d+[:：\.\-–—\)]|question\s*\d+[:：\.\-–—\)]|\d+[\.\-–—\)])\s*/i, "")
+    .replace(/^(?:نص السؤال|السؤال)\s*[:：\.\-–—]\s*/i, "")
+    .trim();
 }
 
 export function cleanOptionString(opt: string): string {
