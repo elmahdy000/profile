@@ -21,12 +21,14 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+export type GalleryCategory = "baccalaureate" | "cpp" | "ai" | "problem_solving";
+
 export interface GalleryVideo {
   id: number | string;
   title: string;
   subtitle?: string;
   unitName?: string;
-  category: "baccalaureate" | "cpp" | "ai" | "problem_solving";
+  category: GalleryCategory;
   categoryLabel: string;
   stage: string;
   durationText: string;
@@ -297,7 +299,7 @@ const PLATFORM_SHOWCASE_VIDEOS: GalleryVideo[] = [
   },
 ];
 
-type CategoryFilter = "all" | "baccalaureate" | "cpp" | "ai" | "problem_solving";
+type CategoryFilter = "all" | GalleryCategory;
 
 export function FeaturedVideoGallery() {
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>("all");
@@ -315,6 +317,10 @@ export function FeaturedVideoGallery() {
         // Map server video records to gallery format while merging metadata
         const mapped: GalleryVideo[] = serverVideos.map((sv: any) => {
           const preset = PLATFORM_SHOWCASE_VIDEOS.find((p) => p.platformVideoId === sv.id);
+          const validCategories: GalleryCategory[] = ["baccalaureate", "cpp", "ai", "problem_solving"];
+          const videoCategory: GalleryCategory = validCategories.includes(sv.category)
+            ? (sv.category as GalleryCategory)
+            : preset?.category || "baccalaureate";
 
           return {
             id: sv.id,
@@ -322,7 +328,7 @@ export function FeaturedVideoGallery() {
             title: sv.title,
             unitName: sv.unitName || preset?.unitName || sv.categoryLabel || sv.category,
             subtitle: preset?.subtitle || sv.subject || `نموذج استعراضي من ${sv.unitName || sv.categoryLabel}`,
-            category: (sv.category as CategoryFilter) || preset?.category || "baccalaureate",
+            category: videoCategory,
             categoryLabel: sv.categoryLabel || preset?.categoryLabel || sv.category,
             stage: sv.stage || preset?.stage || "جميع المراحل",
             durationText: sv.durationText || preset?.durationText || "15 دقيقة",
