@@ -185,7 +185,62 @@ async function syncVideoAttachments(videoId: number, fileIds: number[]) {
       .values(uniqueIds.map((fileId, order) => ({ videoId, fileId, order })));
 }
 
-// Public showcase endpoint for featured videos on the home page gallery
+function classifyVideoUnit(video: typeof videosTable.$inferSelect): { unitName: string; unitGroup: string; priority: number } {
+  const cat = (video.category || "").toLowerCase();
+  const title = (video.title || "").toLowerCase();
+
+  if (cat.includes("c++") || cat.includes("cpp")) {
+    if (title.includes("مصفوف") || title.includes("array") || title.includes("loop") || title.includes("while") || title.includes("foor")) {
+      const p = video.id === 21 ? 1 : (title.includes("while") ? 2 : 5);
+      return { unitName: "وحدة المصفوفات وحلقات التكرار (C++)", unitGroup: "cpp", priority: p };
+    }
+    if (title.includes("if") || title.includes("switch") || title.includes("شرط") || title.includes("operator")) {
+      const p = video.id === 14 ? 1 : 3;
+      return { unitName: "وحدة جمل الشروط والقرارات المنطقية (C++)", unitGroup: "cpp", priority: p };
+    }
+    const p = video.id === 10 ? 1 : 2;
+    return { unitName: "وحدة أساسيات وهيكل لغة C++", unitGroup: "cpp", priority: p };
+  }
+
+  if (cat.includes("لغات") || cat.includes("languages")) {
+    if (title.includes("unit 2") || title.includes("crypto") || title.includes("security") || title.includes("network")) {
+      const p = video.id === 32 ? 1 : 3;
+      return { unitName: "Unit 2: Network Security & Cryptography (Languages)", unitGroup: "ai", priority: p };
+    }
+    const p = video.id === 25 ? 1 : 3;
+    return { unitName: "Unit 1: Artificial Intelligence & Tech (Languages)", unitGroup: "baccalaureate", priority: p };
+  }
+
+  if (cat.includes("بكالوريا")) {
+    if (title.includes("تقييم") || title.includes("مراجعة") || title.includes("امتحان")) {
+      const p = video.id === 40 ? 1 : 3;
+      return { unitName: "وحدة المراجعات الشاملة وحل التقييمات", unitGroup: "baccalaureate", priority: p };
+    }
+    if (title.includes("الثانية") || title.includes("التانية") || title.includes("تشفير") || title.includes("مخاطر") || title.includes("أمن")) {
+      const p = video.id === 35 ? 1 : 3;
+      return { unitName: "الوحدة الثانية: الأمن السيبراني والتشفير", unitGroup: "ai", priority: p };
+    }
+    const p = video.id === 24 ? 1 : 3;
+    return { unitName: "الوحدة الأولى: تكنولوجيا المعلومات والذكاء الاصطناعي", unitGroup: "baccalaureate", priority: p };
+  }
+
+  if (cat.includes("logic") || title.includes("logic") || title.includes("number system")) {
+    const p = video.id === 16 ? 1 : 3;
+    return { unitName: "وحدة التصميم المنطقي والأنظمة العددية", unitGroup: "problem_solving", priority: p };
+  }
+
+  if (cat.includes("oop") || title.includes("oop")) {
+    return { unitName: "وحدة البرمجة كائنية التوجه (OOP)", unitGroup: "problem_solving", priority: 1 };
+  }
+
+  if (cat.includes("script") || cat.includes("web")) {
+    return { unitName: "وحدة تطوير تطبيقات الويب وجافاسكريبت", unitGroup: "cpp", priority: 1 };
+  }
+
+  return { unitName: video.category, unitGroup: "baccalaureate", priority: 1 };
+}
+
+// Public showcase endpoint for featured videos on the home page gallery (strictly 1 lesson per unit)
 router.get("/videos/featured", async (_req, res, next) => {
   try {
     const publishedVideos = await db
@@ -194,7 +249,18 @@ router.get("/videos/featured", async (_req, res, next) => {
       .where(eq(videosTable.isPublished, true))
       .orderBy(asc(videosTable.order), asc(videosTable.id));
 
-    const featured = publishedVideos.map((video) => {
+    // Group all published videos by unit and pick strictly ONE representative lesson per unit
+    const unitMap = new Map<string, { video: typeof videosTable.$inferSelect; unitName: string; unitGroup: string; priority: number }>();
+
+    for (const video of publishedVideos) {
+      const { unitName, unitGroup, priority } = classifyVideoUnit(video);
+      const existing = unitMap.get(unitName);
+      if (!existing || priority < existing.priority) {
+        unitMap.set(unitName, { video, unitName, unitGroup, priority });
+      }
+    }
+
+    const featured = Array.from(unitMap.values()).map(({ video, unitName, unitGroup }) => {
       const isVideoFile = video.youtubeUrl.startsWith("/uploads/") || video.youtubeUrl.endsWith(".mp4");
       const streamUrl = isVideoFile
         ? getProtectedStreamUrl(video.id)
@@ -211,7 +277,9 @@ router.get("/videos/featured", async (_req, res, next) => {
       return {
         id: video.id,
         title: video.title,
-        category: video.category,
+        unitName,
+        category: unitGroup,
+        categoryLabel: video.category,
         stage: video.stage,
         stages: video.stages,
         subject: video.subject,

@@ -25,6 +25,7 @@ export interface GalleryVideo {
   id: number | string;
   title: string;
   subtitle?: string;
+  unitName?: string;
   category: "baccalaureate" | "cpp" | "ai" | "problem_solving";
   categoryLabel: string;
   stage: string;
@@ -39,13 +40,14 @@ export interface GalleryVideo {
   platformVideoId?: number;
 }
 
-// Default curated showcase based directly on real platform lessons
+// Strictly ONE representative lesson from each curriculum unit on the platform
 const PLATFORM_SHOWCASE_VIDEOS: GalleryVideo[] = [
   {
     id: 10,
     platformVideoId: 10,
     title: "2. مقدمة فى السى بلس بلس",
-    subtitle: "تأسيس التفكير البرمجي وهيكل لغة C++ من الصفر",
+    unitName: "وحدة أساسيات وهيكل لغة C++",
+    subtitle: "تأسيس التفكير البرمجي وهيكل برنامج C++ ودالة main",
     category: "cpp",
     categoryLabel: "تأسيس C++ والبرمجة",
     stage: "البكالوريا · أولى وتانية ثانوي وحاسبات",
@@ -53,7 +55,7 @@ const PLATFORM_SHOWCASE_VIDEOS: GalleryVideo[] = [
     thumbnailUrl: "/uploads/1784750571407-339603285.png",
     videoUrl: "/preview/cpp-intro.mp4",
     isVideoFile: true,
-    badge: "درس تجريبي مميز 🔥",
+    badge: "نموذج الوحدة 1: الأساسيات 💻",
     description:
       "شرح عملي ومبسط لهيكلية برنامج C++، مكتبة iostream، ودالة main، وكيف تحول تفكيرك إلى كود سليم يعمل على الشاشة.",
     outcomes: [
@@ -67,7 +69,8 @@ const PLATFORM_SHOWCASE_VIDEOS: GalleryVideo[] = [
     id: 14,
     platformVideoId: 14,
     title: "الدرس الخامس : If statement & switch Case",
-    subtitle: "إتقان اتخاذ القرارات والشروط المنطقية في C++",
+    unitName: "وحدة جمل الشروط والقرارات المنطقية (C++)",
+    subtitle: "إتقان اتخاذ القرارات والشروط المنطقية المتقدمة في C++",
     category: "cpp",
     categoryLabel: "تأسيس C++ والبرمجة",
     stage: "البكالوريا · أولى ثانوي",
@@ -75,7 +78,7 @@ const PLATFORM_SHOWCASE_VIDEOS: GalleryVideo[] = [
     thumbnailUrl: "/uploads/1785013028267-638529034.png",
     videoUrl: "/api/videos/14/stream",
     isVideoFile: true,
-    badge: "قرارات وشروط ⚡",
+    badge: "نموذج الوحدة 2: الشروط والقرارات ⚡",
     description:
       "في C++ لازم تعرف إمتى تستخدم if علشان تفحص شرط وتحدد هتعمل إيه، وإمتى تستخدم switch case علشان تختار من بين كذا حالة بشكل أوضح وأسهل.",
     outcomes: [
@@ -86,120 +89,11 @@ const PLATFORM_SHOWCASE_VIDEOS: GalleryVideo[] = [
     whatsAppText: "السلام عليكم د. محمود، شاهدت درس (If statement & switch Case) على المنصة وأريد الانضمام للمجموعة.",
   },
   {
-    id: 24,
-    platformVideoId: 24,
-    title: "الوحدة الاولى - الدرس الثانى : كيف يعمل الذكاء الاصطناعى",
-    subtitle: "منهج البكالوريا الحديث • وحدة الذكاء الاصطناعي والتكنولوجيا",
-    category: "baccalaureate",
-    categoryLabel: "منهج البكالوريا",
-    stage: "تانية ثانوي · مدارس عربي",
-    durationText: "18 دقيقة",
-    thumbnailUrl: "/uploads/1787603904418-5578210.png",
-    videoUrl: "/api/videos/24/stream",
-    isVideoFile: true,
-    badge: "منهج البكالوريا 🤖",
-    description:
-      "شرح تفصيلي لمبدأ عمل نماذج التعلم الآلي والشبكات العصبية، والفرق الجوهري بين البرمجة الكلاسيكية ومنظومات الـ AI الحديثة.",
-    outcomes: [
-      "كيف تتدرب الآلة على البيانات وتتنبأ بالنتائج",
-      "أبرز مصطلحات الذكاء الاصطناعي في كتاب الوزارة",
-      "حل أسئلة وتطبيقات عملية متوافقة مع نظام الامتحان الجديد",
-    ],
-    whatsAppText: "السلام عليكم د. محمود، شاهدت درس (كيف يعمل الذكاء الاصطناعي) لمنهج تانية ثانوي بكالوريا وأرغب في الاشتراك.",
-  },
-  {
-    id: 25,
-    platformVideoId: 25,
-    title: "Lesson 1-2 : HOW AI WORKS",
-    subtitle: "Egyptian Baccalaureate Computer Science (Languages)",
-    category: "baccalaureate",
-    categoryLabel: "منهج البكالوريا (لغات)",
-    stage: "2nd Secondary · Languages",
-    durationText: "20 دقيقة",
-    thumbnailUrl: "/uploads/1787847821525-651479513.png",
-    videoUrl: "/api/videos/25/stream",
-    isVideoFile: true,
-    badge: "Baccalaureate AI 🌐",
-    description:
-      "Comprehensive breakdown of Artificial Intelligence mechanisms, machine learning models, and training data concepts designed for Baccalaureate Languages students.",
-    outcomes: [
-      "Machine learning vs Traditional Programming",
-      "Neural networks architecture and data pipelines",
-      "Official curriculum examination review questions",
-    ],
-    whatsAppText: "Hello Dr. Mahmoud, I watched Lesson 1-2 (HOW AI WORKS) on the platform and want to join the Baccalaureate course.",
-  },
-  {
-    id: 29,
-    platformVideoId: 29,
-    title: "الوحدة الاولى : الدرس الاول : تطور تكنولوجيا المعلومات والتحول الاجتماعى",
-    subtitle: "الوحدة الأولى بالمنهج الجديد • بناء الوعي التكنولوجي الشامل",
-    category: "baccalaureate",
-    categoryLabel: "منهج البكالوريا",
-    stage: "تانية ثانوي · بكالوريا",
-    durationText: "19 دقيقة",
-    thumbnailUrl: "/uploads/1788289353021-928131730.png",
-    videoUrl: "/api/videos/29/stream",
-    isVideoFile: true,
-    badge: "تكنولوجيا المعلومات 📘",
-    description:
-      "استعراض تاريخ وتطور الحاسبات وشبكات المعلومات وأثر التحول الرقمي على المجتمع وسوق العمل الحديث.",
-    outcomes: [
-      "محطات تطور تكنولوجيا المعلومات والاتصالات",
-      "مفاهيم التحول الرقمي ومجتمع المعرفة",
-      "تجهيز الطالب لأسئلة الفهم والتحليل في الامتحانات",
-    ],
-    whatsAppText: "السلام عليكم د. محمود، شاهدت درس (تطور تكنولوجيا المعلومات) على المنصة وأود الاشتراك في المنهج.",
-  },
-  {
-    id: 35,
-    platformVideoId: 35,
-    title: "الوحدة الثانية : الدرس الاول : التشفير والمصادقة",
-    subtitle: "الأمن السيبراني وحماية البيانات والشبكات الرقمية",
-    category: "ai",
-    categoryLabel: "الأمن السيبراني والشبكات",
-    stage: "تانية ثانوي · بكالوريا",
-    durationText: "17 دقيقة",
-    thumbnailUrl: "/uploads/1789245183216-246813183.png",
-    videoUrl: "/api/videos/35/stream",
-    isVideoFile: true,
-    badge: "أمن سيبراني 🛡️",
-    description:
-      "المفاهيم الأساسية للتشفير المتماثل وغير المتماثل، وطرق المصادقة الثنائية وتأمين كلمات المرور والاتصالات ضد الاختراق.",
-    outcomes: [
-      "أنواع التشفير Symmetric & Asymmetric Encryption",
-      "بروتوكولات المصادقة والشهادات الرقمية SSL/TLS",
-      "حماية البيانات الحساسة وتأمين حسابات المستخدمين",
-    ],
-    whatsAppText: "السلام عليكم د. محمود، مهتم بمحاضرة (التشفير والمصادقة) والأمن السيبراني وأرغب في الاشتراك.",
-  },
-  {
-    id: 15,
-    platformVideoId: 15,
-    title: "6 قاعدة while وتطبيقات عليها",
-    subtitle: "التحكم في التكرار ومعالجة البيانات البرمجية بدقة",
-    category: "cpp",
-    categoryLabel: "تأسيس C++ والبرمجة",
-    stage: "أولى وتانية ثانوي وحاسبات",
-    durationText: "22 دقيقة",
-    thumbnailUrl: "/uploads/1785400322174-726575300.png",
-    videoUrl: "/api/videos/15/stream",
-    isVideoFile: true,
-    badge: "حلقات التكرار 🔁",
-    description:
-      "شرح وافٍ لقاعدة while وكيفية صياغة شروط التوقف وتفادي الحلقات اللانهائية (Infinite Loops) مع تطبيقات عملية.",
-    outcomes: [
-      "فهم دوران الحلقات وتحديث العداد Counters",
-      "تنفيذ برامج تكرار العمليات الحسابية والتحقق",
-      "تدريب مكثف على تتبع الكود خطوة بخطوة",
-    ],
-    whatsAppText: "السلام عليكم د. محمود، شاهدت درس (قاعدة while) وأريد الاشتراك في كورس البرمجة التأسيسي.",
-  },
-  {
     id: 21,
     platformVideoId: 21,
     title: "المصفوفات : arrays in c++",
-    subtitle: "هيكلية تخزين البيانات في الذاكرة RAM وكيفية معالجتها",
+    unitName: "وحدة المصفوفات وحلقات التكرار (C++)",
+    subtitle: "هيكلية تخزين البيانات في الذاكرة RAM وكيفية معالجتها بحلقات التكرار",
     category: "cpp",
     categoryLabel: "تأسيس C++ والبرمجة",
     stage: "البكالوريا وحاسبات ومعلومات",
@@ -207,7 +101,7 @@ const PLATFORM_SHOWCASE_VIDEOS: GalleryVideo[] = [
     thumbnailUrl: "/uploads/1787159059822-809753404.png",
     videoUrl: "/api/videos/21/stream",
     isVideoFile: true,
-    badge: "هياكل البيانات 🧠",
+    badge: "نموذج الوحدة 3: المصفوفات والتكرار 🔁",
     description:
       "توضيح عملي لكيفية حجز المصفوفات في الذاكرة واستخدام الفهرسة (Index) وحلقات For لمعالجة عناصر المصفوفة والبحث فيها.",
     outcomes: [
@@ -218,32 +112,126 @@ const PLATFORM_SHOWCASE_VIDEOS: GalleryVideo[] = [
     whatsAppText: "السلام عليكم د. محمود، شاهدت درس (المصفوفات في C++) على المنصة وأود الاشتراك في الكورس.",
   },
   {
-    id: 37,
-    platformVideoId: 37,
-    title: "الوحدة الثانية : الدرس الثالث (الاستجابة للحوادث وادارة المخاطر)",
-    subtitle: "الأمن السيبراني والتعامل مع التهديدات الرقمية",
+    id: 24,
+    platformVideoId: 24,
+    title: "الوحدة الاولى - الدرس الثانى : كيف يعمل الذكاء الاصطناعى",
+    unitName: "الوحدة الأولى: تكنولوجيا المعلومات والذكاء الاصطناعي",
+    subtitle: "منهج البكالوريا الحديث • وحدة الذكاء الاصطناعي والتكنولوجيا (عربي)",
+    category: "baccalaureate",
+    categoryLabel: "منهج البكالوريا (عربي)",
+    stage: "تانية ثانوي · مدارس عربي",
+    durationText: "18 دقيقة",
+    thumbnailUrl: "/uploads/1787603904418-5578210.png",
+    videoUrl: "/api/videos/24/stream",
+    isVideoFile: true,
+    badge: "نموذج بكالوريا عربي: الوحدة 1 🤖",
+    description:
+      "شرح تفصيلي لمبدأ عمل نماذج التعلم الآلي والشبكات العصبية، والفرق الجوهري بين البرمجة الكلاسيكية ومنظومات الـ AI الحديثة.",
+    outcomes: [
+      "كيف تتدرب الآلة على البيانات وتتنبأ بالنتائج",
+      "أبرز مصطلحات الذكاء الاصطناعي في كتاب الوزارة",
+      "حل أسئلة وتطبيقات عملية متوافقة مع نظام الامتحان الجديد",
+    ],
+    whatsAppText: "السلام عليكم د. محمود، شاهدت درس (كيف يعمل الذكاء الاصطناعي) لمنهج تانية ثانوي بكالوريا وأرغب في الاشتراك.",
+  },
+  {
+    id: 35,
+    platformVideoId: 35,
+    title: "الوحدة الثانية : الدرس الاول : التشفير والمصادقة",
+    unitName: "الوحدة الثانية: الأمن السيبراني والتشفير",
+    subtitle: "الأمن السيبراني وحماية البيانات والشبكات الرقمية (عربي)",
     category: "ai",
     categoryLabel: "الأمن السيبراني والشبكات",
     stage: "تانية ثانوي · بكالوريا",
-    durationText: "19 دقيقة",
-    thumbnailUrl: "/uploads/1790021706861-783874110.png",
-    videoUrl: "/api/videos/37/stream",
+    durationText: "17 دقيقة",
+    thumbnailUrl: "/uploads/1789245183216-246813183.png",
+    videoUrl: "/api/videos/35/stream",
     isVideoFile: true,
-    badge: "إدارة المخاطر ⚠️",
+    badge: "نموذج بكالوريا عربي: الوحدة 2 🛡️",
     description:
-      "كيف تتعامل المؤسسات مع حوادث الاختراق الرقمي، وإجراءات خطة الاستجابة السريعة (Incident Response) لتقليل الخسائر.",
+      "المفاهيم الأساسية للتشفير المتماثل وغير المتماثل، وطرق المصادقة الثنائية وتأمين كلمات المرور والاتصالات ضد الاختراق.",
     outcomes: [
-      "مراحل خطة الاستجابة للحوادث السيبرانية",
-      "تقييم المخاطر وإجراءات التعافي والنسخ الاحتياطي",
-      "حل تدريبات ونماذج أسئلة امتحان الوزارة",
+      "أنواع التشفير Symmetric & Asymmetric Encryption",
+      "بروتوكولات المصادقة والشهادات الرقمية SSL/TLS",
+      "حماية البيانات الحساسة وتأمين حسابات المستخدمين",
     ],
-    whatsAppText: "السلام عليكم د. محمود، شاهدت درس (الاستجابة للحوادث وإدارة المخاطر) وأرغب في الاشتراك في المنهج.",
+    whatsAppText: "السلام عليكم د. محمود، مهتم بمحاضرة (التشفير والمصادقة) والأمن السيبراني وأرغب في الاشتراك.",
+  },
+  {
+    id: 40,
+    platformVideoId: 40,
+    title: "مراجعة الوحدة الاولى الدرس الاول : وحل التقييمات",
+    unitName: "وحدة المراجعات الشاملة وحل التقييمات",
+    subtitle: "حل تدريبات ونماذج تقييمات الوزارة المعتمدة للثانوية والبكالوريا",
+    category: "baccalaureate",
+    categoryLabel: "مراجعات ونماذج الوزارة",
+    stage: "تانية ثانوي · بكالوريا",
+    durationText: "21 دقيقة",
+    thumbnailUrl: "/uploads/1790486414525-637417086.png",
+    videoUrl: "/api/videos/40/stream",
+    isVideoFile: true,
+    badge: "نموذج المراجعات والتقييمات 📝",
+    description:
+      "مراجعة مكثفة على موضوعات الوحدة مع حل كامل لأسئلة التقييمات الأسبوعية ونماذج الوزارة وتدريب الطلاب على أسئلة الامتحانات.",
+    outcomes: [
+      "حل نماذج التقييمات الأسبوعية لوزارة التربية والتعليم",
+      "تثبيت المفاهيم والتطبيقات العملية والبرمجية",
+      "استراتيجيات الإجابة النموذجية في امتحانات الترم",
+    ],
+    whatsAppText: "السلام عليكم د. محمود، شاهدت فيديو مراجعة الوحدة الأولى وحل التقييمات وأرغب في الاشتراك في المراجعات.",
+  },
+  {
+    id: 25,
+    platformVideoId: 25,
+    title: "lesson 1-2 : HOW AI WORKS",
+    unitName: "Unit 1: Artificial Intelligence & Tech (Languages)",
+    subtitle: "Egyptian Baccalaureate Computer Science (Languages) • Unit 1",
+    category: "baccalaureate",
+    categoryLabel: "منهج البكالوريا (لغات)",
+    stage: "2nd Secondary · Languages",
+    durationText: "20 دقيقة",
+    thumbnailUrl: "/uploads/1787847821525-651479513.png",
+    videoUrl: "/api/videos/25/stream",
+    isVideoFile: true,
+    badge: "Languages: Unit 1 Showcase 🌐",
+    description:
+      "Comprehensive breakdown of Artificial Intelligence mechanisms, machine learning models, and training data concepts designed for Baccalaureate Languages students.",
+    outcomes: [
+      "Machine learning vs Traditional Programming",
+      "Neural networks architecture and data pipelines",
+      "Official curriculum examination review questions",
+    ],
+    whatsAppText: "Hello Dr. Mahmoud, I watched Lesson 1-2 (HOW AI WORKS) on the platform and want to join the Baccalaureate course.",
+  },
+  {
+    id: 32,
+    platformVideoId: 32,
+    title: "Unit 2 : Lesson 1 : Cryptographic and Authentications",
+    unitName: "Unit 2: Network Security & Cryptography (Languages)",
+    subtitle: "Cybersecurity & Data Protection • Baccalaureate Languages Unit 2",
+    category: "ai",
+    categoryLabel: "Cybersecurity (Languages)",
+    stage: "2nd Secondary · Languages",
+    durationText: "19 دقيقة",
+    thumbnailUrl: "/uploads/1788725676981-456730888.png",
+    videoUrl: "/api/videos/32/stream",
+    isVideoFile: true,
+    badge: "Languages: Unit 2 Showcase 🔐",
+    description:
+      "Detailed explanation of cryptographic protocols, public/private key mechanisms, and authentication frameworks according to the Egyptian Baccalaureate Languages curriculum.",
+    outcomes: [
+      "Symmetric vs Asymmetric cryptography protocols",
+      "Public Key Infrastructure (PKI) and digital certificates",
+      "Exam-focused risk management and threat mitigation",
+    ],
+    whatsAppText: "Hello Dr. Mahmoud, I watched Unit 2 Lesson 1 (Cryptographic & Authentications) and would like to register.",
   },
   {
     id: 16,
     platformVideoId: 16,
     title: "التحويلات العددية Number systems",
-    subtitle: "كورس التصميم المنطقي ومعمارية الحاسب لطلاب الجامعات",
+    unitName: "وحدة التصميم المنطقي والأنظمة العددية",
+    subtitle: "كورس التصميم المنطقي ومعمارية الحاسب لطلاب الجامعات وحاسبات",
     category: "problem_solving",
     categoryLabel: "حاسبات وتصميم منطقي",
     stage: "جامعات وحاسبات ومعلومات",
@@ -251,7 +239,7 @@ const PLATFORM_SHOWCASE_VIDEOS: GalleryVideo[] = [
     thumbnailUrl: "/uploads/1785705553826-528523815.png",
     videoUrl: "/api/videos/16/stream",
     isVideoFile: true,
-    badge: "حاسبات وجامعات 🎓",
+    badge: "نموذج Logic Design للجامعات 🎓",
     description:
       "شرح رياضي ومنطقي ممتع لطرق التحويل بين الأنظمة العددية (الثنائي Binary، العشري Decimal، والـ Hexadecimal).",
     outcomes: [
@@ -265,7 +253,8 @@ const PLATFORM_SHOWCASE_VIDEOS: GalleryVideo[] = [
     id: 19,
     platformVideoId: 19,
     title: "الدرس الاول : يعنى ايه OOP ومثال عملى (مهم جدا)",
-    subtitle: "البرمجة كائنية التوجه • الانتقال من المبتدئ إلى المحترف",
+    unitName: "وحدة البرمجة كائنية التوجه (OOP)",
+    subtitle: "البرمجة كائنية التوجه • الانتقال من البرمجة الإجرائية إلى الاحتراف",
     category: "problem_solving",
     categoryLabel: "برمجة متقدمة و OOP",
     stage: "حاسبات وهندسة والجامعات",
@@ -273,7 +262,7 @@ const PLATFORM_SHOWCASE_VIDEOS: GalleryVideo[] = [
     thumbnailUrl: "/uploads/1785761959103-976060289.png",
     videoUrl: "/api/videos/19/stream",
     isVideoFile: true,
-    badge: "OOP متقدم 🚀",
+    badge: "نموذج كورس OOP 🚀",
     description:
       "شرح مفهوم البرمجة كائنية التوجه (OOP)، ولماذا ظهرت كبديل للبرمجة الإجرائية، مع مثال عملي متكامل يوضح الـ Classes والـ Objects.",
     outcomes: [
@@ -284,26 +273,27 @@ const PLATFORM_SHOWCASE_VIDEOS: GalleryVideo[] = [
     whatsAppText: "السلام عليكم د. محمود، شاهدت درس (يعنى ايه OOP) على المنصة وأرغب في الاشتراك في كورس الـ OOP.",
   },
   {
-    id: 28,
-    platformVideoId: 28,
-    title: "الدرس الرابع : القضايا الاخلاقية المتعلقة بالذكاء الاصطناعى",
-    subtitle: "الأبعاد الاجتماعية والأخلاقية لتطبيقات الذكاء الاصطناعي",
-    category: "ai",
-    categoryLabel: "الذكاء الاصطناعي",
-    stage: "تانية ثانوي · بكالوريا",
-    durationText: "16 دقيقة",
-    thumbnailUrl: "/uploads/1788207198340-709967078.png",
-    videoUrl: "/api/videos/28/stream",
+    id: 42,
+    platformVideoId: 42,
+    title: "Lesson 1 : introduction -Operators -Variables",
+    unitName: "وحدة تطوير تطبيقات الويب وجافاسكريبت",
+    subtitle: "كورس JavaScript العملي وتطوير الواجهات التفاعلية الحديثة",
+    category: "cpp",
+    categoryLabel: "كورس جافاسكريبت والويب",
+    stage: "تطوير الويب لجميع المراحل",
+    durationText: "15 دقيقة",
+    thumbnailUrl: "/uploads/1791665329587-147804572.png",
+    videoUrl: "/api/videos/42/stream",
     isVideoFile: true,
-    badge: "أخلاقيات الـ AI ⚖️",
+    badge: "نموذج كورس JavaScript 🌐",
     description:
-      "مناقشة قضايا التحيز في الخوارزميات، الخصوصية، حقوق الملكية الفكرية، ومستقبل الوظائف في ظل ثورة الـ AI التوليدي.",
+      "الانطلاقة العملية في عالم الويب وجافاسكريبت، المفاهيم الأساسية، المتغيرات، المعاملات، والتطبيق المباشر في المتصفح.",
     outcomes: [
-      "مفاهيم العدالة والشفافية في خوارزميات الـ AI",
-      "قوانين حماية الخصوصية ومسؤولية استخدام الأدوات الذكية",
-      "حل أسئلة التفكير النقدي المطابقة للامتحان الوزاري",
+      "مفاهيم لغة JavaScript ودورها في الويب الحديث",
+      "أنواع البيانات والمتغيرات let و const",
+      "كتابة وتنفيذ أول كود تفاعلي بالمتصفح",
     ],
-    whatsAppText: "السلام عليكم د. محمود، شاهدت درس (القضايا الأخلاقية للذكاء الاصطناعي) على المنصة وأود الاشتراك في المنهج.",
+    whatsAppText: "السلام عليكم د. محمود، شاهدت درس جافاسكريبت التمهيدي وأود التسجيل في كورس تطوير الويب.",
   },
 ];
 
@@ -314,7 +304,7 @@ export function FeaturedVideoGallery() {
   const [videos, setVideos] = useState<GalleryVideo[]>(PLATFORM_SHOWCASE_VIDEOS);
   const [selectedVideo, setSelectedVideo] = useState<GalleryVideo | null>(null);
 
-  // Dynamically load latest platform featured videos from backend
+  // Dynamically load latest platform unit showcase videos from backend (strictly 1 lesson per unit)
   useEffect(() => {
     let isMounted = true;
     fetch("/api/videos/featured")
@@ -324,43 +314,25 @@ export function FeaturedVideoGallery() {
 
         // Map server video records to gallery format while merging metadata
         const mapped: GalleryVideo[] = serverVideos.map((sv: any) => {
-          // Check if we have pre-configured enriched outcomes
           const preset = PLATFORM_SHOWCASE_VIDEOS.find((p) => p.platformVideoId === sv.id);
-
-          let cat: CategoryFilter = "all";
-          const catStr = (sv.category || "").toLowerCase();
-          const stageStr = (sv.stage || "").toLowerCase();
-
-          if (catStr.includes("c++") || catStr.includes("برمج") || catStr.includes("cpp")) {
-            cat = "cpp";
-          } else if (catStr.includes("بكالوريا") || stageStr.includes("بكالوريا") || catStr.includes("sec")) {
-            if (catStr.includes("ذكاء") || catStr.includes("ai") || catStr.includes("تشفير") || catStr.includes("أمن") || catStr.includes("crypto") || catStr.includes("network")) {
-              cat = "ai";
-            } else {
-              cat = "baccalaureate";
-            }
-          } else if (catStr.includes("logic") || catStr.includes("oop") || catStr.includes("تصميم") || catStr.includes("جامع")) {
-            cat = "problem_solving";
-          } else {
-            cat = "baccalaureate";
-          }
 
           return {
             id: sv.id,
             platformVideoId: sv.id,
             title: sv.title,
-            subtitle: preset?.subtitle || sv.subject || `درس تطبيقي من ${sv.category}`,
-            category: preset?.category || cat,
-            categoryLabel: preset?.categoryLabel || sv.category,
+            unitName: sv.unitName || preset?.unitName || sv.categoryLabel || sv.category,
+            subtitle: preset?.subtitle || sv.subject || `نموذج استعراضي من ${sv.unitName || sv.categoryLabel}`,
+            category: (sv.category as CategoryFilter) || preset?.category || "baccalaureate",
+            categoryLabel: sv.categoryLabel || preset?.categoryLabel || sv.category,
             stage: sv.stage || preset?.stage || "جميع المراحل",
             durationText: sv.durationText || preset?.durationText || "15 دقيقة",
             thumbnailUrl: sv.thumbnailUrl || preset?.thumbnailUrl || "/dr-mahmoud-hero-classroom.webp",
             videoUrl: sv.videoUrl || preset?.videoUrl || `/preview/cpp-intro.mp4`,
             isVideoFile: sv.isVideoFile ?? true,
-            badge: preset?.badge || (sv.category.includes("C++") ? "تأسيس برمجة 🔥" : "منهج المنصة 📘"),
-            description: sv.description || preset?.description || `محاضرة تفاعلية من منصة د. محمود المهدي في ${sv.category}.`,
+            badge: preset?.badge || "نموذج استعراضي للوحدة 🌟",
+            description: sv.description || preset?.description || `محاضرة تفاعلية من منصة د. محمود المهدي في ${sv.unitName || sv.categoryLabel}.`,
             outcomes: preset?.outcomes || [
-              `فهم المفاهيم الأساسية لوحدة ${sv.category}`,
+              `فهم المفاهيم الأساسية لوحدة ${sv.unitName || sv.categoryLabel}`,
               "تطبيق عملي خطوة بخطوة على الشاشة",
               "حل تدريبات ونماذج أسئلة المنصة التفاعلية",
             ],
@@ -384,7 +356,7 @@ export function FeaturedVideoGallery() {
   const categories: { id: CategoryFilter; label: string; icon: React.ElementType; count: number }[] = [
     {
       id: "all",
-      label: "جميع محاضرات المنصة",
+      label: "جميع الوحدات الدراسية",
       icon: Layers,
       count: videos.length,
     },
@@ -396,13 +368,13 @@ export function FeaturedVideoGallery() {
     },
     {
       id: "cpp",
-      label: "تأسيس C++ والبرمجة",
+      label: "تأسيس C++ والبرمجة والويب",
       icon: Terminal,
       count: videos.filter((v) => v.category === "cpp").length,
     },
     {
       id: "ai",
-      label: "الذكاء الاصطناعي والأمن السيبراني",
+      label: "الأمن السيبراني والتشفير",
       icon: Cpu,
       count: videos.filter((v) => v.category === "ai").length,
     },
@@ -466,21 +438,21 @@ export function FeaturedVideoGallery() {
         <header className="mx-auto max-w-3xl text-center space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 text-xs font-bold text-blue-300 shadow-sm backdrop-blur-md">
             <Sparkles className="h-4 w-4 text-sky-400" />
-            <span>فيديوهات حقيقية من داخل المنصة • شاهد طريقة الشرح والتطبيق</span>
+            <span>✨ نماذج استعراضية: درس واحد من كل وحدة دراسية وكورس</span>
           </div>
 
           <h2
             id="video-gallery-heading"
             className="text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl leading-tight"
           >
-            نماذج حية من محاضرات{" "}
+            نماذج استعراضية لوحدات{" "}
             <span className="bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-300 bg-clip-text text-transparent">
-              منصة د. محمود المهدي
+              المنهج والكورسات
             </span>
           </h2>
 
           <p className="text-sm sm:text-base font-semibold leading-relaxed text-slate-300 max-w-2xl mx-auto">
-            جميع الفيديوهات المعروضة هي محاضرات حقيقية من داخل منصة الطلاب لمناهج البكالوريا، تأسيس لغة C++، الذكاء الاصطناعي، ومواد حاسبات ومعلومات.
+            اخترنا لكم درساً نموذجياً واحداً فقط من كل وحدة دراسية بالمنصة لتتعرف على طريقة الشرح والتطبيق العملي. باقي دروس كل وحدة متاحة بالكامل للطلاب المشتركين داخل المنصة.
           </p>
         </header>
 
@@ -556,11 +528,9 @@ export function FeaturedVideoGallery() {
 
                   {/* Top Badges */}
                   <div className="absolute top-3 inset-x-3 flex items-center justify-between gap-2">
-                    {video.badge && (
-                      <span className="rounded-lg bg-blue-600/90 px-2.5 py-1 text-[11px] font-black text-white shadow-md backdrop-blur-sm">
-                        {video.badge}
-                      </span>
-                    )}
+                    <span className="rounded-lg bg-blue-600/90 px-2.5 py-1 text-[11px] font-black text-white shadow-md backdrop-blur-sm">
+                      {video.badge || "نموذج الوحدة 🌟"}
+                    </span>
                     <span className="flex items-center gap-1 rounded-lg bg-black/60 px-2 py-1 text-[11px] font-semibold text-slate-200 backdrop-blur-sm mr-auto">
                       <Clock className="h-3 w-3 text-sky-400" />
                       {video.durationText}
@@ -586,9 +556,15 @@ export function FeaturedVideoGallery() {
                 {/* Card Body */}
                 <div className="flex flex-1 flex-col justify-between p-5 text-right space-y-4">
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-2 text-xs font-bold text-blue-400">
-                      <span>{video.categoryLabel}</span>
-                      <span className="text-[11px] font-semibold text-slate-400">درس بالمنصة #{video.id}</span>
+                    {/* Unit Name Badge */}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="inline-flex items-center gap-1.5 rounded-md bg-blue-500/15 border border-blue-400/30 px-2.5 py-1 text-xs font-black text-sky-300 max-w-[70%]">
+                        <Layers className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+                        <span className="truncate">{video.unitName || video.categoryLabel}</span>
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400 shrink-0 bg-slate-850 px-2 py-0.5 rounded border border-slate-750">
+                        نموذج استعراضي
+                      </span>
                     </div>
 
                     <h3 className="text-base font-black text-white leading-snug group-hover:text-blue-300 transition-colors line-clamp-2">
@@ -629,9 +605,9 @@ export function FeaturedVideoGallery() {
                       variant="outline"
                       className="h-10 rounded-xl border-slate-700 bg-slate-900/80 hover:bg-slate-800 text-slate-200 hover:text-white font-bold text-xs flex items-center justify-center gap-1.5"
                     >
-                      <a href={`/platform?video=${video.id}`} title="فتح الدرس في منصة الطالب">
+                      <a href={`/platform?video=${video.id}`} title="فتح الوحدة والدرس في منصة الطالب">
                         <MonitorPlay className="h-3.5 w-3.5 text-sky-400" />
-                        <span>على المنصة</span>
+                        <span>دروس الوحدة كاملة</span>
                       </a>
                     </Button>
                   </div>
@@ -716,13 +692,13 @@ export function FeaturedVideoGallery() {
               <div className="flex items-center justify-between border-b border-slate-850 bg-slate-900/80 px-5 py-3.5">
                 <div className="flex items-center gap-2">
                   <span className="rounded-lg bg-blue-600/20 border border-blue-500/30 px-2.5 py-0.5 text-xs font-bold text-blue-300">
-                    {selectedVideo.stage}
+                    {selectedVideo.unitName || selectedVideo.categoryLabel}
                   </span>
                   <span className="text-xs font-semibold text-slate-400 hidden sm:inline">
-                    {selectedVideo.categoryLabel}
+                    {selectedVideo.stage}
                   </span>
                   <span className="text-xs text-sky-400/80 font-bold hidden md:inline">
-                    • درس رقم #{selectedVideo.id} بالمنصة
+                    • نموذج استعراضي بالمنصة #{selectedVideo.id}
                   </span>
                 </div>
 
@@ -854,8 +830,9 @@ export function FeaturedVideoGallery() {
                       <a
                         href={`/platform?video=${selectedVideo.id}`}
                         className="flex items-center justify-center gap-2"
+                        title="فتح باقي دروس الوحدة على المنصة"
                       >
-                        <span>فتح الدرس بالمنصة</span>
+                        <span>دروس الوحدة كاملة بالمنصة</span>
                         <ExternalLink className="h-3.5 w-3.5 text-blue-400" />
                       </a>
                     </Button>
