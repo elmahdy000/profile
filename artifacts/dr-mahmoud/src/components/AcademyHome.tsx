@@ -13,6 +13,7 @@ import {
   Brain, Code2, GitFork, Lightbulb, Crown, Layers, Sparkles
 } from "lucide-react";
 import { defaultOfflineCenters, type OfflineCenterItem } from "@/components/admin/settings/CentersTab";
+import { FeaturedVideoGallery } from "@/components/FeaturedVideoGallery";
 
 type BookingForm = { parentName: string; studentName: string; phone: string; grade: string; schoolType: string; mode: string; message: string };
 type Testimonial = { quote: string; author: string; role: string; stars?: number; initials?: string };
@@ -176,7 +177,7 @@ export function AcademyHome() {
   const handleGoToPreview = () => {
     localStorage.setItem("dr_mahmoud_visited_before", "true");
     setShowWelcomeModal(false);
-    const element = document.getElementById("cpp-preview");
+    const element = document.getElementById("video-gallery") || document.getElementById("cpp-preview");
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
     }
@@ -325,6 +326,25 @@ export function AcademyHome() {
                   </Button>
                 </div>
 
+                {/* Video Gallery Quick Link Banner */}
+                <div className="pt-1">
+                  <a
+                    href="#video-gallery"
+                    className="group flex items-center justify-between gap-3 rounded-xl border border-blue-200/90 bg-gradient-to-r from-blue-50/90 via-sky-50/70 to-indigo-50/90 p-2.5 px-3.5 text-xs font-bold text-blue-900 shadow-xs hover:border-blue-400 hover:shadow-md transition-all dark:border-blue-500/30 dark:from-blue-950/40 dark:via-slate-900/60 dark:to-indigo-950/40 dark:text-blue-200"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600 text-white shadow-xs group-hover:scale-110 transition-transform">
+                        <Play className="h-3 w-3 fill-current" />
+                      </span>
+                      <span>معرض الفيديوهات التفاعلي: شاهد عينات واقعية من الشرح بالأسفل</span>
+                    </div>
+                    <span className="flex items-center gap-1 text-[11px] font-black text-blue-700 dark:text-blue-300">
+                      <span>مشاهدة</span>
+                      <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-1" />
+                    </span>
+                  </a>
+                </div>
+
                 {/* Trust line */}
                 <div className="pt-2 text-xs font-bold text-slate-500 dark:text-slate-400 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-100 dark:border-slate-800 mt-4">
                   <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-600" /> أونلاين لكل مصر</span>
@@ -369,6 +389,9 @@ export function AcademyHome() {
             </div>
           </div>
         </section>
+
+        {/* ─── FEATURED VIDEO GALLERY (SHOWCASE LESSONS & CURRICULUM) ─── */}
+        <FeaturedVideoGallery />
 
         {/* ─── 2. WHY STUDENTS FIND PROGRAMMING DIFFICULT SECTION ─── */}
         <section aria-labelledby="problem-section-heading" className="bg-slate-50 dark:bg-[#080f1c] py-12 md:py-16 border-b border-slate-200 dark:border-slate-800">
