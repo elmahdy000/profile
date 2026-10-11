@@ -185,6 +185,51 @@ async function syncVideoAttachments(videoId: number, fileIds: number[]) {
       .values(uniqueIds.map((fileId, order) => ({ videoId, fileId, order })));
 }
 
+// Public showcase endpoint for featured videos on the home page gallery
+router.get("/videos/featured", async (_req, res, next) => {
+  try {
+    const publishedVideos = await db
+      .select()
+      .from(videosTable)
+      .where(eq(videosTable.isPublished, true))
+      .orderBy(asc(videosTable.order), asc(videosTable.id));
+
+    const featured = publishedVideos.map((video) => {
+      const isVideoFile = video.youtubeUrl.startsWith("/uploads/") || video.youtubeUrl.endsWith(".mp4");
+      const streamUrl = isVideoFile
+        ? getProtectedStreamUrl(video.id)
+        : video.youtubeUrl;
+
+      let thumb = video.thumbnailUrl;
+      if (!thumb && video.youtubeUrl && !video.youtubeUrl.startsWith("/uploads/")) {
+        const match = video.youtubeUrl.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+        if (match?.[1]) {
+          thumb = `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`;
+        }
+      }
+
+      return {
+        id: video.id,
+        title: video.title,
+        category: video.category,
+        stage: video.stage,
+        stages: video.stages,
+        subject: video.subject,
+        description: video.description,
+        thumbnailUrl: thumb || "/dr-mahmoud-hero-classroom.webp",
+        videoUrl: streamUrl,
+        isVideoFile,
+        durationText: video.durationText || "15 دقيقة",
+        level: video.level || "تأسيس",
+      };
+    });
+
+    res.json(featured);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // List all videos and playlists with gating logic
 router.get("/videos", async (req, res, next) => {
   try {

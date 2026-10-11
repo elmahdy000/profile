@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useId } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Play,
@@ -15,189 +15,295 @@ import {
   ChevronLeft,
   MonitorPlay,
   Layers,
-  HelpCircle,
+  ShieldCheck,
+  GraduationCap,
   Laptop,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export interface GalleryVideo {
-  id: string;
+  id: number | string;
   title: string;
-  subtitle: string;
+  subtitle?: string;
   category: "baccalaureate" | "cpp" | "ai" | "problem_solving";
   categoryLabel: string;
   stage: string;
   durationText: string;
   thumbnailUrl: string;
-  videoUrl: string; // Direct mp4 or YouTube link
+  videoUrl: string; // Direct stream or YouTube link
   isVideoFile?: boolean;
   badge?: string;
   description: string;
   outcomes: string[];
   whatsAppText: string;
+  platformVideoId?: number;
 }
 
-const GALLERY_VIDEOS: GalleryVideo[] = [
+// Default curated showcase based directly on real platform lessons
+const PLATFORM_SHOWCASE_VIDEOS: GalleryVideo[] = [
   {
-    id: "cpp-intro",
-    title: "مقدمة في لغة C++ وتأسيس التفكير البرمجي",
-    subtitle: "المحاضرة التمهيدية الأولى لطلاب البكالوريا والجامعات",
+    id: 10,
+    platformVideoId: 10,
+    title: "2. مقدمة فى السى بلس بلس",
+    subtitle: "تأسيس التفكير البرمجي وهيكل لغة C++ من الصفر",
     category: "cpp",
-    categoryLabel: "تأسيس البرمجة و C++",
-    stage: "تأسيس عام لجميع المراحل",
+    categoryLabel: "تأسيس C++ والبرمجة",
+    stage: "البكالوريا · أولى وتانية ثانوي وحاسبات",
     durationText: "15 دقيقة",
-    thumbnailUrl: "/dr-mahmoud-hero-classroom.webp",
+    thumbnailUrl: "/uploads/1784750571407-339603285.png",
     videoUrl: "/preview/cpp-intro.mp4",
     isVideoFile: true,
-    badge: "الأكثر طلباً 🔥",
+    badge: "درس تجريبي مميز 🔥",
     description:
-      "شرح عملي ومبسط لهيكلية لغة C++، وكيف تحول التفكير البشري إلى كود برمجي منظم خطوة بخطوة بدون حفظ.",
+      "شرح عملي ومبسط لهيكلية برنامج C++، مكتبة iostream، ودالة main، وكيف تحول تفكيرك إلى كود سليم يعمل على الشاشة.",
     outcomes: [
-      "فهم هيكلية البرنامج ومكتبة iostream",
-      "الفرق بين كتابة الكود والتفكير الخوارزمي",
-      "كتابة وتتبع أول كود يعمل بنجاح على الشاشة",
+      "فهم هيكل برنامج C++ ودالة main",
+      "طباعة النصوص وتتبع المخرجات في الكونسول",
+      "التفكير الخوارزمي المنظم وتجنب الأخطاء الشائعة",
     ],
-    whatsAppText: "السلام عليكم د. محمود، شاهدت محاضرة مقدمة C++ وأرغب في الاشتراك في الكورس الكامل.",
+    whatsAppText: "السلام عليكم د. محمود، شاهدت درس (2. مقدمة فى السى بلس بلس) على المنصة وأرغب في الاشتراك في الكورس الكامل.",
   },
   {
-    id: "baccalaureate-comp-thinking",
-    title: "مدخل التفكير الحاسوبي وهندسة الخوارزميات (أولى ثانوي)",
-    subtitle: "الوحدة الأولى من المنهج المصري الحديث للبكالوريا",
+    id: 14,
+    platformVideoId: 14,
+    title: "الدرس الخامس : If statement & switch Case",
+    subtitle: "إتقان اتخاذ القرارات والشروط المنطقية في C++",
+    category: "cpp",
+    categoryLabel: "تأسيس C++ والبرمجة",
+    stage: "البكالوريا · أولى ثانوي",
+    durationText: "24 دقيقة",
+    thumbnailUrl: "/uploads/1785013028267-638529034.png",
+    videoUrl: "/api/videos/14/stream",
+    isVideoFile: true,
+    badge: "قرارات وشروط ⚡",
+    description:
+      "في C++ لازم تعرف إمتى تستخدم if علشان تفحص شرط وتحدد هتعمل إيه، وإمتى تستخدم switch case علشان تختار من بين كذا حالة بشكل أوضح وأسهل.",
+    outcomes: [
+      "الفرق الجوهري بين if و switch case وكيفية الاختيار بينهما",
+      "كتابة شروط مركبة ومنطقية نظيفة باستخدام && و ||",
+      "تطبيق عملي على أمثلة حياتية تحاكي مشروعات حقيقية",
+    ],
+    whatsAppText: "السلام عليكم د. محمود، شاهدت درس (If statement & switch Case) على المنصة وأريد الانضمام للمجموعة.",
+  },
+  {
+    id: 24,
+    platformVideoId: 24,
+    title: "الوحدة الاولى - الدرس الثانى : كيف يعمل الذكاء الاصطناعى",
+    subtitle: "منهج البكالوريا الحديث • وحدة الذكاء الاصطناعي والتكنولوجيا",
     category: "baccalaureate",
     categoryLabel: "منهج البكالوريا",
-    stage: "الصف الأول الثانوي",
-    durationText: "22 دقيقة",
-    thumbnailUrl: "/baccalaureate-1st-sec.png",
-    videoUrl: "https://www.youtube.com/watch?v=M-5T8T2p5gQ",
-    badge: "منهج البكالوريا 📘",
-    description:
-      "تفكيك مشكلات المنهج وتحويلها إلى خرائط تدفق Flowcharts وخوارزميات واضحة ومطابقة لمواصفات الامتحان الوزاري.",
-    outcomes: [
-      "ركائز التفكير الحاسوبي الأربعة وحل المشكلات",
-      "رسم وتحليل خرائط التدفق Flowcharts القياسية",
-      "نماذج أسئلة الامتحان الجديد وكيفية صياغة الإجابة",
-    ],
-    whatsAppText: "السلام عليكم د. محمود، أود الاشتراك في برنامج منهج البكالوريا للصف الأول الثانوي.",
-  },
-  {
-    id: "ai-revolution-sec2",
-    title: "كيف يفكر الذكاء الاصطناعي؟ مفاهيم وتطبيقات عملية (تانية ثانوي)",
-    subtitle: "وحدة الذكاء الاصطناعي وتكنولوجيا المستقبل بالمنهج الجديد",
-    category: "ai",
-    categoryLabel: "الذكاء الاصطناعي",
-    stage: "الصف الثاني الثانوي",
+    stage: "تانية ثانوي · مدارس عربي",
     durationText: "18 دقيقة",
-    thumbnailUrl: "/baccalaureate-2nd-sec.png",
-    videoUrl: "https://www.youtube.com/playlist?list=PL43pGnjiVwgSxY6b5O_Hmsj-0YhT_a4R3",
-    badge: "ذكاء اصطناعي 🤖",
+    thumbnailUrl: "/uploads/1787603904418-5578210.png",
+    videoUrl: "/api/videos/24/stream",
+    isVideoFile: true,
+    badge: "منهج البكالوريا 🤖",
     description:
-      "شرح ممتع وشيق يوضح للطالب كيف تتعلم الآلات، والفرق بين البرمجة التقليدية ونماذج الذكاء الاصطناعي التوليدي.",
+      "شرح تفصيلي لمبدأ عمل نماذج التعلم الآلي والشبكات العصبية، والفرق الجوهري بين البرمجة الكلاسيكية ومنظومات الـ AI الحديثة.",
     outcomes: [
-      "مبدأ عمل نماذج التعلم الآلي والشبكات العصبية",
-      "الأخلاقيات والاستخدام المسؤول للذكاء الاصطناعي",
-      "تطبيقات برمجية عملية باستخدام بايثون والأدوات الحديثة",
+      "كيف تتدرب الآلة على البيانات وتتنبأ بالنتائج",
+      "أبرز مصطلحات الذكاء الاصطناعي في كتاب الوزارة",
+      "حل أسئلة وتطبيقات عملية متوافقة مع نظام الامتحان الجديد",
     ],
-    whatsAppText: "السلام عليكم د. محمود، مهتم بكورس الذكاء الاصطناعي ومنهج تانية ثانوي.",
+    whatsAppText: "السلام عليكم د. محمود، شاهدت درس (كيف يعمل الذكاء الاصطناعي) لمنهج تانية ثانوي بكالوريا وأرغب في الاشتراك.",
   },
   {
-    id: "cpp-conditions-logic",
-    title: "إتقان جمل الشروط والقرارات المنطقية (If-Else & Logic)",
-    subtitle: "تطبيق عملي خطوة بخطوة على قرارات البرمجة",
-    category: "cpp",
-    categoryLabel: "تأسيس البرمجة و C++",
-    stage: "أولى وتانية ثانوي + حاسبات",
-    durationText: "24 دقيقة",
-    thumbnailUrl: "/dr-mahmoud-photo.webp",
-    videoUrl: "https://www.youtube.com/playlist?list=PL43pGnjiVwgS6cQW6a-8Hj4_N292f7XwX",
-    badge: "أساس برمجي ⚡",
-    description:
-      "بناء المنطق البرمجي السليم: متى نستخدم if وelse ومتى نلجأ إلى switch، مع تجنب الأخطاء الشائعة للمبتدئين.",
-    outcomes: [
-      "التعامل مع الشروط المركبة والمعاملات المنطقية && و ||",
-      "كتابة كود نظيف سهل القراءة بدون تكرار",
-      "تطبيقات عملية على أمثلة حياتية تحاكي مشروعات حقيقية",
-    ],
-    whatsAppText: "السلام عليكم د. محمود، أرغب في الانضمام لكورس أساسيات C++ المتقدم.",
-  },
-  {
-    id: "exam-essay-solving",
-    title: "حل وتحليل الأسئلة المقالية النموذجية في امتحان البرمجة",
-    subtitle: "تدريب على صياغة الكود للحصول على الدرجة النهائية",
-    category: "problem_solving",
-    categoryLabel: "حل المسائل والامتحانات",
-    stage: "منهج البكالوريا والثانوية",
+    id: 25,
+    platformVideoId: 25,
+    title: "Lesson 1-2 : HOW AI WORKS",
+    subtitle: "Egyptian Baccalaureate Computer Science (Languages)",
+    category: "baccalaureate",
+    categoryLabel: "منهج البكالوريا (لغات)",
+    stage: "2nd Secondary · Languages",
     durationText: "20 دقيقة",
-    thumbnailUrl: "/cs_first_year.png",
-    videoUrl: "https://www.youtube.com/playlist?list=PL43pGnjiVwgTq0Kwt-jP_Gndn1154cQk2",
-    badge: "نماذج الامتحانات 🎯",
+    thumbnailUrl: "/uploads/1787847821525-651479513.png",
+    videoUrl: "/api/videos/25/stream",
+    isVideoFile: true,
+    badge: "Baccalaureate AI 🌐",
     description:
-      "تحليل دقيق لطريقة تصحيح الأسئلة المقالية والبرمجية بالوزارة، وكيف يكتب الطالب الكود بتنسيق سليم يحصد الدرجة كاملة.",
+      "Comprehensive breakdown of Artificial Intelligence mechanisms, machine learning models, and training data concepts designed for Baccalaureate Languages students.",
     outcomes: [
-      "تفكيك نصوص الأسئلة الطويلة وتحديد المطلوب بدقة",
-      "تجنب الأخطاء البرمجية النحوية والمنطقية الشائعة",
-      "صياغة الإجابة النموذجية المعتمدة في نماذج الإجابة",
+      "Machine learning vs Traditional Programming",
+      "Neural networks architecture and data pipelines",
+      "Official curriculum examination review questions",
     ],
-    whatsAppText: "السلام عليكم د. محمود، مهتم بمراجعة حل امتحانات البرمجة وبنك الأسئلة المقالية.",
+    whatsAppText: "Hello Dr. Mahmoud, I watched Lesson 1-2 (HOW AI WORKS) on the platform and want to join the Baccalaureate course.",
   },
   {
-    id: "cpp-loops-arrays",
-    title: "حلقات التكرار والمصفوفات Arrays في الذاكرة",
-    subtitle: "فهم عميق لكيفية تخزين ومعالجة البيانات المتسلسلة",
-    category: "cpp",
-    categoryLabel: "تأسيس البرمجة و C++",
-    stage: "المرحلة الثانوية وحاسبات",
-    durationText: "26 دقيقة",
-    thumbnailUrl: "/university-cs-path.webp",
-    videoUrl: "https://www.youtube.com/playlist?list=PL43pGnjiVwgS6cQW6a-8Hj4_N292f7XwX",
-    badge: "فهم الذاكرة 🧠",
+    id: 29,
+    platformVideoId: 29,
+    title: "الوحدة الاولى : الدرس الاول : تطور تكنولوجيا المعلومات والتحول الاجتماعى",
+    subtitle: "الوحدة الأولى بالمنهج الجديد • بناء الوعي التكنولوجي الشامل",
+    category: "baccalaureate",
+    categoryLabel: "منهج البكالوريا",
+    stage: "تانية ثانوي · بكالوريا",
+    durationText: "19 دقيقة",
+    thumbnailUrl: "/uploads/1788289353021-928131730.png",
+    videoUrl: "/api/videos/29/stream",
+    isVideoFile: true,
+    badge: "تكنولوجيا المعلومات 📘",
     description:
-      "توضيح بصري لطريقة تخزين المصفوفات في الذاكرة RAM واستخدام حلقات For و While للبحث والفرز والتعامل مع البيانات.",
+      "استعراض تاريخ وتطور الحاسبات وشبكات المعلومات وأثر التحول الرقمي على المجتمع وسوق العمل الحديث.",
     outcomes: [
-      "فهم الفهرسة (Indexing) وحجز أماكن المتغيرات في الذاكرة",
-      "تنفيذ خوارزميات البحث وحساب المتوسطات والمجاميع",
-      "تمارين تطبيقية وتجهيز الطالب لمادة هياكل البيانات",
+      "محطات تطور تكنولوجيا المعلومات والاتصالات",
+      "مفاهيم التحول الرقمي ومجتمع المعرفة",
+      "تجهيز الطالب لأسئلة الفهم والتحليل في الامتحانات",
     ],
-    whatsAppText: "السلام عليكم د. محمود، أريد الاشتراك في كورس البرمجة المتقدم والمصفوفات.",
+    whatsAppText: "السلام عليكم د. محمود، شاهدت درس (تطور تكنولوجيا المعلومات) على المنصة وأود الاشتراك في المنهج.",
   },
   {
-    id: "cybersecurity-foundations",
-    title: "مبادئ الأمن السيبراني والتشفير وحماية البيانات",
-    subtitle: "تأمين الشبكات والبرمجيات ضد الثغرات والاختراق",
+    id: 35,
+    platformVideoId: 35,
+    title: "الوحدة الثانية : الدرس الاول : التشفير والمصادقة",
+    subtitle: "الأمن السيبراني وحماية البيانات والشبكات الرقمية",
     category: "ai",
-    categoryLabel: "الذكاء الاصطناعي",
-    stage: "تكنولوجيا المعلومات والأمن",
+    categoryLabel: "الأمن السيبراني والشبكات",
+    stage: "تانية ثانوي · بكالوريا",
     durationText: "17 دقيقة",
-    thumbnailUrl: "/dr-mahmoud-hero-classroom.webp",
-    videoUrl: "https://www.youtube.com/playlist?list=PL43pGnjiVwgSxY6b5O_Hmsj-0YhT_a4R3",
+    thumbnailUrl: "/uploads/1789245183216-246813183.png",
+    videoUrl: "/api/videos/35/stream",
+    isVideoFile: true,
     badge: "أمن سيبراني 🛡️",
     description:
-      "شرح مفهوم التشفير المتماثل وغير المتماثل، وكيفية حماية كلمات المرور والبيانات الحساسة في تطبيقات الويب والشبكات.",
+      "المفاهيم الأساسية للتشفير المتماثل وغير المتماثل، وطرق المصادقة الثنائية وتأمين كلمات المرور والاتصالات ضد الاختراق.",
     outcomes: [
-      "أساسيات حماية الأنظمة الرقمية وبروتوكولات الأمان",
-      "كيف تعمل تقنيات التشفير الحديثة والمصادقة الآمنة",
-      "أفضل الممارسات لتأمين حساباتك وتطبيقاتك البرمجية",
+      "أنواع التشفير Symmetric & Asymmetric Encryption",
+      "بروتوكولات المصادقة والشهادات الرقمية SSL/TLS",
+      "حماية البيانات الحساسة وتأمين حسابات المستخدمين",
     ],
-    whatsAppText: "السلام عليكم د. محمود، مهتم بمحاضرات الأمن السيبراني وتكنولوجيا المعلومات.",
+    whatsAppText: "السلام عليكم د. محمود، مهتم بمحاضرة (التشفير والمصادقة) والأمن السيبراني وأرغب في الاشتراك.",
   },
   {
-    id: "live-platform-test-solving",
-    title: "تجربة حية لحل امتحان تفاعلي واكتشاف الأخطاء البرمجية",
-    subtitle: "محاكاة كاملة لطريقة الاختبار على منصة الأكاديمية",
-    category: "problem_solving",
-    categoryLabel: "حل المسائل والامتحانات",
-    stage: "جميع المراحل",
-    durationText: "19 دقيقة",
-    thumbnailUrl: "/cs_second_year.png",
-    videoUrl: "https://www.youtube.com/watch?v=M-5T8T2p5gQ",
-    badge: "محاكاة واقعية 💻",
+    id: 15,
+    platformVideoId: 15,
+    title: "6 قاعدة while وتطبيقات عليها",
+    subtitle: "التحكم في التكرار ومعالجة البيانات البرمجية بدقة",
+    category: "cpp",
+    categoryLabel: "تأسيس C++ والبرمجة",
+    stage: "أولى وتانية ثانوي وحاسبات",
+    durationText: "22 دقيقة",
+    thumbnailUrl: "/uploads/1785400322174-726575300.png",
+    videoUrl: "/api/videos/15/stream",
+    isVideoFile: true,
+    badge: "حلقات التكرار 🔁",
     description:
-      "شاهد كيف يحل الطالب الاختبار التقييمي، ويحصل على تقرير فوري بنقاط القوة والضعف مع شرح تفصيلي لكل خطأ.",
+      "شرح وافٍ لقاعدة while وكيفية صياغة شروط التوقف وتفادي الحلقات اللانهائية (Infinite Loops) مع تطبيقات عملية.",
     outcomes: [
-      "التعود على وتيرة وضغط وقت الامتحان",
-      "التعامل مع أسئلة تتبع الكود (Tracing) والتصحيح",
-      "الاستفادة من التغذية الراجعة الفورية للمنصة",
+      "فهم دوران الحلقات وتحديث العداد Counters",
+      "تنفيذ برامج تكرار العمليات الحسابية والتحقق",
+      "تدريب مكثف على تتبع الكود خطوة بخطوة",
     ],
-    whatsAppText: "السلام عليكم د. محمود، أود معرفة كيفية تفعيل حساب المنصة والامتحانات التفاعلية.",
+    whatsAppText: "السلام عليكم د. محمود، شاهدت درس (قاعدة while) وأريد الاشتراك في كورس البرمجة التأسيسي.",
+  },
+  {
+    id: 21,
+    platformVideoId: 21,
+    title: "المصفوفات : arrays in c++",
+    subtitle: "هيكلية تخزين البيانات في الذاكرة RAM وكيفية معالجتها",
+    category: "cpp",
+    categoryLabel: "تأسيس C++ والبرمجة",
+    stage: "البكالوريا وحاسبات ومعلومات",
+    durationText: "26 دقيقة",
+    thumbnailUrl: "/uploads/1787159059822-809753404.png",
+    videoUrl: "/api/videos/21/stream",
+    isVideoFile: true,
+    badge: "هياكل البيانات 🧠",
+    description:
+      "توضيح عملي لكيفية حجز المصفوفات في الذاكرة واستخدام الفهرسة (Index) وحلقات For لمعالجة عناصر المصفوفة والبحث فيها.",
+    outcomes: [
+      "مفهوم الـ Memory Allocation للمصفوفات",
+      "القراءة والكتابة في عناصر المصفوفة بواسطة الحلقات",
+      "خوارزميات البحث والحسابات الإحصائية على المصفوفة",
+    ],
+    whatsAppText: "السلام عليكم د. محمود، شاهدت درس (المصفوفات في C++) على المنصة وأود الاشتراك في الكورس.",
+  },
+  {
+    id: 37,
+    platformVideoId: 37,
+    title: "الوحدة الثانية : الدرس الثالث (الاستجابة للحوادث وادارة المخاطر)",
+    subtitle: "الأمن السيبراني والتعامل مع التهديدات الرقمية",
+    category: "ai",
+    categoryLabel: "الأمن السيبراني والشبكات",
+    stage: "تانية ثانوي · بكالوريا",
+    durationText: "19 دقيقة",
+    thumbnailUrl: "/uploads/1790021706861-783874110.png",
+    videoUrl: "/api/videos/37/stream",
+    isVideoFile: true,
+    badge: "إدارة المخاطر ⚠️",
+    description:
+      "كيف تتعامل المؤسسات مع حوادث الاختراق الرقمي، وإجراءات خطة الاستجابة السريعة (Incident Response) لتقليل الخسائر.",
+    outcomes: [
+      "مراحل خطة الاستجابة للحوادث السيبرانية",
+      "تقييم المخاطر وإجراءات التعافي والنسخ الاحتياطي",
+      "حل تدريبات ونماذج أسئلة امتحان الوزارة",
+    ],
+    whatsAppText: "السلام عليكم د. محمود، شاهدت درس (الاستجابة للحوادث وإدارة المخاطر) وأرغب في الاشتراك في المنهج.",
+  },
+  {
+    id: 16,
+    platformVideoId: 16,
+    title: "التحويلات العددية Number systems",
+    subtitle: "كورس التصميم المنطقي ومعمارية الحاسب لطلاب الجامعات",
+    category: "problem_solving",
+    categoryLabel: "حاسبات وتصميم منطقي",
+    stage: "جامعات وحاسبات ومعلومات",
+    durationText: "25 دقيقة",
+    thumbnailUrl: "/uploads/1785705553826-528523815.png",
+    videoUrl: "/api/videos/16/stream",
+    isVideoFile: true,
+    badge: "حاسبات وجامعات 🎓",
+    description:
+      "شرح رياضي ومنطقي ممتع لطرق التحويل بين الأنظمة العددية (الثنائي Binary، العشري Decimal، والـ Hexadecimal).",
+    outcomes: [
+      "التحويل السريع بين الأنظمة العددية الأربعة",
+      "تمثيل البيانات والحروف داخل ذاكرة الحاسب",
+      "تأسيس لمادة الـ Logic Design وهندسة الدوائر",
+    ],
+    whatsAppText: "السلام عليكم د. محمود، شاهدت درس (التحويلات العددية) لحاسبات ومعلومات وأود الاشتراك في كورس Logic Design.",
+  },
+  {
+    id: 19,
+    platformVideoId: 19,
+    title: "الدرس الاول : يعنى ايه OOP ومثال عملى (مهم جدا)",
+    subtitle: "البرمجة كائنية التوجه • الانتقال من المبتدئ إلى المحترف",
+    category: "problem_solving",
+    categoryLabel: "برمجة متقدمة و OOP",
+    stage: "حاسبات وهندسة والجامعات",
+    durationText: "28 دقيقة",
+    thumbnailUrl: "/uploads/1785761959103-976060289.png",
+    videoUrl: "/api/videos/19/stream",
+    isVideoFile: true,
+    badge: "OOP متقدم 🚀",
+    description:
+      "شرح مفهوم البرمجة كائنية التوجه (OOP)، ولماذا ظهرت كبديل للبرمجة الإجرائية، مع مثال عملي متكامل يوضح الـ Classes والـ Objects.",
+    outcomes: [
+      "فهم كينونة الـ Class والـ Object في الذاكرة",
+      "مبدأ تغليف البيانات Encapsulation وتنسيق الكود",
+      "بناء أول كائن برمجي تطبيقي واقعي",
+    ],
+    whatsAppText: "السلام عليكم د. محمود، شاهدت درس (يعنى ايه OOP) على المنصة وأرغب في الاشتراك في كورس الـ OOP.",
+  },
+  {
+    id: 28,
+    platformVideoId: 28,
+    title: "الدرس الرابع : القضايا الاخلاقية المتعلقة بالذكاء الاصطناعى",
+    subtitle: "الأبعاد الاجتماعية والأخلاقية لتطبيقات الذكاء الاصطناعي",
+    category: "ai",
+    categoryLabel: "الذكاء الاصطناعي",
+    stage: "تانية ثانوي · بكالوريا",
+    durationText: "16 دقيقة",
+    thumbnailUrl: "/uploads/1788207198340-709967078.png",
+    videoUrl: "/api/videos/28/stream",
+    isVideoFile: true,
+    badge: "أخلاقيات الـ AI ⚖️",
+    description:
+      "مناقشة قضايا التحيز في الخوارزميات، الخصوصية، حقوق الملكية الفكرية، ومستقبل الوظائف في ظل ثورة الـ AI التوليدي.",
+    outcomes: [
+      "مفاهيم العدالة والشفافية في خوارزميات الـ AI",
+      "قوانين حماية الخصوصية ومسؤولية استخدام الأدوات الذكية",
+      "حل أسئلة التفكير النقدي المطابقة للامتحان الوزاري",
+    ],
+    whatsAppText: "السلام عليكم د. محمود، شاهدت درس (القضايا الأخلاقية للذكاء الاصطناعي) على المنصة وأود الاشتراك في المنهج.",
   },
 ];
 
@@ -205,45 +311,113 @@ type CategoryFilter = "all" | "baccalaureate" | "cpp" | "ai" | "problem_solving"
 
 export function FeaturedVideoGallery() {
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>("all");
+  const [videos, setVideos] = useState<GalleryVideo[]>(PLATFORM_SHOWCASE_VIDEOS);
   const [selectedVideo, setSelectedVideo] = useState<GalleryVideo | null>(null);
+
+  // Dynamically load latest platform featured videos from backend
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/videos/featured")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((serverVideos) => {
+        if (!isMounted || !Array.isArray(serverVideos) || serverVideos.length === 0) return;
+
+        // Map server video records to gallery format while merging metadata
+        const mapped: GalleryVideo[] = serverVideos.map((sv: any) => {
+          // Check if we have pre-configured enriched outcomes
+          const preset = PLATFORM_SHOWCASE_VIDEOS.find((p) => p.platformVideoId === sv.id);
+
+          let cat: CategoryFilter = "all";
+          const catStr = (sv.category || "").toLowerCase();
+          const stageStr = (sv.stage || "").toLowerCase();
+
+          if (catStr.includes("c++") || catStr.includes("برمج") || catStr.includes("cpp")) {
+            cat = "cpp";
+          } else if (catStr.includes("بكالوريا") || stageStr.includes("بكالوريا") || catStr.includes("sec")) {
+            if (catStr.includes("ذكاء") || catStr.includes("ai") || catStr.includes("تشفير") || catStr.includes("أمن") || catStr.includes("crypto") || catStr.includes("network")) {
+              cat = "ai";
+            } else {
+              cat = "baccalaureate";
+            }
+          } else if (catStr.includes("logic") || catStr.includes("oop") || catStr.includes("تصميم") || catStr.includes("جامع")) {
+            cat = "problem_solving";
+          } else {
+            cat = "baccalaureate";
+          }
+
+          return {
+            id: sv.id,
+            platformVideoId: sv.id,
+            title: sv.title,
+            subtitle: preset?.subtitle || sv.subject || `درس تطبيقي من ${sv.category}`,
+            category: preset?.category || cat,
+            categoryLabel: preset?.categoryLabel || sv.category,
+            stage: sv.stage || preset?.stage || "جميع المراحل",
+            durationText: sv.durationText || preset?.durationText || "15 دقيقة",
+            thumbnailUrl: sv.thumbnailUrl || preset?.thumbnailUrl || "/dr-mahmoud-hero-classroom.webp",
+            videoUrl: sv.videoUrl || preset?.videoUrl || `/preview/cpp-intro.mp4`,
+            isVideoFile: sv.isVideoFile ?? true,
+            badge: preset?.badge || (sv.category.includes("C++") ? "تأسيس برمجة 🔥" : "منهج المنصة 📘"),
+            description: sv.description || preset?.description || `محاضرة تفاعلية من منصة د. محمود المهدي في ${sv.category}.`,
+            outcomes: preset?.outcomes || [
+              `فهم المفاهيم الأساسية لوحدة ${sv.category}`,
+              "تطبيق عملي خطوة بخطوة على الشاشة",
+              "حل تدريبات ونماذج أسئلة المنصة التفاعلية",
+            ],
+            whatsAppText:
+              preset?.whatsAppText ||
+              `السلام عليكم د. محمود، شاهدت درس (${sv.title}) على المنصة وأرغب في الاشتراك في الكورس.`,
+          };
+        });
+
+        setVideos(mapped);
+      })
+      .catch(() => {
+        // Fallback to static platform showcase seamlessly
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const categories: { id: CategoryFilter; label: string; icon: React.ElementType; count: number }[] = [
     {
       id: "all",
-      label: "الكل",
+      label: "جميع محاضرات المنصة",
       icon: Layers,
-      count: GALLERY_VIDEOS.length,
+      count: videos.length,
     },
     {
       id: "baccalaureate",
-      label: "منهج البكالوريا",
+      label: "منهج البكالوريا (عربي ولغات)",
       icon: BookOpen,
-      count: GALLERY_VIDEOS.filter((v) => v.category === "baccalaureate").length,
+      count: videos.filter((v) => v.category === "baccalaureate").length,
     },
     {
       id: "cpp",
       label: "تأسيس C++ والبرمجة",
       icon: Terminal,
-      count: GALLERY_VIDEOS.filter((v) => v.category === "cpp").length,
+      count: videos.filter((v) => v.category === "cpp").length,
     },
     {
       id: "ai",
-      label: "الذكاء الاصطناعي والتكنولوجيا",
+      label: "الذكاء الاصطناعي والأمن السيبراني",
       icon: Cpu,
-      count: GALLERY_VIDEOS.filter((v) => v.category === "ai").length,
+      count: videos.filter((v) => v.category === "ai").length,
     },
     {
       id: "problem_solving",
-      label: "حل المسائل والامتحانات",
-      icon: HelpCircle,
-      count: GALLERY_VIDEOS.filter((v) => v.category === "problem_solving").length,
+      label: "حاسبات وتصميم منطقي و OOP",
+      icon: GraduationCap,
+      count: videos.filter((v) => v.category === "problem_solving").length,
     },
   ];
 
   const filteredVideos =
     activeCategory === "all"
-      ? GALLERY_VIDEOS
-      : GALLERY_VIDEOS.filter((video) => video.category === activeCategory);
+      ? videos
+      : videos.filter((video) => video.category === activeCategory);
 
   // Close modal on Escape key
   useEffect(() => {
@@ -280,7 +454,7 @@ export function FeaturedVideoGallery() {
       aria-labelledby="video-gallery-heading"
       className="relative overflow-hidden bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 py-16 text-white md:py-24 border-b border-slate-800"
     >
-      {/* Dynamic Background Glows */}
+      {/* Background Ambience Glows */}
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
         <div className="absolute -top-32 left-1/4 h-96 w-96 rounded-full bg-blue-600/15 blur-[140px]" />
         <div className="absolute -bottom-32 right-1/4 h-96 w-96 rounded-full bg-indigo-600/15 blur-[140px]" />
@@ -292,22 +466,21 @@ export function FeaturedVideoGallery() {
         <header className="mx-auto max-w-3xl text-center space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 text-xs font-bold text-blue-300 shadow-sm backdrop-blur-md">
             <Sparkles className="h-4 w-4 text-sky-400" />
-            <span>معرض المحاضرات والشروحات التفاعلية • جرب طريقة الشرح بنفسك</span>
+            <span>فيديوهات حقيقية من داخل المنصة • شاهد طريقة الشرح والتطبيق</span>
           </div>
 
           <h2
             id="video-gallery-heading"
             className="text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl leading-tight"
           >
-            شاهد نماذج واقعية من محاضرات{" "}
+            نماذج حية من محاضرات{" "}
             <span className="bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-300 bg-clip-text text-transparent">
-              المنهج والبرمجة والبكالوريا
+              منصة د. محمود المهدي
             </span>
           </h2>
 
           <p className="text-sm sm:text-base font-semibold leading-relaxed text-slate-300 max-w-2xl mx-auto">
-            قبل أن تشترك، تعرّف على أسلوب د. محمود المهدي في التبسيط والربط بين المفاهيم النظرية
-            والتطبيق العملي على الشاشة خطوة بخطوة.
+            جميع الفيديوهات المعروضة هي محاضرات حقيقية من داخل منصة الطلاب لمناهج البكالوريا، تأسيس لغة C++، الذكاء الاصطناعي، ومواد حاسبات ومعلومات.
           </p>
         </header>
 
@@ -350,7 +523,7 @@ export function FeaturedVideoGallery() {
         {/* Video Cards Grid */}
         <motion.div
           layout
-          className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
+          className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         >
           <AnimatePresence>
             {filteredVideos.map((video) => (
@@ -372,6 +545,10 @@ export function FeaturedVideoGallery() {
                     src={video.thumbnailUrl}
                     alt={video.title}
                     loading="lazy"
+                    onError={(e) => {
+                      // Fallback to high quality classroom poster if custom upload preview is unavailable
+                      (e.currentTarget as HTMLImageElement).src = "/dr-mahmoud-hero-classroom.webp";
+                    }}
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   {/* Dark Vignette Overlay */}
@@ -400,7 +577,7 @@ export function FeaturedVideoGallery() {
 
                   {/* Stage Pill */}
                   <div className="absolute bottom-2.5 right-3">
-                    <span className="inline-block rounded-md bg-slate-900/80 border border-slate-700/60 px-2 py-0.5 text-[11px] font-bold text-sky-300 backdrop-blur-sm">
+                    <span className="inline-block rounded-md bg-slate-900/90 border border-slate-700/60 px-2.5 py-0.5 text-[11px] font-bold text-sky-300 backdrop-blur-sm">
                       {video.stage}
                     </span>
                   </div>
@@ -409,11 +586,12 @@ export function FeaturedVideoGallery() {
                 {/* Card Body */}
                 <div className="flex flex-1 flex-col justify-between p-5 text-right space-y-4">
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-bold text-blue-400">
+                    <div className="flex items-center justify-between gap-2 text-xs font-bold text-blue-400">
                       <span>{video.categoryLabel}</span>
+                      <span className="text-[11px] font-semibold text-slate-400">درس بالمنصة #{video.id}</span>
                     </div>
 
-                    <h3 className="text-base font-black text-white leading-snug group-hover:text-blue-300 transition-colors">
+                    <h3 className="text-base font-black text-white leading-snug group-hover:text-blue-300 transition-colors line-clamp-2">
                       {video.title}
                     </h3>
 
@@ -435,15 +613,26 @@ export function FeaturedVideoGallery() {
                     ))}
                   </div>
 
-                  {/* Action Button */}
-                  <div className="pt-2">
+                  {/* Action Buttons: Preview & Direct Platform Access */}
+                  <div className="pt-2 grid grid-cols-2 gap-2">
                     <Button
                       type="button"
                       onClick={() => setSelectedVideo(video)}
-                      className="w-full h-10 rounded-xl bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/30 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm"
+                      className="h-10 rounded-xl bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/30 font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm"
                     >
                       <Play className="h-3.5 w-3.5 fill-current" />
-                      <span>مشاهدة المعاينة الآن</span>
+                      <span>معاينة الدرس</span>
+                    </Button>
+
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="h-10 rounded-xl border-slate-700 bg-slate-900/80 hover:bg-slate-800 text-slate-200 hover:text-white font-bold text-xs flex items-center justify-center gap-1.5"
+                    >
+                      <a href={`/platform?video=${video.id}`} title="فتح الدرس في منصة الطالب">
+                        <MonitorPlay className="h-3.5 w-3.5 text-sky-400" />
+                        <span>على المنصة</span>
+                      </a>
                     </Button>
                   </div>
                 </div>
@@ -452,20 +641,19 @@ export function FeaturedVideoGallery() {
           </AnimatePresence>
         </motion.div>
 
-        {/* Bottom Banner & Guarantee Strip */}
+        {/* Bottom Banner with Direct Platform Access */}
         <div className="mt-14 rounded-2xl border border-slate-800 bg-slate-950/60 p-6 md:p-8 backdrop-blur-sm shadow-xl">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6 text-right">
             <div className="space-y-2 max-w-2xl">
               <div className="flex items-center gap-2 text-xs font-bold text-blue-400">
                 <Laptop className="h-4 w-4" />
-                <span>شاهدت طريقة الشرح وتريد البدء فوراً؟</span>
+                <span>جميع هذه الدروس وأكثر متاحة بالكامل للطلاب المشتركين</span>
               </div>
               <h3 className="text-xl font-black text-white sm:text-2xl">
-                ابدأ رحلتك البرمجية مع د. محمود المهدي اليوم
+                ادخل منصة الأكاديمية وجرّب الاختبارات التفاعلية وبنك الأسئلة الآن
               </h3>
               <p className="text-xs sm:text-sm font-semibold text-slate-400 leading-relaxed">
-                اشترك في مجموعات البكالوريا أو كورسات C++ وحاسبات ومعلومات واحصل على وصول فوري للمنصة
-                وبنك الأسئلة التفاعلي والمتابعة المستمرة.
+                كل درس على المنصة مصحوب بملخصات PDF، اختبار تفاعلي فوري، وتصحيح تلقائي مع تقرير مباشر لولي الأمر لمتابعة الدرجات والتقدم.
               </p>
             </div>
 
@@ -475,7 +663,7 @@ export function FeaturedVideoGallery() {
                 className="h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-black text-white px-6 shadow-lg shadow-emerald-600/20"
               >
                 <a
-                  href="https://wa.me/201066711545?text=%D8%A7%D9%84%D8%B3%D9%84%D8%A7%D9%85%20%D8%B9%D9%84%D9%8A%D9%83%D9%85%20%D8%AF.%20%D9%85%D8%AD%D9%85%D9%88%D8%AF%D8%8C%20%D8%B4%D8%A7%D9%87%D8%AF%D8%AA%20%D9%85%D8%B9%D8%B1%D8%B6%20%D8%A7%D9%84%D9%81%D9%8A%D8%AF%D9%8A%D9%88%D9%87%D8%A7%D8%AA%20%D9%88%D8%A3%D8%B1%D8%BA%D8%A8%20%D9%81%D9%8A%20%D8%A7%D9%84%D8%A7%D8%B4%D8%AA%D8%B1%D8%A7%D9%83"
+                  href="https://wa.me/201066711545?text=%D8%A7%D9%84%D8%B3%D9%84%D8%A7%D9%85%20%D8%B9%D9%84%D9%8A%D9%83%D9%85%20%D8%AF.%20%D9%85%D8%AD%D9%85%D9%88%D8%AF%D8%8C%20%D8%B4%D8%A7%D9%87%D8%AF%D8%AA%20%D9%85%D8%AD%D8%A7%D8%B6%D8%B1%D8%A7%D8%AA%20%D8%A7%D9%84%D9%85%D9%86%D8%B5%D8%A9%20%D9%88%D8%A3%D8%B1%D8%BA%D8%A8%20%D9%81%D9%8A%20%D8%A7%D9%84%D8%A7%D8%B4%D8%AA%D8%B1%D8%A7%D9%83"
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-2"
@@ -492,7 +680,7 @@ export function FeaturedVideoGallery() {
               >
                 <a href="/platform" className="flex items-center gap-2">
                   <MonitorPlay className="h-4 w-4 text-blue-400" />
-                  <span>دخول منصة الطالب</span>
+                  <span>دخول منصة الطلاب</span>
                 </a>
               </Button>
             </div>
@@ -532,6 +720,9 @@ export function FeaturedVideoGallery() {
                   </span>
                   <span className="text-xs font-semibold text-slate-400 hidden sm:inline">
                     {selectedVideo.categoryLabel}
+                  </span>
+                  <span className="text-xs text-sky-400/80 font-bold hidden md:inline">
+                    • درس رقم #{selectedVideo.id} بالمنصة
                   </span>
                 </div>
 
@@ -594,6 +785,9 @@ export function FeaturedVideoGallery() {
               {/* Modal Body & Action Area */}
               <div className="p-5 sm:p-7 space-y-5 bg-gradient-to-b from-slate-950 to-slate-900">
                 <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-sky-400">
+                    <span>محاضرة من داخل منصة أكاديمية د. محمود المهدي</span>
+                  </div>
                   <h3
                     id="modal-video-title"
                     className="text-lg sm:text-2xl font-black text-white leading-tight"
@@ -608,7 +802,7 @@ export function FeaturedVideoGallery() {
                 {/* What you learn in this lecture */}
                 <div className="rounded-2xl border border-slate-800/80 bg-slate-900/60 p-4 space-y-2.5">
                   <span className="block text-xs font-bold text-sky-400">
-                    ماذا يتعلم الطالب في هذه المحاضرة؟
+                    أهداف ومخرجات التعلم في هذه المحاضرة:
                   </span>
                   <div className="grid gap-2 sm:grid-cols-3">
                     {selectedVideo.outcomes.map((item, idx) => (
@@ -627,10 +821,10 @@ export function FeaturedVideoGallery() {
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-slate-800/80">
                   <div className="text-right w-full sm:w-auto">
                     <span className="block text-xs font-bold text-slate-400">
-                      تريد حجز الكورس أو الحصول على المتابعة الدورية؟
+                      هل ترغب في حضور باقي محاضرات الكورس وحل الاختبارات؟
                     </span>
                     <strong className="block text-sm font-black text-white">
-                      تواصل مباشرة مع فريق د. محمود المهدي
+                      تواصل مباشرة مع د. محمود المهدي عبر واتساب
                     </strong>
                   </div>
 
@@ -647,7 +841,7 @@ export function FeaturedVideoGallery() {
                         rel="noreferrer"
                         className="flex items-center justify-center gap-2"
                       >
-                        <span>اشترك في هذا الكورس عبر واتساب</span>
+                        <span>اشترك في الكورس عبر واتساب</span>
                         <ArrowLeft className="h-4 w-4" />
                       </a>
                     </Button>
@@ -657,8 +851,11 @@ export function FeaturedVideoGallery() {
                       variant="outline"
                       className="flex-1 sm:flex-none h-11 rounded-xl border-slate-700 bg-slate-850 hover:bg-slate-800 text-white font-bold px-4"
                     >
-                      <a href="/platform" className="flex items-center justify-center gap-2">
-                        <span>المنصة والامتحانات</span>
+                      <a
+                        href={`/platform?video=${selectedVideo.id}`}
+                        className="flex items-center justify-center gap-2"
+                      >
+                        <span>فتح الدرس بالمنصة</span>
                         <ExternalLink className="h-3.5 w-3.5 text-blue-400" />
                       </a>
                     </Button>
@@ -674,7 +871,6 @@ export function FeaturedVideoGallery() {
 }
 
 function getEmbedUrl(url: string): string {
-  // Extract YouTube ID or Playlist ID
   try {
     if (url.includes("playlist?list=")) {
       const listId = url.split("list=")[1]?.split("&")[0];
