@@ -208,7 +208,7 @@ export function CommandPaletteModal({
         id: `video-${v.id}`,
         category: "المحاضرات والدروس",
         title: v.title,
-        subtitle: `${v.category} • ${v.duration || "شرح فيديو"}`,
+        subtitle: `${v.category} • ${v.durationText || "شرح فيديو"}`,
         badge: "تشغيل",
         icon: Play,
         onSelect: () => {
@@ -256,18 +256,23 @@ export function CommandPaletteModal({
         );
       })
       .slice(0, 8)
-      .map((f) => ({
-        id: `file-${f.id}`,
-        category: "المذكرات والملفات",
-        title: f.title,
-        subtitle: `${f.category} • ${f.size || "PDF"} • ${f.originalName || "ملف تعليمي"}`,
-        badge: "عرض الملفات",
-        icon: FileDown,
-        onSelect: () => {
-          onSelectTab("files");
-          onClose();
-        },
-      }));
+      .map((f) => {
+        const sizeText = f.sizeBytes
+          ? `${(f.sizeBytes / (1024 * 1024)).toFixed(1)} MB`
+          : "PDF";
+        return {
+          id: `file-${f.id}`,
+          category: "المذكرات والملفات",
+          title: f.title,
+          subtitle: `${f.category} • ${sizeText} • ${f.originalName || "ملف تعليمي"}`,
+          badge: "عرض الملفات",
+          icon: FileDown,
+          onSelect: () => {
+            onSelectTab("files");
+            onClose();
+          },
+        };
+      });
 
     return [...matchedActions, ...matchedVideos, ...matchedQuizzes, ...matchedFiles];
   }, [query, navActions, videos, quizzes, files, onSelectVideo, onStartQuiz, onSelectTab, onClose]);
