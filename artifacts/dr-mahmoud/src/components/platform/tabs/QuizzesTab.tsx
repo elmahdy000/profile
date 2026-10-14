@@ -22,7 +22,7 @@ import type { Quiz } from "@/types/platform";
 // ── 1. Compact Page Header ──
 export function ExamsPageHeader({ totalCount }: { totalCount: number }) {
   return (
-    <header className="flex flex-col gap-1.5 text-right border-b border-slate-200/80 dark:border-[#1F314A] pb-3.5" dir="rtl">
+    <header className="flex flex-col gap-1.5 text-right border-b border-slate-200/80 dark:border-[#1E2E48] pb-3.5" dir="rtl">
       <div className="flex items-center gap-2.5">
         <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
           الاختبارات
@@ -59,7 +59,7 @@ export function ExamStatistics({
 
   return (
     <section aria-label="إحصائيات الاختبارات" className="grid grid-cols-2 lg:grid-cols-4 gap-3" dir="rtl">
-      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-3.5 flex items-center gap-3 shadow-2xs hover:border-blue-500/40 hover:shadow-xs transition-all duration-200 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/30 before:to-transparent">
+      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-3.5 flex items-center gap-3 shadow-2xs hover:border-blue-500/40 hover:shadow-xs transition-all duration-200 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/30 before:to-transparent">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40 group-hover:scale-105 transition-transform duration-200">
           <ClipboardCheck className="h-5 w-5" />
         </span>
@@ -69,7 +69,7 @@ export function ExamStatistics({
         </div>
       </div>
 
-      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-3.5 flex items-center gap-3 shadow-2xs hover:border-emerald-500/40 hover:shadow-xs transition-all duration-200 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-emerald-500/30 before:to-transparent">
+      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-3.5 flex items-center gap-3 shadow-2xs hover:border-emerald-500/40 hover:shadow-xs transition-all duration-200 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-emerald-500/30 before:to-transparent">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40 group-hover:scale-105 transition-transform duration-200">
           <CheckCircle2 className="h-5 w-5" />
         </span>
@@ -79,7 +79,7 @@ export function ExamStatistics({
         </div>
       </div>
 
-      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-3.5 flex items-center gap-3 shadow-2xs hover:border-amber-500/40 hover:shadow-xs transition-all duration-200 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-amber-500/30 before:to-transparent">
+      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-3.5 flex items-center gap-3 shadow-2xs hover:border-amber-500/40 hover:shadow-xs transition-all duration-200 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-amber-500/30 before:to-transparent">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40 group-hover:scale-105 transition-transform duration-200">
           <Award className="h-5 w-5" />
         </span>
@@ -98,7 +98,7 @@ export function ExamStatistics({
         </div>
       </div>
 
-      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-3.5 flex items-center gap-3 shadow-2xs hover:border-purple-500/40 hover:shadow-xs transition-all duration-200 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-purple-500/30 before:to-transparent">
+      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-3.5 flex items-center gap-3 shadow-2xs hover:border-purple-500/40 hover:shadow-xs transition-all duration-200 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-purple-500/30 before:to-transparent">
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-900/40 group-hover:scale-105 transition-transform duration-200">
           <RotateCcw className="h-5 w-5" />
         </span>
@@ -140,7 +140,7 @@ export function ExamFilters({
   isFiltered: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-3 shadow-2xs space-y-2.5" dir="rtl">
+    <div className="rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-3 shadow-2xs space-y-2.5" dir="rtl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         {/* Search & Select Controls Row */}
         <div className="flex flex-1 items-center gap-2 flex-wrap sm:flex-nowrap">
@@ -151,7 +151,7 @@ export function ExamFilters({
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="ابحث باسم الاختبار..."
-              className="h-9 w-full rounded-xl border border-slate-200/80 dark:border-[#223552] bg-slate-50/70 dark:bg-[#12233B] pr-9 pl-3 text-xs font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-500 focus:bg-white dark:focus:bg-[#0A1628] focus:ring-2 focus:ring-blue-500/10 focus:outline-none transition-all"
+              className="h-9 w-full rounded-xl border border-slate-200/80 dark:border-[#1E2E48] bg-slate-50/70 dark:bg-[#0F172A] pr-9 pl-3 text-xs font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-500 focus:bg-white dark:focus:bg-[#0B132B] focus:ring-2 focus:ring-blue-500/10 focus:outline-none transition-all"
             />
           </div>
 
@@ -160,7 +160,7 @@ export function ExamFilters({
               <select
                 value={courseFilter}
                 onChange={(e) => onCourseFilterChange(e.target.value)}
-                className="h-9 appearance-none rounded-xl border border-slate-200/80 dark:border-[#223552] bg-slate-50/70 dark:bg-[#12233B] pr-3 pl-7 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700 focus:border-blue-500 focus:outline-none cursor-pointer transition-colors"
+                className="h-9 appearance-none rounded-xl border border-slate-200/80 dark:border-[#1E2E48] bg-slate-50/70 dark:bg-[#0F172A] pr-3 pl-7 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700 focus:border-blue-500 focus:outline-none cursor-pointer transition-colors"
               >
                 <option value="all">كل الكورسات</option>
                 {categories.map((cat) => (
@@ -177,7 +177,7 @@ export function ExamFilters({
             <select
               value={sortBy}
               onChange={(e) => onSortByChange(e.target.value)}
-              className="h-9 appearance-none rounded-xl border border-slate-200/80 dark:border-[#223552] bg-slate-50/70 dark:bg-[#12233B] pr-3 pl-7 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700 focus:border-blue-500 focus:outline-none cursor-pointer transition-colors"
+              className="h-9 appearance-none rounded-xl border border-slate-200/80 dark:border-[#1E2E48] bg-slate-50/70 dark:bg-[#0F172A] pr-3 pl-7 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700 focus:border-blue-500 focus:outline-none cursor-pointer transition-colors"
             >
               <option value="recent">الأحدث</option>
               <option value="title">حسب الاسم</option>
@@ -192,7 +192,7 @@ export function ExamFilters({
           <button
             type="button"
             onClick={onClearFilters}
-            className="h-9 px-3 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#12233B] rounded-xl transition-colors flex items-center gap-1 shrink-0 self-start sm:self-auto cursor-pointer"
+            className="h-9 px-3 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#0F172A] rounded-xl transition-colors flex items-center gap-1 shrink-0 self-start sm:self-auto cursor-pointer"
           >
             <X className="h-3.5 w-3.5" /> إعادة ضبط الفلاتر
           </button>
@@ -200,7 +200,7 @@ export function ExamFilters({
       </div>
 
       {/* Status Filter Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none border-t border-slate-100 dark:border-[#1F314A] pt-2">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none border-t border-slate-100 dark:border-[#1E2E48] pt-2">
         {[
           ["all", "الكل"],
           ["available", "متاح الآن"],
@@ -216,7 +216,7 @@ export function ExamFilters({
               className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all shrink-0 cursor-pointer ${
                 isActive
                   ? "bg-blue-600 text-white shadow-2xs ring-1 ring-blue-500/20"
-                  : "bg-slate-100/80 dark:bg-[#12233B] text-slate-600 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-[#1A3050]"
+                  : "bg-slate-100/80 dark:bg-[#0F172A] text-slate-600 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-[#1A2642]"
               }`}
             >
               {label}
@@ -260,7 +260,7 @@ export function ExamCard({
   }
 
   return (
-    <article className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/80 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-5 shadow-2xs hover:border-blue-500/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 w-full overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/20 before:to-transparent hover:before:via-blue-500/50" dir="rtl">
+    <article className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-5 shadow-2xs hover:border-blue-500/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 w-full overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/20 before:to-transparent hover:before:via-blue-500/50" dir="rtl">
       <div className="space-y-3">
         {/* 1. Status Badge (Compact Header) */}
         <div className="flex items-center justify-between gap-2">
@@ -311,7 +311,7 @@ export function ExamCard({
           </div>
         )}
 
-        <div className="border-t border-slate-100 dark:border-[#1F314A] my-2" />
+        <div className="border-t border-slate-100 dark:border-[#1E2E48] my-2" />
 
         {/* 5. Fixed 2-Column Metadata Grid */}
         <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
@@ -398,7 +398,7 @@ export function ExamCard({
           disabled={isLocked || (attemptsLeft !== null && attemptsLeft <= 0)}
           className={`w-full h-9 rounded-xl text-xs font-bold shadow-2xs transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer ${
             isLocked || (attemptsLeft !== null && attemptsLeft <= 0)
-              ? "bg-slate-100 dark:bg-[#12233B] text-slate-400 dark:text-slate-500 border border-slate-200/80 dark:border-[#223552] cursor-not-allowed"
+              ? "bg-slate-100 dark:bg-[#0F172A] text-slate-400 dark:text-slate-500 border border-slate-200/80 dark:border-[#1E2E48] cursor-not-allowed"
               : isCompleted
               ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20"
               : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20"
@@ -432,7 +432,7 @@ export function EmptyExamsState({
   onClearFilters: () => void;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-10 text-center space-y-3.5 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/20 before:to-transparent" dir="rtl">
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-10 text-center space-y-3.5 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/20 before:to-transparent" dir="rtl">
       <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40 shadow-xs">
         <ClipboardCheck className="h-6 w-6" />
       </div>

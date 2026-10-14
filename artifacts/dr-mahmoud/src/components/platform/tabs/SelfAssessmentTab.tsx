@@ -1482,7 +1482,7 @@ export function SelfAssessmentTab({
       {step === "taking" && questions.length > 0 && (
         <div className="space-y-5">
           {/* Top Bar: Progress & Timer */}
-          <div className="rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-white/90 dark:bg-[#0D1B2E]/90 backdrop-blur-xl p-3.5 sm:p-4 shadow-xs flex items-center justify-between gap-3 sticky top-4 z-30">
+          <div className="rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-white/90 dark:bg-[#0A101D]/90 backdrop-blur-xl p-3.5 sm:p-4 shadow-xs flex items-center justify-between gap-3 sticky top-4 z-30">
             <div className="flex items-center gap-2">
               <span className="h-8 px-3 rounded-xl bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900/60 font-black text-xs flex items-center gap-1 shadow-2xs">
                 <span>سؤال</span>
@@ -1528,7 +1528,7 @@ export function SelfAssessmentTab({
           </div>
 
           {/* Question Navigator Dots */}
-          <div className="rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0D1B2E] p-3 shadow-xs flex flex-wrap items-center gap-1.5 justify-center">
+          <div className="rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-3 shadow-xs flex flex-wrap items-center gap-1.5 justify-center">
             {questions.map((q, idx) => {
               const isAnswered = answers[idx] !== undefined;
               const isCurrent = currentQIndex === idx;
@@ -1558,7 +1558,7 @@ export function SelfAssessmentTab({
             const isEng = isEnglishQuestion(currentQ.prompt, currentQ.options);
 
             return (
-              <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0D1B2E] p-6 sm:p-8 shadow-xs space-y-6 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/20 before:to-transparent">
+              <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-6 sm:p-8 shadow-xs space-y-6 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/20 before:to-transparent">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between text-xs text-slate-400 font-semibold border-b border-slate-100 dark:border-[#1F314A] pb-3">
                     <span className="flex items-center gap-1">
@@ -1658,7 +1658,7 @@ export function SelfAssessmentTab({
       {step === "results" && (
         <div className="space-y-6">
           {/* Result Card */}
-          <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0D1B2E] p-6 sm:p-8 shadow-md text-center space-y-4 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/30 before:to-transparent">
+          <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-6 sm:p-8 shadow-md text-center space-y-4 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/30 before:to-transparent">
             <div className="inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-blue-50 dark:bg-blue-950/70 border border-blue-200/60 dark:border-blue-900/60 text-blue-600 dark:text-blue-400 shadow-inner mx-auto">
               <Award className="h-10 w-10 text-blue-600 dark:text-blue-400" />
             </div>

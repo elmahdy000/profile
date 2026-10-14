@@ -35,6 +35,7 @@ import {
   ArrowLeft,
   BellRing,
   FileEdit,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VideoLessonsSection } from "@/components/YoutubeSection";
@@ -62,6 +63,7 @@ import { EssayExamsTab } from "./tabs/EssayExamsTab";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { FilePreviewModal } from "./FilePreviewModal";
 import { LockedContentNotice } from "./tabs/LockedContentNotice";
+import { CommandPaletteModal } from "./CommandPaletteModal";
 
 import type {
   Student,
@@ -398,6 +400,19 @@ export function StudentPlatform() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [sidebarOpen]);
+
+  // Global Command Palette Shortcut (Ctrl + K or Cmd + K)
+  const [openCommandPalette, setOpenCommandPalette] = useState(false);
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K")) {
+        e.preventDefault();
+        setOpenCommandPalette((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, []);
 
   // Quiz active states & Timer
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
@@ -1166,8 +1181,21 @@ export function StudentPlatform() {
               </div>
             </div>
 
-            {/* Left in RTL: Notifications + Student Profile + Logout */}
+            {/* Left in RTL: Quick Search + Notifications + Student Profile + Logout */}
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setOpenCommandPalette(true)}
+                title="بحث سريع في المنصة (Ctrl + K)"
+                className="flex items-center gap-2 rounded-xl border border-slate-200/80 dark:border-[#1E2E48] bg-slate-50/70 dark:bg-[#0D1726] px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:border-blue-500/40 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-[#0A101D] transition-all cursor-pointer shadow-2xs group"
+              >
+                <Search className="h-3.5 w-3.5 text-slate-400 group-hover:text-blue-500 transition-colors" />
+                <span className="hidden sm:inline">بحث سريع...</span>
+                <kbd className="hidden md:inline-flex items-center gap-0.5 rounded border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#070D18] px-1.5 py-0.5 font-mono text-[10px] font-bold text-slate-400 shadow-2xs">
+                  ⌘K
+                </kbd>
+              </button>
+
               <div className="relative">
                 <button
                   type="button"
@@ -1740,10 +1768,10 @@ export function StudentPlatform() {
                             ? "border-emerald-500/40 bg-emerald-500/5 dark:bg-emerald-950/20"
                             : isWrong
                             ? "border-red-500/40 bg-red-500/5 dark:bg-red-950/20"
-                            : "border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0D1B2E]"
+                            : "border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0A101D]"
                           : isSelected
-                          ? "border-blue-500/50 bg-white dark:bg-[#0D1B2E] ring-1 ring-blue-500/15 shadow-xs"
-                          : "border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0D1B2E] hover:border-slate-300 dark:hover:border-slate-700"
+                          ? "border-blue-500/50 bg-white dark:bg-[#0A101D] ring-1 ring-blue-500/15 shadow-xs"
+                          : "border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0A101D] hover:border-slate-300 dark:hover:border-slate-700"
                       }`}
                     >
                       {/* Question Header & Prompt */}
@@ -2005,6 +2033,24 @@ export function StudentPlatform() {
             }}
           />
         )}
+        <CommandPaletteModal
+          isOpen={openCommandPalette}
+          onClose={() => setOpenCommandPalette(false)}
+          videos={videos}
+          quizzes={quizzes}
+          files={files}
+          onSelectTab={(newTab) => {
+            if (newTab === "summaries") setAutoOpenSummaryUpload(true);
+            setTab(newTab);
+          }}
+          onSelectVideo={(videoId) => {
+            setInitialVideoId(videoId);
+            setTab("lessons");
+          }}
+          onStartQuiz={(quiz) => {
+            startQuiz(quiz);
+          }}
+        />
       </AnimatePresence>
     </main>
   );

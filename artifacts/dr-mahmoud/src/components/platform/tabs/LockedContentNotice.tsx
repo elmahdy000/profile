@@ -17,7 +17,7 @@ export function LockedContentNotice({
 }: LockedContentNoticeProps) {
   return (
     <div className="mx-auto max-w-2xl py-8 px-4 text-right dir-rtl animate-in fade-in duration-300">
-      <div className="overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-b from-white to-slate-50 dark:from-[#0D1B2E] dark:to-[#07101E] p-6 sm:p-8 shadow-xl text-center">
+      <div className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-b from-white to-slate-50 dark:from-[#0A101D] dark:to-[#050914] p-6 sm:p-8 shadow-xl text-center before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-amber-500/30 before:to-transparent">
         {/* Animated Lock Icon */}
         <div className="mx-auto mb-5 grid h-20 w-20 place-items-center rounded-3xl bg-amber-500/10 text-amber-500 dark:bg-amber-500/20 shadow-inner">
           <Lock className="h-10 w-10 animate-bounce duration-1000" />
