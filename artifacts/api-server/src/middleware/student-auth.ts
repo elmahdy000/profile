@@ -136,7 +136,7 @@ export function isGradeMatch(
   const cNorm = normalizeCategory(contentStage);
 
   if (!sNorm || !cNorm) return false;
-  if (sNorm === cNorm) return true;
+  if (sNorm === cNorm || cNorm === "عام" || cNorm === "general") return true;
 
   const getSystem = (value: string) => {
     if (value.includes("بكالوريا") || value.includes("baccalaureate")) return "baccalaureate";
@@ -347,6 +347,7 @@ export function canStudentAccessContent(
 
   const stageMatches =
     isGeneralContent ||
+    hasCategoryGeneralStage ||
     contentStages.some((value) => {
       const structuredMatch = isStructuredStageMatch(student, value);
       return structuredMatch ?? isGradeMatch(studentStage, value);
