@@ -363,26 +363,41 @@ export function ContinueLearningCard({
   overallProgress,
   academicTrackImage,
   onOpenLessons,
+  onPlayLesson,
 }: {
   continueVideo?: VideoSummary;
   continueProgress: number;
   overallProgress: number;
   academicTrackImage?: string;
   onOpenLessons: () => void;
+  onPlayLesson?: (videoId: number) => void;
 }) {
+  const handlePrimaryClick = () => {
+    if (continueVideo && onPlayLesson) {
+      onPlayLesson(continueVideo.id);
+    } else {
+      onOpenLessons();
+    }
+  };
+
+  const thumbnail = continueVideo?.thumbnailUrl || academicTrackImage || "/university-cs-path.webp";
+
   return (
-    <article className="group relative overflow-hidden rounded-2xl border border-border/70 dark:border-slate-800/80 bg-gradient-to-b from-card to-card/90 dark:from-slate-900/90 dark:to-[#0B1322] shadow-xs hover:shadow-md transition-all duration-300 flex flex-col sm:flex-row" dir="rtl">
-      <div className="relative sm:w-[42%] min-h-48 overflow-hidden bg-slate-900">
+    <article className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] shadow-2xs hover:shadow-xs transition-all duration-300 flex flex-col sm:flex-row before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/20 before:to-transparent" dir="rtl">
+      <div 
+        onClick={handlePrimaryClick}
+        className="relative sm:w-[42%] min-h-48 overflow-hidden bg-slate-900 cursor-pointer"
+      >
         <img
-          src={academicTrackImage || "/university-cs-path.webp"}
-          alt="صورة الكورس"
+          src={thumbnail}
+          alt={continueVideo?.title || "صورة الدرس"}
           className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent sm:bg-gradient-to-r sm:from-transparent sm:to-slate-950/60" />
         
         {/* Play Icon Badge */}
-        <div className="absolute inset-0 grid place-items-center opacity-80 group-hover:opacity-100 transition-opacity">
-          <span className="grid h-12 w-12 place-items-center rounded-full bg-white/25 backdrop-blur-md text-white border border-white/30 shadow-lg group-hover:scale-110 transition-transform">
+        <div className="absolute inset-0 grid place-items-center opacity-85 group-hover:opacity-100 transition-opacity">
+          <span className="grid h-12 w-12 place-items-center rounded-full bg-blue-600/90 backdrop-blur-md text-white shadow-lg group-hover:scale-110 transition-transform">
             <Play className="h-5 w-5 fill-white mr-0.5" />
           </span>
         </div>
@@ -426,10 +441,11 @@ export function ContinueLearningCard({
         <div className="pt-2 flex flex-wrap items-center gap-2">
           <Button
             type="button"
-            onClick={onOpenLessons}
+            onClick={handlePrimaryClick}
             className="h-9 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer group/btn"
           >
-            <span>{continueProgress > 0 ? "أكمل الدرس" : "ابدأ أول درس"}</span>
+            <Play className="h-3.5 w-3.5 fill-current" />
+            <span>{continueProgress > 0 ? "أكمل الدرس الآن" : "ابدأ أول درس"}</span>
             <ChevronLeft className="h-4 w-4 transition-transform group-hover/btn:-translate-x-1" />
           </Button>
 
@@ -452,18 +468,20 @@ export function NextStepsList({
   files,
   videos,
   onOpen,
+  onPlayLesson,
 }: {
   quizzes: Quiz[];
   files: LearningFile[];
   videos: VideoSummary[];
   onOpen: (tab: "lessons" | "files" | "quizzes") => void;
+  onPlayLesson?: (videoId: number) => void;
 }) {
   const nextQuiz = quizzes[0];
   const nextFile = files[0];
   const nextVideo = videos[0];
 
   return (
-    <article className="rounded-2xl border border-border/70 dark:border-slate-800/80 bg-gradient-to-b from-card to-card/90 dark:from-slate-900/90 dark:to-[#0B1322] p-5 shadow-xs space-y-3.5 flex flex-col justify-between" dir="rtl">
+    <article className="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-5 shadow-2xs space-y-3.5 flex flex-col justify-between before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/20 before:to-transparent" dir="rtl">
       <div>
         <h2 className="text-base font-black text-foreground">الخطوات القادمة 🎯</h2>
         <p className="text-xs font-medium text-muted-foreground">
@@ -492,7 +510,7 @@ export function NextStepsList({
             </div>
             <button
               type="button"
-              onClick={() => onOpen("lessons")}
+              onClick={() => (onPlayLesson ? onPlayLesson(nextVideo.id) : onOpen("lessons"))}
               className="h-7 px-3 rounded-lg bg-primary text-primary-foreground text-[11px] font-bold hover:bg-primary/90 transition-all shadow-2xs shrink-0 cursor-pointer"
             >
               افتح الدرس
@@ -596,7 +614,7 @@ export function LatestFilesSection({
             const fileSizeMb = (file.sizeBytes / 1024 / 1024).toFixed(1);
 
             return (
-              <article key={file.id} className="group relative overflow-hidden rounded-2xl border border-border/70 dark:border-slate-800/80 bg-gradient-to-b from-card to-card/90 dark:from-slate-900/90 dark:to-[#0B1322] p-4 shadow-xs hover:shadow-md hover:border-primary/40 transition-all duration-300 flex flex-col justify-between space-y-3">
+              <article key={file.id} className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-4 shadow-2xs hover:shadow-xs hover:border-blue-500/40 transition-all duration-300 flex flex-col justify-between space-y-3 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/15 before:to-transparent">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl border ${typeDetails.bgClass} shadow-2xs`}>
@@ -648,6 +666,7 @@ export function DashboardTab({
   dataError,
   onRetry,
   onOpen,
+  onPlayLesson,
 }: {
   student: Student;
   files: LearningFile[];
@@ -658,6 +677,7 @@ export function DashboardTab({
   dataError: string;
   onRetry: () => void;
   onOpen: (tab: "lessons" | "compiler" | "files" | "quizzes" | "summaries" | "self-assessment") => void;
+  onPlayLesson?: (videoId: number) => void;
 }) {
   const academicTrack = getTrackForStage(student.grade);
   const safeFiles = Array.isArray(files) ? files : [];
@@ -837,6 +857,7 @@ export function DashboardTab({
           overallProgress={averageProgress}
           academicTrackImage={academicTrack?.image}
           onOpenLessons={() => onOpen("lessons")}
+          onPlayLesson={onPlayLesson}
         />
 
         <NextStepsList
@@ -844,6 +865,7 @@ export function DashboardTab({
           files={safeFiles}
           videos={safeVideos}
           onOpen={onOpen}
+          onPlayLesson={onPlayLesson}
         />
       </div>
 

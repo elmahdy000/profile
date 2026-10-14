@@ -155,67 +155,161 @@ export function CourseSwitcher({
   overallProgressPercentage: number;
   totalVisibleLessons: number;
 }) {
-  const isMany = courses.length > 3;
+  const [filterType, setFilterType] = useState<"all" | "academic" | "programming">("all");
 
-  if (isMany) {
+  const isAcademic = (name: string) => {
+    const norm = name.toLowerCase();
     return (
-      <div className="flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-card p-3 shadow-2xs dark:border-[#1E2E48] dark:bg-[#0A101D]">
-        <label className="text-xs font-bold text-muted-foreground shrink-0">اختر الكورس:</label>
-        <select
-          value={activeCategory}
-          onChange={(e) => onSelectCourse(e.target.value)}
-          className="h-10 w-full rounded-xl border border-slate-200/80 bg-slate-50/80 px-3 text-xs font-bold text-foreground focus:border-blue-500 focus:outline-none dark:border-[#1E2E48] dark:bg-[#0E1626] cursor-pointer"
-        >
-          <option value="all">كل الكورسات ({totalVisibleLessons} درس) — {overallProgressPercentage}%</option>
-          {courses.map((c) => (
-            <option key={c.name} value={c.name}>
-              {c.name} ({c.lessonsCount} درس) — {c.progressPct}%
-            </option>
-          ))}
-        </select>
-      </div>
+      norm.includes("بكالوريا") ||
+      norm.includes("ثانوي") ||
+      norm.includes("منهج") ||
+      norm.includes("الصف") ||
+      norm.includes("تانية") ||
+      norm.includes("أولى")
     );
-  }
+  };
+
+  const hasAcademic = courses.some((c) => isAcademic(c.name));
+  const hasProgramming = courses.some((c) => !isAcademic(c.name));
+  const showFilterTabs = hasAcademic && hasProgramming && courses.length > 2;
+
+  const filteredCourses = courses.filter((c) => {
+    if (filterType === "academic") return isAcademic(c.name);
+    if (filterType === "programming") return !isAcademic(c.name);
+    return true;
+  });
 
   return (
-    <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none" dir="rtl">
-      <button
-        type="button"
-        onClick={() => onSelectCourse("all")}
-        className={`flex min-w-[180px] shrink-0 items-center justify-between gap-3 rounded-2xl border px-4 py-2.5 text-right transition-all cursor-pointer ${
-          activeCategory === "all"
-            ? "border-blue-500/80 bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold shadow-2xs"
-            : "border-slate-200/80 bg-card text-muted-foreground hover:border-slate-300 dark:border-[#1E2E48] dark:bg-[#0A101D] dark:text-slate-300 dark:hover:border-slate-700"
-        }`}
-      >
-        <div className="min-w-0">
-          <strong className="block text-xs truncate">كل الكورسات</strong>
-          <span className="text-[10px] font-mono tabular-nums opacity-80">{totalVisibleLessons} درس</span>
-        </div>
-        <span className="text-xs font-mono font-black tabular-nums shrink-0">{overallProgressPercentage}%</span>
-      </button>
-
-      {courses.map((course) => {
-        const isSelected = activeCategory === course.name;
-        return (
+    <div className="space-y-3" dir="rtl">
+      {/* Category Segment Tabs */}
+      {showFilterTabs && (
+        <div className="flex items-center gap-1.5 border-b border-slate-200/60 pb-2.5 dark:border-[#1E2E48]/60">
           <button
-            key={course.name}
             type="button"
-            onClick={() => onSelectCourse(course.name)}
-            className={`flex min-w-[200px] shrink-0 items-center justify-between gap-3 rounded-2xl border px-4 py-2.5 text-right transition-all cursor-pointer ${
-              isSelected
-                ? "border-blue-500/80 bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold shadow-2xs"
-                : "border-slate-200/80 bg-card text-muted-foreground hover:border-slate-300 dark:border-[#1E2E48] dark:bg-[#0A101D] dark:text-slate-300 dark:hover:border-slate-700"
+            onClick={() => setFilterType("all")}
+            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+              filterType === "all"
+                ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xs"
+                : "text-muted-foreground hover:bg-slate-100 hover:text-foreground dark:hover:bg-slate-800/60"
             }`}
           >
-            <div className="min-w-0 text-right dir-ltr" style={{ unicodeBidi: "isolate" }}>
-              <strong className="block text-xs truncate">{course.name}</strong>
-              <span className="text-[10px] font-mono tabular-nums opacity-80">{course.lessonsCount} درس</span>
-            </div>
-            <span className="text-xs font-mono font-black tabular-nums shrink-0">{course.progressPct}%</span>
+            جميع المسارات ({courses.length})
           </button>
-        );
-      })}
+          <button
+            type="button"
+            onClick={() => setFilterType("academic")}
+            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              filterType === "academic"
+                ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xs"
+                : "text-muted-foreground hover:bg-slate-100 hover:text-foreground dark:hover:bg-slate-800/60"
+            }`}
+          >
+            <span>🎓 المناهج الأساسية</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterType("programming")}
+            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              filterType === "programming"
+                ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xs"
+                : "text-muted-foreground hover:bg-slate-100 hover:text-foreground dark:hover:bg-slate-800/60"
+            }`}
+          >
+            <span>💻 المسارات البرمجية</span>
+          </button>
+        </div>
+      )}
+
+      {/* Horizontal Scrollable Course Cards */}
+      <div className="flex gap-3 overflow-x-auto pb-1.5 pt-0.5 scrollbar-none" dir="rtl">
+        {/* All Courses Master Card */}
+        <button
+          type="button"
+          onClick={() => onSelectCourse("all")}
+          className={`flex min-w-[210px] sm:min-w-[230px] shrink-0 flex-col justify-between rounded-2xl border p-3.5 text-right transition-all cursor-pointer ${
+            activeCategory === "all"
+              ? "border-blue-500/90 bg-blue-500/10 text-foreground ring-1 ring-blue-500/30 shadow-2xs"
+              : "border-slate-200/80 bg-card text-muted-foreground hover:border-slate-300 dark:border-[#1E2E48] dark:bg-[#0A101D] dark:text-slate-300 dark:hover:border-slate-700"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2 w-full">
+            <span className="inline-flex items-center gap-1 rounded-md bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold text-blue-600 dark:text-blue-400 border border-blue-500/20">
+              <Layers className="h-3 w-3" /> شامل
+            </span>
+            <span className="font-mono text-xs font-black tabular-nums text-foreground">
+              {overallProgressPercentage}%
+            </span>
+          </div>
+
+          <div className="my-2 min-w-0">
+            <strong className="block text-xs font-extrabold text-foreground truncate">
+              كل الكورسات والمسارات
+            </strong>
+            <span className="text-[11px] font-medium text-muted-foreground font-mono tabular-nums">
+              {totalVisibleLessons} درس متاح
+            </span>
+          </div>
+
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-[#121E31]">
+            <div
+              className="h-full rounded-full bg-blue-600 dark:bg-blue-500 transition-all duration-300"
+              style={{ width: `${Math.max(2, overallProgressPercentage)}%` }}
+            />
+          </div>
+        </button>
+
+        {/* Individual Course Cards */}
+        {filteredCourses.map((course) => {
+          const isSelected = activeCategory === course.name;
+          const academic = isAcademic(course.name);
+
+          return (
+            <button
+              key={course.name}
+              type="button"
+              onClick={() => onSelectCourse(course.name)}
+              className={`flex min-w-[220px] sm:min-w-[240px] shrink-0 flex-col justify-between rounded-2xl border p-3.5 text-right transition-all cursor-pointer ${
+                isSelected
+                  ? "border-blue-500/90 bg-blue-500/10 text-foreground ring-1 ring-blue-500/30 shadow-2xs"
+                  : "border-slate-200/80 bg-card text-muted-foreground hover:border-slate-300 dark:border-[#1E2E48] dark:bg-[#0A101D] dark:text-slate-300 dark:hover:border-slate-700"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2 w-full">
+                <span
+                  className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold border ${
+                    academic
+                      ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20"
+                      : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                  }`}
+                >
+                  {academic ? "🎓 منهج دراسي" : "💻 مسار برمجي"}
+                </span>
+                <span className="font-mono text-xs font-black tabular-nums text-foreground">
+                  {course.progressPct}%
+                </span>
+              </div>
+
+              <div className="my-2 min-w-0 dir-ltr text-right" style={{ unicodeBidi: "isolate" }}>
+                <strong className="block text-xs font-extrabold text-foreground truncate">
+                  {course.name}
+                </strong>
+                <span className="text-[11px] font-medium text-muted-foreground font-mono tabular-nums">
+                  {course.lessonsCount} درس
+                </span>
+              </div>
+
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-[#121E31]">
+                <div
+                  className={`h-full rounded-full transition-all duration-300 ${
+                    academic ? "bg-purple-600 dark:bg-purple-500" : "bg-emerald-600 dark:bg-emerald-500"
+                  }`}
+                  style={{ width: `${Math.max(2, course.progressPct)}%` }}
+                />
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

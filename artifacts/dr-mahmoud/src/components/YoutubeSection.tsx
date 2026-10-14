@@ -663,12 +663,14 @@ export function VideoLessonsSection({
   files = [],
   quizzes = [],
   onStartQuiz,
+  initialVideoId,
 }: {
   student?: any;
   videos?: VideoItem[];
   files?: any[];
   quizzes?: any[];
   onStartQuiz?: (quiz: any) => void;
+  initialVideoId?: number | null;
 }) {
   const { data: dbVideos, isLoading, isError, refetch } = useListVideos();
   const [activeCategory, setActiveCategory] = useState<string>("all");
@@ -736,6 +738,15 @@ export function VideoLessonsSection({
       setActivePlayer(item);
     }
   };
+
+  useEffect(() => {
+    if (initialVideoId && rawItems.length > 0) {
+      const target = rawItems.find((v) => v.id === initialVideoId);
+      if (target) {
+        handlePlayClick(target);
+      }
+    }
+  }, [initialVideoId, rawItems]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

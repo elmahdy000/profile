@@ -4,6 +4,7 @@ import {
   BarChart3,
   Bell,
   BookOpen,
+  Check,
   CheckCircle2,
   ChevronLeft,
   ClipboardCheck,
@@ -301,6 +302,8 @@ export function StudentPlatform() {
   const [dataLoading, setDataLoading] = useState(false);
   const [dataError, setDataError] = useState("");
   const [autoOpenSummaryUpload, setAutoOpenSummaryUpload] = useState(false);
+  const [initialVideoId, setInitialVideoId] = useState<number | null>(null);
+  const [copiedCode, setCopiedCode] = useState(false);
   const latestNotificationIdRef = useRef(0);
   const handleNotificationClickRef = useRef<(n: StudentNotification) => void>(() => {});
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -889,6 +892,18 @@ export function StudentPlatform() {
   handleNotificationClickRef.current = handleNotificationClick;
 
   const unreadNotifications = notifications.filter((item) => !item.readAt).length;
+
+  const copyStudentCode = () => {
+    if (!student?.accessCode) return;
+    void navigator.clipboard?.writeText(student.accessCode);
+    setCopiedCode(true);
+    toast({
+      title: "تم نسخ كود الطالب بنجاح",
+      description: `كودك: ${student.accessCode}`,
+    });
+    setTimeout(() => setCopiedCode(false), 2000);
+  };
+
   const nav = [
     ["dashboard", "الرئيسية", Home],
     ["lessons", "كورساتي", BookOpen],
@@ -900,6 +915,46 @@ export function StudentPlatform() {
     ["self-assessment", "التقييم الذاتي 🎯", Sparkles],
     ["profile", "حسابي", User],
   ] as const;
+
+  const navSections = [
+    {
+      title: "المسار التعليمي",
+      items: [
+        { id: "dashboard" as const, label: "الرئيسية", icon: Home },
+        { id: "lessons" as const, label: "كورساتي والمحاضرات", icon: BookOpen },
+        { id: "summaries" as const, label: "مذكراتي وتلخيصاتي", icon: FileText },
+        { id: "files" as const, label: "الملفات والملازم", icon: FolderOpen },
+      ],
+    },
+    {
+      title: "الاختبارات والتقييم",
+      items: [
+        { id: "quizzes" as const, label: "الاختبارات الدورية", icon: ClipboardCheck },
+        { id: "essay-exams" as const, label: "الامتحانات المقالية", icon: FileEdit },
+        { id: "self-assessment" as const, label: "التقييم الذاتي", icon: Sparkles },
+        { id: "compiler" as const, label: "محرر C++ التفاعلي", icon: Code2 },
+      ],
+    },
+    {
+      title: "الحساب والتفوق",
+      items: [
+        { id: "profile" as const, label: "بيانات حسابي", icon: User },
+      ],
+    },
+  ] as const;
+
+  const navLabels: Record<string, string> = {
+    dashboard: "الرئيسية",
+    lessons: "كورساتي",
+    "essay-exams": "الامتحانات المقالية",
+    quizzes: "الاختبارات",
+    summaries: "مذكراتي",
+    compiler: "محرر C++",
+    files: "الملفات",
+    "self-assessment": "التقييم الذاتي",
+    profile: "حسابي",
+  };
+
   return (
     <main
       className="min-h-screen bg-background pb-24 lg:pb-0"
@@ -914,7 +969,7 @@ export function StudentPlatform() {
         setLinkedPreviewFile(file);
       }}
     >
-      <div className="mx-auto grid max-w-[1440px] lg:grid-cols-[248px_1fr]">
+      <div className="mx-auto grid max-w-[1440px] lg:grid-cols-[256px_1fr]">
         {/* Backdrop for mobile drawer */}
         {sidebarOpen && (
           <div
@@ -924,31 +979,34 @@ export function StudentPlatform() {
           />
         )}
 
-        {/* Responsive Sidebar */}
+        {/* Responsive Sidebar (Vercel Precision Style) */}
         <aside
           aria-label="قائمة التنقل الجانبية"
-          className={`fixed inset-y-0 right-0 z-[70] flex h-dvh max-h-dvh w-[280px] max-w-[85vw] flex-col border-l border-slate-800/80 bg-[#0F1B2D] text-slate-100 shadow-2xl transition-all duration-300 ease-in-out lg:sticky lg:top-0 lg:z-20 lg:h-screen lg:w-[248px] lg:translate-x-0 lg:shadow-none ${
+          className={`fixed inset-y-0 right-0 z-[70] flex h-dvh max-h-dvh w-[280px] max-w-[85vw] flex-col border-l border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#070D18] text-slate-800 dark:text-slate-200 shadow-2xl transition-all duration-300 ease-in-out lg:sticky lg:top-0 lg:z-20 lg:h-screen lg:w-[256px] lg:translate-x-0 lg:shadow-none ${
             sidebarOpen
               ? "translate-x-0 visible pointer-events-auto"
               : "translate-x-full invisible pointer-events-none lg:visible lg:pointer-events-auto"
           }`}
         >
           {/* Top Brand & Close Button Header */}
-          <div className="shrink-0 flex items-center justify-between border-b border-slate-800/80 px-4 py-3.5">
-            <div className="flex items-center gap-3">
+          <div className="shrink-0 flex items-center justify-between border-b border-slate-200/80 dark:border-[#1E2E48] px-4 py-3 bg-slate-50/50 dark:bg-[#0A1220]/70">
+            <div className="flex items-center gap-2.5">
               <img
                 src="/logo.webp"
                 alt="شعار منصة د. محمود المهدي"
-                className="h-8 w-8 rounded-lg object-cover ring-1 ring-white/10"
+                className="h-8 w-8 rounded-lg object-cover ring-1 ring-slate-200/80 dark:ring-white/10 shadow-2xs"
               />
               <div>
-                <strong className="block text-[13px] font-bold text-white">بوابة الطالب</strong>
-                <span className="text-[10px] text-slate-400">د. محمود المهدي</span>
+                <div className="flex items-center gap-1.5">
+                  <strong className="block text-[13px] font-black text-slate-900 dark:text-white">بوابة الطالب</strong>
+                  <span className="rounded-full bg-blue-500/10 px-1.5 py-0.2 text-[9px] font-mono font-bold text-blue-600 dark:text-blue-400 border border-blue-500/20">2026</span>
+                </div>
+                <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">د. محمود المهدي</span>
               </div>
             </div>
             <button
               type="button"
-              className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-800/80 hover:text-white transition lg:hidden"
+              className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition lg:hidden cursor-pointer"
               onClick={() => setSidebarOpen(false)}
               aria-label="إغلاق القائمة"
             >
@@ -957,115 +1015,170 @@ export function StudentPlatform() {
           </div>
 
           {/* Student Info Card */}
-          <div className="shrink-0 mx-3 mt-3 flex items-center gap-2.5 rounded-xl border border-slate-800/80 bg-[#14233A] p-2.5">
-            <StudentAvatar name={student.name} src={student.avatarUrl} size="sm" />
+          <div className="shrink-0 mx-3 mt-3 flex items-center gap-2.5 rounded-xl border border-slate-200/80 dark:border-[#1E2E48] bg-slate-50/80 dark:bg-[#0D1726] p-2.5 shadow-2xs">
+            <StudentAvatar name={student.name} src={student.avatarUrl} size="sm" showOnlineStatus={true} />
             <div className="min-w-0 flex-1">
-              <strong className="block truncate text-[12px] font-bold text-white">{student.name}</strong>
-              <div className="flex items-center gap-2 mt-0.5">
+              <strong className="block truncate text-[12px] font-bold text-slate-900 dark:text-white">{student.name}</strong>
+              <div className="flex items-center gap-1.5 mt-0.5">
                 {isUnpaid ? (
-                  <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                  <span className="text-[9.5px] text-amber-600 dark:text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
                     باقة المعاينة
                   </span>
                 ) : (
-                  <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                  <span className="text-[9.5px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
                     مشترك مفعّل ✅
                   </span>
                 )}
                 {student.accessCode && (
-                  <span className="font-mono text-[11px] font-extrabold text-[#60A5FA] bg-blue-950/60 px-1.5 py-0.5 rounded border border-blue-800/50 dir-ltr">
-                    {student.accessCode}
-                  </span>
+                  <button
+                    type="button"
+                    onClick={copyStudentCode}
+                    title="انقر لنسخ كود الطالب"
+                    className="font-mono text-[10px] font-extrabold text-blue-600 dark:text-[#60A5FA] bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.5 rounded border border-blue-200/70 dark:border-blue-800/50 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors cursor-pointer flex items-center gap-1"
+                  >
+                    <span>{student.accessCode}</span>
+                    {copiedCode ? <Check className="h-2.5 w-2.5 text-emerald-500" /> : <Copy className="h-2.5 w-2.5 opacity-60" />}
+                  </button>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Navigation Items (Scrollable middle section) */}
-          <nav className="flex-1 min-h-0 overflow-y-auto overscroll-contain py-3 px-2.5 space-y-1">
-            {nav.map(([value, label, Icon]) => {
-              const isLockedTab = isUnpaid && ["quizzes", "essay-exams", "self-assessment", "files", "summaries", "compiler"].includes(value);
-              const isPreviewTab = isUnpaid && value === "lessons";
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => {
-                    setTab(value);
-                    setSidebarOpen(false);
-                  }}
-                  aria-current={tab === value ? "page" : undefined}
-                  className={`relative flex min-h-[42px] w-full items-center gap-3 rounded-xl px-3 text-right text-[13px] font-bold transition-all duration-150 cursor-pointer ${
-                    tab === value
-                      ? "bg-blue-600/15 text-[#3B82F6] font-extrabold border border-blue-500/30"
-                      : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
-                  }`}
-                >
-                  {tab === value && (
-                    <span className="absolute right-0 top-2 bottom-2 w-1 rounded-l-full bg-[#1769FF]" />
-                  )}
-                  <Icon className={`h-[18px] w-[18px] shrink-0 ${tab === value ? "text-[#3B82F6]" : "opacity-75"}`} />
-                  <span className="truncate flex-1">{label}</span>
-                  {isLockedTab && (
-                    <span className="rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-400 border border-amber-500/20 flex items-center gap-1 shrink-0">
-                      <Lock className="h-3 w-3" /> مقفول
-                    </span>
-                  )}
-                  {isPreviewTab && (
-                    <span className="rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/20 shrink-0">
-                      معاينة مجانية ✨
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-            <a
-              href="/honor-board"
-              target="_blank"
-              rel="noreferrer"
-              className="flex min-h-[42px] w-full items-center gap-3 rounded-xl px-3 text-right text-[13px] font-bold text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/15 border border-amber-500/25 transition-all cursor-pointer mt-3 shadow-xs"
-            >
-              <Trophy className="h-[18px] w-[18px] shrink-0 text-amber-400" />
-              <span className="truncate">لوحة الشرف 🏆</span>
-            </a>
+          {/* Navigation Items (Categorized Vercel Hierarchy) */}
+          <nav className="flex-1 min-h-0 overflow-y-auto overscroll-contain py-3 px-2.5 space-y-4">
+            {navSections.map((section) => (
+              <div key={section.title} className="space-y-1">
+                <div className="px-2.5 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  {section.title}
+                </div>
+                {section.items.map((item) => {
+                  const isLockedTab = isUnpaid && ["quizzes", "essay-exams", "self-assessment", "files", "summaries", "compiler"].includes(item.id);
+                  const isPreviewTab = isUnpaid && item.id === "lessons";
+                  const isActive = tab === item.id;
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        setTab(item.id);
+                        setSidebarOpen(false);
+                      }}
+                      aria-current={isActive ? "page" : undefined}
+                      className={`group relative flex min-h-[38px] w-full items-center gap-2.5 rounded-xl px-2.5 text-right text-[12.5px] font-bold transition-all duration-150 cursor-pointer ${
+                        isActive
+                          ? "bg-blue-50/90 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-extrabold border border-blue-200/80 dark:border-blue-500/30 shadow-2xs"
+                          : "text-slate-600 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-[#122034] hover:text-slate-900 dark:hover:text-white border border-transparent"
+                      }`}
+                    >
+                      {isActive && (
+                        <span className="absolute right-0 top-1.5 bottom-1.5 w-1 rounded-l-full bg-blue-600 dark:bg-blue-500" />
+                      )}
+                      <Icon className={`h-[17px] w-[17px] shrink-0 transition-colors ${isActive ? "text-blue-600 dark:text-blue-400" : "text-slate-400 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200"}`} />
+                      <span className="truncate flex-1">{item.label}</span>
+                      {isLockedTab && (
+                        <span className="rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[9.5px] font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1 shrink-0">
+                          <Lock className="h-2.5 w-2.5" /> مقفول
+                        </span>
+                      )}
+                      {isPreviewTab && (
+                        <span className="rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[9.5px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                          معاينة ✨
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+                {section.title === "الحساب والتفوق" && (
+                  <a
+                    href="/honor-board"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group relative flex min-h-[38px] w-full items-center gap-2.5 rounded-xl px-2.5 text-right text-[12.5px] font-bold text-amber-600 dark:text-amber-300 hover:text-amber-700 dark:hover:text-amber-200 bg-amber-500/8 hover:bg-amber-500/15 border border-amber-500/20 hover:border-amber-500/30 transition-all cursor-pointer shadow-2xs mt-1"
+                  >
+                    <Trophy className="h-[17px] w-[17px] shrink-0 text-amber-500" />
+                    <span className="truncate flex-1">لوحة الشرف 🏆</span>
+                    <ExternalLink className="h-3 w-3 text-amber-500/70" />
+                  </a>
+                )}
+              </div>
+            ))}
           </nav>
 
           {/* Bottom Footer Actions */}
-          <div className="shrink-0 mt-auto space-y-2 border-t border-slate-800/60 bg-[#0F1B2D] p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
-            <ThemeToggle className="h-9 w-full text-slate-300 shadow-none dark:border-slate-800 dark:bg-transparent" />
+          <div className="shrink-0 mt-auto space-y-2 border-t border-slate-200/80 dark:border-[#1E2E48] bg-slate-50/50 dark:bg-[#070D18] p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <ThemeToggle className="h-9 w-full text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0D1726] shadow-2xs" />
             <a
               href={`https://wa.me/201066711545?text=${encodeURIComponent(
                 `مرحباً د. محمود 👋\n\nأود الاستفسار وحجز الكورس من داخل حسابي بالمنصة:\n- الاسم: ${student.name}\n- رقم الهاتف: ${student.phone}\n- المرحلة الدراسية: ${student.grade || "غير محدد"}\n- نظام التعليم: ${student.educationSystem || "غير محدد"}\n- المحافظة/المدينة: ${student.governorate || "غير محدد"} - ${student.city || ""}\n- وضع التعلم: ${student.learningMode === "offline" ? "أوفلاين بالزقازيق" : "أونلاين"}`
               )}`}
               target="_blank"
               rel="noreferrer"
-              className="flex h-9 items-center justify-center rounded-xl border border-blue-500/30 bg-blue-600/10 text-[12px] font-bold text-blue-400 transition-colors hover:bg-blue-600/20"
+              className="flex h-9 items-center justify-center gap-1.5 rounded-xl border border-emerald-500/25 bg-emerald-500/10 text-[11.5px] font-bold text-emerald-600 dark:text-emerald-400 transition-colors hover:bg-emerald-500/20"
             >
-              كلم الدعم / حجز كورس 💬
+              <span>كلم الدعم / واتساب</span>
+              <span>💬</span>
             </a>
             <button
               type="button"
               onClick={logout}
-              className="flex h-9 w-full items-center justify-center gap-2 rounded-xl text-[12px] font-bold text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-400 cursor-pointer"
+              className="flex h-9 w-full items-center justify-center gap-2 rounded-xl text-[11.5px] font-bold text-slate-500 dark:text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-500 cursor-pointer"
             >
               <LogOut className="h-3.5 w-3.5" /> تسجيل الخروج
             </button>
           </div>
         </aside>
-        <section className="min-w-0 bg-[#F6F8FC] dark:bg-[#0B1220] min-h-screen">
-          <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur-md md:px-6 dark:border-[#1E2E48] dark:bg-[#0D1B2E]/90 shadow-2xs">
+        <section className="min-w-0 bg-[#F8FAFC] dark:bg-[#070D18] min-h-screen">
+          <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200/80 dark:border-[#1E2E48] bg-white/80 dark:bg-[#070D18]/80 px-4 backdrop-blur-xl md:px-6 shadow-2xs">
+            {/* Right in RTL: Menu + Breadcrumbs + Live Status */}
             <div className="flex items-center gap-3">
-              <button className="grid h-9 w-9 place-items-center rounded-xl border border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#12233B] text-slate-600 dark:text-slate-300 lg:hidden hover:border-slate-300 dark:hover:border-slate-700 transition-colors cursor-pointer" onClick={() => setSidebarOpen(true)} aria-label="فتح القائمة"><Menu className="h-[18px] w-[18px]" /></button>
+              <button
+                className="grid h-9 w-9 place-items-center rounded-xl border border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0D1726] text-slate-600 dark:text-slate-300 lg:hidden hover:border-slate-300 dark:hover:border-slate-700 transition-colors cursor-pointer shadow-2xs"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="فتح القائمة"
+              >
+                <Menu className="h-[18px] w-[18px]" />
+              </button>
+
+              <div className="flex items-center gap-2 text-xs font-semibold">
+                <span className="hidden sm:inline text-slate-400 dark:text-slate-500">بوابة الطالب</span>
+                <span className="hidden sm:inline text-slate-300 dark:text-slate-700 font-mono">/</span>
+                <span className="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5 bg-slate-100/90 dark:bg-[#0D1726] px-2.5 py-1 rounded-lg border border-slate-200/70 dark:border-[#1E2E48] shadow-2xs">
+                  {tab === "dashboard" && <Home className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
+                  {tab === "lessons" && <BookOpen className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
+                  {tab === "quizzes" && <ClipboardCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
+                  {tab === "essay-exams" && <FileEdit className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
+                  {tab === "summaries" && <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
+                  {tab === "compiler" && <Code2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
+                  {tab === "files" && <FolderOpen className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
+                  {tab === "self-assessment" && <Sparkles className="h-3.5 w-3.5 text-amber-500" />}
+                  {tab === "profile" && <User className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
+                  <span>{navLabels[tab] || "المنصة"}</span>
+                </span>
+              </div>
+
+              <div className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                </span>
+                <span>متصل بالمنصة</span>
+              </div>
+            </div>
+
+            {/* Left in RTL: Notifications + Student Profile + Logout */}
+            <div className="flex items-center gap-2">
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setShowNotifications((current) => !current)}
                   aria-label="الإشعارات"
                   aria-expanded={showNotifications}
-                  className="relative grid h-9 w-9 place-items-center rounded-xl border border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#12233B] text-slate-600 dark:text-slate-300 transition-all hover:text-blue-600 hover:border-blue-500/30 hover:shadow-2xs active:scale-95 cursor-pointer"
+                  className="relative grid h-9 w-9 place-items-center rounded-xl border border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0D1726] text-slate-600 dark:text-slate-300 transition-all hover:text-blue-600 hover:border-blue-500/30 hover:shadow-2xs active:scale-95 cursor-pointer shadow-2xs"
                 >
                   <Bell className="h-[18px] w-[18px]" />
                   {unreadNotifications > 0 && (
-                    <span className="absolute -left-1.5 -top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-red-600 px-1 text-[9px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-[#0D1B2E]">
+                    <span className="absolute -left-1.5 -top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-red-600 px-1 text-[9px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-[#070D18]">
                       {Math.min(unreadNotifications, 9)}
                     </span>
                   )}
@@ -1077,18 +1190,18 @@ export function StudentPlatform() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -6 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 top-11 z-50 w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-card shadow-xl"
+                      className="absolute left-0 top-11 z-50 w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0A101D] shadow-xl"
                     >
-                      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                      <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-[#1E2E48] px-4 py-3 bg-slate-50/50 dark:bg-[#0D1726]/60">
                         <div>
-                          <strong className="text-[14px] font-bold text-foreground">الإشعارات</strong>
-                          <p className="text-[11px] text-muted-foreground">كل جديد في حسابك وكورساتك</p>
+                          <strong className="text-[13px] font-bold text-slate-900 dark:text-white">الإشعارات</strong>
+                          <p className="text-[10.5px] text-muted-foreground">كل جديد في حسابك وكورساتك</p>
                         </div>
                         {unreadNotifications > 0 && (
                           <button
                             type="button"
                             onClick={() => void markAllNotificationsRead()}
-                            className="rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary transition-colors hover:bg-primary/20"
+                            className="rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-800/40 px-2.5 py-1 text-[10.5px] font-bold text-blue-600 dark:text-blue-400 transition-colors hover:bg-blue-100 dark:hover:bg-blue-900/40 cursor-pointer"
                           >
                             تحديد الكل كمقروء
                           </button>
@@ -1127,24 +1240,24 @@ export function StudentPlatform() {
                           return (
                             <div
                               key={notification.id}
-                              className="group mb-0.5 flex items-start gap-1.5 rounded-xl bg-primary/5 border border-primary/20 p-2.5 transition-all hover:bg-primary/10"
+                              className="group mb-0.5 flex items-start gap-1.5 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/60 p-2.5 transition-all hover:border-blue-500/30"
                             >
                               <button
                                 type="button"
                                 onClick={() => handleNotificationClick(notification)}
                                 className="flex-1 text-right flex items-start gap-2.5 cursor-pointer min-w-0"
                               >
-                                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary animate-pulse" />
+                                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-600 animate-pulse" />
                                 <span className="flex-1 min-w-0">
                                   <div className="flex items-center justify-between gap-1.5 mb-1">
-                                    <strong className="block text-[13px] font-bold text-foreground truncate">{notification.title}</strong>
-                                    <span className="shrink-0 text-[10px] font-extrabold text-primary bg-primary/10 px-2 py-0.5 rounded-full flex items-center gap-1 group-hover:bg-primary group-hover:text-white transition-colors">
+                                    <strong className="block text-[12.5px] font-bold text-foreground truncate">{notification.title}</strong>
+                                    <span className="shrink-0 text-[9.5px] font-extrabold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full flex items-center gap-1 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                                       <span>{target.label}</span>
                                       <ArrowLeft className="h-2.5 w-2.5" />
                                     </span>
                                   </div>
-                                  <span className="block text-[12px] leading-5 text-muted-foreground line-clamp-2">{notification.message}</span>
-                                  <span className="mt-1 block text-[10px] text-muted-foreground/70">{new Date(notification.createdAt).toLocaleDateString("ar-EG")}</span>
+                                  <span className="block text-[11.5px] leading-5 text-muted-foreground line-clamp-2">{notification.message}</span>
+                                  <span className="mt-1 block text-[9.5px] text-muted-foreground/70">{new Date(notification.createdAt).toLocaleDateString("ar-EG")}</span>
                                 </span>
                               </button>
                               <button
@@ -1166,22 +1279,23 @@ export function StudentPlatform() {
                   )}
                 </AnimatePresence>
               </div>
-              <span className="hidden text-[13px] font-bold text-foreground sm:inline">{nav.find(([value]) => value === tab)?.[1]}</span>
-            </div>
-            <div className="flex items-center gap-2">
+
               <button
                 type="button"
                 onClick={() => setTab("profile")}
-                className="flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 transition-all hover:bg-slate-100 dark:hover:bg-[#12233B] border border-transparent hover:border-slate-200/80 dark:hover:border-[#1E2E48] cursor-pointer"
+                className="flex items-center gap-2 rounded-xl p-1 sm:px-2.5 sm:py-1.5 transition-all hover:bg-slate-100 dark:hover:bg-[#0D1726] border border-transparent hover:border-slate-200/80 dark:hover:border-[#1E2E48] cursor-pointer shadow-2xs"
               >
-                <StudentAvatar name={student.name} src={student.avatarUrl} size="sm" />
-                <span className="hidden max-w-40 truncate text-[13px] font-bold text-slate-800 dark:text-slate-200 sm:block">{student.name}</span>
+                <StudentAvatar name={student.name} src={student.avatarUrl} size="sm" showOnlineStatus={true} />
+                <div className="hidden sm:block text-right">
+                  <span className="block max-w-36 truncate text-[12px] font-bold text-slate-900 dark:text-white leading-tight">{student.name}</span>
+                  <span className="block text-[10px] text-muted-foreground">{student.accessCode || "طالب مفعّل"}</span>
+                </div>
               </button>
               <button
                 type="button"
                 onClick={logout}
                 title="تسجيل الخروج"
-                className="lg:hidden grid h-9 w-9 place-items-center rounded-xl border border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#12233B] text-slate-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-950/30 dark:hover:border-red-900/50 transition-colors cursor-pointer"
+                className="lg:hidden grid h-9 w-9 place-items-center rounded-xl border border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0D1726] text-slate-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-950/30 dark:hover:border-red-900/50 transition-colors cursor-pointer shadow-2xs"
               >
                 <LogOut className="h-4 w-4" />
               </button>
@@ -1244,6 +1358,10 @@ export function StudentPlatform() {
                 if (newTab === "summaries") setAutoOpenSummaryUpload(true);
                 setTab(newTab);
               }}
+              onPlayLesson={(videoId) => {
+                setInitialVideoId(videoId);
+                setTab("lessons");
+              }}
             />
           ) : tab === "lessons" ? (
             <VideoLessonsSection
@@ -1252,6 +1370,7 @@ export function StudentPlatform() {
               files={files}
               quizzes={quizzes}
               onStartQuiz={startQuiz}
+              initialVideoId={initialVideoId}
             />
           ) : tab === "essay-exams" ? (
             isUnpaid ? (
@@ -1394,13 +1513,13 @@ export function StudentPlatform() {
             onClick={() => setSidebarOpen((prev) => !prev)}
             aria-label="فتح القائمة الكاملة"
             className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-bold transition-all duration-150 active:scale-95 cursor-pointer relative ${
-              sidebarOpen || ["files", "compiler", "profile"].includes(tab)
-                ? "bg-blue-50/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-black"
+              sidebarOpen || ["files", "compiler", "profile", "essay-exams", "self-assessment"].includes(tab)
+                ? "bg-blue-50/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
             }`}
           >
             <Menu className="h-[20px] w-[20px]" />
-            <span>القائمة</span>
+            <span className="truncate max-w-[60px]">{["files", "compiler", "profile", "essay-exams", "self-assessment"].includes(tab) ? (navLabels[tab] || "المزيد") : "المزيد"}</span>
           </button>
         </div>
       </nav>
