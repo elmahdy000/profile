@@ -299,25 +299,49 @@ export function canStudentAccessContent(
 
   // Strict negative guards for 1st secondary students
   const isStudent1stSec =
-    studentStage?.includes("أولى") ||
-    studentStage?.includes("اولى") ||
-    studentStage?.includes("الأول") ||
-    student.educationGrade === "first_secondary";
+    student.educationGrade === "first_secondary" ||
+    ((studentStage?.includes("أولى") ||
+      studentStage?.includes("اولى") ||
+      studentStage?.includes("الأول")) &&
+      !studentStage?.includes("جامع") &&
+      !studentStage?.includes("كلية") &&
+      !studentStage?.includes("الفرقة"));
 
   if (isStudent1stSec) {
-    const hasForeignStageMarker =
-      normCategory.includes("تانية") ||
-      normCategory.includes("ثاني") ||
-      normCategory.includes("ثانى") ||
-      normCategory.includes("جامع") ||
-      normCategory.includes("حاسبات") ||
-      normCategory.includes("هندس") ||
-      contentStages.some((s) => {
-        const ns = normalizeCategory(s);
-        return ns.includes("تانية") || ns.includes("ثاني") || ns.includes("جامع") || ns.includes("حاسبات") || ns.includes("هندس");
-      });
-    if (hasForeignStageMarker) {
-      return false;
+    const hasTarget1stSec = contentStages.some((s) => {
+      const ns = normalizeCategory(s);
+      return (
+        (ns.includes("أولى") ||
+          ns.includes("اولى") ||
+          ns.includes("الأول") ||
+          ns.includes("first")) &&
+        !ns.includes("جامع") &&
+        !ns.includes("كلية") &&
+        !ns.includes("الفرقة")
+      );
+    });
+
+    if (!hasTarget1stSec) {
+      const hasForeignStageMarker =
+        normCategory.includes("تانية") ||
+        normCategory.includes("ثاني") ||
+        normCategory.includes("ثانى") ||
+        normCategory.includes("جامع") ||
+        normCategory.includes("حاسبات") ||
+        normCategory.includes("هندس") ||
+        contentStages.some((s) => {
+          const ns = normalizeCategory(s);
+          return (
+            ns.includes("تانية") ||
+            ns.includes("ثاني") ||
+            ns.includes("جامع") ||
+            ns.includes("حاسبات") ||
+            ns.includes("هندس")
+          );
+        });
+      if (hasForeignStageMarker) {
+        return false;
+      }
     }
   }
 
