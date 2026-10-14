@@ -193,7 +193,7 @@ export function ProfileTab({
       <PageHeader title="حسابي" description="بياناتك الشخصية والتعليمية وإعدادات الحساب وحجز السنتر." />
 
       {/* Avatar Card */}
-      <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <article className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-xs transition-all hover:border-slate-300 dark:hover:border-[#1E2E48] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/25 before:to-transparent">
         <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-right sm:items-center sm:gap-5">
           <div className="shrink-0">
             <StudentAvatar name={student.name} src={student.avatarUrl} size="lg" />
@@ -467,8 +467,11 @@ export function ProfileTab({
 
       {/* Info Cards */}
       <div className="grid gap-4 md:grid-cols-2">
-        <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <h2 className="text-sm font-extrabold text-foreground mb-3">المعلومات الشخصية</h2>
+        <article className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-xs transition-all hover:border-slate-300 dark:hover:border-[#1E2E48] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/20 before:to-transparent">
+          <h2 className="text-sm font-extrabold text-foreground mb-3 flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-blue-500" />
+            المعلومات الشخصية
+          </h2>
           <dl className="divide-y divide-border">
             <div className="flex items-center justify-between py-2.5 text-xs">
               <dt className="text-muted-foreground font-bold">الاسم</dt>
@@ -500,8 +503,11 @@ export function ProfileTab({
           </dl>
         </article>
 
-        <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <h2 className="text-sm font-extrabold text-foreground mb-3">المعلومات التعليمية والحجز</h2>
+        <article className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-xs transition-all hover:border-slate-300 dark:hover:border-[#1E2E48] before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-emerald-500/20 before:to-transparent">
+          <h2 className="text-sm font-extrabold text-foreground mb-3 flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            المعلومات التعليمية والحجز
+          </h2>
           <dl className="divide-y divide-border">
             <ProfileInfoRow label="المرحلة الدراسية" value={student.grade || "—"} />
             {student.schoolName && <ProfileInfoRow label="اسم المدرسة" value={student.schoolName} />}

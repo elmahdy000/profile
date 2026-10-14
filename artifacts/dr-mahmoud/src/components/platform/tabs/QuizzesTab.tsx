@@ -22,18 +22,21 @@ import type { Quiz } from "@/types/platform";
 // ── 1. Compact Page Header ──
 export function ExamsPageHeader({ totalCount }: { totalCount: number }) {
   return (
-    <header className="flex flex-col gap-1 text-right border-b border-slate-200 dark:border-[#223552] pb-3" dir="rtl">
+    <header className="flex flex-col gap-1.5 text-right border-b border-slate-200/80 dark:border-[#1F314A] pb-3.5" dir="rtl">
       <div className="flex items-center gap-2.5">
-        <h1 className="text-lg md:text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+        <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
           الاختبارات
         </h1>
-        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-800/60 px-2.5 py-0.5 text-xs font-bold text-blue-700 dark:text-blue-300">
-          <ClipboardCheck className="h-3.5 w-3.5" />
-          {totalCount} متاح
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50/80 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/60 px-2.5 py-0.5 text-xs font-bold text-blue-700 dark:text-blue-300 shadow-2xs">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500" />
+          </span>
+          <span className="font-mono tabular-nums">{totalCount}</span> متاح
         </span>
       </div>
       <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-        اختبر مستواك، تابع نتائجك، وأكمل الاختبارات المتاحة بكورساتك.
+        اختبر مستواك، تابع نتائجك أولاً بأول، وتدرّب على أسئلة الامتحانات الإلكترونية بكورساتك.
       </p>
     </header>
   );
@@ -45,7 +48,6 @@ export function ExamStatistics({
 }: {
   quizzes: Quiz[];
 }) {
-  const total = quizzes.length;
   const completedCount = quizzes.filter((q) => q.attemptsUsed && q.attemptsUsed > 0).length;
   const availableCount = quizzes.filter((q) => !q.locked).length;
 
@@ -57,33 +59,33 @@ export function ExamStatistics({
 
   return (
     <section aria-label="إحصائيات الاختبارات" className="grid grid-cols-2 lg:grid-cols-4 gap-3" dir="rtl">
-      <div className="rounded-2xl border border-slate-200 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-3 flex items-center gap-3 shadow-2xs">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40">
+      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-3.5 flex items-center gap-3 shadow-2xs hover:border-blue-500/40 hover:shadow-xs transition-all duration-200 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/30 before:to-transparent">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40 group-hover:scale-105 transition-transform duration-200">
           <ClipboardCheck className="h-5 w-5" />
         </span>
         <div className="min-w-0 text-right">
-          <span className="block text-[13px] font-bold text-slate-500 dark:text-slate-400 truncate">الاختبارات المتاحة</span>
-          <strong className="text-[22px] font-black text-slate-900 dark:text-white leading-none mt-0.5 block">{availableCount}</strong>
+          <span className="block text-[12px] font-bold text-slate-500 dark:text-slate-400 truncate">الاختبارات المتاحة</span>
+          <strong className="text-[22px] font-black font-mono tabular-nums text-slate-900 dark:text-white leading-none mt-0.5 block">{availableCount}</strong>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-3 flex items-center gap-3 shadow-2xs">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40">
+      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-3.5 flex items-center gap-3 shadow-2xs hover:border-emerald-500/40 hover:shadow-xs transition-all duration-200 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-emerald-500/30 before:to-transparent">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40 group-hover:scale-105 transition-transform duration-200">
           <CheckCircle2 className="h-5 w-5" />
         </span>
         <div className="min-w-0 text-right">
-          <span className="block text-[13px] font-bold text-slate-500 dark:text-slate-400 truncate">الاختبارات المكتملة</span>
-          <strong className="text-[22px] font-black text-slate-900 dark:text-white leading-none mt-0.5 block">{completedCount}</strong>
+          <span className="block text-[12px] font-bold text-slate-500 dark:text-slate-400 truncate">الاختبارات المكتملة</span>
+          <strong className="text-[22px] font-black font-mono tabular-nums text-slate-900 dark:text-white leading-none mt-0.5 block">{completedCount}</strong>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-3 flex items-center gap-3 shadow-2xs">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40">
+      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-3.5 flex items-center gap-3 shadow-2xs hover:border-amber-500/40 hover:shadow-xs transition-all duration-200 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-amber-500/30 before:to-transparent">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40 group-hover:scale-105 transition-transform duration-200">
           <Award className="h-5 w-5" />
         </span>
         <div className="min-w-0 text-right">
-          <span className="block text-[13px] font-bold text-slate-500 dark:text-slate-400 truncate">متوسط النتيجة</span>
-          <strong className="text-[22px] font-black text-slate-900 dark:text-white leading-none mt-0.5 block">
+          <span className="block text-[12px] font-bold text-slate-500 dark:text-slate-400 truncate">متوسط النتيجة</span>
+          <strong className="text-[22px] font-black font-mono tabular-nums text-slate-900 dark:text-white leading-none mt-0.5 block">
             {(() => {
               const scores = quizzes
                 .map((q) => q.bestScore)
@@ -96,13 +98,13 @@ export function ExamStatistics({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-3 flex items-center gap-3 shadow-2xs">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-900/40">
+      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-3.5 flex items-center gap-3 shadow-2xs hover:border-purple-500/40 hover:shadow-xs transition-all duration-200 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-purple-500/30 before:to-transparent">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-900/40 group-hover:scale-105 transition-transform duration-200">
           <RotateCcw className="h-5 w-5" />
         </span>
         <div className="min-w-0 text-right">
-          <span className="block text-[13px] font-bold text-slate-500 dark:text-slate-400 truncate">المحاولات المتبقية</span>
-          <strong className="text-[22px] font-black text-slate-900 dark:text-white leading-none mt-0.5 block">
+          <span className="block text-[12px] font-bold text-slate-500 dark:text-slate-400 truncate">المحاولات المتبقية</span>
+          <strong className="text-[22px] font-black font-mono tabular-nums text-slate-900 dark:text-white leading-none mt-0.5 block">
             {totalAttemptsLeft > 50 ? "بلا حدود" : totalAttemptsLeft}
           </strong>
         </div>
@@ -137,11 +139,9 @@ export function ExamFilters({
   onClearFilters: () => void;
   isFiltered: boolean;
 }) {
-  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-3 shadow-2xs space-y-2.5" dir="rtl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+    <div className="rounded-2xl border border-slate-200/80 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-3 shadow-2xs space-y-2.5" dir="rtl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         {/* Search & Select Controls Row */}
         <div className="flex flex-1 items-center gap-2 flex-wrap sm:flex-nowrap">
           <div className="relative flex-1 min-w-[200px]">
@@ -151,7 +151,7 @@ export function ExamFilters({
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="ابحث باسم الاختبار..."
-              className="h-9 w-full rounded-xl border border-slate-200 dark:border-[#223552] bg-slate-50 dark:bg-[#12233B] pr-9 pl-3 text-xs font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-500 focus:outline-none transition-colors"
+              className="h-9 w-full rounded-xl border border-slate-200/80 dark:border-[#223552] bg-slate-50/70 dark:bg-[#12233B] pr-9 pl-3 text-xs font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-500 focus:bg-white dark:focus:bg-[#0A1628] focus:ring-2 focus:ring-blue-500/10 focus:outline-none transition-all"
             />
           </div>
 
@@ -160,7 +160,7 @@ export function ExamFilters({
               <select
                 value={courseFilter}
                 onChange={(e) => onCourseFilterChange(e.target.value)}
-                className="h-9 appearance-none rounded-xl border border-slate-200 dark:border-[#223552] bg-slate-50 dark:bg-[#12233B] pr-3 pl-7 text-xs font-bold text-slate-700 dark:text-slate-200 focus:border-blue-500 focus:outline-none cursor-pointer"
+                className="h-9 appearance-none rounded-xl border border-slate-200/80 dark:border-[#223552] bg-slate-50/70 dark:bg-[#12233B] pr-3 pl-7 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700 focus:border-blue-500 focus:outline-none cursor-pointer transition-colors"
               >
                 <option value="all">كل الكورسات</option>
                 {categories.map((cat) => (
@@ -177,7 +177,7 @@ export function ExamFilters({
             <select
               value={sortBy}
               onChange={(e) => onSortByChange(e.target.value)}
-              className="h-9 appearance-none rounded-xl border border-slate-200 dark:border-[#223552] bg-slate-50 dark:bg-[#12233B] pr-3 pl-7 text-xs font-bold text-slate-700 dark:text-slate-200 focus:border-blue-500 focus:outline-none cursor-pointer"
+              className="h-9 appearance-none rounded-xl border border-slate-200/80 dark:border-[#223552] bg-slate-50/70 dark:bg-[#12233B] pr-3 pl-7 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-700 focus:border-blue-500 focus:outline-none cursor-pointer transition-colors"
             >
               <option value="recent">الأحدث</option>
               <option value="title">حسب الاسم</option>
@@ -192,14 +192,14 @@ export function ExamFilters({
           <button
             type="button"
             onClick={onClearFilters}
-            className="h-9 px-3 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#12233B] rounded-xl transition-colors flex items-center gap-1 shrink-0 self-start sm:self-auto"
+            className="h-9 px-3 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#12233B] rounded-xl transition-colors flex items-center gap-1 shrink-0 self-start sm:self-auto cursor-pointer"
           >
             <X className="h-3.5 w-3.5" /> إعادة ضبط الفلاتر
           </button>
         )}
       </div>
 
-      {/* Status Filter Tabs (Same Row or Tight) */}
+      {/* Status Filter Tabs */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none border-t border-slate-100 dark:border-[#1F314A] pt-2">
         {[
           ["all", "الكل"],
@@ -213,10 +213,10 @@ export function ExamFilters({
               key={val}
               type="button"
               onClick={() => onStatusFilterChange(val)}
-              className={`rounded-lg px-3 py-1 text-xs font-bold transition-all shrink-0 cursor-pointer ${
+              className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all shrink-0 cursor-pointer ${
                 isActive
-                  ? "bg-blue-600 text-white shadow-2xs"
-                  : "bg-slate-100 dark:bg-[#12233B] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1A3050]"
+                  ? "bg-blue-600 text-white shadow-2xs ring-1 ring-blue-500/20"
+                  : "bg-slate-100/80 dark:bg-[#12233B] text-slate-600 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-[#1A3050]"
               }`}
             >
               {label}
@@ -244,43 +244,59 @@ export function ExamCard({
   const questionsCount = quiz.questionsToShow && quiz.questionsToShow > 0 ? quiz.questionsToShow : quiz.questions.length;
 
   let statusBadgeText = "متاح الآن";
-  let statusBadgeClass = "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50";
+  let statusBadgeClass = "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border-emerald-200/80 dark:border-emerald-900/50";
+  let showPulsingDot = true;
 
   if (isLocked) {
     statusBadgeText = "مغلق";
-    statusBadgeClass = "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900/50";
+    statusBadgeClass = "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border-amber-200/80 dark:border-amber-900/50";
+    showPulsingDot = false;
   } else if (isCompleted) {
+    showPulsingDot = false;
     statusBadgeText = attemptsLeft === 0 ? "تم الحل (مكتمل)" : "محاولة جديدة";
     statusBadgeClass = attemptsLeft === 0 
-      ? "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-900/50"
-      : "bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-900/50";
+      ? "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border-blue-200/80 dark:border-blue-900/50"
+      : "bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400 border-purple-200/80 dark:border-purple-900/50";
   }
 
   return (
-    <article className="group relative flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-5 shadow-2xs hover:border-blue-500/50 hover:-translate-y-0.5 transition-all duration-200 w-full" dir="rtl">
+    <article className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/80 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-5 shadow-2xs hover:border-blue-500/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 w-full overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/20 before:to-transparent hover:before:via-blue-500/50" dir="rtl">
       <div className="space-y-3">
         {/* 1. Status Badge (Compact Header) */}
         <div className="flex items-center justify-between gap-2">
-          <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold border ${statusBadgeClass}`}>
-            {isLocked ? <Lock className="h-3 w-3" /> : isCompleted ? <CheckCircle2 className="h-3 w-3" /> : <Sparkles className="h-3 w-3" />}
+          <span className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-[10px] font-bold border ${statusBadgeClass}`}>
+            {showPulsingDot && (
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+              </span>
+            )}
+            {isLocked ? <Lock className="h-3 w-3" /> : isCompleted ? <CheckCircle2 className="h-3 w-3" /> : null}
             {statusBadgeText}
           </span>
+
+          {quiz.durationMinutes && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+              <Clock className="h-3.5 w-3.5 text-amber-500" />
+              <span className="font-mono tabular-nums">{quiz.durationMinutes}</span> دقيقة
+            </span>
+          )}
         </div>
 
-        {/* 2. Exam Title (Dominant Element with isolated LTR rendering for English names) */}
+        {/* 2. Exam Title */}
         <h3
           dir="ltr"
-          className="text-base font-black text-slate-900 dark:text-slate-100 leading-snug text-right"
+          className="text-base font-black text-slate-900 dark:text-slate-100 leading-snug text-right group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"
           style={{ unicodeBidi: "isolate" }}
         >
           {quiz.title}
         </h3>
 
-        {/* 3. Course Badge (Light blue background, dark blue text, subtle border) */}
+        {/* 3. Course Badge */}
         <div className="flex items-center gap-2">
           <span
             dir="ltr"
-            className="inline-flex items-center gap-1.5 rounded-md bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-800/60 px-2.5 py-0.5 text-xs font-bold text-blue-700 dark:text-blue-300 text-right"
+            className="inline-flex items-center gap-1.5 rounded-md bg-blue-50 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/60 px-2.5 py-0.5 text-xs font-bold text-blue-700 dark:text-blue-300 text-right"
             style={{ unicodeBidi: "isolate" }}
           >
             <BookOpen className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
@@ -301,24 +317,23 @@ export function ExamCard({
         <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
           <div className="flex items-center gap-1.5 min-w-0">
             <ClipboardCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-            <span className="truncate">{questionsCount} سؤال</span>
+            <span className="truncate"><span className="font-mono tabular-nums">{questionsCount}</span> سؤال</span>
           </div>
 
           <div className="flex items-center gap-1.5 min-w-0">
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span className="truncate">النجاح: {quiz.passingScore}%</span>
+            <span className="truncate">النجاح: <span className="font-mono tabular-nums">{quiz.passingScore}%</span></span>
           </div>
 
-          {quiz.durationMinutes && (
-            <div className="flex items-center gap-1.5 min-w-0">
-              <Clock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-              <span className="truncate">{quiz.durationMinutes} دقيقة</span>
-            </div>
-          )}
-
-          <div className="flex items-center gap-1.5 min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0 col-span-2">
             <RotateCcw className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
-            <span className="truncate">{attemptsLeft !== null ? `${attemptsLeft} محاولات متبقية` : "بلا حدود"}</span>
+            <span className="truncate">
+              {attemptsLeft !== null ? (
+                <>المتبقي: <span className="font-mono tabular-nums">{attemptsLeft}</span> محاولات</>
+              ) : (
+                "محاولات بلا حدود"
+              )}
+            </span>
           </div>
         </div>
 
@@ -331,27 +346,29 @@ export function ExamCard({
               <div
                 className={`rounded-xl border p-2.5 space-y-1.5 mt-2 ${
                   passed
-                    ? "border-blue-100 dark:border-blue-900/40 bg-blue-50/60 dark:bg-blue-950/40"
-                    : "border-red-100 dark:border-red-900/40 bg-red-50/60 dark:bg-red-950/40"
+                    ? "border-emerald-200/80 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/30"
+                    : "border-red-200/80 dark:border-red-900/40 bg-red-50/50 dark:bg-red-950/30"
                 }`}
               >
                 <div
                   className={`flex items-center justify-between text-xs font-bold ${
                     passed
-                      ? "text-blue-700 dark:text-blue-300"
+                      ? "text-emerald-700 dark:text-emerald-300"
                       : "text-red-700 dark:text-red-300"
                   }`}
                 >
                   <span>أفضل نتيجة:</span>
-                  <span>{best}% ({passed ? "ناجح" : "لم يجتز"})</span>
+                  <span className="font-mono tabular-nums">{best}% ({passed ? "ناجح ✓" : "لم يجتز"})</span>
                 </div>
                 <div
                   className={`h-1.5 w-full overflow-hidden rounded-full ${
-                    passed ? "bg-blue-200 dark:bg-blue-900/60" : "bg-red-200 dark:bg-red-900/60"
+                    passed ? "bg-emerald-100 dark:bg-emerald-900/50" : "bg-red-100 dark:bg-red-900/50"
                   }`}
                 >
                   <div
-                    className={`h-full ${passed ? "bg-blue-600 dark:bg-blue-500" : "bg-red-600 dark:bg-red-500"}`}
+                    className={`h-full rounded-full transition-all duration-700 ${
+                      passed ? "bg-gradient-to-r from-emerald-500 to-teal-400" : "bg-gradient-to-r from-red-500 to-amber-500"
+                    }`}
                     style={{ width: `${best}%` }}
                   />
                 </div>
@@ -379,12 +396,12 @@ export function ExamCard({
           type="button"
           onClick={() => onStartQuiz(quiz)}
           disabled={isLocked || (attemptsLeft !== null && attemptsLeft <= 0)}
-          className={`w-full h-9 rounded-xl text-xs font-bold shadow-2xs transition-all flex items-center justify-center gap-1.5 ${
+          className={`w-full h-9 rounded-xl text-xs font-bold shadow-2xs transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer ${
             isLocked || (attemptsLeft !== null && attemptsLeft <= 0)
-              ? "bg-slate-100 dark:bg-[#12233B] text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-[#223552] cursor-not-allowed"
+              ? "bg-slate-100 dark:bg-[#12233B] text-slate-400 dark:text-slate-500 border border-slate-200/80 dark:border-[#223552] cursor-not-allowed"
               : isCompleted
-              ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-              : "bg-blue-600 hover:bg-blue-700 text-white"
+              ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20"
+              : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20"
           }`}
         >
           {isLocked ? (
@@ -415,8 +432,8 @@ export function EmptyExamsState({
   onClearFilters: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-10 text-center space-y-3" dir="rtl">
-      <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40">
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#223552] bg-white dark:bg-[#0D1B2E] p-10 text-center space-y-3.5 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/20 before:to-transparent" dir="rtl">
+      <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40 shadow-xs">
         <ClipboardCheck className="h-6 w-6" />
       </div>
       <h3 className="text-base font-bold text-slate-900 dark:text-white">
@@ -431,7 +448,7 @@ export function EmptyExamsState({
         <button
           type="button"
           onClick={onClearFilters}
-          className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+          className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition-colors cursor-pointer"
         >
           <X className="h-3.5 w-3.5" /> إلغاء كل الفلاتر
         </button>

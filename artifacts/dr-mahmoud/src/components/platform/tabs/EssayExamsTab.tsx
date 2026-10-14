@@ -605,7 +605,7 @@ export function EssayExamsTab({
               return (
                 <div
                   key={exam.id}
-                  className="flex flex-col justify-between rounded-3xl border border-border bg-card p-5 shadow-xs transition-all hover:shadow-md hover:border-primary/40 relative overflow-hidden group"
+                  className="flex flex-col justify-between rounded-3xl border border-border bg-card p-5 shadow-xs transition-all hover:shadow-md hover:border-primary/40 relative overflow-hidden group before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/25 before:to-transparent"
                 >
                   <div className="space-y-3.5">
                     {/* Top badging */}
@@ -627,7 +627,7 @@ export function EssayExamsTab({
                         )}
                       </div>
                       {isReviewed ? (
-                        <span className="inline-flex items-center gap-1 rounded-xl bg-purple-500/15 text-purple-700 dark:text-purple-300 px-2.5 py-1 text-xs font-extrabold border border-purple-500/20 shrink-0">
+                        <span className="inline-flex items-center gap-1 rounded-xl bg-purple-500/15 text-purple-700 dark:text-purple-300 px-2.5 py-1 text-xs font-extrabold border border-purple-500/20 shrink-0 font-mono tabular-nums">
                           <Sparkles className="h-3.5 w-3.5" />
                           تقييمك: {sub.adminScore} / {exam.totalPoints}
                         </span>
@@ -664,11 +664,11 @@ export function EssayExamsTab({
                     <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/60 text-xs">
                       <div className="flex items-center gap-2 rounded-xl bg-muted/50 p-2 text-muted-foreground font-medium">
                         <Clock className="h-3.5 w-3.5 text-primary shrink-0" />
-                        <span>{exam.durationMinutes || 60} دقيقة (ساعة)</span>
+                        <span className="font-mono tabular-nums">{exam.durationMinutes || 60} دقيقة</span>
                       </div>
                       <div className="flex items-center gap-2 rounded-xl bg-muted/50 p-2 text-muted-foreground font-medium">
                         <Award className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                        <span>{exam.totalPoints} درجة</span>
+                        <span className="font-mono tabular-nums">{exam.totalPoints} درجة</span>
                       </div>
                     </div>
                   </div>
@@ -726,7 +726,7 @@ export function EssayExamsTab({
     return (
       <div className="space-y-6 pb-28" dir="rtl">
         {/* Sticky Exam Header Bar with Countdown Timer */}
-        <div className="sticky top-14 z-30 -mx-4 sm:-mx-6 -mt-6 px-4 sm:px-6 py-3 bg-white/95 dark:bg-[#0E1626]/95 backdrop-blur-md border-b border-border shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div className="sticky top-14 z-30 -mx-4 sm:-mx-6 -mt-6 px-4 sm:px-6 py-3 bg-white/90 dark:bg-[#070D18]/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-[#1E2E48] shadow-xs flex flex-wrap items-center justify-between gap-3 relative before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/25 before:to-transparent">
           <div className="flex items-center gap-3">
             <button
               onClick={() => {

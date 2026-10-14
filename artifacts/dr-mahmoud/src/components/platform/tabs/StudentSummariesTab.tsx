@@ -291,7 +291,7 @@ export function StudentSummariesTab({
     <div className="space-y-6 text-foreground" dir="rtl">
 
       {/* Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-border bg-card p-5 shadow-xs">
+      <div className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-border bg-card p-5 shadow-xs before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/25 before:to-transparent">
         <div className="flex items-center gap-3.5">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20">
             <FileTextIcon className="h-6 w-6 text-primary" />
@@ -363,7 +363,7 @@ export function StudentSummariesTab({
       ) : summaries.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredSummaries.map((item) => (
-            <div key={item.id} className="flex flex-col justify-between rounded-2xl border border-border bg-card p-4 space-y-3.5 shadow-xs hover:border-primary/40 transition-all">
+            <div key={item.id} className="relative overflow-hidden flex flex-col justify-between rounded-2xl border border-border bg-card p-4 space-y-3.5 shadow-xs hover:border-primary/40 transition-all before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/20 before:to-transparent">
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-2 pb-2.5 border-b border-border">
                   <div>
@@ -380,7 +380,7 @@ export function StudentSummariesTab({
                     : <><ClockIcon className="h-3 w-3" /><span>قيد المراجعة</span></>}
                   </span>
                 </div>
-                <span className="text-[10px] text-muted-foreground block">{new Date(item.createdAt).toLocaleDateString("ar-EG")} • {new Date(item.createdAt).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}</span>
+                <span className="text-[10px] text-muted-foreground block font-mono tabular-nums">{new Date(item.createdAt).toLocaleDateString("ar-EG")} • {new Date(item.createdAt).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}</span>
                 {item.imageUrls?.length > 0 && (
                   <div>
                     <span className="text-[11px] font-bold text-muted-foreground block mb-1.5">الملفات والملخصات المرفوعة ({item.imageUrls.length}):</span>

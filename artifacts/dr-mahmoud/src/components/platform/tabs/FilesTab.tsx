@@ -136,22 +136,22 @@ export function FileCard({
   const fileSizeMb = (file.sizeBytes / 1024 / 1024).toFixed(1);
 
   return (
-    <article className="group relative flex flex-col justify-between rounded-2xl border border-slate-200 dark:border-[#283A54] bg-white dark:bg-[#101E32] p-5 shadow-2xs hover:border-[#247CF0]/60 hover:-translate-y-0.5 transition-all duration-200 w-full" dir="rtl">
+    <article className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/80 dark:border-[#283A54] bg-white dark:bg-[#101E32] p-5 shadow-2xs hover:border-[#247CF0]/60 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 w-full overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/20 before:to-transparent hover:before:via-blue-500/50" dir="rtl">
       <div className="space-y-3">
         {/* Top Header Area: File Icon + Title + Badge */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 min-w-0 flex-1">
-            <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border ${typeDetails.bgClass}`}>
+            <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl border ${typeDetails.bgClass} group-hover:scale-105 transition-transform duration-200 shadow-2xs`}>
               <IconComponent className={`h-5 w-5 ${typeDetails.iconColorClass}`} />
             </span>
 
             <div className="min-w-0 space-y-0.5 flex-1">
-              <h3 className="text-base font-black text-slate-900 dark:text-[#F8FAFC] leading-snug line-clamp-2">
+              <h3 className="text-base font-black text-slate-900 dark:text-[#F8FAFC] leading-snug line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                 {file.title}
               </h3>
               <p
                 dir="ltr"
-                className="text-xs font-semibold text-slate-500 dark:text-[#8092AA] truncate text-right"
+                className="text-xs font-semibold text-slate-500 dark:text-[#8092AA] truncate text-right font-mono"
                 style={{ unicodeBidi: "isolate" }}
               >
                 {file.originalName}
@@ -159,7 +159,7 @@ export function FileCard({
             </div>
           </div>
 
-          <span className={`rounded-md px-2 py-0.5 text-[10px] font-extrabold border shrink-0 ${typeDetails.bgClass}`}>
+          <span className={`rounded-md px-2 py-0.5 text-[10px] font-extrabold border shrink-0 ${typeDetails.bgClass} shadow-2xs`}>
             {typeDetails.badgeText}
           </span>
         </div>
@@ -170,7 +170,7 @@ export function FileCard({
         <div className="flex items-center justify-between gap-2 text-xs font-bold text-slate-600 dark:text-[#AFC0D6]">
           <span
             dir="ltr"
-            className="inline-flex items-center gap-1.5 rounded-md bg-blue-50 dark:bg-[#172A46] border border-blue-200 dark:border-[#283A54] px-2.5 py-1 text-xs text-[#247CF0] dark:text-[#247CF0] text-right truncate max-w-[70%]"
+            className="inline-flex items-center gap-1.5 rounded-md bg-blue-50 dark:bg-[#172A46] border border-blue-200/80 dark:border-[#283A54] px-2.5 py-1 text-xs text-[#247CF0] dark:text-[#247CF0] text-right truncate max-w-[70%]"
             style={{ unicodeBidi: "isolate" }}
           >
             <BookOpen className="h-3.5 w-3.5 text-[#247CF0] shrink-0" />
@@ -179,7 +179,7 @@ export function FileCard({
 
           <span
             dir="ltr"
-            className="text-xs font-bold text-slate-500 dark:text-[#8092AA] shrink-0"
+            className="text-xs font-bold font-mono tabular-nums text-slate-500 dark:text-[#8092AA] shrink-0"
             style={{ unicodeBidi: "isolate" }}
           >
             {fileSizeMb} MB
@@ -192,7 +192,7 @@ export function FileCard({
         <button
           type="button"
           onClick={() => onPreview(file)}
-          className="w-full h-11 rounded-xl bg-[#247CF0] hover:bg-[#1C68CC] text-white text-xs font-bold shadow-2xs transition-colors flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+          className="w-full h-11 rounded-xl bg-[#247CF0] hover:bg-[#1C68CC] text-white text-xs font-bold shadow-2xs shadow-blue-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
         >
           <Eye className="h-4 w-4" />
           <span>معاينة الملف</span>

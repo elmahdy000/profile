@@ -74,48 +74,49 @@ export function DashboardHeader({
   onOpenSummaries?: () => void;
 }) {
   return (
-    <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 dark:border-[#26364D] pb-4" dir="rtl">
-      <div className="space-y-1">
-        <div className="flex flex-wrap items-center gap-2.5">
-          <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+    <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border/60 pb-5" dir="rtl">
+      <div className="space-y-1.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-xl md:text-2xl font-black text-foreground tracking-tight">
             مرحبًا، {student.name}
           </h1>
           <span
-            className={`rounded-full px-3 py-0.5 text-xs font-bold ${
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold border shadow-2xs ${
               student.learningMode === "offline"
-                ? "bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-900/40"
-                : "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/40"
+                ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/25"
+                : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25"
             }`}
           >
+            <span className={`h-1.5 w-1.5 rounded-full ${student.learningMode === "offline" ? "bg-purple-500" : "bg-blue-500 animate-pulse"}`} />
             {student.learningMode === "offline" ? "نظامك: أوفلاين (السنتر)" : "نظامك: أونلاين"}
           </span>
 
           {student.centerName && (
-            <span className="inline-flex items-center gap-1 rounded-full px-3 py-0.5 text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/40">
+            <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shadow-2xs">
               <MapPin className="h-3 w-3" /> {student.centerName}
             </span>
           )}
 
           {student.appointmentSlot && (
-            <span className="inline-flex items-center gap-1 rounded-full px-3 py-0.5 text-xs font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/40">
+            <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 shadow-2xs">
               <Clock className="h-3 w-3" /> {student.appointmentSlot}
             </span>
           )}
         </div>
-        <p className="text-xs md:text-sm font-medium text-slate-500 dark:text-[#B1C0D4]">
+        <p className="text-xs md:text-[13px] font-medium text-muted-foreground">
           {academicTrackTitle
             ? `${academicTrackTitle} — تابع تقدمك وابدأ من آخر نقطة وصلت إليها.`
             : "تابع تقدمك وابدأ من آخر نقطة وصلت إليها."}
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 shrink-0 self-start sm:self-auto">
+      <div className="flex flex-wrap items-center gap-2.5 shrink-0 self-start sm:self-auto">
         {onOpenSummaries && (
           <Button
             type="button"
             onClick={onOpenSummaries}
             variant="outline"
-            className="h-10 px-4 rounded-xl border-border hover:border-primary/40 text-foreground text-xs font-bold shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="h-10 px-4 rounded-xl border-border/80 hover:border-primary/40 text-foreground text-xs font-bold shadow-2xs hover:shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <FileText className="h-4 w-4 text-primary" />
             <span>رفع ملخص كشكول 📝</span>
@@ -124,17 +125,17 @@ export function DashboardHeader({
         <Button
           type="button"
           onClick={onContinue}
-          className="h-10 px-5 rounded-xl bg-[#2583F7] hover:bg-[#1470DB] text-white text-xs font-bold shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+          className="h-10 px-5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer group"
         >
           <span>متابعة التعلم</span>
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
         </Button>
       </div>
     </header>
   );
 }
 
-// ── 2. Meaningful Statistics Cards ──
+// ── 2. Meaningful Statistics Cards (Vercel Precision Style) ──
 export function StudentStatistics({
   completedLessonsCount,
   availableQuizzesCount,
@@ -150,43 +151,57 @@ export function StudentStatistics({
 }) {
   return (
     <section aria-label="إحصائيات الطالب" className="grid grid-cols-2 lg:grid-cols-4 gap-3.5" dir="rtl">
-      <div className="rounded-2xl border border-slate-200 dark:border-[#26364D] bg-white dark:bg-[#111D2F] p-4 flex items-center gap-3.5 shadow-2xs">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-[#2583F7] border border-blue-100 dark:border-blue-900/40">
+      {/* 1. الدروس المكتملة */}
+      <div className="group relative overflow-hidden rounded-2xl border border-border/70 dark:border-slate-800/80 bg-gradient-to-b from-card to-card/90 dark:from-slate-900/90 dark:to-[#0B1322] p-4 sm:p-5 flex items-center gap-3.5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-blue-500/40 hover:-translate-y-0.5">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shadow-2xs transition-transform duration-200 group-hover:scale-105">
           <BookOpen className="h-5 w-5" />
         </span>
         <div className="min-w-0 text-right">
-          <span className="block text-[12px] font-bold text-slate-500 dark:text-[#B1C0D4] truncate">الدروس المكتملة</span>
-          <strong className="text-[24px] font-black text-slate-900 dark:text-white leading-none mt-1 block">{completedLessonsCount}</strong>
+          <span className="block text-[12px] font-bold text-muted-foreground truncate">الدروس المكتملة</span>
+          <strong className="text-[24px] font-mono font-black text-foreground dark:text-white leading-none mt-1.5 block tabular-nums">
+            {completedLessonsCount}
+          </strong>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 dark:border-[#26364D] bg-white dark:bg-[#111D2F] p-4 flex items-center gap-3.5 shadow-2xs">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-[#22C58B] border border-emerald-100 dark:border-emerald-900/40">
+      {/* 2. الاختبارات المتاحة */}
+      <div className="group relative overflow-hidden rounded-2xl border border-border/70 dark:border-slate-800/80 bg-gradient-to-b from-card to-card/90 dark:from-slate-900/90 dark:to-[#0B1322] p-4 sm:p-5 flex items-center gap-3.5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-emerald-500/40 hover:-translate-y-0.5">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-2xs transition-transform duration-200 group-hover:scale-105">
           <ClipboardCheck className="h-5 w-5" />
         </span>
         <div className="min-w-0 text-right">
-          <span className="block text-[12px] font-bold text-slate-500 dark:text-[#B1C0D4] truncate">الاختبارات المتاحة</span>
-          <strong className="text-[24px] font-black text-slate-900 dark:text-white leading-none mt-1 block">{availableQuizzesCount}</strong>
+          <span className="block text-[12px] font-bold text-muted-foreground truncate">الاختبارات المتاحة</span>
+          <strong className="text-[24px] font-mono font-black text-foreground dark:text-white leading-none mt-1.5 block tabular-nums">
+            {availableQuizzesCount}
+          </strong>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 dark:border-[#26364D] bg-white dark:bg-[#111D2F] p-4 flex items-center gap-3.5 shadow-2xs">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-900/40">
+      {/* 3. الملفات والملازم */}
+      <div className="group relative overflow-hidden rounded-2xl border border-border/70 dark:border-slate-800/80 bg-gradient-to-b from-card to-card/90 dark:from-slate-900/90 dark:to-[#0B1322] p-4 sm:p-5 flex items-center gap-3.5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-purple-500/40 hover:-translate-y-0.5">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shadow-2xs transition-transform duration-200 group-hover:scale-105">
           <FolderOpen className="h-5 w-5" />
         </span>
         <div className="min-w-0 text-right">
-          <span className="block text-[12px] font-bold text-slate-500 dark:text-[#B1C0D4] truncate">الملفات والملازم</span>
-          <strong className="text-[24px] font-black text-slate-900 dark:text-white leading-none mt-1 block">{newFilesCount}</strong>
+          <span className="block text-[12px] font-bold text-muted-foreground truncate">الملفات والملازم</span>
+          <strong className="text-[24px] font-mono font-black text-foreground dark:text-white leading-none mt-1.5 block tabular-nums">
+            {newFilesCount}
+          </strong>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 dark:border-[#26364D] bg-white dark:bg-[#111D2F] p-4 flex items-center gap-3.5 shadow-2xs">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-[#E4A11B] border border-amber-100 dark:border-amber-900/40">
+      {/* 4. متوسط النتائج */}
+      <div className="group relative overflow-hidden rounded-2xl border border-border/70 dark:border-slate-800/80 bg-gradient-to-b from-card to-card/90 dark:from-slate-900/90 dark:to-[#0B1322] p-4 sm:p-5 flex items-center gap-3.5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-amber-500/40 hover:-translate-y-0.5">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shadow-2xs transition-transform duration-200 group-hover:scale-105">
           <Award className="h-5 w-5" />
         </span>
         <div className="min-w-0 text-right">
-          <span className="block text-[12px] font-bold text-slate-500 dark:text-[#B1C0D4] truncate">متوسط النتائج</span>
-          <strong className="text-[24px] font-black text-slate-900 dark:text-white leading-none mt-1 block">
+          <span className="block text-[12px] font-bold text-muted-foreground truncate">متوسط النتائج</span>
+          <strong className="text-[24px] font-mono font-black text-foreground dark:text-white leading-none mt-1.5 block tabular-nums">
             {hasQuizResults ? `${averageResult}%` : "—"}
           </strong>
         </div>
@@ -210,29 +225,33 @@ export function StudentProgressSummary({
   totalQuizzes: number;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-[#26364D] bg-white dark:bg-[#111D2F] p-4 sm:p-5 shadow-2xs space-y-3" dir="rtl">
+    <div className="relative overflow-hidden rounded-2xl border border-border/70 dark:border-slate-800/80 bg-gradient-to-b from-card to-card/80 dark:from-slate-900/90 dark:to-[#0B1322] p-4 sm:p-5 shadow-xs space-y-3" dir="rtl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="space-y-0.5">
-          <h2 className="text-sm md:text-base font-extrabold text-slate-900 dark:text-white">
-            نسبة إكمال الكورس العامة
-          </h2>
-          <p className="text-xs text-slate-500 dark:text-[#B1C0D4]">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm md:text-base font-black text-foreground">
+              نسبة إكمال الكورس العامة
+            </h2>
+            <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-mono font-black text-primary border border-primary/20">
+              {overallProgress}%
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground">
             {overallProgress === 0
-              ? "ابدأ أول درس لتبدأ رحلة التعلم."
+              ? "ابدأ أول درس لتبدأ رحلة التعلم المنظمة."
               : `أنجزت ${overallProgress}% من إجمالي المحتوى المطلوب لمرحلتك.`}
           </p>
         </div>
 
-        <div className="flex items-center gap-4 text-xs font-bold text-slate-700 dark:text-slate-200">
-          <span>الدروس: {completedLessons}/{totalLessons}</span>
-          <span>•</span>
-          <span>الاختبارات: {completedQuizzes}/{totalQuizzes}</span>
+        <div className="flex items-center gap-3 text-xs font-bold text-muted-foreground font-mono">
+          <span className="bg-muted/40 px-2 py-1 rounded-lg border border-border/40">الدروس: {completedLessons}/{totalLessons}</span>
+          <span className="bg-muted/40 px-2 py-1 rounded-lg border border-border/40">الاختبارات: {completedQuizzes}/{totalQuizzes}</span>
         </div>
       </div>
 
-      <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-[#172844]">
+      <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800/80 p-0.5 shadow-inner">
         <div
-          className="h-full bg-[#2583F7] rounded-full transition-all duration-500"
+          className="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 transition-all duration-700 ease-out shadow-xs"
           style={{ width: `${Math.max(2, overallProgress)}%` }}
         />
       </div>
@@ -240,7 +259,7 @@ export function StudentProgressSummary({
   );
 }
 
-// ── 4. Continue Learning Card ──
+// ── 4. Continue Learning Card (Vercel Media Card Style) ──
 export function ContinueLearningCard({
   continueVideo,
   continueProgress,
@@ -255,64 +274,72 @@ export function ContinueLearningCard({
   onOpenLessons: () => void;
 }) {
   return (
-    <article className="overflow-hidden rounded-2xl border border-slate-200 dark:border-[#26364D] bg-white dark:bg-[#111D2F] shadow-2xs flex flex-col sm:flex-row" dir="rtl">
-      <div className="relative sm:w-[40%] min-h-48 bg-slate-100 dark:bg-[#172844]">
+    <article className="group relative overflow-hidden rounded-2xl border border-border/70 dark:border-slate-800/80 bg-gradient-to-b from-card to-card/90 dark:from-slate-900/90 dark:to-[#0B1322] shadow-xs hover:shadow-md transition-all duration-300 flex flex-col sm:flex-row" dir="rtl">
+      <div className="relative sm:w-[42%] min-h-48 overflow-hidden bg-slate-900">
         <img
           src={academicTrackImage || "/university-cs-path.webp"}
           alt="صورة الكورس"
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-slate-950/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent sm:bg-gradient-to-r sm:from-transparent sm:to-slate-950/60" />
+        
+        {/* Play Icon Badge */}
+        <div className="absolute inset-0 grid place-items-center opacity-80 group-hover:opacity-100 transition-opacity">
+          <span className="grid h-12 w-12 place-items-center rounded-full bg-white/25 backdrop-blur-md text-white border border-white/30 shadow-lg group-hover:scale-110 transition-transform">
+            <Play className="h-5 w-5 fill-white mr-0.5" />
+          </span>
+        </div>
       </div>
 
-      <div className="flex-1 p-5 text-right flex flex-col justify-between space-y-3">
+      <div className="flex-1 p-5 text-right flex flex-col justify-between space-y-3.5">
         <div>
-          <span className="inline-block rounded-md bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-800/60 px-2.5 py-0.5 text-xs font-bold text-blue-700 dark:text-blue-300">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 px-2.5 py-0.5 text-[11px] font-bold text-blue-600 dark:text-blue-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
             {continueProgress > 0 ? "تابع من حيث توقفت" : "الكورس الحالي"}
           </span>
 
           <h2
             dir="ltr"
-            className="mt-2 text-base md:text-lg font-black text-slate-900 dark:text-white leading-snug text-right"
+            className="mt-2 text-base md:text-lg font-black text-foreground dark:text-white leading-snug text-right line-clamp-2"
             style={{ unicodeBidi: "isolate" }}
           >
-            {continueVideo?.title || "محتواك هيظهر هنا قريب"}
+            {continueVideo?.title || "محتواك سيظهر هنا فور التسجيل"}
           </h2>
 
-          <p className="mt-1 text-xs font-medium text-slate-500 dark:text-[#B1C0D4]">
+          <p className="mt-1 text-xs font-medium text-muted-foreground truncate">
             {continueVideo
               ? `${continueVideo.subject || continueVideo.category} — يتطلب تركيز ومتابعة مستمرة.`
               : "لا يوجد درس متاح حالياً للتكملة."}
           </p>
         </div>
 
-        <div className="space-y-1.5 pt-2">
-          <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-200">
-            <span>تقدم الدرس الحالي: {continueProgress}%</span>
+        <div className="space-y-1.5 pt-1">
+          <div className="flex justify-between text-xs font-bold text-muted-foreground font-mono">
+            <span>تقدم الدرس: {continueProgress}%</span>
             <span>الإجمالي: {overallProgress}%</span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-[#172844]">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800/80 p-0.5 shadow-inner">
             <div
-              className="h-full rounded-full bg-[#2583F7] transition-all duration-500"
+              className="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-700 ease-out shadow-xs"
               style={{ width: `${Math.max(2, continueProgress)}%` }}
             />
           </div>
         </div>
 
-        <div className="pt-2 flex items-center gap-2">
+        <div className="pt-2 flex flex-wrap items-center gap-2">
           <Button
             type="button"
             onClick={onOpenLessons}
-            className="h-9 px-4 rounded-xl bg-[#2583F7] hover:bg-[#1470DB] text-white text-xs font-bold shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
+            className="h-9 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer group/btn"
           >
             <span>{continueProgress > 0 ? "أكمل الدرس" : "ابدأ أول درس"}</span>
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4 transition-transform group-hover/btn:-translate-x-1" />
           </Button>
 
           <button
             type="button"
             onClick={onOpenLessons}
-            className="h-9 px-3 rounded-xl border border-slate-200 dark:border-[#26364D] text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#172844] transition-colors"
+            className="h-9 px-3 rounded-xl border border-border/80 text-xs font-bold text-foreground hover:bg-muted/50 transition-colors cursor-pointer"
           >
             عرض تفاصيل الكورس
           </button>
@@ -322,7 +349,7 @@ export function ContinueLearningCard({
   );
 }
 
-// ── 5. Next Steps List ──
+// ── 5. Next Steps List (Vercel Interactive Checklist) ──
 export function NextStepsList({
   quizzes,
   files,
@@ -339,37 +366,37 @@ export function NextStepsList({
   const nextVideo = videos[0];
 
   return (
-    <article className="rounded-2xl border border-slate-200 dark:border-[#26364D] bg-white dark:bg-[#111D2F] p-5 shadow-2xs space-y-4" dir="rtl">
+    <article className="rounded-2xl border border-border/70 dark:border-slate-800/80 bg-gradient-to-b from-card to-card/90 dark:from-slate-900/90 dark:to-[#0B1322] p-5 shadow-xs space-y-3.5 flex flex-col justify-between" dir="rtl">
       <div>
-        <h2 className="text-base font-black text-slate-900 dark:text-white">الخطوات القادمة</h2>
-        <p className="text-xs font-medium text-slate-500 dark:text-[#B1C0D4]">
+        <h2 className="text-base font-black text-foreground">الخطوات القادمة 🎯</h2>
+        <p className="text-xs font-medium text-muted-foreground">
           مهام مخصصة لمتابعة التحصيل الدراسي بالترتيب.
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         {/* Task 1: Lesson */}
         {nextVideo && (
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-[#26364D] bg-slate-50 dark:bg-[#172844] p-3 text-right">
+          <div className="group flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 dark:bg-slate-800/40 p-3 text-right hover:border-primary/40 hover:bg-primary/5 transition-all">
             <div className="flex items-center gap-3 min-w-0">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-[#2583F7] border border-blue-100 dark:border-blue-900/40">
-                <BookOpen className="h-4 w-4" />
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-mono text-xs font-bold">
+                1
               </span>
               <div className="min-w-0">
                 <strong
                   dir="ltr"
-                  className="block text-xs font-extrabold text-slate-900 dark:text-white truncate text-right"
+                  className="block text-xs font-black text-foreground truncate text-right"
                   style={{ unicodeBidi: "isolate" }}
                 >
                   {nextVideo.title}
                 </strong>
-                <span className="block text-[11px] font-medium text-slate-500 dark:text-[#B1C0D4]">الدرس التالي بالخطة</span>
+                <span className="block text-[11px] font-medium text-muted-foreground">الدرس التالي بالخطة</span>
               </div>
             </div>
             <button
               type="button"
               onClick={() => onOpen("lessons")}
-              className="h-8 px-3 rounded-lg bg-blue-600 text-white text-[11px] font-bold hover:bg-blue-700 transition-colors shrink-0"
+              className="h-7 px-3 rounded-lg bg-primary text-primary-foreground text-[11px] font-bold hover:bg-primary/90 transition-all shadow-2xs shrink-0 cursor-pointer"
             >
               افتح الدرس
             </button>
@@ -378,26 +405,26 @@ export function NextStepsList({
 
         {/* Task 2: File */}
         {nextFile && (
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-[#26364D] bg-slate-50 dark:bg-[#172844] p-3 text-right">
+          <div className="group flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 dark:bg-slate-800/40 p-3 text-right hover:border-purple-500/40 hover:bg-purple-500/5 transition-all">
             <div className="flex items-center gap-3 min-w-0">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-900/40">
-                <FileText className="h-4 w-4" />
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 font-mono text-xs font-bold">
+                2
               </span>
               <div className="min-w-0">
                 <strong
                   dir="ltr"
-                  className="block text-xs font-extrabold text-slate-900 dark:text-white truncate text-right"
+                  className="block text-xs font-black text-foreground truncate text-right"
                   style={{ unicodeBidi: "isolate" }}
                 >
                   {nextFile.title}
                 </strong>
-                <span className="block text-[11px] font-medium text-slate-500 dark:text-[#B1C0D4]">مذكرة / كود مساعد</span>
+                <span className="block text-[11px] font-medium text-muted-foreground">مذكرة / كود مساعد</span>
               </div>
             </div>
             <button
               type="button"
               onClick={() => onOpen("files")}
-              className="h-8 px-3 rounded-lg border border-slate-200 dark:border-[#26364D] bg-white dark:bg-[#111D2F] text-slate-700 dark:text-slate-200 text-[11px] font-bold hover:bg-slate-100 dark:hover:bg-[#172844] transition-colors shrink-0"
+              className="h-7 px-3 rounded-lg border border-border bg-card text-foreground text-[11px] font-bold hover:bg-muted transition-colors shrink-0 cursor-pointer"
             >
               معاينة
             </button>
@@ -406,20 +433,20 @@ export function NextStepsList({
 
         {/* Task 3: Quiz */}
         {nextQuiz && (
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 dark:border-[#26364D] bg-slate-50 dark:bg-[#172844] p-3 text-right">
+          <div className="group flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 dark:bg-slate-800/40 p-3 text-right hover:border-amber-500/40 hover:bg-amber-500/5 transition-all">
             <div className="flex items-center gap-3 min-w-0">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-[#E4A11B] border border-amber-100 dark:border-amber-900/40">
-                <ClipboardCheck className="h-4 w-4" />
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 font-mono text-xs font-bold">
+                3
               </span>
               <div className="min-w-0">
                 <strong
                   dir="ltr"
-                  className="block text-xs font-extrabold text-slate-900 dark:text-white truncate text-right"
+                  className="block text-xs font-black text-foreground truncate text-right"
                   style={{ unicodeBidi: "isolate" }}
                 >
                   {nextQuiz.title}
                 </strong>
-                <span className="block text-[11px] font-medium text-slate-500 dark:text-[#B1C0D4]">
+                <span className="block text-[11px] font-medium text-muted-foreground">
                   {nextQuiz.locked ? "يفتح بعد الشروط" : "متاح الآن للحل"}
                 </span>
               </div>
@@ -427,7 +454,7 @@ export function NextStepsList({
             <button
               type="button"
               onClick={() => onOpen("quizzes")}
-              className="h-8 px-3 rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 text-[11px] font-bold hover:bg-amber-100 dark:hover:bg-amber-900/80 transition-colors shrink-0"
+              className="h-7 px-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[11px] font-bold hover:bg-amber-500/20 transition-colors shrink-0 cursor-pointer"
             >
               {nextQuiz.locked ? "عرض الشروط" : "حل الاختبار"}
             </button>
@@ -447,15 +474,20 @@ export function LatestFilesSection({
   onOpenFiles: () => void;
 }) {
   return (
-    <section className="space-y-3" dir="rtl">
+    <section className="space-y-3.5" dir="rtl">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-black text-slate-900 dark:text-white">أحدث الملفات والملازم</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-base font-black text-foreground">أحدث الملفات والملازم</h2>
+          <span className="text-xs font-mono font-bold text-muted-foreground bg-muted/40 px-2 py-0.5 rounded-full border border-border/40">
+            {files.length}
+          </span>
+        </div>
         <button
           type="button"
           onClick={onOpenFiles}
-          className="text-xs font-bold text-blue-600 dark:text-[#2583F7] hover:underline"
+          className="text-xs font-bold text-primary hover:underline cursor-pointer"
         >
-          عرض الكل ({files.length})
+          عرض الكل ({files.length}) ←
         </button>
       </div>
 
@@ -467,22 +499,22 @@ export function LatestFilesSection({
             const fileSizeMb = (file.sizeBytes / 1024 / 1024).toFixed(1);
 
             return (
-              <article key={file.id} className="rounded-2xl border border-slate-200 dark:border-[#26364D] bg-white dark:bg-[#111D2F] p-4 shadow-2xs flex flex-col justify-between space-y-3">
+              <article key={file.id} className="group relative overflow-hidden rounded-2xl border border-border/70 dark:border-slate-800/80 bg-gradient-to-b from-card to-card/90 dark:from-slate-900/90 dark:to-[#0B1322] p-4 shadow-xs hover:shadow-md hover:border-primary/40 transition-all duration-300 flex flex-col justify-between space-y-3">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-2">
-                    <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg border ${typeDetails.bgClass}`}>
+                    <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl border ${typeDetails.bgClass} shadow-2xs`}>
                       <IconComponent className={`h-4 w-4 ${typeDetails.iconColorClass}`} />
                     </span>
-                    <span className="text-[11px] font-bold text-slate-500 dark:text-[#B1C0D4]">{fileSizeMb} MB</span>
+                    <span className="font-mono text-[11px] font-bold text-muted-foreground bg-muted/40 px-2 py-0.5 rounded-md border border-border/40">{fileSizeMb} MB</span>
                   </div>
 
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white line-clamp-1">
+                  <h3 className="text-sm font-bold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
                     {file.title}
                   </h3>
 
                   <p
                     dir="ltr"
-                    className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate text-right"
+                    className="font-mono text-[11px] font-medium text-muted-foreground/80 truncate text-right"
                     style={{ unicodeBidi: "isolate" }}
                   >
                     {file.originalName}
@@ -492,9 +524,9 @@ export function LatestFilesSection({
                 <button
                   type="button"
                   onClick={onOpenFiles}
-                  className="w-full h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800/60 text-blue-700 dark:text-blue-300 text-xs font-bold hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="w-full h-8 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs font-bold hover:bg-primary hover:text-primary-foreground transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                 >
-                  <Eye className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                  <Eye className="h-3.5 w-3.5" />
                   <span>معاينة الملف</span>
                 </button>
               </article>

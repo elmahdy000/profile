@@ -1,20 +1,28 @@
-import paramiko, sys
-sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+import paramiko
+import json
+import sys
+
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 c = paramiko.SSHClient()
 c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-c.connect('72.62.27.196', port=22, username='root', password='e#LWhcSAa6B&R8s', timeout=10)
+c.connect('72.62.27.196', username='root', password='e#LWhcSAa6B&R8s')
 
-def run(cmd):
-    i, o, e = c.exec_command(cmd, timeout=10)
-    out = o.read().decode('utf-8', 'replace').strip()
-    err = e.read().decode('utf-8', 'replace').strip()
-    return out or err
+def q(sql):
+    stdin, stdout, stderr = c.exec_command('su - postgres -c "psql -d profile -t -A"')
+    stdin.write(sql)
+    stdin.close()
+    return stdout.read().decode('utf-8', errors='replace')
 
-print('=== RECENT AUDIT LOGS ===')
-print(run("""sudo -u postgres psql -d profile -c "SELECT * FROM audit_logs ORDER BY id DESC LIMIT 20;" """))
-
-print('\n=== CHECK UPDATED_AT OF STUDENTS ===')
-print(run("""sudo -u postgres psql -d profile -c "SELECT date_trunc('minute', updated_at) as updated_minute, count(*) FROM students GROUP BY 1 ORDER BY 1 DESC LIMIT 10;" """))
+print("--- AUDIT LOGS FOR STUDENT 316 (Malak Atef) & 331 (M9VGXY) ---")
+res = q("""
+SELECT id, action, details, created_at
+FROM audit_logs
+WHERE details::text ILIKE '%331%' OR details::text ILIKE '%M9VGXY%' OR details::text ILIKE '%316%'
+ORDER BY id DESC
+LIMIT 10;
+""")
+print(res if res.strip() else "NO AUDIT LOGS FOUND")
 
 c.close()

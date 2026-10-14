@@ -1052,20 +1052,20 @@ export function StudentPlatform() {
           </div>
         </aside>
         <section className="min-w-0 bg-[#F6F8FC] dark:bg-[#0B1220] min-h-screen">
-          <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-[#E4EAF2] bg-white/95 px-4 backdrop-blur-sm md:px-6 dark:border-[#26364D] dark:bg-[#111C2E]/95">
+          <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur-md md:px-6 dark:border-[#1E2E48] dark:bg-[#0D1B2E]/90 shadow-2xs">
             <div className="flex items-center gap-3">
-              <button className="grid h-9 w-9 place-items-center rounded-lg border border-border text-muted-foreground lg:hidden" onClick={() => setSidebarOpen(true)} aria-label="فتح القائمة"><Menu className="h-[18px] w-[18px]" /></button>
+              <button className="grid h-9 w-9 place-items-center rounded-xl border border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#12233B] text-slate-600 dark:text-slate-300 lg:hidden hover:border-slate-300 dark:hover:border-slate-700 transition-colors cursor-pointer" onClick={() => setSidebarOpen(true)} aria-label="فتح القائمة"><Menu className="h-[18px] w-[18px]" /></button>
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setShowNotifications((current) => !current)}
                   aria-label="الإشعارات"
                   aria-expanded={showNotifications}
-                  className="relative grid h-9 w-9 place-items-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:text-primary hover:border-primary/20"
+                  className="relative grid h-9 w-9 place-items-center rounded-xl border border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#12233B] text-slate-600 dark:text-slate-300 transition-all hover:text-blue-600 hover:border-blue-500/30 hover:shadow-2xs active:scale-95 cursor-pointer"
                 >
                   <Bell className="h-[18px] w-[18px]" />
                   {unreadNotifications > 0 && (
-                    <span className="absolute -left-1.5 -top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-destructive px-1 text-[9px] font-bold text-white shadow-sm">
+                    <span className="absolute -left-1.5 -top-1.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-red-600 px-1 text-[9px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-[#0D1B2E]">
                       {Math.min(unreadNotifications, 9)}
                     </span>
                   )}
@@ -1169,13 +1169,21 @@ export function StudentPlatform() {
               <span className="hidden text-[13px] font-bold text-foreground sm:inline">{nav.find(([value]) => value === tab)?.[1]}</span>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => setTab("profile")} className="flex items-center gap-2.5 rounded-xl p-1.5 transition-colors hover:bg-muted"><StudentAvatar name={student.name} src={student.avatarUrl} size="sm" /><span className="hidden max-w-40 truncate text-[13px] font-bold text-foreground sm:block">{student.name}</span></button>
               <button
+                type="button"
+                onClick={() => setTab("profile")}
+                className="flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 transition-all hover:bg-slate-100 dark:hover:bg-[#12233B] border border-transparent hover:border-slate-200/80 dark:hover:border-[#1E2E48] cursor-pointer"
+              >
+                <StudentAvatar name={student.name} src={student.avatarUrl} size="sm" />
+                <span className="hidden max-w-40 truncate text-[13px] font-bold text-slate-800 dark:text-slate-200 sm:block">{student.name}</span>
+              </button>
+              <button
+                type="button"
                 onClick={logout}
                 title="تسجيل الخروج"
-                className="lg:hidden grid h-9 w-9 place-items-center rounded-lg border border-border text-muted-foreground hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
+                className="lg:hidden grid h-9 w-9 place-items-center rounded-xl border border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#12233B] text-slate-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:hover:bg-red-950/30 dark:hover:border-red-900/50 transition-colors cursor-pointer"
               >
-                <LogOut className="h-[18px] w-[18px]" />
+                <LogOut className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -1324,67 +1332,75 @@ export function StudentPlatform() {
         </section>
       </div>
 
-      {/* Mobile Bottom Navigation */}
+      {/* Mobile Bottom Navigation Dock */}
       <nav
         aria-label="التنقل الرئيسي"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-lg backdrop-blur-sm lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 dark:border-[#1E2E48] bg-white/85 dark:bg-[#070D18]/85 px-1.5 pb-[max(0.25rem,env(safe-area-inset-bottom))] shadow-xl backdrop-blur-xl lg:hidden"
       >
-        <div className="mx-auto grid max-w-lg grid-cols-5">
+        <div className="mx-auto grid max-w-lg grid-cols-5 gap-1">
           <button
             type="button"
             onClick={() => { setTab("dashboard"); setSidebarOpen(false); }}
             aria-current={tab === "dashboard" ? "page" : undefined}
-            className={`my-1 flex min-h-[54px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-bold transition-colors active:scale-[.98] ${
-              tab === "dashboard" ? "bg-primary/10 text-primary font-black" : "text-muted-foreground"
+            className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-bold transition-all duration-150 active:scale-95 cursor-pointer relative ${
+              tab === "dashboard"
+                ? "bg-blue-50/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
             }`}
           >
-            <Home className={`h-[22px] w-[22px] ${tab === "dashboard" ? "stroke-[2.5]" : ""}`} />
+            <Home className={`h-[20px] w-[20px] ${tab === "dashboard" ? "stroke-[2.5]" : ""}`} />
             <span>الرئيسية</span>
           </button>
           <button
             type="button"
             onClick={() => { setTab("lessons"); setSidebarOpen(false); }}
             aria-current={tab === "lessons" ? "page" : undefined}
-            className={`my-1 flex min-h-[54px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-bold transition-colors active:scale-[.98] ${
-              tab === "lessons" ? "bg-primary/10 text-primary font-black" : "text-muted-foreground"
+            className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-bold transition-all duration-150 active:scale-95 cursor-pointer relative ${
+              tab === "lessons"
+                ? "bg-blue-50/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
             }`}
           >
-            <BookOpen className={`h-[22px] w-[22px] ${tab === "lessons" ? "stroke-[2.5]" : ""}`} />
+            <BookOpen className={`h-[20px] w-[20px] ${tab === "lessons" ? "stroke-[2.5]" : ""}`} />
             <span>كورساتي</span>
           </button>
           <button
             type="button"
             onClick={() => { setTab("quizzes"); setSidebarOpen(false); }}
             aria-current={tab === "quizzes" ? "page" : undefined}
-            className={`my-1 flex min-h-[54px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-bold transition-colors active:scale-[.98] ${
-              tab === "quizzes" ? "bg-primary/10 text-primary font-black" : "text-muted-foreground"
+            className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-bold transition-all duration-150 active:scale-95 cursor-pointer relative ${
+              tab === "quizzes"
+                ? "bg-blue-50/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
             }`}
           >
-            <ClipboardCheck className={`h-[22px] w-[22px] ${tab === "quizzes" ? "stroke-[2.5]" : ""}`} />
+            <ClipboardCheck className={`h-[20px] w-[20px] ${tab === "quizzes" ? "stroke-[2.5]" : ""}`} />
             <span>الاختبارات</span>
           </button>
           <button
             type="button"
             onClick={() => { setTab("summaries"); setSidebarOpen(false); }}
             aria-current={tab === "summaries" ? "page" : undefined}
-            className={`my-1 flex min-h-[54px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-bold transition-colors active:scale-[.98] ${
-              tab === "summaries" ? "bg-primary/10 text-primary font-black" : "text-muted-foreground"
+            className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-bold transition-all duration-150 active:scale-95 cursor-pointer relative ${
+              tab === "summaries"
+                ? "bg-blue-50/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
             }`}
           >
-            <FileText className={`h-[22px] w-[22px] ${tab === "summaries" ? "stroke-[2.5]" : ""}`} />
+            <FileText className={`h-[20px] w-[20px] ${tab === "summaries" ? "stroke-[2.5]" : ""}`} />
             <span>مذكراتي</span>
           </button>
           <button
             type="button"
             onClick={() => setSidebarOpen((prev) => !prev)}
             aria-label="فتح القائمة الكاملة"
-            className={`my-1 flex min-h-[54px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[10px] font-bold transition-colors active:scale-[.98] ${
+            className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-bold transition-all duration-150 active:scale-95 cursor-pointer relative ${
               sidebarOpen || ["files", "compiler", "profile"].includes(tab)
-                ? "bg-primary/10 text-primary font-black"
-                : "text-muted-foreground"
+                ? "bg-blue-50/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-black"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
             }`}
           >
-            <Menu className="h-[22px] w-[22px]" />
+            <Menu className="h-[20px] w-[20px]" />
             <span>القائمة</span>
           </button>
         </div>
@@ -1394,18 +1410,18 @@ export function StudentPlatform() {
         {linkedPreviewFile && <AppFilePreviewModal file={linkedPreviewFile} onClose={() => setLinkedPreviewFile(null)} />}
         {activeQuiz && (
           <motion.div
-            className="fixed inset-0 z-[100] bg-slate-50 dark:bg-[#070D18] flex flex-col overflow-hidden select-none md:select-auto"
+            className="fixed inset-0 z-[100] bg-slate-50/95 dark:bg-[#070D18]/95 backdrop-blur-md flex flex-col overflow-hidden select-none md:select-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             {/* ── 1. Sticky Full-Width Header Bar ── */}
-            <header className="sticky top-0 z-30 shrink-0 border-b border-slate-200 dark:border-slate-800/80 bg-white/95 dark:bg-[#0D1B2E]/95 backdrop-blur-md shadow-xs">
+            <header className="sticky top-0 z-30 shrink-0 border-b border-slate-200/80 dark:border-[#1E2E48] bg-white/90 dark:bg-[#070D18]/90 backdrop-blur-xl shadow-xs">
               <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3" dir="rtl">
                 {/* Title and stats on Right (RTL) */}
                 <div className="min-w-0 flex-1 space-y-1 text-right">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60 px-2 py-0.5 text-xs font-black">
+                    <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/80 dark:border-blue-800/60 px-2 py-0.5 text-xs font-black shadow-2xs">
                       اختبار إلكتروني
                     </span>
                     <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight truncate" dir="auto">
@@ -1413,14 +1429,14 @@ export function StudentPlatform() {
                     </h2>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
-                    <span>{activeQuiz.questionsToShow && activeQuiz.questionsToShow > 0 ? activeQuiz.questionsToShow : activeQuiz.questions.length} سؤال</span>
+                    <span><span className="font-mono tabular-nums">{activeQuiz.questionsToShow && activeQuiz.questionsToShow > 0 ? activeQuiz.questionsToShow : activeQuiz.questions.length}</span> سؤال</span>
                     <span>•</span>
-                    <span>نسبة النجاح {activeQuiz.passingScore}%</span>
+                    <span>نسبة النجاح <span className="font-mono tabular-nums">{activeQuiz.passingScore}%</span></span>
                     {!quizResult && (
                       <>
                         <span>•</span>
                         <span className="font-extrabold text-blue-600 dark:text-blue-400">
-                          أجبت: {quizAnswers.filter((a) => a >= 0).length} / {activeQuiz.questions.length}
+                          أجبت: <span className="font-mono tabular-nums">{quizAnswers.filter((a) => a >= 0).length}</span> / <span className="font-mono tabular-nums">{activeQuiz.questions.length}</span>
                         </span>
                       </>
                     )}
@@ -1433,23 +1449,23 @@ export function StudentPlatform() {
                     <div
                       className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-bold shadow-2xs transition-all duration-300 ${
                         quizTimeRemaining === null
-                          ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                          ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700"
                           : quizTimeRemaining < 30
-                          ? "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 animate-pulse"
+                          ? "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/40 animate-pulse ring-2 ring-red-500/20"
                           : quizTimeRemaining < 60
                           ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
-                          : "bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+                          : "bg-blue-50/80 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-500/25 shadow-2xs"
                       }`}
                     >
                       <Clock className="h-4 w-4 shrink-0" />
-                      <span className="font-black text-sm sm:text-base tabular-nums">
+                      <span className="font-black font-mono text-sm sm:text-base tabular-nums tracking-wider">
                         {quizTimeRemaining !== null
                           ? `${Math.floor(quizTimeRemaining / 60)}:${String(quizTimeRemaining % 60).padStart(2, "0")}`
                           : `${Math.floor(quizElapsedSeconds / 60)}:${String(quizElapsedSeconds % 60).padStart(2, "0")}`
                         }
                       </span>
                       {quizTimeRemaining !== null && (
-                        <span className="text-[10px] font-bold opacity-70">
+                        <span className="text-[10px] font-bold font-mono opacity-70">
                           {(() => {
                             const totalSeconds = Math.round((activeQuiz.durationMinutes ?? 0) * 60);
                             return `/ ${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, "0")}`;
@@ -1477,7 +1493,7 @@ export function StudentPlatform() {
                       setActiveQuiz(null);
                       setQuizResult(null);
                     }}
-                    className="h-9 px-3 text-xs font-bold text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-all"
+                    className="h-9 px-3 text-xs font-bold text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-all cursor-pointer"
                   >
                     <X className="h-4 w-4 ml-1" />
                     {quizResult ? "إغلاق" : "خروج"}
@@ -1487,7 +1503,7 @@ export function StudentPlatform() {
 
               {/* Progress bar for countdown */}
               {quizTimeRemaining !== null && !quizResult && activeQuiz.durationMinutes && (
-                <div className="h-1 w-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                <div className="h-1 w-full bg-slate-200/80 dark:bg-slate-800 overflow-hidden">
                   <div
                     className={`h-full transition-all duration-1000 ease-linear ${
                       quizTimeRemaining < 30 ? "bg-red-500" : quizTimeRemaining < 60 ? "bg-amber-500" : "bg-blue-600"
@@ -1538,7 +1554,7 @@ export function StudentPlatform() {
                     <div className="mt-5 mb-2 max-w-md mx-auto space-y-1.5" dir="rtl">
                       <div className="flex justify-between items-center text-xs font-extrabold px-1">
                         <span>الدرجة المكتسبة</span>
-                        <span className="font-mono text-sm font-black text-blue-600 dark:text-blue-400">{quizResult.score}%</span>
+                        <span className="font-mono text-sm font-black tabular-nums text-blue-600 dark:text-blue-400">{quizResult.score}%</span>
                       </div>
                       <div className="h-3.5 w-full bg-white/80 dark:bg-[#070D18]/80 rounded-full overflow-hidden p-0.5 border border-current/15 shadow-inner">
                         <div
@@ -1556,13 +1572,13 @@ export function StudentPlatform() {
                     <div className="grid grid-cols-3 gap-2 md:gap-4 mt-5 pt-5 border-t border-current/15 max-w-lg mx-auto" dir="rtl">
                       <div className="rounded-2xl bg-white/80 dark:bg-[#0F1D32]/80 p-3 text-center shadow-xs border border-current/5 flex flex-col items-center justify-center">
                         <span className="block text-[11px] md:text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">النسبة</span>
-                        <strong className="block text-base md:text-lg font-black text-blue-600 dark:text-blue-400">{quizResult.score}%</strong>
+                        <strong className="block text-base md:text-lg font-black font-mono tabular-nums text-blue-600 dark:text-blue-400">{quizResult.score}%</strong>
                       </div>
 
                       <div className="rounded-2xl bg-white/80 dark:bg-[#0F1D32]/80 p-3 text-center shadow-xs border border-current/5 flex flex-col items-center justify-center min-w-0">
                         <span className="block text-[11px] md:text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap truncate w-full">الإجابات الصحيحة</span>
                         <div dir="ltr" className="flex items-center justify-center gap-0.5 whitespace-nowrap font-mono w-full">
-                          <span className="text-sm md:text-base font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                          <span className="text-sm md:text-base font-black font-mono tabular-nums text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                             {quizResult.correct} / {quizResult.total}
                           </span>
                         </div>
@@ -1570,7 +1586,7 @@ export function StudentPlatform() {
 
                       <div className="rounded-2xl bg-white/80 dark:bg-[#0F1D32]/80 p-3 text-center shadow-xs border border-current/5 flex flex-col items-center justify-center">
                         <span className="block text-[11px] md:text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">المحاولات المتبقية</span>
-                        <strong className="block text-xs md:text-sm font-black text-amber-600 dark:text-amber-400 whitespace-nowrap">
+                        <strong className="block text-xs md:text-sm font-black font-mono tabular-nums text-amber-600 dark:text-amber-400 whitespace-nowrap">
                           {quizResult.attemptsRemaining === null ? "بلا حدود" : quizResult.attemptsRemaining}
                         </strong>
                       </div>
@@ -1600,16 +1616,16 @@ export function StudentPlatform() {
                   return (
                     <div
                       key={qi}
-                      className={`space-y-4 rounded-3xl border p-5 sm:p-7 transition-all shadow-xs ${isEng ? "text-left" : "text-right"} ${
+                      className={`relative overflow-hidden space-y-4 rounded-3xl border p-5 sm:p-7 transition-all shadow-xs before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/15 before:to-transparent ${isEng ? "text-left" : "text-right"} ${
                         quizResult
                           ? isCorrect
                             ? "border-emerald-500/40 bg-emerald-500/5 dark:bg-emerald-950/20"
                             : isWrong
                             ? "border-red-500/40 bg-red-500/5 dark:bg-red-950/20"
-                            : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0D1B2E]"
+                            : "border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#0D1B2E]"
                           : isSelected
-                          ? "border-blue-500/40 bg-white dark:bg-[#0D1B2E] ring-1 ring-blue-500/10"
-                          : "border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#0D1B2E]"
+                          ? "border-blue-500/50 bg-white dark:bg-[#0D1B2E] ring-1 ring-blue-500/15 shadow-xs"
+                          : "border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0D1B2E] hover:border-slate-300 dark:hover:border-slate-700"
                       }`}
                     >
                       {/* Question Header & Prompt */}
@@ -1620,8 +1636,8 @@ export function StudentPlatform() {
                               if (!isEng) {
                                 return (
                                   <h3 dir="rtl" className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 text-right leading-relaxed whitespace-pre-line break-words">
-                                    <span className="inline-flex items-center justify-center h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-black ml-2 shrink-0">
-                                      {qi + 1}
+                                    <span className="inline-flex items-center justify-center h-7 min-w-[28px] px-2 rounded-lg bg-blue-50 dark:bg-blue-950/70 border border-blue-200/60 dark:border-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-black font-mono tabular-nums ml-2 shrink-0">
+                                      #{qi + 1}
                                     </span>
                                     {q.prompt}
                                   </h3>
@@ -1639,8 +1655,8 @@ export function StudentPlatform() {
                                 <>
                                   {/* English Title Line */}
                                   <h3 dir="ltr" className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 text-left leading-relaxed break-words whitespace-pre-line">
-                                    <span className="inline-flex items-center justify-center h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-black mr-2 shrink-0">
-                                      {qi + 1}
+                                    <span className="inline-flex items-center justify-center h-7 min-w-[28px] px-2 rounded-lg bg-blue-50 dark:bg-blue-950/70 border border-blue-200/60 dark:border-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-black font-mono tabular-nums mr-2 shrink-0">
+                                      #{qi + 1}
                                     </span>
                                     {titleLine}
                                   </h3>
@@ -1666,8 +1682,8 @@ export function StudentPlatform() {
                           </div>
 
                           {quizResult && (
-                            <span className={`text-xs font-bold px-3 py-1 rounded-full shrink-0 ${
-                              isCorrect ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-red-500/15 text-red-600 dark:text-red-400"
+                            <span className={`text-xs font-bold px-3 py-1 rounded-full shrink-0 shadow-2xs ${
+                              isCorrect ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" : "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/20"
                             }`}>
                               {isCorrect ? "✓ إجابة صحيحة" : "✗ إجابة خاطئة"}
                             </span>
@@ -1676,7 +1692,7 @@ export function StudentPlatform() {
                       </div>
 
                       {q.imageUrl && (
-                        <div className="my-3 sm:my-4 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/60 p-2 sm:p-4 flex flex-col items-center justify-center">
+                        <div className="my-3 sm:my-4 overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/60 p-2 sm:p-4 flex flex-col items-center justify-center">
                           <img
                             src={q.imageUrl}
                             alt={`Question ${qi + 1} image`}
@@ -1687,7 +1703,7 @@ export function StudentPlatform() {
                           <button
                             type="button"
                             onClick={() => setLightboxImage(q.imageUrl || null)}
-                            className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition"
+                            className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition cursor-pointer"
                           >
                             <Maximize2 className="h-3.5 w-3.5" />
                             <span>اضغط لتكبير الصورة وفحص التفاصيل بدقة</span>
@@ -1701,7 +1717,7 @@ export function StudentPlatform() {
                           const optionSelected = quizAnswers[qi] === oi;
                           const correctOptionIndex = detail ? detail.correctOption : q.correctIndex;
                           const optionIsCorrect = correctOptionIndex !== undefined && correctOptionIndex === oi;
-                          let optionStyle = "border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:border-blue-300 dark:hover:border-blue-700";
+                          let optionStyle = "border-slate-200/80 dark:border-[#1F314A] hover:bg-slate-50/70 dark:hover:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-700";
 
                           if (quizResult) {
                             if (optionIsCorrect) {
@@ -1709,10 +1725,10 @@ export function StudentPlatform() {
                             } else if (optionSelected && !optionIsCorrect) {
                               optionStyle = "border-red-500 bg-red-500/15 text-red-800 dark:text-red-200 line-through opacity-80";
                             } else {
-                              optionStyle = "border-slate-200 dark:border-slate-800 opacity-50";
+                              optionStyle = "border-slate-200/80 dark:border-slate-800 opacity-50";
                             }
                           } else if (optionSelected) {
-                            optionStyle = "border-blue-600 dark:border-blue-500 bg-blue-50/80 dark:bg-blue-950/50 text-blue-900 dark:text-blue-100 font-bold ring-2 ring-blue-500/20 shadow-2xs";
+                            optionStyle = "border-blue-600 dark:border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 text-blue-950 dark:text-blue-100 font-bold ring-2 ring-blue-500/20 shadow-xs";
                           }
 
                           const letter = getOptionLetter(oi, isEng);
@@ -1721,7 +1737,7 @@ export function StudentPlatform() {
                             <label
                               key={oi}
                               dir={isEng ? "ltr" : "rtl"}
-                              className={`flex min-h-12 sm:min-h-14 cursor-pointer items-center gap-3 sm:gap-3.5 rounded-2xl border px-3 sm:px-4 py-3 sm:py-3.5 transition-all select-none ${optionStyle}`}
+                              className={`flex min-h-12 sm:min-h-14 cursor-pointer items-center gap-3 sm:gap-3.5 rounded-2xl border px-3.5 sm:px-4 py-3 sm:py-3.5 transition-all select-none active:scale-[0.99] ${optionStyle}`}
                             >
                               <input
                                 type="radio"
@@ -1736,9 +1752,9 @@ export function StudentPlatform() {
                                 className="text-blue-600 focus:ring-blue-500 h-4 w-4 shrink-0 cursor-pointer"
                               />
                               <span
-                                className={`flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl text-xs sm:text-sm font-black transition-colors ${
+                                className={`flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl text-xs sm:text-sm font-black font-mono transition-colors ${
                                   optionSelected
-                                    ? "bg-blue-600 text-white"
+                                    ? "bg-blue-600 text-white shadow-2xs"
                                     : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
                                 }`}
                               >
@@ -1756,7 +1772,7 @@ export function StudentPlatform() {
                         const isExplAr = /[\u0600-\u06FF]/.test(q.explanation);
                         return (
                           <div
-                            className={`mt-4 rounded-2xl border border-blue-200 dark:border-blue-900/50 bg-blue-50/60 dark:bg-blue-950/30 p-4 text-xs sm:text-sm text-slate-800 dark:text-slate-200 ${
+                            className={`mt-4 rounded-2xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/60 dark:bg-blue-950/30 p-4 text-xs sm:text-sm text-slate-800 dark:text-slate-200 ${
                               isExplAr ? "text-right" : "text-left"
                             }`}
                             dir={isExplAr ? "rtl" : "ltr"}
@@ -1780,7 +1796,7 @@ export function StudentPlatform() {
                     <Button
                       onClick={() => submitQuiz(false)}
                       disabled={quizSubmitting}
-                      className="w-full h-14 text-base sm:text-lg font-black rounded-2xl shadow-xl bg-blue-600 hover:bg-blue-700 text-white transition-all active:scale-[0.99] flex items-center justify-center gap-2"
+                      className="w-full h-14 text-base sm:text-lg font-black rounded-2xl shadow-xl shadow-blue-600/20 bg-blue-600 hover:bg-blue-700 text-white transition-all active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
                     >
                       {quizSubmitting ? (
                         <div className="flex items-center justify-center gap-2">
@@ -1788,7 +1804,7 @@ export function StudentPlatform() {
                           <span>جارٍ التصحيح وحساب النتيجة...</span>
                         </div>
                       ) : (
-                        "تسليم وتصحيح الاختبار"
+                        "تسليم وتصحيح الاختبار 🏁"
                       )}
                     </Button>
                     <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -1802,7 +1818,7 @@ export function StudentPlatform() {
                         setActiveQuiz(null);
                         setQuizResult(null);
                       }}
-                      className="w-full h-13 text-base font-black rounded-2xl shadow-md bg-blue-600 hover:bg-blue-700 text-white transition-all"
+                      className="w-full h-13 text-base font-black rounded-2xl shadow-md bg-blue-600 hover:bg-blue-700 text-white transition-all cursor-pointer"
                     >
                       إغلاق نافذة الاختبار ومتابعة الكورس ✕
                     </Button>

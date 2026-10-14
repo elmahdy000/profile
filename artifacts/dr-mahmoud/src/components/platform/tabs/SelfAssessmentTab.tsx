@@ -1482,33 +1482,36 @@ export function SelfAssessmentTab({
       {step === "taking" && questions.length > 0 && (
         <div className="space-y-5">
           {/* Top Bar: Progress & Timer */}
-          <div className="rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 p-4 shadow-xs flex items-center justify-between gap-4 sticky top-4 z-30">
-            <div className="flex items-center gap-2.5">
-              <span className="h-8 px-3 rounded-xl bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 font-bold text-xs flex items-center">
-                سؤال {currentQIndex + 1} من {questions.length}
+          <div className="rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-white/90 dark:bg-[#0D1B2E]/90 backdrop-blur-xl p-3.5 sm:p-4 shadow-xs flex items-center justify-between gap-3 sticky top-4 z-30">
+            <div className="flex items-center gap-2">
+              <span className="h-8 px-3 rounded-xl bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900/60 font-black text-xs flex items-center gap-1 shadow-2xs">
+                <span>سؤال</span>
+                <span className="font-mono tabular-nums">{currentQIndex + 1}</span>
+                <span>من</span>
+                <span className="font-mono tabular-nums">{questions.length}</span>
               </span>
-              <span className="text-xs text-slate-500 hidden sm:inline">
-                {Object.keys(answers).length} إجابة مكتملة
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 hidden sm:inline">
+                (<span className="font-mono tabular-nums">{Object.keys(answers).length}</span> مكتمل)
               </span>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {isUntimed ? (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold bg-blue-50/80 border-blue-200 text-blue-700 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-300">
-                  <Clock className="h-3.5 w-3.5 text-blue-600" />
-                  <span>الوقت المنقضي: {formatTimer(totalSecondsSpent)}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-200/70 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-sans mr-1">وقت مفتوح</span>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold bg-blue-50/80 border-blue-200/80 text-blue-700 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-300">
+                  <Clock className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                  <span className="tabular-nums">{formatTimer(totalSecondsSpent)}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-200/70 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-sans mr-0.5">مفتوح</span>
                 </div>
               ) : (
                 <div
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold transition-colors ${
                     timeRemainingSeconds < 120
-                      ? "bg-red-50 border-red-200 text-red-600 animate-pulse dark:bg-red-950/40 dark:border-red-800"
-                      : "bg-slate-50 border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
+                      ? "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400 animate-pulse ring-2 ring-red-500/20"
+                      : "bg-slate-50 border-slate-200/80 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
                   }`}
                 >
                   <Clock className="h-3.5 w-3.5" />
-                  <span>الوقت المتبقي: {formatTimer(timeRemainingSeconds)}</span>
+                  <span className="tabular-nums tracking-wider">{formatTimer(timeRemainingSeconds)}</span>
                 </div>
               )}
 
@@ -1517,7 +1520,7 @@ export function SelfAssessmentTab({
                 size="sm"
                 disabled={submitting}
                 onClick={() => setShowSubmitModal(true)}
-                className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-9 px-4 shadow-xs"
+                className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-9 px-4 shadow-xs transition-all active:scale-95 cursor-pointer"
               >
                 {submitting ? "جاري التصحيح..." : "تسليم الاختبار 🏁"}
               </Button>
@@ -1525,7 +1528,7 @@ export function SelfAssessmentTab({
           </div>
 
           {/* Question Navigator Dots */}
-          <div className="rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 p-3 shadow-xs flex flex-wrap items-center gap-1.5 justify-center">
+          <div className="rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0D1B2E] p-3 shadow-xs flex flex-wrap items-center gap-1.5 justify-center">
             {questions.map((q, idx) => {
               const isAnswered = answers[idx] !== undefined;
               const isCurrent = currentQIndex === idx;
@@ -1534,12 +1537,12 @@ export function SelfAssessmentTab({
                   key={idx}
                   type="button"
                   onClick={() => setCurrentQIndex(idx)}
-                  className={`h-8 w-8 rounded-lg text-xs font-bold transition-all ${
+                  className={`h-8 w-8 rounded-lg text-xs font-black font-mono tabular-nums transition-all cursor-pointer ${
                     isCurrent
-                      ? "ring-2 ring-blue-600 bg-blue-600 text-white shadow-xs"
+                      ? "ring-2 ring-blue-600 bg-blue-600 text-white shadow-xs scale-105"
                       : isAnswered
-                      ? "bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400"
+                      ? "bg-emerald-50 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200/80 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
                   }`}
                 >
                   {idx + 1}
@@ -1555,16 +1558,19 @@ export function SelfAssessmentTab({
             const isEng = isEnglishQuestion(currentQ.prompt, currentQ.options);
 
             return (
-              <div className="rounded-3xl border border-slate-200 bg-white dark:bg-slate-900 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0D1B2E] p-6 sm:p-8 shadow-xs space-y-6 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/20 before:to-transparent">
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between text-xs text-slate-400 font-semibold border-b border-slate-100 dark:border-slate-800 pb-3">
-                    <span>السؤال رقم #{currentQIndex + 1}</span>
-                    <span>1 درجة</span>
+                  <div className="flex items-center justify-between text-xs text-slate-400 font-semibold border-b border-slate-100 dark:border-[#1F314A] pb-3">
+                    <span className="flex items-center gap-1">
+                      <span>السؤال رقم</span>
+                      <span className="font-mono tabular-nums font-bold text-slate-700 dark:text-slate-300">#{currentQIndex + 1}</span>
+                    </span>
+                    <span className="font-mono tabular-nums">1 درجة</span>
                   </div>
 
                   <h2
                     dir={isEng ? "ltr" : "rtl"}
-                    className={`text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 leading-relaxed break-words whitespace-pre-line ${
+                    className={`text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 leading-relaxed break-words whitespace-pre-line ${
                       isEng ? "text-left font-sans" : "text-right"
                     }`}
                   >
@@ -1572,7 +1578,7 @@ export function SelfAssessmentTab({
                   </h2>
 
                   {currentQ.imageUrl && (
-                    <div className="rounded-xl overflow-hidden border border-slate-200 max-w-md mx-auto my-3">
+                    <div className="rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 max-w-md mx-auto my-3 shadow-xs">
                       <img src={currentQ.imageUrl} alt="سؤال" className="w-full h-auto object-contain" />
                     </div>
                   )}
@@ -1588,17 +1594,17 @@ export function SelfAssessmentTab({
                         type="button"
                         onClick={() => setAnswers({ ...answers, [currentQIndex]: optIdx })}
                         dir={isEng ? "ltr" : "rtl"}
-                        className={`w-full ${
+                        className={`w-full cursor-pointer ${
                           isEng ? "text-left font-sans" : "text-right"
-                        } p-4 rounded-2xl border text-xs sm:text-sm font-medium transition-all flex items-center justify-between gap-3 ${
+                        } p-4 rounded-2xl border text-xs sm:text-sm font-medium transition-all flex items-center justify-between gap-3 active:scale-[0.99] ${
                           isSelected
-                            ? "border-blue-600 bg-blue-50/80 dark:bg-blue-950/50 text-blue-950 dark:text-blue-100 font-semibold shadow-xs"
-                            : "border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                            ? "border-blue-600 dark:border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 text-blue-950 dark:text-blue-100 font-bold ring-2 ring-blue-500/20 shadow-xs"
+                            : "border-slate-200/80 dark:border-[#1F314A] text-slate-700 dark:text-slate-300 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-700"
                         }`}
                       >
                         <span className="leading-relaxed flex-1" dir={isEng ? "ltr" : "rtl"}>{optionText}</span>
                         <div
-                          className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                          className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
                             isSelected
                               ? "border-blue-600 bg-blue-600 text-white"
                               : "border-slate-300 dark:border-slate-600"
@@ -1612,13 +1618,13 @@ export function SelfAssessmentTab({
                 </div>
 
                 {/* Prev / Next Buttons */}
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-[#1F314A]">
                   <Button
                     variant="outline"
                     size="sm"
                     disabled={currentQIndex === 0}
                     onClick={() => setCurrentQIndex((prev) => Math.max(0, prev - 1))}
-                    className="rounded-xl text-xs"
+                    className="rounded-xl text-xs font-bold cursor-pointer"
                   >
                     <ChevronRight className="h-4 w-4 ml-1" /> السابق
                   </Button>
@@ -1627,7 +1633,7 @@ export function SelfAssessmentTab({
                     <Button
                       size="sm"
                       onClick={() => setCurrentQIndex((prev) => Math.min(questions.length - 1, prev + 1))}
-                      className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs px-5"
+                      className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs px-5 font-bold cursor-pointer transition-all active:scale-95"
                     >
                       التالي <ChevronLeft className="h-4 w-4 mr-1" />
                     </Button>
@@ -1636,9 +1642,9 @@ export function SelfAssessmentTab({
                       size="sm"
                       disabled={submitting}
                       onClick={() => setShowSubmitModal(true)}
-                      className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-5 font-bold"
+                      className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-5 font-bold cursor-pointer shadow-xs transition-all active:scale-95"
                     >
-                      تسليم الاختبار وعرض النتيجة
+                      تسليم الاختبار وعرض النتيجة 🏁
                     </Button>
                   )}
                 </div>
@@ -1652,31 +1658,31 @@ export function SelfAssessmentTab({
       {step === "results" && (
         <div className="space-y-6">
           {/* Result Card */}
-          <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-8 shadow-md text-center space-y-4">
-            <div className="inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-blue-50 dark:bg-blue-950 text-blue-600 shadow-inner mx-auto">
-              <Award className="h-10 w-10 text-blue-600" />
+          <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0D1B2E] p-6 sm:p-8 shadow-md text-center space-y-4 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/30 before:to-transparent">
+            <div className="inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-blue-50 dark:bg-blue-950/70 border border-blue-200/60 dark:border-blue-900/60 text-blue-600 dark:text-blue-400 shadow-inner mx-auto">
+              <Award className="h-10 w-10 text-blue-600 dark:text-blue-400" />
             </div>
 
             <div className="space-y-1">
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
                 تقرير نتيجة التقييم الذاتي
               </h2>
-              <p className="text-xs text-slate-500">
-                الوحدة: {selectedUnitName} • عدد الأسئلة: {reviewDetails.length}
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                الوحدة: <span className="font-bold text-slate-700 dark:text-slate-300">{selectedUnitName}</span> • عدد الأسئلة: <span className="font-mono tabular-nums">{reviewDetails.length}</span>
               </p>
             </div>
 
             {/* Score & Percentage */}
             <div className="flex items-center justify-center gap-6 py-2">
               <div className="text-center">
-                <span className="text-3xl sm:text-4xl font-black text-blue-600 block">
+                <span className="text-3xl sm:text-4xl font-black font-mono tabular-nums text-blue-600 dark:text-blue-400 block">
                   {percentage}%
                 </span>
                 <span className="text-xs text-slate-400 font-semibold">النسبة المئوية</span>
               </div>
-              <div className="h-10 w-px bg-slate-200 dark:bg-slate-800" />
+              <div className="h-10 w-px bg-slate-200 dark:border-slate-800" />
               <div className="text-center">
-                <span className="text-3xl sm:text-4xl font-black text-slate-800 dark:text-slate-200 block">
+                <span className="text-3xl sm:text-4xl font-black font-mono tabular-nums text-slate-800 dark:text-slate-200 block">
                   {score} / {totalPoints}
                 </span>
                 <span className="text-xs text-slate-400 font-semibold">إجمالي الدرجات</span>
@@ -1703,7 +1709,7 @@ export function SelfAssessmentTab({
                         window.scrollTo({ top: 900, behavior: "smooth" });
                       }, 100);
                     }}
-                    className="rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold text-xs shadow-xs"
+                    className="rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold text-xs shadow-xs cursor-pointer"
                   >
                     <Key className="h-3.5 w-3.5 ml-1.5" />
                     تفعيل باقة 10 أيام (100 جنيه)
@@ -1714,7 +1720,7 @@ export function SelfAssessmentTab({
                     )}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500 bg-white dark:bg-slate-900 hover:bg-emerald-50 text-emerald-800 dark:text-emerald-200 text-xs font-bold transition"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500 bg-white dark:bg-slate-900 hover:bg-emerald-50 text-emerald-800 dark:text-emerald-200 text-xs font-bold transition cursor-pointer"
                   >
                     <MessageCircle className="h-3.5 w-3.5 text-emerald-600" />
                     تواصل واتساب للتفعيل الفوري
@@ -1727,7 +1733,7 @@ export function SelfAssessmentTab({
               <Button
                 variant="outline"
                 onClick={() => setStep("setup")}
-                className="rounded-2xl text-xs font-bold"
+                className="rounded-2xl text-xs font-bold cursor-pointer"
               >
                 <RotateCcw className="h-4 w-4 ml-1.5" />
                 إجراء تقييم ذاتي جديد
@@ -1736,7 +1742,7 @@ export function SelfAssessmentTab({
               <Button
                 variant={showOnlyErrors ? "default" : "outline"}
                 onClick={() => setShowOnlyErrors(!showOnlyErrors)}
-                className="rounded-2xl text-xs font-bold"
+                className="rounded-2xl text-xs font-bold cursor-pointer"
               >
                 {showOnlyErrors ? "عرض كل الأسئلة" : "عرض الأخطاء فقط ❌"}
               </Button>
