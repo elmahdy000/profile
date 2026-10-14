@@ -1190,18 +1190,17 @@ export function StudentPlatform() {
           <div className="mx-auto max-w-[1440px] p-4 pb-8 sm:p-6 lg:p-8">
             {/* Offline Push Notifications Prompt Banner */}
             {isPushSupported && pushPermission === "default" && !dismissedPushBanner && (
-              <div className="mb-6 rounded-2xl border border-blue-200/80 bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-600 p-4 sm:p-5 text-white shadow-lg shadow-blue-500/15 relative overflow-hidden">
-                <div className="absolute -left-10 -bottom-10 h-32 w-32 rounded-full bg-white/10 blur-xl pointer-events-none" />
+              <div className="mb-6 rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-4 sm:p-5 shadow-2xs relative overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/25 before:to-transparent">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
                   <div className="flex items-center gap-3.5">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-xs text-white shadow-inner">
-                      <BellRing className="h-6 w-6 animate-pulse" />
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shadow-2xs">
+                      <BellRing className="h-5 w-5 animate-pulse" />
                     </div>
                     <div>
-                      <strong className="block text-sm sm:text-base font-bold">
+                      <strong className="block text-sm sm:text-base font-extrabold text-foreground">
                         فعّل إشعارات المنصة الفورية على جهازك 🔔
                       </strong>
-                      <p className="text-xs sm:text-[13px] text-blue-100 mt-0.5 leading-relaxed">
+                      <p className="text-xs sm:text-[13px] text-muted-foreground mt-0.5 leading-relaxed">
                         لتصلك تنبيهات الدروس الجديدة، ونتائج الامتحانات، وملاحظات د. محمود حتى لو كان المتصفح أو الموقع مغلقاً تماماً.
                       </p>
                     </div>
@@ -1210,7 +1209,7 @@ export function StudentPlatform() {
                     <button
                       type="button"
                       onClick={handleDismissPushBanner}
-                      className="text-xs text-blue-100 hover:text-white px-3 py-1.5 rounded-xl hover:bg-white/10 transition-colors"
+                      className="text-xs text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-xl hover:bg-muted/50 transition-colors cursor-pointer"
                     >
                       لاحقاً
                     </button>
@@ -1218,12 +1217,12 @@ export function StudentPlatform() {
                       size="sm"
                       disabled={pushLoading}
                       onClick={handleEnablePush}
-                      className="h-9 px-4 rounded-xl bg-white text-blue-700 hover:bg-blue-50 font-bold text-xs shadow-md"
+                      className="h-9 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs shadow-xs cursor-pointer flex items-center gap-1.5"
                     >
                       {pushLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin ml-1" />
                       ) : (
-                        <Sparkles className="h-3.5 w-3.5 ml-1 text-blue-600" />
+                        <Sparkles className="h-3.5 w-3.5 ml-1" />
                       )}
                       تفعيل الإشعارات الآن
                     </Button>

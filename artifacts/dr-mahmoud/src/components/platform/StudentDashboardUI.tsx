@@ -163,7 +163,7 @@ export function ProgressBar({
       </div>
       <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800/80 p-0.5 shadow-inner">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-700 ease-out shadow-xs"
+          className="h-full rounded-full bg-blue-600 dark:bg-blue-500 transition-all duration-700 ease-out shadow-xs"
           style={{ width: `${clamped}%` }}
         />
       </div>
