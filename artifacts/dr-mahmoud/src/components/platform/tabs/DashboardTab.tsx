@@ -73,12 +73,15 @@ export function DashboardHeader({
   onContinue: () => void;
   onOpenSummaries?: () => void;
 }) {
+  const currentHour = new Date().getHours();
+  const greeting = currentHour < 12 ? "صباح الخير" : currentHour < 17 ? "مساء الخير" : "مساء الهمة والتركيز";
+
   return (
     <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border/60 pb-5" dir="rtl">
       <div className="space-y-1.5">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-xl md:text-2xl font-black text-foreground tracking-tight">
-            مرحبًا، {student.name}
+            {greeting}، {student.name} 👋
           </h1>
           <span
             className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold border shadow-2xs ${
@@ -138,13 +141,17 @@ export function DashboardHeader({
 // ── 2. Meaningful Statistics Cards (Vercel Precision Style) ──
 export function StudentStatistics({
   completedLessonsCount,
+  totalLessonsCount,
   availableQuizzesCount,
+  completedQuizzesCount,
   newFilesCount,
   hasQuizResults,
   averageResult,
 }: {
   completedLessonsCount: number;
+  totalLessonsCount: number;
   availableQuizzesCount: number;
+  completedQuizzesCount: number;
   newFilesCount: number;
   hasQuizResults: boolean;
   averageResult: number;
@@ -152,61 +159,151 @@ export function StudentStatistics({
   return (
     <section aria-label="إحصائيات الطالب" className="grid grid-cols-2 lg:grid-cols-4 gap-3.5" dir="rtl">
       {/* 1. الدروس المكتملة */}
-      <div className="group relative overflow-hidden rounded-2xl border border-border/70 dark:border-slate-800/80 bg-gradient-to-b from-card to-card/90 dark:from-slate-900/90 dark:to-[#0B1322] p-4 sm:p-5 flex items-center gap-3.5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-blue-500/40 hover:-translate-y-0.5">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shadow-2xs transition-transform duration-200 group-hover:scale-105">
+      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-4 sm:p-5 flex items-center gap-3.5 shadow-2xs transition-all hover:border-blue-500/40 hover:-translate-y-0.5 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/20 before:to-transparent">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shadow-2xs transition-transform group-hover:scale-105">
           <BookOpen className="h-5 w-5" />
         </span>
         <div className="min-w-0 text-right">
           <span className="block text-[12px] font-bold text-muted-foreground truncate">الدروس المكتملة</span>
-          <strong className="text-[24px] font-mono font-black text-foreground dark:text-white leading-none mt-1.5 block tabular-nums">
-            {completedLessonsCount}
-          </strong>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <strong className="text-[22px] font-mono font-black text-foreground dark:text-white leading-none tabular-nums">
+              {completedLessonsCount}
+            </strong>
+            <span className="text-[11px] font-medium text-muted-foreground font-mono tabular-nums">
+              / {totalLessonsCount}
+            </span>
+          </div>
         </div>
       </div>
 
       {/* 2. الاختبارات المتاحة */}
-      <div className="group relative overflow-hidden rounded-2xl border border-border/70 dark:border-slate-800/80 bg-gradient-to-b from-card to-card/90 dark:from-slate-900/90 dark:to-[#0B1322] p-4 sm:p-5 flex items-center gap-3.5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-emerald-500/40 hover:-translate-y-0.5">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-2xs transition-transform duration-200 group-hover:scale-105">
+      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-4 sm:p-5 flex items-center gap-3.5 shadow-2xs transition-all hover:border-emerald-500/40 hover:-translate-y-0.5 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-emerald-500/20 before:to-transparent">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-2xs transition-transform group-hover:scale-105">
           <ClipboardCheck className="h-5 w-5" />
         </span>
         <div className="min-w-0 text-right">
-          <span className="block text-[12px] font-bold text-muted-foreground truncate">الاختبارات المتاحة</span>
-          <strong className="text-[24px] font-mono font-black text-foreground dark:text-white leading-none mt-1.5 block tabular-nums">
-            {availableQuizzesCount}
-          </strong>
+          <span className="block text-[12px] font-bold text-muted-foreground truncate">الاختبارات</span>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <strong className="text-[22px] font-mono font-black text-foreground dark:text-white leading-none tabular-nums">
+              {availableQuizzesCount}
+            </strong>
+            <span className="text-[11px] font-medium text-muted-foreground">
+              متاح للحل
+            </span>
+          </div>
         </div>
       </div>
 
       {/* 3. الملفات والملازم */}
-      <div className="group relative overflow-hidden rounded-2xl border border-border/70 dark:border-slate-800/80 bg-gradient-to-b from-card to-card/90 dark:from-slate-900/90 dark:to-[#0B1322] p-4 sm:p-5 flex items-center gap-3.5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-purple-500/40 hover:-translate-y-0.5">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shadow-2xs transition-transform duration-200 group-hover:scale-105">
+      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-4 sm:p-5 flex items-center gap-3.5 shadow-2xs transition-all hover:border-indigo-500/40 hover:-translate-y-0.5 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-indigo-500/20 before:to-transparent">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 shadow-2xs transition-transform group-hover:scale-105">
           <FolderOpen className="h-5 w-5" />
         </span>
         <div className="min-w-0 text-right">
-          <span className="block text-[12px] font-bold text-muted-foreground truncate">الملفات والملازم</span>
-          <strong className="text-[24px] font-mono font-black text-foreground dark:text-white leading-none mt-1.5 block tabular-nums">
-            {newFilesCount}
-          </strong>
+          <span className="block text-[12px] font-bold text-muted-foreground truncate">الملازم والملفات</span>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <strong className="text-[22px] font-mono font-black text-foreground dark:text-white leading-none tabular-nums">
+              {newFilesCount}
+            </strong>
+            <span className="text-[11px] font-medium text-muted-foreground">
+              مذكرة وشيت
+            </span>
+          </div>
         </div>
       </div>
 
       {/* 4. متوسط النتائج */}
-      <div className="group relative overflow-hidden rounded-2xl border border-border/70 dark:border-slate-800/80 bg-gradient-to-b from-card to-card/90 dark:from-slate-900/90 dark:to-[#0B1322] p-4 sm:p-5 flex items-center gap-3.5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-amber-500/40 hover:-translate-y-0.5">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shadow-2xs transition-transform duration-200 group-hover:scale-105">
+      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-4 sm:p-5 flex items-center gap-3.5 shadow-2xs transition-all hover:border-amber-500/40 hover:-translate-y-0.5 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-amber-500/20 before:to-transparent">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shadow-2xs transition-transform group-hover:scale-105">
           <Award className="h-5 w-5" />
         </span>
         <div className="min-w-0 text-right">
           <span className="block text-[12px] font-bold text-muted-foreground truncate">متوسط النتائج</span>
-          <strong className="text-[24px] font-mono font-black text-foreground dark:text-white leading-none mt-1.5 block tabular-nums">
-            {hasQuizResults ? `${averageResult}%` : "—"}
-          </strong>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <strong className="text-[22px] font-mono font-black text-foreground dark:text-white leading-none tabular-nums">
+              {hasQuizResults ? `${averageResult}%` : "—"}
+            </strong>
+            <span className="text-[11px] font-medium text-muted-foreground truncate">
+              {hasQuizResults ? (averageResult >= 85 ? "مستوى ممتاز ⭐" : averageResult >= 65 ? "مستوى جيد" : "يحتاج مراجعة") : "لا توجد نتائج"}
+            </span>
+          </div>
         </div>
       </div>
     </section>
+  );
+}
+
+// ── Quick Actions Dock (Clean Vercel Tool Shelf) ──
+export function QuickActionsDock({
+  onOpen,
+}: {
+  onOpen: (tab: "lessons" | "compiler" | "files" | "quizzes" | "summaries" | "self-assessment") => void;
+}) {
+  const actions = [
+    {
+      id: "lessons",
+      title: "محاضرات المنهج",
+      desc: "متابعة شرح الفيديوهات",
+      icon: BookOpen,
+      iconColor: "text-blue-600 dark:text-blue-400",
+      iconBg: "bg-blue-500/10",
+      tab: "lessons" as const,
+    },
+    {
+      id: "compiler",
+      title: "محرر أكواد C++",
+      desc: "كتابة وتشغيل البرامج",
+      icon: FileCode,
+      iconColor: "text-indigo-600 dark:text-indigo-400",
+      iconBg: "bg-indigo-500/10",
+      tab: "compiler" as const,
+    },
+    {
+      id: "self-assessment",
+      title: "التقييم الذاتي",
+      desc: "اختبار فوري من بنك الأسئلة",
+      icon: Sparkles,
+      iconColor: "text-amber-600 dark:text-amber-400",
+      iconBg: "bg-amber-500/10",
+      tab: "self-assessment" as const,
+    },
+    {
+      id: "files",
+      title: "الملازم والشيتات",
+      desc: "تحميل الملفات والمذكرات",
+      icon: FolderOpen,
+      iconColor: "text-emerald-600 dark:text-emerald-400",
+      iconBg: "bg-emerald-500/10",
+      tab: "files" as const,
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3" dir="rtl">
+      {actions.map((act) => {
+        const Icon = act.icon;
+        return (
+          <button
+            key={act.id}
+            type="button"
+            onClick={() => onOpen(act.tab)}
+            className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-3.5 text-right transition-all hover:border-blue-500/40 hover:bg-slate-50/80 dark:hover:bg-[#0E1626] cursor-pointer flex items-center gap-3 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/15 before:to-transparent"
+          >
+            <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${act.iconBg} ${act.iconColor} border border-border/40 transition-transform group-hover:scale-105`}>
+              <Icon className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <strong className="block text-xs font-extrabold text-foreground truncate group-hover:text-primary transition-colors">
+                {act.title}
+              </strong>
+              <span className="block text-[11px] text-muted-foreground truncate mt-0.5">
+                {act.desc}
+              </span>
+            </div>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -225,33 +322,33 @@ export function StudentProgressSummary({
   totalQuizzes: number;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-border/70 dark:border-slate-800/80 bg-gradient-to-b from-card to-card/80 dark:from-slate-900/90 dark:to-[#0B1322] p-4 sm:p-5 shadow-xs space-y-3" dir="rtl">
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-4 sm:p-5 shadow-2xs space-y-3 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/20 before:to-transparent" dir="rtl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
-            <h2 className="text-sm md:text-base font-black text-foreground">
-              نسبة إكمال الكورس العامة
+            <h2 className="text-sm md:text-base font-extrabold text-foreground">
+              نسبة إكمال المنهج العام
             </h2>
-            <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-mono font-black text-primary border border-primary/20">
+            <span className="inline-flex items-center rounded-full bg-blue-500/10 px-2 py-0.5 text-[11px] font-mono font-bold text-blue-600 dark:text-blue-400 border border-blue-500/20 tabular-nums">
               {overallProgress}%
             </span>
           </div>
           <p className="text-xs text-muted-foreground">
             {overallProgress === 0
-              ? "ابدأ أول درس لتبدأ رحلة التعلم المنظمة."
+              ? "ابدأ أول درس لتبدأ رحلة التعلم المنظمة وتفعيل شريط التقدم."
               : `أنجزت ${overallProgress}% من إجمالي المحتوى المطلوب لمرحلتك.`}
           </p>
         </div>
 
-        <div className="flex items-center gap-3 text-xs font-bold text-muted-foreground font-mono">
-          <span className="bg-muted/40 px-2 py-1 rounded-lg border border-border/40">الدروس: {completedLessons}/{totalLessons}</span>
-          <span className="bg-muted/40 px-2 py-1 rounded-lg border border-border/40">الاختبارات: {completedQuizzes}/{totalQuizzes}</span>
+        <div className="flex items-center gap-2.5 text-xs font-semibold text-muted-foreground font-mono tabular-nums">
+          <span className="bg-muted/40 dark:bg-slate-800/60 px-2.5 py-1 rounded-lg border border-border/40">الدروس: {completedLessons}/{totalLessons}</span>
+          <span className="bg-muted/40 dark:bg-slate-800/60 px-2.5 py-1 rounded-lg border border-border/40">الاختبارات: {completedQuizzes}/{totalQuizzes}</span>
         </div>
       </div>
 
-      <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800/80 p-0.5 shadow-inner">
+      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800/80 p-0.5">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 transition-all duration-700 ease-out shadow-xs"
+          className="h-full rounded-full bg-blue-600 dark:bg-blue-500 transition-all duration-700 ease-out shadow-xs"
           style={{ width: `${Math.max(2, overallProgress)}%` }}
         />
       </div>
@@ -682,13 +779,18 @@ export function DashboardTab({
       {/* 2. Meaningful Statistics Cards */}
       <StudentStatistics
         completedLessonsCount={completedLessonsCount}
+        totalLessonsCount={safeVideos.length}
         availableQuizzesCount={availableQuizzesCount}
+        completedQuizzesCount={completedQuizzesCount}
         newFilesCount={safeFiles.length}
         hasQuizResults={attemptedQuizzes.length > 0}
         averageResult={realAverageResult}
       />
 
-      {/* 3. Overall Progress Summary */}
+      {/* 3. Quick Actions Dock */}
+      <QuickActionsDock onOpen={onOpen} />
+
+      {/* 4. Overall Progress Summary */}
       <StudentProgressSummary
         overallProgress={averageProgress}
         completedLessons={completedLessonsCount}
@@ -697,28 +799,33 @@ export function DashboardTab({
         totalQuizzes={safeQuizzes.length}
       />
 
-      {/* 🎯 Self-Assessment CTA Card */}
-      <div className="rounded-2xl border border-blue-200 dark:border-blue-900/60 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white p-5 sm:p-6 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4 text-right">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm text-white shadow-inner">
-            <Sparkles className="h-6 w-6 text-amber-300" />
+      {/* 5. Self-Assessment Precision Card */}
+      <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-5 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all hover:border-blue-500/30 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/20 before:to-transparent">
+        <div className="flex items-center gap-3.5 text-right">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shadow-2xs">
+            <Sparkles className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-base sm:text-lg font-black tracking-tight">
-              خدمة التقييم الذاتي المخصص (Self-Assessment) 🎯
-            </h3>
-            <p className="text-xs sm:text-sm text-blue-100 mt-0.5 leading-relaxed">
-              اختر أي وحدة أو دروس معينة، واختبر نفسك فورياً من بنك الأسئلة مع تصحيح لحظي وشرح لكل خطأ!
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm sm:text-base font-extrabold text-foreground">
+                التقييم الذاتي المخصص (Self-Assessment)
+              </h3>
+              <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                بنك الأسئلة الشامل
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+              اختر أي وحدة أو دروس معينة، واختبر نفسك فورياً مع تصحيح لحظي وشرح تفصيلي لكل خطأ.
             </p>
           </div>
         </div>
         <Button
           type="button"
           onClick={() => onOpen("self-assessment")}
-          className="h-11 px-6 rounded-xl bg-white text-blue-900 hover:bg-blue-50 font-bold text-xs shrink-0 shadow-sm cursor-pointer"
+          className="h-10 px-4 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-xs shrink-0 shadow-xs cursor-pointer gap-1.5"
         >
           <span>ابدأ اختبارك الآن</span>
-          <ChevronLeft className="h-4 w-4 mr-1" />
+          <ChevronLeft className="h-4 w-4" />
         </Button>
       </div>
 
