@@ -13,6 +13,7 @@ import {
 import { and, desc, eq, ilike, inArray, ne, or, sql } from "drizzle-orm";
 import { canStudentAccessContent } from "../middleware/student-auth";
 import { logger } from "../lib/logger";
+import { sendPushToStudents } from "./push-notifications";
 
 export interface AutoExamSchedule {
   id: string;
@@ -776,17 +777,26 @@ export async function approveAndPublishQuiz(quizId: number): Promise<{
     const recipients = approvedStudents.filter((student) =>
       canStudentAccessContent(student, updatedQuiz.category, updatedQuiz.stage, updatedQuiz.stages, updatedQuiz.courseId),
     );
-    if (recipients.length > 0) {
-      await db.insert(studentNotificationsTable).values(
-        recipients.map((student) => ({
-          studentId: student.id,
-          type: "quiz",
-          title: "اختبار جديد متاح لك",
-          message: `${updatedQuiz.title} متاح الآن داخل منصة الاختبارات. اختبر معلوماتك الآن!`,
-        })),
-      );
-      notifiedCount = recipients.length;
-    }
+      if (recipients.length > 0) {
+        await db.insert(studentNotificationsTable).values(
+          recipients.map((student) => ({
+            studentId: student.id,
+            type: "quiz",
+            title: "اختبار جديد متاح لك",
+            message: `${updatedQuiz.title} متاح الآن داخل منصة الاختبارات. اختبر معلوماتك الآن!`,
+          })),
+        );
+        void sendPushToStudents(
+          recipients.map((s) => s.id),
+          {
+            title: "اختبار دوري جديد 📝",
+            body: `${updatedQuiz.title} متاح الآن داخل المنصة.`,
+            url: "/platform",
+            tag: `quiz-${updatedQuiz.id}`,
+          }
+        );
+        notifiedCount = recipients.length;
+      }
   } catch (notifErr) {
     logger.error({ err: notifErr }, "[AUTO_EXAM] Failed to notify students");
   }

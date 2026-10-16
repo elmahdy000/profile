@@ -22,6 +22,7 @@ import {
   getApprovedStudent,
 } from "../middleware/student-auth";
 import { isAcceptedAcademicStage } from "../lib/academic-stages";
+import { sendPushToStudents } from "../services/push-notifications";
 
 const router: IRouter = Router();
 
@@ -656,6 +657,15 @@ router.post("/videos", requireAdmin, async (req, res, next) => {
             message: `${inserted.title} متاح دلوقتي في كورس ${inserted.category}.`,
           })),
         );
+        void sendPushToStudents(
+          recipients.map((s) => s.id),
+          {
+            title: "محاضرة جديدة متاحة لك 🎬",
+            body: `${inserted.title} - كورس ${inserted.category}`,
+            url: "/platform",
+            tag: `lesson-${inserted.id}`,
+          }
+        );
       }
     }
 
@@ -780,12 +790,23 @@ router.put("/videos/:id", requireAdmin, async (req, res, next) => {
       const recipients = approvedStudents.filter((student) =>
         canStudentAccessContent(student, updated.category, updated.stage, updated.stages, updated.courseId) &&
         canStudentAccessLearningMode(student, updated.learningMode));
-      if (recipients.length) await db.insert(studentNotificationsTable).values(recipients.map((student) => ({
-        studentId: student.id,
-        type: "lesson",
-        title: "درس جديد اتضاف لك",
-        message: `${updated.title} متاح دلوقتي في كورس ${updated.category}.`,
-      })));
+      if (recipients.length) {
+        await db.insert(studentNotificationsTable).values(recipients.map((student) => ({
+          studentId: student.id,
+          type: "lesson",
+          title: "درس جديد اتضاف لك",
+          message: `${updated.title} متاح دلوقتي في كورس ${updated.category}.`,
+        })));
+        void sendPushToStudents(
+          recipients.map((s) => s.id),
+          {
+            title: "محاضرة جديدة متاحة لك 🎬",
+            body: `${updated.title} - كورس ${updated.category}`,
+            url: "/platform",
+            tag: `lesson-${updated.id}`,
+          }
+        );
+      }
     }
 
     res.json({

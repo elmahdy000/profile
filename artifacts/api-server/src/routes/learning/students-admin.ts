@@ -34,6 +34,7 @@ import {
   savePushSubscription,
   removePushSubscription,
   sendPushToStudent,
+  sendPushToStudents,
   sendPushToAllStudents,
 } from "../../services/push-notifications";
 import { logAudit } from "../../lib/audit";
@@ -488,6 +489,12 @@ router.patch("/admin/students/:id", requireAdmin, async (req, res, next) => {
         type: "success",
         title: "حسابك اتفعل بنجاح",
         message: "تقدر دلوقتي تدخل على كورساتك وتبدأ التعلم بالكود الخاص بيك.",
+      });
+      void sendPushToStudent(id, {
+        title: "حسابك اتفعل بنجاح 🎉",
+        body: "تقدر دلوقتي تدخل على كورساتك وتبدأ التعلم.",
+        url: "/platform",
+        tag: `approved-${id}`,
       });
     }
     if (req.body.enrolledCourseIds !== undefined || req.body.enrolledCategories !== undefined) {
@@ -953,15 +960,21 @@ router.post("/admin/notifications/broadcast", requireAdmin, async (req, res, nex
     );
 
     // Trigger OS-level Web Push even if student has closed the website!
-    void sendPushToAllStudents(
-      {
-        title: title.trim(),
-        body: message.trim(),
-        url: "/platform",
-        tag: `broadcast-${Date.now()}`,
-      },
-      targetGrade !== "all" ? targetGrade : undefined
-    );
+    const pushPayload = {
+      title: title.trim(),
+      body: message.trim(),
+      url: "/platform",
+      tag: `broadcast-${Date.now()}`,
+    };
+
+    if (Array.isArray(studentIds) && studentIds.length > 0) {
+      void sendPushToStudents(targets.map((t) => t.id), pushPayload);
+    } else {
+      void sendPushToAllStudents(
+        pushPayload,
+        targetGrade !== "all" ? targetGrade : undefined
+      );
+    }
 
     res.json({
       success: true,

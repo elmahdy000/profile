@@ -256,6 +256,12 @@ router.patch("/admin/payment-receipts/:id", requireAdmin, async (req, res, next)
           title: "تم تأكيد الدفع وتفعيل الحساب",
           message: "تم تأكيد إيصال الدفع وتفعيل حسابك بنجاح. تقدر دلوقتي تشوف كل الدروس والمحتوى. اشتراكك الشهري ينتهي بعد 29 يوم.",
         });
+        void sendPushToStudent(receipt.studentId, {
+          title: "تم تأكيد الدفع وتفعيل الحساب 🎉",
+          body: "تم تأكيد إيصال الدفع بنجاح. المحتوى متاح لك بالكامل الآن!",
+          url: "/platform",
+          tag: `payment-${receipt.id}`,
+        });
       }
     } else {
       if (receipt.studentId) {
@@ -270,6 +276,12 @@ router.patch("/admin/payment-receipts/:id", requireAdmin, async (req, res, next)
           message: adminNotes
             ? `تم رفض الإيصال: ${adminNotes}. ارفع إيصال صحيح.`
             : "تم رفض الإيصال. ارفع إيصال دفع صحيح وواضح.",
+        });
+        void sendPushToStudent(receipt.studentId, {
+          title: "تنبيه بخصوص إيصال الدفع ⚠️",
+          body: adminNotes ? `تم رفض الإيصال: ${adminNotes}` : "تم رفض الإيصال، يرجى رفع إيصال دفع واضح.",
+          url: "/platform",
+          tag: `payment-reject-${receipt.id}`,
         });
       }
     }

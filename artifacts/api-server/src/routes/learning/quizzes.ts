@@ -19,7 +19,7 @@ import {
   canStudentAccessContent,
   canStudentAccessLearningMode,
 } from "../../middleware/student-auth";
-import { sendPushToStudent } from "../../services/push-notifications";
+import { sendPushToStudent, sendPushToStudents } from "../../services/push-notifications";
 import { logAudit } from "../../lib/audit";
 import {
   normalizeQuestionPrompt,
@@ -589,12 +589,23 @@ router.post("/admin/learning/quizzes", requireAdmin, async (req, res, next) => {
       const approvedStudents = await db.select().from(studentsTable).where(eq(studentsTable.status, "approved"));
       const recipients = approvedStudents.filter((student) =>
         canStudentAccessContent(student, quiz.category, quiz.stage, quiz.stages, quiz.courseId));
-      if (recipients.length) await db.insert(studentNotificationsTable).values(recipients.map((student) => ({
-        studentId: student.id,
-        type: "quiz",
-        title: "اختبار جديد متاح لك",
-        message: `${quiz.title} جاهز الآن داخل الاختبارات.`,
-      })));
+      if (recipients.length) {
+        await db.insert(studentNotificationsTable).values(recipients.map((student) => ({
+          studentId: student.id,
+          type: "quiz",
+          title: "اختبار جديد متاح لك",
+          message: `${quiz.title} جاهز الآن داخل الاختبارات.`,
+        })));
+        void sendPushToStudents(
+          recipients.map((s) => s.id),
+          {
+            title: "اختبار جديد متاح لك 📝",
+            body: `${quiz.title} جاهز الآن داخل المنصة.`,
+            url: "/platform",
+            tag: `quiz-${quiz.id}`,
+          }
+        );
+      }
     }
     res.status(201).json(quiz);
   } catch (error) {
@@ -705,12 +716,23 @@ router.patch(
         const approvedStudents = await db.select().from(studentsTable).where(eq(studentsTable.status, "approved"));
         const recipients = approvedStudents.filter((student) =>
           canStudentAccessContent(student, quiz.category, quiz.stage, quiz.stages, quiz.courseId));
-        if (recipients.length) await db.insert(studentNotificationsTable).values(recipients.map((student) => ({
-          studentId: student.id,
-          type: "quiz",
-          title: "اختبار جديد متاح لك",
-          message: `${quiz.title} جاهز الآن داخل الاختبارات.`,
-        })));
+        if (recipients.length) {
+          await db.insert(studentNotificationsTable).values(recipients.map((student) => ({
+            studentId: student.id,
+            type: "quiz",
+            title: "اختبار جديد متاح لك",
+            message: `${quiz.title} جاهز الآن داخل الاختبارات.`,
+          })));
+          void sendPushToStudents(
+            recipients.map((s) => s.id),
+            {
+              title: "اختبار جديد متاح لك 📝",
+              body: `${quiz.title} جاهز الآن داخل المنصة.`,
+              url: "/platform",
+              tag: `quiz-${quiz.id}`,
+            }
+          );
+        }
       }
       res.json(quiz);
     } catch (error) {

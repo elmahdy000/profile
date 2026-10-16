@@ -22,6 +22,7 @@ import {
 } from "../../middleware/student-auth";
 import { isAcademicStageAllowedForTrack } from "../../lib/academic-stages";
 import { logAudit } from "../../lib/audit";
+import { sendPushToStudents } from "../../services/push-notifications";
 import {
   privateUploadDir,
   normalizeStringList,
@@ -226,12 +227,23 @@ router.post(
         const recipients = approvedStudents.filter((student) => targetType === "videos"
           ? linkedVideos.some((video) => video.isPublished && canStudentAccessContent(student, video.category, video.stage, video.stages, video.courseId))
           : canStudentAccessContent(student, file.category, file.stage, file.stages, file.courseId));
-        if (recipients.length) await db.insert(studentNotificationsTable).values(recipients.map((student) => ({
-          studentId: student.id,
-          type: "file",
-          title: "ملف جديد متاح لك",
-          message: `${file.title} متاح الآن داخل ملفاتك.`,
-        })));
+        if (recipients.length) {
+          await db.insert(studentNotificationsTable).values(recipients.map((student) => ({
+            studentId: student.id,
+            type: "file",
+            title: "ملف جديد متاح لك",
+            message: `${file.title} متاح الآن داخل ملفاتك.`,
+          })));
+          void sendPushToStudents(
+            recipients.map((s) => s.id),
+            {
+              title: "ملزمة جديدة متاحة لك 📄",
+              body: `${file.title} متاح الآن للتحميل.`,
+              url: "/platform",
+              tag: `file-${file.id}`,
+            }
+          );
+        }
       }
       res.status(201).json(file);
     } catch (error) {
@@ -362,12 +374,23 @@ router.patch(
         const recipients = approvedStudents.filter((student) => file.targetType === "videos"
           ? linkedVideos.some((video) => video.isPublished && canStudentAccessContent(student, video.category, video.stage, video.stages, video.courseId))
           : canStudentAccessContent(student, file.category, file.stage, file.stages, file.courseId));
-        if (recipients.length) await db.insert(studentNotificationsTable).values(recipients.map((student) => ({
-          studentId: student.id,
-          type: "file",
-          title: "ملف جديد متاح لك",
-          message: `${file.title} متاح الآن داخل ملفاتك.`,
-        })));
+        if (recipients.length) {
+          await db.insert(studentNotificationsTable).values(recipients.map((student) => ({
+            studentId: student.id,
+            type: "file",
+            title: "ملف جديد متاح لك",
+            message: `${file.title} متاح الآن داخل ملفاتك.`,
+          })));
+          void sendPushToStudents(
+            recipients.map((s) => s.id),
+            {
+              title: "ملزمة جديدة متاحة لك 📄",
+              body: `${file.title} متاح الآن للتحميل.`,
+              url: "/platform",
+              tag: `file-${file.id}`,
+            }
+          );
+        }
       }
       res.json(file);
     } catch (error) {

@@ -173,6 +173,45 @@ export async function sendPushToStudent(studentId: number, payload: PushPayload)
 }
 
 /**
+ * Send a Web Push notification to a list of specific students
+ */
+export async function sendPushToStudents(
+  studentIds: number[],
+  payload: PushPayload
+) {
+  if (!studentIds || !studentIds.length) return { sent: 0 };
+  await ensurePushSubscriptionsTable();
+  try {
+    const validIds = studentIds.map(Number).filter(Number.isInteger);
+    if (!validIds.length) return { sent: 0 };
+
+    const subs = await db
+      .select({
+        endpoint: pushSubscriptionsTable.endpoint,
+        p256dh: pushSubscriptionsTable.p256dh,
+        auth: pushSubscriptionsTable.auth,
+      })
+      .from(pushSubscriptionsTable)
+      .where(inArray(pushSubscriptionsTable.studentId, validIds));
+
+    if (!subs.length) return { sent: 0 };
+
+    // Send in chunks of 25 to respect FCM/push service rate limits
+    const chunkSize = 25;
+    let successful = 0;
+    for (let i = 0; i < subs.length; i += chunkSize) {
+      const chunk = subs.slice(i, i + chunkSize);
+      const results = await Promise.allSettled(chunk.map((s) => sendRawPush(s, payload)));
+      successful += results.filter((r) => r.status === "fulfilled" && r.value).length;
+    }
+    return { sent: successful };
+  } catch (err) {
+    console.error("[WebPush] sendPushToStudents failed:", err);
+    return { sent: 0 };
+  }
+}
+
+/**
  * Send a Web Push notification to all active students (e.g. general broadcast, new course, new quiz)
  * Even if their browser or device is currently closed!
  */
@@ -207,11 +246,18 @@ export async function sendPushToAllStudents(
 
     if (!subs.length) return { sent: 0 };
 
-    const results = await Promise.allSettled(subs.map((s) => sendRawPush(s, payload)));
-    const successful = results.filter((r) => r.status === "fulfilled" && r.value).length;
+    // Send in chunks of 25 to respect push service rate limits
+    const chunkSize = 25;
+    let successful = 0;
+    for (let i = 0; i < subs.length; i += chunkSize) {
+      const chunk = subs.slice(i, i + chunkSize);
+      const results = await Promise.allSettled(chunk.map((s) => sendRawPush(s, payload)));
+      successful += results.filter((r) => r.status === "fulfilled" && r.value).length;
+    }
     return { sent: successful };
   } catch (err) {
     console.error("[WebPush] sendPushToAllStudents failed:", err);
     return { sent: 0 };
   }
 }
+
