@@ -859,15 +859,21 @@ export function VideoLessonsSection({
                   : null;
 
     // Determine content school type
+    const hasLanguagesInStages = stageArr.some((s) => norm(s).includes("لغات") || norm(s).includes("languages"));
+    const hasArabicInStages = stageArr.some((s) => (norm(s).includes("عربي") || norm(s).includes("عربى")) && !norm(s).includes("لغات"));
+    const isBilingualStages = hasLanguagesInStages && hasArabicInStages;
+
     const contentIsLanguages =
-      stageArr.some((s) => norm(s).includes("لغات") || norm(s).includes("languages")) ||
-      ((catNorm.includes("لغات") || catNorm.includes("languages")) && !catNorm.includes("عربي") && !catNorm.includes("عربى"));
+      !isBilingualStages &&
+      (hasLanguagesInStages ||
+      ((catNorm.includes("لغات") || catNorm.includes("languages")) && !catNorm.includes("عربي") && !catNorm.includes("عربى")));
 
     const contentIsArabic =
-      stageArr.some((s) => (norm(s).includes("عربي") || norm(s).includes("عربى")) && !norm(s).includes("لغات")) ||
-      ((catNorm.includes("عربي") || catNorm.includes("عربى") || catNorm.includes("arabic")) && !catNorm.includes("لغات") && !catNorm.includes("languages"));
+      !isBilingualStages &&
+      (hasArabicInStages ||
+      ((catNorm.includes("عربي") || catNorm.includes("عربى") || catNorm.includes("arabic")) && !catNorm.includes("لغات") && !catNorm.includes("languages")));
 
-    // Absolute isolation between Arabic and Languages
+    // Absolute isolation between Arabic and Languages for track-specific content
     if (studentSchoolType === "arabic" && contentIsLanguages) {
       return false;
     }
