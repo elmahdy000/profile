@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { createHash, randomBytes } from "crypto";
 import multer from "multer";
-import { and, desc, eq, ilike, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, isNull, or, sql, lt } from "drizzle-orm";
 import {
   db,
   studentsTable,
@@ -375,29 +375,29 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
 
     // ── Multi-Device Locking & Binding Logic (Strict Maximum: 2 Devices) ──
     if (deviceId) {
-      const maxDevices = Math.min(2, Math.max(1, student.maxDevices || 2));
+      const maxDevices = Math.min(3, Math.max(2, student.maxDevices || 2));
       let boundDevices: string[] = Array.isArray(student.boundDevices) ? [...student.boundDevices] : [];
       if (boundDevices.length === 0 && student.deviceId) {
         boundDevices = [student.deviceId];
       }
 
       if (!boundDevices.includes(deviceId)) {
-        if (boundDevices.length < maxDevices && boundDevices.length < 2) {
-          // Allowed to bind additional device up to absolute maximum limit of 2 devices
+        if (boundDevices.length < maxDevices) {
+          // Allowed to bind additional device up to limit
           boundDevices.push(deviceId);
           await db
             .update(studentsTable)
             .set({
               deviceId: boundDevices[0],
               boundDevices,
+              maxDevices: Math.max(student.maxDevices || 2, 2),
               updatedAt: new Date(),
             })
             .where(eq(studentsTable.id, student.id));
           student.deviceId = boundDevices[0];
           student.boundDevices = boundDevices;
         } else {
-          // Limit reached (default 1 device, or absolute max 2 devices)
-          const isSingleDevice = maxDevices === 1;
+          // Limit reached
           const rawIp = (req.headers["x-forwarded-for"] as string || req.ip || "").split(",")[0].trim();
           const userAgentStr = (req.headers["user-agent"] as string || "").slice(0, 500);
 
@@ -413,9 +413,7 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
           } catch {}
 
           res.status(403).json({
-            error: isSingleDevice
-              ? "عذراً، هذا الحساب مرتبط بجهاز آخر. استخدم خيار «نسيت كود الدخول؟» أو تواصل مع الأدمن لإعادة ضبط جهازك."
-              : "عذراً، هذا الحساب وصل للحد الأقصى المطلق المسموح للأجهزة. استخدم خيار «نسيت كود الدخول؟» لإرسال طلب إعادة ضبط الجهاز للأدمن.",
+            error: "عذراً، هذا الحساب مرتبط بأجهزة أخرى مسجلة مسبقاً. استخدم خيار «نسيت كود الدخول؟» أو تواصل مع الدعم الفني لإعادة ضبط أجهزتك.",
           });
           return;
         }
@@ -423,7 +421,7 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
     }
 
     student = await ensureAutomaticCourseAssignments(student);
-    // ── Single-device session enforcement ──
+    // ── Resilient Multi-Session Generation ──
     const token = randomBytes(32).toString("base64url");
     const tokenHash = createHash("sha256").update(token).digest("hex");
     const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
@@ -432,17 +430,41 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
     const userAgentStr = (req.headers["user-agent"] as string || "").slice(0, 500);
 
     await db.transaction(async (tx) => {
+      // 1. Clean up only expired sessions for this student
       await tx
         .delete(studentSessionsTable)
-        .where(eq(studentSessionsTable.studentId, student.id));
+        .where(
+          and(
+            eq(studentSessionsTable.studentId, student.id),
+            lt(studentSessionsTable.expiresAt, now),
+          ),
+        );
+
+      // 2. Keep the latest 5 active sessions so multi-device/multi-tab exams never get destroyed
+      const existing = await tx
+        .select({ id: studentSessionsTable.id })
+        .from(studentSessionsTable)
+        .where(eq(studentSessionsTable.studentId, student.id))
+        .orderBy(desc(studentSessionsTable.createdAt));
+
+      if (existing.length >= 5) {
+        const toDelete = existing.slice(4).map((s) => s.id);
+        await tx
+          .delete(studentSessionsTable)
+          .where(inArray(studentSessionsTable.id, toDelete));
+      }
+
+      // 3. Insert fresh session
       await tx
         .insert(studentSessionsTable)
         .values({ studentId: student.id, tokenHash, expiresAt });
+
       await tx
         .update(studentsTable)
         .set({ lastLoginAt: now, lastActiveAt: now, updatedAt: now })
         .where(eq(studentsTable.id, student.id));
     });
+
     // Log login attempt separately — non-critical, must not break login if table is missing
     try {
       await db
@@ -465,7 +487,10 @@ router.post("/student/login", studentLoginLimit, async (req, res, next) => {
       expires: expiresAt,
       path: "/",
     });
-    res.json({ student: publicStudent(student) });
+    res.json({
+      student: publicStudent(student),
+      token,
+    });
   } catch (error) {
     next(error);
   }

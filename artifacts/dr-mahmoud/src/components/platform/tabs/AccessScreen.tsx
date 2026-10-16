@@ -26,12 +26,16 @@ import { defaultOfflineCenters } from "@/components/admin/settings/CentersTab";
 
 async function api<T>(url: string, options?: RequestInit): Promise<T> {
   const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
+  const token = localStorage.getItem("dr_mahmoud_student_token") || "";
+  const studentCode = localStorage.getItem("dr_mahmoud_student_code") || "";
   const response = await fetch(url, {
     credentials: "include",
     ...options,
     headers: {
       "Content-Type": "application/json",
       ...(deviceId ? { "X-Device-Id": deviceId } : {}),
+      ...(token ? { "Authorization": `Bearer ${token}`, "X-Student-Token": token } : {}),
+      ...(studentCode ? { "X-Student-Code": studentCode } : {}),
       ...(options?.headers || {}),
     },
   });
@@ -114,13 +118,14 @@ export function AccessScreen({
     setError("");
     try {
       const deviceId = getOrCreateDeviceId();
-      const result = await api<{ student: Student }>("/api/student/login", {
+      const result = await api<{ student: Student; token?: string }>("/api/student/login", {
         method: "POST",
-        body: JSON.stringify({ accessCode, deviceId }),
+        body: JSON.stringify({ accessCode: accessCode.trim().toUpperCase(), deviceId }),
       });
-      if (rememberCode)
-        localStorage.setItem("dr_mahmoud_student_code", accessCode.trim().toUpperCase());
-      else localStorage.removeItem("dr_mahmoud_student_code");
+      if (result.token) {
+        localStorage.setItem("dr_mahmoud_student_token", result.token);
+      }
+      localStorage.setItem("dr_mahmoud_student_code", accessCode.trim().toUpperCase());
       onLogin(result.student);
     } catch (err) {
       setError((err as Error).message);
@@ -176,10 +181,15 @@ export function AccessScreen({
     setError("");
     try {
       const deviceId = getOrCreateDeviceId();
-      const result = await api<{ student: Student }>("/api/student/login", {
+      const cleanCode = code.trim().toUpperCase();
+      const result = await api<{ student: Student; token?: string }>("/api/student/login", {
         method: "POST",
-        body: JSON.stringify({ accessCode: code.trim(), deviceId }),
+        body: JSON.stringify({ accessCode: cleanCode, deviceId }),
       });
+      if (result.token) {
+        localStorage.setItem("dr_mahmoud_student_token", result.token);
+      }
+      localStorage.setItem("dr_mahmoud_student_code", cleanCode);
       setMessage("");
       onLogin(result.student);
     } catch (err) {

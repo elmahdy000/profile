@@ -1,6 +1,6 @@
 import { createHash } from "crypto";
 import type { Request, Response, NextFunction } from "express";
-import { and, eq, gt, ne } from "drizzle-orm";
+import { and, eq, gt, ne, ilike } from "drizzle-orm";
 import { db, studentSessionsTable, studentsTable } from "@workspace/db";
 import { getAcademicStageDimensions } from "../lib/academic-stages";
 
@@ -433,32 +433,93 @@ export function canStudentAccessLearningMode(
 export async function getApprovedStudent(
   req: Request,
 ): Promise<ApprovedStudent | null> {
-  const token = req.cookies?.[STUDENT_COOKIE];
-  if (!token || typeof token !== "string") return null;
-  const tokenHash = createHash("sha256").update(token).digest("hex");
-  const [row] = await db
-    .select({ student: studentsTable })
-    .from(studentSessionsTable)
-    .innerJoin(
-      studentsTable,
-      eq(studentSessionsTable.studentId, studentsTable.id),
-    )
-    .where(
-      and(
-        eq(studentSessionsTable.tokenHash, tokenHash),
-        gt(studentSessionsTable.expiresAt, new Date()),
-        ne(studentsTable.status, "suspended"),
-      ),
-    )
-    .limit(1);
+  const cookieToken = typeof req.cookies?.[STUDENT_COOKIE] === "string" ? req.cookies[STUDENT_COOKIE] : null;
+  const authHeader = typeof req.headers.authorization === "string" ? req.headers.authorization : null;
+  const bearerToken = authHeader && authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
+  const headerToken = typeof req.headers["x-student-token"] === "string" ? req.headers["x-student-token"].trim() : null;
+  const token = cookieToken || bearerToken || headerToken;
+
+  let student: ApprovedStudent | null = null;
+
+  if (token) {
+    const tokenHash = createHash("sha256").update(token).digest("hex");
+    const [row] = await db
+      .select({ student: studentsTable })
+      .from(studentSessionsTable)
+      .innerJoin(
+        studentsTable,
+        eq(studentSessionsTable.studentId, studentsTable.id),
+      )
+      .where(
+        and(
+          eq(studentSessionsTable.tokenHash, tokenHash),
+          gt(studentSessionsTable.expiresAt, new Date()),
+          ne(studentsTable.status, "suspended"),
+        ),
+      )
+      .limit(1);
+    student = row?.student ?? null;
+  }
+
   const reqDeviceId = String(req.headers["x-device-id"] ?? req.query.deviceId ?? "").trim();
-  const student = row?.student ?? null;
-  if (student) {
-    const approvedDevices = Array.isArray(student.boundDevices) ? student.boundDevices : (student.deviceId ? [student.deviceId] : []);
-    if (approvedDevices.length > 0 && reqDeviceId && !approvedDevices.includes(reqDeviceId)) {
-      return null;
+  const reqStudentCode = String(
+    req.headers["x-student-code"] ??
+    (typeof req.body === "object" && req.body ? (req.body as any).accessCode : null) ??
+    req.query.accessCode ??
+    ""
+  ).trim();
+
+  // Fallback: If session token is missing or invalidated, but student provided valid access code
+  if (!student && reqStudentCode) {
+    const [foundStudent] = await db
+      .select()
+      .from(studentsTable)
+      .where(
+        and(
+          ilike(studentsTable.accessCode, reqStudentCode),
+          ne(studentsTable.status, "suspended"),
+        ),
+      )
+      .limit(1);
+
+    if (foundStudent && foundStudent.status === "approved") {
+      student = foundStudent;
     }
   }
+
+  if (student) {
+    const maxDevices = Math.min(3, Math.max(2, student.maxDevices || 2));
+    let boundDevices = Array.isArray(student.boundDevices)
+      ? [...student.boundDevices]
+      : (student.deviceId ? [student.deviceId] : []);
+
+    if (reqDeviceId) {
+      if (!boundDevices.includes(reqDeviceId)) {
+        if (boundDevices.length < maxDevices) {
+          // Auto-bind device for this approved student
+          boundDevices.push(reqDeviceId);
+          await db
+            .update(studentsTable)
+            .set({
+              deviceId: boundDevices[0],
+              boundDevices,
+              updatedAt: new Date(),
+            })
+            .where(eq(studentsTable.id, student.id));
+          student.boundDevices = boundDevices;
+          student.deviceId = boundDevices[0];
+        } else {
+          // Device limit reached.
+          // CRITICAL: NEVER reject an active quiz/exam submission for an authenticated student!
+          const isQuizSubmit = (req.originalUrl || req.url || "").includes("/submit");
+          if (!isQuizSubmit) {
+            return null;
+          }
+        }
+      }
+    }
+  }
+
   return student;
 }
 

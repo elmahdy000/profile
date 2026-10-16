@@ -36,6 +36,7 @@ import {
   BellRing,
   FileEdit,
   Search,
+  KeyRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VideoLessonsSection } from "@/components/YoutubeSection";
@@ -77,12 +78,16 @@ import type {
 
 async function api<T>(url: string, options?: RequestInit): Promise<T> {
   const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
+  const token = localStorage.getItem("dr_mahmoud_student_token") || "";
+  const studentCode = localStorage.getItem("dr_mahmoud_student_code") || "";
   const response = await fetch(url, {
     credentials: "include",
     ...options,
     headers: {
       "Content-Type": "application/json",
       ...(deviceId ? { "X-Device-Id": deviceId } : {}),
+      ...(token ? { "Authorization": `Bearer ${token}`, "X-Student-Token": token } : {}),
+      ...(studentCode ? { "X-Student-Code": studentCode } : {}),
       ...(options?.headers || {}),
     },
   });
@@ -437,6 +442,12 @@ export function StudentPlatform() {
   const quizScrollContainerRef = useRef<HTMLDivElement>(null);
   const playNotificationSound = useNotificationSound();
 
+  // In-exam emergency re-authentication state (preserves answers if session expires or disconnects)
+  const [showQuizReauthModal, setShowQuizReauthModal] = useState(false);
+  const [reauthCode, setReauthCode] = useState("");
+  const [reauthLoading, setReauthLoading] = useState(false);
+  const [reauthError, setReauthError] = useState("");
+
   // Prevent accidental page refresh / navigation during active exam
   useEffect(() => {
     if (!activeQuiz || quizResult) return;
@@ -497,10 +508,31 @@ export function StudentPlatform() {
     if (quiz.questionsToShow && quiz.questionsToShow > 0 && quiz.questionsToShow < mappedQuestions.length) {
       mappedQuestions = mappedQuestions.slice(0, quiz.questionsToShow);
     }
+
+    // Restore draft answers if available from recent session
+    let initialAnswers = Array(mappedQuestions.length).fill(-1);
+    try {
+      const draftKey = `dr_mahmoud_quiz_draft_${quiz.id}`;
+      const savedRaw = localStorage.getItem(draftKey);
+      if (savedRaw) {
+        const saved = JSON.parse(savedRaw);
+        if (
+          saved &&
+          Array.isArray(saved.answers) &&
+          saved.answers.length === mappedQuestions.length &&
+          Date.now() - (saved.savedAt || 0) < 4 * 60 * 60 * 1000
+        ) {
+          initialAnswers = saved.answers;
+        }
+      }
+    } catch {}
+
     // _originalTotal is carried on every question so submitQuiz can build the right-sized array
     setActiveQuiz({ ...quiz, questions: mappedQuestions });
-    setQuizAnswers(Array(mappedQuestions.length).fill(-1));
+    setQuizAnswers(initialAnswers);
     setQuizResult(null);
+    setShowQuizReauthModal(false);
+    setReauthError("");
     quizSubmitInFlightRef.current = false;
     setQuizStartTime(Date.now());
     setQuizElapsedSeconds(0);
@@ -529,13 +561,6 @@ export function StudentPlatform() {
     setQuizSubmitting(true);
     const timeSpentSeconds = Math.round((Date.now() - quizStartTime) / 1000);
 
-    // The displayed questions may be shuffled and/or sliced.
-    // We MUST send answers indexed by their ORIGINAL DB position so the backend
-    // can match answers[i] with quiz.questions[i].correctIndex.
-    //
-    // Key insight: _originalTotal is the full DB question count (stored in startQuiz).
-    // We build a full-length array and place each answer at its _originalIndex.
-    // Slots for questions NOT shown to the student remain -1 (unanswered).
     const firstQ: any = activeQuiz.questions[0];
     const originalTotal: number = firstQ?._originalTotal ?? activeQuiz.questions.length;
     const answersToSend = Array<number>(originalTotal).fill(-1);
@@ -554,6 +579,7 @@ export function StudentPlatform() {
     });
 
     try {
+      const studentCode = student?.accessCode || localStorage.getItem("dr_mahmoud_student_code") || "";
       const res = await api<{
         score: number;
         passed: boolean;
@@ -566,11 +592,20 @@ export function StudentPlatform() {
         `/api/learning/quizzes/${activeQuiz.id}/submit`,
         {
           method: "POST",
-          body: JSON.stringify({ answers: answersToSend, detailedAnswers, timeSpentSeconds }),
+          body: JSON.stringify({
+            answers: answersToSend,
+            detailedAnswers,
+            timeSpentSeconds,
+            accessCode: studentCode,
+          }),
         },
       );
       setQuizResult(res);
       setQuizTimeRemaining(null);
+      setShowQuizReauthModal(false);
+      try {
+        localStorage.removeItem(`dr_mahmoud_quiz_draft_${activeQuiz.id}`);
+      } catch {}
 
       // Play completion chime & trigger instant notification toast
       try { playNotificationSound(); } catch (e) {}
@@ -598,9 +633,21 @@ export function StudentPlatform() {
         ),
       );
     } catch (err) {
-      // Allow retry after a failed submission (network error, etc.)
       quizSubmitInFlightRef.current = false;
-      toast({ variant: "destructive", title: "خطأ في الاختبار", description: (err as Error).message });
+      const errMsg = (err as Error).message || "";
+      const isAuthErr =
+        errMsg.includes("approval and login") ||
+        errMsg.includes("Student approval") ||
+        errMsg.includes("401");
+
+      if (isAuthErr) {
+        const savedCode = student?.accessCode || localStorage.getItem("dr_mahmoud_student_code") || "";
+        setReauthCode(savedCode);
+        setShowQuizReauthModal(true);
+        setReauthError("انتهت جلسة تسجيل الدخول مؤقتاً أثناء أداء الاختبار. إجاباتك محفوظة بالكامل! أكّد كود الدخول لتسليم الاختبار فوراً.");
+      } else {
+        toast({ variant: "destructive", title: "خطأ في الاختبار", description: errMsg });
+      }
     } finally {
       setQuizSubmitting(false);
     }
@@ -609,7 +656,12 @@ export function StudentPlatform() {
 
   useEffect(() => {
     api<{ student: Student | null }>("/api/student/me")
-      .then((r) => setStudent(r.student))
+      .then((r) => {
+        setStudent(r.student);
+        if (r.student?.accessCode) {
+          localStorage.setItem("dr_mahmoud_student_code", r.student.accessCode.trim().toUpperCase());
+        }
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -1890,11 +1942,16 @@ export function StudentPlatform() {
                                 disabled={Boolean(quizResult)}
                                 name={`q-${qi}`}
                                 checked={optionSelected}
-                                onChange={() =>
-                                  setQuizAnswers(
-                                    quizAnswers.map((a, i) => (i === qi ? oi : a)),
-                                  )
-                                }
+                                onChange={() => {
+                                  const nextAnswers = quizAnswers.map((a, i) => (i === qi ? oi : a));
+                                  setQuizAnswers(nextAnswers);
+                                  try {
+                                    localStorage.setItem(
+                                      `dr_mahmoud_quiz_draft_${activeQuiz.id}`,
+                                      JSON.stringify({ answers: nextAnswers, savedAt: Date.now() }),
+                                    );
+                                  } catch {}
+                                }}
                                 className="text-blue-600 focus:ring-blue-500 h-4 w-4 shrink-0 cursor-pointer"
                               />
                               <span
@@ -2051,6 +2108,69 @@ export function StudentPlatform() {
             startQuiz(quiz);
           }}
         />
+        {showQuizReauthModal && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-200">
+            <div className="w-full max-w-md bg-[#0B1528] border border-amber-500/40 rounded-3xl p-6 shadow-2xl text-white space-y-4 text-center">
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl font-black">
+                <KeyRound className="h-7 w-7 text-amber-400" />
+              </div>
+              <h3 className="text-xl font-black text-amber-400">
+                تأكيد كود الدخول لتسليم الاختبار
+              </h3>
+              <p className="text-slate-300 text-sm leading-relaxed">
+                إجاباتك محفوظة بالكامل ولم تفقد أي شيء! حدث انقطاع في الاتصال بالسيرفر، يرجى كتابة كود الدخول لتجديد الجلسة وتوثيق درجتك فوراً:
+              </p>
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={reauthCode}
+                  onChange={(e) => {
+                    setReauthCode(e.target.value.toUpperCase().trim());
+                    setReauthError("");
+                  }}
+                  placeholder="أدخل كود الدخول (مثال: HTVXJF)"
+                  className="w-full text-center text-xl font-mono font-black tracking-widest bg-slate-900 border border-slate-700 rounded-2xl py-3 px-4 text-amber-300 focus:outline-none focus:border-amber-500"
+                  autoFocus
+                />
+                {reauthError && <p className="text-red-400 text-xs font-bold">{reauthError}</p>}
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  disabled={reauthLoading || !reauthCode.trim()}
+                  onClick={async () => {
+                    setReauthLoading(true);
+                    setReauthError("");
+                    try {
+                      const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
+                      const res = await api<{ student: Student; token?: string }>("/api/student/login", {
+                        method: "POST",
+                        body: JSON.stringify({ accessCode: reauthCode.trim().toUpperCase(), deviceId }),
+                      });
+                      if (res.token) {
+                        localStorage.setItem("dr_mahmoud_student_token", res.token);
+                      }
+                      localStorage.setItem("dr_mahmoud_student_code", reauthCode.trim().toUpperCase());
+                      setStudent(res.student);
+                      setShowQuizReauthModal(false);
+                      toast({ title: "تم تجديد الجلسة بنجاح ✅", description: "جاري تسليم وتصحيح الاختبار الآن..." });
+                      setTimeout(() => {
+                        void submitQuizRef.current(false);
+                      }, 300);
+                    } catch (loginErr) {
+                      setReauthError((loginErr as Error).message || "كود الدخول غير صحيح");
+                    } finally {
+                      setReauthLoading(false);
+                    }
+                  }}
+                  className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black py-3 px-4 rounded-2xl shadow-lg transition active:scale-95 disabled:opacity-50 cursor-pointer"
+                >
+                  {reauthLoading ? "جاري التحقق والتسليم..." : "تأكيد الكود وتسليم الاختبار 🚀"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </AnimatePresence>
     </main>
   );

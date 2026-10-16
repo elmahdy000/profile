@@ -20,10 +20,19 @@ import { toast } from "@/hooks/use-toast";
 
 // ─── API helper ────────────────────────────────────────────────────────────────
 async function api<T>(url: string, options?: RequestInit): Promise<T> {
+  const deviceId = typeof localStorage !== "undefined" ? localStorage.getItem("dr_mahmoud_device_id") || "" : "";
+  const token = typeof localStorage !== "undefined" ? localStorage.getItem("dr_mahmoud_student_token") || "" : "";
+  const studentCode = typeof localStorage !== "undefined" ? localStorage.getItem("dr_mahmoud_student_code") || "" : "";
   const response = await fetch(url, {
     credentials: "include",
     ...options,
-    headers: { "Content-Type": "application/json", ...(options?.headers || {}) },
+    headers: {
+      "Content-Type": "application/json",
+      ...(deviceId ? { "X-Device-Id": deviceId } : {}),
+      ...(token ? { "Authorization": `Bearer ${token}`, "X-Student-Token": token } : {}),
+      ...(studentCode ? { "X-Student-Code": studentCode } : {}),
+      ...(options?.headers || {}),
+    },
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || "Request failed");
