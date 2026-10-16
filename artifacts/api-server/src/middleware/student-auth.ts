@@ -47,6 +47,32 @@ export function canStudentAccessCategory(
     student.grade === "أخرى" ? student.otherGradeDetail : student.grade
   );
 
+  // Helper: check school types to prevent cross-track visibility
+  let studentSchoolType: "languages" | "arabic" | null = null;
+  if (student.schoolType === "languages" || student.schoolType === "arabic") {
+    studentSchoolType = student.schoolType;
+  } else if (studentStage.includes("لغات") || studentStage.includes("languages")) {
+    studentSchoolType = "languages";
+  } else if (studentStage.includes("عربي") || studentStage.includes("عربى") || studentStage.includes("arabic")) {
+    studentSchoolType = "arabic";
+  } else if (student.languageTrack && (student.languageTrack.toLowerCase().includes("lang") || student.languageTrack.toLowerCase().includes("eng"))) {
+    studentSchoolType = "languages";
+  } else if (student.enrolledCategories?.some((c) => normalizeCategory(c).includes("لغات") || normalizeCategory(c).includes("languages"))) {
+    studentSchoolType = "languages";
+  } else if (student.enrolledCategories?.some((c) => (normalizeCategory(c).includes("عربي") || normalizeCategory(c).includes("عربى")) && !normalizeCategory(c).includes("لغات"))) {
+    studentSchoolType = "arabic";
+  }
+
+  const isCatLanguages = normalized.includes("لغات") || normalized.includes("languages");
+  const isCatArabic = (normalized.includes("عربي") || normalized.includes("عربى") || normalized.includes("arabic")) && !isCatLanguages;
+
+  if (studentSchoolType === "arabic" && isCatLanguages) {
+    return false;
+  }
+  if (studentSchoolType === "languages" && isCatArabic) {
+    return false;
+  }
+
   // Helper: check if category specifically contains a grade level indicator
   const hasGradeMarker =
     normalized.includes("أولى") ||
@@ -227,42 +253,40 @@ export function canStudentAccessContent(
     student.grade === "أخرى" ? student.otherGradeDetail : student.grade;
   const contentStages = stages?.length ? stages : stage ? [stage] : [];
   
+  const normCategory = normalizeCategory(category);
+  
   // 1. Strict School Type Check (عربي vs لغات)
   // Arabic students must NEVER access content exclusively targeted to Languages.
   // Languages students must NEVER access content exclusively targeted to Arabic.
-  const studentSchoolType = student.schoolType || 
-    (studentStage?.includes("لغات") ? "languages" : studentStage?.includes("عربي") ? "arabic" : null);
+  let studentSchoolType: "languages" | "arabic" | null = null;
+  if (student.schoolType === "languages" || student.schoolType === "arabic") {
+    studentSchoolType = student.schoolType;
+  } else if (studentStage?.includes("لغات") || studentStage?.toLowerCase().includes("languages")) {
+    studentSchoolType = "languages";
+  } else if (studentStage?.includes("عربي") || studentStage?.includes("عربى") || studentStage?.toLowerCase().includes("arabic")) {
+    studentSchoolType = "arabic";
+  } else if (student.languageTrack && (student.languageTrack.toLowerCase().includes("lang") || student.languageTrack.toLowerCase().includes("eng"))) {
+    studentSchoolType = "languages";
+  } else if (student.enrolledCategories?.some((c) => normalizeCategory(c).includes("لغات") || normalizeCategory(c).includes("languages"))) {
+    studentSchoolType = "languages";
+  } else if (student.enrolledCategories?.some((c) => (normalizeCategory(c).includes("عربي") || normalizeCategory(c).includes("عربى")) && !normalizeCategory(c).includes("لغات"))) {
+    studentSchoolType = "arabic";
+  }
 
   if (studentSchoolType) {
     const isStrictLanguagesContent =
-      contentStages.length > 0
-        ? contentStages.every(
-            (s) =>
-              (s.includes("لغات") || s.includes("Languages")) &&
-              !s.includes("عربي") &&
-              !s.includes("عربى"),
-          )
-        : Boolean(
-            stage &&
-              (stage.includes("لغات") || stage.includes("Languages")) &&
-              !stage.includes("عربي") &&
-              !stage.includes("عربى"),
-          );
+      (contentStages.length > 0 &&
+        contentStages.some((s) => s.includes("لغات") || s.toLowerCase().includes("languages")) &&
+        !contentStages.some((s) => (s.includes("عربي") || s.includes("عربى")) && !s.includes("لغات"))) ||
+      Boolean(stage && (stage.includes("لغات") || stage.toLowerCase().includes("languages")) && !stage.includes("عربي") && !stage.includes("عربى")) ||
+      ((normCategory.includes("لغات") || normCategory.includes("languages")) && !normCategory.includes("عربي") && !normCategory.includes("عربى"));
 
     const isStrictArabicContent =
-      contentStages.length > 0
-        ? contentStages.every(
-            (s) =>
-              (s.includes("عربي") || s.includes("عربى")) &&
-              !s.includes("لغات") &&
-              !s.includes("Languages"),
-          )
-        : Boolean(
-            stage &&
-              (stage.includes("عربي") || stage.includes("عربى")) &&
-              !stage.includes("لغات") &&
-              !stage.includes("Languages"),
-          );
+      (contentStages.length > 0 &&
+        contentStages.some((s) => (s.includes("عربي") || s.includes("عربى")) && !s.includes("لغات")) &&
+        !contentStages.some((s) => s.includes("لغات") || s.toLowerCase().includes("languages"))) ||
+      Boolean(stage && (stage.includes("عربي") || stage.includes("عربى")) && !stage.includes("لغات") && !stage.toLowerCase().includes("languages")) ||
+      ((normCategory.includes("عربي") || normCategory.includes("عربى") || normCategory.includes("arabic")) && !normCategory.includes("لغات") && !normCategory.includes("languages"));
 
     if (studentSchoolType === "arabic" && isStrictLanguagesContent) {
       return false;
@@ -277,7 +301,6 @@ export function canStudentAccessContent(
     (value) => normalizeCategory(value) === "عام",
   );
 
-  const normCategory = normalizeCategory(category);
   const categoryHasGradeMarker =
     normCategory.includes("تانية") ||
     normCategory.includes("ثاني") ||
@@ -374,7 +397,13 @@ export function canStudentAccessContent(
 
   // Accounts with explicit course assignments match assigned courses OR any content matching their registered stage
   if (hasExplicitCourseAssignments) {
-    if (stageMatches && (assignedCourseId || assignedCourse || canStudentAccessCategory(student, category))) {
+    if (courseId) {
+      if (assignedCourseId || assignedCourse) {
+        return true;
+      }
+      return false;
+    }
+    if (stageMatches && canStudentAccessCategory(student, category)) {
       return true;
     }
     return false;

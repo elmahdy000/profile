@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, coursesTable, curriculumsTable, videosTable } from "@workspace/db";
 import { CreateCourseBody, UpdateCourseBody } from "@workspace/api-zod";
 import { requireAdmin, requireSuperAdmin, isAdminRequest } from "../middleware/auth";
+import { getApprovedStudent, canStudentAccessContent } from "../middleware/student-auth";
 import { logAudit } from "./learning";
 import { eq } from "drizzle-orm";
 
@@ -16,9 +17,12 @@ router.get("/courses", async (_req, res, next) => {
       db.select().from(videosTable),
     ]);
 
+    const approvedStudent = !isAdminRequest(_req) ? await getApprovedStudent(_req) : null;
     const visibleCourses = isAdminRequest(_req)
       ? courses
-      : courses.filter((course) => course.isPublished);
+      : approvedStudent
+        ? courses.filter((course) => course.isPublished && canStudentAccessContent(approvedStudent, course.category, null, course.stages, course.id))
+        : courses.filter((course) => course.isPublished);
     const formatted = visibleCourses.map((c) => {
       // Find matching curriculum lessons
       const matchingCurriculums = curriculums.filter(

@@ -822,21 +822,60 @@ export function VideoLessonsSection({
     const enrolledCats = (student as any).enrolledCategories ?? [];
     const norm = (s: string) => String(s ?? "").trim().toLowerCase();
 
-    // Explicitly enrolled courses or categories by admin MUST be visible immediately
-    if (item.courseId && enrolledIds.includes(Number(item.courseId))) {
-      return true;
-    }
-    if (item.category && enrolledCats.some((cat: string) => norm(cat) === norm(item.category))) {
+    const hasExplicitEnrollment = enrolledIds.length > 0 || enrolledCats.length > 0;
+    const isEnrolledById = Boolean(item.courseId && enrolledIds.includes(Number(item.courseId)));
+    const isEnrolledByCat = Boolean(item.category && enrolledCats.some((cat: string) => norm(cat) === norm(item.category)));
+
+    if (isEnrolledById || isEnrolledByCat) {
       return true;
     }
 
-    // No explicit enrollment → show content based on student's grade/stage
+    // If student has explicit course assignments, do NOT leak other specific courses
+    if (hasExplicitEnrollment && item.courseId) {
+      return false;
+    }
+
     const grade = studentGrade || "";
     const stageArr: string[] = Array.isArray((item as any).stages) && (item as any).stages.length
       ? (item as any).stages
       : item.stage ? [item.stage] : [];
-    if (stageArr.length === 0) return true;
     const sn = norm(grade);
+    const catNorm = norm(item.category);
+
+    // Determine student school type
+    const studentSchoolType: "languages" | "arabic" | null =
+      (student as any)?.schoolType === "languages" || (student as any)?.schoolType === "arabic"
+        ? (student as any).schoolType
+        : sn.includes("لغات") || sn.includes("languages")
+          ? "languages"
+          : sn.includes("عربي") || sn.includes("عربى") || sn.includes("arabic")
+            ? "arabic"
+            : (student as any)?.languageTrack?.toLowerCase().includes("lang")
+              ? "languages"
+              : enrolledCats.some((c: string) => norm(c).includes("لغات"))
+                ? "languages"
+                : enrolledCats.some((c: string) => (norm(c).includes("عربي") || norm(c).includes("عربى")) && !norm(c).includes("لغات"))
+                  ? "arabic"
+                  : null;
+
+    // Determine content school type
+    const contentIsLanguages =
+      stageArr.some((s) => norm(s).includes("لغات") || norm(s).includes("languages")) ||
+      ((catNorm.includes("لغات") || catNorm.includes("languages")) && !catNorm.includes("عربي") && !catNorm.includes("عربى"));
+
+    const contentIsArabic =
+      stageArr.some((s) => (norm(s).includes("عربي") || norm(s).includes("عربى")) && !norm(s).includes("لغات")) ||
+      ((catNorm.includes("عربي") || catNorm.includes("عربى") || catNorm.includes("arabic")) && !catNorm.includes("لغات") && !catNorm.includes("languages"));
+
+    // Absolute isolation between Arabic and Languages
+    if (studentSchoolType === "arabic" && contentIsLanguages) {
+      return false;
+    }
+    if (studentSchoolType === "languages" && contentIsArabic) {
+      return false;
+    }
+
+    if (stageArr.length === 0) return true;
 
     const getSystem = (val: string) => {
       if (val.includes("بكالوريا") || val.includes("baccalaureate")) return "baccalaureate";
@@ -854,6 +893,16 @@ export function VideoLessonsSection({
       // Enforce strict education system isolation: if student belongs to a known system
       // and content has a different system OR no system marker at all, deny access!
       if (studentSys && (!contentSys || studentSys !== contentSys)) {
+        return false;
+      }
+
+      const cSchoolType =
+        cn.includes("لغات") || cn.includes("languages")
+          ? "languages"
+          : cn.includes("عربي") || cn.includes("عربى") || cn.includes("arabic")
+            ? "arabic"
+            : null;
+      if (studentSchoolType && cSchoolType && studentSchoolType !== cSchoolType) {
         return false;
       }
 

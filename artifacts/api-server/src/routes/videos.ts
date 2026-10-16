@@ -303,7 +303,7 @@ router.get("/videos", async (req, res, next) => {
   try {
     const [videos, courses] = await Promise.all([
       db.select().from(videosTable).orderBy(asc(videosTable.order)),
-      db.select({ id: coursesTable.id, isPublished: coursesTable.isPublished }).from(coursesTable),
+      db.select({ id: coursesTable.id, isPublished: coursesTable.isPublished, stages: coursesTable.stages, category: coursesTable.category }).from(coursesTable),
     ]);
     const attachmentMap = await loadAttachmentMap(
       videos.map((video) => video.id),
@@ -333,20 +333,31 @@ router.get("/videos", async (req, res, next) => {
         .json({ error: "Student approval and login are required" });
       return;
     }
+    const courseMap = new Map(courses.map((course) => [course.id, course]));
     const publishedCourseIds = new Set(courses.filter((course) => course.isPublished).map((course) => course.id));
-    const allowedVideos = videos.filter(
-      (video) =>
-        (!video.courseId || publishedCourseIds.has(video.courseId)) &&
-        video.isPublished &&
+    const allowedVideos = videos.filter((video) => {
+      const course = video.courseId ? courseMap.get(video.courseId) : null;
+      if (video.courseId && (!course || !course.isPublished)) {
+        return false;
+      }
+      if (!video.isPublished) return false;
+
+      const effectiveStages = video.stages?.length
+        ? video.stages
+        : (course?.stages?.length ? course.stages : (video.stage ? [video.stage] : []));
+      const effectiveCategory = video.category || course?.category || "";
+
+      return (
         canStudentAccessContent(
           approvedStudent,
-          video.category,
+          effectiveCategory,
           video.stage,
-          video.stages,
+          effectiveStages,
           video.courseId,
         ) &&
-        canStudentAccessLearningMode(approvedStudent, video.learningMode),
-    );
+        canStudentAccessLearningMode(approvedStudent, video.learningMode)
+      );
+    });
 
     // 1. Group videos by category to find the first video of each category
     const videosByCategory: Record<string, typeof videos> = {};
