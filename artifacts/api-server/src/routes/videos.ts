@@ -12,7 +12,7 @@ import {
 import { CreateVideoBody, UpdateVideoBody } from "@workspace/api-zod";
 import { requireAdmin, requireSuperAdmin, isAdminRequest } from "../middleware/auth";
 import { logAudit } from "./learning";
-import { eq, asc, and, inArray } from "drizzle-orm";
+import { eq, asc, and, inArray, gte, ne, sql } from "drizzle-orm";
 import fs from "fs";
 import path from "path";
 import { createHmac, timingSafeEqual } from "crypto";
@@ -602,11 +602,49 @@ router.post("/videos", requireAdmin, async (req, res, next) => {
       res.status(400).json({ error: "اختار مرحلة دراسية واحدة على الأقل" });
       return;
     }
+
+    const targetCourseId = selectedCourse?.id ?? validated.courseId ?? null;
+    const targetCategory = selectedCourse?.title ?? validated.category;
+    const courseKey = targetCourseId
+      ? eq(videosTable.courseId, targetCourseId)
+      : eq(videosTable.category, targetCategory);
+
+    // Calculate order if missing or <= 0 (الرقم اللي عليه الدور)
+    let targetOrder = validated.order;
+    if (!targetOrder || targetOrder <= 0) {
+      const existingVideos = await db
+        .select({ order: videosTable.order })
+        .from(videosTable)
+        .where(courseKey);
+      const maxOrder = existingVideos.reduce(
+        (max, v) => Math.max(max, Number(v.order) || 0),
+        0,
+      );
+      targetOrder = maxOrder + 1;
+    }
+
+    // If order already exists in this course, shift subsequent videos (+1)
+    const conflict = await db
+      .select({ id: videosTable.id })
+      .from(videosTable)
+      .where(and(courseKey, eq(videosTable.order, targetOrder)))
+      .limit(1);
+
+    if (conflict.length > 0) {
+      await db
+        .update(videosTable)
+        .set({
+          order: sql`${videosTable.order} + 1`,
+        })
+        .where(and(courseKey, gte(videosTable.order, targetOrder)));
+    }
+    videoCache.clear();
+
     const [inserted] = await db
       .insert(videosTable)
       .values({
-        courseId: selectedCourse?.id ?? null,
-        category: selectedCourse?.title ?? validated.category,
+        courseId: targetCourseId,
+        category: targetCategory,
         stage: stages[0] ?? null,
         stages,
         subject: validated.subject ?? null,
@@ -617,7 +655,7 @@ router.post("/videos", requireAdmin, async (req, res, next) => {
         youtubeUrl: sanitizeYoutubeUrl(validated.youtubeUrl) ?? validated.youtubeUrl,
         thumbnailUrl: validated.thumbnailUrl ?? null,
         type: validated.type,
-        order: validated.order ?? 0,
+        order: targetOrder,
         isProtected: validated.isProtected ?? false,
         isPublished: validated.isPublished ?? true,
         accessKey: validated.accessKey ?? null,
@@ -710,9 +748,48 @@ router.put("/videos/:id", requireAdmin, async (req, res, next) => {
       res.status(400).json({ error: "الكورس المختار غير موجود" });
       return;
     }
-    if (validated.courseId && !selectedCourse) {
-      res.status(400).json({ error: "الكورس المختار غير موجود" });
-      return;
+
+    if (validated.order !== undefined && validated.order > 0 && currentVideo) {
+      if (validated.order !== currentVideo.order) {
+        const targetCourseId =
+          validated.courseId !== undefined
+            ? validated.courseId
+            : currentVideo.courseId;
+        const targetCategory = selectedCourse
+          ? selectedCourse.title
+          : (validated.category ?? currentVideo.category);
+        const courseKey = targetCourseId
+          ? eq(videosTable.courseId, targetCourseId)
+          : eq(videosTable.category, targetCategory);
+
+        const conflict = await db
+          .select({ id: videosTable.id })
+          .from(videosTable)
+          .where(
+            and(
+              courseKey,
+              eq(videosTable.order, validated.order),
+              ne(videosTable.id, id),
+            ),
+          )
+          .limit(1);
+
+        if (conflict.length > 0) {
+          await db
+            .update(videosTable)
+            .set({
+              order: sql`${videosTable.order} + 1`,
+            })
+            .where(
+              and(
+                courseKey,
+                gte(videosTable.order, validated.order),
+                ne(videosTable.id, id),
+              ),
+            );
+        }
+        videoCache.clear();
+      }
     }
 
     const [updated] = await db

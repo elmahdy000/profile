@@ -34,7 +34,7 @@ export interface VideoModalProps {
   onSubmit: (e: React.FormEvent) => void;
   videosQuery: { data?: any[] };
   useLatestLessonSettings: () => void;
-  getNextLessonNumber: (category: string, mode: string, stages?: string[]) => number;
+  getNextLessonNumber: (courseIdOrCategory?: string | number, categoryFallback?: string) => number;
   coursesQuery: { data?: any[] };
   learningFiles: any[];
   learningQuizzes: any[];
@@ -80,6 +80,16 @@ export const VideoModal: React.FC<VideoModalProps> = ({
   createMutation,
   updateMutation,
 }) => {
+  const conflictingVideo = (form.courseId && videosQuery?.data)
+    ? videosQuery.data.find(
+        (v) =>
+          v.id !== selectedVideoId &&
+          ((v.courseId != null && String(v.courseId) === String(form.courseId)) ||
+            (form.category && v.category?.trim().toLowerCase() === form.category?.trim().toLowerCase())) &&
+          Number(v.order) === Number(form.order),
+      )
+    : null;
+
   if (!isOpen) return null;
 
   return (
@@ -146,23 +156,64 @@ export const VideoModal: React.FC<VideoModalProps> = ({
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-xs font-bold text-foreground">نوع المحتوى *</label>
-                  <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as "video" | "playlist" })} className="w-full rounded-xl border border-primary/30 bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20">
+                  <select
+                    value={form.type}
+                    onChange={(e) => {
+                      const newType = e.target.value as "video" | "playlist";
+                      setForm({
+                        ...form,
+                        type: newType,
+                        order: (!form.order || form.order <= 0)
+                          ? getNextLessonNumber(form.courseId, form.category)
+                          : form.order,
+                      });
+                    }}
+                    className="w-full rounded-xl border border-primary/30 bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="playlist">قائمة تشغيل (سلسلة دروس الكورس)</option>
                     <option value="video">فيديو منفرد</option>
-                    <option value="playlist">قائمة تشغيل</option>
                   </select>
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-bold text-foreground">اسم الدرس *</label>
                   <input type="text" required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="مثال: المتغيرات وأنواع البيانات" className="w-full rounded-xl border border-primary/30 bg-background px-4 py-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20" />
                 </div>
-                {form.type === "playlist" && <div className="md:col-span-2">
-                  <label className="mb-1 block text-xs font-bold text-foreground">رقم الدرس في قائمة التشغيل *</label>
+                <div className="md:col-span-2">
+                  <label className="mb-1 block text-xs font-bold text-foreground">رقم الدرس في قائمة التشغيل (الترتيب) *</label>
                   <div className="flex gap-2">
-                    <input type="number" min="1" required value={form.order} onChange={(e) => setForm({ ...form, order: Number(e.target.value) })} className="min-w-0 flex-1 rounded-xl border border-primary/30 bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20" />
-                    <button type="button" onClick={() => setForm({ ...form, order: getNextLessonNumber(form.category, form.learningMode, form.stages) })} className="rounded-xl border border-primary/30 bg-white px-3 text-xs font-bold text-primary hover:bg-primary/5">التالي</button>
+                    <input
+                      type="number"
+                      min="1"
+                      required
+                      value={form.order || ""}
+                      onChange={(e) => setForm({ ...form, order: Number(e.target.value) })}
+                      className="min-w-0 flex-1 rounded-xl border border-primary/30 bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                    <button
+                      type="button"
+                      title="وضع الرقم الذي عليه الدور تلقائياً"
+                      onClick={() => setForm({ ...form, order: getNextLessonNumber(form.courseId, form.category) })}
+                      className="rounded-xl border border-primary/30 bg-white px-3 text-xs font-bold text-primary hover:bg-primary/5 transition-colors"
+                    >
+                      الرقم التالي
+                    </button>
                   </div>
-                  <p className="mt-1 text-[11px] text-muted-foreground">حدد موضع هذا الدرس داخل قائمة التشغيل.</p>
-                </div>}
+                  {conflictingVideo ? (
+                    <div className="mt-2 flex items-center gap-2 rounded-xl bg-amber-500/10 px-3 py-2 text-xs font-bold text-amber-700 border border-amber-500/20">
+                      <span className="text-base">⚡</span>
+                      <span>
+                        الرقم {form.order} مأخوذ حالياً لـ «{conflictingVideo.title}». عند الحفظ سيتم إزاحة هذا الدرس والدروس التالية له تلقائياً (+1).
+                      </span>
+                    </div>
+                  ) : form.order > 0 ? (
+                    <p className="mt-1 text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                      <span>✓</span>
+                      <span>هذا الترتيب متاح في قائمة تشغيل الكورس.</span>
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-[11px] text-muted-foreground">حدد موضع هذا الدرس داخل قائمة التشغيل.</p>
+                  )}
+                </div>
               </div>
             </div>
             <div className="md:col-span-2 mt-1 flex items-center gap-3">
@@ -197,19 +248,18 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                 required
                 value={form.courseId}
                 onChange={(e) => {
+                  const courseId = e.target.value;
                   const course = coursesQuery.data?.find(
-                    (item) => String(item.id) === e.target.value,
+                    (item) => String(item.id) === courseId,
                   );
+                  const nextOrder = getNextLessonNumber(courseId, course?.title || "");
                   setForm({
                     ...form,
-                    courseId: e.target.value,
+                    courseId,
                     category: course?.title || "",
                     stages: [],
                     stage: "",
-                    order: getNextLessonNumber(
-                      course?.title || "",
-                      form.learningMode,
-                    ),
+                    order: nextOrder,
                   });
                 }}
                 className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-sm"

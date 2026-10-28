@@ -664,20 +664,47 @@ export default function AdminDashboard() {
   };
 
   const getNextLessonNumber = (
-    category: string,
-    learningMode: "online" | "offline" | "both",
-    stages: string[] = [],
+    courseIdOrCategory?: string | number,
+    categoryFallback?: string,
   ) => {
-    const matching = (videosQuery.data || []).filter(
-      (video) =>
-        video.category.trim().toLowerCase() === category.trim().toLowerCase() &&
-        (video.learningMode || "online") === learningMode &&
-        (stages.length === 0 || (video.stages || (video.stage ? [video.stage] : [])).some((stage) => stages.includes(stage))),
-    );
+    const cid =
+      courseIdOrCategory != null && String(courseIdOrCategory).trim()
+        ? Number(courseIdOrCategory)
+        : null;
+    const cat = (categoryFallback || (typeof courseIdOrCategory === "string" ? courseIdOrCategory : "")).trim().toLowerCase();
+
+    const matching = (videosQuery.data || []).filter((video) => {
+      if (cid && video.courseId != null) {
+        return Number(video.courseId) === cid;
+      }
+      if (cat && video.category) {
+        return video.category.trim().toLowerCase() === cat;
+      }
+      return false;
+    });
+
     return (
       Math.max(0, ...matching.map((video) => Number(video.order) || 0)) + 1
     );
   };
+
+  // Auto-select first course and set its next sequential lesson number if form has no courseId
+  useEffect(() => {
+    if (!videoForm.courseId && coursesQuery.data?.length) {
+      const firstCourse = coursesQuery.data[0];
+      const nextOrder = getNextLessonNumber(firstCourse.id, firstCourse.title);
+      setVideoForm((prev) => {
+        if (prev.courseId) return prev;
+        return {
+          ...prev,
+          courseId: String(firstCourse.id),
+          category: firstCourse.title,
+          type: "playlist",
+          order: nextOrder,
+        };
+      });
+    }
+  }, [coursesQuery.data, videosQuery.data]);
 
   const useLatestLessonSettings = () => {
     const latest = [...(videosQuery.data || [])].sort((a, b) => b.id - a.id)[0];
@@ -695,8 +722,8 @@ export default function AdminDashboard() {
       category: latest.category,
       subject: latest.subject || "",
       learningMode,
-      type: latest.type as "video" | "playlist",
-      order: getNextLessonNumber(latest.category, learningMode),
+      type: (latest.type as "video" | "playlist") || "playlist",
+      order: getNextLessonNumber(latest.courseId != null ? latest.courseId : latest.category, latest.category),
       isProtected: latest.isProtected,
       accessKey: latest.accessKey || "",
       level: latest.level || "",
@@ -775,8 +802,8 @@ export default function AdminDashboard() {
         description: "",
         youtubeUrl: "",
         thumbnailUrl: "",
-        type: "video",
-        order: getNextLessonNumber(defaultCategory, defaultLearningMode),
+        type: "playlist",
+        order: getNextLessonNumber(defaultCourse?.id, defaultCategory),
         isProtected: false,
         isPublished: true,
         accessKey: "",
@@ -1486,27 +1513,15 @@ export default function AdminDashboard() {
       });
       return;
     }
-    const duplicateNumber = (videosQuery.data || []).find(
+    const conflictingVideo = (videosQuery.data || []).find(
       (video) =>
         video.id !== selectedVideoId &&
         ((video.courseId != null &&
           String(video.courseId) === videoForm.courseId) ||
-          video.category.trim().toLowerCase() ===
-            videoForm.category.trim().toLowerCase()) &&
-        (video.learningMode || "online") === videoForm.learningMode &&
-        (video.stages || (video.stage ? [video.stage] : [])).some((stage) =>
-          videoForm.stages.includes(stage),
-        ) &&
-        video.order === Number(videoForm.order),
+          video.category?.trim().toLowerCase() ===
+            videoForm.category?.trim().toLowerCase()) &&
+        Number(video.order) === Number(videoForm.order),
     );
-    if (duplicateNumber) {
-      toast({
-        title: "رقم الدرس مستخدم",
-        description: `الدرس «${duplicateNumber.title}» واخد الرقم ده. اضغط اقترح التالي.`,
-        variant: "warning",
-      });
-      return;
-    }
 
     let videoSource = videoForm.youtubeUrl.trim();
     if (!videoSource && selectedVideoFile) {
@@ -1571,12 +1586,28 @@ export default function AdminDashboard() {
       setIsVideoModalOpen(false);
       toast({
         variant: "success",
-        title: "تم",
-        description:
-          videoModalMode === "edit"
+        title: "تم الحفظ بنجاح",
+        description: conflictingVideo
+          ? `تم حفظ الفيديو برقم ${videoForm.order} وعمل إزاحة لباقي الفيديوهات التالية (+1) تلقائياً.`
+          : (videoModalMode === "edit"
             ? "تم تحديث الفيديو بنجاح"
-            : "تم إضافة الفيديو بنجاح",
+            : "تم إضافة الفيديو بنجاح"),
       });
+
+      // If uploading videos, automatically prepare the next sequential number for the course playlist
+      if (videoModalMode !== "edit") {
+        setTimeout(() => {
+          const nextOrder = getNextLessonNumber(videoForm.courseId, videoForm.category);
+          setVideoForm((prev) => ({
+            ...prev,
+            title: "",
+            youtubeUrl: "",
+            description: "",
+            thumbnailUrl: "",
+            order: nextOrder,
+          }));
+        }, 100);
+      }
     } catch (err) {
       toast({
         title: "خطأ",
@@ -1944,6 +1975,7 @@ export default function AdminDashboard() {
                   handleThumbnailImageUpload={handleThumbnailImageUpload}
                   getNextLessonNumber={getNextLessonNumber}
                   coursesQuery={coursesQuery}
+                  videosQuery={videosQuery}
                   learningFiles={learningFiles}
                   createVideoMutation={createVideoMutation}
                   updateVideoMutation={updateVideoMutation}

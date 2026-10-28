@@ -37,10 +37,14 @@ export interface UploadVideoTabProps {
   } | null;
   isThumbnailUploading: boolean;
   handleThumbnailImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  getNextLessonNumber: (category: string, mode: string, stages?: string[]) => number;
+  getNextLessonNumber: (courseIdOrCategory?: string | number, categoryFallback?: string) => number;
   coursesQuery: {
     data?: any[];
     isLoading: boolean;
+  };
+  videosQuery?: {
+    data?: any[];
+    isLoading?: boolean;
   };
   learningFiles: any[];
   createVideoMutation: { isPending: boolean };
@@ -65,11 +69,20 @@ export const UploadVideoTab: React.FC<UploadVideoTabProps> = ({
   handleThumbnailImageUpload,
   getNextLessonNumber,
   coursesQuery,
+  videosQuery,
   learningFiles,
   createVideoMutation,
   updateVideoMutation,
   setActiveTab,
 }) => {
+  const conflictingVideo = (videoForm.courseId && videosQuery?.data)
+    ? videosQuery.data.find(
+        (v) =>
+          ((v.courseId != null && String(v.courseId) === String(videoForm.courseId)) ||
+            (videoForm.category && v.category?.trim().toLowerCase() === videoForm.category?.trim().toLowerCase())) &&
+          Number(v.order) === Number(videoForm.order),
+      )
+    : null;
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
@@ -301,36 +314,57 @@ export const UploadVideoTab: React.FC<UploadVideoTabProps> = ({
               <label className="block text-xs font-bold text-foreground mb-1">نوع المحتوى *</label>
               <select
                 value={videoForm.type}
-                onChange={(e) => setVideoForm({ ...videoForm, type: e.target.value as "video" | "playlist" })}
+                onChange={(e) => {
+                  const newType = e.target.value as "video" | "playlist";
+                  setVideoForm({
+                    ...videoForm,
+                    type: newType,
+                    order: (!videoForm.order || videoForm.order <= 0)
+                      ? getNextLessonNumber(videoForm.courseId, videoForm.category)
+                      : videoForm.order,
+                  });
+                }}
                 className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm font-medium"
               >
+                <option value="playlist">قائمة تشغيل (سلسلة دروس الكورس)</option>
                 <option value="video">فيديو منفرد</option>
-                <option value="playlist">قائمة تشغيل</option>
               </select>
             </div>
 
-            {videoForm.type === "playlist" && (
-              <div>
-                <label className="block text-xs font-bold text-foreground mb-1">رقم الدرس في قائمة التشغيل *</label>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    min="1"
-                    required
-                    value={videoForm.order}
-                    onChange={(e) => setVideoForm({ ...videoForm, order: Number(e.target.value) })}
-                    className="min-w-0 flex-1 bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm font-medium"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setVideoForm({ ...videoForm, order: getNextLessonNumber(videoForm.category, videoForm.learningMode, videoForm.stages) })}
-                    className="rounded-xl border border-primary/30 px-3 text-xs font-bold text-primary hover:bg-primary/5"
-                  >
-                    التالي
-                  </button>
-                </div>
+            <div>
+              <label className="block text-xs font-bold text-foreground mb-1">رقم الدرس في قائمة التشغيل (الترتيب) *</label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  required
+                  value={videoForm.order || ""}
+                  onChange={(e) => setVideoForm({ ...videoForm, order: Number(e.target.value) })}
+                  className="min-w-0 flex-1 bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm font-medium"
+                />
+                <button
+                  type="button"
+                  title="وضع الرقم الذي عليه الدور تلقائياً"
+                  onClick={() => setVideoForm({ ...videoForm, order: getNextLessonNumber(videoForm.courseId, videoForm.category) })}
+                  className="rounded-xl border border-primary/30 px-3 text-xs font-bold text-primary hover:bg-primary/5 transition-colors"
+                >
+                  الرقم التالي
+                </button>
               </div>
-            )}
+              {conflictingVideo ? (
+                <div className="mt-2 flex items-center gap-2 rounded-xl bg-amber-500/10 px-3 py-2 text-xs font-bold text-amber-700 border border-amber-500/20">
+                  <span className="text-base">⚡</span>
+                  <span>
+                    الرقم {videoForm.order} مأخوذ حالياً بواسطة «{conflictingVideo.title}». عند الحفظ سيتم إزاحة هذا الدرس والدروس التالية له تلقائياً (+1) ليأخذ هذا الفيديو مكانه.
+                  </span>
+                </div>
+              ) : videoForm.order > 0 ? (
+                <p className="mt-1 text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+                  <span>✓</span>
+                  <span>هذا الرقم متاح مباشرة في قائمة تشغيل الكورس.</span>
+                </p>
+              ) : null}
+            </div>
 
             <div>
               <label className="block text-xs font-bold text-foreground mb-1">الكورس التابع له الفيديو *</label>
@@ -338,16 +372,18 @@ export const UploadVideoTab: React.FC<UploadVideoTabProps> = ({
                 required
                 value={videoForm.courseId}
                 onChange={(e) => {
+                  const courseId = e.target.value;
                   const course = coursesQuery.data?.find(
-                    (item) => String(item.id) === e.target.value,
+                    (item) => String(item.id) === courseId,
                   );
+                  const nextOrder = getNextLessonNumber(courseId, course?.title || "");
                   setVideoForm({
                     ...videoForm,
-                    courseId: e.target.value,
+                    courseId,
                     category: course?.title || "",
                     stages: [],
                     stage: "",
-                    order: getNextLessonNumber(course?.title || "", videoForm.learningMode),
+                    order: nextOrder,
                   });
                 }}
                 className="w-full bg-background border border-border rounded-xl px-4 py-3 text-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm font-medium"
