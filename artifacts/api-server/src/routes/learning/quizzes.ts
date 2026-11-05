@@ -490,6 +490,149 @@ router.post("/admin/learning/quizzes/import", requireAdmin, (req, res, next) => 
   });
 });
 
+// ── Master Toggle: Global Status & Pause/Resume All Exams ──
+router.get("/admin/learning/quizzes/global-status", requireAdmin, async (_req, res, next) => {
+  try {
+    const [pubCountRes, unpubCountRes, backupCountRes] = await Promise.all([
+      db.select({ count: sql<number>`count(*)::int` }).from(quizzesTable).where(eq(quizzesTable.isPublished, true)),
+      db.select({ count: sql<number>`count(*)::int` }).from(quizzesTable).where(eq(quizzesTable.isPublished, false)),
+      db.execute(sql`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_schema = 'public' AND table_name = 'exams_active_backup'
+        ) as exists,
+        COALESCE((SELECT count(*)::int FROM exams_active_backup), 0) as backup_count
+      `).catch(() => ({ rows: [{ exists: false, backup_count: 0 }] })),
+    ]);
+
+    const publishedCount = pubCountRes[0]?.count ?? 0;
+    const unpublishedCount = unpubCountRes[0]?.count ?? 0;
+    const backupRow = (backupCountRes as any)?.rows?.[0] || { exists: false, backup_count: 0 };
+    const hasBackup = Boolean(backupRow.exists && Number(backupRow.backup_count) > 0);
+    const backupCount = Number(backupRow.backup_count) || 0;
+
+    const isPaused = hasBackup || (publishedCount === 0 && backupCount > 0);
+
+    res.json({
+      success: true,
+      publishedCount,
+      unpublishedCount,
+      isPaused,
+      hasBackup,
+      backupCount,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/admin/learning/quizzes/global-toggle", requireAdmin, async (req, res, next) => {
+  try {
+    const { action } = req.body;
+    if (action !== "pause" && action !== "resume") {
+      res.status(400).json({ error: "الإجراء غير صالح. يجب أن يكون 'pause' أو 'resume'." });
+      return;
+    }
+
+    if (action === "pause") {
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS exams_active_backup (
+          id integer PRIMARY KEY,
+          exam_type text NOT NULL,
+          backed_up_at timestamp NOT NULL DEFAULT now()
+        );
+      `);
+
+      await db.execute(sql`
+        INSERT INTO exams_active_backup (id, exam_type)
+        SELECT id, 'quiz' FROM quizzes WHERE is_published = true
+        ON CONFLICT (id) DO NOTHING;
+      `);
+
+      try {
+        await db.execute(sql`
+          INSERT INTO exams_active_backup (id, exam_type)
+          SELECT id, 'essay' FROM essay_exams WHERE is_published = true
+          ON CONFLICT (id) DO NOTHING;
+        `);
+      } catch {}
+
+      const backupCountRes = await db.execute(sql`SELECT count(*)::int as cnt FROM exams_active_backup;`);
+      const backupCount = Number((backupCountRes as any)?.rows?.[0]?.cnt) || 0;
+
+      await db.execute(sql`UPDATE quizzes SET is_published = false WHERE is_published = true;`);
+      try {
+        await db.execute(sql`UPDATE essay_exams SET is_published = false WHERE is_published = true;`);
+      } catch {}
+
+      try {
+        await logAudit(req, "PAUSE_ALL_EXAMS", "exams", {
+          backupCount,
+          note: "تم إيقاف جميع الامتحانات مؤقتاً بواسطة الأدمن",
+        });
+      } catch {}
+
+      res.json({
+        success: true,
+        isPaused: true,
+        backupCount,
+        message: `تم إيقاف جميع الامتحانات مؤقتاً بنجاح (تم حفظ ${backupCount} امتحان في النسخة الاحتياطية).`,
+      });
+    } else {
+      // Resume
+      const checkRes = await db.execute(sql`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_schema = 'public' AND table_name = 'exams_active_backup'
+        ) as exists;
+      `);
+      const tableExists = Boolean((checkRes as any)?.rows?.[0]?.exists);
+
+      let restoredQuizzes = 0;
+      if (tableExists) {
+        const updateQuizzesRes = await db.execute(sql`
+          UPDATE quizzes 
+          SET is_published = true 
+          WHERE id IN (SELECT id FROM exams_active_backup WHERE exam_type = 'quiz')
+          RETURNING id;
+        `);
+        restoredQuizzes = (updateQuizzesRes as any)?.rows?.length || 0;
+
+        try {
+          await db.execute(sql`
+            UPDATE essay_exams 
+            SET is_published = true 
+            WHERE id IN (SELECT id FROM exams_active_backup WHERE exam_type = 'essay');
+          `);
+        } catch {}
+
+        await db.execute(sql`DROP TABLE IF EXISTS exams_active_backup;`);
+      } else {
+        res.status(400).json({
+          error: "لم يتم العثور على نسخة احتياطية للامتحانات الموقوفة.",
+        });
+        return;
+      }
+
+      try {
+        await logAudit(req, "RESUME_ALL_EXAMS", "exams", {
+          restoredCount: restoredQuizzes,
+          note: "تم إعادة تفعيل جميع الامتحانات بواسطة الأدمن",
+        });
+      } catch {}
+
+      res.json({
+        success: true,
+        isPaused: false,
+        restoredCount: restoredQuizzes,
+        message: `تم إعادة تفعيل ${restoredQuizzes} امتحان بنجاح وإتاحتها للطلاب.`,
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get("/admin/learning/quizzes", requireAdmin, async (_req, res, next) => {
   try {
     const quizzes = await db

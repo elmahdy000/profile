@@ -37,6 +37,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ACADEMIC_TRACKS, getStagesForTrack, getTrack } from "@/data/academic";
 import { isEnglishQuestion, getOptionLabel } from "./admin/learning/TestBankTab";
+import { GlobalExamsMasterToggle } from "./admin/learning/GlobalExamsMasterToggle";
 
 export type Question = {
   prompt: string;
@@ -1329,6 +1330,11 @@ export function ExamWizard({
           </div>
         </div>
       </form>
+
+      {/* GLOBAL MASTER EXAMS SWITCH */}
+      <div className="mt-8">
+        <GlobalExamsMasterToggle adminApi={adminApi} />
+      </div>
 
       {/* QUIZZES LIST SIDE PANEL / SECTION */}
       <div className="mt-12 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm space-y-5">

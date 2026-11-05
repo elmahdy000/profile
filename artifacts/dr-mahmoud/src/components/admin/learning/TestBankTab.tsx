@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { GlobalExamsMasterToggle } from "./GlobalExamsMasterToggle";
 
 type Question = {
   id?: number;
@@ -1396,6 +1397,9 @@ export function TestBankTab({
           </div>
         </div>
       </div>
+
+      {/* GLOBAL MASTER EXAMS TOGGLE */}
+      <GlobalExamsMasterToggle adminApi={adminApi} />
 
       {/* Navigation Sub-Tabs */}
       <div className="flex border-b border-border bg-card rounded-2xl p-1 shadow-sm gap-1">
