@@ -42,6 +42,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { GlobalExamsMasterToggle } from "./GlobalExamsMasterToggle";
+import { CurriculumUnitModal } from "./curriculum/CurriculumUnitModal";
+import { CurriculumLessonModal } from "./curriculum/CurriculumLessonModal";
+import { CurriculumQuestionModal } from "./curriculum/CurriculumQuestionModal";
+import { CurriculumQuickExamModal } from "./curriculum/CurriculumQuickExamModal";
+import { CurriculumExamsView } from "./curriculum/CurriculumExamsView";
+import { CurriculumEssaysView } from "./curriculum/CurriculumEssaysView";
 
 type Question = {
   id?: number;
@@ -191,6 +197,22 @@ export function TestBankTab({
   const [editingQuestion, setEditingQuestion] = useState<any | null>(null);
   const [showQuestionModal, setShowQuestionModal] = useState<boolean>(false);
   const [savingQuestion, setSavingQuestion] = useState<boolean>(false);
+
+  // Curriculum Modals & Workspace State
+  const [showUnitModal, setShowUnitModal] = useState<boolean>(false);
+  const [unitModalMode, setUnitModalMode] = useState<"add" | "rename">("add");
+  const [targetUnitName, setTargetUnitName] = useState<string>("");
+
+  const [showLessonModal, setShowLessonModal] = useState<boolean>(false);
+  const [lessonModalMode, setLessonModalMode] = useState<"add" | "rename">("add");
+  const [targetLessonData, setTargetLessonData] = useState<{ unit: string; lesson: string; videoId?: number | null } | null>(null);
+
+  const [showCurriculumQuestionModal, setShowCurriculumQuestionModal] = useState<boolean>(false);
+  const [curriculumQuestionMode, setCurriculumQuestionMode] = useState<"add" | "edit">("add");
+  const [curriculumQuestionData, setCurriculumQuestionData] = useState<any | null>(null);
+
+  const [showQuickExamModal, setShowQuickExamModal] = useState<boolean>(false);
+  const [lessonWorkspaceTab, setLessonWorkspaceTab] = useState<"mcq" | "essays" | "quizzes">("mcq");
 
   // Upload Tab State (Unified Step-by-Step Wizard)
   const [uploadScope, setUploadScope] = useState<"unit" | "lesson">("unit");
@@ -506,6 +528,43 @@ export function TestBankTab({
     setSelectedUnit(unitTitle);
     setSelectedLesson(lessonTitle);
     loadQuestions(selectedStage, unitTitle, lessonTitle);
+  };
+
+  const handleDeleteUnit = async (stage: string, unit: string) => {
+    if (!window.confirm(`هل أنت متأكد من حذف الوحدة (${unit}) بالكامل؟ سيتم حذف جميع أسئلتها ودروسها التابعة.`)) return;
+    try {
+      await adminApi("/api/admin/learning/curriculum/delete-unit", {
+        method: "DELETE",
+        body: JSON.stringify({ stage, unit }),
+      });
+      toast({ title: `تم حذف الوحدة (${unit}) بنجاح 🗑️` });
+      if (selectedUnit === unit) {
+        setSelectedUnit("");
+        setSelectedLesson("");
+        setLessonQuestions([]);
+      }
+      loadTree();
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "حصلت مشكلة", description: err.message || "تعذر حذف الوحدة" });
+    }
+  };
+
+  const handleDeleteLesson = async (stage: string, unit: string, lesson: string) => {
+    if (!window.confirm(`هل أنت متأكد من حذف الدرس (${lesson})؟ سيتم حذف جميع أسئلته التابعة.`)) return;
+    try {
+      await adminApi("/api/admin/learning/curriculum/delete-lesson", {
+        method: "DELETE",
+        body: JSON.stringify({ stage, unit, lesson }),
+      });
+      toast({ title: `تم حذف الدرس (${lesson}) بنجاح 🗑️` });
+      if (selectedLesson === lesson) {
+        setSelectedLesson("");
+        setLessonQuestions([]);
+      }
+      loadTree();
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "حصلت مشكلة", description: err.message || "تعذر حذف الدرس" });
+    }
   };
 
   // Filtered questions in explorer
@@ -1504,41 +1563,70 @@ export function TestBankTab({
           <div className="grid gap-6 lg:grid-cols-12">
             {/* Left/Sidebar: Units & Lessons List */}
             <div className="lg:col-span-5 space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <h3 className="text-sm font-black text-foreground flex items-center gap-2">
                   <FolderOpen className="h-4 w-4 text-primary" />
                   <span>الوحدات والدروس ({currentStageNode?.units.length || 0})</span>
                 </h3>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    setUploadStage(selectedStage);
-                    setActiveTab("upload");
-                  }}
-                  className="h-8 text-xs font-bold text-emerald-600 border-emerald-300 hover:bg-emerald-50 cursor-pointer"
-                >
-                  <Plus className="h-3.5 w-3.5 ml-1" /> رفع درس جديد
-                </Button>
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      setUnitModalMode("add");
+                      setTargetUnitName("");
+                      setShowUnitModal(true);
+                    }}
+                    className="h-8 text-xs font-bold bg-primary hover:bg-primary/90 text-white cursor-pointer shadow-xs gap-1"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> وحدة جديدة
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setLessonModalMode("add");
+                      setTargetLessonData(null);
+                      setShowLessonModal(true);
+                    }}
+                    className="h-8 text-xs font-bold text-emerald-600 border-emerald-300 hover:bg-emerald-50 cursor-pointer gap-1"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> درس جديد
+                  </Button>
+                </div>
               </div>
 
               {!currentStageNode || currentStageNode.units.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center space-y-3">
                   <BookOpen className="mx-auto h-10 w-10 text-muted-foreground/40" />
                   <p className="text-xs font-bold text-muted-foreground">
-                    لا توجد بنوك أسئلة مضافة حتى الآن في ({selectedStage})
+                    لا توجد وحدات أو دروس مضافة حتى الآن في ({selectedStage})
                   </p>
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      setUploadStage(selectedStage);
-                      setActiveTab("upload");
-                    }}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold h-9 cursor-pointer"
-                  >
-                    <UploadCloud className="h-3.5 w-3.5 ml-1.5" /> رفع أسئلة درس جديد الآن
-                  </Button>
+                  <div className="flex items-center justify-center gap-2">
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        setUnitModalMode("add");
+                        setTargetUnitName("");
+                        setShowUnitModal(true);
+                      }}
+                      className="bg-primary hover:bg-primary/90 text-white text-xs font-bold h-9 cursor-pointer gap-1"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> إنشاء أول وحدة الآن
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setUploadStage(selectedStage);
+                        setActiveTab("upload");
+                      }}
+                      className="text-emerald-600 border-emerald-300 hover:bg-emerald-50 text-xs font-bold h-9 cursor-pointer"
+                    >
+                      <UploadCloud className="h-3.5 w-3.5 ml-1.5" /> رفع من ملف
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-3 max-h-[700px] overflow-y-auto pr-1">
@@ -1547,16 +1635,55 @@ export function TestBankTab({
                       key={uIdx}
                       className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs"
                     >
-                      <div className="p-3.5 bg-muted/40 border-b border-border flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                      <div className="p-3 bg-muted/40 border-b border-border flex items-center justify-between">
+                        <div className="flex items-center gap-2 min-w-0">
                           <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs font-black">
                             {uIdx + 1}
                           </span>
-                          <span className="text-xs font-black text-foreground">{unitObj.unit}</span>
+                          <span className="text-xs font-black text-foreground truncate">{unitObj.unit}</span>
                         </div>
-                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                          {unitObj.totalQuestions} سؤال
-                        </span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                            {unitObj.totalQuestions} سؤال
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setLessonModalMode("add");
+                              setTargetLessonData({ unit: unitObj.unit, lesson: "" });
+                              setShowLessonModal(true);
+                            }}
+                            className="p-1 rounded-md text-emerald-600 hover:bg-emerald-500/10 transition-colors cursor-pointer"
+                            title="إضافة درس لهذه الوحدة"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setUnitModalMode("rename");
+                              setTargetUnitName(unitObj.unit);
+                              setShowUnitModal(true);
+                            }}
+                            className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                            title="تعديل اسم الوحدة"
+                          >
+                            <Edit className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteUnit(selectedStage, unitObj.unit);
+                            }}
+                            className="p-1 rounded-md text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                            title="حذف الوحدة"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
 
                       <div className="p-2 space-y-1">
@@ -1589,20 +1716,25 @@ export function TestBankTab({
                           const isSelected =
                             selectedUnit === unitObj.unit && selectedLesson === lessonObj.lesson;
                           return (
-                            <button
+                            <div
                               key={lIdx}
-                              type="button"
-                              onClick={() => handleSelectLesson(unitObj.unit, lessonObj.lesson)}
-                              className={`w-full text-right p-2.5 rounded-xl text-xs font-bold flex items-center justify-between transition-all cursor-pointer ${
+                              className={`group w-full p-1.5 rounded-xl text-xs font-bold flex items-center justify-between transition-all border ${
                                 isSelected
-                                  ? "bg-primary text-white shadow-sm"
-                                  : "hover:bg-muted/70 text-foreground"
+                                  ? "bg-primary text-white border-primary shadow-xs"
+                                  : "border-transparent hover:bg-muted/70 text-foreground"
                               }`}
                             >
-                              <div className="flex items-center gap-2 min-w-0">
+                              <button
+                                type="button"
+                                onClick={() => handleSelectLesson(unitObj.unit, lessonObj.lesson)}
+                                className="flex items-center gap-2 min-w-0 flex-1 text-right cursor-pointer py-1 px-1.5"
+                              >
                                 <span className="truncate">{lessonObj.lesson}</span>
-                              </div>
+                              </button>
                               <div className="flex items-center gap-1 shrink-0 text-[10px]">
+                                {lessonObj.lessonId && (
+                                  <Video className={`h-3 w-3 ${isSelected ? "text-white" : "text-primary"}`} title="مرتبط بفيديو" />
+                                )}
                                 <span
                                   className={`px-1.5 py-0.5 rounded ${
                                     isSelected
@@ -1612,8 +1744,40 @@ export function TestBankTab({
                                 >
                                   {lessonObj.totalQuestions} س
                                 </span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setLessonModalMode("rename");
+                                    setTargetLessonData({
+                                      unit: unitObj.unit,
+                                      lesson: lessonObj.lesson,
+                                      videoId: lessonObj.lessonId,
+                                    });
+                                    setShowLessonModal(true);
+                                  }}
+                                  className={`p-1 rounded hover:bg-black/10 transition-colors cursor-pointer ${
+                                    isSelected ? "text-white/80 hover:text-white" : "text-muted-foreground hover:text-foreground"
+                                  }`}
+                                  title="تعديل الدرس"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteLesson(selectedStage, unitObj.unit, lessonObj.lesson);
+                                  }}
+                                  className={`p-1 rounded hover:bg-rose-500/20 transition-colors cursor-pointer ${
+                                    isSelected ? "text-white/80 hover:text-rose-200" : "text-muted-foreground hover:text-rose-500"
+                                  }`}
+                                  title="حذف الدرس"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </button>
                               </div>
-                            </button>
+                            </div>
                           );
                         })}
                       </div>
@@ -1654,41 +1818,21 @@ export function TestBankTab({
                     <div className="flex items-center gap-2 flex-wrap">
                       <Button
                         type="button"
-                        onClick={handleOpenAddQuestion}
-                        className="bg-primary hover:bg-primary/90 text-white text-xs font-bold h-9 cursor-pointer"
+                        onClick={() => {
+                          setCurriculumQuestionMode("add");
+                          setCurriculumQuestionData(null);
+                          setShowCurriculumQuestionModal(true);
+                        }}
+                        className="bg-primary hover:bg-primary/90 text-white text-xs font-bold h-9 cursor-pointer gap-1 shadow-xs"
                       >
-                        <Plus className="h-3.5 w-3.5 ml-1" /> إضافة سؤال يدوي
+                        <Plus className="h-3.5 w-3.5" /> إضافة سؤال يدوي
                       </Button>
                       <Button
                         type="button"
-                        onClick={() => {
-                          setGenStage(selectedStage);
-                          setGenUnit(selectedUnit);
-                          setIsTitleCustomized(false);
-                          if (selectedLesson === "all") {
-                            setGenScope("unit");
-                            setGenLesson("");
-                            setGenTitle(`اختبار شامل على (${selectedUnit})`);
-                          } else {
-                            setGenLesson(selectedLesson);
-                            setGenTitle(`اختبار على (${selectedLesson})`);
-                            const v = videos.find((vid) => vid.title.trim() === selectedLesson.trim());
-                            if (v) {
-                              setGenScope("lesson");
-                              setGenLessonMode("video");
-                              setGenVideoId(String(v.id));
-                              if (v.courseId) setGenCourseId(String(v.courseId));
-                            } else {
-                              setGenScope("lesson");
-                              setGenLessonMode("bank");
-                              setGenVideoId("");
-                            }
-                          }
-                          setActiveTab("generate");
-                        }}
-                        className="bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold h-9 cursor-pointer"
+                        onClick={() => setShowQuickExamModal(true)}
+                        className="bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold h-9 cursor-pointer gap-1 shadow-xs"
                       >
-                        <Sparkles className="h-3.5 w-3.5 ml-1" /> عمل امتحان منه
+                        <Sparkles className="h-3.5 w-3.5" /> عمل امتحان منه
                       </Button>
                       <Button
                         type="button"
@@ -1728,6 +1872,73 @@ export function TestBankTab({
                     </div>
                   </div>
 
+                  {/* Workspace Tabs: MCQ, Essays, Quizzes */}
+                  <div className="flex items-center gap-2 border-b border-border/80 pb-2">
+                    <button
+                      type="button"
+                      onClick={() => setLessonWorkspaceTab("mcq")}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        lessonWorkspaceTab === "mcq"
+                          ? "bg-primary text-white shadow-xs"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <HelpCircle className="h-3.5 w-3.5" />
+                      <span>الأسئلة الاختيارية والصح/خطأ ({lessonQuestions.length})</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLessonWorkspaceTab("essays")}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        lessonWorkspaceTab === "essays"
+                          ? "bg-purple-600 text-white shadow-xs"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      <span>الأسئلة المقالية</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLessonWorkspaceTab("quizzes")}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        lessonWorkspaceTab === "quizzes"
+                          ? "bg-violet-600 text-white shadow-xs"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <ClipboardCheck className="h-3.5 w-3.5" />
+                      <span>الامتحانات المرتبطة بهذا الدرس</span>
+                    </button>
+                  </div>
+
+                  {lessonWorkspaceTab === "essays" ? (
+                    <CurriculumEssaysView
+                      stage={selectedStage}
+                      unit={selectedUnit}
+                      lesson={selectedLesson}
+                      adminApi={adminApi}
+                      onAddEssayClick={() => {
+                        setCurriculumQuestionMode("add");
+                        setCurriculumQuestionData({ modelAnswer: "" });
+                        setShowCurriculumQuestionModal(true);
+                      }}
+                      onEditEssayClick={(essay) => {
+                        setCurriculumQuestionMode("edit");
+                        setCurriculumQuestionData(essay);
+                        setShowCurriculumQuestionModal(true);
+                      }}
+                    />
+                  ) : lessonWorkspaceTab === "quizzes" ? (
+                    <CurriculumExamsView
+                      stage={selectedStage}
+                      unit={selectedUnit}
+                      lesson={selectedLesson}
+                      adminApi={adminApi}
+                      onCreateExamClick={() => setShowQuickExamModal(true)}
+                    />
+                  ) : (
+                    <>
                   {/* Filters & Search Bar */}
                   <div className="flex flex-col sm:flex-row gap-2 items-center">
                     <div className="relative flex-1 w-full">
@@ -1810,7 +2021,11 @@ export function TestBankTab({
                               <div className="flex items-center gap-1">
                                 <button
                                   type="button"
-                                  onClick={() => handleOpenEditQuestion(q)}
+                                  onClick={() => {
+                                    setCurriculumQuestionMode("edit");
+                                    setCurriculumQuestionData(q);
+                                    setShowCurriculumQuestionModal(true);
+                                  }}
                                   title="تعديل السؤال"
                                   className="p-1 text-slate-400 hover:text-primary rounded-lg hover:bg-muted cursor-pointer"
                                 >
@@ -1900,6 +2115,8 @@ export function TestBankTab({
                       })}
                     </div>
                   )}
+                  </>
+                )}
                 </>
               ) : (
                 <div className="rounded-2xl border border-dashed border-border bg-card p-16 text-center space-y-3">
@@ -4955,6 +5172,69 @@ export function TestBankTab({
           </div>
         </div>
       )}
+      {/* ── Curriculum Studio Modals ── */}
+      <CurriculumUnitModal
+        isOpen={showUnitModal}
+        onClose={() => setShowUnitModal(false)}
+        mode={unitModalMode}
+        initialStage={selectedStage || availableStages[0]}
+        initialUnit={targetUnitName}
+        availableStages={availableStages}
+        adminApi={adminApi}
+        onSuccess={(u) => {
+          setSelectedUnit(u);
+          loadTree();
+        }}
+      />
+
+      <CurriculumLessonModal
+        isOpen={showLessonModal}
+        onClose={() => setShowLessonModal(false)}
+        mode={lessonModalMode}
+        initialStage={selectedStage || availableStages[0]}
+        initialUnit={targetLessonData?.unit || selectedUnit || (currentStageNode?.units[0]?.unit || "")}
+        initialLesson={targetLessonData?.lesson || ""}
+        initialVideoId={targetLessonData?.videoId}
+        availableStages={availableStages}
+        availableUnits={(currentStageNode?.units || []).map((u) => u.unit)}
+        videos={videos}
+        adminApi={adminApi}
+        onSuccess={(l, u) => {
+          setSelectedUnit(u);
+          setSelectedLesson(l);
+          loadTree();
+          loadQuestions(selectedStage, u, l);
+        }}
+      />
+
+      <CurriculumQuestionModal
+        isOpen={showCurriculumQuestionModal}
+        onClose={() => setShowCurriculumQuestionModal(false)}
+        mode={curriculumQuestionMode}
+        initialStage={selectedStage}
+        initialUnit={selectedUnit}
+        initialLesson={selectedLesson}
+        initialData={curriculumQuestionData}
+        adminApi={adminApi}
+        onSuccess={() => {
+          loadTree();
+          loadQuestions(selectedStage, selectedUnit, selectedLesson);
+        }}
+      />
+
+      <CurriculumQuickExamModal
+        isOpen={showQuickExamModal}
+        onClose={() => setShowQuickExamModal(false)}
+        stage={selectedStage}
+        unit={selectedUnit}
+        lesson={selectedLesson}
+        totalAvailableQuestions={lessonQuestions.length}
+        adminApi={adminApi}
+        onSuccess={() => {
+          loadTree();
+          setLessonWorkspaceTab("quizzes");
+        }}
+      />
     </div>
   );
 }

@@ -4,6 +4,8 @@ import { and, desc, eq, ilike, inArray, ne, or, sql } from "drizzle-orm";
 import {
   db,
   questionBankTable,
+  essayQuestionBankTable,
+  lessonKholasaMaterialsTable,
   coursesTable,
   videosTable,
   quizzesTable,
@@ -78,6 +80,28 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
       .select({ id: videosTable.id, title: videosTable.title, courseId: videosTable.courseId, stage: videosTable.stage, quizId: videosTable.quizId })
       .from(videosTable);
 
+    const kholasaMaterials = await db
+      .select({
+        id: lessonKholasaMaterialsTable.id,
+        stage: lessonKholasaMaterialsTable.stage,
+        stages: lessonKholasaMaterialsTable.stages,
+        unit: lessonKholasaMaterialsTable.unit,
+        lesson: lessonKholasaMaterialsTable.lesson,
+        videoId: lessonKholasaMaterialsTable.videoId,
+        courseId: lessonKholasaMaterialsTable.courseId,
+      })
+      .from(lessonKholasaMaterialsTable);
+
+    const essayQuestions = await db
+      .select({
+        id: essayQuestionBankTable.id,
+        stage: essayQuestionBankTable.stage,
+        unit: essayQuestionBankTable.unit,
+        lesson: essayQuestionBankTable.lesson,
+        difficulty: essayQuestionBankTable.difficulty,
+      })
+      .from(essayQuestionBankTable);
+
     // Collect ALL unique stages in the system
     const systemStagesSet = new Set<string>();
     for (const c of courses) {
@@ -88,8 +112,17 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
     for (const v of videos) {
       if (v.stage && v.stage.trim()) systemStagesSet.add(v.stage.trim());
     }
+    for (const km of kholasaMaterials) {
+      if (km.stage && km.stage.trim()) systemStagesSet.add(km.stage.trim());
+      if (Array.isArray(km.stages)) {
+        for (const st of km.stages) if (st && st.trim()) systemStagesSet.add(st.trim());
+      }
+    }
     for (const row of all) {
       if (row.stage && row.stage.trim()) systemStagesSet.add(row.stage.trim());
+    }
+    for (const eq of essayQuestions) {
+      if (eq.stage && eq.stage.trim()) systemStagesSet.add(eq.stage.trim());
     }
 
     // Default canonical stages if empty
@@ -103,15 +136,18 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
     const stagesMap: Record<string, {
       stage: string;
       totalQuestions: number;
+      totalEssays: number;
       units: Record<string, {
         unit: string;
         totalQuestions: number;
+        totalEssays: number;
         difficulty: { easy: number; medium: number; hard: number };
         lessons: Record<string, {
           lesson: string;
           lessonId: number | null;
           courseId: number | null;
           totalQuestions: number;
+          totalEssays: number;
           difficulty: { easy: number; medium: number; hard: number };
         }>;
       }>;
@@ -119,9 +155,48 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
 
     // Initialize all system stages so they appear in tree even if 0 questions
     for (const st of systemStagesSet) {
-      stagesMap[st] = { stage: st, totalQuestions: 0, units: {} };
+      stagesMap[st] = { stage: st, totalQuestions: 0, totalEssays: 0, units: {} };
     }
 
+    // 1. Populate from Kholasa Curriculum Materials (Ensures empty/new units and lessons show up)
+    for (const km of kholasaMaterials) {
+      const stage = String(km.stage || "عام").trim();
+      const unit = String(km.unit || "").trim();
+      const lesson = String(km.lesson || "").trim();
+      if (!unit || !lesson) continue;
+
+      if (!stagesMap[stage]) {
+        stagesMap[stage] = { stage, totalQuestions: 0, totalEssays: 0, units: {} };
+      }
+      if (!stagesMap[stage].units[unit]) {
+        stagesMap[stage].units[unit] = {
+          unit,
+          totalQuestions: 0,
+          totalEssays: 0,
+          difficulty: { easy: 0, medium: 0, hard: 0 },
+          lessons: {},
+        };
+      }
+      if (!stagesMap[stage].units[unit].lessons[lesson]) {
+        stagesMap[stage].units[unit].lessons[lesson] = {
+          lesson,
+          lessonId: km.videoId || null,
+          courseId: km.courseId || null,
+          totalQuestions: 0,
+          totalEssays: 0,
+          difficulty: { easy: 0, medium: 0, hard: 0 },
+        };
+      } else {
+        if (!stagesMap[stage].units[unit].lessons[lesson].lessonId && km.videoId) {
+          stagesMap[stage].units[unit].lessons[lesson].lessonId = km.videoId;
+        }
+        if (!stagesMap[stage].units[unit].lessons[lesson].courseId && km.courseId) {
+          stagesMap[stage].units[unit].lessons[lesson].courseId = km.courseId;
+        }
+      }
+    }
+
+    // 2. Populate MCQ & True/False Questions
     for (const row of all) {
       const stage = String(row.stage || "عام").trim();
       const unit = String(row.unit || "الوحدة العامة").trim();
@@ -129,7 +204,7 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
       const diff = (row.difficulty === "easy" || row.difficulty === "hard") ? row.difficulty : "medium";
 
       if (!stagesMap[stage]) {
-        stagesMap[stage] = { stage, totalQuestions: 0, units: {} };
+        stagesMap[stage] = { stage, totalQuestions: 0, totalEssays: 0, units: {} };
       }
       stagesMap[stage].totalQuestions++;
 
@@ -137,6 +212,7 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
         stagesMap[stage].units[unit] = {
           unit,
           totalQuestions: 0,
+          totalEssays: 0,
           difficulty: { easy: 0, medium: 0, hard: 0 },
           lessons: {},
         };
@@ -150,6 +226,7 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
           lessonId: row.lessonId || null,
           courseId: row.courseId || null,
           totalQuestions: 0,
+          totalEssays: 0,
           difficulty: { easy: 0, medium: 0, hard: 0 },
         };
       } else {
@@ -164,14 +241,51 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
       stagesMap[stage].units[unit].lessons[lesson].difficulty[diff]++;
     }
 
+    // 3. Populate Essay Questions counts
+    for (const eqRow of essayQuestions) {
+      const stage = String(eqRow.stage || "عام").trim();
+      const unit = String(eqRow.unit || "الوحدة العامة").trim();
+      const lesson = String(eqRow.lesson || "الدرس العام").trim();
+
+      if (!stagesMap[stage]) {
+        stagesMap[stage] = { stage, totalQuestions: 0, totalEssays: 0, units: {} };
+      }
+      stagesMap[stage].totalEssays = (stagesMap[stage].totalEssays || 0) + 1;
+
+      if (!stagesMap[stage].units[unit]) {
+        stagesMap[stage].units[unit] = {
+          unit,
+          totalQuestions: 0,
+          totalEssays: 0,
+          difficulty: { easy: 0, medium: 0, hard: 0 },
+          lessons: {},
+        };
+      }
+      stagesMap[stage].units[unit].totalEssays = (stagesMap[stage].units[unit].totalEssays || 0) + 1;
+
+      if (!stagesMap[stage].units[unit].lessons[lesson]) {
+        stagesMap[stage].units[unit].lessons[lesson] = {
+          lesson,
+          lessonId: null,
+          courseId: null,
+          totalQuestions: 0,
+          totalEssays: 0,
+          difficulty: { easy: 0, medium: 0, hard: 0 },
+        };
+      }
+      stagesMap[stage].units[unit].lessons[lesson].totalEssays = (stagesMap[stage].units[unit].lessons[lesson].totalEssays || 0) + 1;
+    }
+
     const tree = Object.values(stagesMap).map((st) => ({
       stage: st.stage,
       totalQuestions: st.totalQuestions,
+      totalEssays: st.totalEssays || 0,
       units: Object.values(st.units)
         .sort((a, b) => parseUnitSortOrder(a.unit) - parseUnitSortOrder(b.unit))
         .map((u) => ({
           unit: u.unit,
           totalQuestions: u.totalQuestions,
+          totalEssays: u.totalEssays || 0,
           difficulty: u.difficulty,
           lessons: Object.values(u.lessons)
             .sort((a, b) => parseLessonSortOrder(a.lesson) - parseLessonSortOrder(b.lesson)),
@@ -181,10 +295,225 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
     res.json({
       tree,
       totalQuestions: all.length,
+      totalEssays: essayQuestions.length,
       courses,
       videos,
       stages: Array.from(systemStagesSet),
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ── Curriculum & Unit/Lesson CRUD Endpoints ──
+
+// POST /api/admin/learning/curriculum/create-unit - Create a new curriculum unit
+router.post("/admin/learning/curriculum/create-unit", requireAdmin, async (req, res, next) => {
+  try {
+    const { stage, unit, initialLesson } = req.body;
+    if (!stage || !unit || !String(unit).trim()) {
+      res.status(400).json({ error: "المرحلة واسم الوحدة حقول مطلوبة" });
+      return;
+    }
+    const targetStage = String(stage).trim();
+    const targetUnit = String(unit).trim();
+    const lessonName = initialLesson && String(initialLesson).trim() ? String(initialLesson).trim() : "الدرس الأول: مقدمة وتمهيد";
+
+    const [existing] = await db
+      .select()
+      .from(lessonKholasaMaterialsTable)
+      .where(
+        and(
+          eq(lessonKholasaMaterialsTable.stage, targetStage),
+          eq(lessonKholasaMaterialsTable.unit, targetUnit)
+        )
+      )
+      .limit(1);
+
+    if (!existing) {
+      await db.insert(lessonKholasaMaterialsTable).values({
+        stage: targetStage,
+        stages: [targetStage],
+        unit: targetUnit,
+        lesson: lessonName,
+        summaryData: { definitions: [], keyConcepts: [], takeaways: [] },
+        isPublished: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+
+    res.json({ success: true, message: `تم إنشاء الوحدة "${targetUnit}" بنجاح!` });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/learning/curriculum/create-lesson - Add a new lesson to a unit
+router.post("/admin/learning/curriculum/create-lesson", requireAdmin, async (req, res, next) => {
+  try {
+    const { stage, unit, lesson, videoId, courseId } = req.body;
+    if (!stage || !unit || !lesson || !String(lesson).trim()) {
+      res.status(400).json({ error: "المرحلة والوحدة واسم الدرس حقول مطلوبة" });
+      return;
+    }
+    const targetStage = String(stage).trim();
+    const targetUnit = String(unit).trim();
+    const targetLesson = String(lesson).trim();
+
+    const [created] = await db
+      .insert(lessonKholasaMaterialsTable)
+      .values({
+        stage: targetStage,
+        stages: [targetStage],
+        unit: targetUnit,
+        lesson: targetLesson,
+        videoId: videoId ? Number(videoId) : null,
+        courseId: courseId ? Number(courseId) : null,
+        summaryData: { definitions: [], keyConcepts: [], takeaways: [] },
+        isPublished: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+
+    res.json({ success: true, lesson: created, message: `تمت إضافة الدرس "${targetLesson}" بنجاح!` });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/learning/curriculum/rename-unit - Rename a unit across all content tables
+router.post("/admin/learning/curriculum/rename-unit", requireAdmin, async (req, res, next) => {
+  try {
+    const { stage, oldUnit, newUnit } = req.body;
+    if (!stage || !oldUnit || !newUnit || !String(newUnit).trim()) {
+      res.status(400).json({ error: "المرحلة والاسم الحالي والاسم الجديد حقول مطلوبة" });
+      return;
+    }
+    const targetStage = String(stage).trim();
+    const fromUnit = String(oldUnit).trim();
+    const toUnit = String(newUnit).trim();
+
+    await Promise.all([
+      db.update(questionBankTable).set({ unit: toUnit, updatedAt: new Date() })
+        .where(and(eq(questionBankTable.stage, targetStage), eq(questionBankTable.unit, fromUnit))),
+      db.update(essayQuestionBankTable).set({ unit: toUnit, updatedAt: new Date() })
+        .where(and(eq(essayQuestionBankTable.stage, targetStage), eq(essayQuestionBankTable.unit, fromUnit))),
+      db.update(lessonKholasaMaterialsTable).set({ unit: toUnit, updatedAt: new Date() })
+        .where(and(eq(lessonKholasaMaterialsTable.stage, targetStage), eq(lessonKholasaMaterialsTable.unit, fromUnit))),
+    ]);
+
+    res.json({ success: true, message: `تم تعديل اسم الوحدة إلى "${toUnit}" بنجاح!` });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/learning/curriculum/rename-lesson - Rename a lesson across all content tables
+router.post("/admin/learning/curriculum/rename-lesson", requireAdmin, async (req, res, next) => {
+  try {
+    const { stage, unit, oldLesson, newLesson, targetUnit, videoId } = req.body;
+    if (!stage || !unit || !oldLesson || !newLesson || !String(newLesson).trim()) {
+      res.status(400).json({ error: "المرحلة والوحدة واسم الدرس الحالي والجديد حقول مطلوبة" });
+      return;
+    }
+    const targetStage = String(stage).trim();
+    const fromUnit = String(unit).trim();
+    const toUnit = targetUnit && String(targetUnit).trim() ? String(targetUnit).trim() : fromUnit;
+    const fromLesson = String(oldLesson).trim();
+    const toLesson = String(newLesson).trim();
+
+    await Promise.all([
+      db.update(questionBankTable)
+        .set({ lesson: toLesson, unit: toUnit, lessonId: videoId !== undefined ? Number(videoId) || null : undefined, updatedAt: new Date() })
+        .where(and(eq(questionBankTable.stage, targetStage), eq(questionBankTable.unit, fromUnit), eq(questionBankTable.lesson, fromLesson))),
+      db.update(essayQuestionBankTable)
+        .set({ lesson: toLesson, unit: toUnit, updatedAt: new Date() })
+        .where(and(eq(essayQuestionBankTable.stage, targetStage), eq(essayQuestionBankTable.unit, fromUnit), eq(essayQuestionBankTable.lesson, fromLesson))),
+      db.update(lessonKholasaMaterialsTable)
+        .set({ lesson: toLesson, unit: toUnit, videoId: videoId !== undefined ? Number(videoId) || null : undefined, updatedAt: new Date() })
+        .where(and(eq(lessonKholasaMaterialsTable.stage, targetStage), eq(lessonKholasaMaterialsTable.unit, fromUnit), eq(lessonKholasaMaterialsTable.lesson, fromLesson))),
+    ]);
+
+    res.json({ success: true, message: `تم تعديل بيانات الدرس "${toLesson}" بنجاح!` });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// DELETE /api/admin/learning/curriculum/delete-unit - Delete a unit and all associated contents
+router.delete("/admin/learning/curriculum/delete-unit", requireAdmin, async (req, res, next) => {
+  try {
+    const { stage, unit } = req.body;
+    if (!stage || !unit) {
+      res.status(400).json({ error: "المرحلة والوحدة مطلوبة للحذف" });
+      return;
+    }
+    const targetStage = String(stage).trim();
+    const targetUnit = String(unit).trim();
+
+    const [qDel, eDel, kDel] = await Promise.all([
+      db.delete(questionBankTable).where(and(eq(questionBankTable.stage, targetStage), eq(questionBankTable.unit, targetUnit))).returning(),
+      db.delete(essayQuestionBankTable).where(and(eq(essayQuestionBankTable.stage, targetStage), eq(essayQuestionBankTable.unit, targetUnit))).returning(),
+      db.delete(lessonKholasaMaterialsTable).where(and(eq(lessonKholasaMaterialsTable.stage, targetStage), eq(lessonKholasaMaterialsTable.unit, targetUnit))).returning(),
+    ]);
+
+    res.json({ success: true, message: `تم حذف الوحدة "${targetUnit}" بنجاح (${qDel.length} سؤال اختيار، ${eDel.length} سؤال مقالي، ${kDel.length} درس).` });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// DELETE /api/admin/learning/curriculum/delete-lesson - Delete a lesson and all associated contents
+router.delete("/admin/learning/curriculum/delete-lesson", requireAdmin, async (req, res, next) => {
+  try {
+    const { stage, unit, lesson } = req.body;
+    if (!stage || !unit || !lesson) {
+      res.status(400).json({ error: "المرحلة والوحدة واسم الدرس حقول مطلوبة للحذف" });
+      return;
+    }
+    const targetStage = String(stage).trim();
+    const targetUnit = String(unit).trim();
+    const targetLesson = String(lesson).trim();
+
+    const [qDel, eDel, kDel] = await Promise.all([
+      db.delete(questionBankTable).where(and(eq(questionBankTable.stage, targetStage), eq(questionBankTable.unit, targetUnit), eq(questionBankTable.lesson, targetLesson))).returning(),
+      db.delete(essayQuestionBankTable).where(and(eq(essayQuestionBankTable.stage, targetStage), eq(essayQuestionBankTable.unit, targetUnit), eq(essayQuestionBankTable.lesson, targetLesson))).returning(),
+      db.delete(lessonKholasaMaterialsTable).where(and(eq(lessonKholasaMaterialsTable.stage, targetStage), eq(lessonKholasaMaterialsTable.unit, targetUnit), eq(lessonKholasaMaterialsTable.lesson, targetLesson))).returning(),
+    ]);
+
+    res.json({ success: true, message: `تم حذف الدرس "${targetLesson}" بنجاح (${qDel.length} سؤال، ${eDel.length} سؤال مقالي).` });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/admin/learning/curriculum/quizzes - Get quizzes associated with a stage, unit, or lesson
+router.get("/admin/learning/curriculum/quizzes", requireAdmin, async (req, res, next) => {
+  try {
+    const stage = req.query.stage ? String(req.query.stage).trim() : undefined;
+    const unit = req.query.unit ? String(req.query.unit).trim() : undefined;
+    const lesson = req.query.lesson ? String(req.query.lesson).trim() : undefined;
+
+    let allQuizzes = await db.select().from(quizzesTable).orderBy(desc(quizzesTable.id));
+    if (stage && stage !== "all") {
+      allQuizzes = allQuizzes.filter(q => q.stage === stage || (Array.isArray(q.stages) && q.stages.includes(stage)));
+    }
+    if (unit && unit !== "all") {
+      allQuizzes = allQuizzes.filter(q => 
+        (q.title && q.title.includes(unit)) || 
+        (q.category && q.category.includes(unit)) ||
+        (q.description && q.description.includes(unit))
+      );
+    }
+    if (lesson && lesson !== "all") {
+      allQuizzes = allQuizzes.filter(q => 
+        (q.title && q.title.includes(lesson)) || 
+        (q.description && q.description.includes(lesson))
+      );
+    }
+    res.json(allQuizzes);
   } catch (error) {
     next(error);
   }
