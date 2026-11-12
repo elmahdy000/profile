@@ -596,8 +596,8 @@ export function EssayExamsTab({
       loadExams();
     } catch (err: any) {
       toast({
-        title: "تعذر تسليم الامتحان",
-        description: err.message || "حدث خطأ أثناء تسليم الإجابات",
+        title: "حصلت مشكلة في تسليم الامتحان",
+        description: err.message || "حصل خطأ أثناء تسليم الإجابات، جرب تدوس تسليم تاني.",
         variant: "destructive",
       });
     } finally {
@@ -906,7 +906,7 @@ export function EssayExamsTab({
                           }`}
                         >
                           <CheckCircle2 className={`h-3.5 w-3.5 ${isMastered ? "text-emerald-600" : "text-slate-400"}`} />
-                          {isMastered ? "أتقنت السؤال ✓" : "تحديد كمتقن"}
+                          {isMastered ? "أتقنت السؤال ✓" : "علّم كمتقن"}
                         </button>
                       </div>
 

@@ -397,7 +397,7 @@ export function ExamCard({
           {isLocked ? (
             "غير متاح حالياً"
           ) : attemptsLeft !== null && attemptsLeft <= 0 ? (
-            "استنفذت المحاولات"
+            "خلصت كل محاولاتك"
           ) : isCompleted ? (
             <>
               <Eye className="h-3.5 w-3.5" /> عرض النتيجة / إعادة المحاولة

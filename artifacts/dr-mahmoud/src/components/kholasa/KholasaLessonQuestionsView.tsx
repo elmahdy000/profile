@@ -167,8 +167,8 @@ export function KholasaLessonQuestionsView({
       }
     } catch (err: any) {
       toast({
-        title: "تعذر التحقق من الإجابة",
-        description: err?.message || "حدث خطأ غير متوقع، حاول مرة أخرى.",
+        title: "مش عارفين نتأكد من الإجابة دلوقتي",
+        description: err?.message || "حصلت مشكلة بسيطة، جرب تختار وتدوس تاني.",
         variant: "destructive",
       });
     } finally {
@@ -550,8 +550,8 @@ export function KholasaLessonQuestionsView({
                     >
                       <strong dir="rtl" className={`block text-right ${res.isCorrect ? "text-emerald-500" : "text-rose-500"}`}>
                         {res.isCorrect
-                          ? "✓ أحسنت! إجابة صحيحة."
-                          : "✕ إجابة غير صحيحة — تم حفظ السؤال تلقائياً في «ركن غلطاتي» لتراجعه."}
+                          ? "✓ عاش يا بطل! إجابتك صح."
+                          : "✕ إجابتك مش مظبوطة — متقلقش، حفظنا السؤال في «ركن غلطاتي» عشان تراجعه براحتك."}
                       </strong>
                       {expParts && (
                         <div className={`mt-1.5 space-y-1 ${mutedClass}`}>

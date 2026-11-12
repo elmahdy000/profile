@@ -81,7 +81,7 @@ export function MistakeHubTab({ onMistakeCountChange }: { onMistakeCountChange?:
       setData(res);
       onMistakeCountChange?.(res.unresolvedCount || 0);
     } catch (err: any) {
-      toast({ title: "تعذر تحميل ركن غلطاتي", description: err.message, variant: "destructive" });
+      toast({ title: "حصلت مشكلة في تحميل ركن غلطاتي", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -109,10 +109,10 @@ export function MistakeHubTab({ onMistakeCountChange }: { onMistakeCountChange?:
   const handleResolve = async (mistakeId: number) => {
     try {
       await studentApi(`/api/learning/mistakes/${mistakeId}/resolve`, { method: "POST" });
-      toast({ title: "أحسنت! تم تعليم السؤال كمتقن ✓" });
+      toast({ title: "عاش يا بطل! السؤال بقى متقن خلاص ✓" });
       await loadMistakes();
     } catch (err: any) {
-      toast({ title: "خطأ", description: err.message, variant: "destructive" });
+      toast({ title: "حصلت مشكلة بسيطة", description: err.message, variant: "destructive" });
     }
   };
 
@@ -130,7 +130,7 @@ export function MistakeHubTab({ onMistakeCountChange }: { onMistakeCountChange?:
       });
       setPracticeItems(res.items || []);
     } catch (err: any) {
-      toast({ title: "تعذر بدء التدريب", description: err.message, variant: "destructive" });
+      toast({ title: "حصلت مشكلة في بدء التدريب", description: err.message, variant: "destructive" });
     } finally {
       setStartingPractice(false);
     }
@@ -151,7 +151,7 @@ export function MistakeHubTab({ onMistakeCountChange }: { onMistakeCountChange?:
       setPracticeResult(res);
       await loadMistakes();
     } catch (err: any) {
-      toast({ title: "تعذر تسليم التدريب", description: err.message, variant: "destructive" });
+      toast({ title: "حصلت مشكلة في تسليم التدريب", description: err.message, variant: "destructive" });
     } finally {
       setSubmittingPractice(false);
     }
@@ -470,7 +470,7 @@ export function MistakeHubTab({ onMistakeCountChange }: { onMistakeCountChange?:
           <Target className="h-10 w-10 text-emerald-500 mx-auto" />
           <h3 className="text-base font-black">سجلك نظيف تماماً! 🎉</h3>
           <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
-            لا توجد أي أخطاء قيد المراجعة حالياً. كلما حللت اختبارات أو تحديات يومية، ستُحفظ الأسئلة التي تحتاج مراجعة هنا تلقائياً.
+            مفيش أي أخطاء محتاجة مراجعة دلوقتي. كل ما تحل امتحانات أو تدريبات، أي سؤال تغلط فيه هيتسجل هنا تلقائياً عشان تراجعه وتتقنه.
           </p>
         </div>
       ) : (

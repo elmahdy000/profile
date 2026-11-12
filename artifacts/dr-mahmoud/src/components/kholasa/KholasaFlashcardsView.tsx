@@ -129,7 +129,7 @@ export function KholasaFlashcardsView({
         }`}
       >
         <CheckCircle2 className="h-10 w-10 mx-auto text-emerald-500" />
-        <p className="text-base font-black">أحسنت! أتقنت جميع عناصر التسميع في هذا الدرس ({totalCards} عنصر) 🎉</p>
+        <p className="text-base font-black">عاش يا بطل! خلصت كل عناصر التسميع في الدرس ده ({totalCards} بطاقة) 🎉</p>
         <div className="flex items-center justify-center gap-2">
           <Button type="button" variant="outline" size="sm" onClick={() => setOnlyUnmastered(false)}>
             عرض كل التسميع
