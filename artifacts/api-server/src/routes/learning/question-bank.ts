@@ -1109,27 +1109,39 @@ router.post("/admin/learning/question-bank/batch-import", requireAdmin, async (r
     const inserted = await db
       .insert(questionBankTable)
       .values(
-        nonDuplicates.map((q) => ({
-          courseId: resolvedCourseId,
-          category: String(category || "عام"),
-          stage: targetStage,
-          stages: Array.isArray(stages) ? stages : [targetStage],
-          unit: targetUnit,
-          lesson: targetLesson,
-          lessonId: resolvedLessonId || null,
-          difficulty: String(q.difficulty || difficulty || "medium"),
-          points: Number(q.points || points) || 1,
-          subject: "",
-          tags: [targetStage, targetUnit, targetLesson].filter(Boolean),
-          question: {
-            prompt: String(q.prompt).trim(),
-            options: q.options.map((o: unknown) => String(o).trim()),
-            correctIndex: Math.max(0, Math.min(q.options.length - 1, Number(q.correctIndex) || 0)),
-            explanation: String(q.explanation || "").trim() || undefined,
-            imageUrl: String(q.imageUrl || "").trim() || undefined,
+        nonDuplicates.map((q) => {
+          const opts = q.options.map((o: unknown) => String(o).trim());
+          const cIdx = Math.max(0, Math.min(opts.length - 1, Number(q.correctIndex) || 0));
+          const inferredType: "mcq" | "true_false" =
+            q.questionType === "true_false" || opts.length === 2 ? "true_false" : "mcq";
+          return {
+            courseId: resolvedCourseId,
+            category: String(category || "عام"),
+            stage: targetStage,
+            stages: Array.isArray(stages) ? stages : [targetStage],
+            unit: targetUnit,
+            lesson: targetLesson,
+            lessonId: resolvedLessonId || null,
+            difficulty: String(q.difficulty || difficulty || "medium"),
             points: Number(q.points || points) || 1,
-          },
-        }))
+            subject: "",
+            concept: q.concept ? String(q.concept).trim() : null,
+            translation: q.translation ? String(q.translation).trim() : null,
+            tags: [targetStage, targetUnit, targetLesson].filter(Boolean),
+            question: {
+              prompt: String(q.prompt).trim(),
+              options: opts,
+              correctIndex: cIdx,
+              correctAnswer: q.correctAnswer ? String(q.correctAnswer).trim() : opts[cIdx],
+              questionType: inferredType,
+              explanation: String(q.explanation || "").trim() || undefined,
+              translation: q.translation ? String(q.translation).trim() : undefined,
+              concept: q.concept ? String(q.concept).trim() : undefined,
+              imageUrl: String(q.imageUrl || "").trim() || undefined,
+              points: Number(q.points || points) || 1,
+            },
+          };
+        })
       )
       .returning();
 
@@ -1162,23 +1174,54 @@ router.delete("/admin/learning/question-bank/:id", requireSuperAdmin, async (req
 // Generate Quiz from Question Bank automatically
 router.post("/admin/learning/question-bank/generate-quiz", requireAdmin, async (req, res, next) => {
   try {
-    const { title, courseId, count, category, difficulty, passingScore, durationMinutes } = req.body;
+    const { title, courseId, count, category, stage, stages, difficulty, passingScore, durationMinutes } = req.body;
     const qCount = Math.max(1, Math.min(50, Number(count || 10)));
-    const allBankQuestions = await db.select().from(questionBankTable);
-    
-    let filtered = allBankQuestions;
-    if (courseId) filtered = filtered.filter((q) => q.courseId === Number(courseId));
-    if (category && category !== "all") filtered = filtered.filter((q) => q.category === category);
-    if (difficulty && difficulty !== "all") filtered = filtered.filter((q) => q.difficulty === difficulty);
 
-    if (filtered.length === 0) {
-      res.status(404).json({ error: "لا توجد أسئلة كافية في البنك تطابق هذا البحث" });
+    let targetStages: string[] = Array.isArray(stages) && stages.length
+      ? stages.map((s: unknown) => String(s).trim()).filter(Boolean)
+      : stage && stage !== "all"
+        ? [String(stage).trim()]
+        : [];
+
+    if (targetStages.length === 0 && courseId) {
+      const [course] = await db
+        .select({ stages: coursesTable.stages })
+        .from(coursesTable)
+        .where(eq(coursesTable.id, Number(courseId)))
+        .limit(1);
+      if (Array.isArray(course?.stages) && course.stages.length > 0) {
+        targetStages = course.stages;
+      }
+    }
+
+    const conditions = [];
+    if (targetStages.length > 0) {
+      conditions.push(inArray(questionBankTable.stage, targetStages));
+    } else if (courseId) {
+      conditions.push(eq(questionBankTable.courseId, Number(courseId)));
+    } else if (category && category !== "all") {
+      conditions.push(or(eq(questionBankTable.category, category), eq(questionBankTable.category, "عام")));
+    }
+
+    if (difficulty && difficulty !== "all") {
+      conditions.push(eq(questionBankTable.difficulty, String(difficulty)));
+    }
+
+    const rows = await db
+      .select()
+      .from(questionBankTable)
+      .where(conditions.length ? and(...conditions) : undefined)
+      .orderBy(sql`random()`)
+      .limit(qCount * 2);
+
+    const validRows = rows.filter((r) => isCompleteValidQuestion(r.question)).slice(0, qCount);
+
+    if (validRows.length === 0) {
+      res.status(404).json({ error: "لا توجد أسئلة كافية في البنك تطابق هذا البحث أو المرحلة" });
       return;
     }
 
-    // Pick random questions
-    const shuffled = [...filtered].sort(() => Math.random() - 0.5);
-    const selectedQuestions = shuffled.slice(0, qCount).map((item) => item.question);
+    const selectedQuestions = validRows.map((item) => item.question);
 
     res.json({
       title: title || `اختبار عشوائي من بنك الأسئلة (${selectedQuestions.length} سؤال)`,

@@ -1063,8 +1063,8 @@ export function AdminLearning({
     try {
       await adminApi(`/api/admin/learning/quizzes/${id}`, { method: "DELETE" });
       setQuizzes(prev => prev.filter((q) => q.id !== id));
-    } catch {
-      toast({ title: "خطأ في حذف الاختبار", variant: "destructive" });
+    } catch (err) {
+      toast({ title: "خطأ في حذف الاختبار", description: (err as Error).message, variant: "destructive" });
     }
   };
   const toggleQuiz = async (quiz: Quiz) => {

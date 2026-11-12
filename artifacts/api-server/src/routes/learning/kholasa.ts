@@ -1180,6 +1180,7 @@ router.get("/admin/learning/kholasa/materials", requireAdmin, async (_req, res, 
           videoId: quizzesTable.videoId,
           stage: quizzesTable.stage,
           title: quizzesTable.title,
+          description: quizzesTable.description,
         })
         .from(quizzesTable),
     ]);
@@ -1205,7 +1206,8 @@ router.get("/admin/learning/kholasa/materials", requireAdmin, async (_req, res, 
       const quizzesCount = quizzes.filter(
         (q) =>
           (m.videoId && q.videoId === m.videoId) ||
-          (q.stage === m.stage && q.title.includes(m.lesson)),
+          (q.stage === m.stage &&
+            (q.title.includes(m.lesson) || (q.description || "").includes(m.lesson))),
       ).length;
 
       return {
@@ -1272,6 +1274,7 @@ router.get("/admin/learning/kholasa/materials/:id/bundle", requireAdmin, async (
         .select({
           id: quizzesTable.id,
           title: quizzesTable.title,
+          description: quizzesTable.description,
           scope: quizzesTable.scope,
           videoId: quizzesTable.videoId,
           stage: quizzesTable.stage,
@@ -1293,7 +1296,8 @@ router.get("/admin/learning/kholasa/materials/:id/bundle", requireAdmin, async (
       .filter(
         (q) =>
           (material.videoId && q.videoId === material.videoId) ||
-          (q.stage === material.stage && q.title.includes(material.lesson)),
+          (q.stage === material.stage &&
+            (q.title.includes(material.lesson) || (q.description || "").includes(material.lesson))),
       )
       .map((q) => ({
         ...q,

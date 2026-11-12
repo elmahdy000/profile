@@ -1198,6 +1198,8 @@ export function ExamWizard({
                               body: JSON.stringify({
                                 courseId: quizForm.courseId,
                                 category: quizForm.category,
+                                stage: quizForm.stage,
+                                stages: quizForm.stages,
                                 count,
                               }),
                             }

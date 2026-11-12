@@ -345,7 +345,7 @@ export function KholasaQuestionsManager({
           ...q,
           questionType: qType === "true_false" || q.options?.length === 2 ? "true_false" : "mcq",
         }));
-        const res = await adminApi<{ insertedCount: number; message?: string }>("/api/admin/learning/test-bank/upload", {
+        const res = await adminApi<{ count?: number; insertedCount?: number; message?: string }>("/api/admin/learning/test-bank/upload", {
           method: "POST",
           body: JSON.stringify({
             questions: tagged,
@@ -357,7 +357,8 @@ export function KholasaQuestionsManager({
             difficulty: bulkDifficulty,
           }),
         });
-        toast({ title: res.message || `تم حفظ ${res.insertedCount} سؤال في بنك الدرس ✓` });
+        const savedCount = res.count ?? res.insertedCount ?? tagged.length;
+        toast({ title: res.message || `تم حفظ ${savedCount} سؤال في بنك الدرس ✓` });
         setPreviewObjective(null);
         setBulkText("");
         setMode("list");

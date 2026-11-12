@@ -291,8 +291,8 @@ export function StudentDrawer({
     setIsLoadingDetails(true);
 
     Promise.all([
-      fetch("/api/admin/students/analytics", {}).then((r) => (r.ok ? r.json() : [])),
-      fetch("/api/admin/learning/files", {}).then((r) => (r.ok ? r.json() : [])),
+      fetch("/api/admin/students/analytics", { credentials: "include" }).then((r) => (r.ok ? r.json() : [])),
+      fetch("/api/admin/learning/files", { credentials: "include" }).then((r) => (r.ok ? r.json() : [])),
     ])
       .then(([analyticsList, filesList]) => {
         if (Array.isArray(analyticsList)) {
@@ -1052,6 +1052,7 @@ export function StudentDrawer({
                               try {
                                 const res = await fetch(`/api/admin/learning/quizzes/${q.quizId}/extra-attempts`, {
                                   method: "POST",
+                                  credentials: "include",
                                   headers: { "Content-Type": "application/json" },
                                   body: JSON.stringify({ studentId: student.id, extraAttempts: 1 }),
                                 });
@@ -1059,7 +1060,7 @@ export function StudentDrawer({
                                 toast({ title: "تم بنجاح 🎓", description: `تم منح الطالب محاولة إضافية للاختبار #${q.quizId}` });
                                 setIsLoadingDetails(true);
                                 Promise.all([
-                                  fetch("/api/admin/students/analytics", {}).then((r) => (r.ok ? r.json() : [])),
+                                  fetch("/api/admin/students/analytics", { credentials: "include" }).then((r) => (r.ok ? r.json() : [])),
                                 ])
                                   .then(([analyticsList]) => {
                                     if (Array.isArray(analyticsList)) {
