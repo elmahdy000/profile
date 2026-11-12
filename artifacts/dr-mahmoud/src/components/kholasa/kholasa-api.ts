@@ -1,3 +1,15 @@
+export function buildKholasaMediaUrl(url: string): string {
+  if (!url) return url;
+  if (typeof window === "undefined") return url;
+  const deviceId =
+    localStorage.getItem("dr_mahmoud_device_id") || localStorage.getItem("drelmahdy_device_id") || "";
+  if (!deviceId || url.includes("deviceId=") || !url.includes("/api/learning/kholasa/media/")) {
+    return url;
+  }
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}deviceId=${encodeURIComponent(deviceId)}`;
+}
+
 export async function studentApi<T>(url: string, options?: RequestInit): Promise<T> {
   const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
   const token = localStorage.getItem("dr_mahmoud_student_token") || "";
@@ -21,4 +33,3 @@ export async function studentApi<T>(url: string, options?: RequestInit): Promise
   }
   return data as T;
 }
-

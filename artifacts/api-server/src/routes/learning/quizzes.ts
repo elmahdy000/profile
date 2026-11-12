@@ -1328,14 +1328,25 @@ router.post(
       }
 
       // Non-blocking: record wrong answers into Mistakes Hub & promote mastered ones
+      // IMPORTANT: Only consider questions actually seen/answered in this attempt (prevents marking unseen questions in subset/random quizzes as mistakes).
       try {
+        const seenDetails = details.filter((d, idx) => {
+          if (d.selectedOption >= 0) return true;
+          if (rawDetailedAnswers.length > 0) {
+            const q = quiz.questions[idx];
+            const pKey = normalizeQuestionPrompt(q?.prompt || "");
+            return origIndexToStudentAnswer.has(idx) || Boolean(pKey && promptToStudentAnswer.has(pKey));
+          }
+          return false;
+        });
+
         await recordSubmissionMistakes({
           studentId: student.id,
           stage: quiz.stage || (Array.isArray(quiz.stages) ? quiz.stages[0] : null),
           sourceType: "quiz",
           sourceId: quiz.id,
-          items: details.map((d, idx) => ({
-            question: quiz.questions[idx],
+          items: seenDetails.map((d) => ({
+            question: quiz.questions[d.questionIndex],
             selectedOption: d.selectedOption,
             isCorrect: d.isCorrect,
           })),

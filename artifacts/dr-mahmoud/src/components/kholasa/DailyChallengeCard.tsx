@@ -51,7 +51,7 @@ export function DailyChallengeCard({ isPaid }: { isPaid: boolean }) {
     if (isPaid) void loadDaily();
   }, [isPaid]);
 
-  if (!isPaid || (!loading && !data?.challenge?.questions?.length)) {
+  if (!isPaid || loading || !data?.challenge?.questions?.length) {
     return null;
   }
 

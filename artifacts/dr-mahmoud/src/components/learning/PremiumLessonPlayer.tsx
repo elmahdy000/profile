@@ -376,11 +376,23 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
 
   useEffect(() => {
     setKholasaMaterial(null);
-    if (!item.id || item.paymentLocked || item.youtubeUrl === "locked") return;
+    if (!item.id || item.paymentLocked || item.youtubeUrl === "locked") {
+      setTab((prev) =>
+        ["definitions", "kholasa", "mindmap", "flashcards", "lesson-questions"].includes(prev) ? "overview" : prev,
+      );
+      return;
+    }
     let active = true;
     studentApi<{ material: KholasaMaterial | null }>(`/api/learning/kholasa/video/${item.id}`)
       .then((res) => {
-        if (active && res?.material) setKholasaMaterial(res.material);
+        if (!active) return;
+        if (res?.material) {
+          setKholasaMaterial(res.material);
+        } else {
+          setTab((prev) =>
+            ["definitions", "kholasa", "mindmap", "flashcards", "lesson-questions"].includes(prev) ? "overview" : prev,
+          );
+        }
       })
       .catch(() => undefined);
     return () => {

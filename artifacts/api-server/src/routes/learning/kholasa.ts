@@ -15,7 +15,7 @@ import {
   videosTable,
   type QuizQuestion,
 } from "@workspace/db";
-import { isAdminRequest, requireAdmin } from "../../middleware/auth";
+import { getDynamicAdminPassword, isAdminRequest, requireAdmin } from "../../middleware/auth";
 import {
   canStudentAccessContent,
   getApprovedStudent,
@@ -25,12 +25,15 @@ import {
   assertActivePaidStudent,
   calculateStreak,
   getCairoDayKey,
+  gradeQuestionOption,
   kholasaMindmapsDir,
   recordSubmissionMistakes,
+  resolveCorrectOptionIndex,
   type MistakeRecordingItem,
 } from "../../lib/kholasa-helpers";
 import {
   allowedImageExtensions,
+  isCompleteValidQuestion,
   normalizeCanonicalStage,
   parseLessonSortOrder,
   parseUnitSortOrder,
@@ -67,7 +70,11 @@ function sanitizeQuestionForStudent(q: QuizQuestion) {
 // ── 1. Protected Mindmap / Kholasa Media Endpoint ─────────────────────────────
 router.get("/learning/kholasa/media/:filename", async (req, res, next) => {
   try {
-    const isAdmin = isAdminRequest(req);
+    let isAdmin = isAdminRequest(req);
+    if (!isAdmin) {
+      await getDynamicAdminPassword().catch(() => {});
+      isAdmin = isAdminRequest(req);
+    }
     if (!isAdmin) {
       const student = await getApprovedStudent(req);
       if (!student || student.status !== "approved" || student.paymentStatus !== "paid") {
@@ -136,6 +143,7 @@ router.get("/learning/kholasa/materials", requireStudent, async (_req, res, next
           stage: questionBankTable.stage,
           unit: questionBankTable.unit,
           lesson: questionBankTable.lesson,
+          lessonId: questionBankTable.lessonId,
           qType: sql<string>`COALESCE(${questionBankTable.question}->>'questionType', 'mcq')`,
           cnt: sql<number>`count(*)::int`,
         })
@@ -144,6 +152,7 @@ router.get("/learning/kholasa/materials", requireStudent, async (_req, res, next
           questionBankTable.stage,
           questionBankTable.unit,
           questionBankTable.lesson,
+          questionBankTable.lessonId,
           sql`COALESCE(${questionBankTable.question}->>'questionType', 'mcq')`,
         ),
       db
@@ -170,19 +179,10 @@ router.get("/learning/kholasa/materials", requireStudent, async (_req, res, next
     );
     const videoById = new Map(videos.map((v) => [v.id, v]));
 
-    const countsMap = new Map<string, { mcq: number; trueFalse: number; essay: number }>();
-    for (const row of qbCounts) {
-      const key = `${row.stage || ""}||${row.unit || ""}||${row.lesson || ""}`;
-      const curr = countsMap.get(key) || { mcq: 0, trueFalse: 0, essay: 0 };
-      if (row.qType === "true_false") curr.trueFalse += Number(row.cnt) || 0;
-      else curr.mcq += Number(row.cnt) || 0;
-      countsMap.set(key, curr);
-    }
+    const essayMap = new Map<string, number>();
     for (const row of essayCounts) {
       const key = `${row.stage || ""}||${row.unit || ""}||${row.lesson || ""}`;
-      const curr = countsMap.get(key) || { mcq: 0, trueFalse: 0, essay: 0 };
-      curr.essay += Number(row.cnt) || 0;
-      countsMap.set(key, curr);
+      essayMap.set(key, (essayMap.get(key) || 0) + (Number(row.cnt) || 0));
     }
 
     filtered.sort((a, b) => {
@@ -195,16 +195,21 @@ router.get("/learning/kholasa/materials", requireStudent, async (_req, res, next
 
     res.json({
       materials: filtered.map((m) => {
-        const qCounts = countsMap.get(`${m.stage}||${m.unit}||${m.lesson}`) || {
-          mcq: 0,
-          trueFalse: 0,
-          essay: 0,
-        };
+        let mcq = 0;
+        let trueFalse = 0;
+        for (const row of qbCounts) {
+          if (row.stage !== m.stage || row.unit !== m.unit) continue;
+          const matchesLesson = row.lesson === m.lesson || (m.videoId !== null && row.lessonId === m.videoId);
+          if (!matchesLesson) continue;
+          if (row.qType === "true_false") trueFalse += Number(row.cnt) || 0;
+          else mcq += Number(row.cnt) || 0;
+        }
+        const essay = essayMap.get(`${m.stage}||${m.unit}||${m.lesson}`) || 0;
         return {
           ...m,
           isBookmarked: bookmarkedKeys.has(`lesson:${m.id}`),
           video: m.videoId ? videoById.get(m.videoId) ?? null : null,
-          questionCounts: qCounts,
+          questionCounts: { mcq, trueFalse, essay },
         };
       }),
     });
@@ -393,40 +398,64 @@ router.post("/learning/kholasa/materials/:id/check-answer", requireStudent, asyn
     const questionBankId = Number(req.body?.questionBankId);
     const selectedOption = Number(req.body?.selectedOption);
 
+    if (!Number.isInteger(materialId) || materialId <= 0) {
+      res.status(400).json({ error: "معرف الدرس غير صالح" });
+      return;
+    }
+
     if (!Number.isInteger(questionBankId) || questionBankId <= 0) {
       res.status(400).json({ error: "معرف السؤال غير صالح" });
       return;
     }
 
-    const [row] = await db
-      .select()
-      .from(questionBankTable)
-      .where(eq(questionBankTable.id, questionBankId))
-      .limit(1);
+    const [[material], [row]] = await Promise.all([
+      db
+        .select()
+        .from(lessonKholasaMaterialsTable)
+        .where(
+          and(
+            eq(lessonKholasaMaterialsTable.id, materialId),
+            eq(lessonKholasaMaterialsTable.isPublished, true),
+          ),
+        )
+        .limit(1),
+      db
+        .select()
+        .from(questionBankTable)
+        .where(eq(questionBankTable.id, questionBankId))
+        .limit(1),
+    ]);
+
+    if (!material) {
+      res.status(404).json({ error: "الدرس غير موجود" });
+      return;
+    }
+
+    if (!canStudentAccessContent(student, "عام", material.stage, material.stages, material.courseId)) {
+      res.status(403).json({ error: "هذا الدرس غير متاح لمرحلتك الدراسية" });
+      return;
+    }
 
     if (!row) {
       res.status(404).json({ error: "السؤال غير موجود" });
       return;
     }
 
-    const q = row.question;
-    let resolvedCorrectOption = q.correctIndex;
-    if (q.correctAnswer) {
-      const matchIdx = q.options.findIndex((opt) => opt?.trim() === q.correctAnswer?.trim());
-      if (matchIdx >= 0) resolvedCorrectOption = matchIdx;
+    const belongsToMaterial =
+      row.stage === material.stage &&
+      row.unit === material.unit &&
+      (row.lesson === material.lesson || (material.videoId !== null && row.lessonId === material.videoId));
+
+    if (
+      !belongsToMaterial ||
+      !canStudentAccessContent(student, "عام", row.stage, row.stages)
+    ) {
+      res.status(403).json({ error: "هذا السؤال غير تابع لهذا الدرس أو غير متاح لمرحلتك" });
+      return;
     }
 
-    const selectedText =
-      Number.isInteger(selectedOption) && selectedOption >= 0
-        ? q.options[selectedOption]?.trim()
-        : undefined;
-    const correctText = q.correctAnswer?.trim() || q.options[resolvedCorrectOption]?.trim();
-    const isCorrect = Boolean(
-      Number.isInteger(selectedOption) &&
-        selectedOption >= 0 &&
-        ((selectedText && correctText && selectedText === correctText) ||
-          selectedOption === resolvedCorrectOption),
-    );
+    const q = row.question;
+    const { isCorrect, resolvedCorrectOption, normalizedOption } = gradeQuestionOption(q, selectedOption);
 
     await recordSubmissionMistakes({
       studentId: student.id,
@@ -434,12 +463,12 @@ router.post("/learning/kholasa/materials/:id/check-answer", requireStudent, asyn
       unit: row.unit,
       lesson: row.lesson,
       sourceType: "quiz",
-      sourceId: Number.isInteger(materialId) ? materialId : null,
+      sourceId: material.id,
       items: [
         {
           question: q,
           questionBankId: row.id,
-          selectedOption: Number.isInteger(selectedOption) ? selectedOption : -1,
+          selectedOption: normalizedOption,
           isCorrect,
           unit: row.unit,
           lesson: row.lesson,
@@ -663,25 +692,16 @@ router.post("/learning/mistakes/practice/submit", requireStudent, async (req, re
       const row = rowById.get(mId);
       if (!row) continue;
 
-      const selectedOption = Number.isInteger(Number(ans?.selectedOption))
-        ? Number(ans.selectedOption)
-        : -1;
+      const selectedRaw = Number(ans?.selectedOption);
       const q = row.questionSnapshot;
-      const correctIdx = q.correctIndex;
-      const selectedText = selectedOption >= 0 ? q.options[selectedOption]?.trim() : undefined;
-      const correctText = q.correctAnswer?.trim() || q.options[correctIdx]?.trim();
-      const isCorrect = Boolean(
-        selectedOption >= 0 &&
-          ((selectedText && correctText && selectedText === correctText) ||
-            selectedOption === correctIdx),
-      );
+      const { isCorrect, resolvedCorrectOption, normalizedOption } = gradeQuestionOption(q, selectedRaw);
 
       if (isCorrect) correctCount++;
 
       recordingItems.push({
         question: q,
         questionBankId: row.questionBankId,
-        selectedOption,
+        selectedOption: normalizedOption,
         isCorrect,
         unit: row.unit,
         lesson: row.lesson,
@@ -692,8 +712,8 @@ router.post("/learning/mistakes/practice/submit", requireStudent, async (req, re
         mistakeId: row.id,
         prompt: q.prompt,
         options: q.options,
-        selectedOption,
-        correctOption: correctIdx,
+        selectedOption: normalizedOption,
+        correctOption: resolvedCorrectOption,
         isCorrect,
         explanation: q.explanation ?? null,
         translation: q.translation ?? null,
@@ -702,6 +722,7 @@ router.post("/learning/mistakes/practice/submit", requireStudent, async (req, re
 
     await recordSubmissionMistakes({
       studentId: student.id,
+      stage: rows[0]?.stage ?? null,
       sourceType: "mistakes_practice",
       items: recordingItems,
     });
@@ -776,21 +797,13 @@ router.get("/learning/daily-checkin", requireStudent, async (_req, res, next) =>
       )
       .limit(1);
 
-    if (!todayChallenge) {
-      // Pick 5 questions from question_bank strictly matching student's stage
-      const stageConditions = [];
-      if (canonicalStage) {
-        stageConditions.push(
-          or(
-            eq(questionBankTable.stage, canonicalStage),
-            sql`${questionBankTable.stages}::jsonb @> ${JSON.stringify([canonicalStage])}::jsonb`,
-          ),
-        );
-      }
-
+    if (!todayChallenge && canonicalStage) {
+      // Pick up to 25 random candidates from student's exact canonical stage, then validate strictly
       const candidatePool = await db
         .select({
           id: questionBankTable.id,
+          stage: questionBankTable.stage,
+          stages: questionBankTable.stages,
           question: questionBankTable.question,
           unit: questionBankTable.unit,
           lesson: questionBankTable.lesson,
@@ -798,46 +811,62 @@ router.get("/learning/daily-checkin", requireStudent, async (_req, res, next) =>
           translation: questionBankTable.translation,
         })
         .from(questionBankTable)
-        .where(stageConditions.length ? and(...stageConditions) : undefined)
+        .where(
+          or(
+            eq(questionBankTable.stage, canonicalStage),
+            sql`${questionBankTable.stages}::jsonb @> ${JSON.stringify([canonicalStage])}::jsonb`,
+          ),
+        )
         .orderBy(sql`random()`)
-        .limit(5);
+        .limit(25);
 
-      const pickedQuestions: QuizQuestion[] = candidatePool.map((row) => ({
-        ...row.question,
-        id: String(row.id),
-        translation: row.question.translation || row.translation || undefined,
-        concept: row.question.concept || row.concept || undefined,
-      }));
-      const pickedIds = candidatePool.map((row) => row.id);
+      const safeCandidates = candidatePool
+        .filter(
+          (row) =>
+            isCompleteValidQuestion(row.question) &&
+            canStudentAccessContent(student, "عام", row.stage, row.stages),
+        )
+        .slice(0, 5);
 
-      const [inserted] = await db
-        .insert(studentDailyChallengesTable)
-        .values({
-          studentId: student.id,
-          challengeDate: todayKey,
-          stage: canonicalStage,
-          questionIds: pickedIds,
-          questions: pickedQuestions,
-          totalQuestions: pickedQuestions.length,
-          completed: false,
-        })
-        .onConflictDoNothing()
-        .returning();
+      if (safeCandidates.length > 0) {
+        const pickedQuestions: QuizQuestion[] = safeCandidates.map((row) => ({
+          ...row.question,
+          id: String(row.id),
+          correctIndex: resolveCorrectOptionIndex(row.question),
+          translation: row.question.translation || row.translation || undefined,
+          concept: row.question.concept || row.concept || undefined,
+        }));
+        const pickedIds = safeCandidates.map((row) => row.id);
 
-      if (inserted) {
-        todayChallenge = inserted;
-      } else {
-        const [refetched] = await db
-          .select()
-          .from(studentDailyChallengesTable)
-          .where(
-            and(
-              eq(studentDailyChallengesTable.studentId, student.id),
-              eq(studentDailyChallengesTable.challengeDate, todayKey),
-            ),
-          )
-          .limit(1);
-        todayChallenge = refetched;
+        const [inserted] = await db
+          .insert(studentDailyChallengesTable)
+          .values({
+            studentId: student.id,
+            challengeDate: todayKey,
+            stage: canonicalStage,
+            questionIds: pickedIds,
+            questions: pickedQuestions,
+            totalQuestions: pickedQuestions.length,
+            completed: false,
+          })
+          .onConflictDoNothing()
+          .returning();
+
+        if (inserted) {
+          todayChallenge = inserted;
+        } else {
+          const [refetched] = await db
+            .select()
+            .from(studentDailyChallengesTable)
+            .where(
+              and(
+                eq(studentDailyChallengesTable.studentId, student.id),
+                eq(studentDailyChallengesTable.challengeDate, todayKey),
+              ),
+            )
+            .limit(1);
+          todayChallenge = refetched;
+        }
       }
     }
 
@@ -863,7 +892,10 @@ router.get("/learning/daily-checkin", requireStudent, async (_req, res, next) =>
 
     const questionsPayload = todayChallenge
       ? todayChallenge.completed
-        ? todayChallenge.questions
+        ? todayChallenge.questions.map((q) => ({
+            ...q,
+            correctIndex: resolveCorrectOptionIndex(q),
+          }))
         : todayChallenge.questions.map(sanitizeQuestionForStudent)
       : [];
 
@@ -917,7 +949,10 @@ router.post("/learning/daily-checkin/submit", requireStudent, async (req, res, n
         alreadyCompleted: true,
         score: challenge.score,
         totalQuestions: challenge.totalQuestions,
-        questions: challenge.questions,
+        questions: challenge.questions.map((q) => ({
+          ...q,
+          correctIndex: resolveCorrectOptionIndex(q),
+        })),
         answers: challenge.answers,
       });
       return;
@@ -932,37 +967,31 @@ router.post("/learning/daily-checkin/submit", requireStudent, async (req, res, n
     let correctCount = 0;
     const recordingItems: MistakeRecordingItem[] = [];
     const details = challenge.questions.map((q, idx) => {
-      const selectedOption = resolvedAnswers[idx];
-      const correctIdx = q.correctIndex;
-      const selectedText = selectedOption >= 0 ? q.options[selectedOption]?.trim() : undefined;
-      const correctText = q.correctAnswer?.trim() || q.options[correctIdx]?.trim();
-      const isCorrect = Boolean(
-        selectedOption >= 0 &&
-          ((selectedText && correctText && selectedText === correctText) ||
-            selectedOption === correctIdx),
-      );
+      const selectedRaw = resolvedAnswers[idx];
+      const { isCorrect, resolvedCorrectOption, normalizedOption } = gradeQuestionOption(q, selectedRaw);
+      resolvedAnswers[idx] = normalizedOption;
       if (isCorrect) correctCount++;
 
       const qbIdNum = Number(challenge.questionIds[idx]);
       recordingItems.push({
         question: q,
         questionBankId: Number.isInteger(qbIdNum) && qbIdNum > 0 ? qbIdNum : null,
-        selectedOption,
+        selectedOption: normalizedOption,
         isCorrect,
         concept: q.concept ?? null,
       });
 
       return {
         questionIndex: idx,
-        selectedOption,
-        correctOption: correctIdx,
+        selectedOption: normalizedOption,
+        correctOption: resolvedCorrectOption,
         isCorrect,
         explanation: q.explanation ?? null,
       };
     });
 
     const now = new Date();
-    await db
+    const [updatedChallenge] = await db
       .update(studentDailyChallengesTable)
       .set({
         answers: resolvedAnswers,
@@ -970,7 +999,23 @@ router.post("/learning/daily-checkin/submit", requireStudent, async (req, res, n
         completed: true,
         completedAt: now,
       })
-      .where(eq(studentDailyChallengesTable.id, challenge.id));
+      .where(and(eq(studentDailyChallengesTable.id, challenge.id), eq(studentDailyChallengesTable.completed, false)))
+      .returning({ id: studentDailyChallengesTable.id });
+
+    if (!updatedChallenge) {
+      res.json({
+        success: true,
+        alreadyCompleted: true,
+        score: challenge.score,
+        totalQuestions: challenge.totalQuestions,
+        questions: challenge.questions.map((q) => ({
+          ...q,
+          correctIndex: resolveCorrectOptionIndex(q),
+        })),
+        answers: challenge.answers,
+      });
+      return;
+    }
 
     await recordSubmissionMistakes({
       studentId: student.id,
@@ -1000,7 +1045,10 @@ router.post("/learning/daily-checkin/submit", requireStudent, async (req, res, n
       totalQuestions: challenge.totalQuestions,
       streak,
       details,
-      questions: challenge.questions,
+      questions: challenge.questions.map((q) => ({
+        ...q,
+        correctIndex: resolveCorrectOptionIndex(q),
+      })),
       answers: resolvedAnswers,
     });
   } catch (error) {

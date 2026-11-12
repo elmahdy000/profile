@@ -11,7 +11,8 @@ import {
   Languages,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { studentApi } from "./kholasa-api";
+import { useToast } from "@/hooks/use-toast";
+import { buildKholasaMediaUrl, studentApi } from "./kholasa-api";
 import { BidiStatement } from "./BidiStatement";
 
 interface QuestionCounts {
@@ -69,6 +70,7 @@ export function KholasaLessonQuestionsView({
   initialCounts,
   darkSurface = false,
 }: KholasaLessonQuestionsViewProps) {
+  const { toast } = useToast();
   const [qType, setQType] = useState<"mcq" | "true_false" | "essay">("mcq");
   const [difficulty, setDifficulty] = useState<"all" | "easy" | "medium" | "hard">("all");
   const [page, setPage] = useState(1);
@@ -146,8 +148,12 @@ export function KholasaLessonQuestionsView({
           translation: res.translation,
         },
       }));
-    } catch {
-      // ignore transient error
+    } catch (err: any) {
+      toast({
+        title: "تعذر التحقق من الإجابة",
+        description: err?.message || "حدث خطأ غير متوقع، حاول مرة أخرى.",
+        variant: "destructive",
+      });
     } finally {
       setCheckingId(null);
     }
@@ -256,7 +262,7 @@ export function KholasaLessonQuestionsView({
 
                 {item.imageUrl && (
                   <img
-                    src={item.imageUrl}
+                    src={buildKholasaMediaUrl(item.imageUrl)}
                     alt="صورة السؤال"
                     className="max-h-56 rounded-xl border border-border/40 object-contain"
                   />
@@ -349,7 +355,7 @@ export function KholasaLessonQuestionsView({
 
                 {item.question.imageUrl && (
                   <img
-                    src={item.question.imageUrl}
+                    src={buildKholasaMediaUrl(item.question.imageUrl)}
                     alt="صورة السؤال"
                     className="max-h-56 rounded-xl border border-border/40 object-contain"
                   />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ZoomIn,
   ZoomOut,
@@ -11,6 +11,7 @@ import {
   Map as MapIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { buildKholasaMediaUrl } from "./kholasa-api";
 
 interface KholasaMindMapViewProps {
   title?: string | null;
@@ -18,21 +19,18 @@ interface KholasaMindMapViewProps {
   darkSurface?: boolean;
 }
 
-function buildMediaUrl(url: string): string {
-  const deviceId =
-    typeof window !== "undefined"
-      ? localStorage.getItem("dr_mahmoud_device_id") || localStorage.getItem("drelmahdy_device_id") || ""
-      : "";
-  if (!deviceId || url.includes("deviceId=")) return url;
-  const sep = url.includes("?") ? "&" : "?";
-  return `${url}${sep}deviceId=${encodeURIComponent(deviceId)}`;
-}
-
 export function KholasaMindMapView({ title, images, darkSurface = false }: KholasaMindMapViewProps) {
   const validImages = Array.isArray(images) ? images.filter(Boolean) : [];
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [zoom, setZoom] = useState(1);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [imgError, setImgError] = useState(false);
+
+  const safeIndex = Math.min(selectedIndex, Math.max(0, validImages.length - 1));
+
+  useEffect(() => {
+    setImgError(false);
+  }, [safeIndex, images]);
 
   if (validImages.length === 0) {
     return (
@@ -48,8 +46,7 @@ export function KholasaMindMapView({ title, images, darkSurface = false }: Khola
     );
   }
 
-  const safeIndex = Math.min(selectedIndex, validImages.length - 1);
-  const currentUrl = buildMediaUrl(validImages[safeIndex]);
+  const currentUrl = buildKholasaMediaUrl(validImages[safeIndex]);
 
   return (
     <div className="space-y-4 text-right" dir="rtl">
@@ -131,12 +128,20 @@ export function KholasaMindMapView({ title, images, darkSurface = false }: Khola
         style={{ maxHeight: "70vh" }}
       >
         <div className="flex justify-center min-w-full">
-          <img
-            src={currentUrl}
-            alt={`خريطة ذهنية ${safeIndex + 1}`}
-            className="rounded-xl transition-transform duration-200 origin-top shadow-md select-none"
-            style={{ transform: `scale(${zoom})`, maxWidth: zoom <= 1 ? "100%" : "none" }}
-          />
+          {imgError ? (
+            <div className="py-12 px-4 text-center space-y-2 text-xs text-muted-foreground">
+              <MapIcon className="h-8 w-8 mx-auto opacity-60" />
+              <p className="font-bold">تعذر تحميل صورة الخريطة الذهنية حالياً. تأكد من اتصالك وأعد المحاولة.</p>
+            </div>
+          ) : (
+            <img
+              src={currentUrl}
+              alt={`خريطة ذهنية ${safeIndex + 1}`}
+              onError={() => setImgError(true)}
+              className="rounded-xl transition-transform duration-200 origin-top shadow-md select-none"
+              style={{ transform: `scale(${zoom})`, maxWidth: zoom <= 1 ? "100%" : "none" }}
+            />
+          )}
         </div>
       </div>
 
@@ -157,7 +162,7 @@ export function KholasaMindMapView({ title, images, darkSurface = false }: Khola
                   : "border-transparent opacity-65 hover:opacity-100"
               }`}
             >
-              <img src={buildMediaUrl(img)} alt={`لوحة ${idx + 1}`} className="h-full w-full object-cover" />
+              <img src={buildKholasaMediaUrl(img)} alt={`لوحة ${idx + 1}`} className="h-full w-full object-cover" />
               <span className="absolute bottom-1 right-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-white">
                 {idx + 1}
               </span>

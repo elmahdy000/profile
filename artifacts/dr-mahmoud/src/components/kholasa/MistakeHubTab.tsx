@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { studentApi } from "./kholasa-api";
+import { buildKholasaMediaUrl, studentApi } from "./kholasa-api";
 import { BidiStatement } from "./BidiStatement";
 import type { MistakeDiagnosisBucket, StudentMistakeRow } from "./types";
 
@@ -237,7 +237,7 @@ export function MistakeHubTab({ onMistakeCountChange }: { onMistakeCountChange?:
 
                 {item.question.imageUrl && (
                   <img
-                    src={item.question.imageUrl}
+                    src={buildKholasaMediaUrl(item.question.imageUrl)}
                     alt="صورة السؤال"
                     className="max-h-60 rounded-xl border border-border object-contain"
                   />
@@ -278,10 +278,19 @@ export function MistakeHubTab({ onMistakeCountChange }: { onMistakeCountChange?:
                   })}
                 </div>
 
-                {rev?.explanation && (
-                  <div className="rounded-xl bg-muted/50 border border-border p-3 text-xs leading-6">
-                    <strong className="text-primary block mb-1">💡 التفسير:</strong>
-                    <BidiStatement text={rev.explanation} />
+                {(rev?.explanation || rev?.translation) && (
+                  <div className="rounded-xl bg-muted/50 border border-border p-3 text-xs leading-6 space-y-1.5">
+                    {rev?.translation && (
+                      <div className="text-sky-600 dark:text-sky-400 font-semibold">
+                        🌐 {rev.translation}
+                      </div>
+                    )}
+                    {rev?.explanation && (
+                      <div>
+                        <strong className="text-primary block mb-0.5">💡 التفسير:</strong>
+                        <BidiStatement text={rev.explanation} />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -459,6 +468,14 @@ export function MistakeHubTab({ onMistakeCountChange }: { onMistakeCountChange?:
                 <div className="text-sm font-bold text-foreground">
                   <BidiStatement text={m.question.prompt} />
                 </div>
+
+                {m.question.imageUrl && (
+                  <img
+                    src={buildKholasaMediaUrl(m.question.imageUrl)}
+                    alt="صورة السؤال"
+                    className="max-h-56 rounded-xl border border-border object-contain"
+                  />
+                )}
 
                 <div className="grid gap-2 sm:grid-cols-2 text-xs">
                   {wrongAns && (
