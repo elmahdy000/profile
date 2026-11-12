@@ -29,6 +29,7 @@ export function KholasaSummaryView({ material, darkSurface = false }: KholasaSum
   const examTips = Array.isArray(s.examTips) ? s.examTips : [];
   const commonMistakes = Array.isArray(s.commonMistakes) ? s.commonMistakes : [];
   const checklist = Array.isArray(s.checklist) ? s.checklist : [];
+  const objectives = Array.isArray(material.objectives) ? material.objectives.filter(Boolean) : [];
 
   const [showTranslations, setShowTranslations] = useState(true);
   const storageKey = `kholasa_checklist_${material.id}`;
@@ -61,6 +62,7 @@ export function KholasaSummaryView({ material, darkSurface = false }: KholasaSum
   };
 
   const hasAnyContent =
+    objectives.length > 0 ||
     concepts.length > 0 ||
     definitions.length > 0 ||
     formulas.length > 0 ||
@@ -127,6 +129,25 @@ export function KholasaSummaryView({ material, darkSurface = false }: KholasaSum
           </Button>
         </div>
       </div>
+
+      {/* 0. Lesson Learning Objectives */}
+      {objectives.length > 0 && (
+        <section className={cardClass}>
+          <h4 className="flex items-center gap-2 text-sm font-black mb-2.5 text-emerald-500">
+            <Sparkles className="h-4 w-4" /> ماذا ستتعلم في هذا الدرس؟ ({objectives.length})
+          </h4>
+          <ul className="space-y-1.5 text-xs leading-6 pr-1">
+            {objectives.map((obj, idx) => (
+              <li key={idx} className="flex items-start gap-2">
+                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                <span>
+                  <BidiStatement text={String(obj)} />
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* 1. Key Concepts */}
       {concepts.length > 0 && (
