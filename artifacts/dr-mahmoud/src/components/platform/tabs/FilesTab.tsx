@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   FileText,
   FolderOpen,
@@ -9,11 +9,18 @@ import {
   FileCode,
   FileArchive,
   Search,
-  Download,
+  Map as MapIcon,
+  Maximize2,
+  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import type { LearningFile } from "@/types/platform";
 import { FilePreviewModal } from "../FilePreviewModal";
+import { studentApi } from "@/components/kholasa/kholasa-api";
+import { ProtectedKholasaImage } from "@/components/kholasa/ProtectedKholasaImage";
+import { BidiStatement } from "@/components/kholasa/BidiStatement";
+import type { KholasaMaterial } from "@/components/kholasa/types";
 
 // Helper for file type icons & accent colors
 function getFileTypeDetails(mimeType?: string | null, originalName: string = "") {
@@ -64,7 +71,7 @@ export function FilesPageHeader({ totalCount }: { totalCount: number }) {
         </span>
       </div>
       <p className="text-xs md:text-[13px] font-medium text-slate-500 dark:text-slate-400">
-        حمّل واطّلع على المذكرات والشيتات المخصصة لمرحلتك الدراسية مع إمكانية المعاينة المباشرة.
+        اطّلع وعاين المذكرات والملازم وخرائط الوحدات المخصصة لمرحلتك الدراسية داخل المنصة.
       </p>
     </header>
   );
@@ -242,19 +249,85 @@ export function EmptyFilesState({ hasCategoryFilter }: { hasCategoryFilter: bool
   );
 }
 
+function resolveFileUnitGroup(file: LearningFile): { key: string; title: string; order: number } {
+  const txt = `${file.title || ""} ${file.originalName || ""} ${file.category || ""}`.toLowerCase();
+  const isLang = /لغات|languages|unit\s*\d|lesson\s*\d/i.test(txt);
+
+  if (/الكتب المدرسية|الكتاب المدرسي|التقييمات|assessments|part1/i.test(txt)) {
+    return { key: "books", title: "الكتب المدرسية وملازم التقييمات", order: 5 };
+  }
+  if (/الوحدة\s*(?:الرابعة|الرابعه|4)|\bunit\s*4\b|lesson\s*4[-_.:\s]|درس\s*4[-_.:\s]|\b4-[1-4]\b/i.test(txt)) {
+    return {
+      key: "unit-4",
+      title: isLang ? "الوحدة الرابعة: تصميم الويب والوسائط (Unit 4)" : "الوحدة الرابعة: تصميم الويب والوسائط",
+      order: 4,
+    };
+  }
+  if (/الوحدة\s*(?:الثالثة|التالتة|3)|\bunit\s*3\b|lesson\s*3[-_.:\s]|درس\s*3[-_.:\s]|\b3-[1-4]\b/i.test(txt)) {
+    return {
+      key: "unit-3",
+      title: isLang ? "الوحدة الثالثة: تطبيقات الويب (Unit 3)" : "الوحدة الثالثة: تطبيقات الويب",
+      order: 3,
+    };
+  }
+  if (/الوحدة\s*(?:الثانية|التانية|2)|\bunit\s*2\b|lesson\s*2[-_.:\s]|درس\s*2[-_.:\s]|\b2-[1-4]\b/i.test(txt)) {
+    return {
+      key: "unit-2",
+      title: isLang ? "الوحدة الثانية: الأمن السيبراني والتشفير (Unit 2)" : "الوحدة الثانية: الأمن السيبراني والتشفير",
+      order: 2,
+    };
+  }
+  if (/الوحدة\s*(?:الأولى|الاولى|1)|\bunit\s*1\b|lesson\s*1[-_.:\s]|درس\s*1[-_.:\s]|\b1-[1-4]\b/i.test(txt)) {
+    return {
+      key: "unit-1",
+      title: isLang ? "الوحدة الأولى: الذكاء الاصطناعي (Unit 1)" : "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+      order: 1,
+    };
+  }
+  const cat = file.category || "ملفات وملازم عامة";
+  return { key: `cat-${cat}`, title: cat, order: 99 };
+}
+
+function resolveMaterialUnitOrder(unitName: string): number {
+  const s = (unitName || "").toLowerCase();
+  if (/الأولى|الاولى|unit\s*1/i.test(s)) return 1;
+  if (/الثانية|التانية|unit\s*2/i.test(s)) return 2;
+  if (/الثالثة|التالتة|unit\s*3/i.test(s)) return 3;
+  if (/الرابعة|الرابعه|unit\s*4/i.test(s)) return 4;
+  return 50;
+}
+
 // ── Main FilesTab Component ──
 export function FilesTab({ files }: { files: LearningFile[] }) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [previewFile, setPreviewFile] = useState<LearningFile | null>(null);
+  const [kholasaMaterials, setKholasaMaterials] = useState<KholasaMaterial[]>([]);
+  const [activeSheetLightbox, setActiveSheetLightbox] = useState<{
+    title: string;
+    images: string[];
+    index: number;
+  } | null>(null);
 
-  const categories = useMemo(() => Array.from(new Set(files.map((file) => file.category || "كورس عام"))), [files]);
+  useEffect(() => {
+    studentApi<{ materials: KholasaMaterial[] }>("/api/learning/kholasa/materials")
+      .then((res) => {
+        if (Array.isArray(res?.materials)) setKholasaMaterials(res.materials);
+      })
+      .catch(() => undefined);
+  }, []);
+
+  const categories = useMemo(
+    () => Array.from(new Set(files.map((file) => file.category || "كورس عام"))),
+    [files],
+  );
 
   const filteredFiles = useMemo(() => {
     return files.filter((file) => {
       const matchesCategory = selectedCategory === "all" || (file.category || "كورس عام") === selectedCategory;
       const q = searchQuery.trim().toLowerCase();
-      const matchesSearch = !q ||
+      const matchesSearch =
+        !q ||
         (file.title || "").toLowerCase().includes(q) ||
         (file.originalName || "").toLowerCase().includes(q) ||
         (file.category || "").toLowerCase().includes(q);
@@ -262,10 +335,69 @@ export function FilesTab({ files }: { files: LearningFile[] }) {
     });
   }, [files, selectedCategory, searchQuery]);
 
+  const groupedSections = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        key: string;
+        title: string;
+        order: number;
+        pdfFiles: LearningFile[];
+        kholasaLessons: KholasaMaterial[];
+      }
+    >();
+
+    for (const file of filteredFiles) {
+      const grp = resolveFileUnitGroup(file);
+      const existing = map.get(grp.key);
+      if (existing) {
+        existing.pdfFiles.push(file);
+      } else {
+        map.set(grp.key, {
+          key: grp.key,
+          title: grp.title,
+          order: grp.order,
+          pdfFiles: [file],
+          kholasaLessons: [],
+        });
+      }
+    }
+
+    const q = searchQuery.trim().toLowerCase();
+    for (const mat of kholasaMaterials) {
+      if (!Array.isArray(mat.mindmapImages) || mat.mindmapImages.length === 0) continue;
+      if (
+        q &&
+        !mat.lesson.toLowerCase().includes(q) &&
+        !mat.unit.toLowerCase().includes(q)
+      ) {
+        continue;
+      }
+      const uOrder = resolveMaterialUnitOrder(mat.unit);
+      const unitKey = uOrder <= 4 ? `unit-${uOrder}` : `mat-${mat.unit}`;
+      const existing = map.get(unitKey);
+      if (existing) {
+        existing.kholasaLessons.push(mat);
+      } else {
+        map.set(unitKey, {
+          key: unitKey,
+          title: mat.unit,
+          order: uOrder,
+          pdfFiles: [],
+          kholasaLessons: [mat],
+        });
+      }
+    }
+
+    return Array.from(map.values()).sort((a, b) => a.order - b.order);
+  }, [filteredFiles, kholasaMaterials, searchQuery]);
+
+  const totalDisplayCount = files.length + kholasaMaterials.filter((m) => (m.mindmapImages?.length || 0) > 0).length;
+
   return (
     <section className="space-y-4 text-right max-w-[1400px] w-full" dir="rtl">
       {/* 1. Header */}
-      <FilesPageHeader totalCount={files.length} />
+      <FilesPageHeader totalCount={totalDisplayCount} />
 
       {/* 2. Course Filters & Search Bar */}
       <CourseFilterTabs
@@ -277,19 +409,161 @@ export function FilesTab({ files }: { files: LearningFile[] }) {
         onSearchChange={setSearchQuery}
       />
 
-      {/* 3. Responsive 3-Column Grid */}
-      {filteredFiles.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 justify-start gap-4 sm:gap-5 w-full items-stretch" dir="rtl">
-          {filteredFiles.map((file) => (
-            <FileCard key={file.id} file={file} onPreview={setPreviewFile} />
+      {/* 3. Unit-Grouped Sections (PDF Files + Kholasa Unit Mindmap Sheets under Unit Heading) */}
+      {groupedSections.length > 0 ? (
+        <div className="space-y-5">
+          {groupedSections.map((sec, sIdx) => (
+            <motion.div
+              key={sec.key}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.22, delay: sIdx * 0.04 }}
+              className="rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-slate-50/70 dark:bg-[#0B1322] p-4 sm:p-5 space-y-4"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 dark:border-[#1E2E48] pb-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                    <FolderOpen className="h-4 w-4" />
+                  </span>
+                  <h2 dir="auto" className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                    {sec.title}
+                  </h2>
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] font-bold">
+                  {sec.pdfFiles.length > 0 && (
+                    <span className="rounded-full bg-white dark:bg-[#111C2E] border border-slate-200 dark:border-[#26364D] px-2.5 py-0.5 text-slate-600 dark:text-slate-300">
+                      {sec.pdfFiles.length} ملزمة PDF
+                    </span>
+                  )}
+                  {sec.kholasaLessons.length > 0 && (
+                    <span className="rounded-full bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 text-indigo-600 dark:text-indigo-300">
+                      {sec.kholasaLessons.length} ملف خرائط وحدة
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+                {sec.pdfFiles.map((file) => (
+                  <FileCard key={`pdf-${file.id}`} file={file} onPreview={setPreviewFile} />
+                ))}
+
+                {sec.kholasaLessons.map((mat) => (
+                  <article
+                    key={`kholasa-${mat.id}`}
+                    className="group relative flex flex-col justify-between rounded-2xl border border-indigo-200/80 dark:border-indigo-900/40 bg-card dark:bg-[#0A101D] p-5 shadow-2xs hover:border-indigo-500/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 w-full overflow-hidden"
+                    dir="rtl"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 min-w-0 flex-1">
+                          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20">
+                            <MapIcon className="h-5 w-5" />
+                          </span>
+                          <div className="min-w-0 space-y-0.5 flex-1">
+                            <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-snug line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                              <BidiStatement text={mat.lesson} />
+                            </h3>
+                            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 truncate">
+                              خرائط وشيتات الخلاصة ({mat.mindmapImages.length} لوحات)
+                            </p>
+                          </div>
+                        </div>
+                        <span className="rounded-md px-2 py-0.5 text-[10px] font-extrabold border shrink-0 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20">
+                          الخلاصة
+                        </span>
+                      </div>
+
+                      <div className="border-t border-slate-100 dark:border-slate-800/80 my-2" />
+
+                      <div className="flex items-center justify-between gap-2 text-xs font-bold text-slate-600 dark:text-slate-400">
+                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200/80 dark:border-indigo-900/40 px-2.5 py-1 text-xs text-indigo-600 dark:text-indigo-400 truncate max-w-[75%]">
+                          <BookOpen className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{mat.unit}</span>
+                        </span>
+                        <span className="text-[11px] font-mono text-muted-foreground shrink-0">
+                          {mat.mindmapImages.length} لوحة
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 mt-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setActiveSheetLightbox({
+                            title: mat.lesson,
+                            images: mat.mindmapImages,
+                            index: 0,
+                          })
+                        }
+                        className="w-full h-10 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+                      >
+                        <Maximize2 className="h-4 w-4" />
+                        <span>معاينة شيت وخرائط الدرس</span>
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </motion.div>
           ))}
         </div>
       ) : (
         <EmptyFilesState hasCategoryFilter={selectedCategory !== "all" || searchQuery.length > 0} />
       )}
 
-      {/* 4. Fullscreen-Optimized Preview Modal */}
+      {/* 4. Fullscreen-Optimized Preview Modal for PDFs */}
       <FilePreviewModal file={previewFile as any} onClose={() => setPreviewFile(null)} />
+
+      {/* 5. Protected Lightbox Preview for Kholasa Unit Mindmap Sheets (No Download) */}
+      {activeSheetLightbox && (
+        <div
+          className="fixed inset-0 z-[130] bg-black/92 backdrop-blur-md flex flex-col select-none"
+          dir="rtl"
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 text-white">
+            <div className="min-w-0">
+              <h3 className="text-sm font-black truncate">
+                <BidiStatement text={activeSheetLightbox.title} />
+              </h3>
+              <span className="text-[11px] text-slate-300">
+                لوحة {activeSheetLightbox.index + 1} من {activeSheetLightbox.images.length} — معاينة محمية داخل المنصة
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveSheetLightbox(null)}
+              className="h-9 w-9 rounded-xl border border-white/15 bg-white/10 hover:bg-red-500/25 flex items-center justify-center cursor-pointer"
+              aria-label="إغلاق"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-auto p-4 flex flex-col items-center gap-4">
+            {activeSheetLightbox.images.map((img, idx) => (
+              <div key={`${img}-${idx}`} className="w-full max-w-4xl space-y-1.5">
+                <span className="inline-block rounded-md bg-white/10 px-2.5 py-0.5 text-[11px] font-bold text-slate-200">
+                  لوحة {idx + 1}
+                </span>
+                <ProtectedKholasaImage
+                  src={img}
+                  alt={`لوحة ${idx + 1}`}
+                  className="w-full h-auto rounded-2xl border border-white/10 shadow-xl"
+                />
+              </div>
+            ))}
+          </div>
+          {activeSheetLightbox.images.length > 1 && (
+            <div className="flex items-center justify-center gap-3 px-4 py-2.5 border-t border-white/10 text-xs text-slate-300">
+              <ChevronRight className="h-4 w-4" />
+              <span>مرر للأسفل لمشاهدة جميع اللوحات بالتسلسل</span>
+              <ChevronLeft className="h-4 w-4" />
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 }

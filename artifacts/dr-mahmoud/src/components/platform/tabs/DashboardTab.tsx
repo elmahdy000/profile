@@ -239,7 +239,7 @@ export function QuickActionsDock({
   onOpen,
   unresolvedMistakesCount = 0,
 }: {
-  onOpen: (tab: "lessons" | "kholasa" | "mistakes" | "compiler" | "files" | "quizzes" | "summaries" | "self-assessment") => void;
+  onOpen: (tab: "lessons" | "kholasa" | "mistakes" | "essay-exams" | "files" | "quizzes" | "summaries" | "self-assessment") => void;
   unresolvedMistakesCount?: number;
 }) {
   const actions = [
@@ -274,13 +274,13 @@ export function QuickActionsDock({
       badge: undefined as string | undefined,
     },
     {
-      id: "compiler",
-      title: "محرر أكواد C++",
-      desc: "كتابة وتشغيل البرامج",
-      icon: FileCode,
+      id: "essay-exams",
+      title: "الامتحانات المقالية",
+      desc: "تدرب على الحل ومقارنة النموذج",
+      icon: FileText,
       iconColor: "text-indigo-600 dark:text-indigo-400",
       iconBg: "bg-indigo-500/10",
-      tab: "compiler" as const,
+      tab: "essay-exams" as const,
       badge: undefined as string | undefined,
     },
     {
@@ -734,7 +734,7 @@ export function DashboardTab({
   dataLoading: boolean;
   dataError: string;
   onRetry: () => void;
-  onOpen: (tab: "lessons" | "kholasa" | "mistakes" | "compiler" | "files" | "quizzes" | "summaries" | "self-assessment") => void;
+  onOpen: (tab: "lessons" | "kholasa" | "mistakes" | "essay-exams" | "files" | "quizzes" | "summaries" | "self-assessment") => void;
   onPlayLesson?: (videoId: number) => void;
   unresolvedMistakesCount?: number;
 }) {

@@ -40,17 +40,27 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import type { Student } from "@/types/platform";
 import { BidiStatement } from "@/components/kholasa/BidiStatement";
+import { isPrimarilyEnglish, splitModelAnswerTranslation } from "@/components/kholasa/kholasa-speech";
+
+interface TypeCounts {
+  mcq: number;
+  trueFalse: number;
+  essay: number;
+}
 
 interface StageTaxonomy {
   stage: string;
   track: "ar" | "en";
   totalQuestions: number;
+  typeCounts?: TypeCounts;
   units: Array<{
     unit: string;
     totalQuestions: number;
+    typeCounts?: TypeCounts;
     lessons: Array<{
       lesson: string;
       totalQuestions: number;
+      typeCounts?: TypeCounts;
     }>;
   }>;
 }
@@ -61,16 +71,21 @@ interface QuestionClient {
   options: string[];
   imageUrl?: string;
   points: number;
+  questionType?: "mcq" | "true_false" | "essay";
 }
 
 interface ReviewDetail {
   questionIndex: number;
+  questionType?: "mcq" | "true_false" | "essay";
+  points?: number;
   prompt: string;
   options: string[];
   selectedOption: number;
+  studentAnswer?: string;
   correctOption: number;
   correctAnswer: string;
   isCorrect: boolean;
+  selfGraded?: boolean;
   explanation?: string;
   imageUrl?: string;
 }
@@ -220,6 +235,7 @@ export function SelfAssessmentTab({
   const [selectedStageName, setSelectedStageName] = useState<string>("");
   const [selectedUnitName, setSelectedUnitName] = useState<string>("");
   const [selectedLessons, setSelectedLessons] = useState<string[]>([]); // empty = whole unit
+  const [selectedTypes, setSelectedTypes] = useState<Array<"mcq" | "true_false" | "essay">>(["mcq", "true_false", "essay"]);
   const [questionCount, setQuestionCount] = useState<number>(10);
   const [selectedDurationMinutes, setSelectedDurationMinutes] = useState<number>(45); // default 45 mins matching mockup
   const [isUntimed, setIsUntimed] = useState<boolean>(false);
@@ -251,7 +267,7 @@ export function SelfAssessmentTab({
   const [generating, setGenerating] = useState(false);
   const [sessionId, setSessionId] = useState<string>("");
   const [questions, setQuestions] = useState<QuestionClient[]>([]);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [answers, setAnswers] = useState<Record<number, number | string>>({});
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [timeRemainingSeconds, setTimeRemainingSeconds] = useState<number>(600);
   const [totalSecondsSpent, setTotalSecondsSpent] = useState<number>(0);
@@ -452,16 +468,57 @@ export function SelfAssessmentTab({
     }
   }, [currentStageObj, selectedUnitName]);
 
-  // Total available questions in selected unit/lessons
-  const availableQuestionsCount = React.useMemo(() => {
-    if (!currentUnitObj) return 0;
+  // Type counts & total available questions in selected unit/lessons & types
+  const availableTypeCounts = React.useMemo(() => {
+    if (!currentUnitObj) return { mcq: 0, trueFalse: 0, essay: 0 };
     if (selectedLessons.length === 0) {
-      return currentUnitObj.totalQuestions || 0;
+      return currentUnitObj.typeCounts || {
+        mcq: currentUnitObj.totalQuestions || 0,
+        trueFalse: 0,
+        essay: 0,
+      };
     }
     return currentUnitObj.lessons
       .filter((l) => selectedLessons.includes(l.lesson))
-      .reduce((sum, l) => sum + (l.totalQuestions || 0), 0);
+      .reduce(
+        (acc, l) => ({
+          mcq: acc.mcq + (l.typeCounts?.mcq ?? l.totalQuestions ?? 0),
+          trueFalse: acc.trueFalse + (l.typeCounts?.trueFalse ?? 0),
+          essay: acc.essay + (l.typeCounts?.essay ?? 0),
+        }),
+        { mcq: 0, trueFalse: 0, essay: 0 },
+      );
   }, [currentUnitObj, selectedLessons]);
+
+  const availableQuestionsCount = React.useMemo(() => {
+    let total = 0;
+    if (selectedTypes.includes("mcq")) total += availableTypeCounts.mcq;
+    if (selectedTypes.includes("true_false")) total += availableTypeCounts.trueFalse;
+    if (selectedTypes.includes("essay")) total += availableTypeCounts.essay;
+    return total;
+  }, [availableTypeCounts, selectedTypes]);
+
+  const toggleQuestionType = (t: "mcq" | "true_false" | "essay") => {
+    setSelectedTypes((prev) => {
+      if (prev.includes(t)) {
+        if (prev.length === 1) return prev; // Keep at least 1 type selected
+        return prev.filter((item) => item !== t);
+      }
+      return [...prev, t];
+    });
+  };
+
+  const isQuestionAnswered = (idx: number): boolean => {
+    const val = answers[idx];
+    if (typeof val === "number") return val >= 0;
+    if (typeof val === "string") return val.trim().length > 0;
+    return false;
+  };
+
+  const answeredCount = React.useMemo(
+    () => questions.filter((_, i) => isQuestionAnswered(i)).length,
+    [questions, answers],
+  );
 
   // Toggle Lesson Selection
   const toggleLesson = (lessonName: string) => {
@@ -500,6 +557,7 @@ export function SelfAssessmentTab({
           stage: selectedStageName,
           unit: selectedUnitName,
           lessons: selectedLessons.length > 0 ? selectedLessons : ["all"],
+          questionTypes: selectedTypes,
           count: questionCount,
           phone: effectivePhone,
           studentName: effectiveName,
@@ -577,6 +635,7 @@ export function SelfAssessmentTab({
       setShowSubmitModal(false);
       setStep("results");
       window.scrollTo({ top: 0, behavior: "smooth" });
+      window.dispatchEvent(new Event("kholasa:mistakes-updated"));
 
       if (isAuto) {
         toast({ title: "انتهى الوقت", description: "تم تسليم إجاباتك وإظهار تقرير التقييم الذاتي." });
@@ -591,6 +650,27 @@ export function SelfAssessmentTab({
       });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleGradeEssay = async (questionIndex: number, isCorrect: boolean) => {
+    if (!sessionId) return;
+    try {
+      const res = await fetch("/api/learning/self-assessment/grade-essay", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, questionIndex, isCorrect }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "تعذر حفظ تقييم السؤال");
+      setScore(data.score ?? 0);
+      setTotalPoints(data.totalPoints ?? 0);
+      setPercentage(data.percentage ?? 0);
+      setPassed(Boolean(data.passed));
+      if (Array.isArray(data.details)) setReviewDetails(data.details);
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "تعذر التحديث", description: err?.message });
     }
   };
 
@@ -1141,7 +1221,66 @@ export function SelfAssessmentTab({
               </div>
               <div>
                 <h3 className="text-sm font-black text-slate-900 dark:text-white">إعدادات الاختبار</h3>
-                <p className="text-xs text-slate-400">حدد عدد الأسئلة والوقت المخصص للاختبار</p>
+                <p className="text-xs text-slate-400">اختر أنواع الأسئلة وعددها والوقت المخصص للاختبار</p>
+              </div>
+            </div>
+
+            {/* Question Types Selector (MCQ, True/False, Essay, or All) */}
+            <div className="space-y-2.5 pb-2 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <HelpCircle className="h-4 w-4 text-indigo-600" />
+                  أنواع الأسئلة المشمولة في الاختبار:
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setSelectedTypes(["mcq", "true_false", "essay"])}
+                  className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition cursor-pointer ${
+                    selectedTypes.length === 3
+                      ? "bg-indigo-600 text-white border-indigo-600"
+                      : "bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  تحديد كل الأنواع ({availableTypeCounts.mcq + availableTypeCounts.trueFalse + availableTypeCounts.essay})
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                {([
+                  { key: "mcq" as const, label: "اختيار من متعدد", count: availableTypeCounts.mcq },
+                  { key: "true_false" as const, label: "صح وخطأ", count: availableTypeCounts.trueFalse },
+                  { key: "essay" as const, label: "أسئلة مقالية", count: availableTypeCounts.essay },
+                ]).map((t) => {
+                  const active = selectedTypes.includes(t.key);
+                  return (
+                    <button
+                      key={t.key}
+                      type="button"
+                      onClick={() => toggleQuestionType(t.key)}
+                      className={`flex items-center justify-between gap-2 rounded-2xl border px-3.5 py-2.5 text-xs font-bold transition cursor-pointer ${
+                        active
+                          ? "border-blue-600 bg-blue-50/80 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300"
+                          : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 hover:bg-slate-100"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span
+                          className={`grid h-4 w-4 place-items-center rounded border text-[10px] ${
+                            active
+                              ? "border-blue-600 bg-blue-600 text-white"
+                              : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900"
+                          }`}
+                        >
+                          {active && <Check className="h-3 w-3" />}
+                        </span>
+                        <span>{t.label}</span>
+                      </span>
+                      <span className="font-mono text-[11px] font-black px-2 py-0.5 rounded-full bg-white dark:bg-slate-900 border border-current/15">
+                        {t.count}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -1492,7 +1631,7 @@ export function SelfAssessmentTab({
                 <span className="font-mono tabular-nums">{questions.length}</span>
               </span>
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 hidden sm:inline">
-                (<span className="font-mono tabular-nums">{Object.keys(answers).length}</span> مكتمل)
+                (<span className="font-mono tabular-nums">{answeredCount}</span> مكتمل)
               </span>
             </div>
 
@@ -1530,8 +1669,8 @@ export function SelfAssessmentTab({
 
           {/* Question Navigator Dots */}
           <div className="rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-3 shadow-xs flex flex-wrap items-center gap-1.5 justify-center">
-            {questions.map((q, idx) => {
-              const isAnswered = answers[idx] !== undefined;
+            {questions.map((_, idx) => {
+              const isAnswered = isQuestionAnswered(idx);
               const isCurrent = currentQIndex === idx;
               return (
                 <button
@@ -1556,17 +1695,30 @@ export function SelfAssessmentTab({
           {(() => {
             const currentQ = questions[currentQIndex];
             const currentAnswer = answers[currentQIndex];
-            const isEng = isEnglishQuestion(currentQ.prompt, currentQ.options);
+            const isEssay = currentQ.questionType === "essay" || currentQ.options.length === 0;
+            const isTF = currentQ.questionType === "true_false";
+            const isEng = isEnglishQuestion(currentQ.prompt, currentQ.options) || isPrimarilyEnglish(currentQ.prompt);
 
             return (
               <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-6 sm:p-8 shadow-xs space-y-6">
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between text-xs text-slate-400 font-semibold border-b border-slate-100 dark:border-[#1F314A] pb-3">
-                    <span className="flex items-center gap-1">
-                      <span>السؤال رقم</span>
-                      <span className="font-mono tabular-nums font-bold text-slate-700 dark:text-slate-300">#{currentQIndex + 1}</span>
-                    </span>
-                    <span className="font-mono tabular-nums">1 درجة</span>
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 font-semibold border-b border-slate-100 dark:border-[#1F314A] pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center gap-1">
+                        <span>السؤال رقم</span>
+                        <span className="font-mono tabular-nums font-bold text-slate-700 dark:text-slate-300">#{currentQIndex + 1}</span>
+                      </span>
+                      <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold border ${
+                        isEssay
+                          ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20"
+                          : isTF
+                            ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                            : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
+                      }`}>
+                        {isEssay ? "سؤال مقالي" : isTF ? "صح أو خطأ" : "اختيار من متعدد"}
+                      </span>
+                    </div>
+                    <span className="font-mono tabular-nums">{currentQ.points || 1} درجة</span>
                   </div>
 
                   <h2
@@ -1585,38 +1737,57 @@ export function SelfAssessmentTab({
                   )}
                 </div>
 
-                {/* Options List */}
-                <div className="space-y-3 pt-2" dir={isEng ? "ltr" : "rtl"}>
-                  {currentQ.options.map((optionText, optIdx) => {
-                    const isSelected = currentAnswer === optIdx;
-                    return (
-                      <button
-                        key={optIdx}
-                        type="button"
-                        onClick={() => setAnswers({ ...answers, [currentQIndex]: optIdx })}
-                        dir={isEng ? "ltr" : "rtl"}
-                        className={`w-full cursor-pointer ${
-                          isEng ? "text-left font-sans" : "text-right"
-                        } p-4 rounded-2xl border text-xs sm:text-sm font-medium transition-all flex items-center justify-between gap-3 active:scale-[0.99] ${
-                          isSelected
-                            ? "border-blue-600 dark:border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 text-blue-950 dark:text-blue-100 font-bold ring-2 ring-blue-500/20 shadow-xs"
-                            : "border-slate-200/80 dark:border-[#1F314A] text-slate-700 dark:text-slate-300 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-700"
-                        }`}
-                      >
-                        <span className="leading-relaxed flex-1" dir={isEng ? "ltr" : "rtl"}>{optionText}</span>
-                        <div
-                          className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                {/* Answer Input Area: Textarea for Essay, Options Grid for MCQ / True-False */}
+                {isEssay ? (
+                  <div className="space-y-2 pt-1">
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300">
+                      اكتب إجابتك المقالية هنا (ستظهر الإجابة النموذجية للمقارنة والتقييم الذاتي بعد التسليم):
+                    </label>
+                    <textarea
+                      rows={5}
+                      dir={isEng ? "ltr" : "rtl"}
+                      value={typeof currentAnswer === "string" ? currentAnswer : ""}
+                      onChange={(e) => setAnswers({ ...answers, [currentQIndex]: e.target.value })}
+                      placeholder={isEng ? "Type your detailed answer here..." : "اكتب إجابتك هنا بالتفصيل..."}
+                      className={`w-full rounded-2xl border border-slate-200/80 dark:border-[#1F314A] bg-slate-50/70 dark:bg-[#0D1726] p-4 text-xs sm:text-sm font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 focus:outline-none ${
+                        isEng ? "text-left" : "text-right"
+                      }`}
+                    />
+                  </div>
+                ) : (
+                  <div className={`grid gap-3 pt-2 ${isTF ? "sm:grid-cols-2" : ""}`} dir={isEng ? "ltr" : "rtl"}>
+                    {currentQ.options.map((optionText, optIdx) => {
+                      const isSelected = currentAnswer === optIdx;
+                      const isOptEng = isPrimarilyEnglish(optionText) || isEng;
+                      return (
+                        <button
+                          key={optIdx}
+                          type="button"
+                          onClick={() => setAnswers({ ...answers, [currentQIndex]: optIdx })}
+                          dir={isOptEng ? "ltr" : "rtl"}
+                          className={`w-full cursor-pointer ${
+                            isOptEng ? "text-left font-sans" : "text-right"
+                          } p-4 rounded-2xl border text-xs sm:text-sm font-medium transition-all flex items-center justify-between gap-3 active:scale-[0.99] ${
                             isSelected
-                              ? "border-blue-600 bg-blue-600 text-white"
-                              : "border-slate-300 dark:border-slate-600"
+                              ? "border-blue-600 dark:border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 text-blue-950 dark:text-blue-100 font-bold ring-2 ring-blue-500/20 shadow-xs"
+                              : "border-slate-200/80 dark:border-[#1F314A] text-slate-700 dark:text-slate-300 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-700"
                           }`}
                         >
-                          {isSelected && <div className="h-2 w-2 rounded-full bg-white" />}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                          <span className="leading-relaxed flex-1" dir={isOptEng ? "ltr" : "rtl"}>{optionText}</span>
+                          <div
+                            className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                              isSelected
+                                ? "border-blue-600 bg-blue-600 text-white"
+                                : "border-slate-300 dark:border-slate-600"
+                            }`}
+                          >
+                            {isSelected && <div className="h-2 w-2 rounded-full bg-white" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
 
                 {/* Prev / Next Buttons */}
                 <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-[#1F314A]">
@@ -1758,32 +1929,44 @@ export function SelfAssessmentTab({
             </h3>
 
             {displayedReview.map((rev) => {
-              const isRevEng = isEnglishQuestion(rev.prompt, rev.options);
+              const isEssayRev = rev.questionType === "essay" || !rev.options || rev.options.length === 0;
+              const isRevEng = isEnglishQuestion(rev.prompt, rev.options) || isPrimarilyEnglish(rev.prompt);
+              const ansParts = isEssayRev ? splitModelAnswerTranslation(rev.correctAnswer) : null;
+              const isAnsEng = ansParts ? isPrimarilyEnglish(ansParts.main) : false;
+              const expParts = rev.explanation ? splitModelAnswerTranslation(rev.explanation) : null;
+              const isExpEng = expParts ? isPrimarilyEnglish(expParts.main) : false;
+
               return (
               <div
                 key={rev.questionIndex}
                 className={`rounded-2xl border p-5 sm:p-6 space-y-4 transition-all ${
                   rev.isCorrect
                     ? "border-emerald-200 bg-white dark:bg-slate-900 dark:border-emerald-900/40"
-                    : "border-red-200 bg-red-50/20 dark:bg-slate-900 dark:border-red-900/40"
+                    : isEssayRev && !rev.selfGraded
+                      ? "border-amber-200 bg-amber-50/20 dark:bg-slate-900 dark:border-amber-900/40"
+                      : "border-red-200 bg-red-50/20 dark:bg-slate-900 dark:border-red-900/40"
                 }`}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="h-6 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-600">
                       #{rev.questionIndex + 1}
                     </span>
                     <span
-                      className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                      className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
                         rev.isCorrect
                           ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                          : "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
+                          : isEssayRev && !rev.selfGraded
+                            ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                            : "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300"
                       }`}
                     >
                       {rev.isCorrect ? (
                         <>
-                          <CheckCircle2 className="h-3 w-3" /> إجابة صحيحة (+1)
+                          <CheckCircle2 className="h-3 w-3" /> إجابة صحيحة (+{rev.points || 1})
                         </>
+                      ) : isEssayRev && !rev.selfGraded ? (
+                        <>قارن إجابتك وقيّم نفسك</>
                       ) : (
                         <>
                           <XCircle className="h-3 w-3" /> إجابة غير صحيحة (0)
@@ -1802,55 +1985,125 @@ export function SelfAssessmentTab({
                   <BidiStatement text={rev.prompt} />
                 </h4>
 
-                {/* Options with Highlight */}
-                <div className="space-y-2 pt-1" dir={isRevEng ? "ltr" : "rtl"}>
-                  {rev.options.map((opt, oIdx) => {
-                    const isSelected = rev.selectedOption === oIdx;
-                    const isTrueCorrect = rev.correctOption === oIdx;
-
-                    let optClass = "border-slate-200 dark:border-slate-800 text-slate-600 bg-white dark:bg-slate-800/40";
-                    if (isTrueCorrect) {
-                      optClass = "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-900 dark:text-emerald-200 font-bold";
-                    } else if (isSelected && !rev.isCorrect) {
-                      optClass = "border-red-500 bg-red-50 dark:bg-red-950/50 text-red-900 dark:text-red-200 line-through";
-                    }
-
-                    return (
-                      <div
-                        key={oIdx}
-                        dir={isRevEng ? "ltr" : "rtl"}
-                        className={`p-3 rounded-xl border text-xs sm:text-sm flex items-center justify-between gap-3 ${
-                          isRevEng ? "text-left font-sans" : "text-right"
-                        } ${optClass}`}
-                      >
-                        <span className="leading-relaxed flex-1" dir={isRevEng ? "ltr" : "rtl"}>{opt}</span>
-                        <div className="flex items-center gap-2 shrink-0">
-                          {isSelected && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-800 font-semibold">
-                              إجابتك
-                            </span>
-                          )}
-                          {isTrueCorrect && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-600 text-white font-semibold">
-                              الصحيحة ✓
-                            </span>
-                          )}
-                        </div>
+                {isEssayRev ? (
+                  <div className="space-y-3 pt-1">
+                    {rev.studentAnswer && (
+                      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 p-3.5 text-xs space-y-1">
+                        <strong className="block text-slate-600 dark:text-slate-300 font-bold">📝 إجابتك المكتوبة:</strong>
+                        <p
+                          dir={isPrimarilyEnglish(rev.studentAnswer) ? "ltr" : "rtl"}
+                          className={`whitespace-pre-line text-slate-800 dark:text-slate-200 ${
+                            isPrimarilyEnglish(rev.studentAnswer) ? "text-left" : "text-right"
+                          }`}
+                        >
+                          {rev.studentAnswer}
+                        </p>
                       </div>
-                    );
-                  })}
-                </div>
+                    )}
+
+                    {ansParts && (
+                      <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/70 dark:bg-emerald-950/30 p-3.5 text-xs space-y-2">
+                        <strong className="block text-emerald-700 dark:text-emerald-300 font-black">✓ الإجابة النموذجية:</strong>
+                        <div
+                          dir={isAnsEng ? "ltr" : "rtl"}
+                          className={`whitespace-pre-line leading-6 text-slate-900 dark:text-slate-100 ${
+                            isAnsEng ? "text-left" : "text-right"
+                          }`}
+                        >
+                          <BidiStatement text={ansParts.main} />
+                        </div>
+                        {ansParts.translation && (
+                          <div dir="rtl" className="rounded-lg bg-white/80 dark:bg-slate-900/70 border border-emerald-500/20 px-3 py-2 text-right whitespace-pre-line text-emerald-800 dark:text-emerald-300">
+                            <strong className="block text-[11px] font-black mb-0.5">🌐 الترجمة:</strong>
+                            {ansParts.translation}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300">تقييمك لإجابتك:</span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={rev.selfGraded && rev.isCorrect ? "default" : "outline"}
+                        onClick={() => void handleGradeEssay(rev.questionIndex, true)}
+                        className="h-8 rounded-xl text-xs font-bold gap-1 cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white"
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5" /> إجابتي صحيحة
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={rev.selfGraded && !rev.isCorrect ? "destructive" : "outline"}
+                        onClick={() => void handleGradeEssay(rev.questionIndex, false)}
+                        className="h-8 rounded-xl text-xs font-bold gap-1 cursor-pointer"
+                      >
+                        <XCircle className="h-3.5 w-3.5" /> تحتاج مراجعة
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2 pt-1" dir={isRevEng ? "ltr" : "rtl"}>
+                    {rev.options.map((opt, oIdx) => {
+                      const isSelected = rev.selectedOption === oIdx;
+                      const isTrueCorrect = rev.correctOption === oIdx;
+                      const isOptEng = isPrimarilyEnglish(opt) || isRevEng;
+
+                      let optClass = "border-slate-200 dark:border-slate-800 text-slate-600 bg-white dark:bg-slate-800/40";
+                      if (isTrueCorrect) {
+                        optClass = "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-900 dark:text-emerald-200 font-bold";
+                      } else if (isSelected && !rev.isCorrect) {
+                        optClass = "border-red-500 bg-red-50 dark:bg-red-950/50 text-red-900 dark:text-red-200 line-through";
+                      }
+
+                      return (
+                        <div
+                          key={oIdx}
+                          dir={isOptEng ? "ltr" : "rtl"}
+                          className={`p-3 rounded-xl border text-xs sm:text-sm flex items-center justify-between gap-3 ${
+                            isOptEng ? "text-left font-sans" : "text-right"
+                          } ${optClass}`}
+                        >
+                          <span className="leading-relaxed flex-1" dir={isOptEng ? "ltr" : "rtl"}>{opt}</span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {isSelected && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-800 font-semibold">
+                                إجابتك
+                              </span>
+                            )}
+                            {isTrueCorrect && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-600 text-white font-semibold">
+                                الصحيحة ✓
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
 
                 {/* Step-by-Step Explanation */}
-                {rev.explanation && (
+                {expParts && (
                   <div className="rounded-xl border border-blue-100 bg-blue-50/70 dark:bg-blue-950/30 dark:border-blue-900/40 p-4 space-y-1.5 text-xs text-blue-950 dark:text-blue-200">
                     <div className="font-bold flex items-center gap-1.5 text-blue-700 dark:text-blue-300">
                       <HelpCircle className="h-3.5 w-3.5" />
                       الشرح التوضيحي للحل الصحيح:
                     </div>
-                    <p dir="auto" className="leading-relaxed text-slate-700 dark:text-slate-300 font-normal">
-                      {rev.explanation}
+                    <p
+                      dir={isExpEng ? "ltr" : "rtl"}
+                      className={`leading-relaxed text-slate-700 dark:text-slate-300 font-normal ${
+                        isExpEng ? "text-left" : "text-right"
+                      }`}
+                    >
+                      <BidiStatement text={expParts.main} />
                     </p>
+                    {expParts.translation && (
+                      <p dir="rtl" className="text-right text-emerald-700 dark:text-emerald-300 font-semibold">
+                        🌐 {expParts.translation}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -1889,14 +2142,14 @@ export function SelfAssessmentTab({
               <div className="flex justify-between items-center text-emerald-700 dark:text-emerald-400">
                 <span>الأسئلة التي تمت الإجابة عليها:</span>
                 <span className="font-bold font-mono">
-                  {Object.keys(answers).length} من {questions.length}
+                  {answeredCount} من {questions.length}
                 </span>
               </div>
-              {Object.keys(answers).length < questions.length && (
+              {answeredCount < questions.length && (
                 <div className="flex justify-between items-center text-amber-700 dark:text-amber-400">
                   <span>أسئلة لم تتم الإجابة عليها:</span>
                   <span className="font-bold font-mono">
-                    {questions.length - Object.keys(answers).length} سؤال
+                    {questions.length - answeredCount} سؤال
                   </span>
                 </div>
               )}

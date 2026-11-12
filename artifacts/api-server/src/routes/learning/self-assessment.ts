@@ -6,6 +6,7 @@ import { and, desc, eq, gt, gte, ilike, inArray, isNull, ne, or, sql } from "dri
 import {
   db,
   questionBankTable,
+  essayQuestionBankTable,
   selfAssessmentEntitlementsTable,
   selfAssessmentSessionsTable,
   studentsTable,
@@ -36,7 +37,23 @@ import {
 
 const router: IRouter = Router();
 
-// 1. GET /api/learning/self-assessment/taxonomy - إرجاع قائمة شجرية بالوحدات والدروس المتاحة للتقييم الذاتي
+function detectBankQuestionType(q: QuizQuestion): "mcq" | "true_false" {
+  if (q.questionType === "true_false") return "true_false";
+  const opts = Array.isArray(q.options) ? q.options : [];
+  if (opts.length === 2) {
+    const joined = opts.map((o) => String(o || "").trim().toLowerCase()).join("|");
+    if (
+      joined.includes("صح") ||
+      joined.includes("خطأ") ||
+      (joined.includes("true") && joined.includes("false"))
+    ) {
+      return "true_false";
+    }
+  }
+  return "mcq";
+}
+
+// 1. GET /api/learning/self-assessment/taxonomy - إرجاع قائمة شجرية بالوحدات والدروس المتاحة للتقييم الذاتي (شامل جميع أنواع الأسئلة)
 router.get("/learning/self-assessment/taxonomy", async (req, res, next) => {
   try {
     const student = await getApprovedStudent(req);
@@ -97,7 +114,33 @@ router.get("/learning/self-assessment/taxonomy", async (req, res, next) => {
       );
     }
 
-    const allQuestions = await (conditions.length ? query.where(and(...conditions)) : query);
+    let essayQuery = db
+      .select({
+        id: essayQuestionBankTable.id,
+        stage: essayQuestionBankTable.stage,
+        unit: essayQuestionBankTable.unit,
+        lesson: essayQuestionBankTable.lesson,
+        prompt: essayQuestionBankTable.prompt,
+      })
+      .from(essayQuestionBankTable);
+
+    const essayConditions = [];
+    if (stageQuery && stageQuery !== "all") {
+      essayConditions.push(
+        or(
+          eq(essayQuestionBankTable.stage, stageQuery),
+          sql`${essayQuestionBankTable.stages}::jsonb @> ${JSON.stringify([stageQuery])}::jsonb`
+        )
+      );
+    }
+
+    const [allQuestions, allEssayQuestions] = await Promise.all([
+      conditions.length ? query.where(and(...conditions)) : query,
+      essayConditions.length ? essayQuery.where(and(...essayConditions)) : essayQuery,
+    ]);
+
+    type TypeCounts = { mcq: number; trueFalse: number; essay: number };
+    const makeCounts = (): TypeCounts => ({ mcq: 0, trueFalse: 0, essay: 0 });
 
     const taxonomy: Record<
       string,
@@ -105,16 +148,19 @@ router.get("/learning/self-assessment/taxonomy", async (req, res, next) => {
         stage: string;
         track: "ar" | "en";
         totalQuestions: number;
+        typeCounts: TypeCounts;
         units: Record<
           string,
           {
             unit: string;
             totalQuestions: number;
+            typeCounts: TypeCounts;
             lessons: Record<
               string,
               {
                 lesson: string;
                 totalQuestions: number;
+                typeCounts: TypeCounts;
               }
             >;
           }
@@ -122,13 +168,10 @@ router.get("/learning/self-assessment/taxonomy", async (req, res, next) => {
       }
     > = {};
 
-    for (const row of allQuestions) {
-      if (!row.unit || !row.unit.trim()) continue;
-      if (!isCompleteValidQuestion(row.question)) continue;
-
-      const stage = String(row.stage || "عام").trim();
-      const unit = String(row.unit).trim();
-      const lesson = String(row.lesson || "شامل الوحدة").trim();
+    const ensureBucket = (rawStage: string | null, rawUnit: string, rawLesson: string | null) => {
+      const stage = String(rawStage || "عام").trim();
+      const unit = rawUnit.trim();
+      const lesson = String(rawLesson || "شامل الوحدة").trim();
       const isEnglish = stage.toLowerCase().includes("لغات") || stage.toLowerCase().includes("languages");
 
       if (!taxonomy[stage]) {
@@ -136,28 +179,56 @@ router.get("/learning/self-assessment/taxonomy", async (req, res, next) => {
           stage,
           track: isEnglish ? "en" : "ar",
           totalQuestions: 0,
+          typeCounts: makeCounts(),
           units: {},
         };
       }
-
       if (!taxonomy[stage].units[unit]) {
         taxonomy[stage].units[unit] = {
           unit,
           totalQuestions: 0,
+          typeCounts: makeCounts(),
           lessons: {},
         };
       }
-
       if (!taxonomy[stage].units[unit].lessons[lesson]) {
         taxonomy[stage].units[unit].lessons[lesson] = {
           lesson,
           totalQuestions: 0,
+          typeCounts: makeCounts(),
         };
       }
+      return {
+        st: taxonomy[stage],
+        un: taxonomy[stage].units[unit],
+        ls: taxonomy[stage].units[unit].lessons[lesson],
+      };
+    };
 
-      taxonomy[stage].totalQuestions++;
-      taxonomy[stage].units[unit].totalQuestions++;
-      taxonomy[stage].units[unit].lessons[lesson].totalQuestions++;
+    for (const row of allQuestions) {
+      if (!row.unit || !row.unit.trim()) continue;
+      if (!isCompleteValidQuestion(row.question)) continue;
+      const { st, un, ls } = ensureBucket(row.stage, row.unit, row.lesson);
+      const qType = detectBankQuestionType(row.question);
+      const key = qType === "true_false" ? "trueFalse" : "mcq";
+
+      st.totalQuestions++;
+      un.totalQuestions++;
+      ls.totalQuestions++;
+      st.typeCounts[key]++;
+      un.typeCounts[key]++;
+      ls.typeCounts[key]++;
+    }
+
+    for (const row of allEssayQuestions) {
+      if (!row.unit || !row.unit.trim() || !row.prompt?.trim()) continue;
+      const { st, un, ls } = ensureBucket(row.stage, row.unit, row.lesson);
+      st.totalQuestions++;
+      un.totalQuestions++;
+      ls.totalQuestions++;
+      st.typeCounts.essay++;
+      un.typeCounts.essay++;
+      ls.typeCounts.essay++;
     }
 
     const stagesList = Object.values(taxonomy)
@@ -166,11 +237,13 @@ router.get("/learning/self-assessment/taxonomy", async (req, res, next) => {
         stage: st.stage,
         track: st.track,
         totalQuestions: st.totalQuestions,
+        typeCounts: st.typeCounts,
         units: Object.values(st.units)
           .sort((a, b) => parseUnitSortOrder(a.unit) - parseUnitSortOrder(b.unit))
           .map((u) => ({
             unit: u.unit,
             totalQuestions: u.totalQuestions,
+            typeCounts: u.typeCounts,
             lessons: Object.values(u.lessons)
               .sort((a, b) => parseLessonSortOrder(a.lesson) - parseLessonSortOrder(b.lesson)),
           })),
@@ -568,61 +641,132 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
     const isFullAccess = isEnrolledStudent || hasActiveCode || hasPaidAttempts;
     const targetCount = isFullAccess ? Math.max(5, Math.min(200, Number(count) || 10)) : 50;
 
-    let query = db.select().from(questionBankTable);
-    const conditions = [];
-
-    if (enforcedStage && enforcedStage !== "all") {
-      conditions.push(
-        or(
-          eq(questionBankTable.stage, enforcedStage),
-          sql`${questionBankTable.stages}::jsonb @> ${JSON.stringify([enforcedStage])}::jsonb`
-        )
-      );
-    }
-
-    if (!isFullAccess) {
-      // حصر الأسئلة في الوحدة الأولى فقط لغير المفعلين
-      conditions.push(
-        or(
-          ilike(questionBankTable.unit, "%Unit 1%"),
-          ilike(questionBankTable.unit, "%الاولى%"),
-          ilike(questionBankTable.unit, "%الأولى%")
-        )
-      );
+    const requestedTypesRaw: string[] = Array.isArray(req.body.questionTypes)
+      ? req.body.questionTypes.map((t: any) => String(t).trim()).filter(Boolean)
+      : ["mcq", "true_false", "essay"];
+    const allowedSet = new Set<"mcq" | "true_false" | "essay">();
+    if (requestedTypesRaw.includes("all") || requestedTypesRaw.length === 0) {
+      allowedSet.add("mcq");
+      allowedSet.add("true_false");
+      allowedSet.add("essay");
     } else {
-      conditions.push(eq(questionBankTable.unit, cleanedUnit));
-      if (rawLessons.length > 0 && !rawLessons.includes("الوحدة بالكامل") && !rawLessons.includes("all")) {
-        conditions.push(inArray(questionBankTable.lesson, rawLessons));
+      for (const t of requestedTypesRaw) {
+        if (t === "mcq" || t === "true_false" || t === "essay") allowedSet.add(t);
+      }
+      if (allowedSet.size === 0) {
+        allowedSet.add("mcq");
+        allowedSet.add("true_false");
+        allowedSet.add("essay");
       }
     }
-
-    const availableRows = await query.where(and(...conditions));
 
     const seenPrompts = new Set<string>();
     const validQuestions: QuizQuestion[] = [];
 
-    for (const r of availableRows) {
-      const q = r.question;
-      if (!isCompleteValidQuestion(q)) continue;
+    if (allowedSet.has("mcq") || allowedSet.has("true_false")) {
+      let query = db.select().from(questionBankTable);
+      const conditions = [];
 
-      const pKey = normalizeQuestionPrompt(q.prompt);
-      if (pKey && seenPrompts.has(pKey)) continue;
-      if (pKey) seenPrompts.add(pKey);
+      if (enforcedStage && enforcedStage !== "all") {
+        conditions.push(
+          or(
+            eq(questionBankTable.stage, enforcedStage),
+            sql`${questionBankTable.stages}::jsonb @> ${JSON.stringify([enforcedStage])}::jsonb`
+          )
+        );
+      }
 
-      const cleanedOptions = (q.options || []).map(cleanOptionString);
-      const cIdx = typeof q.correctIndex === "number" ? q.correctIndex : 0;
-      const cAns = cleanedOptions[cIdx]?.trim() || "";
-      if (!cAns) continue;
+      if (!isFullAccess) {
+        conditions.push(
+          or(
+            ilike(questionBankTable.unit, "%Unit 1%"),
+            ilike(questionBankTable.unit, "%الاولى%"),
+            ilike(questionBankTable.unit, "%الأولى%")
+          )
+        );
+      } else {
+        conditions.push(eq(questionBankTable.unit, cleanedUnit));
+        if (rawLessons.length > 0 && !rawLessons.includes("الوحدة بالكامل") && !rawLessons.includes("all")) {
+          conditions.push(inArray(questionBankTable.lesson, rawLessons));
+        }
+      }
 
-      validQuestions.push({
-        prompt: q.prompt.replace(/\r?\n\s*[A-Da-dأابجده]\)\s*$/, "").trim(),
-        options: cleanedOptions,
-        correctIndex: cIdx,
-        correctAnswer: cAns,
-        explanation: q.explanation || "لا يوجد شرح تفصيلي إضافي لهذا السؤال.",
-        imageUrl: q.imageUrl,
-        points: r.points || 1,
-      });
+      const availableRows = await query.where(and(...conditions));
+
+      for (const r of availableRows) {
+        const q = r.question;
+        if (!isCompleteValidQuestion(q)) continue;
+        const detectedType = detectBankQuestionType(q);
+        if (!allowedSet.has(detectedType)) continue;
+
+        const pKey = normalizeQuestionPrompt(q.prompt);
+        if (pKey && seenPrompts.has(pKey)) continue;
+        if (pKey) seenPrompts.add(pKey);
+
+        const cleanedOptions = (q.options || []).map(cleanOptionString);
+        const cIdx = typeof q.correctIndex === "number" ? q.correctIndex : 0;
+        const cAns = cleanedOptions[cIdx]?.trim() || "";
+        if (!cAns) continue;
+
+        validQuestions.push({
+          prompt: q.prompt.replace(/\r?\n\s*[A-Da-dأابجده]\)\s*$/, "").trim(),
+          options: cleanedOptions,
+          correctIndex: cIdx,
+          correctAnswer: cAns,
+          explanation: q.explanation || "لا يوجد شرح تفصيلي إضافي لهذا السؤال.",
+          imageUrl: q.imageUrl,
+          points: r.points || 1,
+          questionType: detectedType,
+        });
+      }
+    }
+
+    if (allowedSet.has("essay")) {
+      let essayQ = db.select().from(essayQuestionBankTable);
+      const essayConds = [];
+
+      if (enforcedStage && enforcedStage !== "all") {
+        essayConds.push(
+          or(
+            eq(essayQuestionBankTable.stage, enforcedStage),
+            sql`${essayQuestionBankTable.stages}::jsonb @> ${JSON.stringify([enforcedStage])}::jsonb`
+          )
+        );
+      }
+
+      if (!isFullAccess) {
+        essayConds.push(
+          or(
+            ilike(essayQuestionBankTable.unit, "%Unit 1%"),
+            ilike(essayQuestionBankTable.unit, "%الاولى%"),
+            ilike(essayQuestionBankTable.unit, "%الأولى%")
+          )
+        );
+      } else {
+        essayConds.push(eq(essayQuestionBankTable.unit, cleanedUnit));
+        if (rawLessons.length > 0 && !rawLessons.includes("الوحدة بالكامل") && !rawLessons.includes("all")) {
+          essayConds.push(inArray(essayQuestionBankTable.lesson, rawLessons));
+        }
+      }
+
+      const essayRows = await essayQ.where(and(...essayConds));
+      for (const er of essayRows) {
+        if (!er.prompt?.trim() || !er.modelAnswer?.trim()) continue;
+        const pKey = normalizeQuestionPrompt(er.prompt);
+        if (pKey && seenPrompts.has(pKey)) continue;
+        if (pKey) seenPrompts.add(pKey);
+
+        validQuestions.push({
+          prompt: er.prompt.trim(),
+          options: [],
+          correctIndex: -1,
+          correctAnswer: er.modelAnswer.trim(),
+          explanation: er.explanation || undefined,
+          imageUrl: er.imageUrl || undefined,
+          points: er.points || 1,
+          questionType: "essay",
+        });
+      }
     }
 
     if (validQuestions.length === 0) {
@@ -706,9 +850,10 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
     const clientQuestions = pickedQuestions.map((q, idx) => ({
       index: idx,
       prompt: q.prompt,
-      options: q.options,
+      options: q.options || [],
       imageUrl: q.imageUrl,
       points: q.points || 1,
+      questionType: q.questionType || "mcq",
     }));
 
     const reqDuration = durationMinutes !== undefined ? Number(durationMinutes) : undefined;
@@ -784,7 +929,7 @@ router.post("/learning/self-assessment/submit", async (req, res, next) => {
     }
 
     const storedQuestions = (session.questions as QuizQuestion[]) || [];
-    const studentAnswers: Record<string, number> =
+    const studentAnswers: Record<string, number | string> =
       typeof answers === "object" && answers !== null ? answers : {};
 
     let earnedScore = 0;
@@ -793,14 +938,32 @@ router.post("/learning/self-assessment/submit", async (req, res, next) => {
     const reviewDetails = storedQuestions.map((q, idx) => {
       const qPoints = q.points || 1;
       totalPossible += qPoints;
-
-      const selected =
+      const isEssay = q.questionType === "essay" || !q.options || q.options.length === 0;
+      const rawAns =
         studentAnswers[String(idx)] !== undefined
-          ? Number(studentAnswers[String(idx)])
-          : studentAnswers[idx] !== undefined
-          ? Number(studentAnswers[idx])
-          : -1;
+          ? studentAnswers[String(idx)]
+          : studentAnswers[idx];
 
+      if (isEssay) {
+        const textAns = typeof rawAns === "string" ? rawAns.trim() : "";
+        return {
+          questionIndex: idx,
+          questionType: "essay" as const,
+          points: qPoints,
+          prompt: q.prompt,
+          options: [] as string[],
+          selectedOption: -1,
+          studentAnswer: textAns || "لم يكتب الطالب إجابة",
+          correctOption: -1,
+          correctAnswer: q.correctAnswer || "",
+          isCorrect: false,
+          selfGraded: false,
+          explanation: q.explanation || "",
+          imageUrl: q.imageUrl,
+        };
+      }
+
+      const selected = rawAns !== undefined && rawAns !== "" && !isNaN(Number(rawAns)) ? Number(rawAns) : -1;
       const isCorrect = selected === q.correctIndex;
       if (isCorrect) earnedScore += qPoints;
 
@@ -811,6 +974,8 @@ router.post("/learning/self-assessment/submit", async (req, res, next) => {
 
       return {
         questionIndex: idx,
+        questionType: (q.questionType || "mcq") as "mcq" | "true_false",
+        points: qPoints,
         prompt: q.prompt,
         options: q.options,
         selectedOption: selected,
@@ -818,6 +983,7 @@ router.post("/learning/self-assessment/submit", async (req, res, next) => {
         correctOption: q.correctIndex,
         correctAnswer: q.correctAnswer || q.options[q.correctIndex] || "",
         isCorrect,
+        selfGraded: true,
         explanation: q.explanation || "لا يوجد شرح تفصيلي مضاف لهذا السؤال.",
         imageUrl: q.imageUrl,
       };
@@ -847,18 +1013,24 @@ router.post("/learning/self-assessment/submit", async (req, res, next) => {
 
     if (session.studentId) {
       try {
-        await recordSubmissionMistakes({
-          studentId: session.studentId,
-          stage: session.stage,
-          unit: session.unit,
-          sourceType: "self_assessment",
-          sourceId: session.id,
-          items: reviewDetails.map((d, idx) => ({
-            question: storedQuestions[idx],
+        const objectiveItems = reviewDetails
+          .map((d, idx) => ({ d, q: storedQuestions[idx] }))
+          .filter(({ d, q }) => d.questionType !== "essay" && Array.isArray(q?.options) && q.options.length >= 2)
+          .map(({ d, q }) => ({
+            question: q,
             selectedOption: d.selectedOption,
             isCorrect: d.isCorrect,
-          })),
-        });
+          }));
+        if (objectiveItems.length > 0) {
+          await recordSubmissionMistakes({
+            studentId: session.studentId,
+            stage: session.stage,
+            unit: session.unit,
+            sourceType: "self_assessment",
+            sourceId: session.id,
+            items: objectiveItems,
+          });
+        }
       } catch {}
     }
 
@@ -906,6 +1078,69 @@ router.post("/learning/self-assessment/submit", async (req, res, next) => {
       hasUsedFreeAttempt: !isEnrolledStudent && !hasActiveCode,
       packageCost: 100,
       durationDays: 10,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 4.5. POST /api/learning/self-assessment/grade-essay - اعتماد التقييم الذاتي للسؤال المقالي
+router.post("/learning/self-assessment/grade-essay", async (req, res, next) => {
+  try {
+    const { sessionId, questionIndex, isCorrect } = req.body;
+    if (!sessionId || questionIndex === undefined) {
+      res.status(400).json({ error: "بيانات التقييم غير مكتملة" });
+      return;
+    }
+
+    const [session] = await db
+      .select()
+      .from(selfAssessmentSessionsTable)
+      .where(eq(selfAssessmentSessionsTable.sessionId, String(sessionId)))
+      .limit(1);
+
+    if (!session || !Array.isArray(session.details)) {
+      res.status(404).json({ error: "جلسة التقييم غير موجودة" });
+      return;
+    }
+
+    const idx = Number(questionIndex);
+    const updatedDetails = (session.details as any[]).map((d) => {
+      if (Number(d.questionIndex) === idx && d.questionType === "essay") {
+        return { ...d, isCorrect: Boolean(isCorrect), selfGraded: true };
+      }
+      return d;
+    });
+
+    let earnedScore = 0;
+    let totalPossible = 0;
+    for (const d of updatedDetails) {
+      const pts = Number(d.points) || 1;
+      totalPossible += pts;
+      if (d.isCorrect) earnedScore += pts;
+    }
+    const percentage = totalPossible > 0 ? Math.round((earnedScore / totalPossible) * 100) : 0;
+    const passed = percentage >= 60;
+
+    await db
+      .update(selfAssessmentSessionsTable)
+      .set({
+        score: earnedScore,
+        totalPoints: totalPossible,
+        percentage,
+        passed,
+        details: updatedDetails as any,
+      })
+      .where(eq(selfAssessmentSessionsTable.id, session.id));
+
+    res.json({
+      success: true,
+      score: earnedScore,
+      totalPoints: totalPossible,
+      percentage,
+      passed,
+      details: updatedDetails,
+      review: updatedDetails,
     });
   } catch (error) {
     next(error);

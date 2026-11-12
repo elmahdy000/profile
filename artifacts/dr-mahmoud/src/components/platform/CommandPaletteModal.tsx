@@ -160,18 +160,6 @@ export function CommandPaletteModal({
       },
     },
     {
-      id: "nav-compiler",
-      category: "أقسام المنصة",
-      title: "محرر ومترجم البرمجة C++",
-      subtitle: "بيئة تشغيل وبرمجة تفاعلية لتطبيق خوارزميات وأكواد الكورس",
-      badge: "كود",
-      icon: Code2,
-      onSelect: () => {
-        onSelectTab("compiler");
-        onClose();
-      },
-    },
-    {
       id: "nav-files",
       category: "أقسام المنصة",
       title: "المذكرات والملفات التعليمية (PDF)",

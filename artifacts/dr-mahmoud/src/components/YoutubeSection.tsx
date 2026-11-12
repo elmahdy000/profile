@@ -4,7 +4,7 @@ import {
   Youtube, Play, ExternalLink, Tv, ChevronLeft, Loader2, Lock, Unlock,
   Search, SlidersHorizontal, Bookmark, Share2, Clock, BookOpen, Award, ArrowUpDown,
   FileText, ClipboardCheck, X, MonitorPlay, Layers3, Signal,
-  Info, Paperclip, ShieldCheck, Eye, Laptop, RefreshCw
+  Info, Paperclip, ShieldCheck, Eye, Laptop, RefreshCw, FolderOpen, ChevronDown, ChevronUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useListVideos } from "@workspace/api-client-react";
@@ -987,6 +987,134 @@ export function VideoLessonsSection({
   };
 
   const isStudentMode = Boolean(student);
+  const [collapsedUnits, setCollapsedUnits] = useState<Record<string, boolean>>({});
+
+  const resolveVideoUnit = (item: VideoItem, courseTitle: string): { key: string; title: string; order: number } => {
+    const t = `${item.title || ""} ${item.subject || ""}`.toLowerCase();
+    const isLang = /لغات|languages|unit\s*\d|lesson\s*\d|mindmap/i.test(`${courseTitle} ${item.title}`);
+
+    if (/الوحدة\s*(?:الرابعة|الرابعه|4)|\bunit\s*4\b|\bunit4\b|lesson\s*4[-_.:\s]|درس\s*4[-_.:\s]|\b4-[1-4]\b/i.test(t)) {
+      return {
+        key: `${courseTitle}::u4`,
+        title: isLang ? "الوحدة الرابعة: تصميم الويب والوسائط (Unit 4: Web Design & Media)" : "الوحدة الرابعة: تصميم الويب والوسائط",
+        order: 4,
+      };
+    }
+    if (/الوحدة\s*(?:الثالثة|التالتة|3)|\bunit\s*3\b|\bunit3\b|lesson\s*3[-_.:\s]|درس\s*3[-_.:\s]|\b3-[1-4]\b/i.test(t)) {
+      return {
+        key: `${courseTitle}::u3`,
+        title: isLang ? "الوحدة الثالثة: تطبيقات الويب (Unit 3: Web Applications)" : "الوحدة الثالثة: تطبيقات الويب",
+        order: 3,
+      };
+    }
+    if (/الوحدة\s*(?:الثانية|التانية|2)|\bunit\s*2\b|\bunit2\b|lesson\s*2[-_.:\s]|درس\s*2[-_.:\s]|\b2-[1-4]\b/i.test(t)) {
+      return {
+        key: `${courseTitle}::u2`,
+        title: isLang ? "الوحدة الثانية: الأمن السيبراني والتشفير (Unit 2: Cybersecurity)" : "الوحدة الثانية: الأمن السيبراني والتشفير",
+        order: 2,
+      };
+    }
+    if (/الوحدة\s*(?:الأولى|الاولى|1)|\bunit\s*1\b|\bunit1\b|lesson\s*1[-_.:\s]|درس\s*1[-_.:\s]|\b1-[1-4]\b|الدرس\s*(?:الثالث|الرابع)\b/i.test(t)) {
+      return {
+        key: `${courseTitle}::u1`,
+        title: isLang ? "الوحدة الأولى: الذكاء الاصطناعي (Unit 1: Artificial Intelligence)" : "الوحدة الأولى: الذكاء الاصطناعي والمجتمع",
+        order: 1,
+      };
+    }
+
+    if (courseTitle.toLowerCase().includes("c++")) {
+      if (/array|مصفوف|for|loop/i.test(t)) {
+        return { key: `${courseTitle}::cpp3`, title: "الحلقات التكرارية والمصفوفات (Loops & Arrays)", order: 3 };
+      }
+      if (/if|switch|relational|logical|while/i.test(t)) {
+        return { key: `${courseTitle}::cpp2`, title: "الجمل الشرطية والحلقات (Conditions & While)", order: 2 };
+      }
+      return { key: `${courseTitle}::cpp1`, title: "الأساسيات والمتغيرات والعمليات (C++ Basics)", order: 1 };
+    }
+
+    return {
+      key: `${courseTitle}::other`,
+      title: item.subject?.trim() || courseTitle,
+      order: 99,
+    };
+  };
+
+  const renderGroupedUnits = (list: typeof visibleItems, courseTitle: string) => {
+    const groupsMap = new Map<string, { key: string; title: string; order: number; items: typeof visibleItems }>();
+    for (const item of list) {
+      const grp = resolveVideoUnit(item, courseTitle);
+      const existing = groupsMap.get(grp.key);
+      if (existing) {
+        existing.items.push(item);
+      } else {
+        groupsMap.set(grp.key, { ...grp, items: [item] });
+      }
+    }
+    const groups = Array.from(groupsMap.values()).sort((a, b) => a.order - b.order);
+
+    return (
+      <div className="space-y-4">
+        {groups.map((grp) => {
+          const isCollapsed = Boolean(collapsedUnits[grp.key]);
+          const completedInGroup = grp.items.filter((v) => v.progress >= 95).length;
+
+          return (
+            <div
+              key={grp.key}
+              className="rounded-2xl border border-[#E4EAF2] dark:border-[#1E2E48] bg-slate-50/70 dark:bg-[#0B1322] p-3.5 sm:p-4 space-y-3.5"
+            >
+              <button
+                type="button"
+                onClick={() => setCollapsedUnits((prev) => ({ ...prev, [grp.key]: !prev[grp.key] }))}
+                className="w-full flex flex-wrap items-center justify-between gap-2 text-right cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                    <FolderOpen className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <h4 dir="auto" className="text-sm sm:text-base font-black text-slate-900 dark:text-white truncate">
+                      {grp.title}
+                    </h4>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="rounded-full bg-white dark:bg-[#111C2E] border border-[#E4EAF2] dark:border-[#26364D] px-2.5 py-0.5 text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                    {grp.items.length} فيديوهات
+                  </span>
+                  <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                    {completedInGroup} مكتمل
+                  </span>
+                  <span className="grid h-7 w-7 place-items-center rounded-lg bg-white dark:bg-[#111C2E] border border-[#E4EAF2] dark:border-[#26364D] text-slate-500">
+                    {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                  </span>
+                </div>
+              </button>
+
+              {!isCollapsed && (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 pt-1">
+                  {grp.items.map((item) => (
+                    <RedesignedLessonCard
+                      key={item.id}
+                      item={item}
+                      files={files}
+                      quizzes={quizzes}
+                      bookmarks={bookmarks}
+                      expandedAttachments={expandedAttachments}
+                      onToggleExpandAttachment={(id) => setExpandedAttachments(prev => ({ ...prev, [id]: !prev[id] }))}
+                      onPlayClick={handlePlayClick}
+                      onToggleBookmark={toggleBookmark}
+                      onStartQuiz={onStartQuiz}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <section id="youtube-lectures" className="py-2 md:py-4 bg-[#F6F8FC] dark:bg-[#0B1220] text-[#111827] dark:text-[#F8FAFC] min-h-screen" dir="rtl">
@@ -1082,22 +1210,7 @@ export function VideoLessonsSection({
                     </Button>
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {courseFilteredItems.map((item) => (
-                      <RedesignedLessonCard
-                        key={item.id}
-                        item={item}
-                        files={files}
-                        quizzes={quizzes}
-                        bookmarks={bookmarks}
-                        expandedAttachments={expandedAttachments}
-                        onToggleExpandAttachment={(id) => setExpandedAttachments(prev => ({ ...prev, [id]: !prev[id] }))}
-                        onPlayClick={handlePlayClick}
-                        onToggleBookmark={toggleBookmark}
-                        onStartQuiz={onStartQuiz}
-                      />
-                    ))}
-                  </div>
+                  {renderGroupedUnits(courseFilteredItems, courseName)}
                 </section>
               );
             })}
@@ -1107,27 +1220,12 @@ export function VideoLessonsSection({
             )}
           </div>
         ) : (
-          /* SINGLE SELECTED COURSE GRID */
+          /* SINGLE SELECTED COURSE GROUPED BY UNIT */
           <div>
             {filterAndSortItems(activeCourseItems).length === 0 ? (
               <EmptyStateMessage searchQuery={searchQuery} statusFilter={statusFilter} />
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {filterAndSortItems(activeCourseItems).map((item) => (
-                  <RedesignedLessonCard
-                    key={item.id}
-                    item={item}
-                    files={files}
-                    quizzes={quizzes}
-                    bookmarks={bookmarks}
-                    expandedAttachments={expandedAttachments}
-                    onToggleExpandAttachment={(id) => setExpandedAttachments(prev => ({ ...prev, [id]: !prev[id] }))}
-                    onPlayClick={handlePlayClick}
-                    onToggleBookmark={toggleBookmark}
-                    onStartQuiz={onStartQuiz}
-                  />
-                ))}
-              </div>
+              renderGroupedUnits(filterAndSortItems(activeCourseItems), activeCategory)
             )}
           </div>
         )}
