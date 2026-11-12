@@ -10,12 +10,20 @@ import {
   HelpCircle,
   Languages,
   RotateCcw,
+  Volume2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { studentApi } from "./kholasa-api";
 import { ProtectedKholasaImage } from "./ProtectedKholasaImage";
 import { BidiStatement } from "./BidiStatement";
+import {
+  isPrimarilyEnglish,
+  splitModelAnswerTranslation,
+  isSpeechSupported,
+  speakEnglishText,
+  stopSpeech,
+} from "./kholasa-speech";
 
 interface QuestionCounts {
   mcq: number;
@@ -88,6 +96,10 @@ export function KholasaLessonQuestionsView({
   const [results, setResults] = useState<Record<number, CheckResult>>({});
   const [revealedEssays, setRevealedEssays] = useState<Record<number, boolean>>({});
   const [showTransMap, setShowTransMap] = useState<Record<number, boolean>>({});
+
+  useEffect(() => {
+    return () => stopSpeech();
+  }, [materialId]);
 
   const loadQuestions = useCallback(async () => {
     try {
@@ -292,6 +304,16 @@ export function KholasaLessonQuestionsView({
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                   <span className="font-black text-primary">سؤال مقالي #{qNum}</span>
                   <div className="flex items-center gap-2">
+                    {isPrimarilyEnglish(item.prompt) && isSpeechSupported() && (
+                      <button
+                        type="button"
+                        onClick={() => speakEnglishText(item.prompt)}
+                        title="الاستماع للسؤال"
+                        className="inline-flex items-center gap-1 rounded-md border border-primary/25 bg-primary/10 text-primary px-2 py-0.5 text-[10px] font-bold hover:bg-primary/20 cursor-pointer"
+                      >
+                        <Volume2 className="h-3 w-3" /> استماع
+                      </button>
+                    )}
                     <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${diffInfo.color}`}>
                       {diffInfo.label}
                     </span>
@@ -299,9 +321,17 @@ export function KholasaLessonQuestionsView({
                   </div>
                 </div>
 
-                <div className="text-sm font-bold leading-relaxed">
-                  <BidiStatement text={item.prompt} />
-                </div>
+                {(() => {
+                  const isPromptEng = isPrimarilyEnglish(item.prompt);
+                  return (
+                    <div
+                      dir={isPromptEng ? "ltr" : "rtl"}
+                      className={`text-sm font-bold leading-relaxed ${isPromptEng ? "text-left" : "text-right"}`}
+                    >
+                      <BidiStatement text={item.prompt} />
+                    </div>
+                  );
+                })()}
 
                 {item.imageUrl && (
                   <ProtectedKholasaImage
@@ -326,26 +356,70 @@ export function KholasaLessonQuestionsView({
                   </Button>
                 </div>
 
-                {revealed && (
-                  <div
-                    className={`rounded-xl border p-3.5 space-y-2 text-xs leading-6 ${
-                      darkSurface
-                        ? "border-emerald-500/30 bg-emerald-950/30 text-emerald-100"
-                        : "border-emerald-500/30 bg-emerald-500/5 text-foreground"
-                    }`}
-                  >
-                    <strong className="block text-emerald-500 font-black">✓ الإجابة النموذجية:</strong>
-                    <div className="whitespace-pre-line">
-                      <BidiStatement text={item.modelAnswer} />
-                    </div>
-                    {item.explanation && (
-                      <div className={`pt-2 border-t border-emerald-500/20 ${mutedClass}`}>
-                        <strong>💡 ملاحظات التصحيح: </strong>
-                        <BidiStatement text={item.explanation} />
+                {revealed && (() => {
+                  const { main: mainAns, translation: ansTrans } = splitModelAnswerTranslation(item.modelAnswer);
+                  const isAnsEng = isPrimarilyEnglish(mainAns);
+                  const expParts = item.explanation ? splitModelAnswerTranslation(item.explanation) : null;
+                  const isExpEng = expParts ? isPrimarilyEnglish(expParts.main) : false;
+
+                  return (
+                    <div
+                      className={`rounded-xl border p-3.5 space-y-2.5 text-xs leading-6 ${
+                        darkSurface
+                          ? "border-emerald-500/30 bg-emerald-950/30 text-emerald-100"
+                          : "border-emerald-500/30 bg-emerald-500/5 text-foreground"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2" dir="rtl">
+                        <strong className="text-emerald-500 font-black">✓ الإجابة النموذجية:</strong>
+                        {isAnsEng && isSpeechSupported() && (
+                          <button
+                            type="button"
+                            onClick={() => speakEnglishText(mainAns)}
+                            className="inline-flex items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-500 hover:bg-emerald-500/20 cursor-pointer"
+                          >
+                            <Volume2 className="h-3 w-3" /> استماع
+                          </button>
+                        )}
                       </div>
-                    )}
-                  </div>
-                )}
+                      <div
+                        dir={isAnsEng ? "ltr" : "rtl"}
+                        className={`whitespace-pre-line ${isAnsEng ? "text-left" : "text-right"}`}
+                      >
+                        <BidiStatement text={mainAns} />
+                      </div>
+                      {ansTrans && (
+                        <div
+                          dir="rtl"
+                          className={`rounded-lg border px-3 py-2 text-right whitespace-pre-line ${
+                            darkSurface
+                              ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
+                              : "border-emerald-500/20 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
+                          }`}
+                        >
+                          <strong className="block mb-0.5 text-[11px] font-black">🌐 الترجمة:</strong>
+                          {ansTrans}
+                        </div>
+                      )}
+                      {expParts && (
+                        <div className={`pt-2 border-t border-emerald-500/20 ${mutedClass}`}>
+                          <strong dir="rtl" className="block text-right mb-1">💡 ملاحظات التصحيح:</strong>
+                          <div
+                            dir={isExpEng ? "ltr" : "rtl"}
+                            className={isExpEng ? "text-left" : "text-right"}
+                          >
+                            <BidiStatement text={expParts.main} />
+                          </div>
+                          {expParts.translation && (
+                            <p dir="rtl" className="mt-1.5 text-right text-emerald-500 font-semibold">
+                              🌐 {expParts.translation}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}
@@ -358,6 +432,7 @@ export function KholasaLessonQuestionsView({
             const isChecking = checkingId === item.id;
             const qNum = (page - 1) * 12 + idx + 1;
             const showTrans = Boolean(showTransMap[item.id]);
+            const isPromptEng = isPrimarilyEnglish(item.question.prompt);
 
             return (
               <div key={item.id} className={cardClass}>
@@ -371,6 +446,16 @@ export function KholasaLessonQuestionsView({
                     )}
                   </div>
                   <div className="flex items-center gap-2">
+                    {isPromptEng && isSpeechSupported() && (
+                      <button
+                        type="button"
+                        onClick={() => speakEnglishText(item.question.prompt)}
+                        title="الاستماع للسؤال"
+                        className="inline-flex items-center gap-1 rounded-md border border-primary/25 bg-primary/10 text-primary px-2 py-0.5 text-[10px] font-bold hover:bg-primary/20 cursor-pointer"
+                      >
+                        <Volume2 className="h-3 w-3" /> استماع
+                      </button>
+                    )}
                     {item.translation && (
                       <button
                         type="button"
@@ -386,12 +471,15 @@ export function KholasaLessonQuestionsView({
                   </div>
                 </div>
 
-                <div className="text-sm font-bold leading-relaxed">
+                <div
+                  dir={isPromptEng ? "ltr" : "rtl"}
+                  className={`text-sm font-bold leading-relaxed ${isPromptEng ? "text-left" : "text-right"}`}
+                >
                   <BidiStatement text={item.question.prompt} />
                 </div>
 
                 {showTrans && item.translation && (
-                  <p className="rounded-xl bg-sky-500/10 border border-sky-500/20 px-3 py-2 text-xs text-sky-400 font-semibold">
+                  <p dir="rtl" className="rounded-xl bg-sky-500/10 border border-sky-500/20 px-3 py-2 text-xs text-sky-400 font-semibold text-right">
                     {item.translation}
                   </p>
                 )}
@@ -409,14 +497,16 @@ export function KholasaLessonQuestionsView({
                     const isPicked = res?.selectedOption === oi;
                     const isCorrectOpt = res?.correctOption === oi;
                     const isWrongPicked = res && isPicked && !res.isCorrect;
+                    const isOptEng = isPrimarilyEnglish(opt);
 
                     return (
                       <button
                         key={oi}
                         type="button"
+                        dir={isOptEng ? "ltr" : "rtl"}
                         disabled={Boolean(res) || isChecking}
                         onClick={() => void handlePickOption(item.id, oi)}
-                        className={`w-full rounded-xl border p-3 text-right text-xs sm:text-sm font-semibold transition flex items-center gap-2.5 cursor-pointer ${
+                        className={`w-full rounded-xl border p-3 ${isOptEng ? "text-left" : "text-right"} text-xs sm:text-sm font-semibold transition flex items-center gap-2.5 cursor-pointer ${
                           res
                             ? isCorrectOpt
                               ? "border-emerald-500 bg-emerald-500/15 text-emerald-500 font-bold"
@@ -443,26 +533,38 @@ export function KholasaLessonQuestionsView({
                   })}
                 </div>
 
-                {res && (
-                  <div
-                    className={`rounded-xl border p-3 text-xs leading-6 ${
-                      res.isCorrect
-                        ? "border-emerald-500/30 bg-emerald-500/10"
-                        : "border-rose-500/30 bg-rose-500/10"
-                    }`}
-                  >
-                    <strong className={res.isCorrect ? "text-emerald-500" : "text-rose-500"}>
-                      {res.isCorrect
-                        ? "✓ أحسنت! إجابة صحيحة."
-                        : "✕ إجابة غير صحيحة — تم حفظ السؤال تلقائياً في «ركن غلطاتي» لتراجعه."}
-                    </strong>
-                    {res.explanation && (
-                      <p className={`mt-1 ${mutedClass}`}>
-                        💡 <BidiStatement text={res.explanation} />
-                      </p>
-                    )}
-                  </div>
-                )}
+                {res && (() => {
+                  const expParts = res.explanation ? splitModelAnswerTranslation(res.explanation) : null;
+                  const isExpEng = expParts ? isPrimarilyEnglish(expParts.main) : false;
+
+                  return (
+                    <div
+                      className={`rounded-xl border p-3 text-xs leading-6 ${
+                        res.isCorrect
+                          ? "border-emerald-500/30 bg-emerald-500/10"
+                          : "border-rose-500/30 bg-rose-500/10"
+                      }`}
+                    >
+                      <strong dir="rtl" className={`block text-right ${res.isCorrect ? "text-emerald-500" : "text-rose-500"}`}>
+                        {res.isCorrect
+                          ? "✓ أحسنت! إجابة صحيحة."
+                          : "✕ إجابة غير صحيحة — تم حفظ السؤال تلقائياً في «ركن غلطاتي» لتراجعه."}
+                      </strong>
+                      {expParts && (
+                        <div className={`mt-1.5 space-y-1 ${mutedClass}`}>
+                          <div dir={isExpEng ? "ltr" : "rtl"} className={isExpEng ? "text-left" : "text-right"}>
+                            💡 <BidiStatement text={expParts.main} />
+                          </div>
+                          {expParts.translation && (
+                            <p dir="rtl" className="text-right text-emerald-500 font-semibold">
+                              🌐 {expParts.translation}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}

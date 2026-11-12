@@ -63,6 +63,18 @@ export function ProtectedKholasaImage({
     onError?.(e);
   };
 
-  return <img {...rest} src={resolvedSrc} alt={alt} onError={handleError} />;
+  return (
+    <img
+      {...rest}
+      draggable={false}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        rest.onContextMenu?.(e);
+      }}
+      src={resolvedSrc}
+      alt={alt}
+      onError={handleError}
+    />
+  );
 }
 

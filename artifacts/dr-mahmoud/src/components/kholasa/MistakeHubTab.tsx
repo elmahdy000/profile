@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { studentApi } from "./kholasa-api";
 import { ProtectedKholasaImage } from "./ProtectedKholasaImage";
 import { BidiStatement } from "./BidiStatement";
+import { isPrimarilyEnglish, splitModelAnswerTranslation } from "./kholasa-speech";
 import type { MistakeDiagnosisBucket, StudentMistakeRow } from "./types";
 
 interface MistakesResponse {
@@ -232,9 +233,17 @@ export function MistakeHubTab({ onMistakeCountChange }: { onMistakeCountChange?:
                   </div>
                 </div>
 
-                <div className="text-sm sm:text-base font-bold text-foreground">
-                  <BidiStatement text={item.question.prompt} />
-                </div>
+                {(() => {
+                  const isPromptEng = isPrimarilyEnglish(item.question.prompt);
+                  return (
+                    <div
+                      dir={isPromptEng ? "ltr" : "rtl"}
+                      className={`text-sm sm:text-base font-bold text-foreground ${isPromptEng ? "text-left" : "text-right"}`}
+                    >
+                      <BidiStatement text={item.question.prompt} />
+                    </div>
+                  );
+                })()}
 
                 {item.question.imageUrl && (
                   <ProtectedKholasaImage
@@ -249,14 +258,16 @@ export function MistakeHubTab({ onMistakeCountChange }: { onMistakeCountChange?:
                     const isPicked = selected === oi;
                     const isCorrectOpt = rev?.correctOption === oi;
                     const isWrongPicked = rev && isPicked && !rev.isCorrect;
+                    const isOptEng = isPrimarilyEnglish(opt);
 
                     return (
                       <button
                         key={oi}
                         type="button"
+                        dir={isOptEng ? "ltr" : "rtl"}
                         disabled={Boolean(practiceResult)}
                         onClick={() => setPracticeAnswers((p) => ({ ...p, [item.mistakeId]: oi }))}
-                        className={`w-full rounded-xl border p-3 text-right text-xs sm:text-sm font-semibold transition flex items-center gap-2.5 cursor-pointer ${
+                        className={`w-full rounded-xl border p-3 ${isOptEng ? "text-left" : "text-right"} text-xs sm:text-sm font-semibold transition flex items-center gap-2.5 cursor-pointer ${
                           rev
                             ? isCorrectOpt
                               ? "border-emerald-500 bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 font-bold"
@@ -279,21 +290,32 @@ export function MistakeHubTab({ onMistakeCountChange }: { onMistakeCountChange?:
                   })}
                 </div>
 
-                {(rev?.explanation || rev?.translation) && (
-                  <div className="rounded-xl bg-muted/50 border border-border p-3 text-xs leading-6 space-y-1.5">
-                    {rev?.translation && (
-                      <div className="text-sky-600 dark:text-sky-400 font-semibold">
-                        🌐 {rev.translation}
-                      </div>
-                    )}
-                    {rev?.explanation && (
-                      <div>
-                        <strong className="text-primary block mb-0.5">💡 التفسير:</strong>
-                        <BidiStatement text={rev.explanation} />
-                      </div>
-                    )}
-                  </div>
-                )}
+                {(rev?.explanation || rev?.translation) && (() => {
+                  const expParts = rev.explanation ? splitModelAnswerTranslation(rev.explanation) : null;
+                  const isExpEng = expParts ? isPrimarilyEnglish(expParts.main) : false;
+                  return (
+                    <div className="rounded-xl bg-muted/50 border border-border p-3 text-xs leading-6 space-y-1.5">
+                      {rev?.translation && (
+                        <div dir="rtl" className="text-right text-sky-600 dark:text-sky-400 font-semibold">
+                          🌐 {rev.translation}
+                        </div>
+                      )}
+                      {expParts && (
+                        <div>
+                          <strong dir="rtl" className="text-primary block text-right mb-0.5">💡 التفسير:</strong>
+                          <div dir={isExpEng ? "ltr" : "rtl"} className={isExpEng ? "text-left" : "text-right"}>
+                            <BidiStatement text={expParts.main} />
+                          </div>
+                          {expParts.translation && (
+                            <p dir="rtl" className="mt-1 text-right text-emerald-500 font-semibold">
+                              🌐 {expParts.translation}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}
@@ -466,9 +488,17 @@ export function MistakeHubTab({ onMistakeCountChange }: { onMistakeCountChange?:
                   </span>
                 </div>
 
-                <div className="text-sm font-bold text-foreground">
-                  <BidiStatement text={m.question.prompt} />
-                </div>
+                {(() => {
+                  const isPromptEng = isPrimarilyEnglish(m.question.prompt);
+                  return (
+                    <div
+                      dir={isPromptEng ? "ltr" : "rtl"}
+                      className={`text-sm font-bold text-foreground ${isPromptEng ? "text-left" : "text-right"}`}
+                    >
+                      <BidiStatement text={m.question.prompt} />
+                    </div>
+                  );
+                })()}
 
                 {m.question.imageUrl && (
                   <ProtectedKholasaImage
@@ -481,22 +511,43 @@ export function MistakeHubTab({ onMistakeCountChange }: { onMistakeCountChange?:
                 <div className="grid gap-2 sm:grid-cols-2 text-xs">
                   {wrongAns && (
                     <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-2.5 text-rose-600 dark:text-rose-400">
-                      <span className="font-bold block mb-0.5">✕ إجابتك السابقة:</span>
-                      <BidiStatement text={wrongAns} />
+                      <span dir="rtl" className="font-bold block text-right mb-0.5">✕ إجابتك السابقة:</span>
+                      <div
+                        dir={isPrimarilyEnglish(wrongAns) ? "ltr" : "rtl"}
+                        className={isPrimarilyEnglish(wrongAns) ? "text-left" : "text-right"}
+                      >
+                        <BidiStatement text={wrongAns} />
+                      </div>
                     </div>
                   )}
                   <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-2.5 text-emerald-600 dark:text-emerald-400">
-                    <span className="font-bold block mb-0.5">✓ الإجابة الصحيحة:</span>
-                    <BidiStatement text={correctAns} />
+                    <span dir="rtl" className="font-bold block text-right mb-0.5">✓ الإجابة الصحيحة:</span>
+                    <div
+                      dir={isPrimarilyEnglish(correctAns) ? "ltr" : "rtl"}
+                      className={isPrimarilyEnglish(correctAns) ? "text-left" : "text-right"}
+                    >
+                      <BidiStatement text={correctAns} />
+                    </div>
                   </div>
                 </div>
 
-                {m.question.explanation && (
-                  <div className="rounded-xl bg-muted/40 p-3 text-xs text-muted-foreground leading-6">
-                    <strong className="text-foreground">💡 الشرح: </strong>
-                    <BidiStatement text={m.question.explanation} />
-                  </div>
-                )}
+                {m.question.explanation && (() => {
+                  const expParts = splitModelAnswerTranslation(m.question.explanation);
+                  const isExpEng = isPrimarilyEnglish(expParts.main);
+                  return (
+                    <div className="rounded-xl bg-muted/40 p-3 text-xs text-muted-foreground leading-6">
+                      <strong dir="rtl" className="text-foreground block text-right mb-0.5">💡 الشرح:</strong>
+                      <div dir={isExpEng ? "ltr" : "rtl"} className={isExpEng ? "text-left" : "text-right"}>
+                        <BidiStatement text={expParts.main} />
+                      </div>
+                      {expParts.translation && (
+                        <p dir="rtl" className="mt-1 text-right text-emerald-500 font-semibold">
+                          🌐 {expParts.translation}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 <div className="flex justify-end pt-1">
                   <Button

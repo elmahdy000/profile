@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react";
-import { BookOpen, Languages, Search, Sparkles } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { BookOpen, Languages, Search, Sparkles, Volume2, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BidiStatement } from "./BidiStatement";
+import { isPrimarilyEnglish, isSpeechSupported, speakEnglishText, stopSpeech } from "./kholasa-speech";
 import type { KholasaMaterial } from "./types";
 
 interface KholasaDefinitionsViewProps {
@@ -12,6 +13,24 @@ interface KholasaDefinitionsViewProps {
 export function KholasaDefinitionsView({ material, darkSurface = false }: KholasaDefinitionsViewProps) {
   const [showTranslations, setShowTranslations] = useState(true);
   const [search, setSearch] = useState("");
+  const [speakingKey, setSpeakingKey] = useState<string | null>(null);
+  const speechAvailable = isSpeechSupported();
+
+  useEffect(() => {
+    return () => stopSpeech();
+  }, [material.id]);
+
+  const toggleSpeak = (key: string, textToSpeak: string) => {
+    if (speakingKey === key) {
+      stopSpeech();
+      setSpeakingKey(null);
+      return;
+    }
+    speakEnglishText(textToSpeak, {
+      onStart: () => setSpeakingKey(key),
+      onEnd: () => setSpeakingKey((cur) => (cur === key ? null : cur)),
+    });
+  };
 
   const definitions = Array.isArray(material.summaryData?.definitions)
     ? material.summaryData.definitions
@@ -99,21 +118,61 @@ export function KholasaDefinitionsView({ material, darkSurface = false }: Kholas
           <div className="grid gap-3 sm:grid-cols-2">
             {filteredDefs.map((d, idx) => {
               const defText = d.meaning || d.definition || "";
+              const isEngTerm = isPrimarilyEnglish(d.term);
+              const isEngDef = isPrimarilyEnglish(defText);
+              const canSpeak = speechAvailable && (isEngTerm || isEngDef);
+              const key = `def-${idx}`;
+              const isSpeaking = speakingKey === key;
+              const speechPayload = [isEngTerm ? d.term : "", isEngDef ? defText : ""]
+                .filter(Boolean)
+                .join(". ");
+
               return (
                 <div key={idx} className={cardClass}>
-                  <div className="text-sm font-black text-primary mb-1.5">
-                    <BidiStatement text={d.term} />
+                  <div className="flex items-start justify-between gap-2 mb-1.5" dir="rtl">
+                    <div
+                      dir={isEngTerm ? "ltr" : "rtl"}
+                      className={`flex-1 text-sm font-black text-primary ${isEngTerm ? "text-left" : "text-right"}`}
+                    >
+                      <BidiStatement text={d.term} />
+                    </div>
+                    {canSpeak && speechPayload && (
+                      <button
+                        type="button"
+                        onClick={() => toggleSpeak(key, speechPayload)}
+                        title={isSpeaking ? "إيقاف النطق" : "نطق المصطلح والتعريف"}
+                        className={`shrink-0 inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-bold transition cursor-pointer ${
+                          isSpeaking
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : darkSurface
+                              ? "border-white/15 bg-white/5 text-sky-300 hover:bg-white/10"
+                              : "border-primary/25 bg-primary/10 text-primary hover:bg-primary/20"
+                        }`}
+                      >
+                        {isSpeaking ? <Square className="h-3 w-3 fill-current" /> : <Volume2 className="h-3.5 w-3.5" />}
+                        <span>{isSpeaking ? "إيقاف" : "نطق"}</span>
+                      </button>
+                    )}
                   </div>
-                  <p className={`text-xs leading-6 ${mutedClass}`}>
+                  <p
+                    dir={isEngDef ? "ltr" : "rtl"}
+                    className={`text-xs leading-6 ${mutedClass} ${isEngDef ? "text-left" : "text-right"}`}
+                  >
                     <BidiStatement text={defText} />
                   </p>
                   {showTranslations && d.translation && (
-                    <p className="mt-2 pt-2 border-t border-border/30 text-xs text-emerald-500 font-semibold leading-relaxed">
+                    <p
+                      dir="rtl"
+                      className="mt-2 pt-2 border-t border-border/30 text-xs text-emerald-500 font-semibold leading-relaxed text-right"
+                    >
                       {d.translation}
                     </p>
                   )}
                   {d.example && (
-                    <p className={`mt-1.5 text-[11px] italic ${mutedClass}`}>
+                    <p
+                      dir={isPrimarilyEnglish(d.example) ? "ltr" : "rtl"}
+                      className={`mt-1.5 text-[11px] italic ${mutedClass} ${isPrimarilyEnglish(d.example) ? "text-left" : "text-right"}`}
+                    >
                       مثال: <BidiStatement text={d.example} />
                     </p>
                   )}
@@ -131,28 +190,67 @@ export function KholasaDefinitionsView({ material, darkSurface = false }: Kholas
             <Sparkles className="h-4 w-4" /> المفاهيم والأفكار الرئيسية ({filteredConcepts.length})
           </h4>
           <div className="grid gap-3 sm:grid-cols-2">
-            {filteredConcepts.map((c, idx) => (
-              <div key={idx} className={cardClass}>
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  <strong className="text-sm font-extrabold">
-                    <BidiStatement text={c.title} />
-                  </strong>
-                  {c.tag && (
-                    <span className="shrink-0 rounded-md bg-sky-500/15 text-sky-400 px-2 py-0.5 text-[10px] font-bold">
-                      {c.tag}
-                    </span>
+            {filteredConcepts.map((c, idx) => {
+              const isEngTitle = isPrimarilyEnglish(c.title);
+              const isEngDesc = isPrimarilyEnglish(c.description);
+              const canSpeak = speechAvailable && (isEngTitle || isEngDesc);
+              const key = `concept-${idx}`;
+              const isSpeaking = speakingKey === key;
+              const speechPayload = [isEngTitle ? c.title : "", isEngDesc ? c.description : ""]
+                .filter(Boolean)
+                .join(". ");
+
+              return (
+                <div key={idx} className={cardClass}>
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <strong
+                      dir={isEngTitle ? "ltr" : "rtl"}
+                      className={`flex-1 text-sm font-extrabold ${isEngTitle ? "text-left" : "text-right"}`}
+                    >
+                      <BidiStatement text={c.title} />
+                    </strong>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {canSpeak && speechPayload && (
+                        <button
+                          type="button"
+                          onClick={() => toggleSpeak(key, speechPayload)}
+                          title={isSpeaking ? "إيقاف النطق" : "نطق المفهوم"}
+                          className={`inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-[11px] font-bold transition cursor-pointer ${
+                            isSpeaking
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : darkSurface
+                                ? "border-white/15 bg-white/5 text-sky-300 hover:bg-white/10"
+                                : "border-primary/25 bg-primary/10 text-primary hover:bg-primary/20"
+                          }`}
+                        >
+                          {isSpeaking ? <Square className="h-3 w-3 fill-current" /> : <Volume2 className="h-3.5 w-3.5" />}
+                          <span>{isSpeaking ? "إيقاف" : "نطق"}</span>
+                        </button>
+                      )}
+                      {c.tag && (
+                        <span className="rounded-md bg-sky-500/15 text-sky-400 px-2 py-0.5 text-[10px] font-bold">
+                          {c.tag}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <p
+                    dir={isEngDesc ? "ltr" : "rtl"}
+                    className={`text-xs leading-6 ${mutedClass} ${isEngDesc ? "text-left" : "text-right"}`}
+                  >
+                    <BidiStatement text={c.description} />
+                  </p>
+                  {showTranslations && c.translation && (
+                    <p
+                      dir="rtl"
+                      className="mt-2 pt-2 border-t border-border/30 text-xs text-emerald-500 font-medium leading-relaxed text-right"
+                    >
+                      {c.translation}
+                    </p>
                   )}
                 </div>
-                <p className={`text-xs leading-6 ${mutedClass}`}>
-                  <BidiStatement text={c.description} />
-                </p>
-                {showTranslations && c.translation && (
-                  <p className="mt-2 pt-2 border-t border-border/30 text-xs text-emerald-500 font-medium leading-relaxed">
-                    {c.translation}
-                  </p>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}

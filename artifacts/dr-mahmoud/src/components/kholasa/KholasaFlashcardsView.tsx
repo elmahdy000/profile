@@ -1,7 +1,19 @@
 import { useState, useMemo, useEffect } from "react";
-import { Layers, RotateCcw, ChevronRight, ChevronLeft, Shuffle, CheckCircle2, Eye, Filter } from "lucide-react";
+import {
+  Layers,
+  RotateCcw,
+  ChevronRight,
+  ChevronLeft,
+  Shuffle,
+  CheckCircle2,
+  Eye,
+  Filter,
+  Volume2,
+  Square,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BidiStatement } from "./BidiStatement";
+import { isPrimarilyEnglish, isSpeechSupported, speakEnglishText, stopSpeech } from "./kholasa-speech";
 import type { KholasaFlashcard } from "./types";
 
 interface KholasaFlashcardsViewProps {
@@ -20,6 +32,12 @@ export function KholasaFlashcardsView({
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [onlyUnmastered, setOnlyUnmastered] = useState(false);
+  const [speakingMode, setSpeakingMode] = useState<"front" | "back" | "both" | null>(null);
+  const speechAvailable = isSpeechSupported();
+
+  useEffect(() => {
+    return () => stopSpeech();
+  }, [materialId]);
   const [masteredIds, setMasteredIds] = useState<Record<string, boolean>>(() => {
     if (!storageKey) return {};
     try {
@@ -95,7 +113,7 @@ export function KholasaFlashcardsView({
         }`}
       >
         <Layers className="h-8 w-8 mx-auto mb-2 opacity-60" />
-        <p className="text-sm font-bold">لا توجد بطاقات مراجعة متاحة لهذا الدرس حالياً.</p>
+        <p className="text-sm font-bold">لا توجد عناصر تسميع متاحة لهذا الدرس حالياً.</p>
       </div>
     );
   }
@@ -109,13 +127,13 @@ export function KholasaFlashcardsView({
         }`}
       >
         <CheckCircle2 className="h-10 w-10 mx-auto text-emerald-500" />
-        <p className="text-base font-black">أحسنت! أتقنت جميع بطاقات هذا الدرس ({totalCards} بطاقة) 🎉</p>
+        <p className="text-base font-black">أحسنت! أتقنت جميع عناصر التسميع في هذا الدرس ({totalCards} عنصر) 🎉</p>
         <div className="flex items-center justify-center gap-2">
           <Button type="button" variant="outline" size="sm" onClick={() => setOnlyUnmastered(false)}>
-            عرض كل البطاقات
+            عرض كل التسميع
           </Button>
           <Button type="button" size="sm" onClick={resetProgress}>
-            إعادة التمرين من البداية
+            إعادة التسميع من البداية
           </Button>
         </div>
       </div>
@@ -124,8 +142,24 @@ export function KholasaFlashcardsView({
 
   const safeIndex = Math.min(index, orderedCards.length - 1);
   const card = orderedCards[safeIndex];
+  const isFrontEng = isPrimarilyEnglish(card.front);
+  const isBackEng = isPrimarilyEnglish(card.back);
+
+  const handleSpeak = (mode: "front" | "back" | "both", text: string) => {
+    if (speakingMode === mode) {
+      stopSpeech();
+      setSpeakingMode(null);
+      return;
+    }
+    speakEnglishText(text, {
+      onStart: () => setSpeakingMode(mode),
+      onEnd: () => setSpeakingMode((cur) => (cur === mode ? null : cur)),
+    });
+  };
 
   const handleShuffle = () => {
+    stopSpeech();
+    setSpeakingMode(null);
     const arr = cards.map((_, i) => i);
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -137,11 +171,15 @@ export function KholasaFlashcardsView({
   };
 
   const nextCard = () => {
+    stopSpeech();
+    setSpeakingMode(null);
     setFlipped(false);
     setIndex((i) => (i + 1) % orderedCards.length);
   };
 
   const prevCard = () => {
+    stopSpeech();
+    setSpeakingMode(null);
     setFlipped(false);
     setIndex((i) => (i - 1 + orderedCards.length) % orderedCards.length);
   };
@@ -152,7 +190,7 @@ export function KholasaFlashcardsView({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/15 text-purple-400 border border-purple-500/30 px-3 py-1 text-xs font-extrabold">
-            <Layers className="h-3.5 w-3.5" /> بطاقة {safeIndex + 1} من {orderedCards.length}
+            <Layers className="h-3.5 w-3.5" /> التسميع {safeIndex + 1} من {orderedCards.length}
           </span>
           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 text-emerald-500 px-2.5 py-1 text-xs font-bold">
             <CheckCircle2 className="h-3.5 w-3.5" /> أتقنت {masteredCount} / {totalCards}
@@ -223,22 +261,79 @@ export function KholasaFlashcardsView({
         </span>
 
         {!flipped ? (
-          <div className="text-base sm:text-xl font-black leading-relaxed max-w-xl">
+          <div
+            dir={isFrontEng ? "ltr" : "rtl"}
+            className="text-base sm:text-xl font-black leading-relaxed max-w-xl"
+          >
             <BidiStatement text={card.front} />
           </div>
         ) : (
-          <div className="space-y-3 max-w-xl">
-            <div className="text-sm sm:text-base font-bold leading-relaxed">
+          <div className="space-y-3 max-w-xl w-full">
+            <div
+              dir={isBackEng ? "ltr" : "rtl"}
+              className="text-sm sm:text-base font-bold leading-relaxed text-center"
+            >
               <BidiStatement text={card.back} />
             </div>
             {card.translation && (
-              <p className="pt-2 border-t border-border/40 text-xs sm:text-sm text-emerald-500 font-semibold leading-relaxed">
+              <p
+                dir="rtl"
+                className="pt-2 border-t border-border/40 text-xs sm:text-sm text-emerald-500 font-semibold leading-relaxed text-center"
+              >
                 {card.translation}
               </p>
             )}
           </div>
         )}
       </button>
+
+      {/* Pronunciation Controls for English / Languages cards */}
+      {speechAvailable && (isFrontEng || isBackEng) && (
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {isFrontEng && (
+            <Button
+              type="button"
+              variant={speakingMode === "front" ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleSpeak("front", card.front)}
+              className={`h-9 rounded-xl text-xs font-bold gap-1.5 cursor-pointer ${
+                speakingMode !== "front" && darkSurface ? "border-white/15 bg-white/5 text-sky-300 hover:bg-white/10" : ""
+              }`}
+            >
+              {speakingMode === "front" ? <Square className="h-3.5 w-3.5 fill-current" /> : <Volume2 className="h-4 w-4" />}
+              {speakingMode === "front" ? "إيقاف" : "نطق الكلمة / المصطلح"}
+            </Button>
+          )}
+          {isBackEng && (
+            <Button
+              type="button"
+              variant={speakingMode === "back" ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleSpeak("back", card.back)}
+              className={`h-9 rounded-xl text-xs font-bold gap-1.5 cursor-pointer ${
+                speakingMode !== "back" && darkSurface ? "border-white/15 bg-white/5 text-emerald-300 hover:bg-white/10" : ""
+              }`}
+            >
+              {speakingMode === "back" ? <Square className="h-3.5 w-3.5 fill-current" /> : <Volume2 className="h-4 w-4" />}
+              {speakingMode === "back" ? "إيقاف" : "نطق التعريف"}
+            </Button>
+          )}
+          {isFrontEng && isBackEng && (
+            <Button
+              type="button"
+              variant={speakingMode === "both" ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleSpeak("both", `${card.front}. ${card.back}`)}
+              className={`h-9 rounded-xl text-xs font-bold gap-1.5 cursor-pointer ${
+                speakingMode !== "both" && darkSurface ? "border-white/15 bg-white/5 text-purple-300 hover:bg-white/10" : ""
+              }`}
+            >
+              {speakingMode === "both" ? <Square className="h-3.5 w-3.5 fill-current" /> : <Volume2 className="h-4 w-4" />}
+              {speakingMode === "both" ? "إيقاف" : "نطق الكل"}
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Navigation & Mastery Controls */}
       <div className="flex flex-wrap items-center justify-between gap-2">

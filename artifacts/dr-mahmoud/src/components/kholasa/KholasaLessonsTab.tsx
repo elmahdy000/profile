@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { studentApi } from "./kholasa-api";
 import { BidiStatement } from "./BidiStatement";
-import { KholasaSummaryView } from "./KholasaSummaryView";
+import { KholasaSummaryView, hasZatonaContent } from "./KholasaSummaryView";
 import { KholasaMindMapView } from "./KholasaMindMapView";
 import { KholasaFlashcardsView } from "./KholasaFlashcardsView";
 import { KholasaDefinitionsView } from "./KholasaDefinitionsView";
@@ -98,17 +98,9 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
   };
 
   const pickDefaultStudyTab = (m: KholasaMaterial): LessonStudyTab => {
-    const s = m.summaryData || {};
-    const hasSummaryRich =
-      Boolean(m.objectives?.length) ||
-      Boolean(s.keyConcepts?.length) ||
-      Boolean(s.definitions?.length) ||
-      Boolean(s.formulas?.length) ||
-      Boolean(s.comparisons?.length) ||
-      Boolean(s.examTips?.length) ||
-      Boolean(s.commonMistakes?.length) ||
-      Boolean(s.checklist?.length);
-    if (hasSummaryRich) return "summary";
+    const defsTotal = (m.summaryData?.definitions?.length || 0) + (m.summaryData?.keyConcepts?.length || 0);
+    if (hasZatonaContent(m)) return "summary";
+    if (defsTotal > 0) return "definitions";
     if (m.mindmapImages?.length) return "mindmap";
     if (m.flashcards?.length) return "flashcards";
     if (
@@ -120,7 +112,7 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
       return "questions";
     }
     if (m.videoId) return "video";
-    return "summary";
+    return "definitions";
   };
 
   const openLesson = (m: KholasaMaterial, initialTab?: LessonStudyTab) => {
@@ -200,12 +192,14 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
       (activeMaterial.questionCounts?.trueFalse || 0) +
       (activeMaterial.questionCounts?.essay || 0);
 
+    const showZatonaTab = hasZatonaContent(activeMaterial);
+
     const subTabs: Array<{ id: LessonStudyTab; label: string; icon: typeof Sparkles }> = [
       { id: "video", label: "فيديو الشرح", icon: Video },
       { id: "definitions", label: `التعريفات (${defsCount})`, icon: BookOpen },
-      { id: "summary", label: "الزتونة", icon: Sparkles },
+      ...(showZatonaTab ? [{ id: "summary" as const, label: "الزتونة", icon: Sparkles }] : []),
       { id: "mindmap", label: `الخرائط الذهنية (${activeMaterial.mindmapImages?.length || 0})`, icon: MapIcon },
-      { id: "flashcards", label: `البطاقات (${activeMaterial.flashcards?.length || 0})`, icon: Layers },
+      { id: "flashcards", label: `التسميع (${activeMaterial.flashcards?.length || 0})`, icon: Layers },
       { id: "questions", label: `الأسئلة (${totalQuestions})`, icon: HelpCircle },
       ...(hasSections ? [{ id: "sections" as const, label: "الشرح المفصل", icon: FileText }] : []),
     ];
@@ -241,7 +235,15 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
                 variant="outline"
                 size="sm"
                 disabled={!prevMaterial}
-                onClick={() => prevMaterial && openLesson(prevMaterial, studyTab === "sections" && !prevMaterial.structuredSections?.length ? "summary" : studyTab)}
+                onClick={() => {
+                  if (!prevMaterial) return;
+                  const targetTab =
+                    (studyTab === "sections" && !prevMaterial.structuredSections?.length) ||
+                    (studyTab === "summary" && !hasZatonaContent(prevMaterial))
+                      ? pickDefaultStudyTab(prevMaterial)
+                      : studyTab;
+                  openLesson(prevMaterial, targetTab);
+                }}
                 className="h-9 rounded-xl text-xs font-bold gap-1 cursor-pointer"
                 title="الدرس السابق"
               >
@@ -252,7 +254,15 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
                 variant="outline"
                 size="sm"
                 disabled={!nextMaterial}
-                onClick={() => nextMaterial && openLesson(nextMaterial, studyTab === "sections" && !nextMaterial.structuredSections?.length ? "summary" : studyTab)}
+                onClick={() => {
+                  if (!nextMaterial) return;
+                  const targetTab =
+                    (studyTab === "sections" && !nextMaterial.structuredSections?.length) ||
+                    (studyTab === "summary" && !hasZatonaContent(nextMaterial))
+                      ? pickDefaultStudyTab(nextMaterial)
+                      : studyTab;
+                  openLesson(nextMaterial, targetTab);
+                }}
                 className="h-9 rounded-xl text-xs font-bold gap-1 cursor-pointer"
                 title="الدرس التالي"
               >
@@ -431,7 +441,7 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
             </span>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            لكل درس في مكان واحد: فيديو الشرح، التعريفات بالترجمة، الزتونة، الخرائط الذهنية، البطاقات، وجميع الأسئلة بأنواعها.
+            لكل درس في مكان واحد: فيديو الشرح، التعريفات بالترجمة، الزتونة، الخرائط الذهنية، التسميع، وجميع الأسئلة بأنواعها.
           </p>
         </div>
 
@@ -585,7 +595,7 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
                             }}
                             className="rounded-md bg-muted hover:bg-primary/15 hover:text-primary text-muted-foreground px-2 py-0.5 cursor-pointer"
                           >
-                            {cardsCount} بطاقة
+                            {cardsCount} تسميع
                           </button>
                           {totalQ > 0 && (
                             <button

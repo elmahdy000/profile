@@ -2,13 +2,9 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
-  ExternalLink,
   ZoomIn,
   ZoomOut,
-  RotateCcw,
   FileText,
-  Maximize2,
-  FileCheck,
 } from "lucide-react";
 import type { LearningFile } from "../../types/platform";
 
@@ -120,18 +116,6 @@ export function FilePreviewModal({ file, onClose }: FilePreviewModalProps) {
                 </div>
               )}
 
-              {/* Open in full separate window/tab */}
-              <a
-                href={rawPreviewUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-9 sm:h-10 items-center gap-1.5 rounded-xl border border-blue-500/30 bg-blue-500/10 px-3 text-xs font-bold text-blue-400 hover:bg-blue-500/20 hover:text-blue-300 transition active:scale-95"
-                title="فتح في نافذة كاملة مستقلة"
-              >
-                <ExternalLink className="h-4 w-4" />
-                <span className="hidden sm:inline">نافذة كاملة</span>
-              </a>
-
               {/* Close Button */}
               <button
                 type="button"
@@ -146,7 +130,10 @@ export function FilePreviewModal({ file, onClose }: FilePreviewModalProps) {
           </header>
 
           {/* ── 2. Viewer Content Area ── */}
-          <div className="relative min-h-0 flex-1 overflow-hidden bg-slate-950 flex items-center justify-center">
+          <div
+            className="relative min-h-0 flex-1 overflow-hidden bg-slate-950 flex items-center justify-center select-none"
+            onContextMenu={(e) => e.preventDefault()}
+          >
             {isImage ? (
               <div className="h-full w-full overflow-auto p-2 sm:p-4 flex items-center justify-center">
                 <div
@@ -157,6 +144,7 @@ export function FilePreviewModal({ file, onClose }: FilePreviewModalProps) {
                   <img
                     src={rawPreviewUrl}
                     alt={file.title}
+                    draggable={false}
                     className="max-h-[85vh] sm:max-h-[82vh] max-w-full rounded-lg shadow-2xl object-contain"
                   />
                 </div>
@@ -179,17 +167,8 @@ export function FilePreviewModal({ file, onClose }: FilePreviewModalProps) {
                     نوع الملف غير مدعوم للمعاينة المباشرة
                   </strong>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    يرجى استخدام ملف بصيغة PDF أو صورة لمعاينتها داخل المنصة بأمان.
+                    المعاينة متاحة داخل المنصة لملفات PDF والصور فقط لحماية المحتوى ومنع التحميل.
                   </p>
-                  <a
-                    href={rawPreviewUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-4 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-500"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    محاولة الفتح في نافذة جديدة
-                  </a>
                 </div>
               </div>
             )}

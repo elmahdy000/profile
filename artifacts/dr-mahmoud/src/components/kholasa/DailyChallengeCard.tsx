@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { studentApi } from "./kholasa-api";
 import { BidiStatement } from "./BidiStatement";
+import { isPrimarilyEnglish, splitModelAnswerTranslation } from "./kholasa-speech";
 
 interface DailyChallengePayload {
   todayKey: string;
@@ -156,10 +157,17 @@ export function DailyChallengeCard({ isPaid }: { isPaid: boolean }) {
 
               {ch.questions.map((q, idx) => {
                 const picked = ch.completed ? ch.answers[idx] : answers[idx];
+                const isPromptEng = isPrimarilyEnglish(q.prompt);
+                const expParts = q.explanation ? splitModelAnswerTranslation(q.explanation) : null;
+                const isExpEng = expParts ? isPrimarilyEnglish(expParts.main) : false;
+
                 return (
                   <div key={idx} className="rounded-2xl border border-border bg-muted/20 p-4 space-y-3">
                     <div className="text-xs font-bold text-muted-foreground">سؤال {idx + 1}</div>
-                    <div className="text-sm font-bold text-foreground">
+                    <div
+                      dir={isPromptEng ? "ltr" : "rtl"}
+                      className={`text-sm font-bold text-foreground ${isPromptEng ? "text-left" : "text-right"}`}
+                    >
                       <BidiStatement text={q.prompt} />
                     </div>
                     <div className="grid gap-2">
@@ -167,13 +175,15 @@ export function DailyChallengeCard({ isPaid }: { isPaid: boolean }) {
                         const isPicked = picked === oi;
                         const isCorrectOpt = ch.completed && q.correctIndex === oi;
                         const isWrongPicked = ch.completed && isPicked && q.correctIndex !== oi;
+                        const isOptEng = isPrimarilyEnglish(opt);
                         return (
                           <button
                             key={oi}
                             type="button"
+                            dir={isOptEng ? "ltr" : "rtl"}
                             disabled={ch.completed}
                             onClick={() => setAnswers((p) => ({ ...p, [idx]: oi }))}
-                            className={`w-full rounded-xl border p-2.5 text-right text-xs font-semibold transition flex items-center gap-2 cursor-pointer ${
+                            className={`w-full rounded-xl border p-2.5 ${isOptEng ? "text-left" : "text-right"} text-xs font-semibold transition flex items-center gap-2 cursor-pointer ${
                               ch.completed
                                 ? isCorrectOpt
                                   ? "border-emerald-500 bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 font-bold"
@@ -195,10 +205,17 @@ export function DailyChallengeCard({ isPaid }: { isPaid: boolean }) {
                         );
                       })}
                     </div>
-                    {ch.completed && q.explanation && (
-                      <div className="rounded-xl bg-muted/60 p-2.5 text-xs text-muted-foreground">
-                        <strong className="text-primary">💡 التفسير: </strong>
-                        <BidiStatement text={q.explanation} />
+                    {ch.completed && expParts && (
+                      <div className="rounded-xl bg-muted/60 p-2.5 text-xs text-muted-foreground space-y-1">
+                        <strong dir="rtl" className="text-primary block text-right">💡 التفسير:</strong>
+                        <div dir={isExpEng ? "ltr" : "rtl"} className={isExpEng ? "text-left" : "text-right"}>
+                          <BidiStatement text={expParts.main} />
+                        </div>
+                        {expParts.translation && (
+                          <p dir="rtl" className="text-right text-emerald-500 font-semibold">
+                            🌐 {expParts.translation}
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>

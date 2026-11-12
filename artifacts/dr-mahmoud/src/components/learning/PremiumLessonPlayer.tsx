@@ -9,7 +9,7 @@ import {
 import { getYouTubePlaylistId, getYouTubeVideoId, getYoutubeThumbnail, type VideoItem } from "@/lib/video";
 import { compressMultipleFiles } from "@/lib/image-compression";
 import { studentApi } from "@/components/kholasa/kholasa-api";
-import { KholasaSummaryView } from "@/components/kholasa/KholasaSummaryView";
+import { KholasaSummaryView, hasZatonaContent } from "@/components/kholasa/KholasaSummaryView";
 import { KholasaMindMapView } from "@/components/kholasa/KholasaMindMapView";
 import { KholasaFlashcardsView } from "@/components/kholasa/KholasaFlashcardsView";
 import { KholasaDefinitionsView } from "@/components/kholasa/KholasaDefinitionsView";
@@ -1057,9 +1057,9 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                 ['overview', 'نظرة عامة', FileText],
                 ...(kholasaMaterial ? [
                   ['definitions', 'التعريفات 📖', BookOpen] as const,
-                  ['kholasa', 'الزتونة 💎', Sparkles] as const,
+                  ...(hasZatonaContent(kholasaMaterial) ? [['kholasa', 'الزتونة 💎', Sparkles] as const] : []),
                   ['mindmap', `الخرائط الذهنية (${kholasaMaterial.mindmapImages?.length || 0})`, MapIcon] as const,
-                  ['flashcards', `البطاقات (${kholasaMaterial.flashcards?.length || 0})`, Layers] as const,
+                  ['flashcards', `التسميع (${kholasaMaterial.flashcards?.length || 0})`, Layers] as const,
                   ['lesson-questions', 'أسئلة الدرس 📝', HelpCircle] as const,
                 ] : []),
                 ['summary', 'رفع التلخيص 📝', UploadCloud],

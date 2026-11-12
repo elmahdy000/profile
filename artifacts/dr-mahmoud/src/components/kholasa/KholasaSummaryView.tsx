@@ -1,18 +1,15 @@
 import { useState, useEffect } from "react";
 import {
   Sparkles,
-  BookOpen,
   Lightbulb,
   AlertTriangle,
   CheckSquare,
   Square,
-  Printer,
-  Languages,
   Calculator,
   GitCompare,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { BidiStatement } from "./BidiStatement";
+import { isPrimarilyEnglish } from "./kholasa-speech";
 import type { KholasaMaterial } from "./types";
 
 interface KholasaSummaryViewProps {
@@ -20,10 +17,21 @@ interface KholasaSummaryViewProps {
   darkSurface?: boolean;
 }
 
+export function hasZatonaContent(material?: KholasaMaterial | null): boolean {
+  if (!material) return false;
+  const s = material.summaryData || {};
+  return (
+    (Array.isArray(material.objectives) && material.objectives.filter(Boolean).length > 0) ||
+    (Array.isArray(s.formulas) && s.formulas.length > 0) ||
+    (Array.isArray(s.comparisons) && s.comparisons.length > 0) ||
+    (Array.isArray(s.examTips) && s.examTips.length > 0) ||
+    (Array.isArray(s.commonMistakes) && s.commonMistakes.length > 0) ||
+    (Array.isArray(s.checklist) && s.checklist.length > 0)
+  );
+}
+
 export function KholasaSummaryView({ material, darkSurface = false }: KholasaSummaryViewProps) {
   const s = material.summaryData || {};
-  const concepts = Array.isArray(s.keyConcepts) ? s.keyConcepts : [];
-  const definitions = Array.isArray(s.definitions) ? s.definitions : [];
   const formulas = Array.isArray(s.formulas) ? s.formulas : [];
   const comparisons = Array.isArray(s.comparisons) ? s.comparisons : [];
   const examTips = Array.isArray(s.examTips) ? s.examTips : [];
@@ -31,7 +39,6 @@ export function KholasaSummaryView({ material, darkSurface = false }: KholasaSum
   const checklist = Array.isArray(s.checklist) ? s.checklist : [];
   const objectives = Array.isArray(material.objectives) ? material.objectives.filter(Boolean) : [];
 
-  const [showTranslations, setShowTranslations] = useState(true);
   const storageKey = `kholasa_checklist_${material.id}`;
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(() => {
     try {
@@ -61,15 +68,7 @@ export function KholasaSummaryView({ material, darkSurface = false }: KholasaSum
     });
   };
 
-  const hasAnyContent =
-    objectives.length > 0 ||
-    concepts.length > 0 ||
-    definitions.length > 0 ||
-    formulas.length > 0 ||
-    comparisons.length > 0 ||
-    examTips.length > 0 ||
-    commonMistakes.length > 0 ||
-    checklist.length > 0;
+  const hasAnyContent = hasZatonaContent(material);
 
   const cardClass = darkSurface
     ? "rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5 text-slate-100"
@@ -91,7 +90,7 @@ export function KholasaSummaryView({ material, darkSurface = false }: KholasaSum
   }
 
   return (
-    <div className="space-y-5 text-right print:text-black print:bg-white" dir="rtl">
+    <div className="space-y-5 text-right select-none" dir="rtl" onContextMenu={(e) => e.preventDefault()}>
       {/* Top Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -102,32 +101,6 @@ export function KholasaSummaryView({ material, darkSurface = false }: KholasaSum
             <BidiStatement text={material.lesson} />
           </h3>
         </div>
-
-        <div className="flex flex-wrap items-center gap-2 print:hidden">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setShowTranslations((v) => !v)}
-            className={`h-9 rounded-xl text-xs font-bold gap-1.5 cursor-pointer ${
-              darkSurface ? "border-white/15 bg-white/5 text-white hover:bg-white/10" : ""
-            }`}
-          >
-            <Languages className="h-3.5 w-3.5" />
-            {showTranslations ? "إخفاء الترجمة" : "إظهار الترجمة"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => window.print()}
-            className={`h-9 rounded-xl text-xs font-bold gap-1.5 cursor-pointer ${
-              darkSurface ? "border-white/15 bg-white/5 text-white hover:bg-white/10" : ""
-            }`}
-          >
-            <Printer className="h-3.5 w-3.5" /> طباعة / PDF
-          </Button>
-        </div>
       </div>
 
       {/* 0. Lesson Learning Objectives */}
@@ -137,82 +110,23 @@ export function KholasaSummaryView({ material, darkSurface = false }: KholasaSum
             <Sparkles className="h-4 w-4" /> ماذا ستتعلم في هذا الدرس؟ ({objectives.length})
           </h4>
           <ul className="space-y-1.5 text-xs leading-6 pr-1">
-            {objectives.map((obj, idx) => (
-              <li key={idx} className="flex items-start gap-2">
-                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
-                <span>
-                  <BidiStatement text={String(obj)} />
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {/* 1. Key Concepts */}
-      {concepts.length > 0 && (
-        <section className={cardClass}>
-          <h4 className="flex items-center gap-2 text-sm font-black mb-3 text-sky-500">
-            <Sparkles className="h-4 w-4" /> أهم المفاهيم والأفكار ({concepts.length})
-          </h4>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {concepts.map((c, idx) => (
-              <div key={idx} className={subCardClass}>
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  <strong className="text-sm font-extrabold">
-                    <BidiStatement text={c.title} />
-                  </strong>
-                  {c.tag && (
-                    <span className="shrink-0 rounded-md bg-sky-500/15 text-sky-400 px-2 py-0.5 text-[10px] font-bold">
-                      {c.tag}
-                    </span>
-                  )}
-                </div>
-                <p className={`text-xs leading-6 ${mutedClass}`}>
-                  <BidiStatement text={c.description} />
-                </p>
-                {showTranslations && c.translation && (
-                  <p className="mt-2 pt-2 border-t border-border/40 text-xs text-emerald-500 font-medium leading-relaxed">
-                    {c.translation}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* 2. Definitions */}
-      {definitions.length > 0 && (
-        <section className={cardClass}>
-          <h4 className="flex items-center gap-2 text-sm font-black mb-3 text-indigo-500">
-            <BookOpen className="h-4 w-4" /> المصطلحات والتعريفات ({definitions.length})
-          </h4>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {definitions.map((d, idx) => {
-              const defText = d.meaning || d.definition || "";
+            {objectives.map((obj, idx) => {
+              const text = String(obj);
+              const isEng = isPrimarilyEnglish(text);
               return (
-                <div key={idx} className={subCardClass}>
-                  <div className="text-sm font-black text-primary mb-1">
-                    <BidiStatement text={d.term} />
-                  </div>
-                  <p className={`text-xs leading-6 ${mutedClass}`}>
-                    <BidiStatement text={defText} />
-                  </p>
-                  {showTranslations && d.translation && (
-                    <p className="mt-2 pt-2 border-t border-border/40 text-xs text-emerald-500 font-semibold leading-relaxed">
-                      {d.translation}
-                    </p>
-                  )}
-                  {d.example && (
-                    <p className={`mt-1.5 text-[11px] italic ${mutedClass}`}>
-                      مثال: <BidiStatement text={d.example} />
-                    </p>
-                  )}
-                </div>
+                <li
+                  key={idx}
+                  dir={isEng ? "ltr" : "rtl"}
+                  className={`flex items-start gap-2 ${isEng ? "text-left" : "text-right"}`}
+                >
+                  <span className="mt-2 h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                  <span className="flex-1">
+                    <BidiStatement text={text} />
+                  </span>
+                </li>
               );
             })}
-          </div>
+          </ul>
         </section>
       )}
 

@@ -7,11 +7,9 @@ import {
   X,
   ChevronRight,
   ChevronLeft,
-  Download,
   Map as MapIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { buildKholasaMediaUrl } from "./kholasa-api";
 import { ProtectedKholasaImage } from "./ProtectedKholasaImage";
 
 interface KholasaMindMapViewProps {
@@ -65,10 +63,9 @@ export function KholasaMindMapView({ title, images, darkSurface = false }: Khola
   }
 
   const rawUrl = validImages[safeIndex];
-  const currentDownloadUrl = buildKholasaMediaUrl(rawUrl);
 
   return (
-    <div className="space-y-4 text-right" dir="rtl">
+    <div className="space-y-4 text-right select-none" dir="rtl" onContextMenu={(e) => e.preventDefault()}>
       {/* Header & Controls */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
@@ -82,7 +79,7 @@ export function KholasaMindMapView({ title, images, darkSurface = false }: Khola
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="hidden md:flex flex-wrap items-center gap-1.5">
           <Button
             type="button"
             variant="outline"
@@ -128,23 +125,57 @@ export function KholasaMindMapView({ title, images, darkSurface = false }: Khola
           >
             <Maximize2 className="h-3.5 w-3.5" /> ملء الشاشة
           </Button>
-          <a
-            href={currentDownloadUrl}
-            download={`mindmap-${safeIndex + 1}.png`}
-            className={`inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition ${
-              darkSurface
-                ? "border-white/15 bg-white/5 text-white hover:bg-white/10"
-                : "border-border bg-background hover:bg-muted text-foreground"
-            }`}
-          >
-            <Download className="h-3.5 w-3.5" /> تحميل
-          </a>
         </div>
       </div>
 
-      {/* Main Viewport */}
+      {/* Mobile View: Sequential stacked images (عرض ورا بعض بدون الحاجة للتبديل) */}
+      <div className="space-y-3 md:hidden">
+        {validImages.map((img, idx) => (
+          <div
+            key={`${img}-${idx}`}
+            className={`overflow-hidden rounded-2xl border ${
+              darkSurface ? "border-white/10 bg-slate-950/70" : "border-border bg-muted/20"
+            }`}
+          >
+            <div
+              className={`flex items-center justify-between px-3 py-2 border-b text-xs font-bold ${
+                darkSurface ? "border-white/10 text-slate-300" : "border-border/60 text-muted-foreground"
+              }`}
+            >
+              <span>
+                لوحة {idx + 1} من {validImages.length}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedIndex(idx);
+                  setLightboxZoom(1);
+                  setLightboxOpen(true);
+                }}
+                className="inline-flex items-center gap-1 text-primary font-bold cursor-pointer"
+              >
+                <Maximize2 className="h-3.5 w-3.5" /> تكبير
+              </button>
+            </div>
+            <div className="p-2">
+              <ProtectedKholasaImage
+                src={img}
+                alt={`خريطة ذهنية ${idx + 1}`}
+                onClick={() => {
+                  setSelectedIndex(idx);
+                  setLightboxZoom(1);
+                  setLightboxOpen(true);
+                }}
+                className="w-full h-auto rounded-xl shadow-xs select-none cursor-zoom-in"
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Viewport */}
       <div
-        className={`relative overflow-auto rounded-2xl border p-3 ${
+        className={`hidden md:block relative overflow-auto rounded-2xl border p-3 ${
           darkSurface ? "border-white/10 bg-slate-950/70" : "border-border bg-muted/30"
         }`}
         style={{ maxHeight: "70vh" }}
@@ -171,9 +202,9 @@ export function KholasaMindMapView({ title, images, darkSurface = false }: Khola
         </div>
       </div>
 
-      {/* Thumbnails Switcher */}
+      {/* Desktop Thumbnails Switcher */}
       {validImages.length > 1 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <div className="hidden md:flex items-center gap-2 overflow-x-auto pb-1">
           {validImages.map((img, idx) => (
             <button
               key={img + idx}

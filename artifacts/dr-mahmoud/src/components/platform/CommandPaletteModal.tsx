@@ -103,7 +103,7 @@ export function CommandPaletteModal({
       id: "nav-kholasa",
       category: "أقسام المنصة",
       title: "الزتونة والخرائط الذهنية والتعريفات",
-      subtitle: "ملخصات الدروس والتعريفات والخرائط والبطاقات وبنك الأسئلة الشامل",
+      subtitle: "ملخصات الدروس والتعريفات والخرائط والتسميع وبنك الأسئلة الشامل",
       badge: "الخلاصة",
       icon: Sparkles,
       onSelect: () => {
