@@ -3,18 +3,23 @@ import fs from "fs";
 import path from "path";
 import multer from "multer";
 import { Router, type IRouter } from "express";
-import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, or, sql } from "drizzle-orm";
 import {
+  coursesTable,
   db,
   essayQuestionBankTable,
   lessonKholasaMaterialsTable,
   questionBankTable,
+  quizzesTable,
   studentBookmarksTable,
   studentDailyChallengesTable,
   studentMistakesTable,
+  studentNotificationsTable,
+  studentsTable,
   videosTable,
   type QuizQuestion,
 } from "@workspace/db";
+import { validateQuestions } from "./question-parser";
 import { getDynamicAdminPassword, isAdminRequest, requireAdmin } from "../../middleware/auth";
 import {
   canStudentAccessContent,
@@ -1124,11 +1129,296 @@ router.post("/learning/kholasa/bookmarks/toggle", requireStudent, async (req, re
 // ── 7. Admin Management Routes (requireAdmin) ────────────────────────────────
 router.get("/admin/learning/kholasa/materials", requireAdmin, async (_req, res, next) => {
   try {
-    const materials = await db
+    const [materials, videos, qbCounts, essayCounts, quizzes] = await Promise.all([
+      db
+        .select()
+        .from(lessonKholasaMaterialsTable)
+        .orderBy(lessonKholasaMaterialsTable.stage, lessonKholasaMaterialsTable.lessonOrder, lessonKholasaMaterialsTable.id),
+      db
+        .select({
+          id: videosTable.id,
+          title: videosTable.title,
+          durationText: videosTable.durationText,
+          thumbnailUrl: videosTable.thumbnailUrl,
+          courseId: videosTable.courseId,
+          stage: videosTable.stage,
+        })
+        .from(videosTable),
+      db
+        .select({
+          stage: questionBankTable.stage,
+          unit: questionBankTable.unit,
+          lesson: questionBankTable.lesson,
+          lessonId: questionBankTable.lessonId,
+          qType: sql<string>`COALESCE(${questionBankTable.question}->>'questionType', 'mcq')`,
+          cnt: sql<number>`count(*)::int`,
+        })
+        .from(questionBankTable)
+        .groupBy(
+          questionBankTable.stage,
+          questionBankTable.unit,
+          questionBankTable.lesson,
+          questionBankTable.lessonId,
+          sql`COALESCE(${questionBankTable.question}->>'questionType', 'mcq')`,
+        ),
+      db
+        .select({
+          stage: essayQuestionBankTable.stage,
+          unit: essayQuestionBankTable.unit,
+          lesson: essayQuestionBankTable.lesson,
+          cnt: sql<number>`count(*)::int`,
+        })
+        .from(essayQuestionBankTable)
+        .groupBy(
+          essayQuestionBankTable.stage,
+          essayQuestionBankTable.unit,
+          essayQuestionBankTable.lesson,
+        ),
+      db
+        .select({
+          id: quizzesTable.id,
+          videoId: quizzesTable.videoId,
+          stage: quizzesTable.stage,
+          title: quizzesTable.title,
+        })
+        .from(quizzesTable),
+    ]);
+
+    const videoById = new Map(videos.map((v) => [v.id, v]));
+    const essayMap = new Map<string, number>();
+    for (const row of essayCounts) {
+      const key = `${row.stage || ""}||${row.unit || ""}||${row.lesson || ""}`;
+      essayMap.set(key, (essayMap.get(key) || 0) + (Number(row.cnt) || 0));
+    }
+
+    const enriched = materials.map((m) => {
+      let mcq = 0;
+      let trueFalse = 0;
+      for (const row of qbCounts) {
+        if (row.stage !== m.stage || row.unit !== m.unit) continue;
+        const matchesLesson = row.lesson === m.lesson || (m.videoId !== null && row.lessonId === m.videoId);
+        if (!matchesLesson) continue;
+        if (row.qType === "true_false") trueFalse += Number(row.cnt) || 0;
+        else mcq += Number(row.cnt) || 0;
+      }
+      const essay = essayMap.get(`${m.stage}||${m.unit}||${m.lesson}`) || 0;
+      const quizzesCount = quizzes.filter(
+        (q) =>
+          (m.videoId && q.videoId === m.videoId) ||
+          (q.stage === m.stage && q.title.includes(m.lesson)),
+      ).length;
+
+      return {
+        ...m,
+        video: m.videoId ? videoById.get(m.videoId) ?? null : null,
+        questionCounts: { mcq, trueFalse, essay },
+        quizzesCount,
+      };
+    });
+
+    res.json({ materials: enriched });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/admin/learning/kholasa/materials/:id/bundle", requireAdmin, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: "معرف غير صالح" });
+      return;
+    }
+
+    const [material] = await db
       .select()
       .from(lessonKholasaMaterialsTable)
-      .orderBy(lessonKholasaMaterialsTable.stage, lessonKholasaMaterialsTable.lessonOrder, lessonKholasaMaterialsTable.id);
-    res.json({ materials });
+      .where(eq(lessonKholasaMaterialsTable.id, id))
+      .limit(1);
+
+    if (!material) {
+      res.status(404).json({ error: "الدرس غير موجود" });
+      return;
+    }
+
+    const lessonMatchQb = material.videoId
+      ? or(eq(questionBankTable.lesson, material.lesson), eq(questionBankTable.lessonId, material.videoId))
+      : eq(questionBankTable.lesson, material.lesson);
+
+    const [qbRows, essayRows, allQuizzes] = await Promise.all([
+      db
+        .select()
+        .from(questionBankTable)
+        .where(
+          and(
+            eq(questionBankTable.stage, material.stage),
+            eq(questionBankTable.unit, material.unit),
+            lessonMatchQb,
+          ),
+        )
+        .orderBy(desc(questionBankTable.id)),
+      db
+        .select()
+        .from(essayQuestionBankTable)
+        .where(
+          and(
+            eq(essayQuestionBankTable.stage, material.stage),
+            eq(essayQuestionBankTable.unit, material.unit),
+            eq(essayQuestionBankTable.lesson, material.lesson),
+          ),
+        )
+        .orderBy(desc(essayQuestionBankTable.id)),
+      db
+        .select({
+          id: quizzesTable.id,
+          title: quizzesTable.title,
+          scope: quizzesTable.scope,
+          videoId: quizzesTable.videoId,
+          stage: quizzesTable.stage,
+          durationMinutes: quizzesTable.durationMinutes,
+          passingScore: quizzesTable.passingScore,
+          maxAttempts: quizzesTable.maxAttempts,
+          isPublished: quizzesTable.isPublished,
+          questions: quizzesTable.questions,
+          createdAt: quizzesTable.createdAt,
+        })
+        .from(quizzesTable)
+        .orderBy(desc(quizzesTable.createdAt)),
+    ]);
+
+    const mcqQuestions = qbRows.filter((r) => (r.question?.questionType || "mcq") !== "true_false");
+    const trueFalseQuestions = qbRows.filter((r) => r.question?.questionType === "true_false");
+
+    const lessonQuizzes = allQuizzes
+      .filter(
+        (q) =>
+          (material.videoId && q.videoId === material.videoId) ||
+          (q.stage === material.stage && q.title.includes(material.lesson)),
+      )
+      .map((q) => ({
+        ...q,
+        questionsCount: Array.isArray(q.questions) ? q.questions.length : 0,
+      }));
+
+    res.json({
+      material,
+      mcqQuestions,
+      trueFalseQuestions,
+      essayQuestions: essayRows,
+      quizzes: lessonQuizzes,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/admin/learning/kholasa/materials/:id/create-quiz", requireAdmin, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: "معرف الدرس غير صالح" });
+      return;
+    }
+
+    const [material] = await db
+      .select()
+      .from(lessonKholasaMaterialsTable)
+      .where(eq(lessonKholasaMaterialsTable.id, id))
+      .limit(1);
+
+    if (!material) {
+      res.status(404).json({ error: "الدرس غير موجود" });
+      return;
+    }
+
+    const title = String(req.body?.title || "").trim();
+    const validQuestions = validateQuestions(req.body?.questions);
+    if (!title || !validQuestions || validQuestions.length === 0) {
+      res.status(400).json({ error: "عنوان الاختبار وقائمة الأسئلة الصالحة مطلوبان" });
+      return;
+    }
+
+    let resolvedCourseId = material.courseId || null;
+    let quizCategory = material.stage || "عام";
+    const resolvedVideoId = material.videoId || null;
+    const requestedScope = req.body?.scope === "lesson" && resolvedVideoId ? "lesson" : "course";
+
+    if (resolvedVideoId) {
+      const [video] = await db
+        .select({ courseId: videosTable.courseId, category: videosTable.category })
+        .from(videosTable)
+        .where(eq(videosTable.id, resolvedVideoId))
+        .limit(1);
+      if (video) {
+        resolvedCourseId = resolvedCourseId ?? video.courseId ?? null;
+        quizCategory = video.category || quizCategory;
+      }
+    }
+
+    if (resolvedCourseId) {
+      const [course] = await db
+        .select({ title: coursesTable.title })
+        .from(coursesTable)
+        .where(eq(coursesTable.id, resolvedCourseId))
+        .limit(1);
+      if (course) quizCategory = course.title;
+    }
+
+    const finalStages = material.stages?.length ? material.stages : [material.stage];
+
+    const [createdQuiz] = await db
+      .insert(quizzesTable)
+      .values({
+        title,
+        courseId: resolvedCourseId,
+        videoId: requestedScope === "lesson" ? resolvedVideoId : null,
+        scope: requestedScope,
+        description: `اختبار على: ${material.lesson} (${material.unit})`,
+        category: quizCategory,
+        stage: material.stage,
+        stages: finalStages,
+        durationMinutes: req.body?.durationMinutes ? Number(req.body.durationMinutes) : null,
+        passingScore: Math.max(0, Math.min(100, Number(req.body?.passingScore ?? 60))),
+        maxAttempts: Math.max(0, Math.min(20, Number(req.body?.maxAttempts ?? 3))),
+        shuffleQuestions: req.body?.shuffleQuestions !== false,
+        showExplanations: req.body?.showExplanations !== false,
+        requiredProgress: requestedScope === "lesson" ? Math.max(0, Math.min(100, Number(req.body?.requiredProgress ?? 80))) : 0,
+        questions: validQuestions,
+        isPublished: req.body?.isPublished !== false,
+      })
+      .returning();
+
+    if (requestedScope === "lesson" && resolvedVideoId) {
+      await db
+        .update(quizzesTable)
+        .set({ videoId: null })
+        .where(and(eq(quizzesTable.videoId, resolvedVideoId), ne(quizzesTable.id, createdQuiz.id)));
+      await db
+        .update(videosTable)
+        .set({ quizId: createdQuiz.id })
+        .where(eq(videosTable.id, resolvedVideoId));
+    }
+
+    if (createdQuiz.isPublished) {
+      try {
+        const approvedStudents = await db.select().from(studentsTable).where(eq(studentsTable.status, "approved"));
+        const recipients = approvedStudents.filter((student) =>
+          canStudentAccessContent(student, createdQuiz.category, createdQuiz.stage, createdQuiz.stages, createdQuiz.courseId),
+        );
+        if (recipients.length > 0) {
+          await db.insert(studentNotificationsTable).values(
+            recipients.map((student) => ({
+              studentId: student.id,
+              type: "quiz",
+              title: "اختبار جديد متاح لك",
+              message: `${createdQuiz.title} جاهز الآن داخل منصة الاختبارات.`,
+            })),
+          );
+        }
+      } catch {}
+    }
+
+    res.status(201).json({ quiz: createdQuiz });
   } catch (error) {
     next(error);
   }

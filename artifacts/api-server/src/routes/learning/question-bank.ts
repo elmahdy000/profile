@@ -391,26 +391,40 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
         const inserted = await db
           .insert(questionBankTable)
           .values(
-            nonDuplicates.map((q) => ({
-              courseId,
-              category: "عام",
-              stage,
-              stages: [stage],
-              unit,
-              lesson,
-              lessonId: lessonId || null,
-              difficulty: (q as any).difficulty || defaultDifficulty,
-              points: q.points || defaultPoints,
-              tags: [stage, unit, lesson].filter(Boolean),
-              question: {
-                prompt: String(q.prompt).trim(),
-                options: q.options.map((o: unknown) => String(o).trim()),
-                correctIndex: Math.max(0, Math.min(q.options.length - 1, Number(q.correctIndex) || 0)),
-                explanation: String(q.explanation || "").trim() || undefined,
-                imageUrl: String(q.imageUrl || "").trim() || undefined,
+            nonDuplicates.map((q) => {
+              const opts = q.options.map((o: unknown) => String(o).trim());
+              const cIdx = Math.max(0, Math.min(opts.length - 1, Number(q.correctIndex) || 0));
+              const inferredType: "mcq" | "true_false" =
+                (q as any).questionType === "true_false" || opts.length === 2
+                  ? "true_false"
+                  : "mcq";
+              return {
+                courseId,
+                category: "عام",
+                stage,
+                stages: [stage],
+                unit,
+                lesson,
+                lessonId: lessonId || null,
+                difficulty: (q as any).difficulty || defaultDifficulty,
                 points: q.points || defaultPoints,
-              },
-            }))
+                concept: (q as any).concept ? String((q as any).concept).trim() : null,
+                translation: (q as any).translation ? String((q as any).translation).trim() : null,
+                tags: [stage, unit, lesson].filter(Boolean),
+                question: {
+                  prompt: String(q.prompt).trim(),
+                  options: opts,
+                  correctIndex: cIdx,
+                  correctAnswer: (q as any).correctAnswer ? String((q as any).correctAnswer).trim() : opts[cIdx],
+                  questionType: inferredType,
+                  explanation: String(q.explanation || "").trim() || undefined,
+                  translation: (q as any).translation ? String((q as any).translation).trim() : undefined,
+                  concept: (q as any).concept ? String((q as any).concept).trim() : undefined,
+                  imageUrl: String(q.imageUrl || "").trim() || undefined,
+                  points: q.points || defaultPoints,
+                },
+              };
+            })
           )
           .returning();
         insertedCount = inserted.length;
@@ -541,6 +555,7 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
       showExplanations,
       requiredProgress,
       isPublished,
+      questionType,
     } = req.body;
 
     if (!title || !title.trim()) {
@@ -595,6 +610,12 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
       }
     } else if (resolvedVideoId) {
       conditions.push(eq(questionBankTable.lessonId, resolvedVideoId));
+    }
+
+    if (questionType === "true_false") {
+      conditions.push(sql`COALESCE(${questionBankTable.question}->>'questionType', 'mcq') = 'true_false'`);
+    } else if (questionType === "mcq") {
+      conditions.push(sql`COALESCE(${questionBankTable.question}->>'questionType', 'mcq') <> 'true_false'`);
     }
 
     const availableQuestions = await (conditions.length ? query.where(and(...conditions)) : query);
@@ -877,11 +898,14 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
 // Single question insert
 router.post("/admin/learning/question-bank", requireAdmin, async (req, res, next) => {
   try {
-    const { prompt, options, correctIndex, explanation, imageUrl, courseId, category, stage, stages, unit, lesson, lessonId, difficulty, points, subject, tags } = req.body;
+    const { prompt, options, correctIndex, explanation, imageUrl, courseId, category, stage, stages, unit, lesson, lessonId, difficulty, points, subject, tags, questionType, translation, concept } = req.body;
     if (!prompt || !Array.isArray(options) || options.length < 2 || typeof correctIndex !== "number") {
       res.status(400).json({ error: "بيانات السؤال غير كاملة" });
       return;
     }
+    const cleanOptions = options.map((o: unknown) => String(o).trim());
+    const safeIdx = Math.max(0, Math.min(cleanOptions.length - 1, correctIndex));
+    const resolvedType: "mcq" | "true_false" = questionType === "true_false" || cleanOptions.length === 2 ? "true_false" : "mcq";
     const [entry] = await db
       .insert(questionBankTable)
       .values({
@@ -895,12 +919,18 @@ router.post("/admin/learning/question-bank", requireAdmin, async (req, res, next
         difficulty: String(difficulty || "medium"),
         points: Number(points) || 1,
         subject: String(subject || ""),
+        concept: concept ? String(concept).trim() : null,
+        translation: translation ? String(translation).trim() : null,
         tags: Array.isArray(tags) ? tags : [],
         question: {
           prompt: String(prompt).trim(),
-          options: options.map((o: unknown) => String(o).trim()),
-          correctIndex: Math.max(0, Math.min(options.length - 1, correctIndex)),
+          options: cleanOptions,
+          correctIndex: safeIdx,
+          correctAnswer: cleanOptions[safeIdx],
+          questionType: resolvedType,
           explanation: String(explanation || "").trim() || undefined,
+          translation: translation ? String(translation).trim() : undefined,
+          concept: concept ? String(concept).trim() : undefined,
           imageUrl: String(imageUrl || "").trim() || undefined,
           points: Number(points) || 1,
         },
@@ -916,7 +946,7 @@ router.post("/admin/learning/question-bank", requireAdmin, async (req, res, next
 router.put("/admin/learning/question-bank/:id", requireAdmin, async (req, res, next) => {
   try {
     const id = Number(req.params.id);
-    const { prompt, options, correctIndex, explanation, imageUrl, unit, lesson, difficulty, points } = req.body;
+    const { prompt, options, correctIndex, explanation, imageUrl, unit, lesson, difficulty, points, questionType, translation, concept } = req.body;
 
     const [existing] = await db.select().from(questionBankTable).where(eq(questionBankTable.id, id)).limit(1);
     if (!existing) {
@@ -924,11 +954,25 @@ router.put("/admin/learning/question-bank/:id", requireAdmin, async (req, res, n
       return;
     }
 
+    const nextOptions = Array.isArray(options) ? options.map((o: any) => String(o).trim()) : existing.question.options;
+    const nextIdx = typeof correctIndex === "number"
+      ? Math.max(0, Math.min(nextOptions.length - 1, correctIndex))
+      : existing.question.correctIndex;
+    const nextType: QuizQuestion["questionType"] = questionType
+      ? (questionType === "true_false" ? "true_false" : "mcq")
+      : (existing.question.questionType || (nextOptions.length === 2 ? "true_false" : "mcq"));
+    const nextTrans = translation !== undefined ? (String(translation).trim() || undefined) : (existing.question.translation || existing.translation || undefined);
+    const nextConcept = concept !== undefined ? (String(concept).trim() || undefined) : (existing.question.concept || existing.concept || undefined);
+
     const updatedQuestion = {
       prompt: prompt ? String(prompt).trim() : existing.question.prompt,
-      options: Array.isArray(options) ? options.map((o: any) => String(o).trim()) : existing.question.options,
-      correctIndex: typeof correctIndex === "number" ? correctIndex : existing.question.correctIndex,
+      options: nextOptions,
+      correctIndex: nextIdx,
+      correctAnswer: nextOptions[nextIdx] || existing.question.correctAnswer,
+      questionType: nextType,
       explanation: explanation !== undefined ? (String(explanation).trim() || undefined) : existing.question.explanation,
+      translation: nextTrans,
+      concept: nextConcept,
       imageUrl: imageUrl !== undefined ? (String(imageUrl).trim() || undefined) : existing.question.imageUrl,
       points: points !== undefined ? Number(points) : (existing.points || 1),
     };
@@ -940,6 +984,8 @@ router.put("/admin/learning/question-bank/:id", requireAdmin, async (req, res, n
         lesson: lesson !== undefined ? String(lesson).trim() : existing.lesson,
         difficulty: difficulty || existing.difficulty,
         points: points !== undefined ? Number(points) : existing.points,
+        translation: nextTrans ?? null,
+        concept: nextConcept ?? null,
         question: updatedQuestion,
         updatedAt: new Date(),
       })

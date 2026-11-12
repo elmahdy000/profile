@@ -95,6 +95,7 @@ export interface KholasaMaterial {
     trueFalse: number;
     essay: number;
   };
+  quizzesCount?: number;
 }
 
 export interface MistakeQuestionSnapshot {
