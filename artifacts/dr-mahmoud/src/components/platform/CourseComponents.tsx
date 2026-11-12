@@ -64,7 +64,7 @@ export function CourseOverviewCard({
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-5 md:p-6 shadow-2xs before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/25 before:to-transparent">
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-5 md:p-6 shadow-2xs">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         {/* Course Main Details */}
         <div className="space-y-2 max-w-2xl text-right">
@@ -337,7 +337,7 @@ export function ContinueLearningCard({
         {/* Main Large Continuation Card */}
         <div
           onClick={() => onPlayClick(item)}
-          className="group relative flex flex-col sm:flex-row items-stretch gap-4 rounded-2xl border border-slate-200/80 bg-card p-4 shadow-2xs hover:border-blue-500/40 hover:shadow-xs transition-all cursor-pointer dark:border-[#1E2E48] dark:bg-[#0A101D] overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/15 before:to-transparent"
+          className="group relative flex flex-col sm:flex-row items-stretch gap-4 rounded-2xl border border-slate-200/80 bg-card p-4 shadow-2xs hover:border-blue-500/40 hover:shadow-xs transition-all cursor-pointer dark:border-[#1E2E48] dark:bg-[#0A101D] overflow-hidden"
         >
           {/* 16:9 Aspect Ratio Thumbnail */}
           <div className="relative aspect-video w-full sm:w-56 shrink-0 overflow-hidden rounded-xl bg-slate-900">
@@ -548,7 +548,7 @@ export function RedesignedLessonCard({
   const isNotStarted = !isCompleted && !isInProgress;
 
   return (
-    <article className="flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-card p-4 shadow-2xs hover:border-blue-500/40 hover:shadow-xs transition-all duration-200 dark:border-[#1E2E48] dark:bg-[#0A101D] relative overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/15 before:to-transparent">
+    <article className="flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-card p-4 shadow-2xs hover:border-blue-500/40 hover:shadow-xs transition-all duration-200 dark:border-[#1E2E48] dark:bg-[#0A101D] relative overflow-hidden">
       <div className="space-y-3">
         {/* Thumbnail area (16:9 aspect ratio) */}
         <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-slate-900">

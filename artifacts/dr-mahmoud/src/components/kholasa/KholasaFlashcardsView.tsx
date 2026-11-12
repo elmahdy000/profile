@@ -232,7 +232,7 @@ export function KholasaFlashcardsView({
       {/* Progress Bar */}
       <div className={`h-2 w-full rounded-full overflow-hidden ${darkSurface ? "bg-white/10" : "bg-muted"}`}>
         <div
-          className="h-full bg-gradient-to-l from-purple-500 to-sky-500 transition-all duration-300"
+          className="h-full bg-purple-600 transition-all duration-300"
           style={{ width: `${Math.round(((safeIndex + 1) / orderedCards.length) * 100)}%` }}
         />
       </div>
@@ -261,8 +261,8 @@ export function KholasaFlashcardsView({
             }}
             className={`col-start-1 row-start-1 rounded-3xl border p-6 sm:p-8 flex flex-col items-center justify-center shadow-md transition-colors ${
               darkSurface
-                ? "border-white/15 bg-gradient-to-br from-slate-900 to-slate-950 text-white group-hover:border-sky-400/60"
-                : "border-border bg-gradient-to-br from-card to-muted/30 text-foreground group-hover:border-primary/50 shadow-sm"
+                ? "border-white/15 bg-slate-900 text-white group-hover:border-sky-400/60"
+                : "border-border bg-card text-foreground group-hover:border-primary/50 shadow-sm"
             }`}
           >
             <span className="mb-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold bg-sky-500/15 text-sky-500">
@@ -289,8 +289,8 @@ export function KholasaFlashcardsView({
             }}
             className={`col-start-1 row-start-1 rounded-3xl border p-6 sm:p-8 flex flex-col items-center justify-center shadow-md ${
               darkSurface
-                ? "border-emerald-500/50 bg-gradient-to-br from-emerald-950/60 to-slate-950 text-white"
-                : "border-emerald-500/45 bg-gradient-to-br from-emerald-500/10 to-card text-foreground shadow-sm"
+                ? "border-emerald-500/50 bg-emerald-950/80 text-white"
+                : "border-emerald-500/45 bg-emerald-50 dark:bg-emerald-950/30 text-foreground shadow-sm"
             }`}
           >
             <span className="mb-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold bg-emerald-500/15 text-emerald-500">

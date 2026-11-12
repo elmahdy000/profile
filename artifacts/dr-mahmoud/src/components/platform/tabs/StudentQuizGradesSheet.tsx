@@ -281,7 +281,7 @@ export const StudentQuizGradesSheet: React.FC<StudentQuizGradesSheetProps> = ({
   return (
     <div className="space-y-6 text-right dir-rtl">
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 p-6 text-white shadow-xl">
+      <div className="relative overflow-hidden rounded-2xl bg-emerald-600 p-6 text-white shadow-xl">
         <div className="absolute -left-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>

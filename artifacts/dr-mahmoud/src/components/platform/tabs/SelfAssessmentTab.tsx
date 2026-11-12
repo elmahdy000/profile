@@ -611,7 +611,7 @@ export function SelfAssessmentTab({
       {step === "setup" && (
         <div className="space-y-6">
           {/* Header Hero Banner matching Mockup */}
-          <div className="rounded-3xl border border-blue-900/40 bg-gradient-to-r from-[#0B1536] via-[#102464] to-[#14328E] text-white p-6 sm:p-8 shadow-xl relative overflow-hidden">
+          <div className="rounded-3xl border border-blue-900/40 bg-[#0F235D] text-white p-6 sm:p-8 shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-10 -left-10 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
 
@@ -648,7 +648,7 @@ export function SelfAssessmentTab({
 
               {/* Visual Decorative Graphic Card */}
               <div className="hidden md:flex flex-col items-center justify-center p-3 relative shrink-0">
-                <div className="w-56 h-48 rounded-2xl bg-gradient-to-tr from-blue-700/40 via-indigo-600/30 to-white/10 border border-white/20 backdrop-blur-md p-4 flex flex-col justify-between shadow-2xl relative">
+                <div className="w-56 h-48 rounded-2xl bg-blue-800/40 border border-white/20 backdrop-blur-md p-4 flex flex-col justify-between shadow-2xl relative">
                   <div className="flex items-center justify-between">
                     <span className="h-8 w-8 rounded-xl bg-blue-500/40 flex items-center justify-center text-white shadow-inner">
                       <GraduationCap className="h-5 w-5 text-cyan-200" />
@@ -674,7 +674,7 @@ export function SelfAssessmentTab({
           {/* Student Info Card - يظهر فقط للطلاب الخارجيين (الغير مسجلين) */}
           {isEnrolled ? (
             /* ── طالب مسجل بالمنصة: كارت ترحيب بسيط بدون طلب بيانات ── */
-            <div className="rounded-3xl border border-emerald-200/80 dark:border-emerald-800/50 bg-gradient-to-r from-emerald-50 via-white to-emerald-50 dark:from-emerald-950/30 dark:via-slate-900 dark:to-emerald-950/30 p-5 shadow-sm relative overflow-hidden">
+            <div className="rounded-3xl border border-emerald-200/80 dark:border-emerald-800/50 bg-emerald-50/70 dark:bg-emerald-950/30 p-5 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none" />
               <div className="relative z-10 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center shadow-sm border border-emerald-200 dark:border-emerald-800">
@@ -1384,7 +1384,7 @@ export function SelfAssessmentTab({
               className={`w-full h-14 rounded-2xl font-black text-base shadow-lg transition-all flex items-center justify-center gap-2 ${
                 eligibilityData.canTakeTest === false
                   ? "bg-slate-300 dark:bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-300 dark:border-slate-700 shadow-none"
-                  : "bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white shadow-blue-600/30 cursor-pointer"
+                  : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/30 cursor-pointer"
               }`}
             >
               {generating ? (
@@ -1559,7 +1559,7 @@ export function SelfAssessmentTab({
             const isEng = isEnglishQuestion(currentQ.prompt, currentQ.options);
 
             return (
-              <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-6 sm:p-8 shadow-xs space-y-6 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/20 before:to-transparent">
+              <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-6 sm:p-8 shadow-xs space-y-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between text-xs text-slate-400 font-semibold border-b border-slate-100 dark:border-[#1F314A] pb-3">
                     <span className="flex items-center gap-1">
@@ -1659,7 +1659,7 @@ export function SelfAssessmentTab({
       {step === "results" && (
         <div className="space-y-6">
           {/* Result Card */}
-          <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-6 sm:p-8 shadow-md text-center space-y-4 before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/30 before:to-transparent">
+          <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-6 sm:p-8 shadow-md text-center space-y-4">
             <div className="inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-blue-50 dark:bg-blue-950/70 border border-blue-200/60 dark:border-blue-900/60 text-blue-600 dark:text-blue-400 shadow-inner mx-auto">
               <Award className="h-10 w-10 text-blue-600 dark:text-blue-400" />
             </div>
@@ -1691,7 +1691,7 @@ export function SelfAssessmentTab({
             </div>
 
             {!isEnrolled && !eligibilityData.hasActiveCode && (
-              <div className="rounded-2xl border-2 border-amber-300 dark:border-amber-700 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/40 p-4 text-right space-y-2 mt-2">
+              <div className="rounded-2xl border-2 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 p-4 text-right space-y-2 mt-2">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-amber-600 shrink-0" />
                   <span className="font-bold text-amber-950 dark:text-amber-200 text-xs sm:text-sm">
@@ -1710,7 +1710,7 @@ export function SelfAssessmentTab({
                         window.scrollTo({ top: 900, behavior: "smooth" });
                       }, 100);
                     }}
-                    className="rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold text-xs shadow-xs cursor-pointer"
+                    className="rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs cursor-pointer"
                   >
                     <Key className="h-3.5 w-3.5 ml-1.5" />
                     تفعيل باقة 10 أيام (100 جنيه)

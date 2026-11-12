@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Flame, Play, CheckCircle2, Loader2, X, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -80,9 +81,13 @@ export function DailyChallengeCard({ isPaid }: { isPaid: boolean }) {
 
   return (
     <>
-      <div
+      <motion.div
         dir="rtl"
-        className="relative overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-l from-amber-500/10 via-card to-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ y: -2 }}
+        transition={{ duration: 0.25 }}
+        className="rounded-2xl border border-amber-500/35 bg-card dark:bg-[#0A101D] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs hover:border-amber-500/60 transition-colors"
       >
         <div className="flex items-start sm:items-center gap-3.5">
           <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-amber-500 text-white shadow-sm">
@@ -124,7 +129,7 @@ export function DailyChallengeCard({ isPaid }: { isPaid: boolean }) {
             </>
           )}
         </Button>
-      </div>
+      </motion.div>
 
       {/* Challenge Modal */}
       {modalOpen && ch && (

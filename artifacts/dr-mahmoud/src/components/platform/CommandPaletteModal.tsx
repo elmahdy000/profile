@@ -365,7 +365,7 @@ export function CommandPaletteModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: -10 }}
           transition={{ duration: 0.18, ease: "easeOut" }}
-          className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200/90 dark:border-[#1E2E48] bg-white dark:bg-[#0A101D] shadow-2xl before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/40 before:to-transparent"
+          className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200/90 dark:border-[#1E2E48] bg-white dark:bg-[#0A101D] shadow-2xl"
         >
           {/* Search Header Bar */}
           <div className="relative flex items-center border-b border-slate-200/80 dark:border-[#1E2E48] px-4 py-3.5 bg-slate-50/50 dark:bg-[#0D1726]/40">

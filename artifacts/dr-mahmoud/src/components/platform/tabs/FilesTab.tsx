@@ -164,7 +164,7 @@ export function FileCard({
   const fileSizeMb = (file.sizeBytes / 1024 / 1024).toFixed(1);
 
   return (
-    <article className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-5 shadow-2xs hover:border-blue-500/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 w-full overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/20 before:to-transparent hover:before:via-blue-500/50" dir="rtl">
+    <article className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-5 shadow-2xs hover:border-blue-500/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 w-full overflow-hidden" dir="rtl">
       <div className="space-y-3">
         {/* Top Header Area: File Icon + Title + Badge */}
         <div className="flex items-start justify-between gap-3">

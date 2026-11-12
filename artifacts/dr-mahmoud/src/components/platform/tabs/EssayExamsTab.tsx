@@ -537,7 +537,7 @@ export function EssayExamsTab({
     return (
       <div className="space-y-6" dir="rtl">
         {/* Header Hero Banner */}
-        <div className="relative overflow-hidden rounded-3xl border border-blue-200/60 bg-gradient-to-br from-blue-600 via-indigo-600 to-sky-700 p-6 sm:p-8 text-white shadow-xl dark:border-blue-900/40">
+        <div className="relative overflow-hidden rounded-3xl border border-blue-500/30 bg-blue-600 p-6 sm:p-8 text-white shadow-xl dark:border-blue-900/40">
           <div className="relative z-10 max-w-2xl space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-md">
               <Sparkles className="h-3.5 w-3.5 text-amber-300" />
@@ -605,7 +605,7 @@ export function EssayExamsTab({
               return (
                 <div
                   key={exam.id}
-                  className="flex flex-col justify-between rounded-3xl border border-border bg-card p-5 shadow-xs transition-all hover:shadow-md hover:border-primary/40 relative overflow-hidden group before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/25 before:to-transparent"
+                  className="flex flex-col justify-between rounded-3xl border border-border bg-card p-5 shadow-xs transition-all hover:shadow-md hover:border-primary/40 relative overflow-hidden group"
                 >
                   <div className="space-y-3.5">
                     {/* Top badging */}
@@ -726,7 +726,7 @@ export function EssayExamsTab({
     return (
       <div className="space-y-6 pb-28" dir="rtl">
         {/* Sticky Exam Header Bar with Countdown Timer */}
-        <div className="sticky top-14 z-30 -mx-4 sm:-mx-6 -mt-6 px-4 sm:px-6 py-3 bg-white/90 dark:bg-[#070D18]/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-[#1E2E48] shadow-xs flex flex-wrap items-center justify-between gap-3 relative before:absolute before:inset-x-0 before:bottom-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/25 before:to-transparent">
+        <div className="sticky top-14 z-30 -mx-4 sm:-mx-6 -mt-6 px-4 sm:px-6 py-3 bg-white/90 dark:bg-[#070D18]/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-[#1E2E48] shadow-xs flex flex-wrap items-center justify-between gap-3 relative">
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
@@ -804,7 +804,7 @@ export function EssayExamsTab({
         </div>
 
         {/* Paper Solving Instructions Banner */}
-        <div className="rounded-3xl border border-blue-400/30 bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-sky-600/10 p-5 flex items-start gap-3.5 text-xs text-foreground shadow-xs">
+        <div className="rounded-3xl border border-blue-400/30 bg-blue-500/10 p-5 flex items-start gap-3.5 text-xs text-foreground shadow-xs">
           <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-blue-600/15 text-blue-600 dark:text-blue-400">
             <BookOpen className="h-5 w-5" />
           </div>
@@ -1129,7 +1129,7 @@ export function EssayExamsTab({
         </div>
 
         {/* Hero Banner: Self-Assessment Control Center */}
-        <div className="rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+        <div className="rounded-3xl border border-emerald-500/30 bg-slate-900 p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
           <div className="relative z-10 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-3.5 py-1 text-xs font-bold text-emerald-300 backdrop-blur-md">
@@ -1180,7 +1180,7 @@ export function EssayExamsTab({
                 <div className="space-y-1.5">
                   <div className="h-2.5 w-full bg-white/15 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-emerald-400 to-teal-300 transition-all duration-500"
+                      className="h-full bg-emerald-400 transition-all duration-500"
                       style={{ width: `${Math.min(100, Math.max(0, percentScore))}%` }}
                     />
                   </div>

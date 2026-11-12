@@ -299,7 +299,7 @@ export function AccessScreen({
                     </span>
                     {index < 2 && (
                       <div className="hidden sm:flex items-center gap-1 text-[#3B82F6]/60">
-                        <span className="h-[2px] w-6 bg-gradient-to-l from-[#3B82F6]/50 to-transparent rounded-full" />
+                        <span className="h-[2px] w-6 bg-[#3B82F6]/40 rounded-full" />
                         <span className="text-xs font-bold font-sans">←</span>
                       </div>
                     )}
@@ -625,7 +625,7 @@ export function AccessScreen({
           ) : (
             <form onSubmit={submitRegistration} className="space-y-5" noValidate dir="rtl">
               <div className={`relative overflow-hidden rounded-[20px] border p-4 sm:p-5 ${
-                isLight ? "border-blue-100 bg-gradient-to-l from-[#EEF6FF] to-white" : "border-blue-400/15 bg-gradient-to-l from-[#132847] to-[#101D31]"
+                isLight ? "border-blue-100 bg-[#F4F8FF]" : "border-blue-400/15 bg-[#101D31]"
               }`}>
                 <div className="absolute -left-8 -top-10 h-28 w-28 rounded-full bg-blue-500/10 blur-2xl" />
                 <div className="relative flex items-center gap-3">

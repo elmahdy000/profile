@@ -115,7 +115,7 @@ export function MonthlyPaymentReminderModal({
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 overflow-y-auto bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="relative w-full max-w-xl overflow-hidden rounded-3xl border border-amber-500/30 bg-white dark:bg-slate-900 shadow-2xl text-right dir-rtl my-auto">
         {/* Header Banner */}
-        <div className="relative overflow-hidden bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 p-6 text-white">
+        <div className="relative overflow-hidden bg-amber-600 p-6 text-white">
           <button
             type="button"
             onClick={handleDismiss}
@@ -189,7 +189,7 @@ export function MonthlyPaymentReminderModal({
               <Button
                 type="button"
                 onClick={() => setShowUploadBox(true)}
-                className="w-full sm:flex-1 h-11 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-xs rounded-xl shadow-md"
+                className="w-full sm:flex-1 h-11 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-md"
               >
                 <FileCheck2 className="h-4 w-4 ml-1.5" />
                 رفع إيصال الدفع الآن 📤

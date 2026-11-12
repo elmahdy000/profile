@@ -1331,7 +1331,7 @@ export function StudentPlatform() {
 
                       {/* Push Notification Prompt in Dropdown */}
                       {isPushSupported && !isPushSubscribed && (
-                        <div className="mx-2 my-2 rounded-xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-sky-500/10 border border-blue-500/20 p-2.5 flex items-center justify-between gap-2">
+                        <div className="mx-2 my-2 rounded-xl bg-blue-500/10 border border-blue-500/20 p-2.5 flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2">
                             <BellRing className="h-4 w-4 text-blue-500 shrink-0 animate-bounce" />
                             <span className="text-[11px] font-semibold text-foreground">
@@ -1425,7 +1425,7 @@ export function StudentPlatform() {
           <div className="mx-auto max-w-[1440px] p-4 pb-8 sm:p-6 lg:p-8">
             {/* Offline Push Notifications Prompt Banner */}
             {isPushSupported && pushPermission === "default" && !dismissedPushBanner && (
-              <div className="mb-6 rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-4 sm:p-5 shadow-2xs relative overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/25 before:to-transparent">
+              <div className="mb-6 rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-4 sm:p-5 shadow-2xs relative overflow-hidden">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
                   <div className="flex items-center gap-3.5">
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shadow-2xs">
@@ -1465,6 +1465,14 @@ export function StudentPlatform() {
                 </div>
               </div>
             )}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={tab}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.16, ease: "easeOut" }}
+              >
             {tab === "dashboard" ? (
             <DashboardTab
               student={student}
@@ -1596,7 +1604,10 @@ export function StudentPlatform() {
             )
           ) : (
             <ProfileTab student={student} onStudentChange={setStudent} />
-          )}</div>
+          )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </section>
       </div>
 
@@ -1688,10 +1699,10 @@ export function StudentPlatform() {
           whileTap={{ scale: 0.96 }}
           dir="rtl"
           title="افتح ركن غلطاتي لمراجعة أخطائك"
-          className={`fixed bottom-[76px] left-3 sm:left-6 lg:bottom-6 lg:left-6 z-30 flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 border backdrop-blur-xl transition-shadow cursor-pointer ${
+          className={`fixed bottom-[76px] left-3 sm:left-6 lg:bottom-6 lg:left-6 z-30 flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 border backdrop-blur-xl transition-colors cursor-pointer ${
             unresolvedMistakesCount > 0
-              ? "border-rose-400/50 bg-gradient-to-l from-rose-600 via-rose-500 to-orange-500 text-white shadow-xl shadow-rose-500/35"
-              : "border-emerald-500/35 bg-white/95 dark:bg-slate-900/95 text-foreground shadow-lg"
+              ? "border-rose-400/50 bg-rose-600 hover:bg-rose-700 text-white shadow-xl shadow-rose-500/25"
+              : "border-emerald-500/35 bg-white/95 dark:bg-slate-900/95 text-foreground shadow-lg hover:border-emerald-500/60"
           }`}
         >
           <span className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-white/20 shrink-0">
@@ -1888,8 +1899,8 @@ export function StudentPlatform() {
                         <div
                           className={`h-full rounded-full transition-all duration-1000 ${
                             quizResult.passed
-                              ? "bg-gradient-to-r from-emerald-500 to-teal-400"
-                              : "bg-gradient-to-r from-red-500 to-amber-500"
+                              ? "bg-emerald-600"
+                              : "bg-rose-600"
                           }`}
                           style={{ width: `${quizResult.score}%` }}
                         />
@@ -1944,7 +1955,7 @@ export function StudentPlatform() {
                   return (
                     <div
                       key={qi}
-                      className={`relative overflow-hidden space-y-4 rounded-3xl border p-5 sm:p-7 transition-all shadow-xs before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/15 before:to-transparent ${isEng ? "text-left" : "text-right"} ${
+                      className={`relative overflow-hidden space-y-4 rounded-3xl border p-5 sm:p-7 transition-all shadow-xs ${isEng ? "text-left" : "text-right"} ${
                         quizResult
                           ? isCorrect
                             ? "border-emerald-500/40 bg-emerald-500/5 dark:bg-emerald-950/20"
@@ -2293,7 +2304,7 @@ export function StudentPlatform() {
                       setReauthLoading(false);
                     }
                   }}
-                  className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black py-3 px-4 rounded-2xl shadow-lg transition active:scale-95 disabled:opacity-50 cursor-pointer"
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 px-4 rounded-2xl shadow-lg transition active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   {reauthLoading ? "جاري التحقق والتسليم..." : "تأكيد الكود وتسليم الاختبار 🚀"}
                 </button>

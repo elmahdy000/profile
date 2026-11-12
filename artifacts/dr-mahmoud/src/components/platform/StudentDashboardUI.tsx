@@ -30,7 +30,7 @@ export function StudentAvatar({
   return (
     <div className="relative inline-block shrink-0">
       <span
-        className={`inline-grid place-items-center overflow-hidden rounded-full bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 font-bold text-white shadow-sm ring-2 ring-background/80 ${avatarSizes[size]}`}
+        className={`inline-grid place-items-center overflow-hidden rounded-full bg-blue-600 font-bold text-white shadow-sm ring-2 ring-background/80 ${avatarSizes[size]}`}
         aria-label={`صورة الطالب ${name}`}
       >
         {src && !failed ? (
@@ -113,10 +113,7 @@ export function StatisticCard({
   };
 
   return (
-    <article className="group relative overflow-hidden rounded-2xl border border-border/70 dark:border-slate-800/80 bg-gradient-to-b from-card to-card/80 dark:from-slate-900/90 dark:to-[#0B1322] p-5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5">
-      {/* Vercel-style subtle top ambient shine */}
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      
+    <article className="group rounded-2xl border border-border/70 dark:border-slate-800/80 bg-card dark:bg-[#0A101D] p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-[12px] font-bold text-muted-foreground tracking-wide">{label}</p>
@@ -183,11 +180,8 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="relative overflow-hidden flex min-h-[260px] flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 bg-gradient-to-b from-card/60 to-card/20 p-8 text-center">
-      {/* Ambient background glow */}
-      <div className="absolute h-32 w-32 rounded-full bg-primary/5 blur-2xl pointer-events-none" />
-      
-      <span className="relative grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-b from-primary/15 to-primary/5 border border-primary/20 text-primary shadow-xs">
+    <div className="flex min-h-[260px] flex-col items-center justify-center rounded-2xl border border-dashed border-border/80 bg-card/60 p-8 text-center">
+      <span className="grid h-14 w-14 place-items-center rounded-2xl bg-primary/10 border border-primary/20 text-primary shadow-xs">
         <Icon className="h-7 w-7" />
       </span>
       <h2 className="mt-4 text-base font-extrabold text-foreground tracking-tight">{title}</h2>

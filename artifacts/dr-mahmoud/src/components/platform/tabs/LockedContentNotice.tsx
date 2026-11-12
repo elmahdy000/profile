@@ -17,7 +17,7 @@ export function LockedContentNotice({
 }: LockedContentNoticeProps) {
   return (
     <div className="mx-auto max-w-2xl py-8 px-4 text-right dir-rtl animate-in fade-in duration-300">
-      <div className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-gradient-to-b from-white to-slate-50 dark:from-[#0A101D] dark:to-[#050914] p-6 sm:p-8 shadow-xl text-center before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-amber-500/30 before:to-transparent">
+      <div className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-white dark:bg-[#0A101D] p-6 sm:p-8 shadow-xl text-center">
         {/* Animated Lock Icon */}
         <div className="mx-auto mb-5 grid h-20 w-20 place-items-center rounded-3xl bg-amber-500/10 text-amber-500 dark:bg-amber-500/20 shadow-inner">
           <Lock className="h-10 w-10 animate-bounce duration-1000" />
@@ -58,7 +58,7 @@ export function LockedContentNotice({
           <Button
             type="button"
             onClick={onOpenPayment}
-            className="w-full sm:w-auto h-12 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-xs sm:text-sm shadow-lg shadow-amber-500/25"
+            className="w-full sm:w-auto h-12 px-6 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs sm:text-sm shadow-lg shadow-amber-500/20"
           >
             <CreditCard className="h-4 w-4 ml-2" />
             سداد الاشتراك أو رفع الإيصال 💳

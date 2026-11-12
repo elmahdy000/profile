@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { motion } from "framer-motion";
 import {
   Sparkles,
   Map as MapIcon,
@@ -507,8 +508,13 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
             {unitCards.map((u, uIdx) => {
               const isUnitEng = isPrimarilyEnglish(u.unitTitle);
               return (
-                <div
+                <motion.div
                   key={u.unitTitle}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.22, delay: uIdx * 0.05 }}
+                  whileHover={{ y: -3 }}
+                  whileTap={{ scale: 0.985 }}
                   onClick={() => {
                     setSelectedUnit(u.unitTitle);
                     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -522,7 +528,7 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     }
                   }}
-                  className="group relative rounded-2xl border border-border bg-card p-5 shadow-2xs hover:border-primary/60 hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer flex flex-col justify-between gap-4 overflow-hidden"
+                  className="group relative rounded-2xl border border-border bg-card p-5 shadow-2xs hover:border-primary/60 hover:shadow-lg transition-colors cursor-pointer flex flex-col justify-between gap-4 overflow-hidden"
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between gap-2">
@@ -572,7 +578,7 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
                     <span>عرض دروس الوحدة</span>
                     <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
@@ -629,7 +635,7 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
                   )}
 
                   <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
-                    {items.map((m) => {
+                    {items.map((m, mIdx) => {
                       const conceptsCount =
                         (m.summaryData?.keyConcepts?.length || 0) + (m.summaryData?.definitions?.length || 0);
                       const mapsCount = m.mindmapImages?.length || 0;
@@ -640,10 +646,14 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
                         (m.questionCounts?.essay || 0);
 
                       return (
-                        <div
+                        <motion.div
                           key={m.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.2, delay: mIdx * 0.04 }}
+                          whileHover={{ y: -2 }}
                           onClick={() => openLesson(m)}
-                          className="group relative rounded-2xl border border-border bg-card p-4 shadow-2xs hover:border-primary/50 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between gap-4"
+                          className="group relative rounded-2xl border border-border bg-card p-4 shadow-2xs hover:border-primary/50 hover:shadow-md transition-colors cursor-pointer flex flex-col justify-between gap-4"
                         >
                           <div className="space-y-2.5">
                             <div className="flex items-start justify-between gap-2">
@@ -747,7 +757,7 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
                           </Button>
                         )}
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>

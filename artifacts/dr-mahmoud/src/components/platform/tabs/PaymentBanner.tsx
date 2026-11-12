@@ -48,7 +48,7 @@ export function PaymentBanner({ paymentStatus, onUploaded }: { paymentStatus: st
 
   if (paymentStatus === "pending_review") {
     return (
-      <div className="relative overflow-hidden rounded-3xl border border-amber-400/40 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-orange-500/10 p-6 shadow-lg backdrop-blur-xl dark:border-amber-500/30 dark:from-amber-950/40 dark:to-orange-950/30 text-right dir-rtl before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-amber-400/50 before:to-transparent">
+      <div className="relative overflow-hidden rounded-3xl border border-amber-400/40 bg-amber-500/10 p-6 shadow-lg backdrop-blur-xl dark:border-amber-500/30 dark:bg-amber-950/35 text-right dir-rtl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
           <div className="flex items-start gap-4">
             <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-amber-500 text-white shadow-lg shadow-amber-500/30 animate-pulse">
@@ -77,14 +77,14 @@ export function PaymentBanner({ paymentStatus, onUploaded }: { paymentStatus: st
   }
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/10 via-blue-500/5 to-indigo-500/10 p-6 shadow-xl backdrop-blur-2xl dark:border-primary/20 dark:from-primary/20 dark:to-indigo-950/30 text-right dir-rtl before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-blue-500/35 before:to-transparent">
+    <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-primary/10 p-6 shadow-xl backdrop-blur-2xl dark:border-primary/20 dark:bg-primary/15 text-right dir-rtl">
       {/* Decorative Glow */}
       <div className="absolute top-0 left-0 h-40 w-40 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
 
       <div className="relative space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-tr from-primary to-blue-600 text-white shadow-lg shadow-primary/30">
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/25">
               <ShieldCheck className="h-6 w-6" />
             </div>
             <div>
@@ -157,13 +157,12 @@ export function PaymentBanner({ paymentStatus, onUploaded }: { paymentStatus: st
             if (e.dataTransfer.files?.[0]) handleFileSelect(e.dataTransfer.files[0]);
           }}
           onClick={() => !selectedFile && fileRef.current?.click()}
-          className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center transition-all cursor-pointer ${
-            dragActive
+          className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center transition-all cursor-pointer ${dragActive
               ? "border-primary bg-primary/10 scale-[1.01]"
               : previewUrl
-              ? "border-emerald-500/50 bg-emerald-50/40 dark:bg-emerald-950/20"
-              : "border-primary/30 bg-card/60 hover:border-primary hover:bg-card/90"
-          }`}
+                ? "border-emerald-500/50 bg-emerald-50/40 dark:bg-emerald-950/20"
+                : "border-primary/30 bg-card/60 hover:border-primary hover:bg-card/90"
+            }`}
         >
           <input
             ref={fileRef}
@@ -235,7 +234,7 @@ export function PaymentBanner({ paymentStatus, onUploaded }: { paymentStatus: st
               <p className="text-xs text-muted-foreground">
                 اضغط لاختيار الصورة أو التقاط صورة واضحة للإيصال فوراً من الموبايل
               </p>
-              
+
               <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
                 <Button
                   type="button"
