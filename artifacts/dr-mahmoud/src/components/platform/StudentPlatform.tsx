@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BarChart3,
@@ -296,12 +297,86 @@ export function getNotificationTarget(notification: { title: string; message: st
   return { tab: "dashboard", label: "الرئيسية 🏠" };
 }
 
+export type PlatformTab =
+  | "dashboard"
+  | "lessons"
+  | "kholasa"
+  | "mistakes"
+  | "essay-exams"
+  | "summaries"
+  | "files"
+  | "quizzes"
+  | "self-assessment"
+  | "profile";
+
+export function resolveTabFromPath(pathname: string): PlatformTab {
+  const clean = pathname.split("?")[0].replace(/^\/platform\/?/, "").split("/")[0].toLowerCase().trim();
+  switch (clean) {
+    case "lessons":
+    case "videos":
+      return "lessons";
+    case "kholasa":
+      return "kholasa";
+    case "mistakes":
+      return "mistakes";
+    case "essay-exams":
+    case "essay":
+    case "essays":
+      return "essay-exams";
+    case "summaries":
+      return "summaries";
+    case "files":
+      return "files";
+    case "quizzes":
+    case "exams":
+      return "quizzes";
+    case "self-assessment":
+    case "assessment":
+      return "self-assessment";
+    case "profile":
+      return "profile";
+    case "dashboard":
+    case "":
+    default:
+      return "dashboard";
+  }
+}
+
+export function buildPlatformUrl(targetTab: PlatformTab): string {
+  if (targetTab === "dashboard") return "/platform";
+  return `/platform/${targetTab}`;
+}
+
 export function StudentPlatform() {
+  const [location, setLocation] = useLocation();
+  const tab = useMemo(() => resolveTabFromPath(location), [location]);
+
+  const setTab = useCallback((newTab: PlatformTab) => {
+    const targetUrl = buildPlatformUrl(newTab);
+    if (location !== targetUrl) {
+      setLocation(targetUrl);
+    }
+  }, [location, setLocation]);
+
+  useEffect(() => {
+    const tabTitles: Record<PlatformTab, string> = {
+      dashboard: "الرئيسية",
+      lessons: "فيديوهات المنصة والدروس",
+      kholasa: "الخلاصة والخرائط الذهنية",
+      mistakes: "ركن غلطاتي والتشخيص الذكي",
+      "essay-exams": "الامتحانات المقالية",
+      summaries: "مذكراتي وتلخيصاتي",
+      files: "الملفات والملازم التعليمية",
+      quizzes: "الاختبارات الإلكترونية",
+      "self-assessment": "التقييم الذاتي وبنك الأسئلة",
+      profile: "الحساب الشخصي والإعدادات",
+    };
+    const title = tabTitles[tab] || "المنصة التعليمية";
+    document.title = `${title} | د. محمود المهدي`;
+  }, [tab]);
+
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<
-    "dashboard" | "lessons" | "kholasa" | "mistakes" | "essay-exams" | "summaries" | "files" | "quizzes" | "self-assessment" | "profile"
-  >("dashboard");
   const [files, setFiles] = useState<LearningFile[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [videos, setVideos] = useState<VideoSummary[]>([]);

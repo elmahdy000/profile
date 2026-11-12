@@ -78,7 +78,7 @@ function PageLoader() {
 
 function App() {
   const [location] = useLocation();
-  const pageAlreadyHasThemeToggle = location === "/" || location === "/platform";
+  const pageAlreadyHasThemeToggle = location === "/" || location.startsWith("/platform");
 
   useEffect(() => {
     sessionStorage.removeItem("chunk_reload_retry");
@@ -107,6 +107,7 @@ function App() {
                 </Route>
                 <Route path="/university" component={UniversityPage} />
                 <Route path="/curriculum" component={CurriculumPage} />
+                <Route path="/platform/:tab*" component={PlatformPage} />
                 <Route path="/platform" component={PlatformPage} />
                 <Route path="/parent" component={ParentPortalPage} />
                 <Route path="/honor-board" component={HonorBoardPage} />
