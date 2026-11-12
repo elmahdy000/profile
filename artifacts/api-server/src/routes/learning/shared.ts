@@ -341,6 +341,24 @@ export const CANONICAL_CURRICULUM_DATA: CanonicalCurriculumStage[] = [
           "شامل مراجعة الوحدة الثانية",
         ],
       },
+      {
+        unit: "الوحدة الثالثة: تطبيقات الويب",
+        lessons: [
+          "الدرس الأول: البنية العامة لتطبيقات الويب",
+          "الدرس الثاني: طرق الاتصال في تطبيقات الويب",
+          "الدرس الثالث: أساسيات تكنولوجيا الواجهة الأمامية",
+          "شامل مراجعة الوحدة الثالثة",
+        ],
+      },
+      {
+        unit: "الوحدة الرابعة: تصميم الويب والوسائط",
+        lessons: [
+          "الدرس الأول: أنواع الوسائط وخصائصها",
+          "الدرس الثاني: تصميم المعلومات وتجربة المستخدم للمواقع",
+          "الدرس الثالث: أساليب تقييم المواقع الإلكترونية",
+          "الدرس الرابع: عملية التحسين التكراري للمواقع",
+        ],
+      },
     ],
   },
   {
@@ -363,6 +381,24 @@ export const CANONICAL_CURRICULUM_DATA: CanonicalCurriculumStage[] = [
           "Lesson 2-2 – Network Security Design & Encryption Technologies",
           "Lesson 2-3 – Security Incident Response & Risk Management",
           "Unit 2 Comprehensive Review",
+        ],
+      },
+      {
+        unit: "الوحدة الثالثة: تطبيقات الويب (Unit 3: Web Applications)",
+        lessons: [
+          "Lesson 3-1 – General Architecture of Web Applications",
+          "Lesson 3-2 – Communication Methods in Web Applications",
+          "Lesson 3-3 – Fundamentals of Front-End Technology",
+          "Unit 3 Comprehensive Review",
+        ],
+      },
+      {
+        unit: "الوحدة الرابعة: تصميم الويب والوسائط (Unit 4: Web Design and Media)",
+        lessons: [
+          "Lesson 4-1 – Media Types and Their Characteristics",
+          "Lesson 4-2 – Information Design and User Experience for Websites",
+          "Lesson 4-3 – Website Evaluation Methods",
+          "Lesson 4-4 – Iterative Website Improvement Process",
         ],
       },
     ],
@@ -481,6 +517,25 @@ export function normalizeCanonicalUnit(stageName?: string | null, unitName?: str
   // 1. تانية بكالوريا عربي
   if (!stage || stage === "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي") {
     if (
+      u.includes("الرابعة") ||
+      u.includes("تصميم الويب") ||
+      u.includes("الوسائط") ||
+      lower.includes("unit 4") ||
+      lower.includes("unit4")
+    ) {
+      return "الوحدة الرابعة: تصميم الويب والوسائط";
+    }
+    if (
+      u.includes("الثالثة") ||
+      u.includes("التالتة") ||
+      u.includes("تطبيقات الويب") ||
+      u.includes("الويب") ||
+      lower.includes("unit 3") ||
+      lower.includes("unit3")
+    ) {
+      return "الوحدة الثالثة: تطبيقات الويب";
+    }
+    if (
       u.includes("الثانية") ||
       u.includes("التانية") ||
       u.includes("السيبراني") ||
@@ -506,6 +561,25 @@ export function normalizeCanonicalUnit(stageName?: string | null, unitName?: str
 
   // 2. تانية بكالوريا لغات
   if (stage === "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)") {
+    if (
+      lower.includes("unit 4") ||
+      lower.includes("unit4") ||
+      lower.includes("web design") ||
+      lower.includes("media") ||
+      u.includes("الرابعة")
+    ) {
+      return "الوحدة الرابعة: تصميم الويب والوسائط (Unit 4: Web Design and Media)";
+    }
+    if (
+      lower.includes("unit 3") ||
+      lower.includes("unit3") ||
+      lower.includes("web application") ||
+      lower.includes("web app") ||
+      u.includes("الثالثة") ||
+      u.includes("التالتة")
+    ) {
+      return "الوحدة الثالثة: تطبيقات الويب (Unit 3: Web Applications)";
+    }
     if (
       lower.includes("unit 2") ||
       lower.includes("unit2") ||
@@ -606,6 +680,38 @@ export function normalizeCanonicalLesson(
       }
     }
 
+    // 3.5. Stage 1: تانية بكالوريا عربي - الوحدة الثالثة: تطبيقات الويب
+    if (canonicalStage === "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي" && canonicalUnit.includes("الثالثة")) {
+      if (raw.includes("الثالث") || lower.includes("3") || raw.includes("واجهة") || raw.includes("أمامية") || raw.includes("html")) {
+        return "الدرس الثالث: أساسيات تكنولوجيا الواجهة الأمامية";
+      }
+      if (raw.includes("الثاني") || raw.includes("الثانى") || lower.includes("2") || raw.includes("اتصال")) {
+        return "الدرس الثاني: طرق الاتصال في تطبيقات الويب";
+      }
+      if (raw.includes("الأول") || raw.includes("الاول") || lower.includes("1") || raw.includes("بنية")) {
+        return "الدرس الأول: البنية العامة لتطبيقات الويب";
+      }
+      if (raw.includes("شامل") || raw.includes("مراجعة")) {
+        return "شامل مراجعة الوحدة الثالثة";
+      }
+    }
+
+    // 3.6. Stage 1: تانية بكالوريا عربي - الوحدة الرابعة: تصميم الويب والوسائط
+    if (canonicalStage === "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس عربي" && canonicalUnit.includes("الرابعة")) {
+      if (raw.includes("الرابع") || lower.includes("4") || raw.includes("تكراري")) {
+        return "الدرس الرابع: عملية التحسين التكراري للمواقع";
+      }
+      if (raw.includes("الثالث") || lower.includes("3") || raw.includes("تقييم")) {
+        return "الدرس الثالث: أساليب تقييم المواقع الإلكترونية";
+      }
+      if (raw.includes("الثاني") || raw.includes("الثانى") || lower.includes("2") || raw.includes("معلومات") || raw.includes("مستخدم")) {
+        return "الدرس الثاني: تصميم المعلومات وتجربة المستخدم للمواقع";
+      }
+      if (raw.includes("الأول") || raw.includes("الاول") || lower.includes("1") || raw.includes("وسائط")) {
+        return "الدرس الأول: أنواع الوسائط وخصائصها";
+      }
+    }
+
     // 4. Stage 2: تانية بكالوريا لغات - Unit 1: AI
     if (canonicalStage === "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)" && canonicalUnit.includes("Artificial Intelligence")) {
       if (lower.includes("1-4") || lower.includes("ethics") || lower.includes("fourth")) {
@@ -638,6 +744,38 @@ export function normalizeCanonicalLesson(
       }
       if (lower.includes("comprehensive") || lower.includes("review") || raw.includes("شامل")) {
         return "Unit 2 Comprehensive Review";
+      }
+    }
+
+    // 5.5. Stage 2: تانية بكالوريا لغات - Unit 3: Web Applications
+    if (canonicalStage === "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)" && canonicalUnit.includes("Web Applications")) {
+      if (lower.includes("3-3") || lower.includes("front-end") || lower.includes("frontend") || lower.includes("third")) {
+        return "Lesson 3-3 – Fundamentals of Front-End Technology";
+      }
+      if (lower.includes("3-2") || lower.includes("communication") || lower.includes("second")) {
+        return "Lesson 3-2 – Communication Methods in Web Applications";
+      }
+      if (lower.includes("3-1") || lower.includes("architecture") || lower.includes("general") || lower.includes("first")) {
+        return "Lesson 3-1 – General Architecture of Web Applications";
+      }
+      if (lower.includes("comprehensive") || lower.includes("review") || raw.includes("شامل")) {
+        return "Unit 3 Comprehensive Review";
+      }
+    }
+
+    // 5.6. Stage 2: تانية بكالوريا لغات - Unit 4: Web Design and Media
+    if (canonicalStage === "البكالوريا · الصف الثاني (تانية بكالوريا) · مدارس لغات (Languages)" && canonicalUnit.includes("Web Design")) {
+      if (lower.includes("4-4") || lower.includes("iterative") || lower.includes("improvement")) {
+        return "Lesson 4-4 – Iterative Website Improvement Process";
+      }
+      if (lower.includes("4-3") || lower.includes("evaluation")) {
+        return "Lesson 4-3 – Website Evaluation Methods";
+      }
+      if (lower.includes("4-2") || lower.includes("user experience") || lower.includes("information design")) {
+        return "Lesson 4-2 – Information Design and User Experience for Websites";
+      }
+      if (lower.includes("4-1") || lower.includes("media types") || lower.includes("characteristics")) {
+        return "Lesson 4-1 – Media Types and Their Characteristics";
       }
     }
 

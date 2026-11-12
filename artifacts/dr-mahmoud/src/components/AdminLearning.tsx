@@ -56,6 +56,7 @@ import { AttendanceScannerTab } from "./admin/attendance/AttendanceScannerTab";
 import { TestBankTab } from "./admin/learning/TestBankTab";
 import { SelfAssessmentAdminTab } from "./admin/learning/SelfAssessmentAdminTab";
 import { EssayExamsAdminTab } from "./admin/learning/EssayExamsAdminTab";
+import { KholasaAdminTab } from "./kholasa/KholasaAdminTab";
 
 type Student = PlatformStudent & {
   accessCode?: string | null;
@@ -234,6 +235,7 @@ export type AdminLearningTab =
   | "notifications"
   | "files"
   | "testbank"
+  | "kholasa"
   | "quizzes"
   | "essay-exams"
   | "subscriptions"
@@ -1288,6 +1290,7 @@ export function AdminLearning({
     ["payments", "إيصالات الدفع", FileCheck2],
     ["files", "الملفات", Folder],
     ["testbank", "بنك الأسئلة الشامل 📚", BookOpen],
+    ["kholasa", "الزتونات والخرائط 💎", Sparkles],
     ["quizzes", "الاختبارات", ClipboardCheck],
     ["essay-exams", "الامتحانات وبنك الأسئلة المقالية", FileEdit],
     ["self-assessment-packs", "باقات التقييم الذاتي ⚡", Sparkles],
@@ -1312,6 +1315,7 @@ export function AdminLearning({
     notifications: ["إرسال إشعار للطلاب", "أرسل تنبيهًا أو إشعارًا عامًا لجميع الطلاب أو مرحلة دراسية محددة."],
     files: ["مكتبة الملفات التعليمية", "ارفع الملفات وحدد مكان ظهورها للطلاب أو داخل الدروس."],
     testbank: ["بنك الأسئلة الشامل وتوليد الامتحانات", "تنظيم الأسئلة هرمياً: المرحلة ⬅️ الوحدة ⬅️ الدرس، رفع الملفات (Word/PDF/نص) وتوليد الامتحانات تلقائياً."],
+    kholasa: ["إدارة الزتونات والخرائط الذهنية", "تعديل المفاهيم والتعريفات وتكات الامتحان وبطاقات المراجعة ورفع صور الخرائط الذهنية وربطها بالفيديوهات."],
     quizzes: ["بناء وإدارة الاختبارات", "أنشئ الاختبارات وحدد الجمهور والإعدادات والأسئلة ثم انشرها."],
     "essay-exams": ["الامتحانات المقالية وبنك الأسئلة المقالي المستقل", "رفع واستيراد الأسئلة المقالية من ملفات Word و PDF، إدارة بنك الأسئلة المقالي، إنشاء الامتحانات ورصد درجات إجابات الطلاب."],
     reports: ["التقارير والمتابعة", "راقب نشاط الطلاب والتقدم ومؤشرات الأداء التعليمية."],
@@ -2254,6 +2258,12 @@ export function AdminLearning({
             <TestBankTab
               adminApi={adminApi}
               onNavigateToQuizzes={() => setTab("quizzes")}
+            />
+          )}
+          {tab === "kholasa" && (
+            <KholasaAdminTab
+              adminApi={adminApi}
+              videoOptions={videoOptions}
             />
           )}
           {tab === "quizzes" && (

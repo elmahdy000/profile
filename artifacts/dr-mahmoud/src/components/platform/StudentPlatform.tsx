@@ -37,6 +37,7 @@ import {
   FileEdit,
   Search,
   KeyRound,
+  Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VideoLessonsSection } from "@/components/YoutubeSection";
@@ -65,6 +66,9 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { FilePreviewModal } from "./FilePreviewModal";
 import { LockedContentNotice } from "./tabs/LockedContentNotice";
 import { CommandPaletteModal } from "./CommandPaletteModal";
+import { KholasaLessonsTab } from "@/components/kholasa/KholasaLessonsTab";
+import { MistakeHubTab } from "@/components/kholasa/MistakeHubTab";
+import { BidiStatement } from "@/components/kholasa/BidiStatement";
 
 import type {
   Student,
@@ -296,7 +300,7 @@ export function StudentPlatform() {
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<
-    "dashboard" | "lessons" | "essay-exams" | "summaries" | "compiler" | "files" | "quizzes" | "self-assessment" | "profile"
+    "dashboard" | "lessons" | "kholasa" | "mistakes" | "essay-exams" | "summaries" | "compiler" | "files" | "quizzes" | "self-assessment" | "profile"
   >("dashboard");
   const [files, setFiles] = useState<LearningFile[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -974,6 +978,8 @@ export function StudentPlatform() {
   const nav = [
     ["dashboard", "الرئيسية", Home],
     ["lessons", "كورساتي", BookOpen],
+    ["kholasa", "الخلاصة والزتونة 💎", Sparkles],
+    ["mistakes", "ركن غلطاتي 🎯", Target],
     ["essay-exams", "الامتحانات المقالية ✍️", FileEdit],
     ["quizzes", "الاختبارات", ClipboardCheck],
     ["summaries", "مذكراتي 📝", FileText],
@@ -989,6 +995,7 @@ export function StudentPlatform() {
       items: [
         { id: "dashboard" as const, label: "الرئيسية", icon: Home },
         { id: "lessons" as const, label: "كورساتي والمحاضرات", icon: BookOpen },
+        { id: "kholasa" as const, label: "الخلاصة والزتونة 💎", icon: Sparkles },
         { id: "summaries" as const, label: "مذكراتي وتلخيصاتي", icon: FileText },
         { id: "files" as const, label: "الملفات والملازم", icon: FolderOpen },
       ],
@@ -997,6 +1004,7 @@ export function StudentPlatform() {
       title: "الاختبارات والتقييم",
       items: [
         { id: "quizzes" as const, label: "الاختبارات الدورية", icon: ClipboardCheck },
+        { id: "mistakes" as const, label: "ركن غلطاتي 🎯", icon: Target },
         { id: "essay-exams" as const, label: "الامتحانات المقالية", icon: FileEdit },
         { id: "self-assessment" as const, label: "التقييم الذاتي", icon: Sparkles },
         { id: "compiler" as const, label: "محرر C++ التفاعلي", icon: Code2 },
@@ -1013,6 +1021,8 @@ export function StudentPlatform() {
   const navLabels: Record<string, string> = {
     dashboard: "الرئيسية",
     lessons: "كورساتي",
+    kholasa: "الخلاصة والزتونة",
+    mistakes: "ركن غلطاتي",
     "essay-exams": "الامتحانات المقالية",
     quizzes: "الاختبارات",
     summaries: "مذكراتي",
@@ -1119,7 +1129,7 @@ export function StudentPlatform() {
                   {section.title}
                 </div>
                 {section.items.map((item) => {
-                  const isLockedTab = isUnpaid && ["quizzes", "essay-exams", "self-assessment", "files", "summaries", "compiler"].includes(item.id);
+                  const isLockedTab = isUnpaid && ["quizzes", "essay-exams", "self-assessment", "kholasa", "mistakes", "files", "summaries", "compiler"].includes(item.id);
                   const isPreviewTab = isUnpaid && item.id === "lessons";
                   const isActive = tab === item.id;
                   const Icon = item.icon;
@@ -1213,6 +1223,8 @@ export function StudentPlatform() {
                 <span className="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5 bg-slate-100/90 dark:bg-[#0D1726] px-2.5 py-1 rounded-lg border border-slate-200/70 dark:border-[#1E2E48] shadow-2xs">
                   {tab === "dashboard" && <Home className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
                   {tab === "lessons" && <BookOpen className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
+                  {tab === "kholasa" && <Sparkles className="h-3.5 w-3.5 text-amber-500" />}
+                  {tab === "mistakes" && <Target className="h-3.5 w-3.5 text-rose-500" />}
                   {tab === "quizzes" && <ClipboardCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
                   {tab === "essay-exams" && <FileEdit className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
                   {tab === "summaries" && <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
@@ -1452,6 +1464,33 @@ export function StudentPlatform() {
               onStartQuiz={startQuiz}
               initialVideoId={initialVideoId}
             />
+          ) : tab === "kholasa" ? (
+            isUnpaid ? (
+              <LockedContentNotice
+                title="الخلاصة والزتونة والخرائط الذهنية"
+                description="تم قفل الزتونة والخرائط الذهنية وبطاقات المراجعة لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
+                onGoToPreview={() => setTab("lessons")}
+                onOpenPayment={() => setShowPaymentModal(true)}
+              />
+            ) : (
+              <KholasaLessonsTab
+                onPlayVideo={(videoId) => {
+                  setInitialVideoId(videoId);
+                  setTab("lessons");
+                }}
+              />
+            )
+          ) : tab === "mistakes" ? (
+            isUnpaid ? (
+              <LockedContentNotice
+                title="ركن غلطاتي والتشخيص الذكي"
+                description="تم قفل ركن غلطاتي وامتحانات المراجعة الذكية لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
+                onGoToPreview={() => setTab("lessons")}
+                onOpenPayment={() => setShowPaymentModal(true)}
+              />
+            ) : (
+              <MistakeHubTab />
+            )
           ) : tab === "essay-exams" ? (
             isUnpaid ? (
               <LockedContentNotice
@@ -1593,13 +1632,13 @@ export function StudentPlatform() {
             onClick={() => setSidebarOpen((prev) => !prev)}
             aria-label="فتح القائمة الكاملة"
             className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-bold transition-all duration-150 active:scale-95 cursor-pointer relative ${
-              sidebarOpen || ["files", "compiler", "profile", "essay-exams", "self-assessment"].includes(tab)
+              sidebarOpen || ["files", "compiler", "profile", "essay-exams", "self-assessment", "kholasa", "mistakes"].includes(tab)
                 ? "bg-blue-50/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
             }`}
           >
             <Menu className="h-[20px] w-[20px]" />
-            <span className="truncate max-w-[60px]">{["files", "compiler", "profile", "essay-exams", "self-assessment"].includes(tab) ? (navLabels[tab] || "المزيد") : "المزيد"}</span>
+            <span className="truncate max-w-[60px]">{["files", "compiler", "profile", "essay-exams", "self-assessment", "kholasa", "mistakes"].includes(tab) ? (navLabels[tab] || "المزيد") : "المزيد"}</span>
           </button>
         </div>
       </nav>
@@ -1837,7 +1876,7 @@ export function StudentPlatform() {
                                     <span className="inline-flex items-center justify-center h-7 min-w-[28px] px-2 rounded-lg bg-blue-50 dark:bg-blue-950/70 border border-blue-200/60 dark:border-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-black font-mono tabular-nums ml-2 shrink-0">
                                       #{qi + 1}
                                     </span>
-                                    {q.prompt}
+                                      <BidiStatement text={q.prompt} />
                                   </h3>
                                 );
                               }

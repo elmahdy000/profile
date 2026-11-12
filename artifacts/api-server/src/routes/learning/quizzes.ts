@@ -21,6 +21,7 @@ import {
 } from "../../middleware/student-auth";
 import { sendPushToStudent, sendPushToStudents } from "../../services/push-notifications";
 import { logAudit } from "../../lib/audit";
+import { recordSubmissionMistakes } from "../../lib/kholasa-helpers";
 import {
   normalizeQuestionPrompt,
   cleanOptionString,
@@ -566,10 +567,13 @@ router.post("/admin/learning/quizzes/global-toggle", requireAdmin, async (req, r
       } catch {}
 
       try {
-        await logAudit(req, "PAUSE_ALL_EXAMS", "exams", {
-          backupCount,
-          note: "تم إيقاف جميع الامتحانات مؤقتاً بواسطة الأدمن",
-        });
+        await logAudit(
+          req,
+          "PAUSE_ALL_EXAMS",
+          "exams",
+          null,
+          `تم إيقاف جميع الامتحانات مؤقتاً بواسطة الأدمن (${backupCount} امتحان)`,
+        );
       } catch {}
 
       res.json({
@@ -615,10 +619,13 @@ router.post("/admin/learning/quizzes/global-toggle", requireAdmin, async (req, r
       }
 
       try {
-        await logAudit(req, "RESUME_ALL_EXAMS", "exams", {
-          restoredCount: restoredQuizzes,
-          note: "تم إعادة تفعيل جميع الامتحانات بواسطة الأدمن",
-        });
+        await logAudit(
+          req,
+          "RESUME_ALL_EXAMS",
+          "exams",
+          null,
+          `تم إعادة تفعيل جميع الامتحانات بواسطة الأدمن (${restoredQuizzes} امتحان)`,
+        );
       } catch {}
 
       res.json({
@@ -1319,6 +1326,21 @@ router.post(
       } catch (notifErr) {
         console.error("Failed to insert quiz completion notification:", notifErr);
       }
+
+      // Non-blocking: record wrong answers into Mistakes Hub & promote mastered ones
+      try {
+        await recordSubmissionMistakes({
+          studentId: student.id,
+          stage: quiz.stage || (Array.isArray(quiz.stages) ? quiz.stages[0] : null),
+          sourceType: "quiz",
+          sourceId: quiz.id,
+          items: details.map((d, idx) => ({
+            question: quiz.questions[idx],
+            selectedOption: d.selectedOption,
+            isCorrect: d.isCorrect,
+          })),
+        });
+      } catch {}
 
       // Return correctIndex per question so frontend can highlight right/wrong
       const showExplanations = quiz.showExplanations !== false;

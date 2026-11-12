@@ -1,0 +1,1229 @@
+import { randomBytes } from "crypto";
+import fs from "fs";
+import path from "path";
+import multer from "multer";
+import { Router, type IRouter } from "express";
+import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
+import {
+  db,
+  essayQuestionBankTable,
+  lessonKholasaMaterialsTable,
+  questionBankTable,
+  studentBookmarksTable,
+  studentDailyChallengesTable,
+  studentMistakesTable,
+  videosTable,
+  type QuizQuestion,
+} from "@workspace/db";
+import { isAdminRequest, requireAdmin } from "../../middleware/auth";
+import {
+  canStudentAccessContent,
+  getApprovedStudent,
+  requireStudent,
+} from "../../middleware/student-auth";
+import {
+  assertActivePaidStudent,
+  calculateStreak,
+  getCairoDayKey,
+  kholasaMindmapsDir,
+  recordSubmissionMistakes,
+  type MistakeRecordingItem,
+} from "../../lib/kholasa-helpers";
+import {
+  allowedImageExtensions,
+  normalizeCanonicalStage,
+  parseLessonSortOrder,
+  parseUnitSortOrder,
+} from "./shared";
+
+const router: IRouter = Router();
+
+const mindmapUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, kholasaMindmapsDir),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname || "").toLowerCase();
+      const safeExt = allowedImageExtensions.has(ext) ? ext : ".png";
+      cb(null, `mm-${Date.now()}-${randomBytes(6).toString("hex")}${safeExt}`);
+    },
+  }),
+  limits: { fileSize: 15 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname || "").toLowerCase();
+    const mime = (file.mimetype || "").toLowerCase();
+    if (mime.startsWith("image/") || allowedImageExtensions.has(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error("يُسمح برفع صور الخرائط الذهنية فقط (PNG / JPG / WebP)"));
+    }
+  },
+});
+
+function sanitizeQuestionForStudent(q: QuizQuestion) {
+  const { correctIndex: _ci, correctAnswer: _ca, ...rest } = q;
+  return rest;
+}
+
+// ── 1. Protected Mindmap / Kholasa Media Endpoint ─────────────────────────────
+router.get("/learning/kholasa/media/:filename", async (req, res, next) => {
+  try {
+    const isAdmin = isAdminRequest(req);
+    if (!isAdmin) {
+      const student = await getApprovedStudent(req);
+      if (!student || student.status !== "approved" || student.paymentStatus !== "paid") {
+        res.status(403).json({
+          error: "عرض الخرائط الذهنية متاح فقط للطلاب المفعلين والمسددين.",
+          code: "PAYMENT_REQUIRED",
+        });
+        return;
+      }
+    }
+
+    const rawName = String(req.params.filename || "");
+    const safeName = path.basename(rawName);
+    if (!safeName || !/^[a-zA-Z0-9._-]+$/.test(safeName)) {
+      res.status(400).json({ error: "اسم الملف غير صالح" });
+      return;
+    }
+
+    const fullPath = path.resolve(kholasaMindmapsDir, safeName);
+    const baseDir = path.resolve(kholasaMindmapsDir);
+    if (!fullPath.startsWith(baseDir + path.sep)) {
+      res.status(403).json({ error: "وصول مرفوض" });
+      return;
+    }
+
+    if (!fs.existsSync(fullPath)) {
+      res.status(404).json({ error: "الصورة غير موجودة" });
+      return;
+    }
+
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Cache-Control", "private, max-age=86400");
+    res.sendFile(fullPath);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ── 2. Student: List All Accessible Kholasa Materials (Active Paid Only) ─────
+router.get("/learning/kholasa/materials", requireStudent, async (_req, res, next) => {
+  try {
+    const student = assertActivePaidStudent(res);
+    if (!student) return;
+
+    const [allMaterials, bookmarks, videos, qbCounts, essayCounts] = await Promise.all([
+      db
+        .select()
+        .from(lessonKholasaMaterialsTable)
+        .where(eq(lessonKholasaMaterialsTable.isPublished, true))
+        .orderBy(lessonKholasaMaterialsTable.lessonOrder, lessonKholasaMaterialsTable.id),
+      db
+        .select()
+        .from(studentBookmarksTable)
+        .where(eq(studentBookmarksTable.studentId, student.id)),
+      db
+        .select({
+          id: videosTable.id,
+          title: videosTable.title,
+          durationText: videosTable.durationText,
+          thumbnailUrl: videosTable.thumbnailUrl,
+        })
+        .from(videosTable)
+        .where(eq(videosTable.isPublished, true)),
+      db
+        .select({
+          stage: questionBankTable.stage,
+          unit: questionBankTable.unit,
+          lesson: questionBankTable.lesson,
+          qType: sql<string>`COALESCE(${questionBankTable.question}->>'questionType', 'mcq')`,
+          cnt: sql<number>`count(*)::int`,
+        })
+        .from(questionBankTable)
+        .groupBy(
+          questionBankTable.stage,
+          questionBankTable.unit,
+          questionBankTable.lesson,
+          sql`COALESCE(${questionBankTable.question}->>'questionType', 'mcq')`,
+        ),
+      db
+        .select({
+          stage: essayQuestionBankTable.stage,
+          unit: essayQuestionBankTable.unit,
+          lesson: essayQuestionBankTable.lesson,
+          cnt: sql<number>`count(*)::int`,
+        })
+        .from(essayQuestionBankTable)
+        .groupBy(
+          essayQuestionBankTable.stage,
+          essayQuestionBankTable.unit,
+          essayQuestionBankTable.lesson,
+        ),
+    ]);
+
+    const filtered = allMaterials.filter((m) =>
+      canStudentAccessContent(student, "عام", m.stage, m.stages, m.courseId),
+    );
+
+    const bookmarkedKeys = new Set(
+      bookmarks.map((b) => `${b.itemType}:${b.itemKey}`),
+    );
+    const videoById = new Map(videos.map((v) => [v.id, v]));
+
+    const countsMap = new Map<string, { mcq: number; trueFalse: number; essay: number }>();
+    for (const row of qbCounts) {
+      const key = `${row.stage || ""}||${row.unit || ""}||${row.lesson || ""}`;
+      const curr = countsMap.get(key) || { mcq: 0, trueFalse: 0, essay: 0 };
+      if (row.qType === "true_false") curr.trueFalse += Number(row.cnt) || 0;
+      else curr.mcq += Number(row.cnt) || 0;
+      countsMap.set(key, curr);
+    }
+    for (const row of essayCounts) {
+      const key = `${row.stage || ""}||${row.unit || ""}||${row.lesson || ""}`;
+      const curr = countsMap.get(key) || { mcq: 0, trueFalse: 0, essay: 0 };
+      curr.essay += Number(row.cnt) || 0;
+      countsMap.set(key, curr);
+    }
+
+    filtered.sort((a, b) => {
+      const unitDiff = parseUnitSortOrder(a.unit) - parseUnitSortOrder(b.unit);
+      if (unitDiff !== 0) return unitDiff;
+      const lessonDiff = parseLessonSortOrder(a.lesson) - parseLessonSortOrder(b.lesson);
+      if (lessonDiff !== 0) return lessonDiff;
+      return a.lessonOrder - b.lessonOrder;
+    });
+
+    res.json({
+      materials: filtered.map((m) => {
+        const qCounts = countsMap.get(`${m.stage}||${m.unit}||${m.lesson}`) || {
+          mcq: 0,
+          trueFalse: 0,
+          essay: 0,
+        };
+        return {
+          ...m,
+          isBookmarked: bookmarkedKeys.has(`lesson:${m.id}`),
+          video: m.videoId ? videoById.get(m.videoId) ?? null : null,
+          questionCounts: qCounts,
+        };
+      }),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ── 2.5. Student: Get Lesson Questions by Type (MCQ / True-False / Essay) ───
+router.get("/learning/kholasa/materials/:id/questions", requireStudent, async (req, res, next) => {
+  try {
+    const student = assertActivePaidStudent(res);
+    if (!student) return;
+
+    const materialId = Number(req.params.id);
+    if (!Number.isInteger(materialId) || materialId <= 0) {
+      res.status(400).json({ error: "معرف الدرس غير صالح" });
+      return;
+    }
+
+    const [material] = await db
+      .select()
+      .from(lessonKholasaMaterialsTable)
+      .where(
+        and(
+          eq(lessonKholasaMaterialsTable.id, materialId),
+          eq(lessonKholasaMaterialsTable.isPublished, true),
+        ),
+      )
+      .limit(1);
+
+    if (!material) {
+      res.status(404).json({ error: "الدرس غير موجود" });
+      return;
+    }
+
+    if (!canStudentAccessContent(student, "عام", material.stage, material.stages, material.courseId)) {
+      res.status(403).json({ error: "هذا الدرس غير متاح لمرحلتك الدراسية" });
+      return;
+    }
+
+    const qTypeParam = String(req.query.type || "mcq").trim(); // mcq | true_false | essay
+    const diffParam = String(req.query.difficulty || "all").trim(); // all | easy | medium | hard
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(25, Math.max(5, Number(req.query.limit) || 12));
+    const offset = (page - 1) * limit;
+
+    const lessonMatchQb = material.videoId
+      ? or(
+          eq(questionBankTable.lesson, material.lesson),
+          eq(questionBankTable.lessonId, material.videoId),
+        )
+      : eq(questionBankTable.lesson, material.lesson);
+
+    const qbBaseCond = and(
+      eq(questionBankTable.stage, material.stage),
+      eq(questionBankTable.unit, material.unit),
+      lessonMatchQb,
+    );
+
+    const essayBaseCond = and(
+      eq(essayQuestionBankTable.stage, material.stage),
+      eq(essayQuestionBankTable.unit, material.unit),
+      eq(essayQuestionBankTable.lesson, material.lesson),
+    );
+
+    const [qbCountRows, essayCountRow] = await Promise.all([
+      db
+        .select({
+          qType: sql<string>`COALESCE(${questionBankTable.question}->>'questionType', 'mcq')`,
+          cnt: sql<number>`count(*)::int`,
+        })
+        .from(questionBankTable)
+        .where(qbBaseCond)
+        .groupBy(sql`COALESCE(${questionBankTable.question}->>'questionType', 'mcq')`),
+      db
+        .select({ cnt: sql<number>`count(*)::int` })
+        .from(essayQuestionBankTable)
+        .where(essayBaseCond),
+    ]);
+
+    const counts = {
+      mcq: 0,
+      trueFalse: 0,
+      essay: Number(essayCountRow[0]?.cnt) || 0,
+    };
+    for (const r of qbCountRows) {
+      if (r.qType === "true_false") counts.trueFalse += Number(r.cnt) || 0;
+      else counts.mcq += Number(r.cnt) || 0;
+    }
+
+    if (qTypeParam === "essay") {
+      const conds = [essayBaseCond];
+      if (diffParam === "easy" || diffParam === "medium" || diffParam === "hard") {
+        conds.push(eq(essayQuestionBankTable.difficulty, diffParam));
+      }
+      const [items, totalRow] = await Promise.all([
+        db
+          .select({
+            id: essayQuestionBankTable.id,
+            difficulty: essayQuestionBankTable.difficulty,
+            points: essayQuestionBankTable.points,
+            prompt: essayQuestionBankTable.prompt,
+            modelAnswer: essayQuestionBankTable.modelAnswer,
+            explanation: essayQuestionBankTable.explanation,
+            imageUrl: essayQuestionBankTable.imageUrl,
+          })
+          .from(essayQuestionBankTable)
+          .where(and(...conds))
+          .orderBy(essayQuestionBankTable.id)
+          .limit(limit)
+          .offset(offset),
+        db
+          .select({ cnt: sql<number>`count(*)::int` })
+          .from(essayQuestionBankTable)
+          .where(and(...conds)),
+      ]);
+      const total = Number(totalRow[0]?.cnt) || 0;
+      res.json({
+        type: "essay",
+        counts,
+        total,
+        page,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+        items,
+      });
+      return;
+    }
+
+    const qbConds = [
+      qbBaseCond,
+      qTypeParam === "true_false"
+        ? sql`COALESCE(${questionBankTable.question}->>'questionType', 'mcq') = 'true_false'`
+        : sql`COALESCE(${questionBankTable.question}->>'questionType', 'mcq') <> 'true_false'`,
+    ];
+    if (diffParam === "easy" || diffParam === "medium" || diffParam === "hard") {
+      qbConds.push(eq(questionBankTable.difficulty, diffParam));
+    }
+
+    const [rows, totalRow] = await Promise.all([
+      db
+        .select({
+          id: questionBankTable.id,
+          difficulty: questionBankTable.difficulty,
+          concept: questionBankTable.concept,
+          translation: questionBankTable.translation,
+          question: questionBankTable.question,
+        })
+        .from(questionBankTable)
+        .where(and(...qbConds))
+        .orderBy(questionBankTable.id)
+        .limit(limit)
+        .offset(offset),
+      db
+        .select({ cnt: sql<number>`count(*)::int` })
+        .from(questionBankTable)
+        .where(and(...qbConds)),
+    ]);
+
+    const total = Number(totalRow[0]?.cnt) || 0;
+    res.json({
+      type: qTypeParam === "true_false" ? "true_false" : "mcq",
+      counts,
+      total,
+      page,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+      items: rows.map((r) => ({
+        id: r.id,
+        difficulty: r.difficulty,
+        concept: r.concept || r.question.concept || null,
+        translation: r.translation || r.question.translation || null,
+        question: sanitizeQuestionForStudent(r.question),
+      })),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/learning/kholasa/materials/:id/check-answer", requireStudent, async (req, res, next) => {
+  try {
+    const student = assertActivePaidStudent(res);
+    if (!student) return;
+
+    const materialId = Number(req.params.id);
+    const questionBankId = Number(req.body?.questionBankId);
+    const selectedOption = Number(req.body?.selectedOption);
+
+    if (!Number.isInteger(questionBankId) || questionBankId <= 0) {
+      res.status(400).json({ error: "معرف السؤال غير صالح" });
+      return;
+    }
+
+    const [row] = await db
+      .select()
+      .from(questionBankTable)
+      .where(eq(questionBankTable.id, questionBankId))
+      .limit(1);
+
+    if (!row) {
+      res.status(404).json({ error: "السؤال غير موجود" });
+      return;
+    }
+
+    const q = row.question;
+    let resolvedCorrectOption = q.correctIndex;
+    if (q.correctAnswer) {
+      const matchIdx = q.options.findIndex((opt) => opt?.trim() === q.correctAnswer?.trim());
+      if (matchIdx >= 0) resolvedCorrectOption = matchIdx;
+    }
+
+    const selectedText =
+      Number.isInteger(selectedOption) && selectedOption >= 0
+        ? q.options[selectedOption]?.trim()
+        : undefined;
+    const correctText = q.correctAnswer?.trim() || q.options[resolvedCorrectOption]?.trim();
+    const isCorrect = Boolean(
+      Number.isInteger(selectedOption) &&
+        selectedOption >= 0 &&
+        ((selectedText && correctText && selectedText === correctText) ||
+          selectedOption === resolvedCorrectOption),
+    );
+
+    await recordSubmissionMistakes({
+      studentId: student.id,
+      stage: row.stage,
+      unit: row.unit,
+      lesson: row.lesson,
+      sourceType: "quiz",
+      sourceId: Number.isInteger(materialId) ? materialId : null,
+      items: [
+        {
+          question: q,
+          questionBankId: row.id,
+          selectedOption: Number.isInteger(selectedOption) ? selectedOption : -1,
+          isCorrect,
+          unit: row.unit,
+          lesson: row.lesson,
+          concept: row.concept,
+        },
+      ],
+    });
+
+    res.json({
+      isCorrect,
+      correctOption: resolvedCorrectOption,
+      explanation: q.explanation || null,
+      translation: q.translation || row.translation || null,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ── 3. Student: Get Kholasa Material for a Specific Video ────────────────────
+router.get("/learning/kholasa/video/:videoId", requireStudent, async (req, res, next) => {
+  try {
+    const student = assertActivePaidStudent(res);
+    if (!student) return;
+
+    const videoId = Number(req.params.videoId);
+    if (!Number.isInteger(videoId) || videoId <= 0) {
+      res.status(400).json({ error: "رقم الفيديو غير صالح" });
+      return;
+    }
+
+    const [material] = await db
+      .select()
+      .from(lessonKholasaMaterialsTable)
+      .where(
+        and(
+          eq(lessonKholasaMaterialsTable.videoId, videoId),
+          eq(lessonKholasaMaterialsTable.isPublished, true),
+        ),
+      )
+      .limit(1);
+
+    if (!material) {
+      res.json({ material: null });
+      return;
+    }
+
+    if (!canStudentAccessContent(student, "عام", material.stage, material.stages, material.courseId)) {
+      res.status(403).json({ error: "المحتوى غير متاح لمرحلتك الدراسية" });
+      return;
+    }
+
+    const [bookmark] = await db
+      .select({ id: studentBookmarksTable.id })
+      .from(studentBookmarksTable)
+      .where(
+        and(
+          eq(studentBookmarksTable.studentId, student.id),
+          eq(studentBookmarksTable.itemType, "lesson"),
+          eq(studentBookmarksTable.itemKey, String(material.id)),
+        ),
+      )
+      .limit(1);
+
+    res.json({
+      material: {
+        ...material,
+        isBookmarked: Boolean(bookmark),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ── 4. Student: Mistakes Hub (ركن غلطاتي) ─────────────────────────────────────
+router.get("/learning/mistakes", requireStudent, async (_req, res, next) => {
+  try {
+    const student = assertActivePaidStudent(res);
+    if (!student) return;
+
+    const rows = await db
+      .select()
+      .from(studentMistakesTable)
+      .where(eq(studentMistakesTable.studentId, student.id))
+      .orderBy(desc(studentMistakesTable.lastWrongAt));
+
+    const unresolved = rows.filter((r) => !r.mastered);
+    const resolvedCount = rows.length - unresolved.length;
+
+    // Build weakness diagnosis buckets grouped by unit/lesson
+    const bucketMap = new Map<
+      string,
+      {
+        key: string;
+        unit: string;
+        lesson: string | null;
+        count: number;
+        totalWrongs: number;
+      }
+    >();
+
+    for (const r of unresolved) {
+      const unit = r.unit?.trim() || "الوحدة العامة";
+      const lesson = r.lesson?.trim() || null;
+      const key = lesson ? `${unit}::${lesson}` : `${unit}::__unit__`;
+      const existing = bucketMap.get(key);
+      const wrongs = Math.max(1, r.wrongCount || 1);
+      if (existing) {
+        existing.count += 1;
+        existing.totalWrongs += wrongs;
+      } else {
+        bucketMap.set(key, { key, unit, lesson, count: 1, totalWrongs: wrongs });
+      }
+    }
+
+    const breakdown = Array.from(bucketMap.values()).sort((a, b) => {
+      if (b.count !== a.count) return b.count - a.count;
+      return b.totalWrongs - a.totalWrongs;
+    });
+
+    res.json({
+      unresolvedCount: unresolved.length,
+      resolvedCount,
+      totalCount: rows.length,
+      topWeakness: breakdown[0] ?? null,
+      breakdown,
+      mistakes: unresolved.map((m) => ({
+        id: m.id,
+        unit: m.unit,
+        lesson: m.lesson,
+        concept: m.concept,
+        sourceType: m.sourceType,
+        wrongCount: m.wrongCount,
+        lastWrongAt: m.lastWrongAt,
+        question: m.questionSnapshot,
+        lastWrongOption: m.lastWrongOption,
+      })),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/learning/mistakes/practice", requireStudent, async (req, res, next) => {
+  try {
+    const student = assertActivePaidStudent(res);
+    if (!student) return;
+
+    const unitFilter = typeof req.body?.unit === "string" ? req.body.unit.trim() : "";
+    const lessonFilter = typeof req.body?.lesson === "string" ? req.body.lesson.trim() : "";
+    const limitCount = Math.min(30, Math.max(1, Number(req.body?.limit) || 15));
+
+    const conditions = [
+      eq(studentMistakesTable.studentId, student.id),
+      eq(studentMistakesTable.mastered, false),
+    ];
+    if (unitFilter) conditions.push(eq(studentMistakesTable.unit, unitFilter));
+    if (lessonFilter) conditions.push(eq(studentMistakesTable.lesson, lessonFilter));
+
+    const rows = await db
+      .select()
+      .from(studentMistakesTable)
+      .where(and(...conditions))
+      .orderBy(desc(studentMistakesTable.wrongCount), desc(studentMistakesTable.lastWrongAt))
+      .limit(limitCount);
+
+    if (rows.length === 0) {
+      res.status(404).json({ error: "لا توجد أخطاء متبقية ضمن هذا النطاق حالياً!" });
+      return;
+    }
+
+    res.json({
+      total: rows.length,
+      items: rows.map((r) => ({
+        mistakeId: r.id,
+        unit: r.unit,
+        lesson: r.lesson,
+        concept: r.concept,
+        wrongCount: r.wrongCount,
+        question: sanitizeQuestionForStudent(r.questionSnapshot),
+      })),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/learning/mistakes/practice/submit", requireStudent, async (req, res, next) => {
+  try {
+    const student = assertActivePaidStudent(res);
+    if (!student) return;
+
+    const rawAnswers = Array.isArray(req.body?.answers) ? req.body.answers : [];
+    const mistakeIds = rawAnswers
+      .map((a: any) => Number(a?.mistakeId))
+      .filter((id: number) => Number.isInteger(id) && id > 0);
+
+    if (mistakeIds.length === 0) {
+      res.status(400).json({ error: "لم يتم إرسال إجابات صالحة" });
+      return;
+    }
+
+    const rows = await db
+      .select()
+      .from(studentMistakesTable)
+      .where(
+        and(
+          eq(studentMistakesTable.studentId, student.id),
+          inArray(studentMistakesTable.id, mistakeIds),
+        ),
+      );
+
+    const rowById = new Map(rows.map((r) => [r.id, r]));
+    const recordingItems: MistakeRecordingItem[] = [];
+    const review = [];
+    let correctCount = 0;
+
+    for (const ans of rawAnswers) {
+      const mId = Number(ans?.mistakeId);
+      const row = rowById.get(mId);
+      if (!row) continue;
+
+      const selectedOption = Number.isInteger(Number(ans?.selectedOption))
+        ? Number(ans.selectedOption)
+        : -1;
+      const q = row.questionSnapshot;
+      const correctIdx = q.correctIndex;
+      const selectedText = selectedOption >= 0 ? q.options[selectedOption]?.trim() : undefined;
+      const correctText = q.correctAnswer?.trim() || q.options[correctIdx]?.trim();
+      const isCorrect = Boolean(
+        selectedOption >= 0 &&
+          ((selectedText && correctText && selectedText === correctText) ||
+            selectedOption === correctIdx),
+      );
+
+      if (isCorrect) correctCount++;
+
+      recordingItems.push({
+        question: q,
+        questionBankId: row.questionBankId,
+        selectedOption,
+        isCorrect,
+        unit: row.unit,
+        lesson: row.lesson,
+        concept: row.concept,
+      });
+
+      review.push({
+        mistakeId: row.id,
+        prompt: q.prompt,
+        options: q.options,
+        selectedOption,
+        correctOption: correctIdx,
+        isCorrect,
+        explanation: q.explanation ?? null,
+        translation: q.translation ?? null,
+      });
+    }
+
+    await recordSubmissionMistakes({
+      studentId: student.id,
+      sourceType: "mistakes_practice",
+      items: recordingItems,
+    });
+
+    const total = review.length;
+    const score = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
+    res.json({
+      success: true,
+      correctCount,
+      total,
+      score,
+      review,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/learning/mistakes/:id/resolve", requireStudent, async (req, res, next) => {
+  try {
+    const student = assertActivePaidStudent(res);
+    if (!student) return;
+
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: "معرف السؤال غير صالح" });
+      return;
+    }
+
+    const now = new Date();
+    const [updated] = await db
+      .update(studentMistakesTable)
+      .set({
+        mastered: true,
+        masteredAt: now,
+        correctStreak: sql`${studentMistakesTable.correctStreak} + 1`,
+        updatedAt: now,
+      })
+      .where(and(eq(studentMistakesTable.id, id), eq(studentMistakesTable.studentId, student.id)))
+      .returning({ id: studentMistakesTable.id });
+
+    if (!updated) {
+      res.status(404).json({ error: "العنصر غير موجود" });
+      return;
+    }
+
+    res.json({ success: true, id: updated.id });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ── 5. Student: Daily Challenge & Streak (التحدي اليومي بتوقيت القاهرة) ──────
+router.get("/learning/daily-checkin", requireStudent, async (_req, res, next) => {
+  try {
+    const student = assertActivePaidStudent(res);
+    if (!student) return;
+
+    const todayKey = getCairoDayKey();
+    const rawStage = student.grade === "أخرى" ? student.otherGradeDetail : student.grade;
+    const canonicalStage = normalizeCanonicalStage(rawStage) || rawStage || null;
+
+    let [todayChallenge] = await db
+      .select()
+      .from(studentDailyChallengesTable)
+      .where(
+        and(
+          eq(studentDailyChallengesTable.studentId, student.id),
+          eq(studentDailyChallengesTable.challengeDate, todayKey),
+        ),
+      )
+      .limit(1);
+
+    if (!todayChallenge) {
+      // Pick 5 questions from question_bank strictly matching student's stage
+      const stageConditions = [];
+      if (canonicalStage) {
+        stageConditions.push(
+          or(
+            eq(questionBankTable.stage, canonicalStage),
+            sql`${questionBankTable.stages}::jsonb @> ${JSON.stringify([canonicalStage])}::jsonb`,
+          ),
+        );
+      }
+
+      const candidatePool = await db
+        .select({
+          id: questionBankTable.id,
+          question: questionBankTable.question,
+          unit: questionBankTable.unit,
+          lesson: questionBankTable.lesson,
+          concept: questionBankTable.concept,
+          translation: questionBankTable.translation,
+        })
+        .from(questionBankTable)
+        .where(stageConditions.length ? and(...stageConditions) : undefined)
+        .orderBy(sql`random()`)
+        .limit(5);
+
+      const pickedQuestions: QuizQuestion[] = candidatePool.map((row) => ({
+        ...row.question,
+        id: String(row.id),
+        translation: row.question.translation || row.translation || undefined,
+        concept: row.question.concept || row.concept || undefined,
+      }));
+      const pickedIds = candidatePool.map((row) => row.id);
+
+      const [inserted] = await db
+        .insert(studentDailyChallengesTable)
+        .values({
+          studentId: student.id,
+          challengeDate: todayKey,
+          stage: canonicalStage,
+          questionIds: pickedIds,
+          questions: pickedQuestions,
+          totalQuestions: pickedQuestions.length,
+          completed: false,
+        })
+        .onConflictDoNothing()
+        .returning();
+
+      if (inserted) {
+        todayChallenge = inserted;
+      } else {
+        const [refetched] = await db
+          .select()
+          .from(studentDailyChallengesTable)
+          .where(
+            and(
+              eq(studentDailyChallengesTable.studentId, student.id),
+              eq(studentDailyChallengesTable.challengeDate, todayKey),
+            ),
+          )
+          .limit(1);
+        todayChallenge = refetched;
+      }
+    }
+
+    const completedRows = await db
+      .select({
+        challengeDate: studentDailyChallengesTable.challengeDate,
+        score: studentDailyChallengesTable.score,
+        totalQuestions: studentDailyChallengesTable.totalQuestions,
+      })
+      .from(studentDailyChallengesTable)
+      .where(
+        and(
+          eq(studentDailyChallengesTable.studentId, student.id),
+          eq(studentDailyChallengesTable.completed, true),
+        ),
+      )
+      .orderBy(desc(studentDailyChallengesTable.challengeDate));
+
+    const streak = calculateStreak(
+      completedRows.map((r) => r.challengeDate),
+      todayKey,
+    );
+
+    const questionsPayload = todayChallenge
+      ? todayChallenge.completed
+        ? todayChallenge.questions
+        : todayChallenge.questions.map(sanitizeQuestionForStudent)
+      : [];
+
+    res.json({
+      todayKey,
+      streak,
+      totalCompletedDays: completedRows.length,
+      recentDays: completedRows.slice(0, 7),
+      challenge: todayChallenge
+        ? {
+            id: todayChallenge.id,
+            challengeDate: todayChallenge.challengeDate,
+            completed: todayChallenge.completed,
+            score: todayChallenge.score,
+            totalQuestions: todayChallenge.totalQuestions,
+            answers: todayChallenge.completed ? todayChallenge.answers : [],
+            questions: questionsPayload,
+          }
+        : null,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/learning/daily-checkin/submit", requireStudent, async (req, res, next) => {
+  try {
+    const student = assertActivePaidStudent(res);
+    if (!student) return;
+
+    const todayKey = getCairoDayKey();
+    const [challenge] = await db
+      .select()
+      .from(studentDailyChallengesTable)
+      .where(
+        and(
+          eq(studentDailyChallengesTable.studentId, student.id),
+          eq(studentDailyChallengesTable.challengeDate, todayKey),
+        ),
+      )
+      .limit(1);
+
+    if (!challenge || challenge.questions.length === 0) {
+      res.status(404).json({ error: "لا يوجد تحدٍ يومي متاح لليوم" });
+      return;
+    }
+
+    if (challenge.completed) {
+      res.json({
+        success: true,
+        alreadyCompleted: true,
+        score: challenge.score,
+        totalQuestions: challenge.totalQuestions,
+        questions: challenge.questions,
+        answers: challenge.answers,
+      });
+      return;
+    }
+
+    const rawAnswers = Array.isArray(req.body?.answers) ? req.body.answers : [];
+    const resolvedAnswers: number[] = challenge.questions.map((_, idx) => {
+      const val = Number(rawAnswers[idx]);
+      return Number.isInteger(val) ? val : -1;
+    });
+
+    let correctCount = 0;
+    const recordingItems: MistakeRecordingItem[] = [];
+    const details = challenge.questions.map((q, idx) => {
+      const selectedOption = resolvedAnswers[idx];
+      const correctIdx = q.correctIndex;
+      const selectedText = selectedOption >= 0 ? q.options[selectedOption]?.trim() : undefined;
+      const correctText = q.correctAnswer?.trim() || q.options[correctIdx]?.trim();
+      const isCorrect = Boolean(
+        selectedOption >= 0 &&
+          ((selectedText && correctText && selectedText === correctText) ||
+            selectedOption === correctIdx),
+      );
+      if (isCorrect) correctCount++;
+
+      const qbIdNum = Number(challenge.questionIds[idx]);
+      recordingItems.push({
+        question: q,
+        questionBankId: Number.isInteger(qbIdNum) && qbIdNum > 0 ? qbIdNum : null,
+        selectedOption,
+        isCorrect,
+        concept: q.concept ?? null,
+      });
+
+      return {
+        questionIndex: idx,
+        selectedOption,
+        correctOption: correctIdx,
+        isCorrect,
+        explanation: q.explanation ?? null,
+      };
+    });
+
+    const now = new Date();
+    await db
+      .update(studentDailyChallengesTable)
+      .set({
+        answers: resolvedAnswers,
+        score: correctCount,
+        completed: true,
+        completedAt: now,
+      })
+      .where(eq(studentDailyChallengesTable.id, challenge.id));
+
+    await recordSubmissionMistakes({
+      studentId: student.id,
+      stage: challenge.stage,
+      sourceType: "daily_challenge",
+      sourceId: challenge.id,
+      items: recordingItems,
+    });
+
+    const completedRows = await db
+      .select({ challengeDate: studentDailyChallengesTable.challengeDate })
+      .from(studentDailyChallengesTable)
+      .where(
+        and(
+          eq(studentDailyChallengesTable.studentId, student.id),
+          eq(studentDailyChallengesTable.completed, true),
+        ),
+      );
+    const streak = calculateStreak(
+      completedRows.map((r) => r.challengeDate),
+      todayKey,
+    );
+
+    res.json({
+      success: true,
+      score: correctCount,
+      totalQuestions: challenge.totalQuestions,
+      streak,
+      details,
+      questions: challenge.questions,
+      answers: resolvedAnswers,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ── 6. Student: Bookmarks (الإشارات المرجعية) ────────────────────────────────
+router.get("/learning/kholasa/bookmarks", requireStudent, async (_req, res, next) => {
+  try {
+    const student = assertActivePaidStudent(res);
+    if (!student) return;
+
+    const bookmarks = await db
+      .select()
+      .from(studentBookmarksTable)
+      .where(eq(studentBookmarksTable.studentId, student.id))
+      .orderBy(desc(studentBookmarksTable.createdAt));
+
+    res.json({ bookmarks });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/learning/kholasa/bookmarks/toggle", requireStudent, async (req, res, next) => {
+  try {
+    const student = assertActivePaidStudent(res);
+    if (!student) return;
+
+    const itemType = String(req.body?.itemType || "lesson").trim();
+    const itemKey = String(req.body?.itemKey || "").trim();
+    const materialId = req.body?.materialId ? Number(req.body.materialId) : null;
+    const videoId = req.body?.videoId ? Number(req.body.videoId) : null;
+    const title = req.body?.title ? String(req.body.title).trim() : null;
+
+    if (!itemKey) {
+      res.status(400).json({ error: "itemKey مطلوب" });
+      return;
+    }
+
+    const [existing] = await db
+      .select({ id: studentBookmarksTable.id })
+      .from(studentBookmarksTable)
+      .where(
+        and(
+          eq(studentBookmarksTable.studentId, student.id),
+          eq(studentBookmarksTable.itemType, itemType),
+          eq(studentBookmarksTable.itemKey, itemKey),
+        ),
+      )
+      .limit(1);
+
+    if (existing) {
+      await db.delete(studentBookmarksTable).where(eq(studentBookmarksTable.id, existing.id));
+      res.json({ bookmarked: false });
+    } else {
+      await db.insert(studentBookmarksTable).values({
+        studentId: student.id,
+        materialId: materialId && Number.isInteger(materialId) ? materialId : null,
+        videoId: videoId && Number.isInteger(videoId) ? videoId : null,
+        itemType,
+        itemKey,
+        title,
+      });
+      res.json({ bookmarked: true });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ── 7. Admin Management Routes (requireAdmin) ────────────────────────────────
+router.get("/admin/learning/kholasa/materials", requireAdmin, async (_req, res, next) => {
+  try {
+    const materials = await db
+      .select()
+      .from(lessonKholasaMaterialsTable)
+      .orderBy(lessonKholasaMaterialsTable.stage, lessonKholasaMaterialsTable.lessonOrder, lessonKholasaMaterialsTable.id);
+    res.json({ materials });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/admin/learning/kholasa/materials", requireAdmin, async (req, res, next) => {
+  try {
+    const {
+      videoId,
+      courseId,
+      stage,
+      stages,
+      unit,
+      lesson,
+      lessonOrder,
+      summaryData,
+      mindmapTitle,
+      mindmapImages,
+      structuredSections,
+      flashcards,
+      audioUrl,
+      pdfUrl,
+      isPublished,
+    } = req.body || {};
+
+    if (!stage || !unit || !lesson) {
+      res.status(400).json({ error: "المرحلة والوحدة والدرس حقول مطلوبة" });
+      return;
+    }
+
+    const [created] = await db
+      .insert(lessonKholasaMaterialsTable)
+      .values({
+        videoId: videoId ? Number(videoId) : null,
+        courseId: courseId ? Number(courseId) : null,
+        stage: String(stage).trim(),
+        stages: Array.isArray(stages) ? stages : [String(stage).trim()],
+        unit: String(unit).trim(),
+        lesson: String(lesson).trim(),
+        lessonOrder: Number(lessonOrder) || 0,
+        summaryData: summaryData || {},
+        mindmapTitle: mindmapTitle || lesson,
+        mindmapImages: Array.isArray(mindmapImages) ? mindmapImages : [],
+        structuredSections: Array.isArray(structuredSections) ? structuredSections : [],
+        flashcards: Array.isArray(flashcards) ? flashcards : [],
+        audioUrl: audioUrl || null,
+        pdfUrl: pdfUrl || null,
+        sourceKey: `admin:${Date.now()}:${randomBytes(4).toString("hex")}`,
+        isPublished: isPublished !== false,
+      })
+      .returning();
+
+    res.status(201).json({ material: created });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.patch("/admin/learning/kholasa/materials/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: "معرف غير صالح" });
+      return;
+    }
+
+    const body = req.body || {};
+    const patch: Record<string, unknown> = { updatedAt: new Date() };
+
+    if (body.videoId !== undefined) patch.videoId = body.videoId ? Number(body.videoId) : null;
+    if (body.courseId !== undefined) patch.courseId = body.courseId ? Number(body.courseId) : null;
+    if (body.stage !== undefined) patch.stage = String(body.stage).trim();
+    if (body.stages !== undefined) patch.stages = Array.isArray(body.stages) ? body.stages : [];
+    if (body.unit !== undefined) patch.unit = String(body.unit).trim();
+    if (body.lesson !== undefined) patch.lesson = String(body.lesson).trim();
+    if (body.lessonOrder !== undefined) patch.lessonOrder = Number(body.lessonOrder) || 0;
+    if (body.summaryData !== undefined) patch.summaryData = body.summaryData;
+    if (body.mindmapTitle !== undefined) patch.mindmapTitle = body.mindmapTitle;
+    if (body.mindmapImages !== undefined) patch.mindmapImages = Array.isArray(body.mindmapImages) ? body.mindmapImages : [];
+    if (body.structuredSections !== undefined) patch.structuredSections = Array.isArray(body.structuredSections) ? body.structuredSections : [];
+    if (body.flashcards !== undefined) patch.flashcards = Array.isArray(body.flashcards) ? body.flashcards : [];
+    if (body.audioUrl !== undefined) patch.audioUrl = body.audioUrl || null;
+    if (body.pdfUrl !== undefined) patch.pdfUrl = body.pdfUrl || null;
+    if (body.isPublished !== undefined) patch.isPublished = Boolean(body.isPublished);
+
+    const [updated] = await db
+      .update(lessonKholasaMaterialsTable)
+      .set(patch)
+      .where(eq(lessonKholasaMaterialsTable.id, id))
+      .returning();
+
+    if (!updated) {
+      res.status(404).json({ error: "المادة غير موجودة" });
+      return;
+    }
+
+    res.json({ material: updated });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete("/admin/learning/kholasa/materials/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: "معرف غير صالح" });
+      return;
+    }
+
+    const [deleted] = await db
+      .delete(lessonKholasaMaterialsTable)
+      .where(eq(lessonKholasaMaterialsTable.id, id))
+      .returning({ id: lessonKholasaMaterialsTable.id });
+
+    if (!deleted) {
+      res.status(404).json({ error: "المادة غير موجودة" });
+      return;
+    }
+
+    res.json({ success: true, id: deleted.id });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/admin/learning/kholasa/upload-mindmap", requireAdmin, (req, res, next) => {
+  mindmapUpload.single("image")(req, res, (err) => {
+    if (err) {
+      res.status(400).json({ error: err.message || "فشل رفع صورة الخريطة الذهنية" });
+      return;
+    }
+    if (!req.file) {
+      res.status(400).json({ error: "لم يتم اختيار ملف صورة" });
+      return;
+    }
+    res.json({
+      success: true,
+      filename: req.file.filename,
+      url: `/api/learning/kholasa/media/${req.file.filename}`,
+    });
+  });
+});
+
+export default router;
+

@@ -19,6 +19,7 @@ import { getAdminIdentity, requireAdmin } from "../../middleware/auth";
 import { getApprovedStudent } from "../../middleware/student-auth";
 import { sendPushToStudent } from "../../services/push-notifications";
 import { logAudit } from "../../lib/audit";
+import { recordSubmissionMistakes } from "../../lib/kholasa-helpers";
 import {
   normalizeEgyptianPhone,
   getStudentTrack,
@@ -843,6 +844,23 @@ router.post("/learning/self-assessment/submit", async (req, res, next) => {
 
     let isEnrolledStudent = Boolean(session.studentId);
     let hasActiveCode = false;
+
+    if (session.studentId) {
+      try {
+        await recordSubmissionMistakes({
+          studentId: session.studentId,
+          stage: session.stage,
+          unit: session.unit,
+          sourceType: "self_assessment",
+          sourceId: session.id,
+          items: reviewDetails.map((d, idx) => ({
+            question: storedQuestions[idx],
+            selectedOption: d.selectedOption,
+            isCorrect: d.isCorrect,
+          })),
+        });
+      } catch {}
+    }
 
     if (session.phone) {
       const [existingEnt] = await db

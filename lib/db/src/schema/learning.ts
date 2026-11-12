@@ -91,6 +91,9 @@ export type QuizQuestion = {
   explanation?: string;       // Explanation/Feedback for why the correct answer is right
   imageUrl?: string;          // Optional image attachment for the question (e.g. code snippet, diagram)
   points?: number;            // Custom points for this question (default 1)
+  questionType?: "mcq" | "true_false" | "short_answer" | "essay";
+  translation?: string;       // Arabic/English translation of the question statement
+  concept?: string;           // Core concept tag for diagnosis & mistake review
 };
 
 export const quizzesTable = pgTable("quizzes", {
@@ -129,6 +132,9 @@ export const questionBankTable = pgTable("question_bank", {
   difficulty: text("difficulty").notNull().default("medium"), // easy, medium, hard
   points: integer("points").notNull().default(1),
   tags: jsonb("tags").$type<string[]>().notNull().default([]),
+  concept: text("concept"),
+  skillCategory: text("skill_category"),
+  translation: text("translation"),
   question: jsonb("question").$type<QuizQuestion>().notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -567,4 +573,136 @@ export const essayQuestionBankTable = pgTable("essay_question_bank", {
 
 export type InsertEssayQuestionBankItem = typeof essayQuestionBankTable.$inferInsert;
 export type EssayQuestionBankItem = typeof essayQuestionBankTable.$inferSelect;
+
+// ── Kholasa Integration: Lesson Materials (الزتونة، الخرائط الذهنية، البطاقات، الشرح التفاعلي) ──
+export interface KholasaSummaryData {
+  keyConcepts?: Array<{ title: string; description: string; translation?: string; tag?: string }>;
+  definitions?: Array<{ term: string; definition: string; translation?: string; example?: string }>;
+  formulas?: Array<{ title: string; formula: string; note?: string }>;
+  comparisons?: Array<{ title: string; headers?: string[]; rows?: string[][]; points?: Array<{ label: string; a: string; b: string }> }>;
+  examTips?: Array<{ title?: string; tip: string }>;
+  commonMistakes?: Array<{ mistake: string; correction: string; why?: string }>;
+  checklist?: Array<{ id?: string; text: string }>;
+}
+
+export interface KholasaStructuredSection {
+  id: string;
+  title: string;
+  order: number;
+  body: string;
+  codeExample?: string;
+  keyTakeaway?: string;
+}
+
+export interface KholasaFlashcard {
+  id: string;
+  front: string;
+  back: string;
+  translation?: string;
+  tag?: string;
+}
+
+export const lessonKholasaMaterialsTable = pgTable("lesson_kholasa_materials", {
+  id: serial("id").primaryKey(),
+  videoId: integer("video_id"),
+  courseId: integer("course_id").references(() => coursesTable.id, { onDelete: "set null" }),
+  stage: text("stage").notNull(),
+  stages: jsonb("stages").$type<string[]>().notNull().default([]),
+  unit: text("unit").notNull(),
+  lesson: text("lesson").notNull(),
+  lessonOrder: integer("lesson_order").notNull().default(0),
+  durationMinutes: integer("duration_minutes").notNull().default(15),
+  objectives: jsonb("objectives").$type<string[]>().notNull().default([]),
+  summaryData: jsonb("summary_data").$type<KholasaSummaryData>().notNull().default({}),
+  mindmapTitle: text("mindmap_title"),
+  mindmapImages: jsonb("mindmap_images").$type<string[]>().notNull().default([]),
+  mindmapData: jsonb("mindmap_data").$type<{ nodes?: unknown[]; edges?: unknown[]; description?: string | null }>(),
+  structuredSections: jsonb("structured_sections").$type<KholasaStructuredSection[]>().notNull().default([]),
+  flashcards: jsonb("flashcards").$type<KholasaFlashcard[]>().notNull().default([]),
+  audioUrl: text("audio_url"),
+  pdfUrl: text("pdf_url"),
+  sourceKey: text("source_key"),
+  isPublished: boolean("is_published").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  videoIdx: index("idx_kholasa_materials_video_id").on(table.videoId),
+  stageUnitLessonIdx: index("idx_kholasa_materials_stage_unit_lesson").on(table.stage, table.unit, table.lesson),
+  sourceKeyUnique: uniqueIndex("idx_kholasa_materials_source_key_unique").on(table.sourceKey),
+}));
+
+export type InsertLessonKholasaMaterial = typeof lessonKholasaMaterialsTable.$inferInsert;
+export type LessonKholasaMaterial = typeof lessonKholasaMaterialsTable.$inferSelect;
+
+// ── Kholasa Integration: Student Mistakes Hub (ركن غلطاتي) ────────────────────
+export const studentMistakesTable = pgTable("student_mistakes", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => studentsTable.id, { onDelete: "cascade" }),
+  questionBankId: integer("question_bank_id").references(() => questionBankTable.id, { onDelete: "set null" }),
+  questionHash: text("question_hash").notNull(),
+  stage: text("stage"),
+  unit: text("unit"),
+  lesson: text("lesson"),
+  concept: text("concept"),
+  sourceType: text("source_type").notNull().default("quiz"), // quiz | self_assessment | daily_challenge | flashcard
+  sourceId: integer("source_id"),
+  diagnosisTag: text("diagnosis_tag"),
+  questionSnapshot: jsonb("question_snapshot").$type<QuizQuestion>().notNull(),
+  lastWrongOption: integer("last_wrong_option"),
+  wrongCount: integer("wrong_count").notNull().default(1),
+  correctStreak: integer("correct_streak").notNull().default(0),
+  mastered: boolean("mastered").notNull().default(false),
+  lastWrongAt: timestamp("last_wrong_at").notNull().defaultNow(),
+  masteredAt: timestamp("mastered_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (table) => ({
+  studentQuestionUnique: uniqueIndex("idx_student_mistakes_student_question_unique").on(table.studentId, table.questionHash),
+  studentMasteredIdx: index("idx_student_mistakes_student_mastered").on(table.studentId, table.mastered),
+  questionBankIdx: index("idx_student_mistakes_question_bank_id").on(table.questionBankId),
+}));
+
+export type InsertStudentMistake = typeof studentMistakesTable.$inferInsert;
+export type StudentMistake = typeof studentMistakesTable.$inferSelect;
+
+// ── Kholasa Integration: Daily Challenge & Streak (التحدي اليومي) ─────────────
+export const studentDailyChallengesTable = pgTable("student_daily_challenges", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => studentsTable.id, { onDelete: "cascade" }),
+  challengeDate: varchar("challenge_date", { length: 16 }).notNull(), // YYYY-MM-DD (Africa/Cairo)
+  stage: text("stage"),
+  questionIds: jsonb("question_ids").$type<number[]>().notNull().default([]),
+  questions: jsonb("questions").$type<QuizQuestion[]>().notNull().default([]),
+  answers: jsonb("answers").$type<number[]>().notNull().default([]),
+  score: integer("score"),
+  totalQuestions: integer("total_questions").notNull().default(5),
+  completed: boolean("completed").notNull().default(false),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  studentDateUnique: uniqueIndex("idx_student_daily_challenges_student_date_unique").on(table.studentId, table.challengeDate),
+  studentIdx: index("idx_student_daily_challenges_student_id").on(table.studentId),
+}));
+
+export type InsertStudentDailyChallenge = typeof studentDailyChallengesTable.$inferInsert;
+export type StudentDailyChallenge = typeof studentDailyChallengesTable.$inferSelect;
+
+// ── Kholasa Integration: Student Bookmarks (الإشارات المرجعية والمفضلة) ──────
+export const studentBookmarksTable = pgTable("student_bookmarks", {
+  id: serial("id").primaryKey(),
+  studentId: integer("student_id").notNull().references(() => studentsTable.id, { onDelete: "cascade" }),
+  materialId: integer("material_id").references(() => lessonKholasaMaterialsTable.id, { onDelete: "cascade" }),
+  videoId: integer("video_id"),
+  itemType: text("item_type").notNull().default("lesson"), // lesson | summary | flashcard | question
+  itemKey: text("item_key").notNull(),
+  title: text("title"),
+  note: text("note"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  studentItemUnique: uniqueIndex("idx_student_bookmarks_student_item_unique").on(table.studentId, table.itemType, table.itemKey),
+  studentIdx: index("idx_student_bookmarks_student_id").on(table.studentId),
+}));
+
+export type InsertStudentBookmark = typeof studentBookmarksTable.$inferInsert;
+export type StudentBookmark = typeof studentBookmarksTable.$inferSelect;
 

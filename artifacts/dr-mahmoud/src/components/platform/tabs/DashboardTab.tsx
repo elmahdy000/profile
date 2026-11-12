@@ -25,6 +25,7 @@ import { getTrackForStage } from "@/data/academic";
 import type { Student, LearningFile, Quiz, VideoSummary, ProgressRow } from "@/types/platform";
 import { EmptyState } from "../StudentDashboardUI";
 import { PaymentBanner } from "./PaymentBanner";
+import { DailyChallengeCard } from "@/components/kholasa/DailyChallengeCard";
 
 // ── Helper for File Icons ──
 function getFileTypeDetails(mimeType?: string | null, originalName: string = "") {
@@ -806,6 +807,9 @@ export function DashboardTab({
         hasQuizResults={attemptedQuizzes.length > 0}
         averageResult={realAverageResult}
       />
+
+      {/* 2.5. Kholasa Daily Challenge & Streak (Active Paid Students Only) */}
+      <DailyChallengeCard isPaid={student.status === "approved" && student.paymentStatus === "paid"} />
 
       {/* 3. Quick Actions Dock */}
       <QuickActionsDock onOpen={onOpen} />

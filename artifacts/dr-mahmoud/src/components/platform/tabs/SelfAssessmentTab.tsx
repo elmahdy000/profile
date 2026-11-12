@@ -39,6 +39,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import type { Student } from "@/types/platform";
+import { BidiStatement } from "@/components/kholasa/BidiStatement";
 
 interface StageTaxonomy {
   stage: string;
@@ -1574,7 +1575,7 @@ export function SelfAssessmentTab({
                       isEng ? "text-left font-sans" : "text-right"
                     }`}
                   >
-                    {currentQ.prompt}
+                    <BidiStatement text={currentQ.prompt} />
                   </h2>
 
                   {currentQ.imageUrl && (
@@ -1798,7 +1799,7 @@ export function SelfAssessmentTab({
                     isRevEng ? "text-left font-sans" : "text-right"
                   }`}
                 >
-                  {rev.prompt}
+                  <BidiStatement text={rev.prompt} />
                 </h4>
 
                 {/* Options with Highlight */}

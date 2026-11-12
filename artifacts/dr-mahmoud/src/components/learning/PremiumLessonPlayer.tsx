@@ -1,13 +1,20 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  Captions, Check, ChevronLeft, ChevronRight, Clock3, Eye,
-  FileText, FolderOpen, Gauge, ListVideo, Loader2, Lock, Maximize, MessageCircle,
-  Minimize, Pause, PictureInPicture, Play, RefreshCw, RotateCcw, RotateCw, StickyNote,
+  BookOpen, Captions, Check, ChevronLeft, ChevronRight, Clock3, Eye,
+  FileText, FolderOpen, Gauge, HelpCircle, Layers, ListVideo, Loader2, Lock, Map as MapIcon, Maximize, MessageCircle,
+  Minimize, Pause, PictureInPicture, Play, RefreshCw, RotateCcw, RotateCw, Sparkles, StickyNote,
   UploadCloud, Volume2, VolumeX, X,
 } from "lucide-react";
 import { getYouTubePlaylistId, getYouTubeVideoId, getYoutubeThumbnail, type VideoItem } from "@/lib/video";
 import { compressMultipleFiles } from "@/lib/image-compression";
+import { studentApi } from "@/components/kholasa/kholasa-api";
+import { KholasaSummaryView } from "@/components/kholasa/KholasaSummaryView";
+import { KholasaMindMapView } from "@/components/kholasa/KholasaMindMapView";
+import { KholasaFlashcardsView } from "@/components/kholasa/KholasaFlashcardsView";
+import { KholasaDefinitionsView } from "@/components/kholasa/KholasaDefinitionsView";
+import { KholasaLessonQuestionsView } from "@/components/kholasa/KholasaLessonQuestionsView";
+import type { KholasaMaterial } from "@/components/kholasa/types";
 
 import Hls from "hls.js";
 
@@ -358,13 +365,28 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
   const [showSpeed, setShowSpeed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [playlistOpen, setPlaylistOpen] = useState(false);
-  const [tab, setTab] = useState<"overview" | "summary" | "files" | "notes" | "questions">("overview");
+  const [tab, setTab] = useState<"overview" | "definitions" | "kholasa" | "mindmap" | "flashcards" | "lesson-questions" | "summary" | "files" | "notes" | "questions">("overview");
+  const [kholasaMaterial, setKholasaMaterial] = useState<KholasaMaterial | null>(null);
   const [noteText, setNoteText] = useState("");
   const [notes, setNotes] = useState<LessonNote[]>([]);
   const [progress, setProgress] = useState(0);
   const [saving, setSaving] = useState(false);
   const [studentInfo, setStudentInfo] = useState<{ name: string; phone: string } | null>(null);
   const [wmPosition, setWmPosition] = useState<{ top: string; left: string }>({ top: "10%", left: "15%" });
+
+  useEffect(() => {
+    setKholasaMaterial(null);
+    if (!item.id || item.paymentLocked || item.youtubeUrl === "locked") return;
+    let active = true;
+    studentApi<{ material: KholasaMaterial | null }>(`/api/learning/kholasa/video/${item.id}`)
+      .then((res) => {
+        if (active && res?.material) setKholasaMaterial(res.material);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [item.id, item.paymentLocked, item.youtubeUrl]);
 
   // Non-obstructive corner watermark: alternates quietly between top corners every 12s
   useEffect(() => {
@@ -453,7 +475,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
     if (!isProtected || !video || !streamSrc) return;
 
     if (hlsRef.current) {
-      try { hlsRef.current.destroy(); } catch {}
+      try { hlsRef.current.destroy(); } catch { }
       hlsRef.current = null;
     }
 
@@ -486,7 +508,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
 
     return () => {
       if (hlsRef.current) {
-        try { hlsRef.current.destroy(); } catch {}
+        try { hlsRef.current.destroy(); } catch { }
         hlsRef.current = null;
       }
     };
@@ -566,7 +588,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
       } else {
         await document.exitFullscreen?.();
       }
-    } catch {}
+    } catch { }
   };
 
   useEffect(() => {
@@ -760,12 +782,12 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
             <div className="min-w-0 flex-1">
               <p className="mb-0.5 truncate text-[11px] font-bold text-sky-400">{item.category}</p>
               <h2 id="lesson-player-title" className="truncate text-sm font-bold text-white sm:text-base">{item.title}</h2>
-              <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-400"><span>الدرس {item.order || currentIndex + 1}</span><span aria-hidden>•</span><Clock3 className="h-3 w-3"/><span>{item.durationText || (duration ? formatTime(duration) : "فيديو تعليمي")}</span></div>
+              <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-400"><span>الدرس {item.order || currentIndex + 1}</span><span aria-hidden>•</span><Clock3 className="h-3 w-3" /><span>{item.durationText || (duration ? formatTime(duration) : "فيديو تعليمي")}</span></div>
             </div>
-            <button onClick={() => setPlaylistOpen(true)} className="grid h-11 w-11 place-items-center rounded-xl text-slate-300 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 lg:hidden" aria-label="فتح قائمة الدروس"><ListVideo className="h-5 w-5"/></button>
-            <button onClick={onClose} className="grid h-11 w-11 place-items-center rounded-xl border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400" aria-label="إغلاق مشغل الدرس"><X className="h-5 w-5"/></button>
+            <button onClick={() => setPlaylistOpen(true)} className="grid h-11 w-11 place-items-center rounded-xl text-slate-300 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 lg:hidden" aria-label="فتح قائمة الدروس"><ListVideo className="h-5 w-5" /></button>
+            <button onClick={onClose} className="grid h-11 w-11 place-items-center rounded-xl border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400" aria-label="إغلاق مشغل الدرس"><X className="h-5 w-5" /></button>
           </div>
-          <div className="absolute inset-x-0 bottom-0 h-0.5 bg-white/5"><div className="h-full bg-sky-500 transition-[width]" style={{ width: `${progress}%` }}/></div>
+          <div className="absolute inset-x-0 bottom-0 h-0.5 bg-white/5"><div className="h-full bg-sky-500 transition-[width]" style={{ width: `${progress}%` }} /></div>
         </header>
 
         <div className="min-h-0 flex-1 flex flex-col overflow-hidden lg:grid lg:grid-cols-[minmax(0,1fr)_300px]">
@@ -806,8 +828,8 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                 </AnimatePresence>
 
                 {isProtected ? <>
-                  {!playerReady && !playerError && <div className="absolute inset-0 z-10 animate-pulse bg-slate-900"><div className="absolute inset-0 grid place-items-center"><Loader2 className="h-8 w-8 animate-spin text-sky-400"/></div></div>}
-                  {playerError ? <div className="absolute inset-0 z-20 grid place-items-center bg-slate-950 p-6 text-center"><div><p className="font-bold text-white">تعذر تشغيل الدرس</p><p className="mt-2 text-sm text-slate-400">{playerErrorMessage}</p><button onClick={() => { refreshAttempted.current = false; setPlayerError(false); void refreshStreamUrl(); }} className="mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-sky-500 px-5 font-bold text-slate-950 hover:bg-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><RefreshCw className="h-4 w-4"/>تحديث رابط الفيديو</button></div></div> : null}
+                  {!playerReady && !playerError && <div className="absolute inset-0 z-10 animate-pulse bg-slate-900"><div className="absolute inset-0 grid place-items-center"><Loader2 className="h-8 w-8 animate-spin text-sky-400" /></div></div>}
+                  {playerError ? <div className="absolute inset-0 z-20 grid place-items-center bg-slate-950 p-6 text-center"><div><p className="font-bold text-white">تعذر تشغيل الدرس</p><p className="mt-2 text-sm text-slate-400">{playerErrorMessage}</p><button onClick={() => { refreshAttempted.current = false; setPlayerError(false); void refreshStreamUrl(); }} className="mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-sky-500 px-5 font-bold text-slate-950 hover:bg-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><RefreshCw className="h-4 w-4" />تحديث رابط الفيديو</button></div></div> : null}
                   <video
                     ref={videoRef}
                     className="h-full w-full object-contain max-h-full max-w-full select-none pointer-events-auto"
@@ -830,7 +852,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                         try {
                           video.currentTime = targetPos;
                           setCurrentTime(targetPos);
-                        } catch {}
+                        } catch { }
                       }
                     }}
                     onError={(event) => {
@@ -916,24 +938,24 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                     </div>
                   )}
                 </> : youtubeUrl ? <>
-                  {!youtubeStarted ? <button onClick={() => setYoutubeStarted(true)} className="absolute inset-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-400" aria-label="تشغيل الفيديو"><img src={poster} alt="" className="h-full w-full object-cover"/><span className="absolute inset-0 bg-black/35"/><span className="absolute inset-0 grid place-items-center"><span className="grid h-16 w-16 place-items-center rounded-full bg-sky-500 text-slate-950 shadow-xl transition group-hover:scale-105 sm:h-20 sm:w-20"><Play className="h-8 w-8 fill-current"/></span></span></button> : <iframe className="absolute inset-0 h-full w-full border-0 object-contain" src={youtubeUrl} title={item.title} loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin"/>}
+                  {!youtubeStarted ? <button onClick={() => setYoutubeStarted(true)} className="absolute inset-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-400" aria-label="تشغيل الفيديو"><img src={poster} alt="" className="h-full w-full object-cover" /><span className="absolute inset-0 bg-black/35" /><span className="absolute inset-0 grid place-items-center"><span className="grid h-16 w-16 place-items-center rounded-full bg-sky-500 text-slate-950 shadow-xl transition group-hover:scale-105 sm:h-20 sm:w-20"><Play className="h-8 w-8 fill-current" /></span></span></button> : <iframe className="absolute inset-0 h-full w-full border-0 object-contain" src={youtubeUrl} title={item.title} loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />}
                 </> : <div className="absolute inset-0 grid place-items-center p-6 text-center text-slate-200 bg-slate-950/90">
-                    <div className="max-w-md space-y-4">
-                      <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                        <Lock className="h-7 w-7" />
-                      </div>
-                      <h3 className="text-base font-bold text-white">يلزم سداد الاشتراك لمشاهدة هذا الفيديو 💳</h3>
-                      <p className="text-xs text-slate-300 leading-relaxed">
-                        هذا المحتوى غير متاح حالياً. يرجى دفع قيمة الكورس ورفع صورة إيصال التحويل من الشاشة الرئيسية ليقوم الأدمن بتفعيل حسابك وفك تشغيل الفيديوهات فوراً.
-                      </p>
-                      <button
-                        onClick={onClose}
-                        className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-5 py-2.5 text-xs font-bold text-slate-950 transition hover:bg-sky-400 active:scale-95 shadow-lg"
-                      >
-                        الذهاب لرفع الإيصال 📤
-                      </button>
+                  <div className="max-w-md space-y-4">
+                    <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      <Lock className="h-7 w-7" />
                     </div>
-                  </div>}
+                    <h3 className="text-base font-bold text-white">يلزم سداد الاشتراك لمشاهدة هذا الفيديو 💳</h3>
+                    <p className="text-xs text-slate-300 leading-relaxed">
+                      هذا المحتوى غير متاح حالياً. يرجى دفع قيمة الكورس ورفع صورة إيصال التحويل من الشاشة الرئيسية ليقوم الأدمن بتفعيل حسابك وفك تشغيل الفيديوهات فوراً.
+                    </p>
+                    <button
+                      onClick={onClose}
+                      className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-5 py-2.5 text-xs font-bold text-slate-950 transition hover:bg-sky-400 active:scale-95 shadow-lg"
+                    >
+                      الذهاب لرفع الإيصال 📤
+                    </button>
+                  </div>
+                </div>}
               </div>
 
               {/* Portrait + desktop bottom control bar (hidden in landscape mobile) */}
@@ -946,7 +968,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                   </PlayerButton>
 
                   <PlayerButton label={playing ? "إيقاف مؤقت" : "تشغيل"} onClick={() => void togglePlay()} className="h-9 w-9 sm:h-11 sm:w-11">
-                    {playing ? <Pause className="h-4 w-4 sm:h-5 sm:w-5 fill-current"/> : <Play className="h-4 w-4 sm:h-5 sm:w-5 fill-current"/>}
+                    {playing ? <Pause className="h-4 w-4 sm:h-5 sm:w-5 fill-current" /> : <Play className="h-4 w-4 sm:h-5 sm:w-5 fill-current" />}
                   </PlayerButton>
 
                   <PlayerButton label="تقديم 10 ثواني" onClick={() => seekRelative(10)} className="h-9 w-9 sm:h-11 sm:w-11">
@@ -977,11 +999,11 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                       if (videoRef.current) videoRef.current.volume = nextVolume;
                     }}
                   >
-                    {volume ? <Volume2 className="h-4 w-4 sm:h-5 sm:w-5"/> : <VolumeX className="h-4 w-4 sm:h-5 sm:w-5"/>}
+                    {volume ? <Volume2 className="h-4 w-4 sm:h-5 sm:w-5" /> : <VolumeX className="h-4 w-4 sm:h-5 sm:w-5" />}
                   </PlayerButton>
                   <div className="relative hidden sm:block">
                     <PlayerButton label="سرعة التشغيل" onClick={() => setShowSpeed(!showSpeed)}>
-                      <Gauge className="h-5 w-5"/>
+                      <Gauge className="h-5 w-5" />
                     </PlayerButton>
                     {showSpeed && (
                       <div className="absolute bottom-12 right-0 z-30 rounded-xl border border-white/10 bg-slate-900 p-1 shadow-xl">
@@ -1003,10 +1025,10 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                     )}
                   </div>
                   <PlayerButton label="صورة داخل صورة" className="hidden sm:grid" onClick={() => void videoRef.current?.requestPictureInPicture?.()}>
-                    <PictureInPicture className="h-5 w-5"/>
+                    <PictureInPicture className="h-5 w-5" />
                   </PlayerButton>
                   <PlayerButton label={isFullscreen ? "الخروج من ملء الشاشة" : "ملء الشاشة"} onClick={() => void toggleFullscreen()} className="h-9 w-9 sm:h-11 sm:w-11">
-                    {isFullscreen ? <Minimize className="h-4 w-4 sm:h-5 sm:w-5"/> : <Maximize className="h-4 w-4 sm:h-5 sm:w-5"/>}
+                    {isFullscreen ? <Minimize className="h-4 w-4 sm:h-5 sm:w-5" /> : <Maximize className="h-4 w-4 sm:h-5 sm:w-5" />}
                   </PlayerButton>
                 </div>
               )}
@@ -1014,27 +1036,45 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
 
             <div className="flex-1 min-h-0 overflow-y-auto bg-slate-900 text-slate-100 landscape:hidden">
               <div className="flex flex-wrap items-center gap-2 border-b border-white/10 p-3 sm:px-5">
-                <button disabled={!previous} onClick={() => previous && onSelectLesson(previous)} className="inline-flex h-11 items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-bold text-slate-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-40"><ChevronRight className="h-4 w-4"/>السابق</button>
-                <button disabled={!next} onClick={() => next && onSelectLesson(next)} className="inline-flex h-11 items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-bold text-slate-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-40">التالي<ChevronLeft className="h-4 w-4"/></button>
-                <div className="mr-auto flex items-center gap-3"><span className="text-xs font-bold text-slate-400">{progress}% مكتمل</span><button disabled={progress >= 100 || saving} onClick={() => void markComplete()} className="inline-flex h-11 min-w-36 items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 text-sm font-extrabold text-slate-950 hover:bg-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 disabled:bg-emerald-500/20 disabled:text-emerald-300">{saving ? <Loader2 className="h-4 w-4 animate-spin"/> : <Check className="h-4 w-4"/>}{progress >= 100 ? "تم إكمال الدرس" : "تحديد كمكتمل"}</button></div>
+                <button disabled={!previous} onClick={() => previous && onSelectLesson(previous)} className="inline-flex h-11 items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-bold text-slate-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-40"><ChevronRight className="h-4 w-4" />السابق</button>
+                <button disabled={!next} onClick={() => next && onSelectLesson(next)} className="inline-flex h-11 items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-bold text-slate-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-40">التالي<ChevronLeft className="h-4 w-4" /></button>
+                <div className="mr-auto flex items-center gap-3"><span className="text-xs font-bold text-slate-400">{progress}% مكتمل</span><button disabled={progress >= 100 || saving} onClick={() => void markComplete()} className="inline-flex h-11 min-w-36 items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 text-sm font-extrabold text-slate-950 hover:bg-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 disabled:bg-emerald-500/20 disabled:text-emerald-300">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}{progress >= 100 ? "تم إكمال الدرس" : "تحديد كمكتمل"}</button></div>
               </div>
 
-              <div className="border-b border-white/10 px-3 sm:px-5"><div className="flex overflow-x-auto">{([['overview','نظرة عامة',FileText],['summary','رفع التلخيص 📝',UploadCloud],['files','ملفات الدرس',FolderOpen],['notes','ملاحظاتي',StickyNote],['questions','الأسئلة',MessageCircle]] as const).map(([id,label,Icon]) => <button key={id} onClick={() => setTab(id)} className={`flex h-12 shrink-0 items-center gap-2 border-b-2 px-3 text-sm font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500 ${tab===id ? "border-sky-400 text-sky-400" : "border-transparent text-slate-400 hover:text-slate-200"}`}><Icon className="h-4 w-4"/>{label}</button>)}</div></div>
+              <div className="border-b border-white/10 px-3 sm:px-5"><div className="flex overflow-x-auto">{([
+                ['overview', 'نظرة عامة', FileText],
+                ...(kholasaMaterial ? [
+                  ['definitions', 'التعريفات 📖', BookOpen] as const,
+                  ['kholasa', 'الزتونة 💎', Sparkles] as const,
+                  ['mindmap', `الخرائط الذهنية (${kholasaMaterial.mindmapImages?.length || 0})`, MapIcon] as const,
+                  ['flashcards', `البطاقات (${kholasaMaterial.flashcards?.length || 0})`, Layers] as const,
+                  ['lesson-questions', 'أسئلة الدرس 📝', HelpCircle] as const,
+                ] : []),
+                ['summary', 'رفع التلخيص 📝', UploadCloud],
+                ['files', 'ملفات الدرس', FolderOpen],
+                ['notes', 'ملاحظاتي', StickyNote],
+                ['questions', 'الأسئلة', MessageCircle]
+              ] as const).map(([id, label, Icon]) => <button key={id} onClick={() => setTab(id)} className={`flex h-12 shrink-0 items-center gap-2 border-b-2 px-3 text-sm font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500 ${tab === id ? "border-sky-400 text-sky-400" : "border-transparent text-slate-400 hover:text-slate-200"}`}><Icon className="h-4 w-4" />{label}</button>)}</div></div>
               <div className="min-h-44 p-4 sm:p-6">
                 {tab === "overview" && <div><h3 className="font-extrabold text-white">عن هذا الدرس</h3><p className="mt-2 max-w-3xl text-sm leading-7 text-slate-300">{item.description || "شاهد الدرس بالكامل، واستخدم الملفات والملاحظات لتثبيت المعلومات. يتم حفظ تقدمك تلقائيًا."}</p><div className="mt-4 flex flex-wrap gap-2 text-xs"><span className="rounded-lg bg-white/10 px-3 py-2 text-slate-200">{item.category}</span>{item.stage && <span className="rounded-lg bg-white/10 px-3 py-2 text-slate-200">{item.stage}</span>}</div></div>}
+                {tab === "definitions" && kholasaMaterial && <KholasaDefinitionsView material={kholasaMaterial} darkSurface />}
+                {tab === "kholasa" && kholasaMaterial && <KholasaSummaryView material={kholasaMaterial} darkSurface />}
+                {tab === "mindmap" && kholasaMaterial && <KholasaMindMapView title={kholasaMaterial.mindmapTitle || kholasaMaterial.lesson} images={kholasaMaterial.mindmapImages} darkSurface />}
+                {tab === "flashcards" && kholasaMaterial && <KholasaFlashcardsView cards={kholasaMaterial.flashcards} darkSurface />}
+                {tab === "lesson-questions" && kholasaMaterial && <KholasaLessonQuestionsView key={kholasaMaterial.id} materialId={kholasaMaterial.id} initialCounts={kholasaMaterial.questionCounts} darkSurface />}
                 {tab === "summary" && <LessonSummaryUploadPanel videoItem={item} />}
-                {tab === "files" && <div className="grid gap-2 sm:grid-cols-2">{resources.length ? resources.map(file => <a key={file.id} href={`/api/learning/files/${file.id}/preview?deviceId=${encodeURIComponent(localStorage.getItem("dr_mahmoud_device_id") || "")}`} target="_blank" rel="noreferrer" className="flex min-h-14 items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 hover:border-sky-400/40 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"><FileText className="h-5 w-5 text-sky-400"/><span className="min-w-0 flex-1 truncate text-sm font-bold text-white">{file.title}</span><Eye className="h-4 w-4 text-slate-400"/></a>) : <p className="text-sm text-slate-400">لا توجد ملفات مرفقة بهذا الدرس.</p>}</div>}
-                {tab === "notes" && <div><div className="flex gap-2"><textarea value={noteText} onChange={event => setNoteText(event.target.value)} placeholder="اكتب ملاحظة مرتبطة بالوقت الحالي..." className="min-h-20 flex-1 resize-none rounded-xl border border-white/10 bg-slate-950 p-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500"/><button onClick={addNote} disabled={!noteText.trim()} className="h-11 self-end rounded-xl bg-sky-500 px-4 text-sm font-bold text-slate-950 hover:bg-sky-400 disabled:opacity-40">حفظ</button></div><div className="mt-4 space-y-2">{notes.map(note => <button key={note.id} onClick={() => { if(videoRef.current){ videoRef.current.currentTime=note.at; void videoRef.current.play(); } }} className="flex w-full gap-3 rounded-xl border border-white/10 bg-white/5 p-3 text-right hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"><span className="font-mono text-xs font-bold text-sky-400">{formatTime(note.at)}</span><span className="text-sm text-white">{note.text}</span></button>)}</div></div>}
-                {tab === "questions" && <div>{quiz ? <button disabled={quiz.locked} onClick={() => onStartQuiz?.(quiz)} className="inline-flex h-11 items-center gap-2 rounded-xl bg-sky-500 px-5 text-sm font-bold text-slate-950 hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600"><Captions className="h-4 w-4"/>{quiz.locked ? quiz.lockedReason || "أكمل الدرس أولًا" : "ابدأ اختبار الدرس"}</button> : <p className="text-sm text-slate-400">لا يوجد اختبار مرتبط بهذا الدرس حاليًا.</p>}</div>}
+                {tab === "files" && <div className="grid gap-2 sm:grid-cols-2">{resources.length ? resources.map(file => <a key={file.id} href={`/api/learning/files/${file.id}/preview?deviceId=${encodeURIComponent(localStorage.getItem("dr_mahmoud_device_id") || "")}`} target="_blank" rel="noreferrer" className="flex min-h-14 items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 hover:border-sky-400/40 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"><FileText className="h-5 w-5 text-sky-400" /><span className="min-w-0 flex-1 truncate text-sm font-bold text-white">{file.title}</span><Eye className="h-4 w-4 text-slate-400" /></a>) : <p className="text-sm text-slate-400">لا توجد ملفات مرفقة بهذا الدرس.</p>}</div>}
+                {tab === "notes" && <div><div className="flex gap-2"><textarea value={noteText} onChange={event => setNoteText(event.target.value)} placeholder="اكتب ملاحظة مرتبطة بالوقت الحالي..." className="min-h-20 flex-1 resize-none rounded-xl border border-white/10 bg-slate-950 p-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500" /><button onClick={addNote} disabled={!noteText.trim()} className="h-11 self-end rounded-xl bg-sky-500 px-4 text-sm font-bold text-slate-950 hover:bg-sky-400 disabled:opacity-40">حفظ</button></div><div className="mt-4 space-y-2">{notes.map(note => <button key={note.id} onClick={() => { if (videoRef.current) { videoRef.current.currentTime = note.at; void videoRef.current.play(); } }} className="flex w-full gap-3 rounded-xl border border-white/10 bg-white/5 p-3 text-right hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"><span className="font-mono text-xs font-bold text-sky-400">{formatTime(note.at)}</span><span className="text-sm text-white">{note.text}</span></button>)}</div></div>}
+                {tab === "questions" && <div>{quiz ? <button disabled={quiz.locked} onClick={() => onStartQuiz?.(quiz)} className="inline-flex h-11 items-center gap-2 rounded-xl bg-sky-500 px-5 text-sm font-bold text-slate-950 hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600"><Captions className="h-4 w-4" />{quiz.locked ? quiz.lockedReason || "أكمل الدرس أولًا" : "ابدأ اختبار الدرس"}</button> : <p className="text-sm text-slate-400">لا يوجد اختبار مرتبط بهذا الدرس حاليًا.</p>}</div>}
               </div>
             </div>
           </main>
 
-          <aside className="hidden min-h-0 border-r border-white/10 bg-slate-900 lg:flex lg:flex-col"><Playlist lessons={lessons} active={item} onSelect={onSelectLesson}/></aside>
+          <aside className="hidden min-h-0 border-r border-white/10 bg-slate-900 lg:flex lg:flex-col"><Playlist lessons={lessons} active={item} onSelect={onSelectLesson} /></aside>
         </div>
         <div className="sticky bottom-0 z-30 flex min-h-16 items-center justify-between border-t border-white/10 bg-slate-950 px-3 lg:hidden landscape:hidden"><button disabled={!previous} onClick={() => previous && onSelectLesson(previous)} className="h-11 rounded-xl px-3 text-sm font-bold text-white hover:bg-white/10 disabled:opacity-30">السابق</button><button onClick={() => setPlaylistOpen(true)} className="h-11 rounded-xl px-4 text-sm font-bold text-sky-400 hover:bg-white/10">قائمة الدروس</button><button disabled={!next} onClick={() => next && onSelectLesson(next)} className="h-11 rounded-xl px-3 text-sm font-bold text-white hover:bg-white/10 disabled:opacity-30">التالي</button></div>
       </motion.div>
-      {playlistOpen && <motion.div className="fixed inset-0 z-[110] bg-black/60 lg:hidden" initial={{opacity:0}} animate={{opacity:1}} onClick={() => setPlaylistOpen(false)}><motion.aside dir="rtl" className="absolute inset-y-0 right-0 flex w-[min(88vw,360px)] flex-col bg-slate-900 shadow-2xl" initial={{x:'100%'}} animate={{x:0}} onClick={event => event.stopPropagation()}><div className="flex h-16 items-center justify-between border-b border-white/10 px-4"><strong className="text-white">محتوى الكورس</strong><button onClick={() => setPlaylistOpen(false)} aria-label="إغلاق قائمة الدروس" className="grid h-11 w-11 place-items-center rounded-xl text-white hover:bg-white/10"><X className="h-5 w-5"/></button></div><Playlist lessons={lessons} active={item} onSelect={(lesson) => { onSelectLesson(lesson); setPlaylistOpen(false); }}/></motion.aside></motion.div>}
+      {playlistOpen && <motion.div className="fixed inset-0 z-[110] bg-black/60 lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={() => setPlaylistOpen(false)}><motion.aside dir="rtl" className="absolute inset-y-0 right-0 flex w-[min(88vw,360px)] flex-col bg-slate-900 shadow-2xl" initial={{ x: '100%' }} animate={{ x: 0 }} onClick={event => event.stopPropagation()}><div className="flex h-16 items-center justify-between border-b border-white/10 px-4"><strong className="text-white">محتوى الكورس</strong><button onClick={() => setPlaylistOpen(false)} aria-label="إغلاق قائمة الدروس" className="grid h-11 w-11 place-items-center rounded-xl text-white hover:bg-white/10"><X className="h-5 w-5" /></button></div><Playlist lessons={lessons} active={item} onSelect={(lesson) => { onSelectLesson(lesson); setPlaylistOpen(false); }} /></motion.aside></motion.div>}
     </motion.div>
   </AnimatePresence>;
 }
@@ -1049,27 +1089,25 @@ function Playlist({ lessons, active, onSelect }: { lessons: VideoItem[]; active:
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
         {lessons.map((lesson, index) => {
           const selected = lesson.id === active.id;
-          const completed = lesson.id ? (readJson<Record<number,number>>("dr_mahmoud_watch_progress", {})[lesson.id] || 0) >= 90 : false;
+          const completed = lesson.id ? (readJson<Record<number, number>>("dr_mahmoud_watch_progress", {})[lesson.id] || 0) >= 90 : false;
           const isLocked = lesson.paymentLocked || lesson.youtubeUrl === "locked";
           return (
             <button
               key={lesson.id || lesson.title}
               onClick={() => onSelect(lesson)}
               aria-current={selected ? "true" : undefined}
-              className={`mb-1 flex min-h-16 w-full items-center gap-3 rounded-xl p-3 text-right transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
-                selected ? "bg-sky-500/15 text-white" : "text-slate-300 hover:bg-white/5"
-              }`}
+              className={`mb-1 flex min-h-16 w-full items-center gap-3 rounded-xl p-3 text-right transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${selected ? "bg-sky-500/15 text-white" : "text-slate-300 hover:bg-white/5"
+                }`}
             >
               <span
-                className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg text-xs font-bold ${
-                  selected
+                className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg text-xs font-bold ${selected
                     ? "bg-sky-500 text-slate-950"
                     : isLocked
-                    ? "bg-amber-500/20 text-amber-400"
-                    : completed
-                    ? "bg-emerald-500/20 text-emerald-400"
-                    : "bg-white/5"
-                }`}
+                      ? "bg-amber-500/20 text-amber-400"
+                      : completed
+                        ? "bg-emerald-500/20 text-emerald-400"
+                        : "bg-white/5"
+                  }`}
               >
                 {isLocked ? <Lock className="h-3.5 w-3.5 text-amber-400" /> : completed ? <Check className="h-4 w-4" /> : index + 1}
               </span>

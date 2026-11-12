@@ -1,0 +1,230 @@
+import { useState } from "react";
+import {
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Maximize2,
+  X,
+  ChevronRight,
+  ChevronLeft,
+  Download,
+  Map as MapIcon,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+interface KholasaMindMapViewProps {
+  title?: string | null;
+  images: string[];
+  darkSurface?: boolean;
+}
+
+function buildMediaUrl(url: string): string {
+  const deviceId =
+    typeof window !== "undefined"
+      ? localStorage.getItem("dr_mahmoud_device_id") || localStorage.getItem("drelmahdy_device_id") || ""
+      : "";
+  if (!deviceId || url.includes("deviceId=")) return url;
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}deviceId=${encodeURIComponent(deviceId)}`;
+}
+
+export function KholasaMindMapView({ title, images, darkSurface = false }: KholasaMindMapViewProps) {
+  const validImages = Array.isArray(images) ? images.filter(Boolean) : [];
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [zoom, setZoom] = useState(1);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+
+  if (validImages.length === 0) {
+    return (
+      <div
+        dir="rtl"
+        className={`rounded-2xl border p-10 text-center ${
+          darkSurface ? "border-white/10 bg-white/5 text-slate-300" : "border-border bg-card text-muted-foreground"
+        }`}
+      >
+        <MapIcon className="h-8 w-8 mx-auto mb-2 opacity-60" />
+        <p className="text-sm font-bold">لا توجد خرائط ذهنية مرفوعة لهذا الدرس حالياً.</p>
+      </div>
+    );
+  }
+
+  const safeIndex = Math.min(selectedIndex, validImages.length - 1);
+  const currentUrl = buildMediaUrl(validImages[safeIndex]);
+
+  return (
+    <div className="space-y-4 text-right" dir="rtl">
+      {/* Header & Controls */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 px-3 py-1 text-xs font-extrabold">
+            <MapIcon className="h-3.5 w-3.5" /> الخرائط الذهنية للدرس ({validImages.length})
+          </span>
+          {title && (
+            <h3 className={`mt-1 text-sm sm:text-base font-black ${darkSurface ? "text-white" : "text-foreground"}`}>
+              {title}
+            </h3>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setZoom((z) => Math.max(0.6, Number((z - 0.2).toFixed(2))))}
+            className={`h-9 w-9 p-0 rounded-xl cursor-pointer ${darkSurface ? "border-white/15 bg-white/5 text-white hover:bg-white/10" : ""}`}
+            title="تصغير"
+          >
+            <ZoomOut className="h-4 w-4" />
+          </Button>
+          <span className={`px-2 text-xs font-mono font-bold ${darkSurface ? "text-slate-300" : "text-muted-foreground"}`}>
+            {Math.round(zoom * 100)}%
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setZoom((z) => Math.min(2.6, Number((z + 0.2).toFixed(2))))}
+            className={`h-9 w-9 p-0 rounded-xl cursor-pointer ${darkSurface ? "border-white/15 bg-white/5 text-white hover:bg-white/10" : ""}`}
+            title="تكبير"
+          >
+            <ZoomIn className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setZoom(1)}
+            className={`h-9 w-9 p-0 rounded-xl cursor-pointer ${darkSurface ? "border-white/15 bg-white/5 text-white hover:bg-white/10" : ""}`}
+            title="إعادة ضبط الحجم"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setLightboxOpen(true)}
+            className={`h-9 px-3 rounded-xl text-xs font-bold gap-1.5 cursor-pointer ${darkSurface ? "border-white/15 bg-white/5 text-white hover:bg-white/10" : ""}`}
+          >
+            <Maximize2 className="h-3.5 w-3.5" /> ملء الشاشة
+          </Button>
+          <a
+            href={currentUrl}
+            download={`mindmap-${safeIndex + 1}.png`}
+            className={`inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition ${
+              darkSurface
+                ? "border-white/15 bg-white/5 text-white hover:bg-white/10"
+                : "border-border bg-background hover:bg-muted text-foreground"
+            }`}
+          >
+            <Download className="h-3.5 w-3.5" /> تحميل
+          </a>
+        </div>
+      </div>
+
+      {/* Main Viewport */}
+      <div
+        className={`relative overflow-auto rounded-2xl border p-3 ${
+          darkSurface ? "border-white/10 bg-slate-950/70" : "border-border bg-muted/30"
+        }`}
+        style={{ maxHeight: "70vh" }}
+      >
+        <div className="flex justify-center min-w-full">
+          <img
+            src={currentUrl}
+            alt={`خريطة ذهنية ${safeIndex + 1}`}
+            className="rounded-xl transition-transform duration-200 origin-top shadow-md select-none"
+            style={{ transform: `scale(${zoom})`, maxWidth: zoom <= 1 ? "100%" : "none" }}
+          />
+        </div>
+      </div>
+
+      {/* Thumbnails Switcher */}
+      {validImages.length > 1 && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          {validImages.map((img, idx) => (
+            <button
+              key={img + idx}
+              type="button"
+              onClick={() => {
+                setSelectedIndex(idx);
+                setZoom(1);
+              }}
+              className={`relative shrink-0 h-16 w-24 rounded-xl overflow-hidden border-2 transition cursor-pointer ${
+                idx === safeIndex
+                  ? "border-primary ring-2 ring-primary/30"
+                  : "border-transparent opacity-65 hover:opacity-100"
+              }`}
+            >
+              <img src={buildMediaUrl(img)} alt={`لوحة ${idx + 1}`} className="h-full w-full object-cover" />
+              <span className="absolute bottom-1 right-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                {idx + 1}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Fullscreen Lightbox */}
+      {lightboxOpen && (
+        <div
+          className="fixed inset-0 z-[200] bg-black/95 flex flex-col p-3 sm:p-5"
+          dir="rtl"
+          onClick={() => setLightboxOpen(false)}
+        >
+          <div className="flex items-center justify-between text-white pb-3" onClick={(e) => e.stopPropagation()}>
+            <span className="text-sm font-bold">
+              خريطة ذهنية ({safeIndex + 1} / {validImages.length})
+            </span>
+            <div className="flex items-center gap-2">
+              {validImages.length > 1 && (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedIndex((i) => (i - 1 + validImages.length) % validImages.length)}
+                    className="h-9 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  >
+                    <ChevronRight className="h-4 w-4" /> السابقة
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedIndex((i) => (i + 1) % validImages.length)}
+                    className="h-9 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  >
+                    التالية <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setLightboxOpen(false)}
+                className="h-9 w-9 bg-white/10 border-white/20 text-white hover:bg-rose-600"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div
+            className="flex-1 overflow-auto flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={currentUrl}
+              alt={`خريطة ذهنية ${safeIndex + 1}`}
+              className="max-h-full max-w-full object-contain rounded-xl"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
