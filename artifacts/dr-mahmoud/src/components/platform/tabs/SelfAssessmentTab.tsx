@@ -1958,9 +1958,9 @@ export function SelfAssessmentTab({
                     return (
                       <span className="inline-flex flex-wrap items-center gap-1">
                         <strong className="text-slate-700 dark:text-slate-300">{match[1].trim()}</strong>
-                        <span dir="ltr" style={{ unicodeBidi: "isolate" }} className="text-[11px] font-sans text-slate-500 dark:text-slate-400 font-medium">
+                        <bdi dir="ltr" style={{ unicodeBidi: "isolate" }} className="text-[11px] font-sans text-slate-500 dark:text-slate-400 font-medium">
                           ({match[2].trim()})
-                        </span>
+                        </bdi>
                       </span>
                     );
                   }

@@ -871,6 +871,7 @@ router.get("/learning/essay-question-bank/browse", requireStudent, async (req, r
         difficulty: q.difficulty || "medium",
         points: q.points || 5,
         prompt: q.prompt,
+        translation: (q as any).translation || null,
         modelAnswer: q.modelAnswer,
         explanation: q.explanation || null,
         imageUrl: q.imageUrl || null,

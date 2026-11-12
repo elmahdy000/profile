@@ -57,6 +57,7 @@ interface EssayBankQuestion {
   difficulty: string;
   points: number;
   prompt: string;
+  translation?: string | null;
   modelAnswer: string;
   explanation?: string | null;
   imageUrl?: string | null;
@@ -944,7 +945,7 @@ export function EssayExamsTab({
                         )}
 
                         {/* Arabic Prompt Translation */}
-                        {promptParts.translation && (
+                        {(q.translation || promptParts.translation) && (
                           <div
                             dir="rtl"
                             className="rounded-xl border border-blue-200/80 dark:border-blue-900/60 bg-blue-50/70 dark:bg-blue-950/30 p-2.5 text-xs text-blue-800 dark:text-blue-300 text-right leading-relaxed"
@@ -952,7 +953,7 @@ export function EssayExamsTab({
                             <strong className="block text-[11px] font-black text-blue-700 dark:text-blue-300 mb-0.5">
                               🌐 ترجمة السؤال:
                             </strong>
-                            <BidiStatement text={promptParts.translation} />
+                            <BidiStatement text={q.translation || promptParts.translation || ""} />
                           </div>
                         )}
 
@@ -1938,15 +1939,32 @@ export function EssayExamsTab({
                       )}
 
                       {/* Step Explanation / Grading breakdown */}
-                      {q.explanation && (
-                        <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 text-xs text-amber-900 dark:text-amber-200 space-y-1">
-                          <span className="font-bold flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
-                            <Sparkles className="h-3.5 w-3.5" />
-                            توزيع الدرجات وخطوات التتبع:
-                          </span>
-                          <p className="leading-relaxed whitespace-pre-wrap">{q.explanation}</p>
-                        </div>
-                      )}
+                      {q.explanation && (() => {
+                        const expParts = splitModelAnswerTranslation(q.explanation);
+                        const isExpEng = isPrimarilyEnglish(expParts.main);
+                        return (
+                          <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 text-xs text-amber-900 dark:text-amber-200 space-y-1.5">
+                            <span className="font-bold flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+                              <Sparkles className="h-3.5 w-3.5" />
+                              توزيع الدرجات وخطوات التتبع:
+                            </span>
+                            <div
+                              dir={isExpEng ? "ltr" : "rtl"}
+                              className={`leading-relaxed whitespace-pre-wrap font-medium ${isExpEng ? "text-left font-sans" : "text-right"}`}
+                            >
+                              <BidiStatement text={expParts.main} />
+                            </div>
+                            {expParts.translation && (
+                              <div dir="rtl" className="pt-2 border-t border-amber-500/20 text-right text-emerald-800 dark:text-emerald-300">
+                                <strong className="block text-[11px] font-black text-emerald-700 dark:text-emerald-300 mb-0.5">
+                                  🌐 الترجمة العربية:
+                                </strong>
+                                <BidiStatement text={expParts.translation} />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>

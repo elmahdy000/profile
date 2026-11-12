@@ -560,6 +560,7 @@ export const essayQuestionBankTable = pgTable("essay_question_bank", {
   prompt: text("prompt").notNull(), // نص السؤال المقالي
   modelAnswer: text("model_answer").notNull(), // الإجابة النموذجية والمثالية
   explanation: text("explanation"), // إرشادات التصحيح وعناصر الدرجات
+  translation: text("translation"), // الترجمة العربية للسؤال لمدارس اللغات
   imageUrl: text("image_url"), // صورة السؤال إن وجدت
   modelAnswerImageUrl: text("model_answer_image_url"), // صورة توضيحية للحل النموذجي إن وجدت
   tags: jsonb("tags").$type<string[]>().notNull().default([]),
