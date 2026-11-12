@@ -1223,7 +1223,7 @@ export function StudentPlatform() {
 
           {/* Compact Bottom Footer Actions */}
           <div className="shrink-0 mt-auto space-y-1.5 border-t border-slate-200/80 dark:border-[#1E2E48] bg-slate-50/70 dark:bg-[#070D18] p-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-            <ThemeToggle className="h-8.5 w-full text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0D1726] shadow-2xs" />
+            <ThemeToggle showLabel className="h-8.5 w-full text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0D1726] shadow-2xs" />
             <div className="grid grid-cols-2 gap-1.5">
               <a
                 href={`https://wa.me/201066711545?text=${encodeURIComponent(

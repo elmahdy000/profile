@@ -216,8 +216,31 @@ const EGYPT_GOVERNORATES: Record<string, string[]> = {
   "جنوب سيناء": ["شرم الشيخ", "طور سيناء", "دهب", "نويبع", "طابا", "رأس سدر", "سانت كاترين", "أبو رديس", "أبو زنيمة"]
 };
 
-function formatUnitLabel(unitName: string): string {
-  return unitName;
+export function renderUnitTitleWithIsolatedEnglish(rawTitle: string) {
+  if (!rawTitle) return null;
+  // Match parenthesized subtitle, e.g. "الوحدة الثانية: الأمن السيبراني والتشفير (Unit 2: Cybersecurity & Encryption)"
+  const match = rawTitle.match(/^([\s\S]*?)\s*\(([^)]+)\)\s*$/);
+  if (match) {
+    const arabicPart = match[1].trim();
+    const englishPart = match[2].trim();
+    return (
+      <span className="inline-flex flex-wrap items-center gap-1.5 align-baseline">
+        <span>{arabicPart}</span>
+        <span
+          dir="ltr"
+          style={{ unicodeBidi: "isolate" }}
+          className="inline-block px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[11px] font-sans font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+        >
+          {englishPart}
+        </span>
+      </span>
+    );
+  }
+  return <BidiStatement text={rawTitle} />;
+}
+
+function formatUnitLabel(unitName: string): React.ReactNode {
+  return renderUnitTitleWithIsolatedEnglish(unitName);
 }
 
 export function SelfAssessmentTab({
@@ -1931,7 +1954,7 @@ export function SelfAssessmentTab({
                 تقرير نتيجة التقييم الذاتي
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                الوحدة: <bdi className="font-bold text-slate-700 dark:text-slate-300">{selectedUnitName}</bdi> • عدد الأسئلة: <span className="font-mono tabular-nums">{reviewDetails.length}</span>
+                الوحدة: {renderUnitTitleWithIsolatedEnglish(selectedUnitName)} • عدد الأسئلة: <span className="font-mono tabular-nums">{reviewDetails.length}</span>
               </p>
             </div>
 

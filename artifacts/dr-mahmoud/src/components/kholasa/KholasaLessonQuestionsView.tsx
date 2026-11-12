@@ -329,7 +329,7 @@ export function KholasaLessonQuestionsView({
                   return (
                     <div
                       dir={isPromptEng ? "ltr" : "rtl"}
-                      className={`text-sm font-bold leading-relaxed ${isPromptEng ? "text-left" : "text-right"}`}
+                      className={`text-sm font-bold leading-relaxed ${isPromptEng ? "text-left font-sans" : "text-right"}`}
                     >
                       <BidiStatement text={item.prompt} />
                     </div>
@@ -387,7 +387,7 @@ export function KholasaLessonQuestionsView({
                       </div>
                       <div
                         dir={isAnsEng ? "ltr" : "rtl"}
-                        className={`whitespace-pre-line ${isAnsEng ? "text-left" : "text-right"}`}
+                        className={`whitespace-pre-line leading-relaxed ${isAnsEng ? "text-left font-sans" : "text-right"}`}
                       >
                         <BidiStatement text={mainAns} />
                       </div>
@@ -406,10 +406,10 @@ export function KholasaLessonQuestionsView({
                       )}
                       {expParts && (
                         <div className={`pt-2 border-t border-emerald-500/20 ${mutedClass}`}>
-                          <strong dir="rtl" className="block text-right mb-1">💡 ملاحظات التصحيح:</strong>
+                          <strong dir="rtl" className="block text-right mb-1 font-bold text-amber-700 dark:text-amber-400">💡 ملاحظات التصحيح:</strong>
                           <div
                             dir={isExpEng ? "ltr" : "rtl"}
-                            className={isExpEng ? "text-left" : "text-right"}
+                            className={isExpEng ? "text-left font-sans" : "text-right"}
                           >
                             <BidiStatement text={expParts.main} />
                           </div>

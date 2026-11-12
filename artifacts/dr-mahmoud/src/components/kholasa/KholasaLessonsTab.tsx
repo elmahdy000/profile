@@ -219,11 +219,11 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
 
     const subTabs: Array<{ id: LessonStudyTab; label: string; icon: typeof Sparkles }> = [
       { id: "video", label: "فيديو الشرح", icon: Video },
-      { id: "definitions", label: `التعريفات (${defsCount})`, icon: BookOpen },
-      ...(showZatonaTab ? [{ id: "summary" as const, label: "الزتونة", icon: Sparkles }] : []),
+      { id: "definitions", label: `التعريفات والمفاهيم (${defsCount})`, icon: BookOpen },
+      ...(showZatonaTab ? [{ id: "summary" as const, label: "أهم النقاط (الزتونة) ⚡", icon: Sparkles }] : []),
       { id: "mindmap", label: `الخرائط الذهنية (${activeMaterial.mindmapImages?.length || 0})`, icon: MapIcon },
       { id: "flashcards", label: `التسميع (${activeMaterial.flashcards?.length || 0})`, icon: Layers },
-      { id: "questions", label: `الأسئلة (${totalQuestions})`, icon: HelpCircle },
+      { id: "questions", label: `بنك أسئلة الدرس (${totalQuestions})`, icon: HelpCircle },
       ...(hasSections ? [{ id: "sections" as const, label: "الشرح المفصل", icon: FileText }] : []),
     ];
 
