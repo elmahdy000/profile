@@ -37,7 +37,8 @@ import {
   ExternalLink,
   ShieldCheck,
   Zap,
-  Info
+  Info,
+  ClipboardCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -1733,7 +1734,9 @@ export function TestBankTab({
                               </button>
                               <div className="flex items-center gap-1 shrink-0 text-[10px]">
                                 {lessonObj.lessonId && (
-                                  <Video className={`h-3 w-3 ${isSelected ? "text-white" : "text-primary"}`} title="مرتبط بفيديو" />
+                                  <span title="مرتبط بفيديو" className="inline-flex items-center">
+                                    <Video className={`h-3 w-3 ${isSelected ? "text-white" : "text-primary"}`} />
+                                  </span>
                                 )}
                                 <span
                                   className={`px-1.5 py-0.5 rounded ${
