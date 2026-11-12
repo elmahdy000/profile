@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   Layers,
   RotateCcw,
@@ -10,6 +11,7 @@ import {
   Filter,
   Volume2,
   Square,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BidiStatement } from "./BidiStatement";
@@ -235,56 +237,86 @@ export function KholasaFlashcardsView({
         />
       </div>
 
-      {/* Flashcard Surface */}
+      {/* 3D Flipping Flashcard Surface */}
       <button
         type="button"
         onClick={() => setFlipped((f) => !f)}
-        className={`w-full min-h-[240px] rounded-3xl border p-6 sm:p-8 flex flex-col items-center justify-center text-center transition-all cursor-pointer shadow-md ${
-          flipped
-            ? darkSurface
-              ? "border-emerald-500/40 bg-emerald-950/30 text-white"
-              : "border-emerald-500/40 bg-emerald-500/5 text-foreground"
-            : darkSurface
-              ? "border-white/15 bg-slate-950/80 text-white hover:border-sky-400/50"
-              : "border-border bg-card text-foreground hover:border-primary/40"
-        }`}
+        aria-label={flipped ? "إظهار وجه المصطلح" : "قلب الكارت لكشف الإجابة"}
+        className="w-full text-center cursor-pointer block focus:outline-none group"
+        style={{ perspective: "1200px" }}
       >
-        <span
-          className={`mb-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold ${
-            flipped
-              ? "bg-emerald-500/15 text-emerald-500"
-              : "bg-sky-500/15 text-sky-500"
-          }`}
+        <motion.div
+          key={`${card.id}-${safeIndex}`}
+          initial={{ opacity: 0.7, scale: 0.97, rotateY: 0 }}
+          animate={{ opacity: 1, scale: 1, rotateY: flipped ? 180 : 0 }}
+          transition={{ type: "spring", stiffness: 240, damping: 22 }}
+          style={{ transformStyle: "preserve-3d" }}
+          className="relative grid w-full min-h-[260px]"
         >
-          <Eye className="h-3 w-3" />
-          {flipped ? "الإجابة والشرح" : card.tag || "المصطلح / المفهوم — اضغط لكشف الإجابة"}
-        </span>
-
-        {!flipped ? (
+          {/* Front Face */}
           <div
-            dir={isFrontEng ? "ltr" : "rtl"}
-            className="text-base sm:text-xl font-black leading-relaxed max-w-xl"
+            style={{
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
+            }}
+            className={`col-start-1 row-start-1 rounded-3xl border p-6 sm:p-8 flex flex-col items-center justify-center shadow-md transition-colors ${
+              darkSurface
+                ? "border-white/15 bg-gradient-to-br from-slate-900 to-slate-950 text-white group-hover:border-sky-400/60"
+                : "border-border bg-gradient-to-br from-card to-muted/30 text-foreground group-hover:border-primary/50 shadow-sm"
+            }`}
           >
-            <BidiStatement text={card.front} />
-          </div>
-        ) : (
-          <div className="space-y-3 max-w-xl w-full">
+            <span className="mb-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold bg-sky-500/15 text-sky-500">
+              <Eye className="h-3 w-3" />
+              {card.tag || "المصطلح / السؤال"}
+            </span>
             <div
-              dir={isBackEng ? "ltr" : "rtl"}
-              className="text-sm sm:text-base font-bold leading-relaxed text-center"
+              dir={isFrontEng ? "ltr" : "rtl"}
+              className="text-base sm:text-xl font-black leading-relaxed max-w-xl"
             >
-              <BidiStatement text={card.back} />
+              <BidiStatement text={card.front} />
             </div>
-            {card.translation && (
-              <p
-                dir="rtl"
-                className="pt-2 border-t border-border/40 text-xs sm:text-sm text-emerald-500 font-semibold leading-relaxed text-center"
-              >
-                {card.translation}
-              </p>
-            )}
+            <span className={`mt-4 inline-flex items-center gap-1 text-[11px] font-bold ${darkSurface ? "text-slate-400" : "text-muted-foreground"}`}>
+              <RotateCcw className="h-3 w-3" /> اضغط لقلب الكارت ومعرفة الإجابة
+            </span>
           </div>
-        )}
+
+          {/* Back Face */}
+          <div
+            style={{
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
+              transform: "rotateY(180deg)",
+            }}
+            className={`col-start-1 row-start-1 rounded-3xl border p-6 sm:p-8 flex flex-col items-center justify-center shadow-md ${
+              darkSurface
+                ? "border-emerald-500/50 bg-gradient-to-br from-emerald-950/60 to-slate-950 text-white"
+                : "border-emerald-500/45 bg-gradient-to-br from-emerald-500/10 to-card text-foreground shadow-sm"
+            }`}
+          >
+            <span className="mb-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold bg-emerald-500/15 text-emerald-500">
+              <Sparkles className="h-3 w-3" /> الإجابة والشرح
+            </span>
+            <div className="space-y-3 max-w-xl w-full">
+              <div
+                dir={isBackEng ? "ltr" : "rtl"}
+                className="text-sm sm:text-base font-bold leading-relaxed text-center"
+              >
+                <BidiStatement text={card.back} />
+              </div>
+              {card.translation && (
+                <p
+                  dir="rtl"
+                  className="pt-2.5 border-t border-emerald-500/25 text-xs sm:text-sm text-emerald-500 font-semibold leading-relaxed text-center"
+                >
+                  {card.translation}
+                </p>
+              )}
+            </div>
+            <span className={`mt-4 inline-flex items-center gap-1 text-[11px] font-bold ${darkSurface ? "text-emerald-300/70" : "text-emerald-600/80"}`}>
+              <RotateCcw className="h-3 w-3" /> اضغط للرجوع لوجه الكارت
+            </span>
+          </div>
+        </motion.div>
       </button>
 
       {/* Pronunciation Controls for English / Languages cards */}

@@ -69,6 +69,7 @@ export function DailyChallengeCard({ isPaid }: { isPaid: boolean }) {
         body: JSON.stringify({ answers: arr }),
       });
       toast({ title: "تم تسجيل التحدي اليومي بنجاح! 🔥" });
+      window.dispatchEvent(new Event("kholasa:mistakes-updated"));
       await loadDaily();
     } catch (err: any) {
       toast({ title: "تعذر التسليم", description: err.message, variant: "destructive" });

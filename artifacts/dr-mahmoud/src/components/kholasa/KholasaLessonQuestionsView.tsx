@@ -162,6 +162,9 @@ export function KholasaLessonQuestionsView({
           translation: res.translation,
         },
       }));
+      if (!res.isCorrect) {
+        window.dispatchEvent(new Event("kholasa:mistakes-updated"));
+      }
     } catch (err: any) {
       toast({
         title: "تعذر التحقق من الإجابة",

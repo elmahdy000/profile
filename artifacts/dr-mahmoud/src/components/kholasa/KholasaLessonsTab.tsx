@@ -17,11 +17,13 @@ import {
   HelpCircle,
   Clock,
   FileText,
+  FolderOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { studentApi } from "./kholasa-api";
 import { BidiStatement } from "./BidiStatement";
+import { isPrimarilyEnglish } from "./kholasa-speech";
 import { KholasaSummaryView, hasZatonaContent } from "./KholasaSummaryView";
 import { KholasaMindMapView } from "./KholasaMindMapView";
 import { KholasaFlashcardsView } from "./KholasaFlashcardsView";
@@ -48,7 +50,7 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [selectedUnit, setSelectedUnit] = useState("all");
+  const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
   const [onlyBookmarked, setOnlyBookmarked] = useState(false);
   const [activeMaterial, setActiveMaterial] = useState<KholasaMaterial | null>(null);
   const [studyTab, setStudyTab] = useState<LessonStudyTab>("summary");
@@ -121,18 +123,37 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const unitsList = useMemo(() => {
-    const s = new Set<string>();
+  const unitCards = useMemo(() => {
+    const map = new Map<string, KholasaMaterial[]>();
     for (const m of materials) {
-      if (m.unit) s.add(m.unit);
+      const unitTitle = m.unit || "دروس عامة";
+      const list = map.get(unitTitle) || [];
+      list.push(m);
+      map.set(unitTitle, list);
     }
-    return Array.from(s);
+    return Array.from(map.entries()).map(([unitTitle, lessons]) => {
+      let totalDefs = 0;
+      let totalMaps = 0;
+      let totalCards = 0;
+      let totalQuestions = 0;
+      for (const l of lessons) {
+        totalDefs += (l.summaryData?.definitions?.length || 0) + (l.summaryData?.keyConcepts?.length || 0);
+        totalMaps += l.mindmapImages?.length || 0;
+        totalCards += l.flashcards?.length || 0;
+        totalQuestions +=
+          (l.questionCounts?.mcq || 0) +
+          (l.questionCounts?.trueFalse || 0) +
+          (l.questionCounts?.essay || 0);
+      }
+      return { unitTitle, lessons, totalDefs, totalMaps, totalCards, totalQuestions };
+    });
   }, [materials]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return materials.filter((m) => {
-      if (selectedUnit !== "all" && m.unit !== selectedUnit) return false;
+      const unitTitle = m.unit || "دروس عامة";
+      if (selectedUnit && unitTitle !== selectedUnit) return false;
       if (onlyBookmarked && !m.isBookmarked) return false;
       if (!q) return true;
       return (
@@ -147,9 +168,10 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
   const groupedByUnit = useMemo(() => {
     const map = new Map<string, KholasaMaterial[]>();
     for (const m of filtered) {
-      const list = map.get(m.unit) || [];
+      const unitTitle = m.unit || "دروس عامة";
+      const list = map.get(unitTitle) || [];
       list.push(m);
-      map.set(m.unit, list);
+      map.set(unitTitle, list);
     }
     return Array.from(map.entries());
   }, [filtered]);
@@ -159,7 +181,7 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
       <div className="grid place-items-center py-20" dir="rtl">
         <div className="flex flex-col items-center gap-3 text-muted-foreground">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-xs font-bold">جارٍ تحميل الدروس والزتونة والخرائط الذهنية...</p>
+          <p className="text-xs font-bold">جارٍ تحميل وحدات ودروس الخلاصة...</p>
         </div>
       </div>
     );
@@ -427,6 +449,8 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
     );
   }
 
+  const showUnitsOverview = !selectedUnit && !search.trim() && !onlyBookmarked;
+
   return (
     <div className="space-y-5 text-right" dir="rtl">
       {/* Header */}
@@ -434,14 +458,14 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl md:text-2xl font-black text-foreground">
-              الزتونة والخرائط الذهنية
+              الخلاصة
             </h1>
             <span className="rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-2.5 py-0.5 text-xs font-extrabold">
-              {materials.length} درس
+              {unitCards.length} وحدات • {materials.length} درس
             </span>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            لكل درس في مكان واحد: فيديو الشرح، التعريفات بالترجمة، الزتونة، الخرائط الذهنية، التسميع، وجميع الأسئلة بأنواعها.
+            اختر الوحدة الدراسية لفتح دروسها: فيديو الشرح، التعريفات بالترجمة، الخرائط الذهنية، التسميع، وجميع الأسئلة بأنواعها.
           </p>
         </div>
 
@@ -470,75 +494,162 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
         </div>
       </header>
 
-      {/* Unit Filter Pills */}
-      {unitsList.length > 1 && (
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-          <button
-            type="button"
-            onClick={() => setSelectedUnit("all")}
-            className={`shrink-0 rounded-xl border px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
-              selectedUnit === "all"
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-muted-foreground hover:bg-muted"
-            }`}
-          >
-            كل الوحدات ({materials.length})
-          </button>
-          {unitsList.map((u) => (
-            <button
-              key={u}
-              type="button"
-              onClick={() => setSelectedUnit(u)}
-              className={`shrink-0 rounded-xl border px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
-                selectedUnit === u
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              {u}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Level 1: Units as Vertical Cards Grid (عند الضغط عليها يفتح دروس الوحدة) */}
+      {showUnitsOverview ? (
+        unitCards.length === 0 ? (
+          <div className="rounded-2xl border border-border bg-card p-10 text-center space-y-2">
+            <Sparkles className="h-8 w-8 text-amber-500 mx-auto opacity-75" />
+            <p className="text-sm font-bold text-foreground">لا توجد وحدات مضافة لمرحلتك الدراسية حالياً.</p>
+            <p className="text-xs text-muted-foreground">ستظهر كل الوحدات والدروس الخاصة بمرحلتك الدراسية هنا.</p>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {unitCards.map((u, uIdx) => {
+              const isUnitEng = isPrimarilyEnglish(u.unitTitle);
+              return (
+                <div
+                  key={u.unitTitle}
+                  onClick={() => {
+                    setSelectedUnit(u.unitTitle);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSelectedUnit(u.unitTitle);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }
+                  }}
+                  className="group relative rounded-2xl border border-border bg-card p-5 shadow-2xs hover:border-primary/60 hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-pointer flex flex-col justify-between gap-4 overflow-hidden"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 text-primary border border-primary/20 px-2.5 py-1 text-xs font-black">
+                        <FolderOpen className="h-3.5 w-3.5" />
+                        الوحدة {uIdx + 1}
+                      </span>
+                      <span className="rounded-lg bg-muted px-2.5 py-0.5 text-[11px] font-extrabold text-muted-foreground">
+                        {u.lessons.length} دروس
+                      </span>
+                    </div>
 
-      {groupedByUnit.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-card p-10 text-center space-y-2">
-          <Sparkles className="h-8 w-8 text-amber-500 mx-auto opacity-75" />
-          <p className="text-sm font-bold text-foreground">لا توجد دروس مطابقة لبحثك حالياً.</p>
-          <p className="text-xs text-muted-foreground">ستظهر كل الدروس والزتونة والخرائط الذهنية الخاصة بمرحلتك الدراسية هنا.</p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {groupedByUnit.map(([unitTitle, items]) => (
-            <section key={unitTitle} className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-primary" />
-                <h2 className="text-sm sm:text-base font-black text-foreground">{unitTitle}</h2>
-                <span className="text-xs font-bold text-muted-foreground">({items.length})</span>
-              </div>
-
-              <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
-                {items.map((m) => {
-                  const conceptsCount =
-                    (m.summaryData?.keyConcepts?.length || 0) + (m.summaryData?.definitions?.length || 0);
-                  const mapsCount = m.mindmapImages?.length || 0;
-                  const cardsCount = m.flashcards?.length || 0;
-                  const totalQ =
-                    (m.questionCounts?.mcq || 0) +
-                    (m.questionCounts?.trueFalse || 0) +
-                    (m.questionCounts?.essay || 0);
-
-                  return (
-                    <div
-                      key={m.id}
-                      onClick={() => openLesson(m)}
-                      className="group relative rounded-2xl border border-border bg-card p-4 shadow-2xs hover:border-primary/50 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between gap-4"
+                    <h2
+                      dir={isUnitEng ? "ltr" : "rtl"}
+                      className={`text-base sm:text-lg font-black text-foreground leading-snug group-hover:text-primary transition-colors ${
+                        isUnitEng ? "text-left" : "text-right"
+                      }`}
                     >
-                      <div className="space-y-2.5">
-                        <div className="flex items-start justify-between gap-2">
-                          <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 text-[11px] font-bold">
-                            <Sparkles className="h-3 w-3" /> زتونة + خريطة
-                          </span>
+                      <BidiStatement text={u.unitTitle} />
+                    </h2>
+
+                    <div className="flex flex-wrap gap-1.5 text-[11px] font-semibold">
+                      {u.totalQuestions > 0 && (
+                        <span className="rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5">
+                          {u.totalQuestions} سؤال
+                        </span>
+                      )}
+                      {u.totalDefs > 0 && (
+                        <span className="rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5">
+                          {u.totalDefs} تعريف
+                        </span>
+                      )}
+                      {u.totalMaps > 0 && (
+                        <span className="rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 px-2 py-0.5">
+                          {u.totalMaps} خريطة
+                        </span>
+                      )}
+                      {u.totalCards > 0 && (
+                        <span className="rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2 py-0.5">
+                          {u.totalCards} تسميع
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-border/60 text-xs font-black text-primary">
+                    <span>عرض دروس الوحدة</span>
+                    <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )
+      ) : (
+        <div className="space-y-4">
+          {selectedUnit && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card/80 px-4 py-3 shadow-2xs">
+              <div className="flex items-center gap-3 min-w-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedUnit(null)}
+                  className="h-9 rounded-xl text-xs font-bold gap-1.5 shrink-0 cursor-pointer"
+                >
+                  <ArrowRight className="h-4 w-4" /> كل الوحدات
+                </Button>
+                <div className="min-w-0">
+                  <h2
+                    dir={isPrimarilyEnglish(selectedUnit) ? "ltr" : "rtl"}
+                    className={`text-sm sm:text-base font-black text-foreground truncate ${
+                      isPrimarilyEnglish(selectedUnit) ? "text-left" : "text-right"
+                    }`}
+                  >
+                    <BidiStatement text={selectedUnit} />
+                  </h2>
+                </div>
+              </div>
+              <span className="rounded-full bg-primary/10 text-primary px-3 py-1 text-xs font-extrabold">
+                {filtered.length} دروس
+              </span>
+            </div>
+          )}
+
+          {groupedByUnit.length === 0 ? (
+            <div className="rounded-2xl border border-border bg-card p-10 text-center space-y-2">
+              <Sparkles className="h-8 w-8 text-amber-500 mx-auto opacity-75" />
+              <p className="text-sm font-bold text-foreground">لا توجد دروس مطابقة لبحثك حالياً.</p>
+              <p className="text-xs text-muted-foreground">ستظهر كل الدروس والملخصات والخرائط الذهنية الخاصة بمرحلتك الدراسية هنا.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {groupedByUnit.map(([unitTitle, items]) => (
+                <section key={unitTitle} className="space-y-3">
+                  {!selectedUnit && (
+                    <div className="flex items-center gap-2">
+                      <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+                      <h2 className="text-sm sm:text-base font-black text-foreground">
+                        <BidiStatement text={unitTitle} />
+                      </h2>
+                      <span className="text-xs font-bold text-muted-foreground">({items.length})</span>
+                    </div>
+                  )}
+
+                  <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+                    {items.map((m) => {
+                      const conceptsCount =
+                        (m.summaryData?.keyConcepts?.length || 0) + (m.summaryData?.definitions?.length || 0);
+                      const mapsCount = m.mindmapImages?.length || 0;
+                      const cardsCount = m.flashcards?.length || 0;
+                      const totalQ =
+                        (m.questionCounts?.mcq || 0) +
+                        (m.questionCounts?.trueFalse || 0) +
+                        (m.questionCounts?.essay || 0);
+
+                      return (
+                        <div
+                          key={m.id}
+                          onClick={() => openLesson(m)}
+                          className="group relative rounded-2xl border border-border bg-card p-4 shadow-2xs hover:border-primary/50 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between gap-4"
+                        >
+                          <div className="space-y-2.5">
+                            <div className="flex items-start justify-between gap-2">
+                              <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 text-[11px] font-bold">
+                                <Sparkles className="h-3 w-3" /> الخلاصة
+                              </span>
                           <button
                             type="button"
                             onClick={(e) => void toggleBookmark(m, e)}
@@ -642,6 +753,8 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
               </div>
             </section>
           ))}
+            </div>
+          )}
         </div>
       )}
     </div>

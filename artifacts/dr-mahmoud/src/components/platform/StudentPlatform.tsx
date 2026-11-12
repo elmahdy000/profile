@@ -226,7 +226,7 @@ export function getNotificationTarget(notification: { title: string; message: st
     titleMsg.includes("فصل") ||
     titleMsg.includes("وحدة")
   ) {
-    return { tab: "lessons", label: "كورساتي 📚" };
+    return { tab: "lessons", label: "فيديوهات المنصة 🎬" };
   }
 
   // 6. Summaries & Notes (كشكول الطالب والتلخيصات)
@@ -713,6 +713,17 @@ export function StudentPlatform() {
   }, [student]);
 
   useEffect(() => {
+    if (!student || student.status !== "approved" || student.paymentStatus !== "paid") return;
+    const syncMistakesCount = () => {
+      api<{ unresolvedCount?: number }>("/api/learning/mistakes")
+        .then((mk) => setUnresolvedMistakesCount(Number(mk?.unresolvedCount) || 0))
+        .catch(() => undefined);
+    };
+    window.addEventListener("kholasa:mistakes-updated", syncMistakesCount);
+    return () => window.removeEventListener("kholasa:mistakes-updated", syncMistakesCount);
+  }, [student]);
+
+  useEffect(() => {
     if (!student) return;
     const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
     const stream = new EventSource(`/api/learning/notifications/stream${deviceId ? `?deviceId=${encodeURIComponent(deviceId)}` : ""}`, { withCredentials: true });
@@ -990,8 +1001,8 @@ export function StudentPlatform() {
 
   const nav = [
     ["dashboard", "الرئيسية", Home],
-    ["lessons", "كورساتي", BookOpen],
-    ["kholasa", "الخلاصة والزتونة 💎", Sparkles],
+    ["lessons", "فيديوهات المنصة", BookOpen],
+    ["kholasa", "الخلاصة 💎", Sparkles],
     ["mistakes", "ركن غلطاتي 🎯", Target],
     ["essay-exams", "الامتحانات المقالية ✍️", FileEdit],
     ["quizzes", "الاختبارات", ClipboardCheck],
@@ -1007,8 +1018,8 @@ export function StudentPlatform() {
       title: "المسار التعليمي",
       items: [
         { id: "dashboard" as const, label: "الرئيسية", icon: Home },
-        { id: "lessons" as const, label: "كورساتي والمحاضرات", icon: BookOpen },
-        { id: "kholasa" as const, label: "الخلاصة والزتونة 💎", icon: Sparkles },
+        { id: "lessons" as const, label: "فيديوهات المنصة", icon: BookOpen },
+        { id: "kholasa" as const, label: "الخلاصة 💎", icon: Sparkles },
         { id: "summaries" as const, label: "مذكراتي وتلخيصاتي", icon: FileText },
         { id: "files" as const, label: "الملفات والملازم", icon: FolderOpen },
       ],
@@ -1033,8 +1044,8 @@ export function StudentPlatform() {
 
   const navLabels: Record<string, string> = {
     dashboard: "الرئيسية",
-    lessons: "كورساتي",
-    kholasa: "الخلاصة والزتونة",
+    lessons: "فيديوهات المنصة",
+    kholasa: "الخلاصة",
     mistakes: "ركن غلطاتي",
     "essay-exams": "الامتحانات المقالية",
     quizzes: "الاختبارات",
@@ -1487,8 +1498,8 @@ export function StudentPlatform() {
           ) : tab === "kholasa" ? (
             isUnpaid ? (
               <LockedContentNotice
-                title="الخلاصة والزتونة والخرائط الذهنية"
-                description="تم قفل الزتونة والخرائط الذهنية وبطاقات المراجعة لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
+                title="الخلاصة والخرائط الذهنية"
+                description="تم قفل الخلاصة والخرائط الذهنية والتسميع لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
                 onGoToPreview={() => setTab("lessons")}
                 onOpenPayment={() => setShowPaymentModal(true)}
               />
@@ -1619,7 +1630,7 @@ export function StudentPlatform() {
             }`}
           >
             <BookOpen className={`h-[20px] w-[20px] ${tab === "lessons" ? "stroke-[2.5]" : ""}`} />
-            <span>كورساتي</span>
+            <span className="truncate max-w-[66px]">فيديوهات المنصة</span>
           </button>
           <button
             type="button"
@@ -1662,6 +1673,66 @@ export function StudentPlatform() {
           </button>
         </div>
       </nav>
+
+      {/* Distinctive Floating Mistakes Counter */}
+      {!isUnpaid && tab !== "mistakes" && !activeQuiz && (
+        <motion.button
+          type="button"
+          onClick={() => {
+            setTab("mistakes");
+            setSidebarOpen(false);
+          }}
+          initial={{ opacity: 0, y: 16, scale: 0.92 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          whileHover={{ scale: 1.04, y: -2 }}
+          whileTap={{ scale: 0.96 }}
+          dir="rtl"
+          title="افتح ركن غلطاتي لمراجعة أخطائك"
+          className={`fixed bottom-[76px] left-3 sm:left-6 lg:bottom-6 lg:left-6 z-30 flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 border backdrop-blur-xl transition-shadow cursor-pointer ${
+            unresolvedMistakesCount > 0
+              ? "border-rose-400/50 bg-gradient-to-l from-rose-600 via-rose-500 to-orange-500 text-white shadow-xl shadow-rose-500/35"
+              : "border-emerald-500/35 bg-white/95 dark:bg-slate-900/95 text-foreground shadow-lg"
+          }`}
+        >
+          <span className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-white/20 shrink-0">
+            {unresolvedMistakesCount > 0 && (
+              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-amber-300 animate-ping" />
+            )}
+            <Target
+              className={`h-4 w-4 ${
+                unresolvedMistakesCount > 0 ? "text-white" : "text-emerald-500"
+              }`}
+            />
+          </span>
+
+          <div className="text-right leading-tight">
+            <div className="text-[11px] font-black tracking-tight">
+              عداد الأخطاء
+            </div>
+            <div
+              className={`text-[10px] font-bold ${
+                unresolvedMistakesCount > 0 ? "text-white/90" : "text-muted-foreground"
+              }`}
+            >
+              {unresolvedMistakesCount > 0 ? "للمراجعة الآن" : "لا توجد أخطاء"}
+            </div>
+          </div>
+
+          <motion.span
+            key={unresolvedMistakesCount}
+            initial={{ scale: 1.35 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 360, damping: 18 }}
+            className={`min-w-[30px] h-7 px-2 rounded-full font-mono text-xs font-black tabular-nums flex items-center justify-center shadow-2xs ${
+              unresolvedMistakesCount > 0
+                ? "bg-white text-rose-600"
+                : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+            }`}
+          >
+            {unresolvedMistakesCount}
+          </motion.span>
+        </motion.button>
+      )}
 
       <AnimatePresence>
         {linkedPreviewFile && <AppFilePreviewModal file={linkedPreviewFile} onClose={() => setLinkedPreviewFile(null)} />}

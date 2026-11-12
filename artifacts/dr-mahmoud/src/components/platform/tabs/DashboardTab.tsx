@@ -246,8 +246,8 @@ export function QuickActionsDock({
   const actions = [
     {
       id: "kholasa",
-      title: "الزتونة والخرائط",
-      desc: "ملخصات، تعريفات، وأسئلة كل درس",
+      title: "الخلاصة",
+      desc: "دروس، تعريفات، خرائط، وتسميع",
       icon: Sparkles,
       iconColor: "text-amber-600 dark:text-amber-400",
       iconBg: "bg-amber-500/10",

@@ -994,7 +994,7 @@ export function VideoLessonsSection({
 
         {/* 1. HERO OVERVIEW CARD */}
         <CourseOverviewCard
-          courseName={activeCategory === "all" ? "جميع الكورسات والمسارات" : `كورس ${activeCategory}`}
+          courseName={activeCategory === "all" ? "فيديوهات المنصة" : activeCategory}
           academicLevel={studentGrade || "حساب طالب متفعّل"}
           totalLessons={activeCategory === "all" ? visibleItems.length : activeCourseItems.length}
           completedLessons={activeCategory === "all" ? completedLessonsCount : activeCourseCompletedCount}

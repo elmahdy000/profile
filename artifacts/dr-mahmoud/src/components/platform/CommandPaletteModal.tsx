@@ -90,7 +90,7 @@ export function CommandPaletteModal({
     {
       id: "nav-lessons",
       category: "أقسام المنصة",
-      title: "المحاضرات والدروس المشروحة",
+      title: "فيديوهات المنصة",
       subtitle: "مكتبة الفيديوهات والشروحات المتكاملة مع إمكانية التقديم",
       badge: "فيديوهات",
       icon: BookOpen,
@@ -102,7 +102,7 @@ export function CommandPaletteModal({
     {
       id: "nav-kholasa",
       category: "أقسام المنصة",
-      title: "الزتونة والخرائط الذهنية والتعريفات",
+      title: "الخلاصة",
       subtitle: "ملخصات الدروس والتعريفات والخرائط والتسميع وبنك الأسئلة الشامل",
       badge: "الخلاصة",
       icon: Sparkles,
