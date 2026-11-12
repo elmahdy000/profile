@@ -31,9 +31,12 @@ import { KholasaFlashcardsView } from "./KholasaFlashcardsView";
 import { KholasaDefinitionsView } from "./KholasaDefinitionsView";
 import { KholasaLessonQuestionsView } from "./KholasaLessonQuestionsView";
 import type { KholasaMaterial } from "./types";
+import type { Student } from "@/types/platform";
 
 interface KholasaLessonsTabProps {
   onPlayVideo?: (videoId: number) => void;
+  student?: Student | null;
+  isLanguages?: boolean;
 }
 
 type LessonStudyTab =
@@ -45,7 +48,7 @@ type LessonStudyTab =
   | "questions"
   | "sections";
 
-export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
+export function KholasaLessonsTab({ onPlayVideo, student, isLanguages }: KholasaLessonsTabProps) {
   const { toast } = useToast();
   const [materials, setMaterials] = useState<KholasaMaterial[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +57,32 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
   const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
   const [onlyBookmarked, setOnlyBookmarked] = useState(false);
   const [activeMaterial, setActiveMaterial] = useState<KholasaMaterial | null>(null);
-  const [studyTab, setStudyTab] = useState<LessonStudyTab>("summary");
+  const [studyTab, setStudyTab] = useState<LessonStudyTab>("definitions");
+
+  const isStudentLanguages = Boolean(
+    isLanguages ||
+      (student?.languageTrack && (student.languageTrack.toLowerCase().includes("lang") || student.languageTrack.includes("لغات"))) ||
+      (student?.academicTrack && (student.academicTrack.toLowerCase().includes("lang") || student.academicTrack.includes("لغات"))) ||
+      (student?.schoolType && (student.schoolType.toLowerCase().includes("lang") || student.schoolType.includes("لغات"))) ||
+      (student?.grade && (student.grade.toLowerCase().includes("لغات") || student.grade.toLowerCase().includes("languages")))
+  );
+
+  const isLanguagesMaterial = (m?: KholasaMaterial | null): boolean => {
+    if (!m) return false;
+    const stageStr = (m.stage || "").toLowerCase();
+    const unitStr = (m.unit || "").toLowerCase();
+    const lessonStr = (m.lesson || "").toLowerCase();
+    return (
+      stageStr.includes("lang") ||
+      stageStr.includes("لغات") ||
+      unitStr.includes("unit ") ||
+      unitStr.includes("languages") ||
+      lessonStr.startsWith("lesson ") ||
+      isPrimarilyEnglish(m.lesson)
+    );
+  };
+
+  const isLanguagesTrack = student ? isStudentLanguages : isLanguagesMaterial(activeMaterial);
 
   const loadMaterials = async () => {
     try {
@@ -101,8 +129,9 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
   };
 
   const pickDefaultStudyTab = (m: KholasaMaterial): LessonStudyTab => {
+    const isLangMat = student ? isStudentLanguages : isLanguagesMaterial(m);
+    if (isLangMat && hasZatonaContent(m)) return "summary";
     const defsTotal = (m.summaryData?.definitions?.length || 0) + (m.summaryData?.keyConcepts?.length || 0);
-    if (hasZatonaContent(m)) return "summary";
     if (defsTotal > 0) return "definitions";
     if (m.mindmapImages?.length) return "mindmap";
     if (m.flashcards?.length) return "flashcards";
@@ -117,6 +146,12 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
     if (m.videoId) return "video";
     return "definitions";
   };
+
+  useEffect(() => {
+    if (!isLanguagesTrack && (studyTab === "summary" || studyTab === "sections")) {
+      setStudyTab("definitions");
+    }
+  }, [isLanguagesTrack, studyTab]);
 
   const openLesson = (m: KholasaMaterial, initialTab?: LessonStudyTab) => {
     setActiveMaterial(m);
@@ -215,7 +250,8 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
       (activeMaterial.questionCounts?.trueFalse || 0) +
       (activeMaterial.questionCounts?.essay || 0);
 
-    const showZatonaTab = hasZatonaContent(activeMaterial);
+    const showZatonaTab = isLanguagesTrack && hasZatonaContent(activeMaterial);
+    const showSectionsTab = isLanguagesTrack && hasSections;
 
     const subTabs: Array<{ id: LessonStudyTab; label: string; icon: typeof Sparkles }> = [
       { id: "video", label: "فيديو الشرح", icon: Video },
@@ -224,7 +260,7 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
       { id: "mindmap", label: `الخرائط الذهنية (${activeMaterial.mindmapImages?.length || 0})`, icon: MapIcon },
       { id: "flashcards", label: `التسميع (${activeMaterial.flashcards?.length || 0})`, icon: Layers },
       { id: "questions", label: `بنك أسئلة الدرس (${totalQuestions})`, icon: HelpCircle },
-      ...(hasSections ? [{ id: "sections" as const, label: "الشرح المفصل", icon: FileText }] : []),
+      ...(showSectionsTab ? [{ id: "sections" as const, label: "الشرح المفصل", icon: FileText }] : []),
     ];
 
     return (
@@ -261,6 +297,7 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
                 onClick={() => {
                   if (!prevMaterial) return;
                   const targetTab =
+                    (!isLanguagesTrack && (studyTab === "sections" || studyTab === "summary")) ||
                     (studyTab === "sections" && !prevMaterial.structuredSections?.length) ||
                     (studyTab === "summary" && !hasZatonaContent(prevMaterial))
                       ? pickDefaultStudyTab(prevMaterial)
@@ -280,6 +317,7 @@ export function KholasaLessonsTab({ onPlayVideo }: KholasaLessonsTabProps) {
                 onClick={() => {
                   if (!nextMaterial) return;
                   const targetTab =
+                    (!isLanguagesTrack && (studyTab === "sections" || studyTab === "summary")) ||
                     (studyTab === "sections" && !nextMaterial.structuredSections?.length) ||
                     (studyTab === "summary" && !hasZatonaContent(nextMaterial))
                       ? pickDefaultStudyTab(nextMaterial)

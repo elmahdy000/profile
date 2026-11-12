@@ -1541,6 +1541,7 @@ export function StudentPlatform() {
               />
             ) : (
               <KholasaLessonsTab
+                student={student}
                 onPlayVideo={(videoId) => {
                   setInitialVideoId(videoId);
                   setTab("lessons");
