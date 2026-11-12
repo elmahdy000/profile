@@ -809,18 +809,68 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
         // Ignore lookup failure
       }
 
-      const freshQuestions = validQuestions.filter((q) => !recentPrompts.has(normalizeQuestionPrompt(q.prompt)));
-      const freshShuffled = [...freshQuestions].sort(() => Math.random() - 0.5);
+      // Stratified balanced selection across requested question types
+      const typesWithQuestions = (["mcq", "true_false", "essay"] as const).filter(
+        (t) => allowedSet.has(t) && validQuestions.some((q) => q.questionType === t)
+      );
 
-      if (freshShuffled.length >= targetCount) {
-        pickedQuestions = freshShuffled.slice(0, targetCount);
+      if (typesWithQuestions.length <= 1) {
+        const freshQuestions = validQuestions.filter((q) => !recentPrompts.has(normalizeQuestionPrompt(q.prompt)));
+        const freshShuffled = [...freshQuestions].sort(() => Math.random() - 0.5);
+
+        if (freshShuffled.length >= targetCount) {
+          pickedQuestions = freshShuffled.slice(0, targetCount);
+        } else {
+          const remainderNeeded = targetCount - freshShuffled.length;
+          const seenSet = new Set(freshShuffled.map((q) => normalizeQuestionPrompt(q.prompt)));
+          const otherQuestions = [...validQuestions]
+            .filter((q) => !seenSet.has(normalizeQuestionPrompt(q.prompt)))
+            .sort(() => Math.random() - 0.5);
+          pickedQuestions = [...freshShuffled, ...otherQuestions.slice(0, remainderNeeded)];
+        }
       } else {
-        const remainderNeeded = targetCount - freshShuffled.length;
-        const seenSet = new Set(freshShuffled.map((q) => normalizeQuestionPrompt(q.prompt)));
-        const otherQuestions = [...validQuestions]
-          .filter((q) => !seenSet.has(normalizeQuestionPrompt(q.prompt)))
-          .sort(() => Math.random() - 0.5);
-        pickedQuestions = [...freshShuffled, ...otherQuestions.slice(0, remainderNeeded)];
+        // Multi-type selection: allocate balanced quotas across requested types
+        const typePools: Record<string, { fresh: QuizQuestion[]; all: QuizQuestion[] }> = {};
+        for (const t of typesWithQuestions) {
+          const poolAll = validQuestions.filter((q) => q.questionType === t);
+          const poolFresh = poolAll.filter((q) => !recentPrompts.has(normalizeQuestionPrompt(q.prompt)));
+          typePools[t] = {
+            fresh: [...poolFresh].sort(() => Math.random() - 0.5),
+            all: [...poolAll].sort(() => Math.random() - 0.5),
+          };
+        }
+
+        const pickedList: QuizQuestion[] = [];
+        const baseShare = Math.floor(targetCount / typesWithQuestions.length);
+        const remainder = targetCount % typesWithQuestions.length;
+
+        for (let i = 0; i < typesWithQuestions.length; i++) {
+          const t = typesWithQuestions[i];
+          const needed = baseShare + (i < remainder ? 1 : 0);
+          const pool = typePools[t];
+          const pickedFromType: QuizQuestion[] = [];
+
+          if (pool.fresh.length >= needed) {
+            pickedFromType.push(...pool.fresh.slice(0, needed));
+          } else {
+            pickedFromType.push(...pool.fresh);
+            const deficit = needed - pickedFromType.length;
+            const seen = new Set(pickedFromType.map((q) => normalizeQuestionPrompt(q.prompt)));
+            const backup = pool.all.filter((q) => !seen.has(normalizeQuestionPrompt(q.prompt)));
+            pickedFromType.push(...backup.slice(0, deficit));
+          }
+          pickedList.push(...pickedFromType);
+        }
+
+        if (pickedList.length < targetCount) {
+          const pickedSet = new Set(pickedList.map((q) => normalizeQuestionPrompt(q.prompt)));
+          const extraBackups = validQuestions
+            .filter((q) => !pickedSet.has(normalizeQuestionPrompt(q.prompt)))
+            .sort(() => Math.random() - 0.5);
+          pickedList.push(...extraBackups.slice(0, targetCount - pickedList.length));
+        }
+
+        pickedQuestions = pickedList.sort(() => Math.random() - 0.5);
       }
     }
 

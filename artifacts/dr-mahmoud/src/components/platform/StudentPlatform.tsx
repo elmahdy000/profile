@@ -49,7 +49,6 @@ import {
   createDefaultRegistrationStage,
 } from "@/components/ui/RegistrationStageSelector";
 import { EmptyState, PageHeader, ProfileInfoRow, StatisticCard, StatusBadge, StudentAvatar } from "./StudentDashboardUI";
-import { CppCompilerPanel } from "./CppCompilerPanel";
 import { useNotificationSound } from "@/hooks/use-notification-sound";
 import { useWebPush } from "@/hooks/use-web-push";
 import { ProfileTab } from "./tabs/ProfileTab";
@@ -148,7 +147,7 @@ async function cropAvatar(file: File): Promise<Blob> {
 
 
 export function getNotificationTarget(notification: { title: string; message: string; type?: string | null }): {
-  tab: "dashboard" | "lessons" | "essay-exams" | "summaries" | "compiler" | "files" | "quizzes" | "self-assessment" | "profile" | "external";
+  tab: "dashboard" | "lessons" | "essay-exams" | "summaries" | "files" | "quizzes" | "self-assessment" | "profile" | "external";
   label: string;
   url?: string;
 } {
@@ -280,7 +279,7 @@ export function getNotificationTarget(notification: { title: string; message: st
     return { tab: "profile", label: "حسابي 👤" };
   }
 
-  // 9. C++ Compiler (محرر الأكواد)
+  // 9. C++ Compiler (محرر الأكواد) - redirect to videos
   if (
     type === "compiler" ||
     type === "code" ||
@@ -290,7 +289,7 @@ export function getNotificationTarget(notification: { title: string; message: st
     titleMsg.includes("برمجة") ||
     titleMsg.includes("c++")
   ) {
-    return { tab: "compiler", label: "محرر C++ 💻" };
+    return { tab: "lessons", label: "فيديوهات المنصة 🎬" };
   }
 
   return { tab: "dashboard", label: "الرئيسية 🏠" };
@@ -300,7 +299,7 @@ export function StudentPlatform() {
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<
-    "dashboard" | "lessons" | "kholasa" | "mistakes" | "essay-exams" | "summaries" | "compiler" | "files" | "quizzes" | "self-assessment" | "profile"
+    "dashboard" | "lessons" | "kholasa" | "mistakes" | "essay-exams" | "summaries" | "files" | "quizzes" | "self-assessment" | "profile"
   >("dashboard");
   const [files, setFiles] = useState<LearningFile[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
@@ -1270,7 +1269,6 @@ export function StudentPlatform() {
                   {tab === "quizzes" && <ClipboardCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
                   {tab === "essay-exams" && <FileEdit className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
                   {tab === "summaries" && <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
-                  {tab === "compiler" && <Code2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
                   {tab === "files" && <FolderOpen className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
                   {tab === "self-assessment" && <Sparkles className="h-3.5 w-3.5 text-amber-500" />}
                   {tab === "profile" && <User className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
@@ -1570,17 +1568,6 @@ export function StudentPlatform() {
                 autoOpenUpload={autoOpenSummaryUpload}
                 onModalClosed={() => setAutoOpenSummaryUpload(false)}
               />
-            )
-          ) : tab === "compiler" ? (
-            isUnpaid ? (
-              <LockedContentNotice
-                title="مترجم ومحرر البرمجة C++"
-                description="تم قفل محرر ومترجم البرمجة C++ لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
-                onGoToPreview={() => setTab("lessons")}
-                onOpenPayment={() => setShowPaymentModal(true)}
-              />
-            ) : (
-              <CppCompilerPanel />
             )
           ) : tab === "files" ? (
             isUnpaid ? (
