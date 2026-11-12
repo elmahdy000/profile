@@ -58,34 +58,34 @@ export function ExamStatistics({
   }, 0);
 
   return (
-    <section aria-label="إحصائيات الاختبارات" className="grid grid-cols-2 lg:grid-cols-4 gap-3" dir="rtl">
-      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-3.5 flex items-center gap-3 shadow-2xs hover:border-blue-500/40 hover:shadow-xs transition-all duration-200">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40 group-hover:scale-105 transition-transform duration-200">
-          <ClipboardCheck className="h-5 w-5" />
+    <section aria-label="إحصائيات الاختبارات" className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3" dir="rtl">
+      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-2.5 sm:p-3 flex items-center gap-2.5 shadow-2xs hover:border-blue-500/40 hover:shadow-xs transition-all duration-200">
+        <span className="grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/40 group-hover:scale-105 transition-transform duration-200">
+          <ClipboardCheck className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
         </span>
         <div className="min-w-0 text-right">
-          <span className="block text-[12px] font-bold text-slate-500 dark:text-slate-400 truncate">الاختبارات المتاحة</span>
-          <strong className="text-[22px] font-black font-mono tabular-nums text-slate-900 dark:text-white leading-none mt-0.5 block">{availableCount}</strong>
+          <span className="block text-[11px] sm:text-[11.5px] font-bold text-slate-500 dark:text-slate-400 truncate">الاختبارات المتاحة</span>
+          <strong className="text-lg sm:text-[20px] font-black font-mono tabular-nums text-slate-900 dark:text-white leading-none mt-0.5 block">{availableCount}</strong>
         </div>
       </div>
 
-      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-3.5 flex items-center gap-3 shadow-2xs hover:border-emerald-500/40 hover:shadow-xs transition-all duration-200">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40 group-hover:scale-105 transition-transform duration-200">
-          <CheckCircle2 className="h-5 w-5" />
+      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-2.5 sm:p-3 flex items-center gap-2.5 shadow-2xs hover:border-emerald-500/40 hover:shadow-xs transition-all duration-200">
+        <span className="grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40 group-hover:scale-105 transition-transform duration-200">
+          <CheckCircle2 className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
         </span>
         <div className="min-w-0 text-right">
-          <span className="block text-[12px] font-bold text-slate-500 dark:text-slate-400 truncate">الاختبارات المكتملة</span>
-          <strong className="text-[22px] font-black font-mono tabular-nums text-slate-900 dark:text-white leading-none mt-0.5 block">{completedCount}</strong>
+          <span className="block text-[11px] sm:text-[11.5px] font-bold text-slate-500 dark:text-slate-400 truncate">الاختبارات المكتملة</span>
+          <strong className="text-lg sm:text-[20px] font-black font-mono tabular-nums text-slate-900 dark:text-white leading-none mt-0.5 block">{completedCount}</strong>
         </div>
       </div>
 
-      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-3.5 flex items-center gap-3 shadow-2xs hover:border-amber-500/40 hover:shadow-xs transition-all duration-200">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40 group-hover:scale-105 transition-transform duration-200">
-          <Award className="h-5 w-5" />
+      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-2.5 sm:p-3 flex items-center gap-2.5 shadow-2xs hover:border-amber-500/40 hover:shadow-xs transition-all duration-200">
+        <span className="grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40 group-hover:scale-105 transition-transform duration-200">
+          <Award className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
         </span>
         <div className="min-w-0 text-right">
-          <span className="block text-[12px] font-bold text-slate-500 dark:text-slate-400 truncate">متوسط النتيجة</span>
-          <strong className="text-[22px] font-black font-mono tabular-nums text-slate-900 dark:text-white leading-none mt-0.5 block">
+          <span className="block text-[11px] sm:text-[11.5px] font-bold text-slate-500 dark:text-slate-400 truncate">متوسط النتيجة</span>
+          <strong className="text-lg sm:text-[20px] font-black font-mono tabular-nums text-slate-900 dark:text-white leading-none mt-0.5 block">
             {(() => {
               const scores = quizzes
                 .map((q) => q.bestScore)
@@ -98,13 +98,13 @@ export function ExamStatistics({
         </div>
       </div>
 
-      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-3.5 flex items-center gap-3 shadow-2xs hover:border-purple-500/40 hover:shadow-xs transition-all duration-200">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-900/40 group-hover:scale-105 transition-transform duration-200">
-          <RotateCcw className="h-5 w-5" />
+      <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-2.5 sm:p-3 flex items-center gap-2.5 shadow-2xs hover:border-purple-500/40 hover:shadow-xs transition-all duration-200">
+        <span className="grid h-8 w-8 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-900/40 group-hover:scale-105 transition-transform duration-200">
+          <RotateCcw className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
         </span>
         <div className="min-w-0 text-right">
-          <span className="block text-[12px] font-bold text-slate-500 dark:text-slate-400 truncate">المحاولات المتبقية</span>
-          <strong className="text-[22px] font-black font-mono tabular-nums text-slate-900 dark:text-white leading-none mt-0.5 block">
+          <span className="block text-[11px] sm:text-[11.5px] font-bold text-slate-500 dark:text-slate-400 truncate">المحاولات المتبقية</span>
+          <strong className="text-lg sm:text-[20px] font-black font-mono tabular-nums text-slate-900 dark:text-white leading-none mt-0.5 block">
             {totalAttemptsLeft > 50 ? "بلا حدود" : totalAttemptsLeft}
           </strong>
         </div>
@@ -228,7 +228,7 @@ export function ExamFilters({
   );
 }
 
-// ── 4. Redesigned Exam Card ──
+// ── 4. Compact & Refined Exam Card ──
 export function ExamCard({
   quiz,
   onStartQuiz,
@@ -243,42 +243,42 @@ export function ExamCard({
   const isLocked = !!quiz.locked;
   const questionsCount = quiz.questionsToShow && quiz.questionsToShow > 0 ? quiz.questionsToShow : quiz.questions.length;
 
-  let statusBadgeText = "جديد — لم يتم حله ⚡";
-  let statusBadgeClass = "bg-blue-100 dark:bg-blue-900/80 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700";
-  let cardBorderBg = "border-2 border-blue-300/90 dark:border-blue-600/70 bg-blue-50/20 dark:bg-blue-950/20 hover:border-blue-500";
+  let statusBadgeText = "جديد — لم يتم حله";
+  let statusBadgeClass = "bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border-blue-200/80 dark:border-blue-800/60";
+  let cardBorderBg = "border border-slate-200/90 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] hover:border-blue-500/50";
   let showPulsingDot = true;
 
   if (isLocked) {
     statusBadgeText = "مغلق 🔒";
-    statusBadgeClass = "bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800";
-    cardBorderBg = "border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 opacity-75";
+    statusBadgeClass = "bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/60";
+    cardBorderBg = "border border-slate-200/60 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/40 opacity-75";
     showPulsingDot = false;
   } else if (isCompleted) {
     showPulsingDot = false;
     statusBadgeText = "تم الاختبار بنجاح ✓";
-    statusBadgeClass = "bg-emerald-100 dark:bg-emerald-900/80 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700";
-    cardBorderBg = "border-2 border-emerald-400/90 dark:border-emerald-600/70 bg-emerald-50/25 dark:bg-emerald-950/20 hover:border-emerald-500";
+    statusBadgeClass = "bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/60";
+    cardBorderBg = "border border-emerald-300/70 dark:border-emerald-700/60 bg-card dark:bg-[#0A101D] hover:border-emerald-500";
   }
 
   return (
-    <article className={`group relative flex flex-col justify-between rounded-2xl ${cardBorderBg} p-5 shadow-xs hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 w-full overflow-hidden`} dir="rtl">
-      <div className="space-y-3">
-        {/* 1. Status Badge (Compact Header) */}
+    <article className={`group relative flex flex-col justify-between rounded-2xl ${cardBorderBg} p-3.5 sm:p-4 shadow-2xs hover:shadow-xs transition-all duration-200 w-full overflow-hidden`} dir="rtl">
+      <div className="space-y-2.5">
+        {/* 1. Status Badge & Duration */}
         <div className="flex items-center justify-between gap-2">
-          <span className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-black border ${statusBadgeClass}`}>
+          <span className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-[10.5px] font-bold border ${statusBadgeClass}`}>
             {showPulsingDot && (
-              <span className="relative flex h-2 w-2">
+              <span className="relative flex h-1.5 w-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-600" />
               </span>
             )}
-            {isLocked ? <Lock className="h-3 w-3" /> : isCompleted ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" /> : null}
+            {isLocked ? <Lock className="h-3 w-3" /> : isCompleted ? <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" /> : null}
             {statusBadgeText}
           </span>
 
           {quiz.durationMinutes && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
-              <Clock className="h-3.5 w-3.5 text-amber-500" />
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+              <Clock className="h-3 w-3 text-amber-500" />
               <span className="font-mono tabular-nums">{quiz.durationMinutes}</span> دقيقة
             </span>
           )}
@@ -287,118 +287,106 @@ export function ExamCard({
         {/* 2. Exam Title */}
         <h3
           dir="ltr"
-          className="text-base font-black text-slate-900 dark:text-slate-100 leading-snug text-right group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"
+          className="text-sm sm:text-[15px] font-bold text-slate-900 dark:text-slate-100 leading-snug text-right group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2"
           style={{ unicodeBidi: "isolate" }}
         >
           {quiz.title}
         </h3>
 
-        {/* 3. Course Badge */}
-        <div className="flex items-center gap-2">
+        {/* 3. Course and Stage metadata */}
+        <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
           <span
-            dir="ltr"
-            className="inline-flex items-center gap-1.5 rounded-md bg-blue-50 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/60 px-2.5 py-0.5 text-xs font-bold text-blue-700 dark:text-blue-300 text-right"
-            style={{ unicodeBidi: "isolate" }}
+            dir="auto"
+            className="inline-flex items-center gap-1 rounded-md bg-blue-50 dark:bg-blue-950/70 border border-blue-200/80 dark:border-blue-800/60 px-2 py-0.5 text-[10.5px] font-bold text-blue-700 dark:text-blue-300"
           >
-            <BookOpen className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+            <BookOpen className="h-3 w-3 text-blue-600 dark:text-blue-400" />
             {quiz.category}
+          </span>
+          {quiz.stage && (
+            <span className="text-[10.5px] font-medium text-slate-400 dark:text-slate-500 truncate max-w-[220px]">
+              • {quiz.stage}
+            </span>
+          )}
+        </div>
+
+        {/* 4. Compact Stats Row */}
+        <div className="flex flex-wrap items-center gap-2 pt-2 text-[11px] font-semibold text-slate-600 dark:text-slate-400 border-t border-slate-100 dark:border-[#1E2E48]">
+          <span className="inline-flex items-center gap-1">
+            <ClipboardCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+            <span><span className="font-mono tabular-nums">{questionsCount}</span> سؤال</span>
+          </span>
+          <span>•</span>
+          <span className="inline-flex items-center gap-1">
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>النجاح <span className="font-mono tabular-nums">{quiz.passingScore}%</span></span>
+          </span>
+          <span>•</span>
+          <span className="inline-flex items-center gap-1">
+            <RotateCcw className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+            <span>
+              {attemptsLeft !== null ? (
+                <><span className="font-mono tabular-nums">{attemptsLeft}</span> محاولات</>
+              ) : (
+                "بلا حدود"
+              )}
+            </span>
           </span>
         </div>
 
-        {/* 4. Academic Level & Metadata Lines */}
-        {quiz.stage && (
-          <div className="space-y-0.5 text-[11px] font-bold text-slate-500 dark:text-slate-400">
-            <div>{quiz.stage}</div>
-          </div>
-        )}
-
-        <div className="border-t border-slate-100 dark:border-[#1E2E48] my-2" />
-
-        {/* 5. Fixed 2-Column Metadata Grid */}
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs font-semibold text-slate-700 dark:text-slate-300">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <ClipboardCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-            <span className="truncate"><span className="font-mono tabular-nums">{questionsCount}</span> سؤال</span>
-          </div>
-
-          <div className="flex items-center gap-1.5 min-w-0">
-            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span className="truncate">النجاح: <span className="font-mono tabular-nums">{quiz.passingScore}%</span></span>
-          </div>
-
-          <div className="flex items-center gap-1.5 min-w-0 col-span-2">
-            <RotateCcw className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
-            <span className="truncate">
-              {attemptsLeft !== null ? (
-                <>المتبقي: <span className="font-mono tabular-nums">{attemptsLeft}</span> محاولات</>
-              ) : (
-                "محاولات بلا حدود"
-              )}
-            </span>
-          </div>
-        </div>
-
-        {/* 6. Results / Progress State */}
-        {isCompleted && typeof quiz.bestScore === "number" ? (
-          (() => {
-            const best = Math.max(0, Math.min(100, Math.round(quiz.bestScore as number)));
-            const passed = best >= quiz.passingScore;
-            return (
+        {/* 5. Results / Progress State (if completed) */}
+        {isCompleted && typeof quiz.bestScore === "number" && (() => {
+          const best = Math.max(0, Math.min(100, Math.round(quiz.bestScore as number)));
+          const passed = best >= quiz.passingScore;
+          return (
+            <div
+              className={`rounded-xl border p-2 space-y-1 mt-1 ${
+                passed
+                  ? "border-emerald-300/80 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-950/40"
+                  : "border-red-300/80 dark:border-red-800 bg-red-50/70 dark:bg-red-950/40"
+              }`}
+            >
               <div
-                className={`rounded-xl border p-2.5 space-y-1.5 mt-2 ${
+                className={`flex items-center justify-between text-[11px] font-bold ${
                   passed
-                    ? "border-emerald-300 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-950/40"
-                    : "border-red-300 dark:border-red-800 bg-red-50/70 dark:bg-red-950/40"
+                    ? "text-emerald-800 dark:text-emerald-200"
+                    : "text-red-800 dark:text-red-200"
+                }`}
+              >
+                <span>أفضل نتيجة لك:</span>
+                <span className="font-mono font-black tabular-nums">{best}% ({passed ? "ناجح ✓" : "لم يجتز"})</span>
+              </div>
+              <div
+                className={`h-1.5 w-full overflow-hidden rounded-full ${
+                  passed ? "bg-emerald-100 dark:bg-emerald-900/50" : "bg-red-100 dark:bg-red-900/50"
                 }`}
               >
                 <div
-                  className={`flex items-center justify-between text-xs font-bold ${
-                    passed
-                      ? "text-emerald-800 dark:text-emerald-200"
-                      : "text-red-800 dark:text-red-200"
+                  className={`h-full rounded-full transition-all duration-700 ${
+                    passed ? "bg-emerald-600" : "bg-rose-600"
                   }`}
-                >
-                  <span>أفضل نتيجة لك:</span>
-                  <span className="font-mono font-black tabular-nums">{best}% ({passed ? "ناجح ✓" : "لم يجتز"})</span>
-                </div>
-                <div
-                  className={`h-2 w-full overflow-hidden rounded-full ${
-                    passed ? "bg-emerald-100 dark:bg-emerald-900/50" : "bg-red-100 dark:bg-red-900/50"
-                  }`}
-                >
-                  <div
-                    className={`h-full rounded-full transition-all duration-700 ${
-                      passed ? "bg-emerald-600" : "bg-rose-600"
-                    }`}
-                    style={{ width: `${best}%` }}
-                  />
-                </div>
+                  style={{ width: `${best}%` }}
+                />
               </div>
-            );
-          })()
-        ) : (
-          <div className="rounded-xl border border-blue-200 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/30 p-2 text-[11px] font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse" />
-            لم تبدأ هذا الاختبار بعد — ابدأ الآن وتعرف على مستواك
-          </div>
-        )}
+            </div>
+          );
+        })()}
 
         {/* Locked Reason Warning */}
         {isLocked && quiz.lockedReason && (
-          <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/40 p-2.5 text-xs font-bold text-amber-700 dark:text-amber-300 flex items-start gap-2">
-            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+          <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/40 p-2 text-[11px] font-bold text-amber-700 dark:text-amber-300 flex items-start gap-1.5">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
             <span>{quiz.lockedReason}</span>
           </div>
         )}
       </div>
 
-      {/* 7. Action Button */}
-      <div className="pt-3 mt-2">
+      {/* 6. Clean Action Button */}
+      <div className="pt-2.5 mt-2">
         <Button
           type="button"
           onClick={() => onStartQuiz(quiz)}
           disabled={isLocked || (attemptsLeft !== null && attemptsLeft <= 0)}
-          className={`w-full h-10 rounded-xl text-xs font-black shadow-xs transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer ${
+          className={`w-full h-9 rounded-xl text-xs font-bold shadow-2xs transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer ${
             isLocked || (attemptsLeft !== null && attemptsLeft <= 0)
               ? "bg-slate-100 dark:bg-[#0F172A] text-slate-400 dark:text-slate-500 border border-slate-200/80 dark:border-[#1E2E48] cursor-not-allowed"
               : isCompleted
@@ -412,12 +400,10 @@ export function ExamCard({
             "استنفذت المحاولات"
           ) : isCompleted ? (
             <>
-              <Eye className="h-4 w-4" /> عرض النتيجة / إعادة المحاولة ↺
+              <Eye className="h-3.5 w-3.5" /> عرض النتيجة / إعادة المحاولة
             </>
           ) : (
-            <>
-              <Play className="h-4 w-4 fill-white" /> ابدأ الاختبار الآن 🏁
-            </>
+            "ابدأ الاختبار"
           )}
         </Button>
       </div>
@@ -548,7 +534,7 @@ export function QuizzesTab({
 
       {/* 4. Exam Grid (Aligned from right, 1/2/3 cols responsive grid) */}
       {filteredQuizzes.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4 w-full">
           {filteredQuizzes.map((quiz) => (
             <ExamCard key={quiz.id} quiz={quiz} onStartQuiz={onStartQuiz} />
           ))}
