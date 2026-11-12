@@ -243,35 +243,36 @@ export function ExamCard({
   const isLocked = !!quiz.locked;
   const questionsCount = quiz.questionsToShow && quiz.questionsToShow > 0 ? quiz.questionsToShow : quiz.questions.length;
 
-  let statusBadgeText = "متاح الآن";
-  let statusBadgeClass = "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border-emerald-200/80 dark:border-emerald-900/50";
+  let statusBadgeText = "جديد — لم يتم حله ⚡";
+  let statusBadgeClass = "bg-blue-100 dark:bg-blue-900/80 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700";
+  let cardBorderBg = "border-2 border-blue-300/90 dark:border-blue-600/70 bg-blue-50/20 dark:bg-blue-950/20 hover:border-blue-500";
   let showPulsingDot = true;
 
   if (isLocked) {
-    statusBadgeText = "مغلق";
-    statusBadgeClass = "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border-amber-200/80 dark:border-amber-900/50";
+    statusBadgeText = "مغلق 🔒";
+    statusBadgeClass = "bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800";
+    cardBorderBg = "border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 opacity-75";
     showPulsingDot = false;
   } else if (isCompleted) {
     showPulsingDot = false;
-    statusBadgeText = attemptsLeft === 0 ? "تم الحل (مكتمل)" : "محاولة جديدة";
-    statusBadgeClass = attemptsLeft === 0 
-      ? "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border-blue-200/80 dark:border-blue-900/50"
-      : "bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400 border-purple-200/80 dark:border-purple-900/50";
+    statusBadgeText = "تم الاختبار بنجاح ✓";
+    statusBadgeClass = "bg-emerald-100 dark:bg-emerald-900/80 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700";
+    cardBorderBg = "border-2 border-emerald-400/90 dark:border-emerald-600/70 bg-emerald-50/25 dark:bg-emerald-950/20 hover:border-emerald-500";
   }
 
   return (
-    <article className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-5 shadow-2xs hover:border-blue-500/50 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 w-full overflow-hidden" dir="rtl">
+    <article className={`group relative flex flex-col justify-between rounded-2xl ${cardBorderBg} p-5 shadow-xs hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 w-full overflow-hidden`} dir="rtl">
       <div className="space-y-3">
         {/* 1. Status Badge (Compact Header) */}
         <div className="flex items-center justify-between gap-2">
-          <span className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-[10px] font-bold border ${statusBadgeClass}`}>
+          <span className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-black border ${statusBadgeClass}`}>
             {showPulsingDot && (
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600" />
               </span>
             )}
-            {isLocked ? <Lock className="h-3 w-3" /> : isCompleted ? <CheckCircle2 className="h-3 w-3" /> : null}
+            {isLocked ? <Lock className="h-3 w-3" /> : isCompleted ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" /> : null}
             {statusBadgeText}
           </span>
 
@@ -346,22 +347,22 @@ export function ExamCard({
               <div
                 className={`rounded-xl border p-2.5 space-y-1.5 mt-2 ${
                   passed
-                    ? "border-emerald-200/80 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/30"
-                    : "border-red-200/80 dark:border-red-900/40 bg-red-50/50 dark:bg-red-950/30"
+                    ? "border-emerald-300 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-950/40"
+                    : "border-red-300 dark:border-red-800 bg-red-50/70 dark:bg-red-950/40"
                 }`}
               >
                 <div
                   className={`flex items-center justify-between text-xs font-bold ${
                     passed
-                      ? "text-emerald-700 dark:text-emerald-300"
-                      : "text-red-700 dark:text-red-300"
+                      ? "text-emerald-800 dark:text-emerald-200"
+                      : "text-red-800 dark:text-red-200"
                   }`}
                 >
-                  <span>أفضل نتيجة:</span>
-                  <span className="font-mono tabular-nums">{best}% ({passed ? "ناجح ✓" : "لم يجتز"})</span>
+                  <span>أفضل نتيجة لك:</span>
+                  <span className="font-mono font-black tabular-nums">{best}% ({passed ? "ناجح ✓" : "لم يجتز"})</span>
                 </div>
                 <div
-                  className={`h-1.5 w-full overflow-hidden rounded-full ${
+                  className={`h-2 w-full overflow-hidden rounded-full ${
                     passed ? "bg-emerald-100 dark:bg-emerald-900/50" : "bg-red-100 dark:bg-red-900/50"
                   }`}
                 >
@@ -376,8 +377,9 @@ export function ExamCard({
             );
           })()
         ) : (
-          <div className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 pt-1">
-            لم تبدأ الاختبار بعد
+          <div className="rounded-xl border border-blue-200 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/30 p-2 text-[11px] font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse" />
+            لم تبدأ هذا الاختبار بعد — ابدأ الآن وتعرف على مستواك
           </div>
         )}
 
@@ -396,7 +398,7 @@ export function ExamCard({
           type="button"
           onClick={() => onStartQuiz(quiz)}
           disabled={isLocked || (attemptsLeft !== null && attemptsLeft <= 0)}
-          className={`w-full h-9 rounded-xl text-xs font-bold shadow-2xs transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer ${
+          className={`w-full h-10 rounded-xl text-xs font-black shadow-xs transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer ${
             isLocked || (attemptsLeft !== null && attemptsLeft <= 0)
               ? "bg-slate-100 dark:bg-[#0F172A] text-slate-400 dark:text-slate-500 border border-slate-200/80 dark:border-[#1E2E48] cursor-not-allowed"
               : isCompleted
@@ -410,11 +412,11 @@ export function ExamCard({
             "استنفذت المحاولات"
           ) : isCompleted ? (
             <>
-              <Eye className="h-3.5 w-3.5" /> عرض النتيجة / إعادتها
+              <Eye className="h-4 w-4" /> عرض النتيجة / إعادة المحاولة ↺
             </>
           ) : (
             <>
-              <Play className="h-3.5 w-3.5 fill-white" /> ابدأ الاختبار
+              <Play className="h-4 w-4 fill-white" /> ابدأ الاختبار الآن 🏁
             </>
           )}
         </Button>
@@ -544,9 +546,9 @@ export function QuizzesTab({
         isFiltered={isFiltered}
       />
 
-      {/* 4. Exam Grid (Aligned from right, auto-fit min 340px up to 3 cols) */}
+      {/* 4. Exam Grid (Aligned from right, 1/2/3 cols responsive grid) */}
       {filteredQuizzes.length > 0 ? (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(340px,420px))] justify-start gap-4 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 w-full">
           {filteredQuizzes.map((quiz) => (
             <ExamCard key={quiz.id} quiz={quiz} onStartQuiz={onStartQuiz} />
           ))}

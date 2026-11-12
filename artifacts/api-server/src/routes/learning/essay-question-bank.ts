@@ -7,10 +7,12 @@ import {
   db,
   essayQuestionBankTable,
   coursesTable,
+  studentsTable,
   type InsertEssayQuestionBankItem,
   type EssayQuestionBankItem,
 } from "@workspace/db";
 import { requireAdmin, getAdminIdentity } from "../../middleware/auth";
+import { requireStudent, canStudentAccessContent } from "../../middleware/student-auth";
 import { logAudit } from "../../lib/audit";
 import {
   PLATFORM_CANONICAL_STAGES,
@@ -809,6 +811,72 @@ router.delete("/admin/learning/essay-question-bank/:id", requireAdmin, async (re
     }
 
     res.json({ success: true, message: "تم حذف السؤال المقالي بنجاح" });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 8. GET /api/learning/essay-question-bank/browse
+// Student endpoint: browse questions grouped by unit and lesson matching stage
+// ─────────────────────────────────────────────────────────────────────────────
+router.get("/learning/essay-question-bank/browse", requireStudent, async (req, res, next) => {
+  try {
+    await ensureEssayQuestionBankTable();
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+
+    const allRows = await db
+      .select()
+      .from(essayQuestionBankTable)
+      .orderBy(
+        essayQuestionBankTable.unit,
+        essayQuestionBankTable.lesson,
+        essayQuestionBankTable.id
+      );
+
+    // Filter questions accessible to this student
+    const accessible = allRows.filter((q) =>
+      canStudentAccessContent(student, q.category, q.stage, q.stages, q.courseId)
+    );
+
+    // Build hierarchical tree
+    const unitMap = new Map<string, Map<string, number>>();
+    for (const q of accessible) {
+      const u = q.unit || "الوحدة العامة";
+      const l = q.lesson || "درس عام";
+      if (!unitMap.has(u)) {
+        unitMap.set(u, new Map());
+      }
+      const lMap = unitMap.get(u)!;
+      lMap.set(l, (lMap.get(l) || 0) + 1);
+    }
+
+    const tree = Array.from(unitMap.entries()).map(([unit, lessonMap]) => ({
+      unit,
+      totalQuestions: Array.from(lessonMap.values()).reduce((a, b) => a + b, 0),
+      lessons: Array.from(lessonMap.entries()).map(([lesson, count]) => ({
+        lesson,
+        count,
+      })),
+    }));
+
+    res.json({
+      success: true,
+      totalCount: accessible.length,
+      tree,
+      questions: accessible.map((q) => ({
+        id: q.id,
+        unit: q.unit || "الوحدة العامة",
+        lesson: q.lesson || "درس عام",
+        difficulty: q.difficulty || "medium",
+        points: q.points || 5,
+        prompt: q.prompt,
+        modelAnswer: q.modelAnswer,
+        explanation: q.explanation || null,
+        imageUrl: q.imageUrl || null,
+        modelAnswerImageUrl: q.modelAnswerImageUrl || null,
+      })),
+    });
   } catch (err) {
     next(err);
   }

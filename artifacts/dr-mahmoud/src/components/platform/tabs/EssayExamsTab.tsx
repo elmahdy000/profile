@@ -32,10 +32,42 @@ import {
   CheckCheck,
   TrendingUp,
   Layers,
+  Volume2,
+  VolumeX,
+  EyeOff,
+  GraduationCap,
+  FolderOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import type { Student } from "@/types/platform";
+import {
+  isPrimarilyEnglish,
+  splitModelAnswerTranslation,
+  speakEnglishText,
+  stopSpeech,
+  isSpeechSupported,
+} from "../../kholasa/kholasa-speech";
+import { BidiStatement } from "../../kholasa/BidiStatement";
+
+interface EssayBankQuestion {
+  id: number;
+  unit: string;
+  lesson: string;
+  difficulty: string;
+  points: number;
+  prompt: string;
+  modelAnswer: string;
+  explanation?: string | null;
+  imageUrl?: string | null;
+  modelAnswerImageUrl?: string | null;
+}
+
+interface EssayBankUnitTree {
+  unit: string;
+  totalQuestions: number;
+  lessons: Array<{ lesson: string; count: number }>;
+}
 
 interface EssayQuestion {
   id: string;
@@ -94,6 +126,64 @@ export function EssayExamsTab({
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
+  // Sub-section state: "bank" for 1000+ unit/lesson questions, "exams" for formal timed exam papers
+  const [mainSection, setMainSection] = useState<"bank" | "exams">("bank");
+  const [bankQuestions, setBankQuestions] = useState<EssayBankQuestion[]>([]);
+  const [bankTree, setBankTree] = useState<EssayBankUnitTree[]>([]);
+  const [loadingBank, setLoadingBank] = useState(false);
+  const [selectedUnit, setSelectedUnit] = useState<string>("all");
+  const [selectedLesson, setSelectedLesson] = useState<string>("all");
+  const [bankSearch, setBankSearch] = useState("");
+  const [revealedBankAnswers, setRevealedBankAnswers] = useState<Record<number, boolean>>({});
+  const [speakingQuestionId, setSpeakingQuestionId] = useState<number | null>(null);
+  const [speakingModelId, setSpeakingModelId] = useState<number | null>(null);
+  const [masteredBankIds, setMasteredBankIds] = useState<Record<number, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem("dr_mahmoud_essay_mastered");
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const toggleMastered = (id: number) => {
+    setMasteredBankIds((prev) => {
+      const updated = { ...prev, [id]: !prev[id] };
+      try {
+        localStorage.setItem("dr_mahmoud_essay_mastered", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const handleToggleSpeakPrompt = (qId: number, text: string) => {
+    if (speakingQuestionId === qId) {
+      stopSpeech();
+      setSpeakingQuestionId(null);
+    } else {
+      stopSpeech();
+      setSpeakingModelId(null);
+      setSpeakingQuestionId(qId);
+      speakEnglishText(text, {
+        onEnd: () => setSpeakingQuestionId(null),
+      });
+    }
+  };
+
+  const handleToggleSpeakModel = (qId: number, text: string) => {
+    if (speakingModelId === qId) {
+      stopSpeech();
+      setSpeakingModelId(null);
+    } else {
+      stopSpeech();
+      setSpeakingQuestionId(null);
+      setSpeakingModelId(qId);
+      speakEnglishText(text, {
+        onEnd: () => setSpeakingModelId(null),
+      });
+    }
+  };
+
   // Active exam state
   const [activeExam, setActiveExam] = useState<EssayExamDetail | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "exam_room" | "model_answer">("list");
@@ -141,8 +231,27 @@ export function EssayExamsTab({
     }
   };
 
+  // 1.5. Load questions from essay question bank (grouped by units and lessons)
+  const loadBank = async () => {
+    try {
+      setLoadingBank(true);
+      const res = await fetch("/api/learning/essay-question-bank/browse", { credentials: "include" });
+      if (!res.ok) throw new Error("تعذر تحميل بنك الأسئلة المقالية");
+      const data = await res.json();
+      if (data.success) {
+        setBankQuestions(data.questions || []);
+        setBankTree(data.tree || []);
+      }
+    } catch (err: any) {
+      console.error("Bank load error:", err);
+    } finally {
+      setLoadingBank(false);
+    }
+  };
+
   useEffect(() => {
     loadExams();
+    loadBank();
   }, []);
 
   // 2. Open an exam
@@ -530,6 +639,32 @@ export function EssayExamsTab({
     }).length;
   }, [activeExam, answers]);
 
+  // Lessons available for the selected unit
+  const availableLessons = useMemo(() => {
+    if (selectedUnit === "all") {
+      const set = new Set<string>();
+      bankTree.forEach((u) => u.lessons.forEach((l) => set.add(l.lesson)));
+      return Array.from(set);
+    }
+    const unitObj = bankTree.find((u) => u.unit === selectedUnit);
+    return unitObj ? unitObj.lessons.map((l) => l.lesson) : [];
+  }, [bankTree, selectedUnit]);
+
+  // Filtered essay bank questions
+  const filteredBankQuestions = useMemo(() => {
+    return bankQuestions.filter((q) => {
+      const matchUnit = selectedUnit === "all" || q.unit === selectedUnit;
+      const matchLesson = selectedLesson === "all" || q.lesson === selectedLesson;
+      const qLower = bankSearch.toLowerCase().trim();
+      const matchSearch =
+        !qLower ||
+        q.prompt.toLowerCase().includes(qLower) ||
+        q.modelAnswer.toLowerCase().includes(qLower) ||
+        (q.explanation && q.explanation.toLowerCase().includes(qLower));
+      return matchUnit && matchLesson && matchSearch;
+    });
+  }, [bankQuestions, selectedUnit, selectedLesson, bankSearch]);
+
   // ─────────────────────────────────────────────────────────────
   // VIEW 1: EXAMS LIST
   // ─────────────────────────────────────────────────────────────
@@ -541,172 +676,597 @@ export function EssayExamsTab({
           <div className="relative z-10 max-w-2xl space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-md">
               <Sparkles className="h-3.5 w-3.5 text-amber-300" />
-              <span>نظام الامتحانات المقالية التحريرية ✍️</span>
+              <span>نظام الأسئلة والامتحانات المقالية ✍️</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              الامتحانات والواجبات المقالية
+              الأسئلة والواجبات المقالية المعتمدة
             </h1>
             <p className="text-sm text-blue-100/90 leading-relaxed">
-              اختبر مهاراتك في الحل التحريري وتتبع الكود وكتابة الخوارزميات والبرمجة بالتفصيل. بعد تسليم إجاباتك، يفتح لك الحل النموذجي المعتمد لتقارن إجابتك وتقيّم نفسك وتتعرف على ما ينقصك.
+              تدرّب على صياغة الحلول التحريرية وكتابة الأكواد وتتبع المفاهيم العلمية. كل سؤال مقالي مزود بالحل النموذجي وعناصر التصحيح والترجمة الصوتية لتقيّم نفسك وتتقن الإجابة بنسبة 100%.
             </p>
           </div>
           <div className="absolute -left-12 -bottom-12 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute right-0 top-0 h-48 w-48 rounded-full bg-sky-400/20 blur-2xl" />
         </div>
 
-        {/* Search bar & Refresh */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="relative w-full sm:max-w-md">
-            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="ابحث عن اختبار مقالي بالاسم..."
-              className="w-full rounded-2xl border border-border bg-card pr-10 pl-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-xs"
-            />
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadExams}
-            disabled={loading}
-            className="w-full sm:w-auto rounded-xl gap-2 text-xs font-bold"
+        {/* View Switcher: Bank (By Unit/Lesson) vs Formal Timed Exam Papers */}
+        <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800">
+          <button
+            type="button"
+            onClick={() => setMainSection("bank")}
+            className={`flex-1 min-w-[220px] inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+              mainSection === "bank"
+                ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200 dark:border-slate-700"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            }`}
           >
-            <RotateCcw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            تحديث القائمة
-          </Button>
+            <BookOpen className="h-4 w-4 text-blue-600" />
+            <span>بنك الأسئلة المقالية للدروس والوحدات</span>
+            <span className="font-mono text-[11px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold">
+              {bankQuestions.length} سؤال
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMainSection("exams")}
+            className={`flex-1 min-w-[220px] inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+              mainSection === "exams"
+                ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200 dark:border-slate-700"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            <Clock className="h-4 w-4 text-amber-500" />
+            <span>نماذج الامتحانات المقالية التحريرية</span>
+            <span className="font-mono text-[11px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold">
+              {exams.length} نماذج
+            </span>
+          </button>
         </div>
 
-        {/* Exams Grid */}
-        {loading ? (
-          <div className="grid place-items-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <span className="mt-3 text-xs font-semibold text-muted-foreground">جاري تحميل الامتحانات المقالية...</span>
-          </div>
-        ) : filteredExams.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-border bg-card/50 p-12 text-center">
-            <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-primary/10 text-primary">
-              <FileEdit className="h-8 w-8" />
-            </div>
-            <h3 className="mt-4 text-base font-bold text-foreground">لا توجد امتحانات مقالية منشورة حالياً</h3>
-            <p className="mt-1 text-xs text-muted-foreground">
-              سيقوم د. محمود بنشر اختبارات مقالية جديدة لك قريباً. تفقد المنصة بانتظام!
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredExams.map((exam) => {
-              const sub = exam.mySubmission;
-              const isSubmitted = sub?.status === "submitted" || sub?.status === "reviewed";
-              const isInProgress = sub?.status === "in_progress";
-              const isReviewed = sub?.status === "reviewed";
+        {/* ─────────────── SECTION A: ESSAY QUESTION BANK BY UNIT & LESSON ─────────────── */}
+        {mainSection === "bank" ? (
+          <div className="space-y-6">
+            {/* 1. Units Taxonomy Pills */}
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-card p-4 space-y-3">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <span className="text-xs font-black text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <FolderOpen className="h-4 w-4 text-blue-600" />
+                  الوحدات الدراسية المتاحة:
+                </span>
+                <span className="text-[11px] font-bold text-slate-500">
+                  إجمالي الأسئلة: <span className="font-mono text-blue-600 font-bold">{bankQuestions.length}</span> سؤال مقالي
+                </span>
+              </div>
 
-              return (
-                <div
-                  key={exam.id}
-                  className="flex flex-col justify-between rounded-3xl border border-border bg-card p-5 shadow-xs transition-all hover:shadow-md hover:border-primary/40 relative overflow-hidden group"
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedUnit("all");
+                    setSelectedLesson("all");
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                    selectedUnit === "all"
+                      ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                      : "bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-blue-400"
+                  }`}
                 >
-                  <div className="space-y-3.5">
-                    {/* Top badging */}
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="inline-flex items-center gap-1.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2.5 py-1 text-xs font-bold">
-                          <FileEdit className="h-3.5 w-3.5" />
-                          {exam.stage || "منهج البكالوريا"}
-                        </span>
-                        {exam.unit && (
-                          <span className="inline-flex items-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 text-[11px] font-semibold" title={exam.unit}>
-                            {exam.unit.length > 18 ? exam.unit.slice(0, 18) + "..." : exam.unit}
-                          </span>
-                        )}
-                        {exam.lesson && (
-                          <span className="inline-flex items-center rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2 py-0.5 text-[11px] font-semibold" title={exam.lesson}>
-                            {exam.lesson.length > 18 ? exam.lesson.slice(0, 18) + "..." : exam.lesson}
-                          </span>
-                        )}
-                      </div>
-                      {isReviewed ? (
-                        <span className="inline-flex items-center gap-1 rounded-xl bg-purple-500/15 text-purple-700 dark:text-purple-300 px-2.5 py-1 text-xs font-extrabold border border-purple-500/20 shrink-0 font-mono tabular-nums">
-                          <Sparkles className="h-3.5 w-3.5" />
-                          تقييمك: {sub.adminScore} / {exam.totalPoints}
-                        </span>
-                      ) : isSubmitted ? (
-                        <span className="inline-flex items-center gap-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-2.5 py-1 text-xs font-bold shrink-0">
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                          تم التسليم ✅
-                        </span>
-                      ) : isInProgress ? (
-                        <span className="inline-flex items-center gap-1 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 px-2.5 py-1 text-xs font-bold animate-pulse">
-                          <Clock className="h-3.5 w-3.5" />
-                          جاري الحل ⏱️
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 rounded-xl bg-muted text-muted-foreground px-2.5 py-1 text-xs font-semibold">
-                          لم يبدأ بعد
-                        </span>
-                      )}
-                    </div>
+                  كافة الوحدات ({bankQuestions.length})
+                </button>
+                {bankTree.map((u) => (
+                  <button
+                    key={u.unit}
+                    type="button"
+                    onClick={() => {
+                      setSelectedUnit(u.unit);
+                      setSelectedLesson("all");
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                      selectedUnit === u.unit
+                        ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                        : "bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-blue-400"
+                    }`}
+                  >
+                    {u.unit} ({u.totalQuestions})
+                  </button>
+                ))}
+              </div>
 
-                    {/* Title & Description */}
-                    <div>
-                      <h3 className="text-base font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
-                        {exam.title}
-                      </h3>
-                      {exam.description && (
-                        <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2">
-                          {exam.description}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Exam Specs (Duration & Points) */}
-                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/60 text-xs">
-                      <div className="flex items-center gap-2 rounded-xl bg-muted/50 p-2 text-muted-foreground font-medium">
-                        <Clock className="h-3.5 w-3.5 text-primary shrink-0" />
-                        <span className="font-mono tabular-nums">{exam.durationMinutes || 60} دقيقة</span>
-                      </div>
-                      <div className="flex items-center gap-2 rounded-xl bg-muted/50 p-2 text-muted-foreground font-medium">
-                        <Award className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                        <span className="font-mono tabular-nums">{exam.totalPoints} درجة</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Button */}
-                  <div className="mt-5 pt-3">
-                    {isSubmitted ? (
-                      <Button
-                        onClick={() => handleOpenExam(exam.id)}
-                        disabled={loadingExam}
-                        className="w-full rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2 text-xs shadow-xs"
+              {/* 2. Lessons Pills */}
+              {availableLessons.length > 0 && (
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-1.5">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">
+                    دروس الوحدة:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedLesson("all")}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                        selectedLesson === "all"
+                          ? "bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700"
+                          : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-400"
+                      }`}
+                    >
+                      كل دروس الوحدة
+                    </button>
+                    {availableLessons.map((les) => (
+                      <button
+                        key={les}
+                        type="button"
+                        onClick={() => setSelectedLesson(les)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                          selectedLesson === les
+                            ? "bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700"
+                            : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-400"
+                        }`}
                       >
-                        <Sparkles className="h-4 w-4" />
-                        عرض الحل النموذجي والمثالي
-                      </Button>
-                    ) : isInProgress ? (
-                      <Button
-                        onClick={() => handleOpenExam(exam.id)}
-                        disabled={loadingExam}
-                        className="w-full rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-bold gap-2 text-xs shadow-xs animate-pulse"
-                      >
-                        <Clock className="h-4 w-4" />
-                        متابعة حل الاختبار ✍️
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={() => handleOpenExam(exam.id, true)}
-                        disabled={loadingExam}
-                        className="w-full rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold gap-2 text-xs shadow-xs"
-                      >
-                        <FileEdit className="h-4 w-4" />
-                        بدء الاختبار المقالي (60 دقيقة) ⏱️
-                      </Button>
-                    )}
+                        {les}
+                      </button>
+                    ))}
                   </div>
                 </div>
-              );
-            })}
+              )}
+            </div>
+
+            {/* 3. Search and stats bar */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="relative w-full sm:max-w-md">
+                <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={bankSearch}
+                  onChange={(e) => setBankSearch(e.target.value)}
+                  placeholder="ابحث في نص الأسئلة المقالية أو المفاهيم..."
+                  className="w-full rounded-2xl border border-border bg-card pr-10 pl-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-xs"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-500">
+                  معروض: <span className="font-mono text-blue-600 font-bold">{filteredBankQuestions.length}</span> سؤال
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={loadBank}
+                  disabled={loadingBank}
+                  className="rounded-xl gap-1.5 text-xs font-bold cursor-pointer"
+                >
+                  <RotateCcw className={`h-3.5 w-3.5 ${loadingBank ? "animate-spin" : ""}`} />
+                  تحديث
+                </Button>
+              </div>
+            </div>
+
+            {/* 4. Questions List */}
+            {loadingBank ? (
+              <div className="grid place-items-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="mt-3 text-xs font-semibold text-muted-foreground">جاري تحميل أسئلة بنك المقالي...</span>
+              </div>
+            ) : filteredBankQuestions.length === 0 ? (
+              <div className="rounded-3xl border border-dashed border-border bg-card/50 p-12 text-center space-y-2">
+                <FileText className="h-10 w-10 text-muted-foreground mx-auto" />
+                <h3 className="text-sm font-bold text-foreground">لا توجد أسئلة مقالية مطابقة للفلتر المحدد</h3>
+                <p className="text-xs text-muted-foreground">جرب اختيار وحدة أخرى أو مسح كلمات البحث.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredBankQuestions.map((q, idx) => {
+                  const isPromptEng = isPrimarilyEnglish(q.prompt);
+                  const promptParts = splitModelAnswerTranslation(q.prompt);
+                  const isRevealed = Boolean(revealedBankAnswers[q.id]);
+                  const isMastered = Boolean(masteredBankIds[q.id]);
+                  const { main: modelMain, translation: modelTrans } = splitModelAnswerTranslation(q.modelAnswer);
+                  const isModelEng = isPrimarilyEnglish(modelMain);
+                  const expParts = q.explanation ? splitModelAnswerTranslation(q.explanation) : null;
+                  const isExpEng = expParts ? isPrimarilyEnglish(expParts.main) : false;
+
+                  const difficultyLabel =
+                    q.difficulty === "easy" ? "سهل" : q.difficulty === "hard" ? "صعب" : "متوسط";
+                  const difficultyClass =
+                    q.difficulty === "easy"
+                      ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200"
+                      : q.difficulty === "hard"
+                      ? "bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200"
+                      : "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200";
+
+                  return (
+                    <article
+                      key={q.id}
+                      className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-card p-5 sm:p-6 shadow-xs space-y-4 transition-all hover:border-blue-400/50"
+                    >
+                      {/* Top Header */}
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-mono font-bold text-xs px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                            سؤال مقالي #{idx + 1}
+                          </span>
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md border ${difficultyClass}`}>
+                            {difficultyLabel}
+                          </span>
+                          <span className="text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
+                            {q.points} درجات
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/60 px-2 py-0.5 rounded-md truncate max-w-[220px]">
+                            {q.unit}
+                          </span>
+                        </div>
+
+                        {/* Mastered Pill */}
+                        <button
+                          type="button"
+                          onClick={() => toggleMastered(q.id)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
+                            isMastered
+                              ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300"
+                              : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 hover:text-slate-800"
+                          }`}
+                        >
+                          <CheckCircle2 className={`h-3.5 w-3.5 ${isMastered ? "text-emerald-600" : "text-slate-400"}`} />
+                          {isMastered ? "أتقنت السؤال ✓" : "تحديد كمتقن"}
+                        </button>
+                      </div>
+
+                      {/* Question Prompt */}
+                      <div className="space-y-2">
+                        <div
+                          dir={isPromptEng ? "ltr" : "rtl"}
+                          className={`text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 leading-relaxed whitespace-pre-line ${
+                            isPromptEng ? "text-left font-sans" : "text-right"
+                          }`}
+                        >
+                          <BidiStatement text={promptParts.main} />
+                        </div>
+
+                        {/* English Prompt Audio pronunciation */}
+                        {isPromptEng && isSpeechSupported() && (
+                          <div className="flex items-center gap-2 pt-1" dir="ltr">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleSpeakPrompt(q.id, promptParts.main)}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 dark:border-blue-900/60 bg-blue-50 dark:bg-blue-950/50 px-2.5 py-1 text-xs font-bold text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/80 cursor-pointer"
+                            >
+                              {speakingQuestionId === q.id ? (
+                                <>
+                                  <VolumeX className="h-3.5 w-3.5 text-rose-500 animate-pulse" />
+                                  <span>إيقاف الصوت</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Volume2 className="h-3.5 w-3.5 text-blue-600" />
+                                  <span>استماع لنطق السؤال 🔊</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Arabic Prompt Translation */}
+                        {promptParts.translation && (
+                          <div
+                            dir="rtl"
+                            className="rounded-xl border border-blue-200/80 dark:border-blue-900/60 bg-blue-50/70 dark:bg-blue-950/30 p-2.5 text-xs text-blue-800 dark:text-blue-300 text-right leading-relaxed"
+                          >
+                            <strong className="block text-[11px] font-black text-blue-700 dark:text-blue-300 mb-0.5">
+                              🌐 ترجمة السؤال:
+                            </strong>
+                            <BidiStatement text={promptParts.translation} />
+                          </div>
+                        )}
+
+                        {/* Optional Question Image */}
+                        {q.imageUrl && (
+                          <div className="pt-2">
+                            <img
+                              src={q.imageUrl}
+                              alt="توضيح السؤال"
+                              className="max-h-72 rounded-xl border border-slate-200 dark:border-slate-800 object-contain cursor-pointer hover:opacity-90"
+                              onClick={() => setPreviewImageUrl(q.imageUrl || null)}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action Bar */}
+                      <div className="pt-2 flex items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800/80">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setRevealedBankAnswers((prev) => ({
+                              ...prev,
+                              [q.id]: !isRevealed,
+                            }))
+                          }
+                          className="rounded-xl text-xs font-black gap-1.5 cursor-pointer"
+                        >
+                          {isRevealed ? (
+                            <>
+                              <EyeOff className="h-3.5 w-3.5" /> إخفاء الحل النموذجي
+                            </>
+                          ) : (
+                            <>
+                              <Eye className="h-3.5 w-3.5 text-blue-600" /> عرض الإجابة النموذجية وملاحظات التصحيح 💡
+                            </>
+                          )}
+                        </Button>
+                      </div>
+
+                      {/* Model Answer & Evaluation Box */}
+                      {isRevealed && (
+                        <div className="rounded-2xl border border-emerald-300 dark:border-emerald-800/80 bg-emerald-50/30 dark:bg-emerald-950/20 p-4 sm:p-5 space-y-3.5 animate-in fade-in">
+                          <div className="flex items-center justify-between gap-2" dir="rtl">
+                            <strong className="text-xs sm:text-sm font-black text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                              ✓ الإجابة النموذجية المعتمدة:
+                            </strong>
+                            {isModelEng && isSpeechSupported() && (
+                              <button
+                                type="button"
+                                onClick={() => handleToggleSpeakModel(q.id, modelMain)}
+                                className="inline-flex items-center gap-1 rounded-md border border-emerald-300 dark:border-emerald-700 bg-emerald-100/70 dark:bg-emerald-900/50 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:text-emerald-200 hover:bg-emerald-200/80 cursor-pointer"
+                              >
+                                {speakingModelId === q.id ? (
+                                  <>
+                                    <VolumeX className="h-3 w-3 text-rose-500" /> إيقاف
+                                  </>
+                                ) : (
+                                  <>
+                                    <Volume2 className="h-3 w-3" /> استماع للإجابة
+                                  </>
+                                )}
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Main Model Answer */}
+                          <div
+                            dir={isModelEng ? "ltr" : "rtl"}
+                            className={`whitespace-pre-line text-xs sm:text-sm font-medium leading-relaxed text-slate-800 dark:text-slate-200 ${
+                              isModelEng ? "text-left font-sans" : "text-right"
+                            }`}
+                          >
+                            <BidiStatement text={modelMain} />
+                          </div>
+
+                          {/* Arabic Translation of Model Answer */}
+                          {modelTrans && (
+                            <div
+                              dir="rtl"
+                              className="rounded-xl border border-emerald-300/80 dark:border-emerald-800/60 bg-emerald-100/50 dark:bg-emerald-950/40 p-3 text-xs text-emerald-900 dark:text-emerald-200 text-right whitespace-pre-line font-medium leading-relaxed"
+                            >
+                              <strong className="block text-[11px] font-black text-emerald-800 dark:text-emerald-300 mb-0.5">
+                                🌐 الترجمة العربية للإجابة النموذجية:
+                              </strong>
+                              <BidiStatement text={modelTrans} />
+                            </div>
+                          )}
+
+                          {/* Optional Model Answer Image */}
+                          {q.modelAnswerImageUrl && (
+                            <div className="pt-2">
+                              <img
+                                src={q.modelAnswerImageUrl}
+                                alt="مخطط الإجابة النموذجية"
+                                className="max-h-72 rounded-xl border border-emerald-200 dark:border-emerald-800 object-contain cursor-pointer"
+                                onClick={() => setPreviewImageUrl(q.modelAnswerImageUrl || null)}
+                              />
+                            </div>
+                          )}
+
+                          {/* Correction Notes / Rubric */}
+                          {expParts && (
+                            <div className="pt-3 border-t border-emerald-200/80 dark:border-emerald-800/60 text-xs space-y-1.5">
+                              <strong className="block font-black text-amber-800 dark:text-amber-300 text-right" dir="rtl">
+                                💡 ملاحظات التصحيح وعناصر التقييم:
+                              </strong>
+                              <div
+                                dir={isExpEng ? "ltr" : "rtl"}
+                                className={`whitespace-pre-line text-slate-700 dark:text-slate-300 font-medium ${
+                                  isExpEng ? "text-left font-sans" : "text-right"
+                                }`}
+                              >
+                                <BidiStatement text={expParts.main} />
+                              </div>
+                              {expParts.translation && (
+                                <p dir="rtl" className="mt-1 text-right text-emerald-800 dark:text-emerald-300 font-semibold">
+                                  🌐 {expParts.translation}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Self Reflection */}
+                          <div className="pt-3 border-t border-emerald-200/60 dark:border-emerald-800/40 flex items-center justify-between gap-2 flex-wrap">
+                            <span className="text-[11px] font-bold text-slate-500">
+                              تقييمك الذاتي لفهمك للسؤال:
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => toggleMastered(q.id)}
+                                className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer"
+                              >
+                                فهمت السؤال بالكامل ✓
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* ─────────────── SECTION B: FORMAL TIMED EXAM PAPERS ─────────────── */
+          <div className="space-y-4">
+            {/* Search bar & Refresh */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="relative w-full sm:max-w-md">
+                <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="ابحث عن اختبار مقالي بالاسم..."
+                  className="w-full rounded-2xl border border-border bg-card pr-10 pl-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary shadow-xs"
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadExams}
+                disabled={loading}
+                className="w-full sm:w-auto rounded-xl gap-2 text-xs font-bold"
+              >
+                <RotateCcw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+                تحديث القائمة
+              </Button>
+            </div>
+
+            {/* Exams Grid */}
+            {loading ? (
+              <div className="grid place-items-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="mt-3 text-xs font-semibold text-muted-foreground">جاري تحميل الامتحانات المقالية...</span>
+              </div>
+            ) : filteredExams.length === 0 ? (
+              <div className="rounded-3xl border border-dashed border-border bg-card/50 p-12 text-center space-y-2">
+                <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-primary/10 text-primary">
+                  <FileEdit className="h-8 w-8" />
+                </div>
+                <h3 className="mt-4 text-base font-bold text-foreground">لا توجد نماذج امتحانات مقالية منشورة حالياً</h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  يمكنك الاستفادة فوراً من <strong>بنك الأسئلة المقالية للدروس والوحدات</strong> في التاب أعلاه حيث يحتوي على كافة أسئلة المنهج التحريرية!
+                </p>
+                <div className="pt-2">
+                  <Button
+                    onClick={() => setMainSection("bank")}
+                    className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs"
+                  >
+                    الانتقال لبنك الأسئلة المقالية للدروس ({bankQuestions.length} سؤال) 📚
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filteredExams.map((exam) => {
+                  const sub = exam.mySubmission;
+                  const isSubmitted = sub?.status === "submitted" || sub?.status === "reviewed";
+                  const isInProgress = sub?.status === "in_progress";
+                  const isReviewed = sub?.status === "reviewed";
+
+                  return (
+                    <div
+                      key={exam.id}
+                      className="flex flex-col justify-between rounded-3xl border border-border bg-card p-5 shadow-xs transition-all hover:shadow-md hover:border-primary/40 relative overflow-hidden group"
+                    >
+                      <div className="space-y-3.5">
+                        {/* Top badging */}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2.5 py-1 text-xs font-bold">
+                              <FileEdit className="h-3.5 w-3.5" />
+                              {exam.stage || "منهج البكالوريا"}
+                            </span>
+                            {exam.unit && (
+                              <span className="inline-flex items-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 text-[11px] font-semibold" title={exam.unit}>
+                                {exam.unit.length > 18 ? exam.unit.slice(0, 18) + "..." : exam.unit}
+                              </span>
+                            )}
+                            {exam.lesson && (
+                              <span className="inline-flex items-center rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2 py-0.5 text-[11px] font-semibold" title={exam.lesson}>
+                                {exam.lesson.length > 18 ? exam.lesson.slice(0, 18) + "..." : exam.lesson}
+                              </span>
+                            )}
+                          </div>
+                          {isReviewed ? (
+                            <span className="inline-flex items-center gap-1 rounded-xl bg-purple-500/15 text-purple-700 dark:text-purple-300 px-2.5 py-1 text-xs font-extrabold border border-purple-500/20 shrink-0 font-mono tabular-nums">
+                              <Sparkles className="h-3.5 w-3.5" />
+                              تقييمك: {sub.adminScore} / {exam.totalPoints}
+                            </span>
+                          ) : isSubmitted ? (
+                            <span className="inline-flex items-center gap-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-2.5 py-1 text-xs font-bold shrink-0">
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                              تم التسليم ✅
+                            </span>
+                          ) : isInProgress ? (
+                            <span className="inline-flex items-center gap-1 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 px-2.5 py-1 text-xs font-bold animate-pulse">
+                              <Clock className="h-3.5 w-3.5" />
+                              جاري الحل ⏱️
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded-xl bg-muted text-muted-foreground px-2.5 py-1 text-xs font-semibold">
+                              لم يبدأ بعد
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Title & Description */}
+                        <div>
+                          <h3 className="text-base font-bold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+                            {exam.title}
+                          </h3>
+                          {exam.description && (
+                            <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2">
+                              {exam.description}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Exam Specs (Duration & Points) */}
+                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/60 text-xs">
+                          <div className="flex items-center gap-2 rounded-xl bg-muted/50 p-2 text-muted-foreground font-medium">
+                            <Clock className="h-3.5 w-3.5 text-primary shrink-0" />
+                            <span className="font-mono tabular-nums">{exam.durationMinutes || 60} دقيقة</span>
+                          </div>
+                          <div className="flex items-center gap-2 rounded-xl bg-muted/50 p-2 text-muted-foreground font-medium">
+                            <Award className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                            <span className="font-mono tabular-nums">{exam.totalPoints} درجة</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Button */}
+                      <div className="mt-5 pt-3">
+                        {isSubmitted ? (
+                          <Button
+                            onClick={() => handleOpenExam(exam.id)}
+                            disabled={loadingExam}
+                            className="w-full rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2 text-xs shadow-xs"
+                          >
+                            <Eye className="h-4 w-4" />
+                            عرض الحل النموذجي والتقييم 🔍
+                          </Button>
+                        ) : isInProgress ? (
+                          <Button
+                            onClick={() => handleOpenExam(exam.id)}
+                            disabled={loadingExam}
+                            className="w-full rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-bold gap-2 text-xs shadow-xs animate-pulse"
+                          >
+                            <Clock className="h-4 w-4" />
+                            متابعة حل الاختبار ✍️
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() => handleOpenExam(exam.id, true)}
+                            disabled={loadingExam}
+                            className="w-full rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold gap-2 text-xs shadow-xs"
+                          >
+                            <FileEdit className="h-4 w-4" />
+                            بدء الاختبار المقالي (60 دقيقة) ⏱️
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>

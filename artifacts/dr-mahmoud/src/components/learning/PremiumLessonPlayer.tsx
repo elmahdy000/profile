@@ -1057,7 +1057,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
                 ['overview', 'نظرة عامة', FileText],
                 ...(kholasaMaterial ? [
                   ['definitions', 'التعريفات 📖', BookOpen] as const,
-                  ...(hasZatonaContent(kholasaMaterial) ? [['kholasa', 'الزتونة 💎', Sparkles] as const] : []),
+                  ...(hasZatonaContent(kholasaMaterial) ? [['kholasa', 'الزتونة', Sparkles] as const] : []),
                   ['mindmap', `الخرائط الذهنية (${kholasaMaterial.mindmapImages?.length || 0})`, MapIcon] as const,
                   ['flashcards', `التسميع (${kholasaMaterial.flashcards?.length || 0})`, Layers] as const,
                   ['lesson-questions', 'أسئلة الدرس 📝', HelpCircle] as const,

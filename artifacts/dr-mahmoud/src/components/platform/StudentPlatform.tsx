@@ -1002,7 +1002,7 @@ export function StudentPlatform() {
   const nav = [
     ["dashboard", "الرئيسية", Home],
     ["lessons", "فيديوهات المنصة", BookOpen],
-    ["kholasa", "الخلاصة 💎", Sparkles],
+    ["kholasa", "الخلاصة", Sparkles],
     ["mistakes", "ركن غلطاتي 🎯", Target],
     ["essay-exams", "الامتحانات المقالية ✍️", FileEdit],
     ["quizzes", "الاختبارات", ClipboardCheck],
@@ -1018,7 +1018,7 @@ export function StudentPlatform() {
       items: [
         { id: "dashboard" as const, label: "الرئيسية", icon: Home },
         { id: "lessons" as const, label: "فيديوهات المنصة", icon: BookOpen },
-        { id: "kholasa" as const, label: "الخلاصة 💎", icon: Sparkles },
+        { id: "kholasa" as const, label: "الخلاصة", icon: Sparkles },
         { id: "summaries" as const, label: "مذكراتي وتلخيصاتي", icon: FileText },
         { id: "files" as const, label: "الملفات والملازم", icon: FolderOpen },
       ],
@@ -1223,7 +1223,7 @@ export function StudentPlatform() {
 
           {/* Compact Bottom Footer Actions */}
           <div className="shrink-0 mt-auto space-y-1.5 border-t border-slate-200/80 dark:border-[#1E2E48] bg-slate-50/70 dark:bg-[#070D18] p-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-            <ThemeToggle showLabel className="h-8.5 w-full text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0D1726] shadow-2xs" />
+            <ThemeToggle className="h-8.5 w-full text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-[#1E2E48] bg-white dark:bg-[#0D1726] shadow-2xs" />
             <div className="grid grid-cols-2 gap-1.5">
               <a
                 href={`https://wa.me/201066711545?text=${encodeURIComponent(
@@ -1658,10 +1658,10 @@ export function StudentPlatform() {
             }`}
           >
             <BookOpen className={`h-[20px] w-[20px] ${tab === "lessons" ? "stroke-[2.5]" : ""}`} />
-            <span className="truncate max-w-[66px]">فيديوهات المنصة</span>
+            <span className="truncate">الفيديوهات</span>
           </button>
 
-          {/* Center: الخلاصة 💎 */}
+          {/* Center: الخلاصة */}
           <button
             type="button"
             onClick={() => { setTab("kholasa"); setSidebarOpen(false); }}
@@ -1673,7 +1673,7 @@ export function StudentPlatform() {
             }`}
           >
             <Sparkles className={`h-[20px] w-[20px] ${tab === "kholasa" ? "text-amber-500 stroke-[2.5]" : "text-amber-500/70"}`} />
-            <span className="font-extrabold text-amber-600 dark:text-amber-400">الخلاصة 💎</span>
+            <span className="font-extrabold text-amber-600 dark:text-amber-400">الخلاصة</span>
           </button>
 
           <button

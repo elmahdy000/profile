@@ -216,22 +216,19 @@ const EGYPT_GOVERNORATES: Record<string, string[]> = {
   "جنوب سيناء": ["شرم الشيخ", "طور سيناء", "دهب", "نويبع", "طابا", "رأس سدر", "سانت كاترين", "أبو رديس", "أبو زنيمة"]
 };
 
-export function renderUnitTitleWithIsolatedEnglish(rawTitle: string) {
+export function renderUnitTitleWithIsolatedEnglish(rawTitle: string): React.ReactNode {
   if (!rawTitle) return null;
-  // Match parenthesized subtitle, e.g. "الوحدة الثانية: الأمن السيبراني والتشفير (Unit 2: Cybersecurity & Encryption)"
   const match = rawTitle.match(/^([\s\S]*?)\s*\(([^)]+)\)\s*$/);
   if (match) {
-    const arabicPart = match[1].trim();
-    const englishPart = match[2].trim();
     return (
       <span className="inline-flex flex-wrap items-center gap-1.5 align-baseline">
-        <span>{arabicPart}</span>
+        <span>{match[1].trim()}</span>
         <span
           dir="ltr"
           style={{ unicodeBidi: "isolate" }}
           className="inline-block px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[11px] font-sans font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
         >
-          {englishPart}
+          {match[2].trim()}
         </span>
       </span>
     );
@@ -1953,13 +1950,29 @@ export function SelfAssessmentTab({
               <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
                 تقرير نتيجة التقييم الذاتي
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                الوحدة: {renderUnitTitleWithIsolatedEnglish(selectedUnitName)} • عدد الأسئلة: <span className="font-mono tabular-nums">{reviewDetails.length}</span>
-              </p>
+              <div className="text-xs text-slate-500 dark:text-slate-400 flex flex-wrap items-center justify-center gap-1.5" dir="rtl">
+                <span>الوحدة:</span>
+                {(() => {
+                  const match = selectedUnitName.match(/^([\s\S]*?)\s*\(([^)]+)\)\s*$/);
+                  if (match) {
+                    return (
+                      <span className="inline-flex flex-wrap items-center gap-1">
+                        <strong className="text-slate-700 dark:text-slate-300">{match[1].trim()}</strong>
+                        <span dir="ltr" style={{ unicodeBidi: "isolate" }} className="text-[11px] font-sans text-slate-500 dark:text-slate-400 font-medium">
+                          ({match[2].trim()})
+                        </span>
+                      </span>
+                    );
+                  }
+                  return <strong className="text-slate-700 dark:text-slate-300"><bdi>{selectedUnitName}</bdi></strong>;
+                })()}
+                <span>• عدد الأسئلة:</span>
+                <span className="font-mono tabular-nums font-bold text-slate-700 dark:text-slate-300">{reviewDetails.length}</span>
+              </div>
             </div>
 
-            {/* Score & Percentage (Fixed BiDi Direction) */}
-            <div className="flex items-center justify-center gap-6 py-1">
+            {/* Score & Percentage (Clear Arabic phrasing avoiding BiDi reversal) */}
+            <div className="flex items-center justify-center gap-6 py-1" dir="rtl">
               <div className="text-center">
                 <span className="text-2xl sm:text-3xl font-black font-mono tabular-nums text-blue-600 dark:text-blue-400 block">
                   {percentage}%
@@ -1968,9 +1981,9 @@ export function SelfAssessmentTab({
               </div>
               <div className="h-8 w-px bg-slate-200 dark:bg-slate-800" />
               <div className="text-center">
-                <div dir="ltr" className="inline-flex items-center justify-center font-mono font-black text-2xl sm:text-3xl text-slate-800 dark:text-slate-200 tabular-nums">
+                <div className="inline-flex items-center justify-center font-mono font-black text-2xl sm:text-3xl text-slate-800 dark:text-slate-200 tabular-nums">
                   <span>{score}</span>
-                  <span className="mx-1 text-slate-400 font-normal">/</span>
+                  <span className="mx-1.5 text-sm font-bold text-slate-400 font-sans">من</span>
                   <span>{totalPoints}</span>
                 </div>
                 <span className="text-xs text-slate-400 font-semibold block">إجمالي الدرجات</span>

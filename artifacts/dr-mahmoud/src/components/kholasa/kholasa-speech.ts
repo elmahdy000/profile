@@ -14,8 +14,11 @@ export function isPrimarilyEnglish(text?: string | null): boolean {
   const latinCount = latinMatches ? latinMatches.length : 0;
   const arabicCount = arabicMatches ? arabicMatches.length : 0;
 
+  if (arabicCount === 0) {
+    return latinCount > 0 || /[0-9]/.test(cleaned);
+  }
+
   if (latinCount === 0) return false;
-  if (arabicCount === 0) return latinCount >= 2;
   return latinCount > arabicCount * 1.35;
 }
 

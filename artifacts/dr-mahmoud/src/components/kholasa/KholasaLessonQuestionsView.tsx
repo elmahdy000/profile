@@ -500,7 +500,7 @@ export function KholasaLessonQuestionsView({
                     const isPicked = res?.selectedOption === oi;
                     const isCorrectOpt = res?.correctOption === oi;
                     const isWrongPicked = res && isPicked && !res.isCorrect;
-                    const isOptEng = isPrimarilyEnglish(opt);
+                    const isOptEng = isPromptEng || isPrimarilyEnglish(opt);
 
                     return (
                       <button
