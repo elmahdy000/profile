@@ -708,8 +708,10 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
         const cAns = cleanedOptions[cIdx]?.trim() || "";
         if (!cAns) continue;
 
+        const qTrans = (q.translation || r.translation || "").trim() || undefined;
         validQuestions.push({
           prompt: q.prompt.replace(/\r?\n\s*[A-Da-dأابجده]\)\s*$/, "").trim(),
+          translation: qTrans,
           options: cleanedOptions,
           correctIndex: cIdx,
           correctAnswer: cAns,
@@ -900,6 +902,7 @@ router.post("/learning/self-assessment/generate", async (req, res, next) => {
     const clientQuestions = pickedQuestions.map((q, idx) => ({
       index: idx,
       prompt: q.prompt,
+      translation: q.translation || undefined,
       options: q.options || [],
       imageUrl: q.imageUrl,
       points: q.points || 1,
@@ -1001,6 +1004,7 @@ router.post("/learning/self-assessment/submit", async (req, res, next) => {
           questionType: "essay" as const,
           points: qPoints,
           prompt: q.prompt,
+          translation: q.translation || undefined,
           options: [] as string[],
           selectedOption: -1,
           studentAnswer: textAns || "لم يكتب الطالب إجابة",
@@ -1027,6 +1031,7 @@ router.post("/learning/self-assessment/submit", async (req, res, next) => {
         questionType: (q.questionType || "mcq") as "mcq" | "true_false",
         points: qPoints,
         prompt: q.prompt,
+        translation: q.translation || undefined,
         options: q.options,
         selectedOption: selected,
         studentAnswer: studentAnsText,

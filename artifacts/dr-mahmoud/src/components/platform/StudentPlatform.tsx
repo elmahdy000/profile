@@ -68,6 +68,7 @@ import { CommandPaletteModal } from "./CommandPaletteModal";
 import { KholasaLessonsTab } from "@/components/kholasa/KholasaLessonsTab";
 import { MistakeHubTab } from "@/components/kholasa/MistakeHubTab";
 import { BidiStatement } from "@/components/kholasa/BidiStatement";
+import { splitModelAnswerTranslation, isPrimarilyEnglish } from "@/components/kholasa/kholasa-speech";
 
 import type {
   Student,
@@ -1283,6 +1284,22 @@ export function StudentPlatform() {
                 </span>
                 <span>متصل بالمنصة</span>
               </div>
+
+              {unresolvedMistakesCount > 0 && !isUnpaid && (
+                <button
+                  type="button"
+                  onClick={() => setTab("mistakes")}
+                  title="افتح ركن غلطاتي لمراجعة أخطائك"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-rose-300 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/50 px-2.5 py-1 text-xs font-bold text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors cursor-pointer shadow-2xs"
+                >
+                  <Target className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+                  <span className="hidden sm:inline">أخطاء للمراجعة</span>
+                  <span className="inline sm:hidden">غلطاتي</span>
+                  <span className="min-w-[18px] h-4.5 px-1 rounded-full bg-rose-600 text-white font-mono text-[10px] font-black flex items-center justify-center">
+                    {unresolvedMistakesCount}
+                  </span>
+                </button>
+              )}
             </div>
 
             {/* Left in RTL: Quick Search + Notifications + Student Profile + Logout */}
@@ -1611,12 +1628,12 @@ export function StudentPlatform() {
         </section>
       </div>
 
-      {/* Mobile Bottom Navigation Dock */}
+      {/* Mobile Bottom Navigation Dock (Centered الخلاصة) */}
       <nav
         aria-label="التنقل الرئيسي"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 dark:border-[#1E2E48] bg-white/85 dark:bg-[#070D18]/85 px-1.5 pb-[max(0.25rem,env(safe-area-inset-bottom))] shadow-xl backdrop-blur-xl lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 dark:border-[#1E2E48] bg-white/90 dark:bg-[#070D18]/90 px-1.5 pb-[max(0.25rem,env(safe-area-inset-bottom))] shadow-xl backdrop-blur-xl lg:hidden"
       >
-        <div className="mx-auto grid max-w-lg grid-cols-5 gap-1">
+        <div className="mx-auto grid max-w-lg grid-cols-5 gap-1 items-center">
           <button
             type="button"
             onClick={() => { setTab("dashboard"); setSidebarOpen(false); }}
@@ -1643,6 +1660,22 @@ export function StudentPlatform() {
             <BookOpen className={`h-[20px] w-[20px] ${tab === "lessons" ? "stroke-[2.5]" : ""}`} />
             <span className="truncate max-w-[66px]">فيديوهات المنصة</span>
           </button>
+
+          {/* Center: الخلاصة 💎 */}
+          <button
+            type="button"
+            onClick={() => { setTab("kholasa"); setSidebarOpen(false); }}
+            aria-current={tab === "kholasa" ? "page" : undefined}
+            className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-bold transition-all duration-150 active:scale-95 cursor-pointer relative ${
+              tab === "kholasa"
+                ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-amber-500 before:rounded-full"
+                : "text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400"
+            }`}
+          >
+            <Sparkles className={`h-[20px] w-[20px] ${tab === "kholasa" ? "text-amber-500 stroke-[2.5]" : "text-amber-500/70"}`} />
+            <span className="font-extrabold text-amber-600 dark:text-amber-400">الخلاصة 💎</span>
+          </button>
+
           <button
             type="button"
             onClick={() => { setTab("quizzes"); setSidebarOpen(false); }}
@@ -1656,94 +1689,22 @@ export function StudentPlatform() {
             <ClipboardCheck className={`h-[20px] w-[20px] ${tab === "quizzes" ? "stroke-[2.5]" : ""}`} />
             <span>الاختبارات</span>
           </button>
-          <button
-            type="button"
-            onClick={() => { setTab("summaries"); setSidebarOpen(false); }}
-            aria-current={tab === "summaries" ? "page" : undefined}
-            className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-bold transition-all duration-150 active:scale-95 cursor-pointer relative ${
-              tab === "summaries"
-                ? "bg-blue-50/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
-                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-            }`}
-          >
-            <FileText className={`h-[20px] w-[20px] ${tab === "summaries" ? "stroke-[2.5]" : ""}`} />
-            <span>مذكراتي</span>
-          </button>
+
           <button
             type="button"
             onClick={() => setSidebarOpen((prev) => !prev)}
             aria-label="فتح القائمة الكاملة"
             className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-bold transition-all duration-150 active:scale-95 cursor-pointer relative ${
-              sidebarOpen || ["files", "profile", "essay-exams", "self-assessment", "kholasa", "mistakes"].includes(tab)
+              sidebarOpen || ["files", "profile", "essay-exams", "self-assessment", "mistakes", "summaries"].includes(tab)
                 ? "bg-blue-50/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
             }`}
           >
             <Menu className="h-[20px] w-[20px]" />
-            <span className="truncate max-w-[60px]">{["files", "profile", "essay-exams", "self-assessment", "kholasa", "mistakes"].includes(tab) ? (navLabels[tab] || "المزيد") : "المزيد"}</span>
+            <span className="truncate max-w-[60px]">{["files", "profile", "essay-exams", "self-assessment", "mistakes", "summaries"].includes(tab) ? (navLabels[tab] || "المزيد") : "المزيد"}</span>
           </button>
         </div>
       </nav>
-
-      {/* Distinctive Floating Mistakes Counter */}
-      {!isUnpaid && tab !== "mistakes" && !activeQuiz && (
-        <motion.button
-          type="button"
-          onClick={() => {
-            setTab("mistakes");
-            setSidebarOpen(false);
-          }}
-          initial={{ opacity: 0, y: 16, scale: 0.92 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          whileHover={{ scale: 1.04, y: -2 }}
-          whileTap={{ scale: 0.96 }}
-          dir="rtl"
-          title="افتح ركن غلطاتي لمراجعة أخطائك"
-          className={`fixed bottom-[76px] left-3 sm:left-6 lg:bottom-6 lg:left-6 z-30 flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 border backdrop-blur-xl transition-colors cursor-pointer ${
-            unresolvedMistakesCount > 0
-              ? "border-rose-400/50 bg-rose-600 hover:bg-rose-700 text-white shadow-xl shadow-rose-500/25"
-              : "border-emerald-500/35 bg-white/95 dark:bg-slate-900/95 text-foreground shadow-lg hover:border-emerald-500/60"
-          }`}
-        >
-          <span className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-white/20 shrink-0">
-            {unresolvedMistakesCount > 0 && (
-              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-amber-300 animate-ping" />
-            )}
-            <Target
-              className={`h-4 w-4 ${
-                unresolvedMistakesCount > 0 ? "text-white" : "text-emerald-500"
-              }`}
-            />
-          </span>
-
-          <div className="text-right leading-tight">
-            <div className="text-[11px] font-black tracking-tight">
-              عداد الأخطاء
-            </div>
-            <div
-              className={`text-[10px] font-bold ${
-                unresolvedMistakesCount > 0 ? "text-white/90" : "text-muted-foreground"
-              }`}
-            >
-              {unresolvedMistakesCount > 0 ? "للمراجعة الآن" : "لا توجد أخطاء"}
-            </div>
-          </div>
-
-          <motion.span
-            key={unresolvedMistakesCount}
-            initial={{ scale: 1.35 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 360, damping: 18 }}
-            className={`min-w-[30px] h-7 px-2 rounded-full font-mono text-xs font-black tabular-nums flex items-center justify-center shadow-2xs ${
-              unresolvedMistakesCount > 0
-                ? "bg-white text-rose-600"
-                : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-            }`}
-          >
-            {unresolvedMistakesCount}
-          </motion.span>
-        </motion.button>
-      )}
 
       <AnimatePresence>
         {linkedPreviewFile && <AppFilePreviewModal file={linkedPreviewFile} onClose={() => setLinkedPreviewFile(null)} />}
@@ -2015,6 +1976,14 @@ export function StudentPlatform() {
                                       {arLines.join(" ")}
                                     </div>
                                   )}
+
+                                  {/* Direct Question Translation from DB */}
+                                  {q.translation && arLines.length === 0 && (
+                                    <div dir="rtl" className="text-right text-xs sm:text-sm font-bold text-blue-700 dark:text-blue-300 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/40 rounded-xl px-4 py-2.5 mt-2 leading-relaxed">
+                                      <span className="block text-[11px] font-black text-blue-600 dark:text-blue-400 mb-0.5">🌐 ترجمة السؤال:</span>
+                                      <BidiStatement text={q.translation} />
+                                    </div>
+                                  )}
                                 </>
                               );
                             })()}
@@ -2113,20 +2082,26 @@ export function StudentPlatform() {
                       </div>
 
                       {quizResult && activeQuiz.showExplanations !== false && q.explanation && (() => {
-                        const isExplAr = /[\u0600-\u06FF]/.test(q.explanation);
+                        const { main: expMain, translation: expTrans } = splitModelAnswerTranslation(q.explanation);
+                        const isMainEng = isPrimarilyEnglish(expMain);
                         return (
                           <div
-                            className={`mt-4 rounded-2xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/60 dark:bg-blue-950/30 p-4 text-xs sm:text-sm text-slate-800 dark:text-slate-200 ${
-                              isExplAr ? "text-right" : "text-left"
+                            className={`mt-4 rounded-2xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/60 dark:bg-blue-950/30 p-4 text-xs sm:text-sm text-slate-800 dark:text-slate-200 space-y-2 ${
+                              isMainEng ? "text-left" : "text-right"
                             }`}
-                            dir={isExplAr ? "rtl" : "ltr"}
                           >
-                            <strong className="block font-bold mb-1 text-blue-700 dark:text-blue-300">
-                              {isExplAr ? "💡 توضيح وشرح الإجابة:" : "💡 Explanation:"}
+                            <strong className="block font-bold text-blue-700 dark:text-blue-300" dir="rtl">
+                              💡 توضيح وشرح الإجابة:
                             </strong>
-                            <span className="text-slate-600 dark:text-slate-300 leading-relaxed" dir={isExplAr ? "rtl" : "ltr"}>
-                              {q.explanation}
-                            </span>
+                            <div dir={isMainEng ? "ltr" : "rtl"} className={`text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line ${isMainEng ? "text-left font-sans" : "text-right"}`}>
+                              <BidiStatement text={expMain} />
+                            </div>
+                            {expTrans && (
+                              <div dir="rtl" className="mt-2 pt-2 border-t border-blue-200/50 dark:border-blue-900/40 text-right text-emerald-800 dark:text-emerald-300 bg-emerald-50/60 dark:bg-emerald-950/20 p-2.5 rounded-xl whitespace-pre-line">
+                                <span className="text-[11px] font-black block mb-0.5">🌐 الترجمة العربية للشرح:</span>
+                                <BidiStatement text={expTrans} />
+                              </div>
+                            )}
                           </div>
                         );
                       })()}

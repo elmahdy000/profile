@@ -34,6 +34,7 @@ import {
   TrendingUp,
   ChevronDown,
   ChevronUp,
+  Languages,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +69,7 @@ interface StageTaxonomy {
 interface QuestionClient {
   index: number;
   prompt: string;
+  translation?: string;
   options: string[];
   imageUrl?: string;
   points: number;
@@ -79,6 +81,7 @@ interface ReviewDetail {
   questionType?: "mcq" | "true_false" | "essay";
   points?: number;
   prompt: string;
+  translation?: string;
   options: string[];
   selectedOption: number;
   studentAnswer?: string;
@@ -269,6 +272,7 @@ export function SelfAssessmentTab({
   const [questions, setQuestions] = useState<QuestionClient[]>([]);
   const [answers, setAnswers] = useState<Record<number, number | string>>({});
   const [currentQIndex, setCurrentQIndex] = useState(0);
+  const [showQuestionTranslation, setShowQuestionTranslation] = useState(true);
   const [timeRemainingSeconds, setTimeRemainingSeconds] = useState<number>(600);
   const [totalSecondsSpent, setTotalSecondsSpent] = useState<number>(0);
   const [submitting, setSubmitting] = useState(false);
@@ -1225,6 +1229,68 @@ export function SelfAssessmentTab({
               </div>
             </div>
 
+            {/* Quick Practice Mode Presets */}
+            <div className="space-y-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <Zap className="h-4 w-4 text-amber-500" />
+                أنماط جاهزة للتدريب السريع من بنك الأسئلة:
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuestionCount(10);
+                    setSelectedTypes(["mcq", "true_false"]);
+                    setSelectedDurationMinutes(15);
+                    setIsUntimed(false);
+                  }}
+                  className="p-2.5 rounded-xl border border-blue-200/80 dark:border-blue-900/60 bg-blue-50/60 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-right transition cursor-pointer"
+                >
+                  <strong className="block text-xs font-extrabold text-blue-700 dark:text-blue-300">⚡ تحدي سريع</strong>
+                  <span className="block text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">10 أسئلة • 15 دقيقة</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuestionCount(10);
+                    setSelectedTypes(["essay"]);
+                    setSelectedDurationMinutes(25);
+                    setIsUntimed(false);
+                  }}
+                  className="p-2.5 rounded-xl border border-purple-200/80 dark:border-purple-900/60 bg-purple-50/60 dark:bg-purple-950/30 hover:bg-purple-100 dark:hover:bg-purple-900/50 text-right transition cursor-pointer"
+                >
+                  <strong className="block text-xs font-extrabold text-purple-700 dark:text-purple-300">✍️ تدريب مقالي</strong>
+                  <span className="block text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">10 أسئلة مقالية نموذجية</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuestionCount(25);
+                    setSelectedTypes(["mcq", "true_false", "essay"]);
+                    setSelectedDurationMinutes(45);
+                    setIsUntimed(false);
+                  }}
+                  className="p-2.5 rounded-xl border border-emerald-200/80 dark:border-emerald-900/60 bg-emerald-50/60 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-right transition cursor-pointer"
+                >
+                  <strong className="block text-xs font-extrabold text-emerald-700 dark:text-emerald-300">🏛️ محاكاة الامتحان</strong>
+                  <span className="block text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">25 سؤال متوازن • 45 دقيقة</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuestionCount(Math.min(availableQuestionsCount || 50, 50));
+                    setSelectedTypes(["mcq", "true_false", "essay"]);
+                    setSelectedDurationMinutes(0);
+                    setIsUntimed(true);
+                  }}
+                  className="p-2.5 rounded-xl border border-amber-200/80 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-right transition cursor-pointer"
+                >
+                  <strong className="block text-xs font-extrabold text-amber-700 dark:text-amber-300">🧠 تدريب مفتوح</strong>
+                  <span className="block text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">50 سؤال • بدون توقيت</span>
+                </button>
+              </div>
+            </div>
+
             {/* Question Types Selector (MCQ, True/False, Essay, or All) */}
             <div className="space-y-2.5 pb-2 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center justify-between flex-wrap gap-2">
@@ -1730,6 +1796,31 @@ export function SelfAssessmentTab({
                     <BidiStatement text={currentQ.prompt} />
                   </h2>
 
+                  {currentQ.translation && (
+                    <div className="pt-1 text-right" dir="rtl">
+                      <button
+                        type="button"
+                        onClick={() => setShowQuestionTranslation((prev) => !prev)}
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-blue-200/80 dark:border-blue-800/60 bg-blue-50/80 dark:bg-blue-950/40 px-3 py-1 text-xs font-bold text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors cursor-pointer"
+                      >
+                        <Languages className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                        <span>{showQuestionTranslation ? "إخفاء الترجمة العربية" : "عرض الترجمة العربية للسؤال 🌐"}</span>
+                      </button>
+
+                      {showQuestionTranslation && (
+                        <div
+                          dir="rtl"
+                          className="mt-2 rounded-2xl border border-blue-500/25 bg-blue-50/60 dark:bg-blue-950/25 p-3.5 text-right text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-200 leading-relaxed shadow-2xs"
+                        >
+                          <span className="block text-[11px] font-black text-blue-600 dark:text-blue-400 mb-1">
+                            🌐 الترجمة العربية للسؤال:
+                          </span>
+                          <BidiStatement text={currentQ.translation} />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {currentQ.imageUrl && (
                     <div className="rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 max-w-md mx-auto my-3 shadow-xs">
                       <img src={currentQ.imageUrl} alt="سؤال" className="w-full h-auto object-contain" />
@@ -1829,35 +1920,37 @@ export function SelfAssessmentTab({
       {/* ────────────────── STEP 3: RESULTS & EXPLANATIONS ────────────────── */}
       {step === "results" && (
         <div className="space-y-6">
-          {/* Result Card */}
-          <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-6 sm:p-8 shadow-md text-center space-y-4">
-            <div className="inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-blue-50 dark:bg-blue-950/70 border border-blue-200/60 dark:border-blue-900/60 text-blue-600 dark:text-blue-400 shadow-inner mx-auto">
-              <Award className="h-10 w-10 text-blue-600 dark:text-blue-400" />
+          {/* Result Card (Compact & Crisp) */}
+          <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-5 sm:p-6 shadow-md text-center space-y-3.5 max-w-2xl mx-auto">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/70 border border-blue-200/60 dark:border-blue-900/60 text-blue-600 dark:text-blue-400 shadow-inner mx-auto">
+              <Award className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
 
             <div className="space-y-1">
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
                 تقرير نتيجة التقييم الذاتي
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                الوحدة: <span className="font-bold text-slate-700 dark:text-slate-300">{selectedUnitName}</span> • عدد الأسئلة: <span className="font-mono tabular-nums">{reviewDetails.length}</span>
+                الوحدة: <bdi className="font-bold text-slate-700 dark:text-slate-300">{selectedUnitName}</bdi> • عدد الأسئلة: <span className="font-mono tabular-nums">{reviewDetails.length}</span>
               </p>
             </div>
 
-            {/* Score & Percentage */}
-            <div className="flex items-center justify-center gap-6 py-2">
+            {/* Score & Percentage (Fixed BiDi Direction) */}
+            <div className="flex items-center justify-center gap-6 py-1">
               <div className="text-center">
-                <span className="text-3xl sm:text-4xl font-black font-mono tabular-nums text-blue-600 dark:text-blue-400 block">
+                <span className="text-2xl sm:text-3xl font-black font-mono tabular-nums text-blue-600 dark:text-blue-400 block">
                   {percentage}%
                 </span>
                 <span className="text-xs text-slate-400 font-semibold">النسبة المئوية</span>
               </div>
-              <div className="h-10 w-px bg-slate-200 dark:border-slate-800" />
+              <div className="h-8 w-px bg-slate-200 dark:bg-slate-800" />
               <div className="text-center">
-                <span className="text-3xl sm:text-4xl font-black font-mono tabular-nums text-slate-800 dark:text-slate-200 block">
-                  {score} / {totalPoints}
-                </span>
-                <span className="text-xs text-slate-400 font-semibold">إجمالي الدرجات</span>
+                <div dir="ltr" className="inline-flex items-center justify-center font-mono font-black text-2xl sm:text-3xl text-slate-800 dark:text-slate-200 tabular-nums">
+                  <span>{score}</span>
+                  <span className="mx-1 text-slate-400 font-normal">/</span>
+                  <span>{totalPoints}</span>
+                </div>
+                <span className="text-xs text-slate-400 font-semibold block">إجمالي الدرجات</span>
               </div>
             </div>
 
@@ -1985,6 +2078,13 @@ export function SelfAssessmentTab({
                   <BidiStatement text={rev.prompt} />
                 </h4>
 
+                {rev.translation && (
+                  <div dir="rtl" className="text-right text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40 rounded-xl px-3.5 py-2 leading-relaxed">
+                    <span className="block text-[11px] font-black text-blue-600 dark:text-blue-400 mb-0.5">🌐 ترجمة السؤال:</span>
+                    <BidiStatement text={rev.translation} />
+                  </div>
+                )}
+
                 {isEssayRev ? (
                   <div className="space-y-3 pt-1">
                     {rev.studentAnswer && (
@@ -2084,25 +2184,28 @@ export function SelfAssessmentTab({
                   </div>
                 )}
 
-                {/* Step-by-Step Explanation */}
+                {/* Step-by-Step Explanation (Isolated English & Arabic) */}
                 {expParts && (
-                  <div className="rounded-xl border border-blue-100 bg-blue-50/70 dark:bg-blue-950/30 dark:border-blue-900/40 p-4 space-y-1.5 text-xs text-blue-950 dark:text-blue-200">
-                    <div className="font-bold flex items-center gap-1.5 text-blue-700 dark:text-blue-300">
-                      <HelpCircle className="h-3.5 w-3.5" />
-                      الشرح التوضيحي للحل الصحيح:
+                  <div className="rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-slate-50/70 dark:bg-[#0D1726] p-3.5 sm:p-4 space-y-2 text-xs">
+                    <div className="font-bold flex items-center gap-1.5 text-blue-700 dark:text-blue-300" dir="rtl">
+                      <HelpCircle className="h-3.5 w-3.5 text-blue-600" />
+                      <span>الشرح التوضيحي للحل الصحيح:</span>
                     </div>
-                    <p
+                    <div
                       dir={isExpEng ? "ltr" : "rtl"}
-                      className={`leading-relaxed text-slate-700 dark:text-slate-300 font-normal ${
-                        isExpEng ? "text-left" : "text-right"
+                      className={`leading-relaxed text-slate-800 dark:text-slate-200 font-medium whitespace-pre-line ${
+                        isExpEng ? "text-left font-sans" : "text-right"
                       }`}
                     >
                       <BidiStatement text={expParts.main} />
-                    </p>
+                    </div>
                     {expParts.translation && (
-                      <p dir="rtl" className="text-right text-emerald-700 dark:text-emerald-300 font-semibold">
-                        🌐 {expParts.translation}
-                      </p>
+                      <div dir="rtl" className="mt-2 pt-2 border-t border-slate-200/70 dark:border-slate-800 text-right text-emerald-800 dark:text-emerald-300 bg-emerald-50/70 dark:bg-emerald-950/25 p-2.5 rounded-xl whitespace-pre-line font-medium leading-relaxed">
+                        <strong className="block text-[11px] font-black text-emerald-700 dark:text-emerald-300 mb-0.5">
+                          🌐 الترجمة العربية للشرح:
+                        </strong>
+                        <BidiStatement text={expParts.translation} />
+                      </div>
                     )}
                   </div>
                 )}

@@ -46,6 +46,7 @@ export type LearningFile = {
 
 export type QuizQuestion = {
   prompt: string;
+  translation?: string;
   options: string[];
   correctIndex?: number;
   correctAnswer?: string;  // النص الفعلي للإجابة الصحيحة (أكثر أماناً من correctIndex)

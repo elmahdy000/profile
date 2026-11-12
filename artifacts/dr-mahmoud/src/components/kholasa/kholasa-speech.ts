@@ -24,17 +24,36 @@ export function splitModelAnswerTranslation(text?: string | null): {
   translation: string | null;
 } {
   if (!text) return { main: "", translation: null };
-  const markerRegex = /\n*\[الترجمة\]\s*:\s*/;
-  const match = text.match(markerRegex);
-  if (!match || match.index === undefined) {
-    return { main: text.trim(), translation: null };
+  let cleaned = text.trim();
+  // Clean trailing metadata tags such as "تقيمات اللغات"
+  cleaned = cleaned.replace(/\s*تقيم[اإ]ت\s+اللغات\s*$/i, "").trim();
+
+  // Match any translation marker: [الترجمة]:, الترجمة العربية للتفسير:, الترجمة العربية:, الترجمة الآلية:, الترجمة:, ترجمة:
+  const markerRegex = /(?:\r?\n)+\s*(?:\[\s*الترجمة\s*\]|\[\s*ترجمة\s*\]|الترجمة\s+العربية\s+للتفسير|الترجمة\s+العربية|الترجمة\s+الآلية|الترجمة|ترجمة)\s*:\s*|(?:\s+|^)(?:\[\s*الترجمة\s*\]|الترجمة\s+العربية\s+للتفسير|الترجمة\s+العربية|الترجمة\s+الآلية)\s*:\s*/i;
+  const match = cleaned.match(markerRegex);
+  if (match && match.index !== undefined) {
+    const main = cleaned.slice(0, match.index).trim();
+    const translation = cleaned.slice(match.index + match[0].length).trim();
+    return {
+      main: main || cleaned,
+      translation: translation || null,
+    };
   }
-  const main = text.slice(0, match.index).trim();
-  const translation = text.slice(match.index + match[0].length).trim();
-  return {
-    main,
-    translation: translation || null,
-  };
+
+  // Fallback: If text has multiple paragraphs where the first is English and the second is Arabic
+  const paragraphs = cleaned.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  if (paragraphs.length >= 2) {
+    const first = paragraphs[0];
+    const rest = paragraphs.slice(1).join("\n\n");
+    if (isPrimarilyEnglish(first) && !isPrimarilyEnglish(rest)) {
+      return {
+        main: first,
+        translation: rest,
+      };
+    }
+  }
+
+  return { main: cleaned, translation: null };
 }
 
 export function isSpeechSupported(): boolean {
@@ -46,8 +65,8 @@ export function isSpeechSupported(): boolean {
 }
 
 function cleanTextForSpeech(text: string): string {
-  return text
-    .replace(/\[الترجمة\]\s*:[\s\S]*$/g, "")
+  const { main } = splitModelAnswerTranslation(text);
+  return main
     .replace(/```[\s\S]*?```/g, " code snippet ")
     .replace(/[*_`#>~]/g, " ")
     .replace(/\s+/g, " ")
