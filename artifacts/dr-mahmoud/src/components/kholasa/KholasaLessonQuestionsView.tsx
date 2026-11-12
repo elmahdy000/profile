@@ -9,10 +9,12 @@ import {
   ChevronLeft,
   HelpCircle,
   Languages,
+  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { buildKholasaMediaUrl, studentApi } from "./kholasa-api";
+import { studentApi } from "./kholasa-api";
+import { ProtectedKholasaImage } from "./ProtectedKholasaImage";
 import { BidiStatement } from "./BidiStatement";
 
 interface QuestionCounts {
@@ -165,8 +167,49 @@ export function KholasaLessonQuestionsView({
 
   const mutedClass = darkSurface ? "text-slate-300" : "text-muted-foreground";
 
+  const answeredResults = Object.values(results);
+  const solvedCount = answeredResults.length;
+  const correctCount = answeredResults.filter((r) => r.isCorrect).length;
+  const accuracyPct = solvedCount > 0 ? Math.round((correctCount / solvedCount) * 100) : 0;
+
   return (
     <div className="space-y-4 text-right" dir="rtl">
+      {/* Live Session Scoreboard */}
+      {qType !== "essay" && solvedCount > 0 && (
+        <div
+          className={`flex flex-wrap items-center justify-between gap-2.5 rounded-2xl border px-4 py-2.5 text-xs ${
+            darkSurface ? "border-sky-500/30 bg-sky-950/30 text-slate-100" : "border-primary/25 bg-primary/5 text-foreground"
+          }`}
+        >
+          <div className="flex flex-wrap items-center gap-3 font-bold">
+            <span>
+              تم حل: <strong className="font-mono text-primary">{solvedCount}</strong>
+            </span>
+            <span>•</span>
+            <span className="text-emerald-500">
+              صحيح: <strong className="font-mono">{correctCount}</strong>
+            </span>
+            <span>•</span>
+            <span>
+              الدقة:{" "}
+              <strong className={`font-mono ${accuracyPct >= 75 ? "text-emerald-500" : "text-amber-500"}`}>
+                {accuracyPct}%
+              </strong>
+            </span>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setResults({})}
+            className={`h-8 rounded-xl text-[11px] font-bold gap-1 cursor-pointer ${
+              darkSurface ? "border-white/15 bg-white/5 text-white hover:bg-white/10" : ""
+            }`}
+          >
+            <RotateCcw className="h-3 w-3" /> إعادة التمرين
+          </Button>
+        </div>
+      )}
       {/* Question Type Sub-Tabs */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div
@@ -261,8 +304,8 @@ export function KholasaLessonQuestionsView({
                 </div>
 
                 {item.imageUrl && (
-                  <img
-                    src={buildKholasaMediaUrl(item.imageUrl)}
+                  <ProtectedKholasaImage
+                    src={item.imageUrl}
                     alt="صورة السؤال"
                     className="max-h-56 rounded-xl border border-border/40 object-contain"
                   />
@@ -354,8 +397,8 @@ export function KholasaLessonQuestionsView({
                 )}
 
                 {item.question.imageUrl && (
-                  <img
-                    src={buildKholasaMediaUrl(item.question.imageUrl)}
+                  <ProtectedKholasaImage
+                    src={item.question.imageUrl}
                     alt="صورة السؤال"
                     className="max-h-56 rounded-xl border border-border/40 object-contain"
                   />

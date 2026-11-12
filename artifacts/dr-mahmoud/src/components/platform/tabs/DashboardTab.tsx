@@ -19,6 +19,7 @@ import {
   AlertCircle,
   RotateCcw,
   MapPin,
+  Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getTrackForStage } from "@/data/academic";
@@ -237,10 +238,32 @@ export function StudentStatistics({
 // ── Quick Actions Dock (Clean Vercel Tool Shelf) ──
 export function QuickActionsDock({
   onOpen,
+  unresolvedMistakesCount = 0,
 }: {
-  onOpen: (tab: "lessons" | "compiler" | "files" | "quizzes" | "summaries" | "self-assessment") => void;
+  onOpen: (tab: "lessons" | "kholasa" | "mistakes" | "compiler" | "files" | "quizzes" | "summaries" | "self-assessment") => void;
+  unresolvedMistakesCount?: number;
 }) {
   const actions = [
+    {
+      id: "kholasa",
+      title: "الزتونة والخرائط",
+      desc: "ملخصات، تعريفات، وأسئلة كل درس",
+      icon: Sparkles,
+      iconColor: "text-amber-600 dark:text-amber-400",
+      iconBg: "bg-amber-500/10",
+      tab: "kholasa" as const,
+      badge: undefined as string | undefined,
+    },
+    {
+      id: "mistakes",
+      title: "ركن غلطاتي",
+      desc: "راجع أخطاءك وتدرب عليها فوراً",
+      icon: Target,
+      iconColor: "text-rose-600 dark:text-rose-400",
+      iconBg: "bg-rose-500/10",
+      tab: "mistakes" as const,
+      badge: unresolvedMistakesCount > 0 ? `${unresolvedMistakesCount} للمراجعة` : undefined,
+    },
     {
       id: "lessons",
       title: "محاضرات المنهج",
@@ -249,6 +272,7 @@ export function QuickActionsDock({
       iconColor: "text-blue-600 dark:text-blue-400",
       iconBg: "bg-blue-500/10",
       tab: "lessons" as const,
+      badge: undefined as string | undefined,
     },
     {
       id: "compiler",
@@ -258,15 +282,17 @@ export function QuickActionsDock({
       iconColor: "text-indigo-600 dark:text-indigo-400",
       iconBg: "bg-indigo-500/10",
       tab: "compiler" as const,
+      badge: undefined as string | undefined,
     },
     {
       id: "self-assessment",
       title: "التقييم الذاتي",
       desc: "اختبار فوري من بنك الأسئلة",
-      icon: Sparkles,
-      iconColor: "text-amber-600 dark:text-amber-400",
-      iconBg: "bg-amber-500/10",
+      icon: ClipboardCheck,
+      iconColor: "text-cyan-600 dark:text-cyan-400",
+      iconBg: "bg-cyan-500/10",
       tab: "self-assessment" as const,
+      badge: undefined as string | undefined,
     },
     {
       id: "files",
@@ -276,11 +302,12 @@ export function QuickActionsDock({
       iconColor: "text-emerald-600 dark:text-emerald-400",
       iconBg: "bg-emerald-500/10",
       tab: "files" as const,
+      badge: undefined as string | undefined,
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3" dir="rtl">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3" dir="rtl">
       {actions.map((act) => {
         const Icon = act.icon;
         return (
@@ -294,9 +321,16 @@ export function QuickActionsDock({
               <Icon className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <strong className="block text-xs font-extrabold text-foreground truncate group-hover:text-primary transition-colors">
-                {act.title}
-              </strong>
+              <div className="flex items-center justify-between gap-1">
+                <strong className="block text-xs font-extrabold text-foreground truncate group-hover:text-primary transition-colors">
+                  {act.title}
+                </strong>
+                {act.badge && (
+                  <span className="shrink-0 rounded-full bg-rose-500/15 text-rose-500 px-1.5 py-0.5 text-[9px] font-black">
+                    {act.badge}
+                  </span>
+                )}
+              </div>
               <span className="block text-[11px] text-muted-foreground truncate mt-0.5">
                 {act.desc}
               </span>
@@ -668,6 +702,7 @@ export function DashboardTab({
   onRetry,
   onOpen,
   onPlayLesson,
+  unresolvedMistakesCount = 0,
 }: {
   student: Student;
   files: LearningFile[];
@@ -677,8 +712,9 @@ export function DashboardTab({
   dataLoading: boolean;
   dataError: string;
   onRetry: () => void;
-  onOpen: (tab: "lessons" | "compiler" | "files" | "quizzes" | "summaries" | "self-assessment") => void;
+  onOpen: (tab: "lessons" | "kholasa" | "mistakes" | "compiler" | "files" | "quizzes" | "summaries" | "self-assessment") => void;
   onPlayLesson?: (videoId: number) => void;
+  unresolvedMistakesCount?: number;
 }) {
   const academicTrack = getTrackForStage(student.grade);
   const safeFiles = Array.isArray(files) ? files : [];
@@ -812,7 +848,7 @@ export function DashboardTab({
       <DailyChallengeCard isPaid={student.status === "approved" && student.paymentStatus === "paid"} />
 
       {/* 3. Quick Actions Dock */}
-      <QuickActionsDock onOpen={onOpen} />
+      <QuickActionsDock onOpen={onOpen} unresolvedMistakesCount={unresolvedMistakesCount} />
 
       {/* 4. Overall Progress Summary */}
       <StudentProgressSummary

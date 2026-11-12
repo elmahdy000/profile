@@ -664,6 +664,7 @@ export function VideoLessonsSection({
   quizzes = [],
   onStartQuiz,
   initialVideoId,
+  onInitialVideoHandled,
 }: {
   student?: any;
   videos?: VideoItem[];
@@ -671,6 +672,7 @@ export function VideoLessonsSection({
   quizzes?: any[];
   onStartQuiz?: (quiz: any) => void;
   initialVideoId?: number | null;
+  onInitialVideoHandled?: () => void;
 }) {
   const { data: dbVideos, isLoading, isError, refetch } = useListVideos();
   const [activeCategory, setActiveCategory] = useState<string>("all");
@@ -744,6 +746,7 @@ export function VideoLessonsSection({
       const target = rawItems.find((v) => v.id === initialVideoId);
       if (target) {
         handlePlayClick(target);
+        onInitialVideoHandled?.();
       }
     }
   }, [initialVideoId, rawItems]);

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { buildKholasaMediaUrl } from "./kholasa-api";
+import { ProtectedKholasaImage } from "./ProtectedKholasaImage";
 
 interface KholasaMindMapViewProps {
   title?: string | null;
@@ -24,13 +25,30 @@ export function KholasaMindMapView({ title, images, darkSurface = false }: Khola
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [zoom, setZoom] = useState(1);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxZoom, setLightboxZoom] = useState(1);
   const [imgError, setImgError] = useState(false);
 
   const safeIndex = Math.min(selectedIndex, Math.max(0, validImages.length - 1));
 
   useEffect(() => {
     setImgError(false);
+    setLightboxZoom(1);
   }, [safeIndex, images]);
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setLightboxOpen(false);
+      } else if (e.key === "ArrowLeft" && validImages.length > 1) {
+        setSelectedIndex((i) => (i + 1) % validImages.length);
+      } else if (e.key === "ArrowRight" && validImages.length > 1) {
+        setSelectedIndex((i) => (i - 1 + validImages.length) % validImages.length);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [lightboxOpen, validImages.length]);
 
   if (validImages.length === 0) {
     return (
@@ -46,7 +64,8 @@ export function KholasaMindMapView({ title, images, darkSurface = false }: Khola
     );
   }
 
-  const currentUrl = buildKholasaMediaUrl(validImages[safeIndex]);
+  const rawUrl = validImages[safeIndex];
+  const currentDownloadUrl = buildKholasaMediaUrl(rawUrl);
 
   return (
     <div className="space-y-4 text-right" dir="rtl">
@@ -101,13 +120,16 @@ export function KholasaMindMapView({ title, images, darkSurface = false }: Khola
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => setLightboxOpen(true)}
+            onClick={() => {
+              setLightboxZoom(1);
+              setLightboxOpen(true);
+            }}
             className={`h-9 px-3 rounded-xl text-xs font-bold gap-1.5 cursor-pointer ${darkSurface ? "border-white/15 bg-white/5 text-white hover:bg-white/10" : ""}`}
           >
             <Maximize2 className="h-3.5 w-3.5" /> ملء الشاشة
           </Button>
           <a
-            href={currentUrl}
+            href={currentDownloadUrl}
             download={`mindmap-${safeIndex + 1}.png`}
             className={`inline-flex h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-bold transition ${
               darkSurface
@@ -134,11 +156,15 @@ export function KholasaMindMapView({ title, images, darkSurface = false }: Khola
               <p className="font-bold">تعذر تحميل صورة الخريطة الذهنية حالياً. تأكد من اتصالك وأعد المحاولة.</p>
             </div>
           ) : (
-            <img
-              src={currentUrl}
+            <ProtectedKholasaImage
+              src={rawUrl}
               alt={`خريطة ذهنية ${safeIndex + 1}`}
-              onError={() => setImgError(true)}
-              className="rounded-xl transition-transform duration-200 origin-top shadow-md select-none"
+              onImageFail={() => setImgError(true)}
+              onClick={() => {
+                setLightboxZoom(1);
+                setLightboxOpen(true);
+              }}
+              className="rounded-xl transition-transform duration-200 origin-top shadow-md select-none cursor-zoom-in"
               style={{ transform: `scale(${zoom})`, maxWidth: zoom <= 1 ? "100%" : "none" }}
             />
           )}
@@ -162,7 +188,7 @@ export function KholasaMindMapView({ title, images, darkSurface = false }: Khola
                   : "border-transparent opacity-65 hover:opacity-100"
               }`}
             >
-              <img src={buildKholasaMediaUrl(img)} alt={`لوحة ${idx + 1}`} className="h-full w-full object-cover" />
+              <ProtectedKholasaImage src={img} alt={`لوحة ${idx + 1}`} className="h-full w-full object-cover" />
               <span className="absolute bottom-1 right-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-white">
                 {idx + 1}
               </span>
@@ -171,18 +197,41 @@ export function KholasaMindMapView({ title, images, darkSurface = false }: Khola
         </div>
       )}
 
-      {/* Fullscreen Lightbox */}
+      {/* Fullscreen Lightbox with Zoom & Keyboard Controls */}
       {lightboxOpen && (
         <div
           className="fixed inset-0 z-[200] bg-black/95 flex flex-col p-3 sm:p-5"
           dir="rtl"
           onClick={() => setLightboxOpen(false)}
         >
-          <div className="flex items-center justify-between text-white pb-3" onClick={(e) => e.stopPropagation()}>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-white pb-3" onClick={(e) => e.stopPropagation()}>
             <span className="text-sm font-bold">
               خريطة ذهنية ({safeIndex + 1} / {validImages.length})
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setLightboxZoom((z) => Math.max(0.6, Number((z - 0.25).toFixed(2))))}
+                className="h-9 w-9 p-0 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                title="تصغير"
+              >
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <span className="px-1.5 text-xs font-mono font-bold text-slate-300">
+                {Math.round(lightboxZoom * 100)}%
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setLightboxZoom((z) => Math.min(3, Number((z + 0.25).toFixed(2))))}
+                className="h-9 w-9 p-0 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                title="تكبير"
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
               {validImages.length > 1 && (
                 <>
                   <Button
@@ -221,10 +270,15 @@ export function KholasaMindMapView({ title, images, darkSurface = false }: Khola
             className="flex-1 overflow-auto flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
-              src={currentUrl}
+            <ProtectedKholasaImage
+              src={rawUrl}
               alt={`خريطة ذهنية ${safeIndex + 1}`}
-              className="max-h-full max-w-full object-contain rounded-xl"
+              className="object-contain rounded-xl transition-transform duration-200 origin-center"
+              style={{
+                transform: `scale(${lightboxZoom})`,
+                maxHeight: lightboxZoom <= 1 ? "85vh" : "none",
+                maxWidth: lightboxZoom <= 1 ? "95vw" : "none",
+              }}
             />
           </div>
         </div>
@@ -232,4 +286,3 @@ export function KholasaMindMapView({ title, images, darkSurface = false }: Khola
     </div>
   );
 }
-

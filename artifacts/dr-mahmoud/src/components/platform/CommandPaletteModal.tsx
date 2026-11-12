@@ -18,6 +18,7 @@ import {
   FileDown,
   ArrowRight,
   LucideIcon,
+  Target,
 } from "lucide-react";
 import type { LearningFile, Quiz, VideoSummary } from "@/types/platform";
 
@@ -95,6 +96,30 @@ export function CommandPaletteModal({
       icon: BookOpen,
       onSelect: () => {
         onSelectTab("lessons");
+        onClose();
+      },
+    },
+    {
+      id: "nav-kholasa",
+      category: "أقسام المنصة",
+      title: "الزتونة والخرائط الذهنية والتعريفات",
+      subtitle: "ملخصات الدروس والتعريفات والخرائط والبطاقات وبنك الأسئلة الشامل",
+      badge: "الخلاصة",
+      icon: Sparkles,
+      onSelect: () => {
+        onSelectTab("kholasa");
+        onClose();
+      },
+    },
+    {
+      id: "nav-mistakes",
+      category: "أقسام المنصة",
+      title: "ركن غلطاتي والتشخيص الذكي",
+      subtitle: "مراجعة الأسئلة التي أخطأت بها وإجراء امتحان فوري لإتقانها",
+      badge: "غلطاتي",
+      icon: Target,
+      onSelect: () => {
+        onSelectTab("mistakes");
         onClose();
       },
     },

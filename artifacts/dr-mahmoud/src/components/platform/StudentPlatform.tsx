@@ -314,6 +314,7 @@ export function StudentPlatform() {
   const [dataError, setDataError] = useState("");
   const [autoOpenSummaryUpload, setAutoOpenSummaryUpload] = useState(false);
   const [initialVideoId, setInitialVideoId] = useState<number | null>(null);
+  const [unresolvedMistakesCount, setUnresolvedMistakesCount] = useState(0);
   const [copiedCode, setCopiedCode] = useState(false);
   const latestNotificationIdRef = useRef(0);
   const handleNotificationClickRef = useRef<(n: StudentNotification) => void>(() => {});
@@ -607,6 +608,11 @@ export function StudentPlatform() {
       setQuizResult(res);
       setQuizTimeRemaining(null);
       setShowQuizReauthModal(false);
+      if (!isUnpaid) {
+        api<{ unresolvedCount?: number }>("/api/learning/mistakes")
+          .then((mk) => setUnresolvedMistakesCount(Number(mk?.unresolvedCount) || 0))
+          .catch(() => undefined);
+      }
       try {
         localStorage.removeItem(`dr_mahmoud_quiz_draft_${activeQuiz.id}`);
       } catch {}
@@ -689,6 +695,13 @@ export function StudentPlatform() {
       setProgress(progressRows);
       setNotifications(n);
       latestNotificationIdRef.current = Math.max(0, ...n.map((item) => item.id));
+      if (student.status === "approved" && student.paymentStatus === "paid") {
+        api<{ unresolvedCount?: number }>("/api/learning/mistakes")
+          .then((mk) => setUnresolvedMistakesCount(Number(mk?.unresolvedCount) || 0))
+          .catch(() => undefined);
+      } else {
+        setUnresolvedMistakesCount(0);
+      }
     } catch (err) {
       setDataError((err as Error).message || "مقدرناش نحمّل محتواك دلوقتي.");
     } finally {
@@ -1158,6 +1171,11 @@ export function StudentPlatform() {
                           <Lock className="h-2.5 w-2.5" /> مقفول
                         </span>
                       )}
+                      {!isLockedTab && item.id === "mistakes" && unresolvedMistakesCount > 0 && (
+                        <span className="rounded-full bg-rose-500 px-1.5 py-0.5 text-[9.5px] font-black text-white shrink-0">
+                          {unresolvedMistakesCount}
+                        </span>
+                      )}
                       {isPreviewTab && (
                         <span className="rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[9.5px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
                           معاينة ✨
@@ -1454,6 +1472,7 @@ export function StudentPlatform() {
                 setInitialVideoId(videoId);
                 setTab("lessons");
               }}
+              unresolvedMistakesCount={isUnpaid ? 0 : unresolvedMistakesCount}
             />
           ) : tab === "lessons" ? (
             <VideoLessonsSection
@@ -1463,6 +1482,7 @@ export function StudentPlatform() {
               quizzes={quizzes}
               onStartQuiz={startQuiz}
               initialVideoId={initialVideoId}
+              onInitialVideoHandled={() => setInitialVideoId(null)}
             />
           ) : tab === "kholasa" ? (
             isUnpaid ? (
@@ -1489,7 +1509,7 @@ export function StudentPlatform() {
                 onOpenPayment={() => setShowPaymentModal(true)}
               />
             ) : (
-              <MistakeHubTab />
+              <MistakeHubTab onMistakeCountChange={setUnresolvedMistakesCount} />
             )
           ) : tab === "essay-exams" ? (
             isUnpaid ? (

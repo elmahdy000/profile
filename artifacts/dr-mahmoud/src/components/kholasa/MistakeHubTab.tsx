@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { buildKholasaMediaUrl, studentApi } from "./kholasa-api";
+import { studentApi } from "./kholasa-api";
+import { ProtectedKholasaImage } from "./ProtectedKholasaImage";
 import { BidiStatement } from "./BidiStatement";
 import type { MistakeDiagnosisBucket, StudentMistakeRow } from "./types";
 
@@ -236,8 +237,8 @@ export function MistakeHubTab({ onMistakeCountChange }: { onMistakeCountChange?:
                 </div>
 
                 {item.question.imageUrl && (
-                  <img
-                    src={buildKholasaMediaUrl(item.question.imageUrl)}
+                  <ProtectedKholasaImage
+                    src={item.question.imageUrl}
                     alt="صورة السؤال"
                     className="max-h-60 rounded-xl border border-border object-contain"
                   />
@@ -470,8 +471,8 @@ export function MistakeHubTab({ onMistakeCountChange }: { onMistakeCountChange?:
                 </div>
 
                 {m.question.imageUrl && (
-                  <img
-                    src={buildKholasaMediaUrl(m.question.imageUrl)}
+                  <ProtectedKholasaImage
+                    src={m.question.imageUrl}
                     alt="صورة السؤال"
                     className="max-h-56 rounded-xl border border-border object-contain"
                   />
