@@ -8,7 +8,7 @@ interface BidiStatementProps {
 }
 
 const CODE_TOKEN_REGEX =
-  /(`[^`]+`|\b(?:O|Θ|Ω)\s*\([^)]+\)|\bC\+\+|\bC#|\b\.NET|\bF#|\bHTML5|\bCSS3|\([A-Za-z0-9_\s&+/.:,-]+\)|[A-Za-z0-9][A-Za-z0-9_&+/.:,-]*(?:\s+[A-Za-z0-9][A-Za-z0-9_&+/.:,-]+)*|\b(?:const\s+)?(?:int|float|double|char|bool|string|void|auto|long|short|unsigned)\s+[a-zA-Z0-9_\s*+=%&|<>!/().-]+;?|\b(?:cout|cin)\s*(?:<<|>>)\s*[^;]+;?|\b(?:printf|scanf|return|sizeof)\s*[^;]+;?|\b(?:if|for|while|switch)\s*\([^)]+\)|\b[a-zA-Z_][a-zA-Z0-9_]*\s*=\s*[^;]+;|\b[a-zA-Z_][a-zA-Z0-9_]*(?:\+\+|--);?)/g;
+  /(`[^`]+`|<\/?[a-zA-Z][a-zA-Z0-9_-]*(?:\s+[^>]*)?>|\b(?:O|Θ|Ω)\s*\([^)]+\)|\bC\+\+|\bC#|\b\.NET|\bF#|\bHTML5|\bCSS3|\([A-Za-z0-9_\s&+/.:,-]+\)|[A-Za-z0-9][A-Za-z0-9_&+/.:,-]*(?:\s+[A-Za-z0-9][A-Za-z0-9_&+/.:,-]+)*|\b(?:const\s+)?(?:int|float|double|char|bool|string|void|auto|long|short|unsigned)\s+[a-zA-Z0-9_\s*+=%&|<>!/().-]+;?|\b(?:cout|cin)\s*(?:<<|>>)\s*[^;]+;?|\b(?:printf|scanf|return|sizeof)\s*[^;]+;?|\b(?:if|for|while|switch)\s*\([^)]+\)|\b[a-zA-Z_][a-zA-Z0-9_]*\s*=\s*[^;]+;|\b[a-zA-Z_][a-zA-Z0-9_]*(?:\+\+|--);?)/g;
 
 export function BidiStatement({
   text,
@@ -128,6 +128,19 @@ export function BidiStatement({
             >
               {token}
             </bdi>
+          );
+        }
+
+        if (/^<\/?[a-zA-Z][a-zA-Z0-9_-]*(?:\s+[^>]*)?>$/.test(token)) {
+          return (
+            <code
+              key={index}
+              dir="ltr"
+              className="inline-block font-mono font-bold bg-blue-50 dark:bg-slate-800 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded-md border border-blue-200 dark:border-slate-700 text-[13px] sm:text-sm break-words whitespace-nowrap mx-1 align-baseline"
+              style={{ unicodeBidi: "isolate" }}
+            >
+              {token}
+            </code>
           );
         }
 
