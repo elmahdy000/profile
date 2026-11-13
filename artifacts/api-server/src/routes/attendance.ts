@@ -158,13 +158,13 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
       )
       .limit(1);
 
+    const now = new Date();
     let attendanceRecord = existingRecord;
     let alreadyRecorded = false;
 
     if (existingRecord && existingRecord.status === "present") {
       alreadyRecorded = true;
     } else {
-      const now = new Date();
       if (existingRecord) {
         // Update from absent/late to present
         const [updated] = await db

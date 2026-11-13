@@ -1693,17 +1693,27 @@ router.post("/admin/learning/question-bank/batch-import", requireAdmin, async (r
 router.delete("/admin/learning/question-bank/:id", requireAdmin, async (req, res, next) => {
   try {
     const targetId = Number(req.params.id);
-    let [deleted] = await db
+    if (!targetId || isNaN(targetId)) {
+      res.status(400).json({ error: "معرف السؤال غير صالح" });
+      return;
+    }
+
+    let deleted: any = null;
+    const [qbDeleted] = await db
       .delete(questionBankTable)
       .where(eq(questionBankTable.id, targetId))
       .returning();
 
-    if (!deleted) {
+    if (qbDeleted) {
+      deleted = qbDeleted;
+    } else {
       const [essayDeleted] = await db
         .delete(essayQuestionBankTable)
         .where(eq(essayQuestionBankTable.id, targetId))
         .returning();
-      deleted = essayDeleted;
+      if (essayDeleted) {
+        deleted = essayDeleted;
+      }
     }
 
     if (!deleted) {
