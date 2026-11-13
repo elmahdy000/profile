@@ -1376,9 +1376,389 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     setQuestions((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  // Print execution
+  // Pristine isolated iframe print execution
+  const executeIframePrint = () => {
+    const sheetNodes = Array.from(document.querySelectorAll(".memo-sheet"));
+    if (sheetNodes.length === 0) {
+      window.print();
+      return;
+    }
+
+    const iframe = document.createElement("iframe");
+    iframe.id = "memo-print-iframe";
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "none";
+    iframe.style.zIndex = "-99999";
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (!doc) {
+      window.print();
+      return;
+    }
+
+    let sheetsHtml = "";
+    sheetNodes.forEach((node, idx) => {
+      const clone = node.cloneNode(true) as HTMLElement;
+      clone.style.transform = "none";
+      clone.style.position = "relative";
+      clone.style.margin = "0";
+      clone.style.width = "210mm";
+      clone.style.height = "297mm";
+      clone.style.minHeight = "297mm";
+      clone.style.maxHeight = "297mm";
+      clone.style.boxSizing = "border-box";
+      clone.style.overflow = "hidden";
+      clone.style.backgroundColor = "#ffffff";
+
+      // Remove edit/delete action buttons from print
+      clone.querySelectorAll(".no-print, button").forEach((el) => el.remove());
+
+      sheetsHtml += `
+        <div class="print-page-shell" style="width: 210mm; height: 297mm; min-height: 297mm; max-height: 297mm; page-break-after: ${idx < sheetNodes.length - 1 ? "always" : "auto"}; break-after: ${idx < sheetNodes.length - 1 ? "page" : "auto"}; page-break-inside: avoid; break-inside: avoid; position: relative; overflow: hidden; background: #ffffff; margin: 0; padding: 0; box-sizing: border-box;">
+          ${clone.outerHTML}
+        </div>
+      `;
+    });
+
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html dir="${settings.contentDir || "rtl"}" lang="${settings.contentDir === "ltr" ? "en" : "ar"}">
+        <head>
+          <meta charset="utf-8">
+          <title>${settings.headerText || "مذكرة A4 - د. محمود المهدي"}</title>
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+          <style>
+            @page {
+              size: A4 portrait;
+              margin: 0mm !important;
+            }
+            * {
+              box-sizing: border-box !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 210mm !important;
+              background: #ffffff !important;
+              font-family: ${settings.fontSelect || "'Cairo', sans-serif"} !important;
+              direction: ${settings.contentDir || "rtl"} !important;
+            }
+            .print-page-shell {
+              width: 210mm !important;
+              height: 297mm !important;
+              min-height: 297mm !important;
+              max-height: 297mm !important;
+              position: relative !important;
+              overflow: hidden !important;
+              background: #ffffff !important;
+              box-sizing: border-box !important;
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+            .memo-sheet {
+              width: 210mm !important;
+              height: 297mm !important;
+              min-height: 297mm !important;
+              max-height: 297mm !important;
+              transform: none !important;
+              position: relative !important;
+              overflow: hidden !important;
+              background: #ffffff !important;
+              box-sizing: border-box !important;
+            }
+            .no-print {
+              display: none !important;
+            }
+          </style>
+        </head>
+        <body>
+          ${sheetsHtml}
+        </body>
+      </html>
+    `);
+    doc.close();
+
+    setTimeout(() => {
+      try {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      } catch (e) {
+        console.error("Print error:", e);
+      } finally {
+        setTimeout(() => {
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+          }
+        }, 3000);
+      }
+    }, 450);
+  };
+
+  // Print execution: Pristine, isolated iframe print with zero dashboard leak
   const handlePrint = () => {
-    window.print();
+    if (!pages || pages.length === 0 || questions.length === 0) {
+      toast({ variant: "destructive", description: "لا توجد أسئلة أو صفحات لطباعتها." });
+      return;
+    }
+
+    if (!showAllPages) {
+      setShowAllPages(true);
+      setTimeout(() => {
+        executeIframePrint();
+      }, 150);
+      return;
+    }
+
+    executeIframePrint();
+  };
+
+  // Export Questions to Microsoft Word (.doc format with RTL, tables & styles)
+  const handleExportWord = () => {
+    if (questions.length === 0) {
+      toast({ variant: "destructive", description: "لا توجد أسئلة لتصديرها إلى ملف Word" });
+      return;
+    }
+
+    const isRtl = settings.contentDir === "rtl";
+    const title = settings.headerText || "مذكرة تدريبات وبنك أسئلة";
+    const subTitle = settings.subHeaderText || "";
+
+    let wordContent = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+      <head>
+        <meta charset='utf-8'>
+        <!--[if gte mso 9]>
+        <xml>
+          <w:WordDocument>
+            <w:View>Print</w:View>
+            <w:Zoom>100</w:Zoom>
+            <w:DoNotOptimizeForBrowser/>
+          </w:WordDocument>
+        </xml>
+        <![endif]-->
+        <style>
+          @page Section1 {
+            size: 21.0cm 29.7cm;
+            margin: 2.0cm 2.0cm 2.0cm 2.0cm;
+            mso-page-orientation: portrait;
+          }
+          div.Section1 { page: Section1; }
+          body {
+            font-family: 'Cairo', 'Arial', sans-serif;
+            direction: ${isRtl ? "rtl" : "ltr"};
+            text-align: ${isRtl ? "right" : "left"};
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #0f172a;
+          }
+          .doc-header-table {
+            width: 100%;
+            border-bottom: 2px solid #d97706;
+            padding-bottom: 8px;
+            margin-bottom: 14px;
+          }
+          .doc-title {
+            font-size: 15pt;
+            font-weight: bold;
+            color: #0f172a;
+            margin: 6px 0 2px 0;
+            text-align: center;
+          }
+          .doc-subtitle {
+            font-size: 10.5pt;
+            color: #64748b;
+            margin: 0 0 10px 0;
+            text-align: center;
+          }
+          .student-box {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            border-collapse: collapse;
+          }
+          .student-box td {
+            padding: 6px 10px;
+            font-size: 10pt;
+            border: 1px solid #e2e8f0;
+          }
+          .question-item {
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #cbd5e1;
+            page-break-inside: avoid;
+          }
+          .question-statement {
+            font-size: 11.5pt;
+            font-weight: bold;
+            color: #0f172a;
+            margin-bottom: 8px;
+          }
+          .question-badge {
+            display: inline-block;
+            background-color: #0f172a;
+            color: #ffffff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 9.5pt;
+            margin-left: 6px;
+          }
+          .options-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 6px;
+            margin-bottom: 6px;
+          }
+          .options-table td {
+            padding: 5px 8px;
+            font-size: 10.5pt;
+            vertical-align: top;
+          }
+          .opt-badge {
+            font-weight: bold;
+            color: #0284c7;
+            display: inline-block;
+            width: 24px;
+          }
+          .answer-box {
+            margin-top: 6px;
+            padding: 6px 10px;
+            background-color: #f0fdf4;
+            border: 1px solid #86efac;
+            font-size: 10pt;
+            color: #166534;
+            border-radius: 4px;
+          }
+          .explanation-box {
+            margin-top: 4px;
+            padding: 6px 10px;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            font-size: 9.5pt;
+            color: #475569;
+            border-radius: 4px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="Section1">
+          <table class="doc-header-table" dir="${isRtl ? "rtl" : "ltr"}">
+            <tr>
+              <td style="text-align: ${isRtl ? "right" : "left"}; vertical-align: middle;">
+                <strong style="font-size: 13pt; color: #0f172a;">د. محمود المهدي</strong><br>
+                <span style="font-size: 9pt; color: #d97706; font-weight: bold;">الحاسب الآلي والذكاء الاصطناعي • Dr / Elmahdy</span>
+              </td>
+              <td style="text-align: ${isRtl ? "left" : "right"}; vertical-align: middle;">
+                <span style="background-color: #0f172a; color: #ffffff; padding: 4px 10px; font-size: 9.5pt; font-weight: bold; border-radius: 4px;">
+                  ${settings.templateStyle === "exam" ? "ورقة اختبار رسمي" : "مذكرة تدريبات وبنك أسئلة"}
+                </span>
+              </td>
+            </tr>
+          </table>
+
+          <div class="doc-title">${title}</div>
+          ${subTitle ? `<div class="doc-subtitle">${subTitle}</div>` : ""}
+
+          ${
+            settings.studentFields
+              ? `
+            <table class="student-box" dir="${isRtl ? "rtl" : "ltr"}">
+              <tr>
+                <td style="width: 50%;"><strong>اسم الطالب:</strong> ................................................................</td>
+                <td style="width: 25%;"><strong>السنتر / المجموعة:</strong> ..........................</td>
+                <td style="width: 25%;"><strong>رقم الهاتف:</strong> ............................</td>
+              </tr>
+            </table>
+          `
+              : ""
+          }
+
+          <div class="questions-list">
+    `;
+
+    activeQuestions.forEach((q, idx) => {
+      const qNum = settings.questionStart + idx;
+      wordContent += `
+        <div class="question-item">
+          <div class="question-statement">
+            <span class="question-badge">(${qNum})</span>
+            ${q.statement || q.prompt || ""}
+          </div>
+      `;
+
+      if (q.options && q.options.length > 0) {
+        wordContent += `<table class="options-table" dir="${isRtl ? "rtl" : "ltr"}">`;
+        const useTwoCols = q.options.length >= 2;
+        if (useTwoCols) {
+          for (let i = 0; i < q.options.length; i += 2) {
+            wordContent += `<tr>`;
+            wordContent += `<td style="width: 50%;"><span class="opt-badge">(${q.options[i].id || i + 1})</span> ${q.options[i].text || ""}</td>`;
+            if (q.options[i + 1]) {
+              wordContent += `<td style="width: 50%;"><span class="opt-badge">(${q.options[i + 1].id || i + 2})</span> ${q.options[i + 1].text || ""}</td>`;
+            } else {
+              wordContent += `<td></td>`;
+            }
+            wordContent += `</tr>`;
+          }
+        } else {
+          q.options.forEach((opt, oIdx) => {
+            wordContent += `<tr><td><span class="opt-badge">(${opt.id || oIdx + 1})</span> ${opt.text || ""}</td></tr>`;
+          });
+        }
+        wordContent += `</table>`;
+      }
+
+      if (settings.showAnswerBox && (q.correctAnswer || q.answer || q.modelAnswer)) {
+        wordContent += `
+          <div class="answer-box">
+            <strong>الإجابة الصحيحة النموذجية:</strong> ${q.correctAnswer || q.answer || q.modelAnswer}
+          </div>
+        `;
+      }
+
+      if (settings.showExplanation && q.explanation) {
+        wordContent += `
+          <div class="explanation-box">
+            <strong>التفسير والشرح:</strong> ${q.explanation}
+          </div>
+        `;
+      }
+
+      wordContent += `</div>`;
+    });
+
+    wordContent += `
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob(["\ufeff", wordContent], {
+      type: "application/msword;charset=utf-8",
+    });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    const cleanName = (settings.headerText || "مذكرة_أسئلة_A4").replace(/[/\\?%*:|"<>]/g, "_").slice(0, 45);
+    link.download = `${cleanName}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "تم تصدير ملف Word بنجاح 📄",
+      description: "يمكنك الآن فتح الملف مباشرة في Microsoft Word والتعديل عليه بكل سهولة.",
+    });
   };
 
   // Selected stage in bank tree
@@ -1402,7 +1782,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       />
 
       {/* Top Header / Mode Switcher */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 rounded-2xl bg-gradient-to-l from-slate-900 via-blue-950 to-slate-900 p-5 text-white shadow-xl">
+      <div className="no-print flex flex-col md:flex-row items-start md:items-center justify-between gap-4 rounded-2xl bg-gradient-to-l from-slate-900 via-blue-950 to-slate-900 p-5 text-white shadow-xl">
         <div className="flex items-center gap-3.5">
           <div className="grid h-12 w-12 place-items-center rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-inner">
             <Printer className="h-6 w-6" />
@@ -1411,11 +1791,11 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-black">استوديو المذكرات والطباعة الاحترافية A4</h2>
               <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300 border border-emerald-500/30">
-                جاهز للطباعة والتصدير
+                جاهز للطباعة وتصدير Word
               </span>
             </div>
             <p className="text-xs text-slate-300 mt-0.5">
-              صمّم ونظّم واطبع مذكرات الوحدات، أوراق العمل، والامتحانات الرسمية بضغطة زر واحدة.
+              صمّم ونظّم واطبع مذكرات الوحدات، أوراق العمل، والامتحانات الرسمية، أو صدّرها لـ Word بنقرة واحدة.
             </p>
           </div>
         </div>
@@ -1441,6 +1821,14 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
           </Button>
           <Button
             type="button"
+            onClick={handleExportWord}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center gap-2 px-4 py-2.5 shadow-lg shadow-emerald-600/25"
+          >
+            <FileText className="h-4 w-4" />
+            تصدير Word (.doc)
+          </Button>
+          <Button
+            type="button"
             onClick={handlePrint}
             className="bg-primary hover:bg-primary/90 text-white font-extrabold text-xs flex items-center gap-2 px-5 py-2.5 shadow-lg shadow-primary/20"
           >
@@ -1453,7 +1841,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       {/* Main Studio Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Config & Content Picker (5 cols) */}
-        <div className="lg:col-span-5 xl:col-span-5 space-y-4">
+        <div className="no-print lg:col-span-5 xl:col-span-5 space-y-4">
           {/* Main Studio Navigation Tabs */}
           <div className="grid grid-cols-3 gap-1 rounded-xl bg-slate-200/80 p-1 dark:bg-slate-800">
             <button
@@ -2459,15 +2847,26 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 </label>
               </div>
 
-              {/* Print Button */}
-              <Button
-                type="button"
-                onClick={handlePrint}
-                className="w-full bg-primary hover:bg-primary/90 text-white font-extrabold py-3 text-sm shadow-md"
-              >
-                <Printer className="h-4 w-4 ml-2" />
-                تصدير وطباعة المذكرة A4 الآن
-              </Button>
+              {/* Print & Word Export Buttons */}
+              <div className="space-y-2 pt-2">
+                <Button
+                  type="button"
+                  onClick={handlePrint}
+                  className="w-full bg-primary hover:bg-primary/90 text-white font-black py-3 text-sm shadow-md flex items-center justify-center gap-2"
+                >
+                  <Printer className="h-4 w-4" />
+                  طباعة / تصدير PDF مباشر (A4)
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleExportWord}
+                  variant="outline"
+                  className="w-full border-emerald-600 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 font-bold py-2.5 text-xs flex items-center justify-center gap-2"
+                >
+                  <FileText className="h-4 w-4 text-emerald-600" />
+                  تصدير الأسئلة إلى مستند Word (.doc)
+                </Button>
+              </div>
             </div>
           )}
 
@@ -3896,9 +4295,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             max-width: none !important;
             width: 100% !important;
           }
-          header, nav, aside, .topbar, button, .no-print,
+          header, nav, aside, .topbar, button, input, select, textarea, .no-print,
           [role="tablist"], [data-radix-portal] {
             display: none !important;
+            visibility: hidden !important;
           }
           .memo-print-root {
             display: block !important;
@@ -3914,6 +4314,8 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             max-height: 297mm !important;
             page-break-after: always !important;
             break-after: page !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
             box-shadow: none !important;
             border: none !important;
             margin: 0 !important;
@@ -3926,14 +4328,19 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             position: relative !important;
             width: 210mm !important;
             height: 297mm !important;
+            min-height: 297mm !important;
+            max-height: 297mm !important;
             box-shadow: none !important;
             border: none !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+            overflow: hidden !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
           @page {
             size: A4 portrait;
-            margin: 0 !important;
+            margin: 0mm !important;
           }
         }
       `}</style>

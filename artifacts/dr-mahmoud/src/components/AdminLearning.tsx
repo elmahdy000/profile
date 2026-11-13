@@ -1343,7 +1343,7 @@ export function AdminLearning({
   return (
     <div className="admin-learning-workspace space-y-6 text-[#0F172A]" dir="rtl">
       {/* 1. Page Header */}
-      <div className="flex flex-col gap-4 border-b border-[#E2E8F0] pb-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="no-print flex flex-col gap-4 border-b border-[#E2E8F0] pb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#0F172A]">
             إدارة المنصة التعليمية
@@ -1383,7 +1383,7 @@ export function AdminLearning({
       </div>
 
       {/* 5. Management Tabs Bar (RTL Horizontal Scroll on Mobile) */}
-      <div className="w-full overflow-x-auto overflow-y-hidden pb-1 scrollbar-none">
+      <div className="no-print w-full overflow-x-auto overflow-y-hidden pb-1 scrollbar-none">
         <div className="flex w-max min-w-full gap-2 rounded-2xl border border-[#E2E8F0] bg-white p-1.5 shadow-xs">
           {tabs.map(([value, label, Icon]) => (
             <button
@@ -1418,7 +1418,7 @@ export function AdminLearning({
           : tabMeta[tab][1];
 
         return (
-          <div className="flex flex-col gap-3.5 rounded-2xl border border-[#E2E8F0] bg-white p-5 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+          <div className="no-print flex flex-col gap-3.5 rounded-2xl border border-[#E2E8F0] bg-white p-5 shadow-xs sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-lg font-bold text-[#0F172A]">{activeTitle}</h3>
               <p className="mt-1 text-sm text-[#64748B]">{activeSub}</p>

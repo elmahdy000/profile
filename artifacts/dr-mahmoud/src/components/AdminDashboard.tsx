@@ -1869,7 +1869,7 @@ export default function AdminDashboard() {
         <div className="w-full max-w-[1400px] mx-auto">
 
             {/* Top Desktop Executive Header */}
-            <div className="hidden lg:flex items-center justify-between gap-4 mb-6 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+            <div className="no-print hidden lg:flex items-center justify-between gap-4 mb-6 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-[#0B63CE] text-white flex items-center justify-center font-black text-sm shadow-sm">
                   د.م
@@ -1881,7 +1881,7 @@ export default function AdminDashboard() {
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> السيرفر نشط
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5">لوحة التحكم التنفيذية وإدارة محتوى الأكاديمية</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">لوحة التحكم التنفيذية وإدارة محتوى المنصة</p>
                 </div>
               </div>
 
