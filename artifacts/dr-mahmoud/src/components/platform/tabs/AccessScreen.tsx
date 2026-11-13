@@ -93,9 +93,9 @@ export function AccessScreen({
     }),
     otherGradeDetail: "",
     learningMode: "online" as "online" | "offline",
-    centerName: "سنتر رافال أكاديمي (Rafal Academy)",
+    centerName: "سنتر رافال (Rafal) - عربي",
     appointmentSlot: "حسب جدول المجموعات بالسنتر (الساعة 3:00 عصراً)",
-    centerChoice: "سنتر رافال أكاديمي (Rafal Academy) - حسب جدول المجموعات بالسنتر (الساعة 3:00 عصراً)",
+    centerChoice: "سنتر رافال (Rafal) - حسب جدول المجموعات بالسنتر (الساعة 3:00 عصراً)",
   }));
 
   useEffect(() => {
@@ -913,7 +913,7 @@ export function AccessScreen({
                                 setForm({
                                   ...form,
                                   learningMode: nextMode,
-                                  centerChoice: nextMode === "online" ? "أونلاين لكل مصر" : "سنتر زاج أكاديمي (الفلل) - سبت واتنين واربع 5:00 م",
+                                  centerChoice: nextMode === "online" ? "أونلاين لكل مصر" : "سنتر زاج (الفلل) - سبت واتنين واربع 5:00 م",
                                 });
                               }}
                               className="sr-only"

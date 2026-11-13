@@ -139,7 +139,7 @@ const DEFAULT_SETTINGS: MemoSettings = {
   showTotalPages: true,
   numPosition: "left",
   studentFields: true,
-  showWatermark: true,
+  showWatermark: false,
   watermarkText: "د. محمود المهدي — الحاسب الآلي والذكاء الاصطناعي",
   watermarkOpacity: 0.05,
 };
@@ -684,6 +684,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       const saved = localStorage.getItem("drelmahdy_memo_settings");
       if (saved) {
         const parsed = JSON.parse(saved);
+        parsed.showWatermark = false; // Strictly default to no watermark as requested
         if (parsed.subHeaderText) {
           parsed.subHeaderText = sanitizeMemoText(parsed.subHeaderText);
         }
@@ -2675,7 +2676,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                   { id: "royal", title: "الملكي الكحلي والذهبي", desc: "كحلي فاخر وذهبي عنبري للدروس والمذكرات" },
                   { id: "exam", title: "ورقة اختبار رسمي معتمد", desc: "جدول درجات، رقم جلوس وتوقيع المصحح" },
                   { id: "tech", title: "تكنولوجيا وذكاء اصطناعي", desc: "أزرق نيون وكحلي سيبراني لمناهج الـ AI" },
-                  { id: "emerald", title: "الزمردي الأكاديمي", desc: "أخضر زمردي راقي للمدارس واللغات" },
+                  { id: "emerald", title: "النمط الزمردي الراقي", desc: "أخضر زمردي أنيق للمدارس واللغات" },
                   { id: "minimal", title: "النمط الاقتصادي للتصوير", desc: "أبيض وأسود عالي التباين موفر للحبر" },
                   { id: "custom", title: "خلفية خاصة مخصصة", desc: "رفع صورة A4 من جهازك" },
                 ].map((t) => (
@@ -2972,7 +2973,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
               {/* Font Select */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  نوع الخط الأكاديمي:
+                  نوع الخط المعتمد للطباعة:
                 </label>
                 <select
                   value={settings.fontSelect}
@@ -2982,7 +2983,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                   <option value="'Cairo', sans-serif">Cairo (كايرو - الافتراضي للمنصة)</option>
                   <option value="'Tajawal', sans-serif">Tajawal (تجوال)</option>
                   <option value="'Almarai', sans-serif">Almarai (المراعي)</option>
-                  <option value="'Noto Naskh Arabic', serif">Noto Naskh Arabic (نسخ كلاسيكي أكاديمي)</option>
+                  <option value="'Noto Naskh Arabic', serif">Noto Naskh Arabic (نسخ كلاسيكي فاخر)</option>
                   <option value="'Amiri', serif">Amiri (أميري للمطبوعات الفاخرة)</option>
                   <option value="'IBM Plex Sans Arabic', sans-serif">IBM Plex Sans Arabic (عصري تقني)</option>
                   <option value="'Inter', sans-serif">Inter (ممتاز للغات والإنجليزية)</option>

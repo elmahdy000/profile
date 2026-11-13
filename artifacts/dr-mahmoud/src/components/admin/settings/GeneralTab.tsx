@@ -112,7 +112,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
               handleChange(SETTINGS_KEYS.SITE_SEO_KEYWORDS, e.target.value)
             }
             className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
-            placeholder="دكتور محمود المهدي, برمجة, علوم الحاسب, كودينج, الزقازيق, رافال أكاديمي, زاج أكاديمي, إديوفيرس, كورس بايثون"
+            placeholder="دكتور محمود المهدي, برمجة, علوم الحاسب, كودينج, الزقازيق, سنتر رافال, سنتر زاج, سنتر إديوفيرس, كورس بايثون"
           />
           <p className="text-[11px] text-muted-foreground">افصل بين الكلمات بفواصل (،) لمساعدة محركات البحث في أرشفة المنصة.</p>
         </div>

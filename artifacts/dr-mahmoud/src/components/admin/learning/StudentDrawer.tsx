@@ -75,13 +75,13 @@ export function normalizeCenterName(rawName?: string | null): string {
     return "سنتر المجد (El-Magd) - لغات";
   }
   if (clean.includes("رافال") || clean.includes("rafal")) {
-    return "سنتر رافال أكاديمي (Rafal Academy) - عربي";
+    return "سنتر رافال (Rafal) - عربي";
   }
   if (clean.includes("زاج") || clean.includes("zag")) {
-    return "سنتر زاج أكاديمي (Zag Academy) - عربي";
+    return "سنتر زاج (Zag) - عربي";
   }
   if (clean.includes("إديوفيرس") || clean.includes("اديوفيرس") || clean.includes("eduverse")) {
-    return "سنتر إديوفيرس أكاديمي (EduVerse) - لغات";
+    return "سنتر إديوفيرس (EduVerse) - لغات";
   }
   return rawName.trim();
 }
