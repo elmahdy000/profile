@@ -28,6 +28,14 @@ import {
   FileQuestion,
   HelpCircle,
   Award,
+  Edit3,
+  Plus,
+  X,
+  Check,
+  Settings as SettingsIcon,
+  User,
+  CheckCircle,
+  ListOrdered,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -97,15 +105,15 @@ interface MemoSettings {
 const DEFAULT_SETTINGS: MemoSettings = {
   templateStyle: "royal",
   fitMode: "fill",
-  topMm: 38,
-  continuationTopMm: 16,
-  bottomMm: 20,
-  rightMm: 14,
-  leftMm: 14,
+  topMm: 34,
+  continuationTopMm: 12,
+  bottomMm: 10,
+  rightMm: 12,
+  leftMm: 12,
   headerEnabled: true,
   continuationHeader: "minimal",
   headerText: "مذكرة التدريبات الشاملة وبنك الأسئلة",
-  subHeaderText: "أكاديمية د. محمود المهدي | الحاسب الآلي والذكاء الاصطناعي",
+  subHeaderText: "أكاديمية د. محمود المهدي | الحاسب الآلي والبرمجة",
   guideView: false,
   showAnswers: false,
   showExplain: false,
@@ -686,8 +694,16 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
   const [selectedStageName, setSelectedStageName] = useState<string>("");
   const [selectedUnitName, setSelectedUnitName] = useState<string>("");
   const [selectedLessonName, setSelectedLessonName] = useState<string>("");
+  const [selectedLessons, setSelectedLessons] = useState<Array<{ unit: string; lesson: string; totalQuestions?: number }>>([]);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   const [randomCount, setRandomCount] = useState<number>(20);
+
+  // Question editing modal & creation
+  const [editingQuestion, setEditingQuestion] = useState<{
+    index: number;
+    data: NormalizedQuestion;
+  } | null>(null);
+  const [showAddQuestionModal, setShowAddQuestionModal] = useState<boolean>(false);
 
   // Pagination and view state
   const [pageIndex, setPageIndex] = useState<number>(0);
@@ -699,6 +715,9 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
 
   const paperAreaRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
+
+  // Language helper: detects if text contains Arabic characters
+  const isArabicText = (text: string) => /[\u0600-\u06FF]/.test(text || "");
 
   // Save settings locally
   useEffect(() => {
@@ -735,17 +754,17 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
 
   // Calculate region printable area in mm
   const region = useMemo(() => {
-    let top = Math.max(15, Math.min(120, settings.topMm));
-    if (settings.headerEnabled && top < 38) {
-      top = 38;
+    let top = Math.max(12, Math.min(120, settings.topMm));
+    if (settings.headerEnabled && top < 32) {
+      top = 32;
     }
-    let bottom = Math.max(15, Math.min(100, settings.bottomMm));
-    let right = Math.max(7, Math.min(60, settings.rightMm));
-    let left = Math.max(7, Math.min(60, settings.leftMm));
-    if (top + bottom > 275) bottom = 275 - top;
-    if (right + left > 180) {
-      right = 15;
-      left = 15;
+    let bottom = Math.max(8, Math.min(100, settings.bottomMm));
+    let right = Math.max(6, Math.min(60, settings.rightMm));
+    let left = Math.max(6, Math.min(60, settings.leftMm));
+    if (top + bottom > 280) bottom = 280 - top;
+    if (right + left > 185) {
+      right = 12;
+      left = 12;
     }
     return {
       top,
@@ -791,34 +810,39 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     </div>`;
   }, [settings.templateStyle, settings.contentDir]);
 
-  // Card HTML generator with Compact Academic Lines & Adaptive MCQ Columns
+  // Card HTML generator with Compact Academic Lines, Adaptive MCQ Columns & Strict BiDi Alignment
   const getCardHtml = (q: NormalizedQuestion, qNumber: number) => {
-    const isRtl = settings.contentDir === "rtl";
-    const letters = isRtl ? ARABIC_LETTERS : ENGLISH_LETTERS;
+    const isDocRtl = settings.contentDir === "rtl";
     const theme = getThemeConfig(settings.templateStyle);
 
+    // Language detection: Arabic vs English/Latin
+    const stmtIsArabic = isArabicText(q.statement);
+    const stmtDir = stmtIsArabic ? "rtl" : "ltr";
+    const stmtAlign = stmtIsArabic ? "right" : "left";
+
     const typeLabel = {
-      MCQ: isRtl ? "اختر الإجابة الصحيحة" : "Multiple choice",
-      TRUE_FALSE: isRtl ? "صواب أم خطأ" : "True / False",
-      ESSAY: isRtl ? "سؤال مقالي" : "Essay",
-      DEFINITION: isRtl ? "تعريف" : "Definition",
-      TEXT: isRtl ? "ملاحظة" : "Note",
+      MCQ: stmtIsArabic ? "اختر الإجابة الصحيحة" : "Multiple choice",
+      TRUE_FALSE: stmtIsArabic ? "صواب أم خطأ" : "True / False",
+      ESSAY: stmtIsArabic ? "سؤال مقالي" : "Essay",
+      DEFINITION: stmtIsArabic ? "تعريف" : "Definition",
+      TEXT: stmtIsArabic ? "ملاحظة" : "Note",
     }[q.type];
 
     const densityConfig = {
-      compact: { pad: "1.5mm 1.8mm", gap: "1.2mm 2.5mm", qGap: "2.4mm" },
-      balanced: { pad: "2.2mm 2.6mm", gap: "1.6mm 3.8mm", qGap: "3.5mm" },
-      comfortable: { pad: "3.0mm 3.2mm", gap: "2.0mm 4.8mm", qGap: "5.0mm" },
+      compact: { pad: "1.2mm 1.5mm", gap: "1.0mm 2.0mm", qGap: "2.0mm" },
+      balanced: { pad: "1.8mm 2.2mm", gap: "1.4mm 3.0mm", qGap: "2.8mm" },
+      comfortable: { pad: "2.6mm 3.0mm", gap: "1.8mm 4.0mm", qGap: "4.0mm" },
     }[settings.density || "balanced"];
 
     if (q.type === "TEXT") {
-      return `<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:2mm;padding:2.2mm;white-space:pre-wrap;line-height:1.6;break-inside:avoid;">${q.statement}</div>`;
+      return `<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:2mm;padding:2mm;white-space:pre-wrap;line-height:1.55;break-inside:avoid;direction:${stmtDir};text-align:${stmtAlign};">${q.statement}</div>`;
     }
 
     if (q.type === "DEFINITION") {
-      return `<div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:2mm;padding:2mm 2.8mm;break-inside:avoid;">
+      const defAnsIsArabic = isArabicText(q.answer);
+      return `<div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:2mm;padding:2mm 2.5mm;break-inside:avoid;direction:${stmtDir};text-align:${stmtAlign};">
         <div style="font-weight:800;color:#0f172a;">${q.statement}</div>
-        ${settings.showAnswers && q.answer ? `<div style="margin-top:1.2mm;white-space:pre-wrap;color:#334155;">${q.answer}</div>` : ""}
+        ${settings.showAnswers && q.answer ? `<div style="margin-top:1.2mm;white-space:pre-wrap;color:#334155;direction:${defAnsIsArabic ? "rtl" : "ltr"};text-align:${defAnsIsArabic ? "right" : "left"};">${q.answer}</div>` : ""}
       </div>`;
     }
 
@@ -826,7 +850,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       q.options && q.options.length
         ? q.options
         : q.type === "TRUE_FALSE"
-          ? [{ text: isRtl ? "صواب" : "True" }, { text: isRtl ? "خطأ" : "False" }]
+          ? [{ text: stmtIsArabic ? "صواب" : "True" }, { text: stmtIsArabic ? "خطأ" : "False" }]
           : [];
 
     // Adaptive MCQ Option Columns
@@ -849,15 +873,21 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     }
 
     const optionsHtml = opts.length
-      ? `<div style="display:grid;${colStyle}gap:${densityConfig.gap};margin-top:1.6mm;padding-inline-start:8.2mm;">
+      ? `<div style="display:grid;${colStyle}gap:${densityConfig.gap};margin-top:1.4mm;padding-inline-start:7.5mm;">
           ${opts
-            .map(
-              (o, i) => `
-            <div style="display:flex;gap:1.8mm;align-items:flex-start;break-inside:avoid;">
-              <span style="display:inline-grid;place-items:center;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:50%;height:4.8mm;min-width:4.8mm;font:bold 7.5pt Arial;color:#334155;">${letters[i] ?? i + 1}</span>
-              <span style="flex:1;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45;">${o.text}</span>
-            </div>`,
-            )
+            .map((o, i) => {
+              const optIsArabic = isArabicText(o.text);
+              const optDir = optIsArabic ? "rtl" : "ltr";
+              const optAlign = optIsArabic ? "right" : "left";
+              const letter = optIsArabic
+                ? (ARABIC_LETTERS[i] ?? i + 1)
+                : (ENGLISH_LETTERS[i] ?? String.fromCharCode(65 + i));
+              return `
+            <div style="display:flex;gap:1.5mm;align-items:flex-start;break-inside:avoid;direction:${optDir};text-align:${optAlign};">
+              <span style="display:inline-grid;place-items:center;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:50%;height:4.4mm;min-width:4.4mm;font:bold 7pt Arial;color:#334155;flex-shrink:0;">${letter}</span>
+              <span style="flex:1;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.4;direction:${optDir};">${o.text}</span>
+            </div>`;
+            })
             .join("")}
         </div>`
       : "";
@@ -865,26 +895,38 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     // Container styling based on cardStyle (lines vs cards vs dashed)
     let containerStyle = "";
     if (settings.cardStyle === "lines") {
-      containerStyle = `border-bottom: 1.2px solid ${theme.cardBorderColor}; padding: ${densityConfig.pad}; padding-bottom: 2mm; margin-bottom: 0.8mm; background: transparent;`;
+      containerStyle = `border-bottom: 1px solid ${theme.cardBorderColor}; padding: ${densityConfig.pad}; padding-bottom: 1.5mm; margin-bottom: 0.5mm; background: transparent;`;
     } else if (settings.cardStyle === "dashed") {
-      containerStyle = `border-bottom: 1.2px dashed #cbd5e1; padding: ${densityConfig.pad}; padding-bottom: 2mm; margin-bottom: 0.8mm; background: transparent;`;
+      containerStyle = `border-bottom: 1px dashed #cbd5e1; padding: ${densityConfig.pad}; padding-bottom: 1.5mm; margin-bottom: 0.5mm; background: transparent;`;
     } else {
       // "cards"
-      containerStyle = `border: 1px solid ${theme.cardBorderColor}; border-${isRtl ? "right" : "left"}: ${theme.cardBorderRight}; border-radius: 2mm; padding: ${densityConfig.pad}; background: rgba(255,255,255,0.98);`;
+      containerStyle = `border: 1px solid ${theme.cardBorderColor}; border-${stmtIsArabic ? "right" : "left"}: ${theme.cardBorderRight}; border-radius: 2mm; padding: ${densityConfig.pad}; background: rgba(255,255,255,0.98);`;
     }
 
-    return `<article style="box-sizing:border-box;width:100%;max-width:100%;${containerStyle}break-inside:avoid;page-break-inside:avoid;position:relative;word-break:normal;overflow-wrap:anywhere;">
-      <div style="display:flex;align-items:flex-start;gap:2mm;min-width:0;width:100%;box-sizing:border-box;">
-        <span style="flex:0 0 auto;background:${theme.numBadgeBg};color:${theme.numBadgeColor};border:${theme.numBadgeBorder};border-radius:1.5mm;min-width:6.8mm;height:6.8mm;display:grid;place-items:center;font:bold 9.5pt 'Cairo',Arial;line-height:1;">${qNumber}</span>
-        <div style="min-width:0;flex:1;box-sizing:border-box;">
-          ${settings.showQuestionType ? `<span style="display:inline-block;color:#64748b;font-family:'Cairo',Arial;font-size:7pt;font-weight:700;margin-bottom:0.6mm;">${typeLabel}</span>` : ""}
-          <div style="white-space:pre-wrap;font-weight:700;line-height:inherit;overflow-wrap:anywhere;">${q.statement || "—"}</div>
-          ${settings.showTranslations && q.translation ? `<div style="white-space:pre-wrap;color:#475569;border-${isRtl ? "right" : "left"}:2px solid #94a3b8;padding-${isRtl ? "right" : "left"}:2mm;margin-top:1.4mm;font-size:0.92em;overflow-wrap:anywhere;">${q.translation}</div>` : ""}
+    const transIsArabic = isArabicText(q.translation);
+    const transDir = transIsArabic ? "rtl" : "ltr";
+    const transAlign = transIsArabic ? "right" : "left";
+
+    const ansIsArabic = isArabicText(q.answer);
+    const ansDir = ansIsArabic ? "rtl" : "ltr";
+    const ansAlign = ansIsArabic ? "right" : "left";
+
+    const expIsArabic = isArabicText(q.explanation);
+    const expDir = expIsArabic ? "rtl" : "ltr";
+    const expAlign = expIsArabic ? "right" : "left";
+
+    return `<article style="box-sizing:border-box;width:100%;max-width:100%;${containerStyle}break-inside:avoid;page-break-inside:avoid;position:relative;word-break:normal;overflow-wrap:anywhere;direction:${stmtDir};">
+      <div style="display:flex;align-items:flex-start;gap:2mm;min-width:0;width:100%;box-sizing:border-box;direction:${stmtDir};">
+        <span style="flex:0 0 auto;background:${theme.numBadgeBg};color:${theme.numBadgeColor};border:${theme.numBadgeBorder};border-radius:1.5mm;min-width:6.2mm;height:6.2mm;display:grid;place-items:center;font:bold 9pt 'Cairo',Arial;line-height:1;">${qNumber}</span>
+        <div style="min-width:0;flex:1;box-sizing:border-box;text-align:${stmtAlign};">
+          ${settings.showQuestionType ? `<span style="display:inline-block;color:#64748b;font-family:'Cairo',Arial;font-size:7pt;font-weight:700;margin-bottom:0.5mm;">${typeLabel}</span>` : ""}
+          <div style="white-space:pre-wrap;font-weight:700;line-height:inherit;overflow-wrap:anywhere;direction:${stmtDir};text-align:${stmtAlign};">${q.statement || "—"}</div>
+          ${settings.showTranslations && q.translation ? `<div style="white-space:pre-wrap;color:#475569;border-${stmtIsArabic ? "right" : "left"}:2px solid #94a3b8;padding-${stmtIsArabic ? "right" : "left"}:2mm;margin-top:1.2mm;font-size:0.92em;overflow-wrap:anywhere;direction:${transDir};text-align:${transAlign};">${q.translation}</div>` : ""}
         </div>
       </div>
       ${optionsHtml}
-      ${settings.showAnswers && q.answer ? `<div style="box-sizing:border-box;background:#f0fdf4;border-${isRtl ? "right" : "left"}:2px solid #16a34a;border-radius:1.5mm;margin-top:1.6mm;margin-inline-start:8.2mm;padding:1.2mm 2.5mm;font-size:0.9em;color:#166534;white-space:pre-wrap;overflow-wrap:anywhere;"><span style="font-weight:bold;">${isRtl ? "الإجابة النموذجية:" : "Answer:"}</span> ${q.answer}</div>` : ""}
-      ${settings.showExplain && q.explanation ? `<div style="box-sizing:border-box;background:#fefce8;border-${isRtl ? "right" : "left"}:2px solid #ca8a04;border-radius:1.5mm;margin-top:1.2mm;margin-inline-start:8.2mm;padding:1.2mm 2.5mm;font-size:0.86em;color:#854d0e;white-space:pre-wrap;overflow-wrap:anywhere;"><span style="font-weight:bold;">${isRtl ? "التفسير:" : "Explanation:"}</span> ${q.explanation}</div>` : ""}
+      ${settings.showAnswers && q.answer ? `<div style="box-sizing:border-box;background:#f0fdf4;border-${stmtIsArabic ? "right" : "left"}:2px solid #16a34a;border-radius:1.5mm;margin-top:1.4mm;margin-inline-start:7.5mm;padding:1.2mm 2.2mm;font-size:0.9em;color:#166534;white-space:pre-wrap;overflow-wrap:anywhere;direction:${ansDir};text-align:${ansAlign};"><span style="font-weight:bold;">${ansIsArabic ? "الإجابة النموذجية:" : "Model Answer:"}</span> ${q.answer}</div>` : ""}
+      ${settings.showExplain && q.explanation ? `<div style="box-sizing:border-box;background:#fefce8;border-${stmtIsArabic ? "right" : "left"}:2px solid #ca8a04;border-radius:1.5mm;margin-top:1.0mm;margin-inline-start:7.5mm;padding:1.2mm 2.2mm;font-size:0.86em;color:#854d0e;white-space:pre-wrap;overflow-wrap:anywhere;direction:${expDir};text-align:${expAlign};"><span style="font-weight:bold;">${expIsArabic ? "التفسير والتعليل:" : "Explanation:"}</span> ${q.explanation}</div>` : ""}
     </article>`;
   };
 
@@ -914,29 +956,29 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     });
   }, [questions, selectedTypeFilter]);
 
-  // Intelligent Pagination Engine: Real Height-Based with Page 1 vs Continuation segregation
+  // Intelligent Pagination Engine: Real Height-Based with Page 1 vs Continuation segregation & 3mm tolerance
   const pages = useMemo(() => {
     const warns: string[] = [];
     const max = settings.maxQuestions || 99999;
     const densityGap = {
-      compact: 2.4,
-      balanced: 3.5,
-      comfortable: 5.0,
+      compact: 2.0,
+      balanced: 2.8,
+      comfortable: 4.0,
     }[settings.density || "balanced"];
 
     // Page 1 available content height
-    const p1Top = settings.headerEnabled ? Math.max(36, settings.topMm) : settings.topMm;
+    const p1Top = settings.headerEnabled ? Math.max(34, settings.topMm) : settings.topMm;
     const p1AvailableH = 297 - p1Top - settings.bottomMm;
 
     // Continuation Page available content height (massively increased usable space!)
-    let contTop = 11;
+    let contTop = 10;
     if (settings.continuationHeader === "minimal") {
-      contTop = Math.max(15, settings.continuationTopMm || 16);
+      contTop = Math.max(12, settings.continuationTopMm || 13);
     } else if (settings.continuationHeader === "full") {
       contTop = p1Top;
     } else {
       // "none"
-      contTop = Math.max(10, settings.continuationTopMm ? Math.min(settings.continuationTopMm, 12) : 11);
+      contTop = Math.max(8, settings.continuationTopMm ? Math.min(settings.continuationTopMm, 10) : 8);
     }
     const contAvailableH = 297 - contTop - settings.bottomMm;
 
@@ -946,6 +988,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     let count = 0;
 
     const studentH = settings.studentFields ? measureHeight(studentStripHtml, region.width) : 0;
+    const toleranceMm = 3.0; // Tolerance to prevent questions that nearly fit from jumping to next page
 
     activeQuestions.forEach((q, i) => {
       const isQuestion = !["TEXT", "DEFINITION"].includes(q.type);
@@ -960,7 +1003,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       const firstPageOffset = isFirstPage && settings.studentFields && current.length === 0 ? studentH + densityGap : 0;
       const addedGap = current.length === 0 ? 0 : densityGap;
 
-      if (count >= max || (current.length > 0 && currentUsedH + addedGap + h + firstPageOffset > targetAvailableH)) {
+      if (count >= max || (current.length > 0 && currentUsedH + addedGap + h + firstPageOffset > targetAvailableH + toleranceMm)) {
         if (current.length) {
           all.push(current);
           current = [];
@@ -972,7 +1015,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       const postFirstOffset = postIsFirst && settings.studentFields && current.length === 0 ? studentH + densityGap : 0;
       const postAddedGap = current.length === 0 ? 0 : densityGap;
 
-      if (h + postFirstOffset > targetAvailableH) {
+      if (h + postFirstOffset > targetAvailableH + toleranceMm) {
         warns.push(
           `السؤال ${actualN} أطول من المساحة المتاحة في صفحة A4 (${Math.ceil(h)} مم). يُنصح باختيار كثافة "مضغوط" أو تقليل حجم الخط.`,
         );
@@ -1006,6 +1049,13 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     return () => window.removeEventListener("resize", updateScale);
   }, [autoScale]);
 
+  // Helper to remove any duplicate mode suffixes from headerText
+  const cleanHeaderText = (text: string) => {
+    return (text || "")
+      .replace(/\s*\[نموذج الإجابة\]|\(نموذج الإجابة\)|\s*\[نسخة المعلم\]|\s*\[نسخة الطالب\]/g, "")
+      .trim();
+  };
+
   // Quick mode presets: Student vs Teacher
   const setStudentMode = () => {
     setSettings((prev) => ({
@@ -1013,11 +1063,9 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       showAnswers: false,
       showExplain: false,
       studentFields: true,
-      headerText: prev.headerText.includes("المعلم")
-        ? prev.headerText.replace("المعلم", "الطلاب")
-        : prev.headerText,
+      headerText: cleanHeaderText(prev.headerText),
     }));
-    toast({ title: "تم تفعيل نمط (نسخة الطالب)", description: "تم إخفاء الإجابات والتفسيرات وتفعيل شريط اسم الطالب." });
+    toast({ title: "تم تفعيل نمط (نسخة الطالب)", description: "تم إخفاء الإجابات والتفسيرات وتفعيل شريط اسم وبيانات الطالب." });
   };
 
   const setTeacherMode = () => {
@@ -1026,9 +1074,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       showAnswers: true,
       showExplain: true,
       studentFields: false,
-      headerText: prev.headerText.includes("الطلاب")
-        ? prev.headerText.replace("الطلاب", "المعلم")
-        : `${prev.headerText} [نموذج الإجابة]`,
+      headerText: `${cleanHeaderText(prev.headerText)} [نموذج الإجابة]`,
     }));
     toast({ title: "تم تفعيل نمط (نسخة المعلم)", description: "تم إظهار الإجابات النموذجية والتفسيرات الكاملة لكل سؤال." });
   };
@@ -1210,6 +1256,102 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     }
   };
 
+  // Bulk Load from multiple selected lessons simultaneously
+  const handleLoadFromSelectedLessons = async (countLimit?: number) => {
+    if (!selectedStageName || !selectedLessons.length) return;
+    try {
+      setIsLoadingQuestions(true);
+      const fetchPromises = selectedLessons.map(async (item) => {
+        const params = new URLSearchParams({
+          stage: selectedStageName,
+          unit: item.unit,
+          lesson: item.lesson,
+        });
+        if (bankTypeFilter && bankTypeFilter !== "ALL") {
+          params.set("type", bankTypeFilter);
+        }
+        return adminApi<any[]>(`/api/admin/learning/test-bank/questions?${params.toString()}`);
+      });
+
+      const results = await Promise.all(fetchPromises);
+      const combined: any[] = [];
+      const seenTexts = new Set<string>();
+
+      for (const list of results) {
+        if (Array.isArray(list)) {
+          for (const item of list) {
+            const qObj = item.question || item;
+            const textKey = (qObj.text || qObj.statement || qObj.prompt || item.prompt || "").trim();
+            if (textKey && !seenTexts.has(textKey)) {
+              seenTexts.add(textKey);
+              combined.push(item);
+            }
+          }
+        }
+      }
+
+      if (!combined.length) {
+        toast({ variant: "destructive", description: "لم يتم العثور على أسئلة للدروس المحددة." });
+        return;
+      }
+
+      let finalRows = combined;
+      if (countLimit && countLimit > 0 && finalRows.length > countLimit) {
+        finalRows = [...finalRows].sort(() => 0.5 - Math.random()).slice(0, countLimit);
+      }
+
+      const mapped = finalRows.map((item, idx) => {
+        const qObj = item.question || item;
+        return normalizeQuestion(
+          {
+            ...item,
+            ...qObj,
+            id: item.id || `q-${idx}`,
+            statement: qObj.prompt || qObj.statement || item.prompt || "",
+            options: qObj.options || item.options || [],
+            answer: qObj.modelAnswer || item.modelAnswer || qObj.correctAnswer || item.answer || "",
+            modelAnswer: qObj.modelAnswer || item.modelAnswer,
+            explanation: qObj.explanation || item.explanation || "",
+            translation: qObj.translation || item.translation || "",
+            type: qObj.type || item.type,
+          },
+          idx,
+        );
+      });
+
+      setQuestions(mapped);
+      setPageIndex(0);
+      setSelectedTypeFilter("ALL");
+
+      const uniqueUnits = Array.from(new Set(selectedLessons.map((l) => l.unit)));
+      const unitTitle = uniqueUnits.length === 1 ? uniqueUnits[0] : `${uniqueUnits.length} وحدات دراسية`;
+      const lessonTitle =
+        selectedLessons.length === 1
+          ? selectedLessons[0].lesson
+          : `${selectedLessons.length} دروس مختارة (${selectedLessons.map((x) => x.lesson).slice(0, 2).join("، ")}${selectedLessons.length > 2 ? "..." : ""})`;
+
+      setSettings((prev) => ({
+        ...prev,
+        contentDir:
+          selectedStageName.toLowerCase().includes("لغات") ||
+          selectedStageName.toLowerCase().includes("lang")
+            ? "ltr"
+            : "rtl",
+        headerText: `${unitTitle} - ${lessonTitle}`,
+        subHeaderText: `أكاديمية د. محمود المهدي ▪ ${selectedStageName.replace(/·/g, "•")}`,
+      }));
+
+      toast({
+        title: "تم استيراد أسئلة الدروس المحددة بنجاح",
+        description: `تم جلب ${mapped.length} سؤال من أصل ${selectedLessons.length} دروس تم تحديدها.`,
+      });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "خطأ في جلب أسئلة الدروس", description: err.message });
+    } finally {
+      setIsLoadingQuestions(false);
+    }
+  };
+
   // Toggle single question enabled
   const toggleQuestionEnabled = (idx: number) => {
     setQuestions((prev) =>
@@ -1271,17 +1413,19 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             type="button"
             onClick={setStudentMode}
             variant="outline"
-            className="border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-white text-xs font-bold"
+            className="border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-white text-xs font-bold flex items-center gap-1.5"
           >
-            🎓 نسخة الطالب (بدون إجابات)
+            <User className="h-3.5 w-3.5 text-slate-300" />
+            نسخة الطالب (بدون إجابات)
           </Button>
           <Button
             type="button"
             onClick={setTeacherMode}
             variant="outline"
-            className="border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 text-xs font-bold"
+            className="border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 text-xs font-bold flex items-center gap-1.5"
           >
-            👨‍🏫 نسخة المعلم (مع الإجابات)
+            <CheckCircle className="h-3.5 w-3.5 text-amber-400" />
+            نسخة المعلم (مع الإجابات)
           </Button>
           <Button
             type="button"
@@ -1346,35 +1490,38 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setContentSourceTab("curriculum")}
-                  className={`text-xs font-bold pb-1.5 px-2.5 border-b-2 transition ${
+                  className={`text-xs font-bold pb-1.5 px-2.5 border-b-2 transition flex items-center gap-1.5 ${
                     contentSourceTab === "curriculum"
                       ? "border-primary text-primary"
                       : "border-transparent text-slate-500 hover:text-slate-800"
                   }`}
                 >
-                  📚 من بنك أسئلة المنهج
+                  <BookOpen className="h-3.5 w-3.5" />
+                  بنك أسئلة المنهج
                 </button>
                 <button
                   type="button"
                   onClick={() => setContentSourceTab("quizzes")}
-                  className={`text-xs font-bold pb-1.5 px-2.5 border-b-2 transition ${
+                  className={`text-xs font-bold pb-1.5 px-2.5 border-b-2 transition flex items-center gap-1.5 ${
                     contentSourceTab === "quizzes"
                       ? "border-primary text-primary"
                       : "border-transparent text-slate-500 hover:text-slate-800"
                   }`}
                 >
-                  📝 من اختبارات المنصة ({quizzes.length})
+                  <FileText className="h-3.5 w-3.5" />
+                  اختبارات المنصة ({quizzes.length})
                 </button>
                 <button
                   type="button"
                   onClick={() => setContentSourceTab("external")}
-                  className={`text-xs font-bold pb-1.5 px-2.5 border-b-2 transition ${
+                  className={`text-xs font-bold pb-1.5 px-2.5 border-b-2 transition flex items-center gap-1.5 ${
                     contentSourceTab === "external"
                       ? "border-primary text-primary"
                       : "border-transparent text-slate-500 hover:text-slate-800"
                   }`}
                 >
-                  📥 إدخال خارجي (JSON)
+                  <Upload className="h-3.5 w-3.5" />
+                  استيراد ملف (JSON)
                 </button>
               </div>
 
@@ -1398,6 +1545,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                               setSelectedStageName(st.stage);
                               setSelectedUnitName("");
                               setSelectedLessonName("");
+                              setSelectedLessons([]);
                             }}
                             className={`rounded-xl border p-3 text-right transition-all cursor-pointer ${
                               isSelected
@@ -1407,7 +1555,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                           >
                             <div className="flex items-center justify-between gap-1 mb-1">
                               <span className="text-xs font-extrabold truncate">
-                                {isLanguages ? "🇬🇧 لغات" : "🇪🇬 عربي"}
+                                {isLanguages ? "لغات (English)" : "عام (عربي)"}
                               </span>
                               <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
                                 {st.totalQuestions} سؤال
@@ -1425,6 +1573,47 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                   {/* Units of selected stage */}
                   {selectedStageName && (
                     <div className="space-y-3 pt-2">
+                      {/* Multi-lesson sticky selection summary bar */}
+                      {selectedLessons.length > 0 && (
+                        <div className="sticky top-0 z-20 p-2.5 rounded-xl bg-slate-900 text-white shadow-xl flex flex-wrap items-center justify-between gap-2 border border-slate-700">
+                          <div className="flex items-center gap-2">
+                            <CheckSquare className="h-4 w-4 text-emerald-400 shrink-0" />
+                            <span className="text-xs font-bold">
+                              تم تحديد <strong>{selectedLessons.length}</strong> دروس (
+                              {selectedLessons.reduce((acc, l) => acc + (l.totalQuestions || 0), 0)} سؤال)
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <Button
+                              type="button"
+                              size="sm"
+                              disabled={isLoadingQuestions}
+                              onClick={() => handleLoadFromSelectedLessons()}
+                              className="h-7 px-2.5 text-[11px] font-bold bg-primary hover:bg-primary/90 text-white"
+                            >
+                              جلب وتجميع ({selectedLessons.reduce((acc, l) => acc + (l.totalQuestions || 0), 0)})
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              disabled={isLoadingQuestions}
+                              onClick={() => handleLoadFromSelectedLessons(randomCount)}
+                              className="h-7 px-2.5 text-[11px] font-bold bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-1"
+                            >
+                              <Shuffle className="h-3 w-3" />
+                              {randomCount} عشوائي
+                            </Button>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedLessons([])}
+                              className="text-[11px] text-slate-300 hover:text-white underline px-1"
+                            >
+                              إلغاء التحديد
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
                       <div className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700">
                         <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700 dark:text-slate-300">
                           <span>نوع الأسئلة:</span>
@@ -1457,6 +1646,36 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                       <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
                         {stageUnits.map((u: any) => {
                           const isUnitActive = selectedUnitName === u.unit;
+                          const allUnitLessonsSelected =
+                            u.lessons &&
+                            u.lessons.length > 0 &&
+                            u.lessons.every((les: any) =>
+                              selectedLessons.some((x) => x.unit === u.unit && x.lesson === les.lesson),
+                            );
+
+                          const toggleAllUnitLessons = () => {
+                            if (!u.lessons) return;
+                            if (allUnitLessonsSelected) {
+                              setSelectedLessons((prev) =>
+                                prev.filter((x) => x.unit !== u.unit),
+                              );
+                            } else {
+                              const newToAdd = u.lessons
+                                .filter(
+                                  (les: any) =>
+                                    !selectedLessons.some(
+                                      (x) => x.unit === u.unit && x.lesson === les.lesson,
+                                    ),
+                                )
+                                .map((les: any) => ({
+                                  unit: u.unit,
+                                  lesson: les.lesson,
+                                  totalQuestions: les.totalQuestions,
+                                }));
+                              setSelectedLessons((prev) => [...prev, ...newToAdd]);
+                            }
+                          };
+
                           return (
                             <div
                               key={u.unit}
@@ -1476,7 +1695,21 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                       {u.totalQuestions} سؤال متاح · {u.lessons?.length || 0} دروس
                                     </p>
                                   </div>
-                                  <div className="flex items-center gap-1.5 shrink-0">
+                                  <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+                                    {u.lessons && u.lessons.length > 1 && (
+                                      <button
+                                        type="button"
+                                        onClick={toggleAllUnitLessons}
+                                        className={`h-7 px-2 text-[11px] font-bold rounded-md border transition flex items-center gap-1 ${
+                                          allUnitLessonsSelected
+                                            ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                                            : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
+                                        }`}
+                                      >
+                                        <CheckSquare className="h-3 w-3" />
+                                        {allUnitLessonsSelected ? "إلغاء دروس الوحدة" : "تحديد كل دروس الوحدة"}
+                                      </button>
+                                    )}
                                     <Button
                                       type="button"
                                       size="sm"
@@ -1486,7 +1719,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                       title={`اختيار ${randomCount} سؤال عشوائي من الوحدة`}
                                     >
                                       <Shuffle className="h-3 w-3" />
-                                      {randomCount} سؤال عشوائي
+                                      {randomCount} عشوائي
                                     </Button>
                                     <Button
                                       type="button"
@@ -1500,21 +1733,55 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                   </div>
                                 </div>
 
-                                {/* Lessons pills inside unit */}
+                                {/* Lessons pills inside unit with multi-selection checkboxes */}
                                 {u.lessons && u.lessons.length > 0 && (
                                   <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-700/60 flex flex-wrap gap-1.5">
                                     <span className="text-[10px] font-bold text-slate-400 self-center">الدروس:</span>
-                                    {u.lessons.map((les: any) => (
-                                      <button
-                                        key={les.lesson}
-                                        type="button"
-                                        disabled={isLoadingQuestions}
-                                        onClick={() => handleLoadFromBank(u.unit, les.lesson)}
-                                        className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-700 hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-colors cursor-pointer dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
-                                      >
-                                        {les.lesson} ({les.totalQuestions})
-                                      </button>
-                                    ))}
+                                    {u.lessons.map((les: any) => {
+                                      const isSelected = selectedLessons.some(
+                                        (x) => x.unit === u.unit && x.lesson === les.lesson,
+                                      );
+                                      return (
+                                        <button
+                                          key={les.lesson}
+                                          type="button"
+                                          disabled={isLoadingQuestions}
+                                          onClick={() => {
+                                            setSelectedLessons((prev) => {
+                                              const exists = prev.some(
+                                                (x) => x.unit === u.unit && x.lesson === les.lesson,
+                                              );
+                                              if (exists) {
+                                                return prev.filter(
+                                                  (x) => !(x.unit === u.unit && x.lesson === les.lesson),
+                                                );
+                                              } else {
+                                                return [
+                                                  ...prev,
+                                                  {
+                                                    unit: u.unit,
+                                                    lesson: les.lesson,
+                                                    totalQuestions: les.totalQuestions,
+                                                  },
+                                                ];
+                                              }
+                                            });
+                                          }}
+                                          className={`rounded-md border px-2 py-0.5 text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                                            isSelected
+                                              ? "border-primary bg-primary text-white shadow-xs"
+                                              : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-primary/10 hover:border-primary/40 hover:text-primary dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
+                                          }`}
+                                          title="انقر لتحديد أو إلغاء تحديد هذا الدرس ضمن مجموعة الدروس"
+                                        >
+                                          <span className="font-mono">{isSelected ? "✓" : "+"}</span>
+                                          <span>{les.lesson}</span>
+                                          <span className={`text-[9px] px-1 rounded ${isSelected ? "bg-white/20" : "bg-slate-200 dark:bg-slate-700"}`}>
+                                            {les.totalQuestions}
+                                          </span>
+                                        </button>
+                                      );
+                                    })}
                                   </div>
                                 )}
                               </div>
@@ -1755,10 +2022,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                     onChange={(e) => setSettings({ ...settings, optionLayout: e.target.value as any })}
                     className="rounded-md border border-slate-300 px-2 py-1 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
                   >
-                    <option value="auto">🧠 تلقائي ذكي (4 بالسطر للقصيرة / 2 للمتوسطة / 1 للطويلة)</option>
-                    <option value="four">4️⃣ أربعة خيارات في سطر واحد (مساحة قصوى)</option>
-                    <option value="two">2️⃣ عمودين (مدمج ومتوازن)</option>
-                    <option value="one">1️⃣ خيار تلو الآخر (رأسي)</option>
+                    <option value="auto">توزيع تلقائي ذكي (4 خيارات للقصيرة / 2 للمتوسطة / 1 للطويلة)</option>
+                    <option value="four">أربعة خيارات في سطر واحد (مساحة قصوى)</option>
+                    <option value="two">عمودين (مدمج ومتوازن)</option>
+                    <option value="one">خيار تلو الآخر (رأسي)</option>
                   </select>
                 </div>
               </div>
@@ -1779,12 +2046,12 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
               {/* Preset Template Styles */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {[
-                  { id: "royal", title: "👑 الملكي الذهبي (د. المهدي)", desc: "كحلي فاخر وذهبي عنبري للدروس والمذكرات" },
-                  { id: "exam", title: "📝 ورقة امتحان رسمي وزاري", desc: "جدول درجات، رقم جلوس وتوقيع المصحح" },
-                  { id: "tech", title: "⚡ تكنولوجيا وذكاء اصطناعي", desc: "أزرق نيون وكحلي سيبراني لمناهج الـ AI" },
-                  { id: "emerald", title: "🌿 الزمردي الأكاديمي", desc: "أخضر زمردي راقي للمدارس واللغات" },
-                  { id: "minimal", title: "🖨️ نمط التصوير الاقتصادي", desc: "أبيض وأسود عالي التباين موفر للحبر" },
-                  { id: "custom", title: "🖼️ خلفية خاصة مخصصة", desc: "رفع صورة A4 من جهازك" },
+                  { id: "royal", title: "الملكي الكحلي والذهبي", desc: "كحلي فاخر وذهبي عنبري للدروس والمذكرات" },
+                  { id: "exam", title: "ورقة اختبار رسمي معتمد", desc: "جدول درجات، رقم جلوس وتوقيع المصحح" },
+                  { id: "tech", title: "تكنولوجيا وذكاء اصطناعي", desc: "أزرق نيون وكحلي سيبراني لمناهج الـ AI" },
+                  { id: "emerald", title: "الزمردي الأكاديمي", desc: "أخضر زمردي راقي للمدارس واللغات" },
+                  { id: "minimal", title: "النمط الاقتصادي للتصوير", desc: "أبيض وأسود عالي التباين موفر للحبر" },
+                  { id: "custom", title: "خلفية خاصة مخصصة", desc: "رفع صورة A4 من جهازك" },
                 ].map((t) => (
                   <button
                     key={t.id}
@@ -1809,9 +2076,9 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: "lines", title: "📑 خطوط أكاديمية", desc: "خفيف موفر للورق (الموصى به)" },
-                    { id: "cards", title: "🔲 كروت بإطار", desc: "إطار كلاسيكي كامل" },
-                    { id: "dashed", title: "✂️ فواصل منقطة", desc: "حدود ناعمة وبسيطة" },
+                    { id: "lines", title: "فواصل خطية أكاديمية", desc: "خفيف موفر للورق (الموصى به)" },
+                    { id: "cards", title: "بطاقات بإطار محدد", desc: "إطار كلاسيكي كامل" },
+                    { id: "dashed", title: "فواصل منقطة ناعمة", desc: "حدود ناعمة وبسيطة" },
                   ].map((cs) => (
                     <button
                       key={cs.id}
@@ -1837,9 +2104,9 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: "compact", title: "⚡ مضغوط", desc: "أقصى توفير لصفحات الطباعة" },
-                    { id: "balanced", title: "⚖️ متوازن", desc: "قراءة مثالية ومساحة مريحة" },
-                    { id: "comfortable", title: "🛋️ مريح", desc: "فواصل وهوامش واسعة" },
+                    { id: "compact", title: "مكثف موفر للورق", desc: "أقصى توفير لصفحات الطباعة" },
+                    { id: "balanced", title: "متوازن ومريح للقراءة", desc: "قراءة مثالية ومساحة مريحة" },
+                    { id: "comfortable", title: "مريح ومتباعد", desc: "فواصل وهوامش واسعة" },
                   ].map((ds) => (
                     <button
                       key={ds.id}
@@ -1937,9 +2204,9 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { id: "minimal", title: "🏷️ شريط مصغر", desc: "اسم الدرس ود. المهدي (موصى به)" },
-                      { id: "none", title: "❌ بدون هيدر", desc: "مساحة قصوى للأسئلة" },
-                      { id: "full", title: "📑 ترويسة كاملة", desc: "تكرار هيدر الصفحة الأولى" },
+                      { id: "minimal", title: "شريط مصغر", desc: "اسم الدرس ومعلومات المذكرة (موصى به)" },
+                      { id: "none", title: "بدون شريط ترويسة", desc: "مساحة قصوى للأسئلة" },
+                      { id: "full", title: "ترويسة كاملة", desc: "تكرار هيدر الصفحة الأولى" },
                     ].map((ch) => (
                       <button
                         key={ch.id}
@@ -1993,7 +2260,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                     <label className="block text-[10.5px] font-bold text-slate-600 mb-0.5">أعلى باقي الصفحات (mm)</label>
                     <input
                       type="number"
-                      min="10"
+                      min="8"
                       max="50"
                       value={settings.continuationTopMm}
                       onChange={(e) => setSettings({ ...settings, continuationTopMm: Number(e.target.value) })}
@@ -2004,7 +2271,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                     <label className="block text-[10.5px] font-bold text-slate-600 mb-0.5">من الأسفل (mm)</label>
                     <input
                       type="number"
-                      min="12"
+                      min="8"
                       max="60"
                       value={settings.bottomMm}
                       onChange={(e) => setSettings({ ...settings, bottomMm: Number(e.target.value) })}
@@ -2015,7 +2282,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                     <label className="block text-[10.5px] font-bold text-slate-600 mb-0.5">الهوامش الجانبية (mm)</label>
                     <input
                       type="number"
-                      min="7"
+                      min="6"
                       max="40"
                       value={settings.rightMm}
                       onChange={(e) => setSettings({ ...settings, rightMm: Number(e.target.value), leftMm: Number(e.target.value) })}
@@ -2228,24 +2495,26 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setPreviewTab("preview")}
-                  className={`rounded-md px-3 py-1 text-xs font-bold transition ${
+                  className={`rounded-md px-3 py-1 text-xs font-bold transition flex items-center gap-1.5 ${
                     previewTab === "preview"
                       ? "bg-white text-primary shadow-xs dark:bg-slate-900"
                       : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
                   }`}
                 >
-                  📄 المعاينة الحية
+                  <Eye className="h-3.5 w-3.5" />
+                  المعاينة الحية
                 </button>
                 <button
                   type="button"
                   onClick={() => setPreviewTab("questions_list")}
-                  className={`rounded-md px-3 py-1 text-xs font-bold transition ${
+                  className={`rounded-md px-3 py-1 text-xs font-bold transition flex items-center gap-1.5 ${
                     previewTab === "questions_list"
                       ? "bg-white text-primary shadow-xs dark:bg-slate-900"
                       : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
                   }`}
                 >
-                  📋 إدارة الأسئلة ({questions.length})
+                  <ListOrdered className="h-3.5 w-3.5" />
+                  إدارة وتعديل الأسئلة ({questions.length})
                 </button>
               </div>
 
@@ -2292,7 +2561,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                     : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
                 }`}
               >
-                ✨ الكل ({typeCounts.ALL})
+                الكل ({typeCounts.ALL})
               </button>
               {typeCounts.MCQ > 0 && (
                 <button
@@ -2304,7 +2573,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                       : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
                   }`}
                 >
-                  🔘 اختيار من متعدد ({typeCounts.MCQ})
+                  اختيار من متعدد ({typeCounts.MCQ})
                 </button>
               )}
               {typeCounts.TRUE_FALSE > 0 && (
@@ -2317,7 +2586,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                       : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
                   }`}
                 >
-                  ⚖️ صواب وخطأ ({typeCounts.TRUE_FALSE})
+                  صواب وخطأ ({typeCounts.TRUE_FALSE})
                 </button>
               )}
               {typeCounts.ESSAY > 0 && (
@@ -2330,7 +2599,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                       : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
                   }`}
                 >
-                  ✍️ مقالي ({typeCounts.ESSAY})
+                  أسئلة مقالية ({typeCounts.ESSAY})
                 </button>
               )}
               {typeCounts.DEFINITION > 0 && (
@@ -2343,7 +2612,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                       : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
                   }`}
                 >
-                  📖 تعريفات ({typeCounts.DEFINITION})
+                  تعريفات ومصطلحات ({typeCounts.DEFINITION})
                 </button>
               )}
             </div>
@@ -2422,14 +2691,22 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
           {/* QUESTIONS LIST MANAGER VIEW */}
           {previewTab === "questions_list" && (
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3 dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
                 <div>
                   <h4 className="text-xs font-extrabold text-slate-900 dark:text-white">
                     الأسئلة المحملة داخل المذكرة ({questions.length})
                   </h4>
-                  <p className="text-[11px] text-slate-500">يمكنك استبعاد أو حذف أي سؤال بنقرة واحدة قبل الطباعة.</p>
+                  <p className="text-[11px] text-slate-500">يمكنك تعديل أي سؤال، استبعاده، أو إضافة أسئلة جديدة بنقرة واحدة.</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button
+                    size="sm"
+                    onClick={() => setShowAddQuestionModal(true)}
+                    className="h-7 text-xs font-bold bg-primary hover:bg-primary/90 text-white flex items-center gap-1"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    إضافة سؤال جديد
+                  </Button>
                   <Button
                     size="sm"
                     variant="outline"
@@ -2479,6 +2756,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                         type="button"
                         onClick={() => toggleQuestionEnabled(originalIdx)}
                         className="mt-0.5 text-primary cursor-pointer"
+                        title={q.enabled ? "استبعاد السؤال من الطباعة" : "تضمين السؤال في الطباعة"}
                       >
                         {q.enabled ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4 text-slate-400" />}
                       </button>
@@ -2497,14 +2775,24 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                         </p>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => removeQuestion(originalIdx)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
-                        title="حذف هذا السؤال"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setEditingQuestion({ index: originalIdx, data: { ...q, options: q.options ? [...q.options.map(o => ({ ...o }))] : [] } })}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition"
+                          title="تعديل نص السؤال والخيارات والحل"
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeQuestion(originalIdx)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                          title="حذف هذا السؤال"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
                   ))}
               </div>
@@ -2829,7 +3117,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                         lineHeight: 1.2,
                                       }}
                                     >
-                                      خبير وموجه الحاسب الآلي والذكاء الاصطناعي
+                                      أكاديمية د. محمود المهدي
                                     </span>
                                   </div>
                                 </div>
@@ -2851,12 +3139,12 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                     }}
                                   >
                                     {settings.templateStyle === "exam"
-                                      ? "📝 ورقة امتحان رسمي معتمد"
+                                      ? "ورقة اختبار رسمي معتمد"
                                       : settings.templateStyle === "tech"
-                                      ? "⚡ مخرجات تقنية وبنك أسئلة"
+                                      ? "بنك الأسئلة والتقييمات"
                                       : settings.templateStyle === "emerald"
-                                      ? "🌿 التقييم الأكاديمي الشامل"
-                                      : "👑 مذكرة تدريبات وبنك أسئلة"}
+                                      ? "التقييم الأكاديمي الشامل"
+                                      : "مذكرة تدريبات وبنك أسئلة"}
                                   </span>
                                 </div>
                               </div>
@@ -2882,7 +3170,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                       fontSize: "8pt",
                                       color: "#64748b",
                                       fontWeight: 600,
-                                      marginTop: "0.8mm",
+                                      marginTop: "1.0mm",
                                       wordBreak: "normal",
                                       overflowWrap: "anywhere",
                                       fontFamily: "'Cairo', sans-serif",
@@ -2893,11 +3181,11 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                 )}
                               </div>
 
-                              {/* Tier 3: Decorative Divider Line placed strictly BELOW all titles */}
+                              {/* Tier 3: Decorative Divider Line placed strictly BELOW all titles with safe clearance */}
                               <div
                                 style={{
                                   width: "100%",
-                                  marginTop: "1.2mm",
+                                  marginTop: "2.2mm",
                                   borderBottom: theme.headerBorder,
                                 }}
                               />
@@ -3015,7 +3303,38 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                 <div dangerouslySetInnerHTML={{ __html: studentStripHtml }} style={{ width: "100%", boxSizing: "border-box" }} />
                               )}
                               {pageItems.map((item, itemIdx) => (
-                                <div key={itemIdx} dangerouslySetInnerHTML={{ __html: item.html }} style={{ width: "100%", boxSizing: "border-box" }} />
+                                <div
+                                  key={itemIdx}
+                                  className="group relative"
+                                  style={{ width: "100%", boxSizing: "border-box" }}
+                                >
+                                  <div dangerouslySetInnerHTML={{ __html: item.html }} style={{ width: "100%", boxSizing: "border-box" }} />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const qIdx = questions.findIndex(
+                                        (q) => q.statement === activeQuestions[item.qNumber - settings.questionStart]?.statement
+                                      );
+                                      const targetIdx = qIdx !== -1 ? qIdx : item.qNumber - settings.questionStart;
+                                      if (questions[targetIdx]) {
+                                        setEditingQuestion({
+                                          index: targetIdx,
+                                          data: {
+                                            ...questions[targetIdx],
+                                            options: questions[targetIdx].options
+                                              ? [...questions[targetIdx].options.map((o) => ({ ...o }))]
+                                              : [],
+                                          },
+                                        });
+                                      }
+                                    }}
+                                    className="no-print absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/95 dark:bg-slate-800/95 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:text-primary hover:border-primary shadow-xs rounded px-2 py-0.5 text-[10px] font-bold flex items-center gap-1 cursor-pointer z-10"
+                                    title="تعديل هذا السؤال مباشرة"
+                                  >
+                                    <Edit3 className="h-3 w-3 text-primary" />
+                                    تعديل
+                                  </button>
+                                </div>
                               ))}
                             </div>
                           </div>
@@ -3025,17 +3344,17 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                             <div
                               style={{
                                 position: "absolute",
-                                bottom: "7mm",
+                                bottom: "4.5mm",
                                 left: `${region.left}mm`,
                                 right: `${region.right}mm`,
                                 width: `calc(210mm - ${region.left + region.right}mm)`,
                                 boxSizing: "border-box",
-                                height: "8.5mm",
+                                height: "6.5mm",
                                 borderTop: `1px solid ${theme.cardBorderColor}`,
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
-                                font: "bold 8.5pt Arial, sans-serif",
+                                font: "bold 8pt Arial, sans-serif",
                                 color: "#475569",
                                 zIndex: 1,
                               }}
@@ -3048,21 +3367,21 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                           <div
                             style={{
                               position: "absolute",
-                              bottom: "7.2mm",
+                              bottom: "4.5mm",
                               ...(settings.numPosition === "center"
                                 ? { left: "50%", transform: "translateX(-50%)" }
                                 : settings.numPosition === "right"
                                   ? { right: `${region.right}mm` }
                                   : { left: `${region.left}mm` }),
                               minWidth: "12mm",
-                              height: "7.5mm",
+                              height: "6.5mm",
                               padding: "0 2.5mm",
                               backgroundColor: theme.pageNumberBg,
                               border: theme.pageNumberBorder,
                               borderRadius: "1.5mm",
                               textAlign: "center",
-                              font: "bold 8.5pt Arial, sans-serif",
-                              lineHeight: "7.5mm",
+                              font: "bold 8pt Arial, sans-serif",
+                              lineHeight: "6.5mm",
                               color: theme.pageNumberColor,
                               zIndex: 1,
                               whiteSpace: "nowrap",
@@ -3081,6 +3400,386 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
         </div>
       </div>
 
+      {/* Interactive Edit Question Modal */}
+      {editingQuestion && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto" dir="rtl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <Edit3 className="h-5 w-5 text-primary" />
+                تعديل السؤال #{editingQuestion.index + 1}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingQuestion(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  نوع السؤال:
+                </label>
+                <select
+                  value={editingQuestion.data.type}
+                  onChange={(e) =>
+                    setEditingQuestion({
+                      ...editingQuestion,
+                      data: { ...editingQuestion.data, type: e.target.value as any },
+                    })
+                  }
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
+                >
+                  <option value="MCQ">اختيار من متعدد (MCQ)</option>
+                  <option value="TRUE_FALSE">صواب وخطأ</option>
+                  <option value="ESSAY">سؤال مقالي</option>
+                  <option value="DEFINITION">تعريف ومصطلح</option>
+                  <option value="TEXT">ملاحظة / نص توضيحي</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  نص السؤال (Statement):
+                </label>
+                <textarea
+                  rows={3}
+                  value={editingQuestion.data.statement}
+                  onChange={(e) =>
+                    setEditingQuestion({
+                      ...editingQuestion,
+                      data: { ...editingQuestion.data, statement: e.target.value },
+                    })
+                  }
+                  className="w-full rounded-lg border border-slate-300 p-2.5 text-xs font-medium dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
+
+              {/* Options for MCQ */}
+              {editingQuestion.data.type === "MCQ" && (
+                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      خيارات الإجابة:
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const opts = editingQuestion.data.options || [];
+                        setEditingQuestion({
+                          ...editingQuestion,
+                          data: {
+                            ...editingQuestion.data,
+                            options: [...opts, { text: `خيار ${opts.length + 1}`, isCorrect: false }],
+                          },
+                        });
+                      }}
+                      className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1"
+                    >
+                      <Plus className="h-3 w-3" />
+                      إضافة خيار
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {(editingQuestion.data.options || []).map((opt, optIdx) => (
+                      <div key={optIdx} className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-400 font-mono w-4">
+                          {optIdx + 1}.
+                        </span>
+                        <input
+                          type="text"
+                          value={opt.text}
+                          onChange={(e) => {
+                            const nextOpts = [...(editingQuestion.data.options || [])];
+                            nextOpts[optIdx] = { ...nextOpts[optIdx], text: e.target.value };
+                            setEditingQuestion({
+                              ...editingQuestion,
+                              data: { ...editingQuestion.data, options: nextOpts },
+                            });
+                          }}
+                          className="flex-1 rounded-lg border border-slate-300 px-2.5 py-1 text-xs dark:bg-slate-800 dark:border-slate-700"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const nextOpts = (editingQuestion.data.options || []).filter((_, i) => i !== optIdx);
+                            setEditingQuestion({
+                              ...editingQuestion,
+                              data: { ...editingQuestion.data, options: nextOpts },
+                            });
+                          }}
+                          className="p-1 text-slate-400 hover:text-rose-600 rounded"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                <div>
+                  <label className="block text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-1">
+                    الإجابة النموذجية (Model Answer):
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={editingQuestion.data.answer}
+                    onChange={(e) =>
+                      setEditingQuestion({
+                        ...editingQuestion,
+                        data: { ...editingQuestion.data, answer: e.target.value },
+                      })
+                    }
+                    className="w-full rounded-lg border border-slate-300 p-2 text-xs dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-amber-700 dark:text-amber-400 mb-1">
+                    التفسير وسبب الحل (Explanation):
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={editingQuestion.data.explanation}
+                    onChange={(e) =>
+                      setEditingQuestion({
+                        ...editingQuestion,
+                        data: { ...editingQuestion.data, explanation: e.target.value },
+                      })
+                    }
+                    className="w-full rounded-lg border border-slate-300 p-2 text-xs dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  الترجمة الإنجليزية / الملاحظة (Translation):
+                </label>
+                <input
+                  type="text"
+                  value={editingQuestion.data.translation}
+                  onChange={(e) =>
+                    setEditingQuestion({
+                      ...editingQuestion,
+                      data: { ...editingQuestion.data, translation: e.target.value },
+                    })
+                  }
+                  className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditingQuestion(null)}
+                className="text-xs font-bold"
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  const idx = editingQuestion.index;
+                  setQuestions((prev) => {
+                    const next = [...prev];
+                    next[idx] = { ...editingQuestion.data };
+                    return next;
+                  });
+                  setEditingQuestion(null);
+                  toast({ title: "تم حفظ تعديلات السؤال بنجاح" });
+                }}
+                className="text-xs font-bold bg-primary hover:bg-primary/90 text-white"
+              >
+                حفظ التعديل
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Interactive Add Question Modal */}
+      {showAddQuestionModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto" dir="rtl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <Plus className="h-5 w-5 text-primary" />
+                إضافة سؤال جديد للمذكرة
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowAddQuestionModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const form = e.target as any;
+                const statement = form.stmt.value.trim();
+                if (!statement) {
+                  toast({ variant: "destructive", description: "يرجى كتابة نص السؤال." });
+                  return;
+                }
+                const type = form.qtype.value;
+                const opt1 = form.opt1?.value?.trim();
+                const opt2 = form.opt2?.value?.trim();
+                const opt3 = form.opt3?.value?.trim();
+                const opt4 = form.opt4?.value?.trim();
+                const opts = [opt1, opt2, opt3, opt4].filter(Boolean).map((t, i) => ({ text: t, isCorrect: i === 0 }));
+                const answer = form.ans.value.trim();
+                const explanation = form.exp.value.trim();
+                const translation = form.trans.value.trim();
+
+                const newQ: NormalizedQuestion = {
+                  id: `custom-${Date.now()}`,
+                  type,
+                  statement,
+                  options: opts,
+                  answer,
+                  explanation,
+                  translation,
+                  enabled: true,
+                };
+                setQuestions((prev) => [...prev, newQ]);
+                setShowAddQuestionModal(false);
+                toast({ title: "تمت إضافة السؤال الجديد للمذكرة بنجاح" });
+              }}
+              className="space-y-3"
+            >
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  نوع السؤال:
+                </label>
+                <select
+                  name="qtype"
+                  defaultValue="MCQ"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
+                >
+                  <option value="MCQ">اختيار من متعدد (MCQ)</option>
+                  <option value="TRUE_FALSE">صواب وخطأ</option>
+                  <option value="ESSAY">سؤال مقالي</option>
+                  <option value="DEFINITION">تعريف ومصطلح</option>
+                  <option value="TEXT">ملاحظة / نص توضيحي</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  نص السؤال (Statement):
+                </label>
+                <textarea
+                  name="stmt"
+                  required
+                  rows={3}
+                  placeholder="اكتب نص السؤال هنا..."
+                  className="w-full rounded-lg border border-slate-300 p-2.5 text-xs font-medium dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  خيارات الإجابة (لأسئلة الاختيار من متعدد):
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <input
+                    name="opt1"
+                    type="text"
+                    placeholder="الخيار الأول (الإجابة الصحيحة)"
+                    className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs dark:bg-slate-800 dark:border-slate-700"
+                  />
+                  <input
+                    name="opt2"
+                    type="text"
+                    placeholder="الخيار الثاني"
+                    className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs dark:bg-slate-800 dark:border-slate-700"
+                  />
+                  <input
+                    name="opt3"
+                    type="text"
+                    placeholder="الخيار الثالث (اختياري)"
+                    className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs dark:bg-slate-800 dark:border-slate-700"
+                  />
+                  <input
+                    name="opt4"
+                    type="text"
+                    placeholder="الخيار الرابع (اختياري)"
+                    className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                <div>
+                  <label className="block text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-1">
+                    الإجابة النموذجية (Model Answer):
+                  </label>
+                  <textarea
+                    name="ans"
+                    rows={2}
+                    placeholder="الحل النموذجي..."
+                    className="w-full rounded-lg border border-slate-300 p-2 text-xs dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-amber-700 dark:text-amber-400 mb-1">
+                    التفسير والتعليل (Explanation):
+                  </label>
+                  <textarea
+                    name="exp"
+                    rows={2}
+                    placeholder="تفسير سبب الإجابة..."
+                    className="w-full rounded-lg border border-slate-300 p-2 text-xs dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
+                  الترجمة الإنجليزية (Translation):
+                </label>
+                <input
+                  name="trans"
+                  type="text"
+                  placeholder="الترجمة الإنجليزية إن وجدت..."
+                  className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowAddQuestionModal(false)}
+                  className="text-xs font-bold"
+                >
+                  إلغاء
+                </Button>
+                <Button
+                  type="submit"
+                  className="text-xs font-bold bg-primary hover:bg-primary/90 text-white"
+                >
+                  إضافة السؤال للمذكرة
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Scoped Media Print Styling */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Inter:wght@400;600;700;800&family=Noto+Naskh+Arabic:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap');
@@ -3091,6 +3790,15 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             margin: 0 !important;
             padding: 0 !important;
             width: 210mm !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          #root, main, .app-layout, .container, [class*="layout"] {
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            max-width: none !important;
+            width: 100% !important;
           }
           header, nav, aside, .topbar, button, .no-print,
           [role="tablist"], [data-radix-portal] {
@@ -3106,6 +3814,8 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
           .memo-page-shell {
             width: 210mm !important;
             height: 297mm !important;
+            min-height: 297mm !important;
+            max-height: 297mm !important;
             page-break-after: always !important;
             break-after: page !important;
             box-shadow: none !important;
@@ -3113,18 +3823,21 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             margin: 0 !important;
             padding: 0 !important;
             overflow: hidden !important;
+            box-sizing: border-box !important;
           }
           .memo-sheet {
             transform: none !important;
             position: relative !important;
             width: 210mm !important;
             height: 297mm !important;
+            box-shadow: none !important;
+            border: none !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
           @page {
             size: A4 portrait;
-            margin: 0;
+            margin: 0 !important;
           }
         }
       `}</style>
