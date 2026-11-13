@@ -1052,7 +1052,9 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
   // Helper to remove any duplicate mode suffixes from headerText
   const cleanHeaderText = (text: string) => {
     return (text || "")
-      .replace(/\s*\[نموذج الإجابة\]|\(نموذج الإجابة\)|\s*\[نسخة المعلم\]|\s*\[نسخة الطالب\]/g, "")
+      .replace(/(\s*\[\s*(نموذج الإجابة|نسخة المعلم|نسخة الطالب|Model Answer|Teacher Copy|Student Copy)\s*\])+/gi, "")
+      .replace(/(\s*\(\s*(نموذج الإجابة|نسخة المعلم|نسخة الطالب|Model Answer|Teacher Copy|Student Copy)\s*\))+/gi, "")
+      .replace(/(\s*(نموذج الإجابة|نسخة المعلم|نسخة الطالب))+/gi, "")
       .trim();
   };
 
@@ -3150,7 +3152,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                               </div>
 
                               {/* Tier 2: Dynamic Titles (Never cut off!) */}
-                              <div style={{ width: "100%", boxSizing: "border-box", padding: "0 0.5mm" }}>
+                              <div style={{ width: "100%", boxSizing: "border-box", padding: "0 0.5mm 1mm 0.5mm" }}>
                                 <div
                                   style={{
                                     fontSize: "11.5pt",
@@ -3170,7 +3172,8 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                       fontSize: "8pt",
                                       color: "#64748b",
                                       fontWeight: 600,
-                                      marginTop: "1.0mm",
+                                      marginTop: "1.5mm",
+                                      lineHeight: 1.4,
                                       wordBreak: "normal",
                                       overflowWrap: "anywhere",
                                       fontFamily: "'Cairo', sans-serif",
@@ -3185,7 +3188,8 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                               <div
                                 style={{
                                   width: "100%",
-                                  marginTop: "2.2mm",
+                                  marginTop: "2.5mm",
+                                  marginBottom: "0.5mm",
                                   borderBottom: theme.headerBorder,
                                 }}
                               />

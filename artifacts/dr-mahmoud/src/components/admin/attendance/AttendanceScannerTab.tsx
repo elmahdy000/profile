@@ -295,6 +295,62 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
     };
   }, [selectedCenter, selectedSlot, groupBreakdown, stats]);
 
+  // Live Cairo Time display
+  const [currentCairoTime, setCurrentCairoTime] = useState<string>(() => {
+    try {
+      return new Intl.DateTimeFormat("ar-EG", {
+        timeZone: "Africa/Cairo",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }).format(new Date());
+    } catch {
+      return "الآن";
+    }
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      try {
+        setCurrentCairoTime(
+          new Intl.DateTimeFormat("ar-EG", {
+            timeZone: "Africa/Cairo",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          }).format(new Date())
+        );
+      } catch {}
+    }, 30000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Finish Attendance Session & Switch to Center Sheet
+  const handleFinishAttendanceSession = () => {
+    // 1. Stop camera feed
+    stopCamera();
+
+    // 2. Filter sheet by the center that was being scanned
+    if (selectedCenter && selectedCenter !== "all") {
+      setCenterFilter(selectedCenter);
+    }
+    if (selectedSlot && selectedSlot !== "all") {
+      setSlotFilter(selectedSlot);
+    }
+
+    // 3. Switch view directly to the Center Attendance Sheet
+    setActiveTab("sheet");
+
+    // 4. Silently refresh records
+    void loadDailySheet(selectedDate);
+
+    // 5. Friendly notification
+    toast({
+      title: "تم إنهاء جلسة الحضور بنجاح 🏁",
+      description: `تم نقلك إلى شيت سنتر (${selectedCenter !== "all" ? selectedCenter : "جميع السناتر"}) ليوم ${selectedDate}. تم تسجيل ${activeSessionStats.present} طالب من إجمالي ${activeSessionStats.enrolled}.`,
+    });
+  };
+
   // Load Daily Attendance Sheet
   const loadDailySheet = useCallback(async (date: string) => {
     setIsLoadingRecords(true);
@@ -877,6 +933,22 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               {/* Selectors */}
               <div className="flex flex-wrap items-center gap-3 flex-1">
+                {/* Auto Date & Time Badge */}
+                <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-2 rounded-2xl border border-white/10 min-w-[170px]">
+                  <span className="p-1.5 rounded-xl bg-emerald-500/30 text-emerald-300 shrink-0">
+                    <Calendar className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <span className="text-[10px] font-bold text-emerald-200 flex items-center gap-1">
+                      <span>التاريخ والوقت:</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                    </span>
+                    <span className="text-xs font-black text-white">
+                      {selectedDate} • {currentCairoTime}
+                    </span>
+                  </div>
+                </div>
+
                 {/* Center Selector */}
                 <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-2 rounded-2xl border border-white/10 flex-1 min-w-[200px]">
                   <span className="p-1.5 rounded-xl bg-blue-500/30 text-blue-300">
@@ -919,6 +991,29 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
                     </select>
                   </div>
                 </div>
+              </div>
+
+              {/* Action Buttons for Session */}
+              <div className="flex items-center gap-2 shrink-0">
+                {!isCameraActive ? (
+                  <button
+                    type="button"
+                    onClick={startCamera}
+                    className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg shadow-blue-500/30 flex items-center gap-2 transition-all cursor-pointer active:scale-95"
+                  >
+                    <Camera className="h-4 w-4" />
+                    <span>بدء تسجيل الحضور (فتح الكاميرا)</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleFinishAttendanceSession}
+                    className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-lg shadow-emerald-500/30 flex items-center gap-2 transition-all cursor-pointer active:scale-95"
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span>الانتهاء وعرض شيت السنتر اليوم 🏁</span>
+                  </button>
+                )}
               </div>
 
               {/* Live Group Session Counters */}
@@ -1041,6 +1136,16 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
                       </span>
 
                       <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={handleFinishAttendanceSession}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 border border-emerald-400 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/30 transition-all cursor-pointer"
+                          title="إنهاء التسجيل والانتقال لشيت السنتر"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          <span>إنهاء للشيت 🏁</span>
+                        </button>
+
                         <button
                           type="button"
                           onClick={() => setFacingMode((prev) => (prev === "environment" ? "user" : "environment"))}
@@ -1257,6 +1362,41 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
       {/* 5. Daily Attendance Sheet Tab Content */}
       {activeTab === "sheet" && (
         <div className="space-y-4">
+          {/* Active Center Sheet Banner with Quick Return to Scanner */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-3xl bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white shadow-lg border border-blue-500/20">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-blue-300 shrink-0">
+                <Building2 className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-black text-white">
+                    كشف حضور طلاب: {centerFilter !== "all" ? centerFilter : "كافة السناتر والمجموعات"}
+                  </h3>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold">
+                    اليوم {selectedDate}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  عرض كشف الحضور والغياب للسنتر ومواعيد الدخول المسجلة بالـ QR Code.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-end sm:self-auto">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("scanner");
+                  void startCamera();
+                }}
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-blue-500/30 transition-all cursor-pointer"
+              >
+                <Camera className="h-4 w-4" />
+                <span>العودة لمسح الـ QR Code</span>
+              </button>
+            </div>
+          </div>
           {/* Group Breakdown Cards Grid (حضور المجموعات والسناتر) */}
           {groupBreakdown.length > 0 && (
             <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-xs space-y-3">

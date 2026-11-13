@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Camera, Trash2, MapPin, Clock, School, Phone, Building2, CalendarDays, ShieldCheck, Lock, AlertTriangle, CheckCircle2, Edit2, Plus, X } from "lucide-react";
+import { Camera, Trash2, MapPin, Clock, School, Phone, Building2, CalendarDays, ShieldCheck, Lock, AlertTriangle, CheckCircle2, Edit2, Plus, X, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import type { Student } from "@/types/platform";
@@ -191,6 +191,35 @@ export function ProfileTab({
   return (
     <div className="space-y-5 pb-6 text-right" dir="rtl">
       <PageHeader title="حسابي" description="بياناتك الشخصية والتعليمية وإعدادات الحساب وحجز السنتر." />
+
+      {/* Official Digital Student ID & Attendance QR Card Banner */}
+      <article className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 p-5 text-white shadow-lg">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-blue-300 shrink-0">
+              <QrCode className="h-6 w-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-black text-white">بطاقة الطالب ورمز الـ QR للحضور</h3>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold">
+                  معتمد للسكرتارية
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 mt-0.5">
+                أبرز كود الـ QR الخاص بك للسكرتارية في السنتر لتسجيل حضورك الفوري وطباعة الكارت.
+              </p>
+            </div>
+          </div>
+          <a
+            href="/platform/card"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/30 transition-all shrink-0 cursor-pointer"
+          >
+            <QrCode className="h-4 w-4" />
+            <span>عرض وتحميل كارت الـ QR</span>
+          </a>
+        </div>
+      </article>
 
       {/* Avatar Card */}
       <article className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-xs transition-all hover:border-slate-300 dark:hover:border-[#1E2E48]">

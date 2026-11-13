@@ -39,6 +39,7 @@ import {
   Search,
   KeyRound,
   Target,
+  QrCode,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VideoLessonsSection } from "@/components/YoutubeSection";
@@ -53,6 +54,7 @@ import { EmptyState, PageHeader, ProfileInfoRow, StatisticCard, StatusBadge, Stu
 import { useNotificationSound } from "@/hooks/use-notification-sound";
 import { useWebPush } from "@/hooks/use-web-push";
 import { ProfileTab } from "./tabs/ProfileTab";
+import { StudentCardTab } from "./tabs/StudentCardTab";
 import { FilesTab } from "./tabs/FilesTab";
 import { QuizzesTab } from "./tabs/QuizzesTab";
 import { DashboardTab } from "./tabs/DashboardTab";
@@ -307,6 +309,7 @@ export type PlatformTab =
   | "files"
   | "quizzes"
   | "self-assessment"
+  | "card"
   | "profile";
 
 export function resolveTabFromPath(pathname: string): PlatformTab {
@@ -333,6 +336,10 @@ export function resolveTabFromPath(pathname: string): PlatformTab {
     case "self-assessment":
     case "assessment":
       return "self-assessment";
+    case "card":
+    case "qrcode":
+    case "qr":
+      return "card";
     case "profile":
       return "profile";
     case "dashboard":
@@ -369,6 +376,7 @@ export function StudentPlatform() {
       files: "الملفات والملازم التعليمية",
       quizzes: "الاختبارات الإلكترونية",
       "self-assessment": "التقييم الذاتي وبنك الأسئلة",
+      card: "بطاقة الطالب ورمز الحضور QR",
       profile: "الحساب الشخصي والإعدادات",
     };
     const title = tabTitles[tab] || "المنصة التعليمية";
@@ -1084,6 +1092,7 @@ export function StudentPlatform() {
     ["summaries", "مذكراتي 📝", FileText],
     ["files", "الملفات", FolderOpen],
     ["self-assessment", "التقييم الذاتي 🎯", Sparkles],
+    ["card", "كارت الحضور QR", QrCode],
     ["profile", "حسابي", User],
   ] as const;
 
@@ -1110,6 +1119,7 @@ export function StudentPlatform() {
     {
       title: "الحساب والتفوق",
       items: [
+        { id: "card" as const, label: "بطاقة الحضور QR", icon: QrCode },
         { id: "profile" as const, label: "بيانات حسابي", icon: User },
       ],
     },
@@ -1125,6 +1135,7 @@ export function StudentPlatform() {
     summaries: "مذكراتي",
     files: "الملفات",
     "self-assessment": "التقييم الذاتي",
+    card: "بطاقة الحضور QR",
     profile: "حسابي",
   };
 
@@ -1347,6 +1358,7 @@ export function StudentPlatform() {
                   {tab === "summaries" && <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
                   {tab === "files" && <FolderOpen className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
                   {tab === "self-assessment" && <Sparkles className="h-3.5 w-3.5 text-amber-500" />}
+                  {tab === "card" && <QrCode className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
                   {tab === "profile" && <User className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
                   <span>{navLabels[tab] || "المنصة"}</span>
                 </span>
@@ -1695,6 +1707,8 @@ export function StudentPlatform() {
             ) : (
               <SelfAssessmentTab student={student} onBackToDashboard={() => setTab("dashboard")} />
             )
+          ) : tab === "card" ? (
+            <StudentCardTab student={student} onBackToDashboard={() => setTab("dashboard")} />
           ) : (
             <ProfileTab student={student} onStudentChange={setStudent} />
           )}
