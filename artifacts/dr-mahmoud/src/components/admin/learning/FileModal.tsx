@@ -43,6 +43,7 @@ export interface FileModalProps {
   previewFile: FileItem | null;
   setPreviewFile: (file: FileItem | null) => void;
   videoOptions: VideoOption[];
+  learningCourses?: Array<{ id: number; title: string; category: string; stages?: string[] }>;
 }
 
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
@@ -59,6 +60,7 @@ export const FileModal: React.FC<FileModalProps> = ({
   previewFile,
   setPreviewFile,
   videoOptions,
+  learningCourses,
 }) => {
   return (
     <>
@@ -94,6 +96,34 @@ export const FileModal: React.FC<FileModalProps> = ({
                 }
               />
             </Field>
+            {learningCourses && learningCourses.length > 0 && (
+              <div className="my-3">
+                <Field label="الكورس التابع له الملف 📚">
+                  <select
+                    className="input-admin font-bold text-sm"
+                    value={editingFile.courseId || ""}
+                    onChange={(e) => {
+                      const cId = e.target.value ? Number(e.target.value) : null;
+                      const matched = learningCourses.find((c) => c.id === cId);
+                      setEditingFile({
+                        ...editingFile,
+                        courseId: cId,
+                        category: matched ? matched.title : editingFile.category,
+                        subject: matched ? matched.title : editingFile.subject,
+                        stages: matched?.stages?.length ? matched.stages : editingFile.stages,
+                      });
+                    }}
+                  >
+                    <option value="">-- اختياري: اختر من الكورسات المتاحة --</option>
+                    {learningCourses.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        📚 {c.title}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-3">
               <Field label="الوحدة التعليمية (اختياري)">
                 <input

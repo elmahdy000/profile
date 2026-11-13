@@ -287,8 +287,9 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                     ...form,
                     courseId,
                     category: course?.title || "",
-                    stages: [],
-                    stage: "",
+                    subject: course?.title || form.subject || "الحاسب الآلي والذكاء الاصطناعي",
+                    stages: course?.stages || [],
+                    stage: course?.stages?.[0] || "",
                     order: nextOrder,
                   });
                 }}
@@ -337,18 +338,31 @@ export const VideoModal: React.FC<VideoModalProps> = ({
 
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1">
-                المادة
+                المادة / الكورس (اختيار من الكورسات)
               </label>
-              <input
-                type="text"
-                required
-                value={form.subject}
-                onChange={(e) =>
-                  setForm({ ...form, subject: e.target.value })
-                }
-                placeholder="مثال: البرمجة وعلوم الحاسب"
-                className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm"
-              />
+              <select
+                value={form.subject || form.category || ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const matchedCourse = coursesQuery.data?.find(
+                    (c) => c.title === val || String(c.id) === val,
+                  );
+                  setForm({
+                    ...form,
+                    subject: matchedCourse ? matchedCourse.title : val,
+                    category: matchedCourse ? matchedCourse.title : (val || form.category),
+                    courseId: matchedCourse ? String(matchedCourse.id) : form.courseId,
+                  });
+                }}
+                className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary text-sm font-medium"
+              >
+                <option value="">-- اختر من الكورسات المتاحة --</option>
+                {coursesQuery.data?.map((course) => (
+                  <option key={course.id} value={course.title}>
+                    📚 {course.title}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>

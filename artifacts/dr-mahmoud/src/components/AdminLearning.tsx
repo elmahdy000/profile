@@ -985,8 +985,9 @@ export function AdminLearning({
       toast({ variant: "destructive", description: "اختر درسًا واحدًا على الأقل." });
       return;
     }
-    if (editingFile.targetType !== "videos" && (!getTrack(editingFile.category) || !editingFile.stages?.length)) {
-      toast({ variant: "destructive", description: "اختر القسم التعليمي ومرحلة واحدة على الأقل." });
+    const isCourseTargeted = Boolean(editingFile.courseId);
+    if (editingFile.targetType !== "videos" && !isCourseTargeted && (!getTrack(editingFile.category) || !editingFile.stages?.length)) {
+      toast({ variant: "destructive", description: "اختر القسم التعليمي ومرحلة واحدة على الأقل أو حدد كورس." });
       return;
     }
     const editingCategory = editingFile.targetType === "videos"
@@ -1000,6 +1001,7 @@ export function AdminLearning({
         lesson: editingFile.lesson ? editingFile.lesson.trim() : null,
         targetType: editingFile.targetType || "stages",
         courseId: editingFile.courseId,
+        subject: editingFile.subject || (learningCourses.find(c => c.id === editingFile.courseId)?.title) || "الحاسب الآلي والذكاء الاصطناعي",
         category: editingCategory,
         stages: editingFile.stages || [],
         videoIds: editingFile.videoIds || [],
@@ -2215,6 +2217,32 @@ export function AdminLearning({
                   <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
                     <div className="mb-5 flex items-center justify-between"><div><h3 className="text-lg font-black">تعديل الملف</h3><p className="text-xs text-slate-500">غيّر مكان ظهوره بدون إعادة رفعه.</p></div><button type="button" onClick={() => setEditingFile(null)}><X className="h-5 w-5" /></button></div>
                     <Field label="اسم الملف"><input className="input-admin" value={editingFile.title} onChange={(event) => setEditingFile({ ...editingFile, title: event.target.value })} /></Field>
+                    <div className="my-3">
+                      <Field label="الكورس التابع له الملف 📚">
+                        <select
+                          className="input-admin font-bold text-sm"
+                          value={editingFile.courseId || ""}
+                          onChange={(e) => {
+                            const cId = e.target.value ? Number(e.target.value) : null;
+                            const matched = learningCourses.find((c) => c.id === cId);
+                            setEditingFile({
+                              ...editingFile,
+                              courseId: cId,
+                              category: matched ? matched.title : editingFile.category,
+                              subject: matched ? matched.title : editingFile.subject,
+                              stages: matched?.stages?.length ? matched.stages : editingFile.stages,
+                            });
+                          }}
+                        >
+                          <option value="">-- اختياري: اختر من الكورسات المتاحة --</option>
+                          {learningCourses.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              📚 {c.title}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-3">
                       <Field label="الوحدة التعليمية (اختياري)">
                         <input
