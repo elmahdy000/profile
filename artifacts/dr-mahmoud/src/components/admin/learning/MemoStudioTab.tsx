@@ -172,11 +172,26 @@ const ENGLISH_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
 
 function normalizeType(x: any): "MCQ" | "TRUE_FALSE" | "ESSAY" | "DEFINITION" | "TEXT" {
   const t = String(x || "").toUpperCase().replace(/[\s-]+/g, "_");
-  if (["MCQ", "MULTIPLE_CHOICE", "CHOICE", "MULTIPLECHOICE", "اختيار_من_متعدد"].includes(t)) return "MCQ";
-  if (["TRUE_FALSE", "TRUEFALSE", "TF", "T_F", "صواب_وخطأ", "صح_وخطأ"].includes(t)) return "TRUE_FALSE";
-  if (["ESSAY", "SHORT_ANSWER", "LONG_ANSWER", "مقالي"].includes(t)) return "ESSAY";
-  if (["DEFINITION", "DEFINE", "تعريف"].includes(t)) return "DEFINITION";
-  if (["TEXT", "PARAGRAPH", "NOTE", "CONTENT"].includes(t)) return "TEXT";
+  if (["MCQ", "MULTIPLE_CHOICE", "CHOICE", "MULTIPLECHOICE", "اختيار_من_متعدد", "اختيارات"].includes(t)) return "MCQ";
+  if (["TRUE_FALSE", "TRUEFALSE", "TF", "T_F", "صواب_وخطأ", "صح_وخطأ", "صح_أم_خطأ", "صواب_أم_خطأ"].includes(t)) return "TRUE_FALSE";
+  if ([
+    "ESSAY",
+    "ESSAYS",
+    "ESSAYQUESTIONS",
+    "ESSAY_QUESTIONS",
+    "SHORT_ANSWER",
+    "LONG_ANSWER",
+    "مقالي",
+    "مقالى",
+    "سؤال_مقالي",
+    "سؤال_مقالى",
+    "أسئلة_مقالية",
+    "اسئلة_مقالية",
+    "OPEN_ENDED",
+    "WRITTEN",
+  ].includes(t)) return "ESSAY";
+  if (["DEFINITION", "DEFINE", "تعريف", "تعريفات"].includes(t)) return "DEFINITION";
+  if (["TEXT", "PARAGRAPH", "NOTE", "CONTENT", "ملاحظة"].includes(t)) return "TEXT";
   return "MCQ";
 }
 
@@ -189,12 +204,42 @@ function textValue(v: any): string {
 }
 
 function normalizeQuestion(raw: any, i: number): NormalizedQuestion {
-  const statement = textValue(raw.statement ?? raw.prompt ?? raw.question ?? raw.questionText ?? raw.text ?? raw.definition ?? "");
+  const statement = textValue(
+    raw.statement ?? raw.prompt ?? raw.question ?? raw.questionText ?? raw.text ?? raw.definition ?? "",
+  );
   let opt = raw.options ?? raw.choices ?? raw.answers ?? [];
   if (!Array.isArray(opt)) {
     opt = Object.entries(opt).map(([k, v]) => ({ label: k, text: textValue(v) }));
   }
-  const type = normalizeType(raw.type ?? raw.question_type ?? (raw.definition ? "DEFINITION" : raw.options || raw.choices ? "MCQ" : "ESSAY"));
+
+  // Detect type intelligently
+  const explicitType = raw.type ?? raw.question_type ?? raw.category;
+  let type: "MCQ" | "TRUE_FALSE" | "ESSAY" | "DEFINITION" | "TEXT";
+
+  if (explicitType) {
+    type = normalizeType(explicitType);
+  } else if (raw.definition) {
+    type = "DEFINITION";
+  } else if (raw.modelAnswer || raw.model_answer || raw.answerTranslation || raw.answer_translation) {
+    type = "ESSAY";
+  } else if (opt && opt.length > 0) {
+    type =
+      opt.length === 2 &&
+      opt.some(
+        (o: any) =>
+          textValue(o).includes("صواب") || textValue(o).includes("صح") || textValue(o) === "True",
+      )
+        ? "TRUE_FALSE"
+        : "MCQ";
+  } else {
+    type = "ESSAY";
+  }
+
+  // If options are empty or length is 0, but an answer exists, it must be an ESSAY question!
+  if (type === "MCQ" && (!opt || opt.length === 0) && (raw.answer || raw.modelAnswer || raw.model_answer)) {
+    type = "ESSAY";
+  }
+
   const options = opt.map((o: any, idx: number) => ({
     text: textValue(o),
     isCorrect:
@@ -202,7 +247,14 @@ function normalizeQuestion(raw: any, i: number): NormalizedQuestion {
         ? Boolean(o.isCorrect ?? o.correct ?? (raw.correctIndex !== undefined && raw.correctIndex === idx))
         : raw.correctIndex !== undefined && raw.correctIndex === idx,
   }));
-  let ans = raw.answer ?? raw.correctAnswer ?? raw.correct_answer ?? raw.modelAnswer ?? raw.model_answer ?? "";
+
+  let ans =
+    raw.answer ??
+    raw.correctAnswer ??
+    raw.correct_answer ??
+    raw.modelAnswer ??
+    raw.model_answer ??
+    "";
   if (typeof ans === "number" && options[ans]) ans = options[ans].text;
   if (Array.isArray(ans)) ans = ans.map(textValue).join(" / ");
   if (typeof ans === "object" && ans !== null) ans = textValue(ans);
@@ -210,6 +262,17 @@ function normalizeQuestion(raw: any, i: number): NormalizedQuestion {
     const correct = options.filter((x: any) => x.isCorrect).map((x: any) => x.text);
     if (correct.length) ans = correct.join(" / ");
   }
+
+  // Translation: handles promptTranslation, answerTranslation, etc.
+  let translation = textValue(
+    raw.translation ?? raw.arabicTranslation ?? raw.translation_ar ?? raw.promptTranslation ?? "",
+  );
+  if (raw.answerTranslation && type === "ESSAY") {
+    translation = translation
+      ? `${translation}\n[ترجمة الإجابة]: ${raw.answerTranslation}`
+      : `[ترجمة الإجابة]: ${raw.answerTranslation}`;
+  }
+
   return {
     id: raw.id ?? `q-${Date.now()}-${i}`,
     type,
@@ -217,7 +280,7 @@ function normalizeQuestion(raw: any, i: number): NormalizedQuestion {
     options,
     answer: String(ans),
     explanation: textValue(raw.explanation ?? raw.reason ?? raw.justification ?? ""),
-    translation: textValue(raw.translation ?? raw.arabicTranslation ?? raw.translation_ar ?? ""),
+    translation,
     enabled: raw.enabled !== false,
     _source: i,
   };
@@ -238,11 +301,49 @@ function parseJsonSections(data: any): ParsedJsonSection[] {
   function walk(node: any, path: string = "", name: string = "") {
     if (!node) return;
 
-    // Direct questions array inside an object
-    const qList = node.questions || node.items || node.questionsList || node.questions_list;
+    // Direct essayQuestions array inside an object
+    if (Array.isArray(node.essayQuestions) && node.essayQuestions.length > 0) {
+      const parentTitle =
+        node.lesson || node.lessonName || node.unit || node.unitName || node.title || name || "أسئلة مقالية";
+      sections.push({
+        id: `sec-${sections.length}-${Math.random().toString(36).substring(2, 7)}`,
+        title: `${parentTitle} (مقالي / Essay)`,
+        path: path ? `${path} > ${parentTitle} (مقالي)` : `${parentTitle} (مقالي)`,
+        count: node.essayQuestions.length,
+        questions: node.essayQuestions.map((q: any) => ({ ...q, type: "ESSAY" })),
+      });
+    }
+
+    // Direct mcqQuestions array inside an object
+    if (Array.isArray(node.mcqQuestions) && node.mcqQuestions.length > 0) {
+      const parentTitle =
+        node.lesson || node.lessonName || node.unit || node.unitName || node.title || name || "اختيار من متعدد";
+      sections.push({
+        id: `sec-${sections.length}-${Math.random().toString(36).substring(2, 7)}`,
+        title: `${parentTitle} (MCQ)`,
+        path: path ? `${path} > ${parentTitle} (MCQ)` : `${parentTitle} (MCQ)`,
+        count: node.mcqQuestions.length,
+        questions: node.mcqQuestions.map((q: any) => ({ ...q, type: "MCQ" })),
+      });
+    }
+
+    // Direct general questions array inside an object
+    const qList =
+      node.questions ||
+      node.items ||
+      node.questionsList ||
+      node.questions_list ||
+      node.allQuestions;
     if (Array.isArray(qList) && qList.length > 0) {
       const title =
-        node.title || node.name || node.unit || node.unitName || node.lesson || node.lessonName || name || `قسم ${sections.length + 1}`;
+        node.title ||
+        node.name ||
+        node.unit ||
+        node.unitName ||
+        node.lesson ||
+        node.lessonName ||
+        name ||
+        `قسم ${sections.length + 1}`;
       sections.push({
         id: `sec-${sections.length}-${Math.random().toString(36).substring(2, 7)}`,
         title,
@@ -258,7 +359,15 @@ function parseJsonSections(data: any): ParsedJsonSection[] {
       if (!node.length) return;
       // Are elements questions themselves?
       const isQuestionArray = node.some(
-        (x) => x && (x.statement || x.question || x.prompt || x.questionText || x.options || x.choices),
+        (x) =>
+          x &&
+          (x.statement ||
+            x.question ||
+            x.prompt ||
+            x.questionText ||
+            x.options ||
+            x.choices ||
+            x.modelAnswer),
       );
       if (isQuestionArray) {
         sections.push({
@@ -273,7 +382,14 @@ function parseJsonSections(data: any): ParsedJsonSection[] {
       // Otherwise elements are sections / units
       node.forEach((item, idx) => {
         const itemTitle =
-          item && (item.title || item.name || item.unit || item.unitName || item.lesson || item.lessonName || `عنصر ${idx + 1}`);
+          item &&
+          (item.title ||
+            item.name ||
+            item.unit ||
+            item.unitName ||
+            item.lesson ||
+            item.lessonName ||
+            `عنصر ${idx + 1}`);
         walk(item, path ? `${path} > ${itemTitle}` : itemTitle, itemTitle);
       });
       return;
@@ -282,20 +398,43 @@ function parseJsonSections(data: any): ParsedJsonSection[] {
     // Node is a dictionary / object
     if (typeof node === "object") {
       for (const [key, val] of Object.entries(node)) {
-        if (["settings", "metadata", "config", "author", "version"].includes(key.toLowerCase())) continue;
+        if (
+          ["settings", "metadata", "config", "author", "version", "_instructions", "totals"].includes(
+            key.toLowerCase(),
+          )
+        )
+          continue;
+        if (key === "essayQuestions" || key === "mcqQuestions") continue; // Handled explicitly above
+
         if (Array.isArray(val)) {
-          const isQ = val.some((x) => x && (x.statement || x.question || x.prompt || x.questionText || x.options || x.choices));
+          const isQ = val.some(
+            (x) =>
+              x &&
+              (x.statement ||
+                x.question ||
+                x.prompt ||
+                x.questionText ||
+                x.options ||
+                x.choices ||
+                x.modelAnswer),
+          );
           if (isQ) {
+            const isEssaySection =
+              key.toLowerCase().includes("essay") || key.includes("مقالي") || key.includes("مقالى");
             sections.push({
               id: `sec-${sections.length}-${Math.random().toString(36).substring(2, 7)}`,
               title: key,
               path: path ? `${path} > ${key}` : key,
               count: val.length,
-              questions: val,
+              questions: isEssaySection
+                ? val.map((item: any) => ({ ...item, type: "ESSAY" }))
+                : val,
             });
           } else {
             val.forEach((item: any, idx: number) => {
-              const childName = (item && (item.title || item.name || item.unit || item.lesson)) || `${key} [${idx + 1}]`;
+              const childName =
+                (item && (item.title || item.name || item.unit || item.lesson)) ||
+                `${key} [${idx + 1}]`;
               walk(item, path ? `${path} > ${key}` : key, childName);
             });
           }
@@ -737,6 +876,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       if (lessonName && lessonName !== "all") {
         params.set("lesson", lessonName);
       }
+      const effectiveType = typeFilter || bankTypeFilter;
+      if (effectiveType && effectiveType !== "ALL") {
+        params.set("type", effectiveType);
+      }
       const res = await adminApi<any[]>(`/api/admin/learning/test-bank/questions?${params.toString()}`);
       if (!res || !res.length) {
         toast({ variant: "destructive", description: "لم يتم العثور على أسئلة في بنك الأسئلة لهذا التحديد." });
@@ -746,14 +889,14 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       let selectedRows = res;
 
       // Filter by question type if requested
-      const effectiveType = typeFilter || bankTypeFilter;
       if (effectiveType && effectiveType !== "ALL") {
         selectedRows = selectedRows.filter((item) => {
           const qObj = item.question || item;
           const t = normalizeType(
             qObj.type ??
+              item.type ??
               qObj.question_type ??
-              (qObj.definition ? "DEFINITION" : qObj.options || qObj.choices ? "MCQ" : "ESSAY"),
+              (qObj.definition ? "DEFINITION" : qObj.modelAnswer || item.modelAnswer ? "ESSAY" : qObj.options || qObj.choices ? "MCQ" : "ESSAY"),
           );
           return t === effectiveType;
         });
@@ -777,13 +920,16 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
         const qObj = item.question || item;
         return normalizeQuestion(
           {
+            ...item,
             ...qObj,
             id: item.id || `q-${idx}`,
             statement: qObj.prompt || qObj.statement || item.prompt || "",
             options: qObj.options || item.options || [],
-            answer: qObj.correctAnswer || item.answer || "",
+            answer: qObj.modelAnswer || item.modelAnswer || qObj.correctAnswer || item.answer || "",
+            modelAnswer: qObj.modelAnswer || item.modelAnswer,
             explanation: qObj.explanation || item.explanation || "",
             translation: qObj.translation || item.translation || "",
+            type: qObj.type || item.type,
           },
           idx,
         );

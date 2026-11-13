@@ -666,7 +666,7 @@ router.get("/admin/learning/curriculum/export-json", requireAdmin, async (req, r
   }
 });
 
-// GET /api/admin/learning/test-bank/questions - Filtered list of questions with search
+// GET /api/admin/learning/test-bank/questions - Filtered list of questions with search (supports MCQ & Essay)
 router.get("/admin/learning/test-bank/questions", requireAdmin, async (req, res, next) => {
   try {
     const stage = req.query.stage ? String(req.query.stage).trim() : undefined;
@@ -674,25 +674,85 @@ router.get("/admin/learning/test-bank/questions", requireAdmin, async (req, res,
     const lesson = req.query.lesson ? String(req.query.lesson).trim() : undefined;
     const difficulty = req.query.difficulty ? String(req.query.difficulty).trim() : undefined;
     const search = req.query.search ? String(req.query.search).trim().toLowerCase() : undefined;
+    const type = req.query.type ? String(req.query.type).trim().toUpperCase() : undefined;
 
-    let query = db.select().from(questionBankTable);
-    const conditions = [];
-    if (stage && stage !== "all") conditions.push(eq(questionBankTable.stage, stage));
-    if (unit && unit !== "all") conditions.push(eq(questionBankTable.unit, unit));
-    if (lesson && lesson !== "all") conditions.push(eq(questionBankTable.lesson, lesson));
-    if (difficulty && difficulty !== "all") conditions.push(eq(questionBankTable.difficulty, difficulty));
+    const shouldFetchMcq = !type || type === "ALL" || type === "MCQ" || type === "TRUE_FALSE";
+    const shouldFetchEssay = !type || type === "ALL" || type === "ESSAY";
 
-    let rows = await (conditions.length ? query.where(and(...conditions)) : query).orderBy(desc(questionBankTable.id));
+    const fetchTasks: Promise<any[]>[] = [];
+
+    // 1. Fetch MCQs
+    if (shouldFetchMcq) {
+      const mcqConds = [];
+      if (stage && stage !== "all") mcqConds.push(eq(questionBankTable.stage, stage));
+      if (unit && unit !== "all") mcqConds.push(eq(questionBankTable.unit, unit));
+      if (lesson && lesson !== "all") mcqConds.push(eq(questionBankTable.lesson, lesson));
+      if (difficulty && difficulty !== "all") mcqConds.push(eq(questionBankTable.difficulty, difficulty));
+
+      let q = db.select().from(questionBankTable);
+      fetchTasks.push((mcqConds.length ? q.where(and(...mcqConds)) : q).orderBy(desc(questionBankTable.id)));
+    } else {
+      fetchTasks.push(Promise.resolve([]));
+    }
+
+    // 2. Fetch Essays
+    if (shouldFetchEssay) {
+      const essayConds = [];
+      if (stage && stage !== "all") essayConds.push(eq(essayQuestionBankTable.stage, stage));
+      if (unit && unit !== "all") essayConds.push(eq(essayQuestionBankTable.unit, unit));
+      if (lesson && lesson !== "all") essayConds.push(eq(essayQuestionBankTable.lesson, lesson));
+      if (difficulty && difficulty !== "all") essayConds.push(eq(essayQuestionBankTable.difficulty, difficulty));
+
+      let eqQuery = db.select().from(essayQuestionBankTable);
+      fetchTasks.push((essayConds.length ? eqQuery.where(and(...essayConds)) : eqQuery).orderBy(desc(essayQuestionBankTable.id)));
+    } else {
+      fetchTasks.push(Promise.resolve([]));
+    }
+
+    const [mcqRows, essayRows] = await Promise.all(fetchTasks);
+
+    // Format essays to match standard question schema
+    const formattedEssays = essayRows.map((e) => ({
+      id: `essay-${e.id}`,
+      stage: e.stage,
+      unit: e.unit,
+      lesson: e.lesson,
+      difficulty: e.difficulty,
+      points: e.points,
+      type: "ESSAY",
+      category: "essay",
+      prompt: e.prompt,
+      modelAnswer: e.modelAnswer,
+      answer: e.modelAnswer,
+      correctAnswer: e.modelAnswer,
+      explanation: e.explanation || "",
+      translation: e.translation || "",
+      question: {
+        type: "ESSAY",
+        prompt: e.prompt,
+        statement: e.prompt,
+        answer: e.modelAnswer,
+        correctAnswer: e.modelAnswer,
+        modelAnswer: e.modelAnswer,
+        explanation: e.explanation || "",
+        translation: e.translation || "",
+        options: [],
+      },
+      createdAt: e.createdAt,
+    }));
+
+    let allRows = [...mcqRows, ...formattedEssays];
 
     if (search) {
-      rows = rows.filter((r) => {
-        const prompt = (r.question?.prompt || "").toLowerCase();
+      allRows = allRows.filter((r) => {
+        const prompt = (r.question?.prompt || r.prompt || "").toLowerCase();
         const opts = (r.question?.options || []).join(" ").toLowerCase();
-        return prompt.includes(search) || opts.includes(search);
+        const ans = (r.modelAnswer || r.answer || "").toLowerCase();
+        return prompt.includes(search) || opts.includes(search) || ans.includes(search);
       });
     }
 
-    res.json(rows);
+    res.json(allRows);
   } catch (error) {
     next(error);
   }
