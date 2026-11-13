@@ -519,6 +519,153 @@ router.get("/admin/learning/curriculum/quizzes", requireAdmin, async (req, res, 
   }
 });
 
+// GET /api/admin/learning/curriculum/export-json - Export questions as clean structured JSON for Unit or Lesson
+router.get("/admin/learning/curriculum/export-json", requireAdmin, async (req, res, next) => {
+  try {
+    const stage = String(req.query.stage || "").trim();
+    const unit = String(req.query.unit || "").trim();
+    const lesson = req.query.lesson ? String(req.query.lesson).trim() : "";
+
+    if (!stage || !unit) {
+      res.status(400).json({ error: "stage and unit are required" });
+      return;
+    }
+
+    const isAllLesson = !lesson || lesson === "all";
+
+    // 1. Fetch MCQs & T/F from questionBankTable
+    const mcqConds = [
+      eq(questionBankTable.stage, stage),
+      eq(questionBankTable.unit, unit),
+    ];
+    if (!isAllLesson) {
+      mcqConds.push(eq(questionBankTable.lesson, lesson));
+    }
+    const mcqRows = await db
+      .select()
+      .from(questionBankTable)
+      .where(and(...mcqConds))
+      .orderBy(questionBankTable.lesson, questionBankTable.id);
+
+    // 2. Fetch Essays from essayQuestionBankTable
+    const essayConds = [
+      eq(essayQuestionBankTable.stage, stage),
+      eq(essayQuestionBankTable.unit, unit),
+    ];
+    if (!isAllLesson) {
+      essayConds.push(eq(essayQuestionBankTable.lesson, lesson));
+    }
+    const essayRows = await db
+      .select()
+      .from(essayQuestionBankTable)
+      .where(and(...essayConds))
+      .orderBy(essayQuestionBankTable.lesson, essayQuestionBankTable.id);
+
+    // 3. Format and clean questions
+    const formattedMcqs = mcqRows.map((r) => {
+      const q = r.question || ({} as any);
+      const isTF = (q.options || []).length === 2 && 
+        ((q.options[0]?.includes("صواب") && q.options[1]?.includes("خطأ")) ||
+         (q.options[0]?.includes("صح") && q.options[1]?.includes("خطأ")) ||
+         (q.options[0] === "True" && q.options[1] === "False"));
+      return {
+        id: r.id,
+        category: "mcq_or_tf",
+        type: isTF ? "صح أم خطأ" : "اختيار من متعدد",
+        unit: r.unit,
+        lesson: r.lesson,
+        difficulty: r.difficulty || "medium",
+        points: r.points || 1,
+        prompt: q.prompt || "",
+        options: q.options || [],
+        correctIndex: typeof q.correctAnswer === "number" ? q.correctAnswer : 0,
+        correctAnswer: (q.options && typeof q.correctAnswer === "number") ? q.options[q.correctAnswer] : "",
+        explanation: q.explanation || "",
+        translation: r.translation || "",
+        imageUrl: q.imageUrl || null,
+        tags: r.tags || [],
+      };
+    });
+
+    const formattedEssays = essayRows.map((r) => {
+      return {
+        id: r.id,
+        category: "essay",
+        type: "سؤال مقالي",
+        unit: r.unit,
+        lesson: r.lesson,
+        difficulty: r.difficulty || "medium",
+        points: r.points || 5,
+        prompt: r.prompt,
+        modelAnswer: r.modelAnswer,
+        explanation: r.explanation || "",
+        translation: r.translation || "",
+        imageUrl: r.imageUrl || null,
+        modelAnswerImageUrl: r.modelAnswerImageUrl || null,
+        tags: r.tags || [],
+      };
+    });
+
+    const allQuestions = [...formattedMcqs, ...formattedEssays];
+
+    // Group by lesson
+    const lessonsMap = new Map<string, {
+      lesson: string;
+      totalQuestions: number;
+      mcqCount: number;
+      trueFalseCount: number;
+      essayCount: number;
+      questions: any[];
+    }>();
+
+    for (const q of allQuestions) {
+      const lName = q.lesson || "عام";
+      if (!lessonsMap.has(lName)) {
+        lessonsMap.set(lName, {
+          lesson: lName,
+          totalQuestions: 0,
+          mcqCount: 0,
+          trueFalseCount: 0,
+          essayCount: 0,
+          questions: [],
+        });
+      }
+      const lObj = lessonsMap.get(lName)!;
+      lObj.totalQuestions += 1;
+      if (q.category === "essay") {
+        lObj.essayCount += 1;
+      } else if (q.type === "صح أم خطأ") {
+        lObj.trueFalseCount += 1;
+      } else {
+        lObj.mcqCount += 1;
+      }
+      lObj.questions.push(q);
+    }
+
+    const exportPayload = {
+      _meta: {
+        exportedAt: new Date().toISOString(),
+        stage,
+        unit,
+        lesson: isAllLesson ? "all" : lesson,
+        scope: isAllLesson ? "unit" : "lesson",
+      },
+      summary: {
+        totalQuestions: allQuestions.length,
+        mcqCount: formattedMcqs.filter((q) => q.type !== "صح أم خطأ").length,
+        trueFalseCount: formattedMcqs.filter((q) => q.type === "صح أم خطأ").length,
+        essayCount: formattedEssays.length,
+      },
+      lessons: Array.from(lessonsMap.values()),
+      allQuestions,
+    };
+
+    res.json(exportPayload);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/admin/learning/test-bank/questions - Filtered list of questions with search
 router.get("/admin/learning/test-bank/questions", requireAdmin, async (req, res, next) => {
   try {

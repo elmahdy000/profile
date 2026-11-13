@@ -38,7 +38,8 @@ import {
   ShieldCheck,
   Zap,
   Info,
-  ClipboardCheck
+  ClipboardCheck,
+  Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -605,6 +606,55 @@ export function TestBankTab({
       loadTree();
     } catch (err: any) {
       toast({ variant: "destructive", description: err.message || "تعذر حذف أسئلة الدرس" });
+    }
+  };
+
+  // Export questions as JSON for Unit or Lesson
+  const [exportingTarget, setExportingTarget] = useState<string | null>(null);
+
+  const handleExportQuestionsJson = async (unit: string, lesson?: string) => {
+    if (!selectedStage || !unit) return;
+    const targetKey = `${unit}_${lesson || "all"}`;
+    setExportingTarget(targetKey);
+    try {
+      const params = new URLSearchParams({
+        stage: selectedStage,
+        unit,
+      });
+      if (lesson && lesson !== "all") {
+        params.set("lesson", lesson);
+      }
+      const data = await adminApi<any>(`/api/admin/learning/curriculum/export-json?${params.toString()}`);
+
+      const cleanUnitName = unit.replace(/[\\/:*?"<>|]/g, "_");
+      const cleanLessonName = lesson && lesson !== "all" ? lesson.replace(/[\\/:*?"<>|]/g, "_") : "";
+      const fileName = cleanLessonName
+        ? `questions_${cleanLessonName}.json`
+        : `questions_${cleanUnitName}.json`;
+
+      const jsonStr = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonStr], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      const count = data.summary?.totalQuestions ?? data.allQuestions?.length ?? 0;
+      toast({
+        title: "تم تصدير الأسئلة بنجاح 📥",
+        description: `تم حفظ ${count} سؤال بصيغة JSON لملف: ${fileName}`,
+      });
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        description: err.message || "تعذر تصدير الأسئلة بصيغة JSON",
+      });
+    } finally {
+      setExportingTarget(null);
     }
   };
 
@@ -1675,6 +1725,22 @@ export function TestBankTab({
                           </button>
                           <button
                             type="button"
+                            disabled={exportingTarget === `${unitObj.unit}_all`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleExportQuestionsJson(unitObj.unit);
+                            }}
+                            className="p-1 rounded-md text-muted-foreground hover:text-blue-600 hover:bg-blue-500/10 transition-colors cursor-pointer"
+                            title="تصدير جميع أسئلة الوحدة بصيغة JSON"
+                          >
+                            {exportingTarget === `${unitObj.unit}_all` ? (
+                              <RefreshCw className="h-3.5 w-3.5 animate-spin text-blue-600" />
+                            ) : (
+                              <Download className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+                          <button
+                            type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDeleteUnit(selectedStage, unitObj.unit);
@@ -1765,6 +1831,24 @@ export function TestBankTab({
                                   title="تعديل الدرس"
                                 >
                                   <Edit className="h-3 w-3" />
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={exportingTarget === `${unitObj.unit}_${lessonObj.lesson}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleExportQuestionsJson(unitObj.unit, lessonObj.lesson);
+                                  }}
+                                  className={`p-1 rounded hover:bg-blue-500/10 transition-colors cursor-pointer ${
+                                    isSelected ? "text-white/80 hover:text-blue-200" : "text-muted-foreground hover:text-blue-600"
+                                  }`}
+                                  title="تصدير أسئلة هذا الدرس بصيغة JSON"
+                                >
+                                  {exportingTarget === `${unitObj.unit}_${lessonObj.lesson}` ? (
+                                    <RefreshCw className="h-3 w-3 animate-spin text-blue-600" />
+                                  ) : (
+                                    <Download className="h-3 w-3" />
+                                  )}
                                 </button>
                                 <button
                                   type="button"
@@ -1862,6 +1946,21 @@ export function TestBankTab({
                         className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 h-9 px-2.5 text-xs font-bold cursor-pointer"
                       >
                         <UploadCloud className="h-4 w-4 ml-1" /> رفع المزيد
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={exportingTarget === `${selectedUnit}_${selectedLesson}`}
+                        onClick={() => handleExportQuestionsJson(selectedUnit, selectedLesson)}
+                        title={selectedLesson === "all" ? "تصدير جميع أسئلة الوحدة بصيغة JSON" : "تصدير جميع أسئلة هذا الدرس بصيغة JSON"}
+                        className="text-blue-600 border-blue-200 hover:bg-blue-50 h-9 px-2.5 text-xs font-bold cursor-pointer gap-1"
+                      >
+                        {exportingTarget === `${selectedUnit}_${selectedLesson}` ? (
+                          <RefreshCw className="h-4 w-4 animate-spin text-blue-600" />
+                        ) : (
+                          <Download className="h-4 w-4" />
+                        )}
+                        <span>تصدير JSON</span>
                       </Button>
                       <Button
                         type="button"
