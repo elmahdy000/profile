@@ -64,18 +64,22 @@ interface NormalizedQuestion {
 interface MemoSettings {
   templateStyle: "royal" | "exam" | "tech" | "emerald" | "minimal" | "custom";
   fitMode: "fill" | "contain" | "cover";
-  topMm: number;
+  topMm: number; // For page 1
+  continuationTopMm: number; // For page 2+
   bottomMm: number;
   rightMm: number;
   leftMm: number;
-  headerEnabled: boolean;
+  headerEnabled: boolean; // First page header
+  continuationHeader: "minimal" | "none" | "full"; // Continuation pages header
   headerText: string;
   subHeaderText: string;
   guideView: boolean;
   showAnswers: boolean;
   showExplain: boolean;
   showTranslations: boolean;
-  optionLayout: "two" | "one";
+  optionLayout: "auto" | "four" | "two" | "one";
+  cardStyle: "lines" | "cards" | "dashed";
+  density: "compact" | "balanced" | "comfortable";
   showQuestionType: boolean;
   fontSelect: string;
   fontSize: number;
@@ -85,6 +89,7 @@ interface MemoSettings {
   pageStart: number;
   maxQuestions: number;
   footerText: string;
+  showTotalPages: boolean;
   numPosition: "left" | "right" | "center";
   studentFields: boolean;
 }
@@ -93,26 +98,31 @@ const DEFAULT_SETTINGS: MemoSettings = {
   templateStyle: "royal",
   fitMode: "fill",
   topMm: 38,
-  bottomMm: 25,
-  rightMm: 15,
-  leftMm: 15,
+  continuationTopMm: 16,
+  bottomMm: 20,
+  rightMm: 14,
+  leftMm: 14,
   headerEnabled: true,
+  continuationHeader: "minimal",
   headerText: "مذكرة التدريبات الشاملة وبنك الأسئلة",
   subHeaderText: "أكاديمية د. محمود المهدي | الحاسب الآلي والذكاء الاصطناعي",
   guideView: false,
   showAnswers: false,
   showExplain: false,
   showTranslations: true,
-  optionLayout: "two",
+  optionLayout: "auto",
+  cardStyle: "lines",
+  density: "balanced",
   showQuestionType: false,
   fontSelect: "'Cairo', sans-serif",
-  fontSize: 12.5,
-  lineHeight: 1.6,
+  fontSize: 11.5,
+  lineHeight: 1.55,
   contentDir: "rtl",
   questionStart: 1,
   pageStart: 1,
   maxQuestions: 0,
-  footerText: "أكاديمية د. محمود المهدي | دليلك للتميز والدرجة النهائية",
+  footerText: "أكاديمية د. محمود المهدي | الحاسب الآلي والذكاء الاصطناعي",
+  showTotalPages: true,
   numPosition: "left",
   studentFields: true,
 };
@@ -781,7 +791,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     </div>`;
   }, [settings.templateStyle, settings.contentDir]);
 
-  // Card HTML generator
+  // Card HTML generator with Compact Academic Lines & Adaptive MCQ Columns
   const getCardHtml = (q: NormalizedQuestion, qNumber: number) => {
     const isRtl = settings.contentDir === "rtl";
     const letters = isRtl ? ARABIC_LETTERS : ENGLISH_LETTERS;
@@ -795,14 +805,20 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       TEXT: isRtl ? "ملاحظة" : "Note",
     }[q.type];
 
+    const densityConfig = {
+      compact: { pad: "1.5mm 1.8mm", gap: "1.2mm 2.5mm", qGap: "2.4mm" },
+      balanced: { pad: "2.2mm 2.6mm", gap: "1.6mm 3.8mm", qGap: "3.5mm" },
+      comfortable: { pad: "3.0mm 3.2mm", gap: "2.0mm 4.8mm", qGap: "5.0mm" },
+    }[settings.density || "balanced"];
+
     if (q.type === "TEXT") {
-      return `<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:2.5mm;padding:3mm;white-space:pre-wrap;line-height:1.7;break-inside:avoid;">${q.statement}</div>`;
+      return `<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:2mm;padding:2.2mm;white-space:pre-wrap;line-height:1.6;break-inside:avoid;">${q.statement}</div>`;
     }
 
     if (q.type === "DEFINITION") {
-      return `<div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:2.5mm;padding:2.5mm 3.5mm;break-inside:avoid;">
+      return `<div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:2mm;padding:2mm 2.8mm;break-inside:avoid;">
         <div style="font-weight:800;color:#0f172a;">${q.statement}</div>
-        ${settings.showAnswers && q.answer ? `<div style="margin-top:1.5mm;white-space:pre-wrap;color:#334155;">${q.answer}</div>` : ""}
+        ${settings.showAnswers && q.answer ? `<div style="margin-top:1.2mm;white-space:pre-wrap;color:#334155;">${q.answer}</div>` : ""}
       </div>`;
     }
 
@@ -813,33 +829,62 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
           ? [{ text: isRtl ? "صواب" : "True" }, { text: isRtl ? "خطأ" : "False" }]
           : [];
 
-    const isSingleCol = settings.optionLayout === "one";
+    // Adaptive MCQ Option Columns
+    let colStyle = "grid-template-columns: repeat(2, minmax(0, 1fr));";
+    if (settings.optionLayout === "auto") {
+      const maxLen = Math.max(...opts.map((o) => (o.text || "").trim().length), 0);
+      if (maxLen <= 18 && opts.length <= 4) {
+        colStyle = "grid-template-columns: repeat(4, minmax(0, 1fr));";
+      } else if (maxLen <= 48) {
+        colStyle = "grid-template-columns: repeat(2, minmax(0, 1fr));";
+      } else {
+        colStyle = "grid-template-columns: 1fr;";
+      }
+    } else if (settings.optionLayout === "four") {
+      colStyle = "grid-template-columns: repeat(4, minmax(0, 1fr));";
+    } else if (settings.optionLayout === "two") {
+      colStyle = "grid-template-columns: repeat(2, minmax(0, 1fr));";
+    } else if (settings.optionLayout === "one") {
+      colStyle = "grid-template-columns: 1fr;";
+    }
+
     const optionsHtml = opts.length
-      ? `<div style="display:grid;grid-template-columns:${isSingleCol ? "1fr" : "repeat(2, minmax(0, 1fr))"};gap:1.5mm 4mm;margin-top:2mm;padding-inline-start:9.5mm;">
+      ? `<div style="display:grid;${colStyle}gap:${densityConfig.gap};margin-top:1.6mm;padding-inline-start:8.2mm;">
           ${opts
             .map(
               (o, i) => `
-            <div style="display:flex;gap:2mm;align-items:flex-start;break-inside:avoid;">
-              <span style="display:inline-grid;place-items:center;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:50%;height:5.2mm;min-width:5.2mm;font:bold 8pt Arial;color:#334155;">${letters[i] ?? i + 1}</span>
-              <span style="flex:1;white-space:pre-wrap;overflow-wrap:anywhere;">${o.text}</span>
+            <div style="display:flex;gap:1.8mm;align-items:flex-start;break-inside:avoid;">
+              <span style="display:inline-grid;place-items:center;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:50%;height:4.8mm;min-width:4.8mm;font:bold 7.5pt Arial;color:#334155;">${letters[i] ?? i + 1}</span>
+              <span style="flex:1;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45;">${o.text}</span>
             </div>`,
             )
             .join("")}
         </div>`
       : "";
 
-    return `<article style="box-sizing:border-box;width:100%;max-width:100%;border:1px solid ${theme.cardBorderColor};border-${isRtl ? "right" : "left"}:${theme.cardBorderRight};border-radius:2.5mm;padding:2.8mm 3.2mm;break-inside:avoid;page-break-inside:avoid;position:relative;background:rgba(255,255,255,0.98);word-break:normal;overflow-wrap:anywhere;">
-      <div style="display:flex;align-items:flex-start;gap:2.2mm;min-width:0;width:100%;box-sizing:border-box;">
-        <span style="flex:0 0 auto;background:${theme.numBadgeBg};color:${theme.numBadgeColor};border:${theme.numBadgeBorder};border-radius:1.8mm;min-width:7.5mm;height:7.5mm;display:grid;place-items:center;font:bold 10pt 'Cairo',Arial;line-height:1;">${qNumber}</span>
+    // Container styling based on cardStyle (lines vs cards vs dashed)
+    let containerStyle = "";
+    if (settings.cardStyle === "lines") {
+      containerStyle = `border-bottom: 1.2px solid ${theme.cardBorderColor}; padding: ${densityConfig.pad}; padding-bottom: 2mm; margin-bottom: 0.8mm; background: transparent;`;
+    } else if (settings.cardStyle === "dashed") {
+      containerStyle = `border-bottom: 1.2px dashed #cbd5e1; padding: ${densityConfig.pad}; padding-bottom: 2mm; margin-bottom: 0.8mm; background: transparent;`;
+    } else {
+      // "cards"
+      containerStyle = `border: 1px solid ${theme.cardBorderColor}; border-${isRtl ? "right" : "left"}: ${theme.cardBorderRight}; border-radius: 2mm; padding: ${densityConfig.pad}; background: rgba(255,255,255,0.98);`;
+    }
+
+    return `<article style="box-sizing:border-box;width:100%;max-width:100%;${containerStyle}break-inside:avoid;page-break-inside:avoid;position:relative;word-break:normal;overflow-wrap:anywhere;">
+      <div style="display:flex;align-items:flex-start;gap:2mm;min-width:0;width:100%;box-sizing:border-box;">
+        <span style="flex:0 0 auto;background:${theme.numBadgeBg};color:${theme.numBadgeColor};border:${theme.numBadgeBorder};border-radius:1.5mm;min-width:6.8mm;height:6.8mm;display:grid;place-items:center;font:bold 9.5pt 'Cairo',Arial;line-height:1;">${qNumber}</span>
         <div style="min-width:0;flex:1;box-sizing:border-box;">
-          ${settings.showQuestionType ? `<span style="display:inline-block;color:#64748b;font-family:'Cairo',Arial;font-size:7.5pt;font-weight:700;margin-bottom:0.8mm;">${typeLabel}</span>` : ""}
+          ${settings.showQuestionType ? `<span style="display:inline-block;color:#64748b;font-family:'Cairo',Arial;font-size:7pt;font-weight:700;margin-bottom:0.6mm;">${typeLabel}</span>` : ""}
           <div style="white-space:pre-wrap;font-weight:700;line-height:inherit;overflow-wrap:anywhere;">${q.statement || "—"}</div>
-          ${settings.showTranslations && q.translation ? `<div style="white-space:pre-wrap;color:#475569;border-${isRtl ? "right" : "left"}:2px solid #94a3b8;padding-${isRtl ? "right" : "left"}:2mm;margin-top:1.8mm;font-size:0.92em;overflow-wrap:anywhere;">${q.translation}</div>` : ""}
+          ${settings.showTranslations && q.translation ? `<div style="white-space:pre-wrap;color:#475569;border-${isRtl ? "right" : "left"}:2px solid #94a3b8;padding-${isRtl ? "right" : "left"}:2mm;margin-top:1.4mm;font-size:0.92em;overflow-wrap:anywhere;">${q.translation}</div>` : ""}
         </div>
       </div>
       ${optionsHtml}
-      ${settings.showAnswers && q.answer ? `<div style="box-sizing:border-box;background:#f0fdf4;border-${isRtl ? "right" : "left"}:2px solid #16a34a;border-radius:1.5mm;margin-top:2mm;margin-inline-start:9.5mm;padding:1.5mm 3mm;font-size:0.92em;color:#166534;white-space:pre-wrap;overflow-wrap:anywhere;"><span style="font-weight:bold;">${isRtl ? "الإجابة النموذجية:" : "Answer:"}</span> ${q.answer}</div>` : ""}
-      ${settings.showExplain && q.explanation ? `<div style="box-sizing:border-box;background:#fefce8;border-${isRtl ? "right" : "left"}:2px solid #ca8a04;border-radius:1.5mm;margin-top:1.5mm;margin-inline-start:9.5mm;padding:1.5mm 3mm;font-size:0.88em;color:#854d0e;white-space:pre-wrap;overflow-wrap:anywhere;"><span style="font-weight:bold;">${isRtl ? "التفسير:" : "Explanation:"}</span> ${q.explanation}</div>` : ""}
+      ${settings.showAnswers && q.answer ? `<div style="box-sizing:border-box;background:#f0fdf4;border-${isRtl ? "right" : "left"}:2px solid #16a34a;border-radius:1.5mm;margin-top:1.6mm;margin-inline-start:8.2mm;padding:1.2mm 2.5mm;font-size:0.9em;color:#166534;white-space:pre-wrap;overflow-wrap:anywhere;"><span style="font-weight:bold;">${isRtl ? "الإجابة النموذجية:" : "Answer:"}</span> ${q.answer}</div>` : ""}
+      ${settings.showExplain && q.explanation ? `<div style="box-sizing:border-box;background:#fefce8;border-${isRtl ? "right" : "left"}:2px solid #ca8a04;border-radius:1.5mm;margin-top:1.2mm;margin-inline-start:8.2mm;padding:1.2mm 2.5mm;font-size:0.86em;color:#854d0e;white-space:pre-wrap;overflow-wrap:anywhere;"><span style="font-weight:bold;">${isRtl ? "التفسير:" : "Explanation:"}</span> ${q.explanation}</div>` : ""}
     </article>`;
   };
 
@@ -869,27 +914,38 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     });
   }, [questions, selectedTypeFilter]);
 
-  // Compile pages dynamically based on measured heights
+  // Intelligent Pagination Engine: Real Height-Based with Page 1 vs Continuation segregation
   const pages = useMemo(() => {
     const warns: string[] = [];
     const max = settings.maxQuestions || 99999;
-    const areaH = region.height;
+    const densityGap = {
+      compact: 2.4,
+      balanced: 3.5,
+      comfortable: 5.0,
+    }[settings.density || "balanced"];
+
+    // Page 1 available content height
+    const p1Top = settings.headerEnabled ? Math.max(36, settings.topMm) : settings.topMm;
+    const p1AvailableH = 297 - p1Top - settings.bottomMm;
+
+    // Continuation Page available content height (massively increased usable space!)
+    let contTop = 11;
+    if (settings.continuationHeader === "minimal") {
+      contTop = Math.max(15, settings.continuationTopMm || 16);
+    } else if (settings.continuationHeader === "full") {
+      contTop = p1Top;
+    } else {
+      // "none"
+      contTop = Math.max(10, settings.continuationTopMm ? Math.min(settings.continuationTopMm, 12) : 11);
+    }
+    const contAvailableH = 297 - contTop - settings.bottomMm;
+
     const all: Array<Array<{ html: string; h: number; qNumber: number }>> = [];
     let current: Array<{ html: string; h: number; qNumber: number }> = [];
-    let usedH = 0;
+    let currentUsedH = 0;
     let count = 0;
-    const gap = 3.2;
 
     const studentH = settings.studentFields ? measureHeight(studentStripHtml, region.width) : 0;
-
-    const flush = () => {
-      if (current.length) {
-        all.push(current);
-        current = [];
-        usedH = 0;
-        count = 0;
-      }
-    };
 
     activeQuestions.forEach((q, i) => {
       const isQuestion = !["TEXT", "DEFINITION"].includes(q.type);
@@ -900,27 +956,36 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       const h = measureHeight(html, region.width);
 
       const isFirstPage = all.length === 0;
-      let firstOffset = isFirstPage && settings.studentFields ? studentH + gap : 0;
-      let addedGap = count === 0 ? 0 : gap;
+      const targetAvailableH = isFirstPage ? p1AvailableH : contAvailableH;
+      const firstPageOffset = isFirstPage && settings.studentFields && current.length === 0 ? studentH + densityGap : 0;
+      const addedGap = current.length === 0 ? 0 : densityGap;
 
-      if (count >= max || usedH + addedGap + h + firstOffset > areaH + 0.1) {
-        if (current.length) flush();
-        firstOffset = all.length === 0 && settings.studentFields ? studentH + gap : 0;
-        addedGap = 0;
+      if (count >= max || (current.length > 0 && currentUsedH + addedGap + h + firstPageOffset > targetAvailableH)) {
+        if (current.length) {
+          all.push(current);
+          current = [];
+          currentUsedH = 0;
+        }
       }
 
-      if (h + firstOffset > areaH + 0.1) {
+      const postIsFirst = all.length === 0;
+      const postFirstOffset = postIsFirst && settings.studentFields && current.length === 0 ? studentH + densityGap : 0;
+      const postAddedGap = current.length === 0 ? 0 : densityGap;
+
+      if (h + postFirstOffset > targetAvailableH) {
         warns.push(
-          `السؤال ${actualN} أطول من المساحة المتاحة في صفحة A4 (${Math.ceil(h)} مم). يُنصح بتقليل حجم الخط أو زيادة الهوامش.`,
+          `السؤال ${actualN} أطول من المساحة المتاحة في صفحة A4 (${Math.ceil(h)} مم). يُنصح باختيار كثافة "مضغوط" أو تقليل حجم الخط.`,
         );
       }
 
       current.push({ html, h, qNumber: actualN });
-      usedH += addedGap + h;
+      currentUsedH += postAddedGap + h + postFirstOffset;
       count++;
     });
 
-    flush();
+    if (current.length) {
+      all.push(current);
+    }
     if (all.length === 0) all.push([]);
     setWarnings(warns);
     return all;
@@ -1684,14 +1749,16 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                   />
                 </label>
                 <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
-                  <span>توزيع اختيارات MCQ:</span>
+                  <span className="font-bold">توزيع اختيارات MCQ:</span>
                   <select
                     value={settings.optionLayout}
-                    onChange={(e) => setSettings({ ...settings, optionLayout: e.target.value as "two" | "one" })}
-                    className="rounded-md border border-slate-300 px-2 py-1 text-xs font-medium dark:bg-slate-800 dark:border-slate-700"
+                    onChange={(e) => setSettings({ ...settings, optionLayout: e.target.value as any })}
+                    className="rounded-md border border-slate-300 px-2 py-1 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
                   >
-                    <option value="two">عمودين (توفير مساحة الورق)</option>
-                    <option value="one">خيار تلو الآخر (رأسي)</option>
+                    <option value="auto">🧠 تلقائي ذكي (4 بالسطر للقصيرة / 2 للمتوسطة / 1 للطويلة)</option>
+                    <option value="four">4️⃣ أربعة خيارات في سطر واحد (مساحة قصوى)</option>
+                    <option value="two">2️⃣ عمودين (مدمج ومتوازن)</option>
+                    <option value="one">1️⃣ خيار تلو الآخر (رأسي)</option>
                   </select>
                 </div>
               </div>
@@ -1735,6 +1802,62 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 ))}
               </div>
 
+              {/* Question & Card Style */}
+              <div className="space-y-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+                <label className="block text-xs font-black text-slate-900 dark:text-white">
+                  شكل وتصميم السؤال (إلغاء الكروت الضخمة):
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: "lines", title: "📑 خطوط أكاديمية", desc: "خفيف موفر للورق (الموصى به)" },
+                    { id: "cards", title: "🔲 كروت بإطار", desc: "إطار كلاسيكي كامل" },
+                    { id: "dashed", title: "✂️ فواصل منقطة", desc: "حدود ناعمة وبسيطة" },
+                  ].map((cs) => (
+                    <button
+                      key={cs.id}
+                      type="button"
+                      onClick={() => setSettings({ ...settings, cardStyle: cs.id as any })}
+                      className={`rounded-xl border p-2.5 text-right transition cursor-pointer ${
+                        settings.cardStyle === cs.id
+                          ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs font-bold"
+                          : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800/40"
+                      }`}
+                    >
+                      <strong className="block text-xs">{cs.title}</strong>
+                      <span className="text-[9.5px] text-muted-foreground mt-0.5 block leading-tight">{cs.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Page Density */}
+              <div className="space-y-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+                <label className="block text-xs font-black text-slate-900 dark:text-white">
+                  كثافة وتوزيع المحتوى على ورقة A4:
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: "compact", title: "⚡ مضغوط", desc: "أقصى توفير لصفحات الطباعة" },
+                    { id: "balanced", title: "⚖️ متوازن", desc: "قراءة مثالية ومساحة مريحة" },
+                    { id: "comfortable", title: "🛋️ مريح", desc: "فواصل وهوامش واسعة" },
+                  ].map((ds) => (
+                    <button
+                      key={ds.id}
+                      type="button"
+                      onClick={() => setSettings({ ...settings, density: ds.id as any })}
+                      className={`rounded-xl border p-2.5 text-right transition cursor-pointer ${
+                        settings.density === ds.id
+                          ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs font-bold"
+                          : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800/40"
+                      }`}
+                    >
+                      <strong className="block text-xs">{ds.title}</strong>
+                      <span className="text-[9.5px] text-muted-foreground mt-0.5 block leading-tight">{ds.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Custom Image Upload if custom selected */}
               {settings.templateStyle === "custom" && (
                 <div className="space-y-2 pt-2 border-t border-slate-100">
@@ -1775,11 +1898,72 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 </div>
               )}
 
+              {/* Header Configuration: First Page vs Continuation Pages */}
+              <div className="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-slate-900 dark:text-white">
+                    ترويسة الصفحة الأولى (الهيدر الرئيسي والشعار):
+                  </label>
+                  <input
+                    type="checkbox"
+                    checked={settings.headerEnabled}
+                    onChange={(e) => setSettings({ ...settings, headerEnabled: e.target.checked })}
+                    className="h-4 w-4 rounded accent-primary cursor-pointer"
+                  />
+                </div>
+                {settings.headerEnabled && (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={settings.headerText}
+                      onChange={(e) => setSettings({ ...settings, headerText: e.target.value })}
+                      placeholder="عنوان المذكرة الرئيسي"
+                      className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
+                    />
+                    <input
+                      type="text"
+                      value={settings.subHeaderText}
+                      onChange={(e) => setSettings({ ...settings, subHeaderText: e.target.value })}
+                      placeholder="العنوان الفرعي أو اسم الأكاديمية"
+                      className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-600 dark:bg-slate-800 dark:border-slate-700"
+                    />
+                  </div>
+                )}
+
+                {/* Continuation Page Header (Page 2+) */}
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <label className="block text-xs font-black text-slate-900 dark:text-white mb-1.5">
+                    شريط ترويسة الصفحات التالية (Page 2+):
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: "minimal", title: "🏷️ شريط مصغر", desc: "اسم الدرس ود. المهدي (موصى به)" },
+                      { id: "none", title: "❌ بدون هيدر", desc: "مساحة قصوى للأسئلة" },
+                      { id: "full", title: "📑 ترويسة كاملة", desc: "تكرار هيدر الصفحة الأولى" },
+                    ].map((ch) => (
+                      <button
+                        key={ch.id}
+                        type="button"
+                        onClick={() => setSettings({ ...settings, continuationHeader: ch.id as any })}
+                        className={`rounded-xl border p-2 text-right transition cursor-pointer ${
+                          settings.continuationHeader === ch.id
+                            ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs font-bold"
+                            : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800/40"
+                        }`}
+                      >
+                        <strong className="block text-xs">{ch.title}</strong>
+                        <span className="text-[9.5px] text-muted-foreground mt-0.5 block leading-tight">{ch.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
               {/* Margins in mm */}
               <div className="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-800">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-900 dark:text-white">
-                    هوامش الكتابة بالمليمتر (لعدم تغطية الهيدر والفوتر):
+                  <label className="text-xs font-black text-slate-900 dark:text-white">
+                    هوامش الكتابة بالمليمتر (A4):
                   </label>
                   <button
                     type="button"
@@ -1795,81 +1979,50 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-500 mb-0.5">من الأعلى (mm)</label>
+                    <label className="block text-[10.5px] font-bold text-slate-600 mb-0.5">أعلى الصفحة الأولى (mm)</label>
                     <input
                       type="number"
-                      min="15"
-                      max="100"
+                      min="20"
+                      max="80"
                       value={settings.topMm}
                       onChange={(e) => setSettings({ ...settings, topMm: Number(e.target.value) })}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
+                      className="w-full rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-500 mb-0.5">من الأسفل (mm)</label>
+                    <label className="block text-[10.5px] font-bold text-slate-600 mb-0.5">أعلى باقي الصفحات (mm)</label>
                     <input
                       type="number"
-                      min="15"
-                      max="90"
+                      min="10"
+                      max="50"
+                      value={settings.continuationTopMm}
+                      onChange={(e) => setSettings({ ...settings, continuationTopMm: Number(e.target.value) })}
+                      className="w-full rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10.5px] font-bold text-slate-600 mb-0.5">من الأسفل (mm)</label>
+                    <input
+                      type="number"
+                      min="12"
+                      max="60"
                       value={settings.bottomMm}
                       onChange={(e) => setSettings({ ...settings, bottomMm: Number(e.target.value) })}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
+                      className="w-full rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-500 mb-0.5">من اليمين (mm)</label>
+                    <label className="block text-[10.5px] font-bold text-slate-600 mb-0.5">الهوامش الجانبية (mm)</label>
                     <input
                       type="number"
                       min="7"
-                      max="50"
+                      max="40"
                       value={settings.rightMm}
-                      onChange={(e) => setSettings({ ...settings, rightMm: Number(e.target.value) })}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-medium text-slate-500 mb-0.5">من اليسار (mm)</label>
-                    <input
-                      type="number"
-                      min="7"
-                      max="50"
-                      value={settings.leftMm}
-                      onChange={(e) => setSettings({ ...settings, leftMm: Number(e.target.value) })}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
+                      onChange={(e) => setSettings({ ...settings, rightMm: Number(e.target.value), leftMm: Number(e.target.value) })}
+                      className="w-full rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
                     />
                   </div>
                 </div>
-              </div>
-
-              {/* Header Text Settings */}
-              <div className="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                <label className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
-                  <span>إظهار شريط عنوان أعلى كل صفحة</span>
-                  <input
-                    type="checkbox"
-                    checked={settings.headerEnabled}
-                    onChange={(e) => setSettings({ ...settings, headerEnabled: e.target.checked })}
-                    className="h-4 w-4 rounded accent-primary"
-                  />
-                </label>
-                {settings.headerEnabled && (
-                  <>
-                    <input
-                      type="text"
-                      value={settings.headerText}
-                      onChange={(e) => setSettings({ ...settings, headerText: e.target.value })}
-                      placeholder="عنوان المذكرة الرئيسي"
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
-                    />
-                    <input
-                      type="text"
-                      value={settings.subHeaderText}
-                      onChange={(e) => setSettings({ ...settings, subHeaderText: e.target.value })}
-                      placeholder="العنوان الفرعي أو اسم الأكاديمية"
-                      className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-600 dark:bg-slate-800 dark:border-slate-700"
-                    />
-                  </>
-                )}
               </div>
             </div>
           )}
@@ -1888,7 +2041,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
               {/* Font Select */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  نوع الخط:
+                  نوع الخط الأكاديمي:
                 </label>
                 <select
                   value={settings.fontSelect}
@@ -1898,9 +2051,11 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                   <option value="'Cairo', sans-serif">Cairo (كايرو - الافتراضي للمنصة)</option>
                   <option value="'Tajawal', sans-serif">Tajawal (تجوال)</option>
                   <option value="'Almarai', sans-serif">Almarai (المراعي)</option>
-                  <option value="'Noto Naskh Arabic', serif">Noto Naskh Arabic (نسخ كلاسيكي)</option>
-                  <option value="'Amiri', serif">Amiri (أميري)</option>
-                  <option value="Arial, sans-serif">Arial</option>
+                  <option value="'Noto Naskh Arabic', serif">Noto Naskh Arabic (نسخ كلاسيكي أكاديمي)</option>
+                  <option value="'Amiri', serif">Amiri (أميري للمطبوعات الفاخرة)</option>
+                  <option value="'IBM Plex Sans Arabic', sans-serif">IBM Plex Sans Arabic (عصري تقني)</option>
+                  <option value="'Inter', sans-serif">Inter (ممتاز للغات والإنجليزية)</option>
+                  <option value="Arial, sans-serif">Arial (كلاسيكي نظامي)</option>
                 </select>
               </div>
 
@@ -1914,7 +2069,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                   <input
                     type="range"
                     min="10"
-                    max="18"
+                    max="16"
                     step="0.5"
                     value={settings.fontSize}
                     onChange={(e) => setSettings({ ...settings, fontSize: Number(e.target.value) })}
@@ -1928,8 +2083,8 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                   </div>
                   <input
                     type="range"
-                    min="1.2"
-                    max="2.0"
+                    min="1.3"
+                    max="1.9"
                     step="0.05"
                     value={settings.lineHeight}
                     onChange={(e) => setSettings({ ...settings, lineHeight: Number(e.target.value) })}
@@ -1941,7 +2096,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
               {/* Content Direction */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  اتجاه النص والأسئلة:
+                  اتجاه النص واللغة:
                 </label>
                 <select
                   value={settings.contentDir}
@@ -1978,8 +2133,34 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                   </div>
                 </div>
 
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-500 mb-0.5">موضع رقم الصفحة:</label>
+                    <select
+                      value={settings.numPosition}
+                      onChange={(e) => setSettings({ ...settings, numPosition: e.target.value as any })}
+                      className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
+                    >
+                      <option value="left">يسار (Left)</option>
+                      <option value="center">وسط (Center)</option>
+                      <option value="right">يمين (Right)</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center pt-4">
+                    <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settings.showTotalPages}
+                        onChange={(e) => setSettings({ ...settings, showTotalPages: e.target.checked })}
+                        className="h-4 w-4 rounded accent-primary"
+                      />
+                      <span>إظهار إجمالي الصفحات (1 / {pages.length})</span>
+                    </label>
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-500 mb-0.5">تذييل الصفحة (Footer):</label>
+                  <label className="block text-[11px] font-medium text-slate-500 mb-0.5">تذييل الصفحة الثابت (Footer):</label>
                   <input
                     type="text"
                     value={settings.footerText}
@@ -2367,9 +2548,24 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
               >
                 {(showAllPages ? pages : [pages[pageIndex] || []]).map((pageItems, idx) => {
                   const actualPageIdx = showAllPages ? idx : pageIndex;
+                  const isFirstPage = actualPageIdx === 0;
                   const pageNumber = settings.pageStart + actualPageIdx;
                   const isRtl = settings.contentDir === "rtl";
                   const theme = getThemeConfig(settings.templateStyle);
+
+                  const contentTopMm = isFirstPage
+                    ? (settings.headerEnabled ? Math.max(36, settings.topMm) : settings.topMm)
+                    : (settings.continuationHeader === "minimal"
+                        ? Math.max(15, settings.continuationTopMm || 16)
+                        : settings.continuationHeader === "full"
+                          ? (settings.headerEnabled ? Math.max(36, settings.topMm) : settings.topMm)
+                          : Math.max(10, settings.continuationTopMm ? Math.min(settings.continuationTopMm, 12) : 11));
+
+                  const densityGap = {
+                    compact: 2.4,
+                    balanced: 3.5,
+                    comfortable: 5.0,
+                  }[settings.density || "balanced"];
 
                   return (
                     <div key={actualPageIdx} className="flex flex-col items-center gap-2 max-w-full">
@@ -2531,8 +2727,8 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                             />
                           )}
 
-                          {/* Top Header */}
-                          {settings.headerEnabled && (
+                          {/* First Page Full Header */}
+                          {isFirstPage && settings.headerEnabled && (
                             <div
                               style={{
                                 position: "absolute",
@@ -2708,13 +2904,72 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                             </div>
                           )}
 
+                          {/* Continuation Running Header (Page 2+) */}
+                          {!isFirstPage && settings.continuationHeader === "minimal" && (
+                            <div
+                              style={{
+                                position: "absolute",
+                                top: "6mm",
+                                right: `${region.right}mm`,
+                                left: `${region.left}mm`,
+                                width: `calc(210mm - ${region.left + region.right}mm)`,
+                                boxSizing: "border-box",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                paddingBottom: "1.4mm",
+                                borderBottom: `1.2px solid ${theme.accentColor}35`,
+                                zIndex: 2,
+                                color: "#0f172a",
+                              }}
+                            >
+                              <div style={{ display: "flex", alignItems: "center", gap: "2mm", maxWidth: "68%" }}>
+                                <span
+                                  style={{
+                                    fontSize: "7.5pt",
+                                    fontWeight: 800,
+                                    background: theme.drPillBg,
+                                    color: theme.drPillColor,
+                                    padding: "0.3mm 1.8mm",
+                                    borderRadius: "1mm",
+                                    border: theme.drPillBorder,
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  {settings.templateStyle === "exam" ? "امتحان" : "مذكرة"}
+                                </span>
+                                <span
+                                  style={{
+                                    fontSize: "8.5pt",
+                                    fontWeight: 800,
+                                    color: "#1e293b",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                    fontFamily: "'Cairo', sans-serif",
+                                  }}
+                                >
+                                  {settings.headerText}
+                                </span>
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: "1.5mm" }}>
+                                <span style={{ fontSize: "8pt", fontWeight: 800, color: theme.drTextColor, fontFamily: "'Cairo', sans-serif" }}>
+                                  د. محمود المهدي
+                                </span>
+                                <span style={{ fontSize: "6.5pt", color: "#64748b", fontWeight: 700 }}>
+                                  • Dr / Elmahdy
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
                           {/* Visual guide overlay */}
                           {settings.guideView && (
                             <div
                               style={{
                                 position: "absolute",
-                                top: `${region.top}mm`,
-                                bottom: `${region.bottom}mm`,
+                                top: `${contentTopMm}mm`,
+                                bottom: `${settings.bottomMm}mm`,
                                 right: `${region.right}mm`,
                                 left: `${region.left}mm`,
                                 width: `calc(210mm - ${region.left + region.right}mm)`,
@@ -2745,8 +3000,8 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                           <div
                             style={{
                               position: "absolute",
-                              top: `${region.top}mm`,
-                              bottom: `${region.bottom}mm`,
+                              top: `${contentTopMm}mm`,
+                              bottom: `${settings.bottomMm}mm`,
                               right: `${region.right}mm`,
                               left: `${region.left}mm`,
                               width: `calc(210mm - ${region.left + region.right}mm)`,
@@ -2755,7 +3010,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                               overflow: "hidden",
                             }}
                           >
-                            <div style={{ display: "flex", flexDirection: "column", gap: "3.2mm", width: "100%", boxSizing: "border-box" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: `${densityGap}mm`, width: "100%", boxSizing: "border-box" }}>
                               {actualPageIdx === 0 && settings.studentFields && (
                                 <div dangerouslySetInnerHTML={{ __html: studentStripHtml }} style={{ width: "100%", boxSizing: "border-box" }} />
                               )}
@@ -2775,12 +3030,12 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                 right: `${region.right}mm`,
                                 width: `calc(210mm - ${region.left + region.right}mm)`,
                                 boxSizing: "border-box",
-                                height: "9mm",
+                                height: "8.5mm",
                                 borderTop: `1px solid ${theme.cardBorderColor}`,
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
-                                font: "bold 9pt Arial, sans-serif",
+                                font: "bold 8.5pt Arial, sans-serif",
                                 color: "#475569",
                                 zIndex: 1,
                               }}
@@ -2793,26 +3048,27 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                           <div
                             style={{
                               position: "absolute",
-                              bottom: "7.5mm",
+                              bottom: "7.2mm",
                               ...(settings.numPosition === "center"
                                 ? { left: "50%", transform: "translateX(-50%)" }
                                 : settings.numPosition === "right"
                                   ? { right: `${region.right}mm` }
                                   : { left: `${region.left}mm` }),
-                              minWidth: "9mm",
-                              height: "8mm",
+                              minWidth: "12mm",
+                              height: "7.5mm",
                               padding: "0 2.5mm",
                               backgroundColor: theme.pageNumberBg,
                               border: theme.pageNumberBorder,
                               borderRadius: "1.5mm",
                               textAlign: "center",
-                              font: "bold 9.5pt Arial, sans-serif",
-                              lineHeight: "8mm",
+                              font: "bold 8.5pt Arial, sans-serif",
+                              lineHeight: "7.5mm",
                               color: theme.pageNumberColor,
                               zIndex: 1,
+                              whiteSpace: "nowrap",
                             }}
                           >
-                            {pageNumber}
+                            {settings.showTotalPages ? `${pageNumber} / ${pages.length}` : `${pageNumber}`}
                           </div>
                         </div>
                       </div>
@@ -2827,6 +3083,8 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
 
       {/* Scoped Media Print Styling */}
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Inter:wght@400;600;700;800&family=Noto+Naskh+Arabic:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap');
+
         @media print {
           body, html {
             background: #ffffff !important;
