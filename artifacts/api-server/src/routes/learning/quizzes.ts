@@ -912,58 +912,6 @@ router.delete(
   },
 );
 
-// GET /api/admin/learning/quizzes/:id/replacement-candidates - Get alternative clean questions from bank
-router.get("/admin/learning/quizzes/:id/replacement-candidates", requireAdmin, async (req, res, next) => {
-  try {
-    const quizId = Number(req.params.id);
-    const [quiz] = await db.select().from(quizzesTable).where(eq(quizzesTable.id, quizId)).limit(1);
-    if (!quiz) {
-      res.status(404).json({ error: "الاختبار غير موجود" });
-      return;
-    }
-
-    const currentPrompts = new Set((quiz.questions || []).map((q) => normalizeQuestionPrompt(q.prompt)));
-
-    const conditions = [];
-    if (quiz.courseId) {
-      conditions.push(or(eq(questionBankTable.courseId, quiz.courseId), isNull(questionBankTable.courseId)));
-    }
-    if (quiz.stage) {
-      conditions.push(or(eq(questionBankTable.stage, quiz.stage), eq(questionBankTable.stage, "عام")));
-    }
-
-    const bankQuestions = await db
-      .select()
-      .from(questionBankTable)
-      .where(conditions.length ? and(...conditions) : undefined)
-      .limit(100);
-
-    const validCandidates = bankQuestions
-      .filter((bq) => {
-        const q = bq.question;
-        if (!isCompleteValidQuestion(q)) return false;
-        const norm = normalizeQuestionPrompt(q.prompt);
-        return !currentPrompts.has(norm);
-      })
-      .map((bq) => ({
-        id: bq.id,
-        lesson: bq.lesson,
-        unit: bq.unit,
-        stage: bq.stage,
-        difficulty: bq.difficulty,
-        question: {
-          ...bq.question,
-          options: (bq.question.options || []).map(cleanOptionString),
-          prompt: bq.question.prompt.replace(/[\n\s]+[A-Da-dأابجده]\)\s*$/, "").trim(),
-        },
-      }));
-
-    res.json({ candidates: validCandidates });
-  } catch (error) {
-    next(error);
-  }
-});
-
 // POST /api/admin/learning/quizzes/:id/replace-question - Replace a question with a clean one
 router.post("/admin/learning/quizzes/:id/replace-question", requireAdmin, async (req, res, next) => {
   try {

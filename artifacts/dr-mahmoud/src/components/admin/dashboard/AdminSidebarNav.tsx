@@ -28,6 +28,8 @@ import {
   FileSpreadsheet,
   MapPin,
   Sparkles,
+  QrCode,
+  FileEdit,
 } from "lucide-react";
 
 interface AdminSidebarNavProps {
@@ -95,6 +97,16 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
             setLearningSubTab("center-bookings" as any);
           },
           active: activeTab === "learning" && (learningSubTab as string) === "center-bookings",
+        },
+        {
+          id: "attendance",
+          label: "مسح الحضور (QR Scanner)",
+          icon: QrCode,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("attendance");
+          },
+          active: activeTab === "learning" && learningSubTab === "attendance",
         },
         {
           id: "students",
@@ -172,6 +184,16 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           onClick: () => setActiveTab("upload-video"),
           active: activeTab === "upload-video",
         },
+        {
+          id: "kholasa",
+          label: "الزتونة والخرائط الذهنية ⚡",
+          icon: Sparkles,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("kholasa");
+          },
+          active: activeTab === "learning" && learningSubTab === "kholasa",
+        },
       ],
     },
     {
@@ -196,6 +218,16 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
             setLearningSubTab("quizzes");
           },
           active: activeTab === "learning" && learningSubTab === "quizzes",
+        },
+        {
+          id: "essay-exams",
+          label: "الامتحانات المقالية ✍️",
+          icon: FileEdit,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("essay-exams");
+          },
+          active: activeTab === "learning" && learningSubTab === "essay-exams",
         },
         {
           id: "self-assessment-packs",
