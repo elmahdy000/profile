@@ -62,7 +62,7 @@ interface NormalizedQuestion {
 }
 
 interface MemoSettings {
-  templateStyle: "royal" | "exam" | "minimal" | "custom";
+  templateStyle: "royal" | "exam" | "tech" | "emerald" | "minimal" | "custom";
   fitMode: "fill" | "contain" | "cover";
   topMm: number;
   bottomMm: number;
@@ -92,8 +92,8 @@ interface MemoSettings {
 const DEFAULT_SETTINGS: MemoSettings = {
   templateStyle: "royal",
   fitMode: "fill",
-  topMm: 36,
-  bottomMm: 27,
+  topMm: 38,
+  bottomMm: 25,
   rightMm: 15,
   leftMm: 15,
   headerEnabled: true,
@@ -115,6 +115,186 @@ const DEFAULT_SETTINGS: MemoSettings = {
   footerText: "أكاديمية د. محمود المهدي | دليلك للتميز والدرجة النهائية",
   numPosition: "left",
   studentFields: true,
+};
+
+interface ThemeConfig {
+  accentColor: string;
+  secondaryAccent: string;
+  cardBorderColor: string;
+  cardBorderRight: string;
+  numBadgeBg: string;
+  numBadgeColor: string;
+  numBadgeBorder: string;
+  headerBorder: string;
+  headerTopAccent: string;
+  badgeBg: string;
+  badgeColor: string;
+  badgeBorder: string;
+  sealBg: string;
+  sealBorder: string;
+  sealShadow: string;
+  crestBg: string;
+  crestBorder: string;
+  crestColor: string;
+  drTextColor: string;
+  drSubTextColor: string;
+  drPillBg: string;
+  drPillColor: string;
+  drPillBorder: string;
+  pageNumberBg: string;
+  pageNumberColor: string;
+  pageNumberBorder: string;
+}
+
+const getThemeConfig = (style: MemoSettings["templateStyle"]): ThemeConfig => {
+  switch (style) {
+    case "exam":
+      return {
+        accentColor: "#0f172a",
+        secondaryAccent: "#475569",
+        cardBorderColor: "#e2e8f0",
+        cardBorderRight: "3px solid #0f172a",
+        numBadgeBg: "#0f172a",
+        numBadgeColor: "#ffffff",
+        numBadgeBorder: "none",
+        headerBorder: "2.5px solid #0f172a",
+        headerTopAccent: "#0f172a",
+        badgeBg: "#0f172a",
+        badgeColor: "#ffffff",
+        badgeBorder: "none",
+        sealBg: "#f8fafc",
+        sealBorder: "1.5px solid #0f172a",
+        sealShadow: "none",
+        crestBg: "#0f172a",
+        crestBorder: "1px solid #0f172a",
+        crestColor: "#ffffff",
+        drTextColor: "#0f172a",
+        drSubTextColor: "#475569",
+        drPillBg: "#f1f5f9",
+        drPillColor: "#0f172a",
+        drPillBorder: "1px solid #cbd5e1",
+        pageNumberBg: "#0f172a",
+        pageNumberColor: "#ffffff",
+        pageNumberBorder: "none",
+      };
+    case "tech":
+      return {
+        accentColor: "#0284c7",
+        secondaryAccent: "#38bdf8",
+        cardBorderColor: "#e0f2fe",
+        cardBorderRight: "3.5px solid #0284c7",
+        numBadgeBg: "linear-gradient(135deg, #0f172a 0%, #0369a1 100%)",
+        numBadgeColor: "#38bdf8",
+        numBadgeBorder: "1px solid #0284c7",
+        headerBorder: "2.5px solid #0284c7",
+        headerTopAccent: "#0284c7",
+        badgeBg: "#0369a1",
+        badgeColor: "#ffffff",
+        badgeBorder: "1px solid #38bdf8",
+        sealBg: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+        sealBorder: "1.5px solid #0284c7",
+        sealShadow: "0 2px 8px rgba(2, 132, 199, 0.2)",
+        crestBg: "linear-gradient(135deg, #0284c7 0%, #38bdf8 100%)",
+        crestBorder: "1px solid #7dd3fc",
+        crestColor: "#0f172a",
+        drTextColor: "#0284c7",
+        drSubTextColor: "#94a3b8",
+        drPillBg: "rgba(2, 132, 199, 0.15)",
+        drPillColor: "#38bdf8",
+        drPillBorder: "1px solid #0284c7",
+        pageNumberBg: "#0369a1",
+        pageNumberColor: "#ffffff",
+        pageNumberBorder: "1px solid #38bdf8",
+      };
+    case "emerald":
+      return {
+        accentColor: "#059669",
+        secondaryAccent: "#10b981",
+        cardBorderColor: "#d1fae5",
+        cardBorderRight: "3.5px solid #059669",
+        numBadgeBg: "#064e3b",
+        numBadgeColor: "#ffffff",
+        numBadgeBorder: "1px solid #059669",
+        headerBorder: "2.5px solid #059669",
+        headerTopAccent: "#047857",
+        badgeBg: "#064e3b",
+        badgeColor: "#ffffff",
+        badgeBorder: "1px solid #10b981",
+        sealBg: "#f0fdf4",
+        sealBorder: "1.5px solid #059669",
+        sealShadow: "0 2px 6px rgba(5, 150, 105, 0.15)",
+        crestBg: "linear-gradient(135deg, #064e3b 0%, #059669 100%)",
+        crestBorder: "1px solid #10b981",
+        crestColor: "#ffffff",
+        drTextColor: "#064e3b",
+        drSubTextColor: "#047857",
+        drPillBg: "#dcfce7",
+        drPillColor: "#064e3b",
+        drPillBorder: "1px solid #86efac",
+        pageNumberBg: "#064e3b",
+        pageNumberColor: "#ffffff",
+        pageNumberBorder: "1px solid #10b981",
+      };
+    case "minimal":
+      return {
+        accentColor: "#334155",
+        secondaryAccent: "#64748b",
+        cardBorderColor: "#e2e8f0",
+        cardBorderRight: "3px solid #334155",
+        numBadgeBg: "#f8fafc",
+        numBadgeColor: "#0f172a",
+        numBadgeBorder: "1.5px solid #334155",
+        headerBorder: "2px solid #0f172a",
+        headerTopAccent: "transparent",
+        badgeBg: "#ffffff",
+        badgeColor: "#0f172a",
+        badgeBorder: "1.5px solid #0f172a",
+        sealBg: "#ffffff",
+        sealBorder: "1.5px solid #0f172a",
+        sealShadow: "none",
+        crestBg: "#ffffff",
+        crestBorder: "1.5px solid #0f172a",
+        crestColor: "#0f172a",
+        drTextColor: "#0f172a",
+        drSubTextColor: "#475569",
+        drPillBg: "#f1f5f9",
+        drPillColor: "#0f172a",
+        drPillBorder: "1px solid #94a3b8",
+        pageNumberBg: "#ffffff",
+        pageNumberColor: "#0f172a",
+        pageNumberBorder: "1.5px solid #0f172a",
+      };
+    case "royal":
+    default:
+      return {
+        accentColor: "#d97706",
+        secondaryAccent: "#f59e0b",
+        cardBorderColor: "#fef3c7",
+        cardBorderRight: "3.5px solid #d97706",
+        numBadgeBg: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+        numBadgeColor: "#f59e0b",
+        numBadgeBorder: "1px solid #d97706",
+        headerBorder: "2.5px solid #d97706",
+        headerTopAccent: "#0f172a",
+        badgeBg: "#0f172a",
+        badgeColor: "#ffffff",
+        badgeBorder: "1px solid #f59e0b",
+        sealBg: "linear-gradient(135deg, #fffbeb 0%, #ffffff 100%)",
+        sealBorder: "1.5px solid #d97706",
+        sealShadow: "0 2px 6px rgba(217, 119, 6, 0.18)",
+        crestBg: "linear-gradient(135deg, #d97706 0%, #b45309 100%)",
+        crestBorder: "1px solid #fef3c7",
+        crestColor: "#ffffff",
+        drTextColor: "#0f172a",
+        drSubTextColor: "#b45309",
+        drPillBg: "#fef3c7",
+        drPillColor: "#92400e",
+        drPillBorder: "1px solid #fde68a",
+        pageNumberBg: "#0f172a",
+        pageNumberColor: "#f59e0b",
+        pageNumberBorder: "1px solid #d97706",
+      };
+  }
 };
 
 const SAMPLE_QUESTIONS: any[] = [
@@ -545,7 +725,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
 
   // Calculate region printable area in mm
   const region = useMemo(() => {
-    const top = Math.max(15, Math.min(120, settings.topMm));
+    let top = Math.max(15, Math.min(120, settings.topMm));
+    if (settings.headerEnabled && top < 38) {
+      top = 38;
+    }
     let bottom = Math.max(15, Math.min(100, settings.bottomMm));
     let right = Math.max(7, Math.min(60, settings.rightMm));
     let left = Math.max(7, Math.min(60, settings.leftMm));
@@ -562,7 +745,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       width: 210 - left - right,
       height: 297 - top - bottom,
     };
-  }, [settings.topMm, settings.bottomMm, settings.rightMm, settings.leftMm]);
+  }, [settings.topMm, settings.bottomMm, settings.rightMm, settings.leftMm, settings.headerEnabled]);
 
   // Measure card height in mm using off-screen DOM
   const measureHeight = (html: string, widthMm: number): number => {
@@ -582,6 +765,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
 
   // Student header strip HTML
   const studentStripHtml = useMemo(() => {
+    const theme = getThemeConfig(settings.templateStyle);
     if (settings.templateStyle === "exam") {
       return `<div style="background:#f8fafc;border:1.5px solid #0f172a;border-radius:2mm;padding:2.5mm 3.5mm;display:grid;grid-template-columns:repeat(4, 1fr);gap:2.5mm;font-size:9pt;color:#0f172a;margin-bottom:3.5mm;font-weight:bold;">
         <div>اسم الطالب: <span style="display:inline-block;width:25mm;border-bottom:1px dotted #475569;"></span></div>
@@ -590,17 +774,18 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
         <div style="text-align:left;color:#b45309;">الدرجة: [ &nbsp; / 50 &nbsp; ]</div>
       </div>`;
     }
-    return `<div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:2.5mm;padding:2.2mm 3.5mm;display:flex;gap:4mm;justify-content:space-between;flex-wrap:wrap;font-size:9pt;color:#1e293b;margin-bottom:3mm;">
+    return `<div style="background:#f8fafc;border:1px solid #cbd5e1;border-${settings.contentDir === "rtl" ? "right" : "left"}:3.5px solid ${theme.accentColor};border-radius:2.5mm;padding:2.2mm 3.5mm;display:flex;gap:4mm;justify-content:space-between;flex-wrap:wrap;font-size:9pt;color:#1e293b;margin-bottom:3mm;">
       <span style="white-space:nowrap;flex:1;min-width:25mm;">اسم الطالب: <span style="display:inline-block;width:25mm;border-bottom:1px dotted #64748b;"></span></span>
       <span style="white-space:nowrap;flex:1;min-width:25mm;">السنتر / المجموعة: <span style="display:inline-block;width:25mm;border-bottom:1px dotted #64748b;"></span></span>
       <span style="white-space:nowrap;flex:1;min-width:25mm;">رقم الهاتف: <span style="display:inline-block;width:25mm;border-bottom:1px dotted #64748b;"></span></span>
     </div>`;
-  }, [settings.templateStyle]);
+  }, [settings.templateStyle, settings.contentDir]);
 
   // Card HTML generator
   const getCardHtml = (q: NormalizedQuestion, qNumber: number) => {
     const isRtl = settings.contentDir === "rtl";
     const letters = isRtl ? ARABIC_LETTERS : ENGLISH_LETTERS;
+    const theme = getThemeConfig(settings.templateStyle);
 
     const typeLabel = {
       MCQ: isRtl ? "اختر الإجابة الصحيحة" : "Multiple choice",
@@ -643,9 +828,9 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
         </div>`
       : "";
 
-    return `<article style="box-sizing:border-box;width:100%;max-width:100%;border:1px solid #e2e8f0;border-${isRtl ? "right" : "left"}:3.5px solid #d97706;border-radius:2.5mm;padding:2.8mm 3.2mm;break-inside:avoid;page-break-inside:avoid;position:relative;background:rgba(255,255,255,0.98);word-break:normal;overflow-wrap:anywhere;">
+    return `<article style="box-sizing:border-box;width:100%;max-width:100%;border:1px solid ${theme.cardBorderColor};border-${isRtl ? "right" : "left"}:${theme.cardBorderRight};border-radius:2.5mm;padding:2.8mm 3.2mm;break-inside:avoid;page-break-inside:avoid;position:relative;background:rgba(255,255,255,0.98);word-break:normal;overflow-wrap:anywhere;">
       <div style="display:flex;align-items:flex-start;gap:2.2mm;min-width:0;width:100%;box-sizing:border-box;">
-        <span style="flex:0 0 auto;background:#0f172a;color:#fff;border-radius:1.8mm;min-width:7.5mm;height:7.5mm;display:grid;place-items:center;font:bold 10pt 'Cairo',Arial;line-height:1;">${qNumber}</span>
+        <span style="flex:0 0 auto;background:${theme.numBadgeBg};color:${theme.numBadgeColor};border:${theme.numBadgeBorder};border-radius:1.8mm;min-width:7.5mm;height:7.5mm;display:grid;place-items:center;font:bold 10pt 'Cairo',Arial;line-height:1;">${qNumber}</span>
         <div style="min-width:0;flex:1;box-sizing:border-box;">
           ${settings.showQuestionType ? `<span style="display:inline-block;color:#64748b;font-family:'Cairo',Arial;font-size:7.5pt;font-weight:700;margin-bottom:0.8mm;">${typeLabel}</span>` : ""}
           <div style="white-space:pre-wrap;font-weight:700;line-height:inherit;overflow-wrap:anywhere;">${q.statement || "—"}</div>
@@ -1525,11 +1710,13 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
               </div>
 
               {/* Preset Template Styles */}
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {[
-                  { id: "royal", title: "👑 الملكي (أكاديمية د. محمود)", desc: "ترويسة كحلية وذهبية رسمية" },
-                  { id: "exam", title: "📋 ورقة امتحان رسمي", desc: "جدول درجات وتوقيع المصحح" },
-                  { id: "minimal", title: "✨ البسيط العصري", desc: "خطوط ناعمة ومساحات واسعة" },
+                  { id: "royal", title: "👑 الملكي الذهبي (د. المهدي)", desc: "كحلي فاخر وذهبي عنبري للدروس والمذكرات" },
+                  { id: "exam", title: "📝 ورقة امتحان رسمي وزاري", desc: "جدول درجات، رقم جلوس وتوقيع المصحح" },
+                  { id: "tech", title: "⚡ تكنولوجيا وذكاء اصطناعي", desc: "أزرق نيون وكحلي سيبراني لمناهج الـ AI" },
+                  { id: "emerald", title: "🌿 الزمردي الأكاديمي", desc: "أخضر زمردي راقي للمدارس واللغات" },
+                  { id: "minimal", title: "🖨️ نمط التصوير الاقتصادي", desc: "أبيض وأسود عالي التباين موفر للحبر" },
                   { id: "custom", title: "🖼️ خلفية خاصة مخصصة", desc: "رفع صورة A4 من جهازك" },
                 ].map((t) => (
                   <button
@@ -1538,12 +1725,12 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                     onClick={() => setSettings({ ...settings, templateStyle: t.id as any })}
                     className={`rounded-xl border p-3 text-right transition cursor-pointer ${
                       settings.templateStyle === t.id
-                        ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs"
+                        ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs font-bold"
                         : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800/40"
                     }`}
                   >
                     <strong className="block text-xs font-bold">{t.title}</strong>
-                    <span className="text-[10px] text-muted-foreground mt-0.5 block">{t.desc}</span>
+                    <span className="text-[10px] text-muted-foreground mt-0.5 block leading-tight">{t.desc}</span>
                   </button>
                 ))}
               </div>
@@ -2182,6 +2369,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                   const actualPageIdx = showAllPages ? idx : pageIndex;
                   const pageNumber = settings.pageStart + actualPageIdx;
                   const isRtl = settings.contentDir === "rtl";
+                  const theme = getThemeConfig(settings.templateStyle);
 
                   return (
                     <div key={actualPageIdx} className="flex flex-col items-center gap-2 max-w-full">
@@ -2240,6 +2428,15 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                   zIndex: 2,
                                 }}
                               />
+                              <div
+                                style={{
+                                  position: "absolute",
+                                  inset: "5mm",
+                                  border: "1px solid rgba(217, 119, 6, 0.3)",
+                                  pointerEvents: "none",
+                                  zIndex: 0,
+                                }}
+                              />
                             </>
                           )}
 
@@ -2249,6 +2446,69 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                 position: "absolute",
                                 inset: "6mm",
                                 border: "1.5px solid #0f172a",
+                                pointerEvents: "none",
+                                zIndex: 0,
+                              }}
+                            />
+                          )}
+
+                          {settings.templateStyle === "tech" && (
+                            <>
+                              <div
+                                style={{
+                                  position: "absolute",
+                                  top: 0,
+                                  left: 0,
+                                  right: 0,
+                                  height: "3.5mm",
+                                  background: "linear-gradient(90deg, #0369a1 0%, #0284c7 50%, #38bdf8 100%)",
+                                  zIndex: 2,
+                                }}
+                              />
+                              <div
+                                style={{
+                                  position: "absolute",
+                                  inset: "6mm",
+                                  border: "1px solid rgba(2, 132, 199, 0.25)",
+                                  pointerEvents: "none",
+                                  zIndex: 0,
+                                }}
+                              />
+                            </>
+                          )}
+
+                          {settings.templateStyle === "emerald" && (
+                            <>
+                              <div
+                                style={{
+                                  position: "absolute",
+                                  top: 0,
+                                  left: 0,
+                                  right: 0,
+                                  height: "3.5mm",
+                                  backgroundColor: "#064e3b",
+                                  borderBottom: "1.2mm solid #059669",
+                                  zIndex: 2,
+                                }}
+                              />
+                              <div
+                                style={{
+                                  position: "absolute",
+                                  inset: "6mm",
+                                  border: "1px solid rgba(5, 150, 105, 0.25)",
+                                  pointerEvents: "none",
+                                  zIndex: 0,
+                                }}
+                              />
+                            </>
+                          )}
+
+                          {settings.templateStyle === "minimal" && (
+                            <div
+                              style={{
+                                position: "absolute",
+                                inset: "6mm",
+                                border: "1px solid #cbd5e1",
                                 pointerEvents: "none",
                                 zIndex: 0,
                               }}
@@ -2276,43 +2536,175 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                             <div
                               style={{
                                 position: "absolute",
-                                top: "11mm",
+                                top: "8.5mm",
                                 right: `${region.right}mm`,
                                 left: `${region.left}mm`,
                                 width: `calc(210mm - ${region.left + region.right}mm)`,
                                 boxSizing: "border-box",
-                                height: "14mm",
                                 display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                borderBottom: settings.templateStyle === "royal" ? "2px solid #d97706" : "1px solid #cbd5e1",
-                                zIndex: 1,
+                                flexDirection: "column",
+                                gap: "1.6mm",
+                                zIndex: 2,
                                 color: "#0f172a",
                               }}
                             >
-                              <div>
-                                <span style={{ fontSize: "11.5pt", fontWeight: 900, display: "block" }}>
-                                  {settings.headerText}
-                                </span>
-                                <span style={{ fontSize: "8pt", color: "#64748b", fontWeight: 600 }}>
-                                  {settings.subHeaderText}
-                                </span>
-                              </div>
-                              <div style={{ textAlign: isRtl ? "left" : "right" }}>
-                                <span
+                              {/* Tier 1: Dr. Mahmoud Elmahdy Luxury Branding + Document Type Badge */}
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  width: "100%",
+                                  boxSizing: "border-box",
+                                }}
+                              >
+                                {/* Dr / Elmahdy Distinctive Seal & Signature */}
+                                <div
                                   style={{
-                                    display: "inline-block",
-                                    padding: "1mm 3mm",
-                                    borderRadius: "1.5mm",
-                                    backgroundColor: "#0f172a",
-                                    color: "#ffffff",
-                                    fontSize: "8pt",
-                                    fontWeight: "bold",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "2.5mm",
+                                    background: theme.sealBg,
+                                    border: theme.sealBorder,
+                                    borderRadius: "3mm",
+                                    padding: "1.2mm 3mm",
+                                    boxShadow: theme.sealShadow,
                                   }}
                                 >
-                                  {settings.templateStyle === "exam" ? "ورقة امتحان" : "مذكرة تدريبات"}
-                                </span>
+                                  {/* Crest */}
+                                  <div
+                                    style={{
+                                      width: "7.5mm",
+                                      height: "7.5mm",
+                                      borderRadius: "50%",
+                                      background: theme.crestBg,
+                                      border: theme.crestBorder,
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      color: theme.crestColor,
+                                      fontWeight: 900,
+                                      fontSize: "4pt",
+                                      lineHeight: 1.1,
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    <span style={{ fontSize: "5pt" }}>★</span>
+                                    <span>DR</span>
+                                  </div>
+
+                                  {/* Text */}
+                                  <div style={{ display: "flex", flexDirection: "column" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "1.5mm" }}>
+                                      <span
+                                        style={{
+                                          fontSize: "9.5pt",
+                                          fontWeight: 900,
+                                          color: theme.drTextColor,
+                                          fontFamily: "'Cairo', sans-serif",
+                                          lineHeight: 1.2,
+                                        }}
+                                      >
+                                        د. محمود المهدي
+                                      </span>
+                                      <span
+                                        style={{
+                                          fontSize: "6pt",
+                                          fontWeight: 800,
+                                          background: theme.drPillBg,
+                                          color: theme.drPillColor,
+                                          padding: "0.4mm 1.8mm",
+                                          borderRadius: "1mm",
+                                          border: theme.drPillBorder,
+                                          letterSpacing: "0.5px",
+                                          lineHeight: 1.2,
+                                        }}
+                                      >
+                                        Dr / Elmahdy
+                                      </span>
+                                    </div>
+                                    <span
+                                      style={{
+                                        fontSize: "6.8pt",
+                                        fontWeight: 700,
+                                        color: theme.drSubTextColor,
+                                        fontFamily: "'Cairo', sans-serif",
+                                        lineHeight: 1.2,
+                                      }}
+                                    >
+                                      خبير وموجه الحاسب الآلي والذكاء الاصطناعي
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Document Type Badge */}
+                                <div style={{ textAlign: isRtl ? "left" : "right" }}>
+                                  <span
+                                    style={{
+                                      display: "inline-block",
+                                      padding: "1.2mm 3.5mm",
+                                      borderRadius: "1.8mm",
+                                      backgroundColor: theme.badgeBg,
+                                      color: theme.badgeColor,
+                                      fontSize: "8pt",
+                                      fontWeight: 800,
+                                      border: theme.badgeBorder,
+                                      fontFamily: "'Cairo', sans-serif",
+                                      letterSpacing: "0.3px",
+                                    }}
+                                  >
+                                    {settings.templateStyle === "exam"
+                                      ? "📝 ورقة امتحان رسمي معتمد"
+                                      : settings.templateStyle === "tech"
+                                      ? "⚡ مخرجات تقنية وبنك أسئلة"
+                                      : settings.templateStyle === "emerald"
+                                      ? "🌿 التقييم الأكاديمي الشامل"
+                                      : "👑 مذكرة تدريبات وبنك أسئلة"}
+                                  </span>
+                                </div>
                               </div>
+
+                              {/* Tier 2: Dynamic Titles (Never cut off!) */}
+                              <div style={{ width: "100%", boxSizing: "border-box", padding: "0 0.5mm" }}>
+                                <div
+                                  style={{
+                                    fontSize: "11.5pt",
+                                    fontWeight: 900,
+                                    color: "#0f172a",
+                                    lineHeight: 1.35,
+                                    wordBreak: "normal",
+                                    overflowWrap: "anywhere",
+                                    fontFamily: "'Cairo', sans-serif",
+                                  }}
+                                >
+                                  {settings.headerText}
+                                </div>
+                                {settings.subHeaderText && (
+                                  <div
+                                    style={{
+                                      fontSize: "8pt",
+                                      color: "#64748b",
+                                      fontWeight: 600,
+                                      marginTop: "0.8mm",
+                                      wordBreak: "normal",
+                                      overflowWrap: "anywhere",
+                                      fontFamily: "'Cairo', sans-serif",
+                                    }}
+                                  >
+                                    {settings.subHeaderText}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Tier 3: Decorative Divider Line placed strictly BELOW all titles */}
+                              <div
+                                style={{
+                                  width: "100%",
+                                  marginTop: "1.2mm",
+                                  borderBottom: theme.headerBorder,
+                                }}
+                              />
                             </div>
                           )}
 
@@ -2384,7 +2776,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                 width: `calc(210mm - ${region.left + region.right}mm)`,
                                 boxSizing: "border-box",
                                 height: "9mm",
-                                borderTop: "1px solid #cbd5e1",
+                                borderTop: `1px solid ${theme.cardBorderColor}`,
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
@@ -2410,12 +2802,13 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                               minWidth: "9mm",
                               height: "8mm",
                               padding: "0 2.5mm",
-                              backgroundColor: "#0f172a",
+                              backgroundColor: theme.pageNumberBg,
+                              border: theme.pageNumberBorder,
                               borderRadius: "1.5mm",
                               textAlign: "center",
                               font: "bold 9.5pt Arial, sans-serif",
                               lineHeight: "8mm",
-                              color: "#f59e0b",
+                              color: theme.pageNumberColor,
                               zIndex: 1,
                             }}
                           >
