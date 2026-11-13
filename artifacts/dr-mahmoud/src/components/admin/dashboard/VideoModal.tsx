@@ -6,6 +6,8 @@ export interface ModalVideoFormState {
   title: string;
   youtubeUrl: string;
   category: string;
+  unit?: string;
+  lesson?: string;
   description: string;
   type: "video" | "playlist";
   thumbnailUrl: string;
@@ -175,8 +177,36 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-bold text-foreground">اسم الدرس *</label>
+                  <label className="mb-1 block text-xs font-bold text-foreground">اسم عنوان الفيديو *</label>
                   <input type="text" required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="مثال: المتغيرات وأنواع البيانات" className="w-full rounded-xl border border-primary/30 bg-background px-4 py-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-foreground">الوحدة التعليمية (اختياري)</label>
+                  <input
+                    type="text"
+                    list="curriculum-units-datalist"
+                    value={form.unit || ""}
+                    onChange={(e) => setForm({ ...form, unit: e.target.value })}
+                    placeholder="مثال: الوحدة الأولى: الذكاء الاصطناعي والمجتمع"
+                    className="w-full rounded-xl border border-primary/30 bg-background px-4 py-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                  <datalist id="curriculum-units-datalist">
+                    <option value="الوحدة الأولى: الذكاء الاصطناعي والمجتمع" />
+                    <option value="الوحدة الثانية: الأمن السيبراني والتشفير" />
+                    <option value="الوحدة الثالثة: تطبيقات الويب" />
+                    <option value="الوحدة الرابعة: الحوسبة السحابية" />
+                    <option value="الوحدة الخامسة: قواعد البيانات" />
+                  </datalist>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-bold text-foreground">الدرس التابع له في المنهج (اختياري)</label>
+                  <input
+                    type="text"
+                    value={form.lesson || ""}
+                    onChange={(e) => setForm({ ...form, lesson: e.target.value })}
+                    placeholder="مثال: الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية"
+                    className="w-full rounded-xl border border-primary/30 bg-background px-4 py-3 text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
                 </div>
                 <div className="md:col-span-2">
                   <label className="mb-1 block text-xs font-bold text-foreground">رقم الدرس في قائمة التشغيل (الترتيب) *</label>

@@ -6,6 +6,8 @@ export const videosTable = pgTable("videos", {
   id: serial("id").primaryKey(),
   courseId: integer("course_id").references(() => coursesTable.id, { onDelete: "set null" }),
   category: text("category").notNull(),     // e.g. "سي بلس بلس C++", "برمجة ثانوية عامة"
+  unit: text("unit"),                       // e.g. "الوحدة الأولى: الذكاء الاصطناعي والمجتمع"
+  lesson: text("lesson"),                   // e.g. "الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية"
   stage: text("stage"),
   stages: jsonb("stages").$type<string[]>().notNull().default([]),
   subject: text("subject"),

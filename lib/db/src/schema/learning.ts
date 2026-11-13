@@ -68,6 +68,8 @@ export const learningFilesTable = pgTable("learning_files", {
   title: text("title").notNull(),
   description: text("description"),
   category: text("category").notNull().default("عام"),
+  unit: text("unit"),
+  lesson: text("lesson"),
   stage: text("stage"),
   stages: jsonb("stages").$type<string[]>().notNull().default([]),
   targetType: text("target_type").notNull().default("stages"),
@@ -104,6 +106,8 @@ export const quizzesTable = pgTable("quizzes", {
   title: text("title").notNull(),
   description: text("description"),
   category: text("category").notNull().default("عام"),
+  unit: text("unit"),
+  lesson: text("lesson"),
   stage: text("stage"),
   stages: jsonb("stages").$type<string[]>().notNull().default([]),
   durationMinutes: integer("duration_minutes"), // null = no time limit, e.g. 30 = 30-minute exam timer

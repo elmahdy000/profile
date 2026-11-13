@@ -8,6 +8,8 @@ interface FileItem {
   courseId?: number | null;
   title: string;
   category: string;
+  unit?: string | null;
+  lesson?: string | null;
   stage?: string | null;
   stages?: string[];
   targetType?: "stages" | "videos";
@@ -28,6 +30,8 @@ interface VideoOption {
   courseId?: number | null;
   title: string;
   category: string;
+  unit?: string | null;
+  lesson?: string | null;
   stage?: string | null;
   stages?: string[];
 }
@@ -90,6 +94,36 @@ export const FileModal: React.FC<FileModalProps> = ({
                 }
               />
             </Field>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-3">
+              <Field label="الوحدة التعليمية (اختياري)">
+                <input
+                  className="input-admin"
+                  list="file-curriculum-units"
+                  value={editingFile.unit || ""}
+                  placeholder="مثال: الوحدة الأولى: الذكاء الاصطناعي والمجتمع"
+                  onChange={(event) =>
+                    setEditingFile({ ...editingFile, unit: event.target.value })
+                  }
+                />
+                <datalist id="file-curriculum-units">
+                  <option value="الوحدة الأولى: الذكاء الاصطناعي والمجتمع" />
+                  <option value="الوحدة الثانية: الأمن السيبراني والتشفير" />
+                  <option value="الوحدة الثالثة: تطبيقات الويب" />
+                  <option value="الوحدة الرابعة: الحوسبة السحابية" />
+                  <option value="الوحدة الخامسة: قواعد البيانات" />
+                </datalist>
+              </Field>
+              <Field label="الدرس التابع له في المنهج (اختياري)">
+                <input
+                  className="input-admin"
+                  value={editingFile.lesson || ""}
+                  placeholder="مثال: الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية"
+                  onChange={(event) =>
+                    setEditingFile({ ...editingFile, lesson: event.target.value })
+                  }
+                />
+              </Field>
+            </div>
             <div className="my-4 grid grid-cols-2 gap-2">
               {(
                 [

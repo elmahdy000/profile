@@ -188,6 +188,8 @@ router.post(
           courseId: targetType === "stages" ? courseId : null,
           description: String(req.body.description ?? "").trim() || null,
           category,
+          unit: req.body.unit ? String(req.body.unit).trim() : null,
+          lesson: req.body.lesson ? String(req.body.lesson).trim() : null,
           stage: stages[0] ?? null,
           stages,
           targetType,
@@ -320,6 +322,12 @@ router.patch(
           }),
           ...(req.body.category !== undefined && {
             category: String(req.body.category).trim() || "عام",
+          }),
+          ...(req.body.unit !== undefined && {
+            unit: req.body.unit ? String(req.body.unit).trim() : null,
+          }),
+          ...(req.body.lesson !== undefined && {
+            lesson: req.body.lesson ? String(req.body.lesson).trim() : null,
           }),
           ...(req.body.stage !== undefined && {
             stage: String(req.body.stage).trim() || null,

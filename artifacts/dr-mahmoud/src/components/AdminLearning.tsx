@@ -70,6 +70,8 @@ type FileItem = {
   courseId?: number | null;
   title: string;
   category: string;
+  unit?: string | null;
+  lesson?: string | null;
   stage?: string | null;
   stages?: string[];
   targetType?: "stages" | "videos";
@@ -102,6 +104,8 @@ interface Quiz {
   title: string;
   description?: string | null;
   category: string;
+  unit?: string | null;
+  lesson?: string | null;
   stage?: string | null;
   stages: string[];
   durationMinutes?: number | null;
@@ -122,6 +126,8 @@ interface BankQuestion {
   id: number;
   courseId?: number | null;
   category: string;
+  unit?: string | null;
+  lesson?: string | null;
   stage?: string | null;
   stages?: string[];
   subject?: string | null;
@@ -317,6 +323,8 @@ export function AdminLearning({
     title: "",
     stage: "",
     category: "",
+    unit: "",
+    lesson: "",
     courseId: "",
     subject: "",
     tags: "",
@@ -861,6 +869,8 @@ export function AdminLearning({
     body.append("videoIds", fileForm.videoIds.join(","));
     body.append("category", fileForm.category);
     body.append("courseId", fileForm.courseId);
+    body.append("unit", fileForm.unit || "");
+    body.append("lesson", fileForm.lesson || "");
     body.append("subject", fileForm.subject);
     body.append("tags", fileForm.tags);
     body.append("order", String(fileForm.order));
@@ -986,6 +996,8 @@ export function AdminLearning({
       `/api/admin/learning/files/${editingFile.id}`,
       { method: "PATCH", body: JSON.stringify({
         title: editingFile.title,
+        unit: editingFile.unit ? editingFile.unit.trim() : null,
+        lesson: editingFile.lesson ? editingFile.lesson.trim() : null,
         targetType: editingFile.targetType || "stages",
         courseId: editingFile.courseId,
         category: editingCategory,
@@ -2203,6 +2215,32 @@ export function AdminLearning({
                   <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
                     <div className="mb-5 flex items-center justify-between"><div><h3 className="text-lg font-black">تعديل الملف</h3><p className="text-xs text-slate-500">غيّر مكان ظهوره بدون إعادة رفعه.</p></div><button type="button" onClick={() => setEditingFile(null)}><X className="h-5 w-5" /></button></div>
                     <Field label="اسم الملف"><input className="input-admin" value={editingFile.title} onChange={(event) => setEditingFile({ ...editingFile, title: event.target.value })} /></Field>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-3">
+                      <Field label="الوحدة التعليمية (اختياري)">
+                        <input
+                          className="input-admin"
+                          list="file-curriculum-units-admin"
+                          value={editingFile.unit || ""}
+                          placeholder="مثال: الوحدة الأولى: الذكاء الاصطناعي والمجتمع"
+                          onChange={(event) => setEditingFile({ ...editingFile, unit: event.target.value })}
+                        />
+                        <datalist id="file-curriculum-units-admin">
+                          <option value="الوحدة الأولى: الذكاء الاصطناعي والمجتمع" />
+                          <option value="الوحدة الثانية: الأمن السيبراني والتشفير" />
+                          <option value="الوحدة الثالثة: تطبيقات الويب" />
+                          <option value="الوحدة الرابعة: الحوسبة السحابية" />
+                          <option value="الوحدة الخامسة: قواعد البيانات" />
+                        </datalist>
+                      </Field>
+                      <Field label="الدرس التابع له في المنهج (اختياري)">
+                        <input
+                          className="input-admin"
+                          value={editingFile.lesson || ""}
+                          placeholder="مثال: الدرس الثالث: الذكاء الاصطناعي في حياتنا اليومية"
+                          onChange={(event) => setEditingFile({ ...editingFile, lesson: event.target.value })}
+                        />
+                      </Field>
+                    </div>
                     <div className="my-4 grid grid-cols-2 gap-2">{([['stages', 'مراحل محددة'], ['videos', 'فيديو أو درس']] as const).map(([value, label]) => <button type="button" key={value} onClick={() => setEditingFile({ ...editingFile, targetType: value, stages: [], videoIds: [] })} className={`rounded-xl border p-3 font-bold ${editingFile.targetType === value ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200'}`}>{label}</button>)}</div>
                     {editingFile.targetType === "videos" ? <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl border p-3">{videoOptions.map((video) => { const checked = editingFile.videoIds?.includes(video.id) || false; return <label key={video.id} className="flex gap-3 rounded-lg p-2 hover:bg-slate-50"><input type="checkbox" checked={checked} onChange={() => setEditingFile({ ...editingFile, videoIds: checked ? editingFile.videoIds?.filter((id) => id !== video.id) : [...(editingFile.videoIds || []), video.id] })} /><span><strong className="block text-sm">{video.title}</strong><small>{video.category}</small></span></label>; })}</div> : <div className="space-y-3">
                       <div className="grid gap-2 sm:grid-cols-3">{ACADEMIC_TRACKS.map((track) => <button type="button" key={track.id} onClick={() => setEditingFile({ ...editingFile, courseId: null, category: track.id, stages: [] })} className={`rounded-xl border p-3 text-sm font-bold ${getTrack(editingFile.category)?.id === track.id ? "border-primary bg-primary/5 text-primary" : "border-slate-200"}`}>{track.shortTitle}</button>)}</div>

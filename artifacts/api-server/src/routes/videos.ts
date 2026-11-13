@@ -8,6 +8,7 @@ import {
   videoFileAttachmentsTable,
   videoProgressTable,
   videosTable,
+  lessonKholasaMaterialsTable,
 } from "@workspace/db";
 import { CreateVideoBody, UpdateVideoBody } from "@workspace/api-zod";
 import { requireAdmin, requireSuperAdmin, isAdminRequest } from "../middleware/auth";
@@ -664,6 +665,8 @@ router.post("/videos", requireAdmin, async (req, res, next) => {
         level: validated.level ?? null,
         pdfFileId: validated.pdfFileId ?? null,
         quizId: validated.quizId ?? null,
+        unit: req.body.unit ? String(req.body.unit).trim() : ((validated as any).unit ?? null),
+        lesson: req.body.lesson ? String(req.body.lesson).trim() : ((validated as any).lesson ?? null),
       })
       .returning();
 
@@ -671,6 +674,18 @@ router.post("/videos", requireAdmin, async (req, res, next) => {
       validated.attachmentFileIds ??
       (validated.pdfFileId ? [validated.pdfFileId] : []);
     await syncVideoAttachments(inserted.id, attachmentIds);
+
+    const createdUnit = inserted.unit;
+    const createdLesson = inserted.lesson;
+    if (createdUnit && createdLesson) {
+      const stageCond = inserted.stage ? eq(lessonKholasaMaterialsTable.stage, inserted.stage) : undefined;
+      const conds = [
+        eq(lessonKholasaMaterialsTable.unit, createdUnit),
+        eq(lessonKholasaMaterialsTable.lesson, createdLesson),
+      ];
+      if (stageCond) conds.push(stageCond);
+      await db.update(lessonKholasaMaterialsTable).set({ videoId: inserted.id }).where(and(...conds));
+    }
 
     if (inserted.isPublished) {
       const approvedStudents = await db
@@ -843,6 +858,12 @@ router.put("/videos/:id", requireAdmin, async (req, res, next) => {
           pdfFileId: validated.pdfFileId,
         }),
         ...(validated.quizId !== undefined && { quizId: validated.quizId }),
+        ...(req.body.unit !== undefined && {
+          unit: req.body.unit ? String(req.body.unit).trim() : null,
+        }),
+        ...(req.body.lesson !== undefined && {
+          lesson: req.body.lesson ? String(req.body.lesson).trim() : null,
+        }),
       })
       .where(eq(videosTable.id, id))
       .returning();
@@ -860,6 +881,18 @@ router.put("/videos/:id", requireAdmin, async (req, res, next) => {
         validated.attachmentFileIds ??
         (validated.pdfFileId ? [validated.pdfFileId] : []);
       await syncVideoAttachments(updated.id, attachmentIds);
+    }
+
+    const finalUnit = req.body.unit !== undefined ? (req.body.unit ? String(req.body.unit).trim() : null) : updated.unit;
+    const finalLesson = req.body.lesson !== undefined ? (req.body.lesson ? String(req.body.lesson).trim() : null) : updated.lesson;
+    if (finalUnit && finalLesson) {
+      const stageCond = updated.stage ? eq(lessonKholasaMaterialsTable.stage, updated.stage) : undefined;
+      const conds = [
+        eq(lessonKholasaMaterialsTable.unit, finalUnit),
+        eq(lessonKholasaMaterialsTable.lesson, finalLesson),
+      ];
+      if (stageCond) conds.push(stageCond);
+      await db.update(lessonKholasaMaterialsTable).set({ videoId: id }).where(and(...conds));
     }
 
     if (currentVideo && !currentVideo.isPublished && updated.isPublished) {

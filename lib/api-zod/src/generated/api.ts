@@ -321,6 +321,8 @@ export const createVideoBodyIsPublishedDefault = true;
 export const CreateVideoBody = zod.object({
   courseId: zod.number().nullish(),
   category: zod.string(),
+  unit: zod.string().nullish(),
+  lesson: zod.string().nullish(),
   stage: zod.string().nullish(),
   stages: zod.array(zod.string()).optional(),
   subject: zod.string().nullish(),
@@ -360,6 +362,8 @@ export const updateVideoBodyIsPublishedDefault = true;
 export const UpdateVideoBody = zod.object({
   courseId: zod.number().nullish(),
   category: zod.string(),
+  unit: zod.string().nullish(),
+  lesson: zod.string().nullish(),
   stage: zod.string().nullish(),
   stages: zod.array(zod.string()).optional(),
   subject: zod.string().nullish(),

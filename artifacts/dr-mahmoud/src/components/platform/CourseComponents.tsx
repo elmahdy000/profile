@@ -606,10 +606,17 @@ export function RedesignedLessonCard({
 
         {/* Content area */}
         <div className="space-y-1.5 text-right">
-          <div className="flex items-center justify-between text-[11px] font-bold text-muted-foreground">
-            <span className="rounded-md bg-blue-500/10 px-2 py-0.5 text-blue-600 dark:text-blue-400 border border-blue-500/20 dir-ltr text-right" style={{ unicodeBidi: "isolate" }}>
-              {item.category}
-            </span>
+          <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] font-bold text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+              <span className="rounded-md bg-blue-500/10 px-2 py-0.5 text-blue-600 dark:text-blue-400 border border-blue-500/20 dir-ltr text-right truncate" style={{ unicodeBidi: "isolate" }}>
+                {item.category}
+              </span>
+              {(item as any).unit && (
+                <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] truncate max-w-[200px]" title={(item as any).unit}>
+                  {(item as any).unit}
+                </span>
+              )}
+            </div>
             {item.meta?.duration && (
               <span className="flex items-center gap-1 font-mono tabular-nums">
                 <Clock className="h-3 w-3 text-amber-500" /> {item.meta.duration}
