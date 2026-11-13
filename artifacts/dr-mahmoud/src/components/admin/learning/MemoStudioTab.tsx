@@ -61,8 +61,11 @@ interface NormalizedQuestion {
   id?: string | number;
   type: "MCQ" | "TRUE_FALSE" | "ESSAY" | "DEFINITION" | "TEXT";
   statement: string;
-  options: { text: string; isCorrect: boolean }[];
+  prompt?: string;
+  options: { text: string; isCorrect: boolean; id?: string | number }[];
   answer: string;
+  correctAnswer?: string;
+  modelAnswer?: string;
   explanation: string;
   translation: string;
   enabled: boolean;
@@ -437,10 +440,10 @@ function normalizeQuestion(raw: any, i: number): NormalizedQuestion {
   } else if (opt && opt.length > 0) {
     type =
       opt.length === 2 &&
-      opt.some(
-        (o: any) =>
-          textValue(o).includes("صواب") || textValue(o).includes("صح") || textValue(o) === "True",
-      )
+        opt.some(
+          (o: any) =>
+            textValue(o).includes("صواب") || textValue(o).includes("صح") || textValue(o) === "True",
+        )
         ? "TRUE_FALSE"
         : "MCQ";
   } else {
@@ -905,20 +908,20 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     const optionsHtml = opts.length
       ? `<div style="display:grid;${colStyle}gap:${densityConfig.gap};margin-top:1.4mm;padding-inline-start:7.5mm;">
           ${opts
-            .map((o, i) => {
-              const optIsArabic = isArabicText(o.text);
-              const optDir = optIsArabic ? "rtl" : "ltr";
-              const optAlign = optIsArabic ? "right" : "left";
-              const letter = optIsArabic
-                ? (ARABIC_LETTERS[i] ?? i + 1)
-                : (ENGLISH_LETTERS[i] ?? String.fromCharCode(65 + i));
-              return `
+        .map((o, i) => {
+          const optIsArabic = isArabicText(o.text);
+          const optDir = optIsArabic ? "rtl" : "ltr";
+          const optAlign = optIsArabic ? "right" : "left";
+          const letter = optIsArabic
+            ? (ARABIC_LETTERS[i] ?? i + 1)
+            : (ENGLISH_LETTERS[i] ?? String.fromCharCode(65 + i));
+          return `
             <div style="display:flex;gap:1.5mm;align-items:flex-start;break-inside:avoid;direction:${optDir};text-align:${optAlign};">
               <span style="display:inline-grid;place-items:center;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:50%;height:4.4mm;min-width:4.4mm;font:bold 7pt Arial;color:#334155;flex-shrink:0;">${letter}</span>
               <span style="flex:1;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.4;direction:${optDir};">${o.text}</span>
             </div>`;
-            })
-            .join("")}
+        })
+        .join("")}
         </div>`
       : "";
 
@@ -992,10 +995,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     const badgeText = settings.templateStyle === "exam"
       ? "ورقة اختبار رسمي معتمد"
       : settings.templateStyle === "tech"
-      ? "بنك الأسئلة والتقييمات"
-      : settings.templateStyle === "emerald"
-      ? "التقييم الشامل والتدريبات"
-      : "مذكرة تدريبات وبنك أسئلة";
+        ? "بنك الأسئلة والتقييمات"
+        : settings.templateStyle === "emerald"
+          ? "التقييم الشامل والتدريبات"
+          : "مذكرة تدريبات وبنك أسئلة";
     const cleanTitle = sanitizeMemoText(settings.headerText);
     const cleanSub = sanitizeMemoText(settings.subHeaderText);
 
@@ -1262,9 +1265,9 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
           const qObj = item.question || item;
           const t = normalizeType(
             qObj.type ??
-              item.type ??
-              qObj.question_type ??
-              (qObj.definition ? "DEFINITION" : qObj.modelAnswer || item.modelAnswer ? "ESSAY" : qObj.options || qObj.choices ? "MCQ" : "ESSAY"),
+            item.type ??
+            qObj.question_type ??
+            (qObj.definition ? "DEFINITION" : qObj.modelAnswer || item.modelAnswer ? "ESSAY" : qObj.options || qObj.choices ? "MCQ" : "ESSAY"),
           );
           return t === effectiveType;
         });
@@ -1310,7 +1313,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
         ...prev,
         contentDir:
           selectedStageName.toLowerCase().includes("لغات") ||
-          selectedStageName.toLowerCase().includes("lang")
+            selectedStageName.toLowerCase().includes("lang")
             ? "ltr"
             : "rtl",
         headerText: lessonName && lessonName !== "all" ? `${unitName} - ${lessonName}` : unitName,
@@ -1406,7 +1409,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
         ...prev,
         contentDir:
           selectedStageName.toLowerCase().includes("لغات") ||
-          selectedStageName.toLowerCase().includes("lang")
+            selectedStageName.toLowerCase().includes("lang")
             ? "ltr"
             : "rtl",
         headerText: `${unitTitle} - ${lessonTitle}`,
@@ -1494,10 +1497,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       const badgeText = settings.templateStyle === "exam"
         ? "ورقة اختبار رسمي معتمد"
         : settings.templateStyle === "tech"
-        ? "بنك الأسئلة والتقييمات"
-        : settings.templateStyle === "emerald"
-        ? "التقييم الشامل والتدريبات"
-        : "مذكرة تدريبات وبنك أسئلة";
+          ? "بنك الأسئلة والتقييمات"
+          : settings.templateStyle === "emerald"
+            ? "التقييم الشامل والتدريبات"
+            : "مذكرة تدريبات وبنك أسئلة";
 
       const cleanTitle = sanitizeMemoText(settings.headerText);
       const cleanSub = sanitizeMemoText(settings.subHeaderText);
@@ -1579,10 +1582,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     const topOffset = isFirstPage
       ? (settings.headerEnabled ? 7.5 : (settings.topMm || 12))
       : (settings.continuationHeader === "minimal"
-          ? 5.5
-          : settings.continuationHeader === "none"
-            ? (settings.topMm || 7.5)
-            : 7.5);
+        ? 5.5
+        : settings.continuationHeader === "none"
+          ? (settings.topMm || 7.5)
+          : 7.5);
 
     // Footer
     const footerHtml = `
@@ -1897,9 +1900,8 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
           <div class="doc-title">${title}</div>
           ${subTitle ? `<div class="doc-subtitle">${subTitle}</div>` : ""}
 
-          ${
-            settings.studentFields
-              ? `
+          ${settings.studentFields
+        ? `
             <table class="student-box" dir="${isRtl ? "rtl" : "ltr"}">
               <tr>
                 <td style="width: 50%;"><strong>اسم الطالب:</strong> ................................................................</td>
@@ -1908,8 +1910,8 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
               </tr>
             </table>
           `
-              : ""
-          }
+        : ""
+      }
 
           <div class="questions-list">
     `;
@@ -1929,10 +1931,12 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
         const useTwoCols = q.options.length >= 2;
         if (useTwoCols) {
           for (let i = 0; i < q.options.length; i += 2) {
+            const letter1 = isRtl ? (ARABIC_LETTERS[i] ?? i + 1) : (ENGLISH_LETTERS[i] ?? String.fromCharCode(65 + i));
+            const letter2 = isRtl ? (ARABIC_LETTERS[i + 1] ?? i + 2) : (ENGLISH_LETTERS[i + 1] ?? String.fromCharCode(65 + i + 1));
             wordContent += `<tr>`;
-            wordContent += `<td style="width: 50%;"><span class="opt-badge">(${q.options[i].id || i + 1})</span> ${q.options[i].text || ""}</td>`;
+            wordContent += `<td style="width: 50%;"><span class="opt-badge">(${letter1})</span> ${q.options[i].text || ""}</td>`;
             if (q.options[i + 1]) {
-              wordContent += `<td style="width: 50%;"><span class="opt-badge">(${q.options[i + 1].id || i + 2})</span> ${q.options[i + 1].text || ""}</td>`;
+              wordContent += `<td style="width: 50%;"><span class="opt-badge">(${letter2})</span> ${q.options[i + 1].text || ""}</td>`;
             } else {
               wordContent += `<td></td>`;
             }
@@ -1940,24 +1944,26 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
           }
         } else {
           q.options.forEach((opt, oIdx) => {
-            wordContent += `<tr><td><span class="opt-badge">(${opt.id || oIdx + 1})</span> ${opt.text || ""}</td></tr>`;
+            const letter = isRtl ? (ARABIC_LETTERS[oIdx] ?? oIdx + 1) : (ENGLISH_LETTERS[oIdx] ?? String.fromCharCode(65 + oIdx));
+            wordContent += `<tr><td><span class="opt-badge">(${letter})</span> ${opt.text || ""}</td></tr>`;
           });
         }
         wordContent += `</table>`;
       }
 
-      if (settings.showAnswerBox && (q.correctAnswer || q.answer || q.modelAnswer)) {
+      const effectiveAns = q.answer || q.modelAnswer || q.correctAnswer;
+      if (settings.showAnswers && effectiveAns) {
         wordContent += `
           <div class="answer-box">
-            <strong>الإجابة الصحيحة النموذجية:</strong> ${q.correctAnswer || q.answer || q.modelAnswer}
+            <strong>${isRtl ? "الإجابة النموذجية:" : "Model Answer:"}</strong> ${effectiveAns}
           </div>
         `;
       }
 
-      if (settings.showExplanation && q.explanation) {
+      if (settings.showExplain && q.explanation) {
         wordContent += `
           <div class="explanation-box">
-            <strong>التفسير والشرح:</strong> ${q.explanation}
+            <strong>${isRtl ? "التفسير والتعليل:" : "Explanation:"}</strong> ${q.explanation}
           </div>
         `;
       }
@@ -2078,11 +2084,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             <button
               type="button"
               onClick={() => setActiveStep("content")}
-              className={`rounded-lg py-2.5 text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-                activeStep === "content"
-                  ? "bg-white text-slate-900 shadow-xs dark:bg-slate-900 dark:text-white"
-                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-              }`}
+              className={`rounded-lg py-2.5 text-xs font-black transition-all flex items-center justify-center gap-1.5 ${activeStep === "content"
+                ? "bg-white text-slate-900 shadow-xs dark:bg-slate-900 dark:text-white"
+                : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                }`}
             >
               <BookOpen className="h-3.5 w-3.5" />
               ١. مصدر الأسئلة
@@ -2090,11 +2095,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             <button
               type="button"
               onClick={() => setActiveStep("design")}
-              className={`rounded-lg py-2.5 text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-                activeStep === "design"
-                  ? "bg-white text-slate-900 shadow-xs dark:bg-slate-900 dark:text-white"
-                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-              }`}
+              className={`rounded-lg py-2.5 text-xs font-black transition-all flex items-center justify-center gap-1.5 ${activeStep === "design"
+                ? "bg-white text-slate-900 shadow-xs dark:bg-slate-900 dark:text-white"
+                : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                }`}
             >
               <Palette className="h-3.5 w-3.5" />
               ٢. القالب والشكل
@@ -2102,11 +2106,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             <button
               type="button"
               onClick={() => setActiveStep("export")}
-              className={`rounded-lg py-2.5 text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-                activeStep === "export"
-                  ? "bg-white text-slate-900 shadow-xs dark:bg-slate-900 dark:text-white"
-                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-              }`}
+              className={`rounded-lg py-2.5 text-xs font-black transition-all flex items-center justify-center gap-1.5 ${activeStep === "export"
+                ? "bg-white text-slate-900 shadow-xs dark:bg-slate-900 dark:text-white"
+                : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                }`}
             >
               <Sliders className="h-3.5 w-3.5" />
               ٣. الخط والترقيم
@@ -2121,11 +2124,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setContentSourceTab("curriculum")}
-                  className={`text-xs font-bold pb-1.5 px-2.5 border-b-2 transition flex items-center gap-1.5 ${
-                    contentSourceTab === "curriculum"
-                      ? "border-primary text-primary"
-                      : "border-transparent text-slate-500 hover:text-slate-800"
-                  }`}
+                  className={`text-xs font-bold pb-1.5 px-2.5 border-b-2 transition flex items-center gap-1.5 ${contentSourceTab === "curriculum"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-slate-500 hover:text-slate-800"
+                    }`}
                 >
                   <BookOpen className="h-3.5 w-3.5" />
                   بنك أسئلة المنهج
@@ -2133,11 +2135,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setContentSourceTab("quizzes")}
-                  className={`text-xs font-bold pb-1.5 px-2.5 border-b-2 transition flex items-center gap-1.5 ${
-                    contentSourceTab === "quizzes"
-                      ? "border-primary text-primary"
-                      : "border-transparent text-slate-500 hover:text-slate-800"
-                  }`}
+                  className={`text-xs font-bold pb-1.5 px-2.5 border-b-2 transition flex items-center gap-1.5 ${contentSourceTab === "quizzes"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-slate-500 hover:text-slate-800"
+                    }`}
                 >
                   <FileText className="h-3.5 w-3.5" />
                   اختبارات المنصة ({quizzes.length})
@@ -2145,11 +2146,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setContentSourceTab("external")}
-                  className={`text-xs font-bold pb-1.5 px-2.5 border-b-2 transition flex items-center gap-1.5 ${
-                    contentSourceTab === "external"
-                      ? "border-primary text-primary"
-                      : "border-transparent text-slate-500 hover:text-slate-800"
-                  }`}
+                  className={`text-xs font-bold pb-1.5 px-2.5 border-b-2 transition flex items-center gap-1.5 ${contentSourceTab === "external"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-slate-500 hover:text-slate-800"
+                    }`}
                 >
                   <Upload className="h-3.5 w-3.5" />
                   استيراد ملف (JSON)
@@ -2178,11 +2178,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                               setSelectedLessonName("");
                               setSelectedLessons([]);
                             }}
-                            className={`rounded-xl border p-3 text-right transition-all cursor-pointer ${
-                              isSelected
-                                ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs"
-                                : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-200"
-                            }`}
+                            className={`rounded-xl border p-3 text-right transition-all cursor-pointer ${isSelected
+                              ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs"
+                              : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-200"
+                              }`}
                           >
                             <div className="flex items-center justify-between gap-1 mb-1">
                               <span className="text-xs font-extrabold truncate">
@@ -2310,11 +2309,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                           return (
                             <div
                               key={u.unit}
-                              className={`rounded-xl border transition-all ${
-                                isUnitActive
-                                  ? "border-primary/50 bg-primary/5 shadow-xs"
-                                  : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/40"
-                              }`}
+                              className={`rounded-xl border transition-all ${isUnitActive
+                                ? "border-primary/50 bg-primary/5 shadow-xs"
+                                : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/40"
+                                }`}
                             >
                               <div className="p-3">
                                 <div className="flex items-start justify-between gap-2">
@@ -2331,11 +2329,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                       <button
                                         type="button"
                                         onClick={toggleAllUnitLessons}
-                                        className={`h-7 px-2 text-[11px] font-bold rounded-md border transition flex items-center gap-1 ${
-                                          allUnitLessonsSelected
-                                            ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-                                            : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
-                                        }`}
+                                        className={`h-7 px-2 text-[11px] font-bold rounded-md border transition flex items-center gap-1 ${allUnitLessonsSelected
+                                          ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                                          : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
+                                          }`}
                                       >
                                         <CheckSquare className="h-3 w-3" />
                                         {allUnitLessonsSelected ? "إلغاء دروس الوحدة" : "تحديد كل دروس الوحدة"}
@@ -2398,11 +2395,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                               }
                                             });
                                           }}
-                                          className={`rounded-md border px-2 py-0.5 text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                                            isSelected
-                                              ? "border-primary bg-primary text-white shadow-xs"
-                                              : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-primary/10 hover:border-primary/40 hover:text-primary dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
-                                          }`}
+                                          className={`rounded-md border px-2 py-0.5 text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${isSelected
+                                            ? "border-primary bg-primary text-white shadow-xs"
+                                            : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-primary/10 hover:border-primary/40 hover:text-primary dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
+                                            }`}
                                           title="انقر لتحديد أو إلغاء تحديد هذا الدرس ضمن مجموعة الدروس"
                                         >
                                           <span className="font-mono">{isSelected ? "✓" : "+"}</span>
@@ -2569,11 +2565,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                           return (
                             <label
                               key={sec.id}
-                              className={`flex items-center justify-between p-2 rounded-lg border text-xs cursor-pointer transition ${
-                                isChecked
-                                  ? "bg-white border-primary/40 text-slate-900 shadow-2xs dark:bg-slate-850 dark:text-white"
-                                  : "bg-slate-50/70 border-slate-200 text-slate-500 dark:bg-slate-900 dark:border-slate-800"
-                              }`}
+                              className={`flex items-center justify-between p-2 rounded-lg border text-xs cursor-pointer transition ${isChecked
+                                ? "bg-white border-primary/40 text-slate-900 shadow-2xs dark:bg-slate-850 dark:text-white"
+                                : "bg-slate-50/70 border-slate-200 text-slate-500 dark:bg-slate-900 dark:border-slate-800"
+                                }`}
                             >
                               <div className="flex items-center gap-2 min-w-0">
                                 <input
@@ -2688,11 +2683,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                     key={t.id}
                     type="button"
                     onClick={() => setSettings({ ...settings, templateStyle: t.id as any })}
-                    className={`rounded-xl border p-3 text-right transition cursor-pointer ${
-                      settings.templateStyle === t.id
-                        ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs font-bold"
-                        : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800/40"
-                    }`}
+                    className={`rounded-xl border p-3 text-right transition cursor-pointer ${settings.templateStyle === t.id
+                      ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs font-bold"
+                      : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800/40"
+                      }`}
                   >
                     <strong className="block text-xs font-bold">{t.title}</strong>
                     <span className="text-[10px] text-muted-foreground mt-0.5 block leading-tight">{t.desc}</span>
@@ -2715,11 +2709,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                       key={cs.id}
                       type="button"
                       onClick={() => setSettings({ ...settings, cardStyle: cs.id as any })}
-                      className={`rounded-xl border p-2.5 text-right transition cursor-pointer ${
-                        settings.cardStyle === cs.id
-                          ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs font-bold"
-                          : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800/40"
-                      }`}
+                      className={`rounded-xl border p-2.5 text-right transition cursor-pointer ${settings.cardStyle === cs.id
+                        ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs font-bold"
+                        : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800/40"
+                        }`}
                     >
                       <strong className="block text-xs">{cs.title}</strong>
                       <span className="text-[9.5px] text-muted-foreground mt-0.5 block leading-tight">{cs.desc}</span>
@@ -2743,11 +2736,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                       key={ds.id}
                       type="button"
                       onClick={() => setSettings({ ...settings, density: ds.id as any })}
-                      className={`rounded-xl border p-2.5 text-right transition cursor-pointer ${
-                        settings.density === ds.id
-                          ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs font-bold"
-                          : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800/40"
-                      }`}
+                      className={`rounded-xl border p-2.5 text-right transition cursor-pointer ${settings.density === ds.id
+                        ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs font-bold"
+                        : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800/40"
+                        }`}
                     >
                       <strong className="block text-xs">{ds.title}</strong>
                       <span className="text-[9.5px] text-muted-foreground mt-0.5 block leading-tight">{ds.desc}</span>
@@ -2843,11 +2835,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                         key={ch.id}
                         type="button"
                         onClick={() => setSettings({ ...settings, continuationHeader: ch.id as any })}
-                        className={`rounded-xl border p-2 text-right transition cursor-pointer ${
-                          settings.continuationHeader === ch.id
-                            ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs font-bold"
-                            : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800/40"
-                        }`}
+                        className={`rounded-xl border p-2 text-right transition cursor-pointer ${settings.continuationHeader === ch.id
+                          ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs font-bold"
+                          : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800/40"
+                          }`}
                       >
                         <strong className="block text-xs">{ch.title}</strong>
                         <span className="text-[9.5px] text-muted-foreground mt-0.5 block leading-tight">{ch.desc}</span>
@@ -2866,11 +2857,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                   <button
                     type="button"
                     onClick={() => setSettings({ ...settings, guideView: !settings.guideView })}
-                    className={`text-[11px] font-bold px-2 py-0.5 rounded-md border ${
-                      settings.guideView
-                        ? "bg-amber-100 text-amber-800 border-amber-300"
-                        : "bg-slate-100 text-slate-600 border-slate-200"
-                    }`}
+                    className={`text-[11px] font-bold px-2 py-0.5 rounded-md border ${settings.guideView
+                      ? "bg-amber-100 text-amber-800 border-amber-300"
+                      : "bg-slate-100 text-slate-600 border-slate-200"
+                      }`}
                   >
                     {settings.guideView ? "إخفاء الخطوط الإرشادية" : "إظهار حدود الكتابة"}
                   </button>
@@ -3180,11 +3170,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setPreviewTab("preview")}
-                  className={`rounded-md px-3 py-1 text-xs font-bold transition flex items-center gap-1.5 ${
-                    previewTab === "preview"
-                      ? "bg-white text-primary shadow-xs dark:bg-slate-900"
-                      : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                  }`}
+                  className={`rounded-md px-3 py-1 text-xs font-bold transition flex items-center gap-1.5 ${previewTab === "preview"
+                    ? "bg-white text-primary shadow-xs dark:bg-slate-900"
+                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                    }`}
                 >
                   <Eye className="h-3.5 w-3.5" />
                   المعاينة الحية
@@ -3192,11 +3181,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setPreviewTab("questions_list")}
-                  className={`rounded-md px-3 py-1 text-xs font-bold transition flex items-center gap-1.5 ${
-                    previewTab === "questions_list"
-                      ? "bg-white text-primary shadow-xs dark:bg-slate-900"
-                      : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                  }`}
+                  className={`rounded-md px-3 py-1 text-xs font-bold transition flex items-center gap-1.5 ${previewTab === "questions_list"
+                    ? "bg-white text-primary shadow-xs dark:bg-slate-900"
+                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                    }`}
                 >
                   <ListOrdered className="h-3.5 w-3.5" />
                   إدارة وتعديل الأسئلة ({questions.length})
@@ -3208,22 +3196,20 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowAllPages(true)}
-                    className={`rounded-md px-2.5 py-1 text-xs font-bold transition ${
-                      showAllPages
-                        ? "bg-primary text-white"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800"
-                    }`}
+                    className={`rounded-md px-2.5 py-1 text-xs font-bold transition ${showAllPages
+                      ? "bg-primary text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800"
+                      }`}
                   >
                     كل الصفحات
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowAllPages(false)}
-                    className={`rounded-md px-2.5 py-1 text-xs font-bold transition ${
-                      !showAllPages
-                        ? "bg-primary text-white"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800"
-                    }`}
+                    className={`rounded-md px-2.5 py-1 text-xs font-bold transition ${!showAllPages
+                      ? "bg-primary text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800"
+                      }`}
                   >
                     صفحة واحدة
                   </button>
@@ -3240,11 +3226,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
               <button
                 type="button"
                 onClick={() => setSelectedTypeFilter("ALL")}
-                className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${
-                  selectedTypeFilter === "ALL"
-                    ? "bg-primary text-white shadow-xs"
-                    : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
-                }`}
+                className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${selectedTypeFilter === "ALL"
+                  ? "bg-primary text-white shadow-xs"
+                  : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+                  }`}
               >
                 الكل ({typeCounts.ALL})
               </button>
@@ -3252,11 +3237,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setSelectedTypeFilter("MCQ")}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${
-                    selectedTypeFilter === "MCQ"
-                      ? "bg-primary text-white shadow-xs"
-                      : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
-                  }`}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${selectedTypeFilter === "MCQ"
+                    ? "bg-primary text-white shadow-xs"
+                    : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+                    }`}
                 >
                   اختيار من متعدد ({typeCounts.MCQ})
                 </button>
@@ -3265,11 +3249,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setSelectedTypeFilter("TRUE_FALSE")}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${
-                    selectedTypeFilter === "TRUE_FALSE"
-                      ? "bg-primary text-white shadow-xs"
-                      : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
-                  }`}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${selectedTypeFilter === "TRUE_FALSE"
+                    ? "bg-primary text-white shadow-xs"
+                    : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+                    }`}
                 >
                   صواب وخطأ ({typeCounts.TRUE_FALSE})
                 </button>
@@ -3278,11 +3261,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setSelectedTypeFilter("ESSAY")}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${
-                    selectedTypeFilter === "ESSAY"
-                      ? "bg-primary text-white shadow-xs"
-                      : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
-                  }`}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${selectedTypeFilter === "ESSAY"
+                    ? "bg-primary text-white shadow-xs"
+                    : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+                    }`}
                 >
                   أسئلة مقالية ({typeCounts.ESSAY})
                 </button>
@@ -3291,11 +3273,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 <button
                   type="button"
                   onClick={() => setSelectedTypeFilter("DEFINITION")}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${
-                    selectedTypeFilter === "DEFINITION"
-                      ? "bg-primary text-white shadow-xs"
-                      : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
-                  }`}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${selectedTypeFilter === "DEFINITION"
+                    ? "bg-primary text-white shadow-xs"
+                    : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+                    }`}
                 >
                   تعريفات ومصطلحات ({typeCounts.DEFINITION})
                 </button>
@@ -3344,11 +3325,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                       setScale(Number(Math.max(0.35, Math.min(0.85, (containerW - 48) / a4WidthPx)).toFixed(2)));
                     }
                   }}
-                  className={`rounded-md px-2 py-1 text-[11px] font-bold transition border ${
-                    autoScale
-                      ? "bg-slate-200 text-slate-800 border-slate-300 dark:bg-slate-700 dark:text-white"
-                      : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300"
-                  }`}
+                  className={`rounded-md px-2 py-1 text-[11px] font-bold transition border ${autoScale
+                    ? "bg-slate-200 text-slate-800 border-slate-300 dark:bg-slate-700 dark:text-white"
+                    : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300"
+                    }`}
                   title="ملاءمة تلقائية مع عرض الشاشة"
                 >
                   تلقائي
@@ -3360,11 +3340,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                     setAutoScale(false);
                     setScale(1.0);
                   }}
-                  className={`rounded-md px-2 py-1 text-[11px] font-bold transition border ${
-                    scale === 1.0
-                      ? "bg-primary text-white border-primary"
-                      : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300"
-                  }`}
+                  className={`rounded-md px-2 py-1 text-[11px] font-bold transition border ${scale === 1.0
+                    ? "bg-primary text-white border-primary"
+                    : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300"
+                    }`}
                   title="عرض بالحجم الحقيقي 100%"
                 >
                   100%
@@ -3431,11 +3410,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                   .map(({ q, originalIdx }) => (
                     <div
                       key={q.id || originalIdx}
-                      className={`rounded-xl border p-3 transition flex items-start gap-3 ${
-                        q.enabled
-                          ? "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
-                          : "border-slate-200/50 bg-slate-50 opacity-50 dark:bg-slate-800/40"
-                      }`}
+                      className={`rounded-xl border p-3 transition flex items-start gap-3 ${q.enabled
+                        ? "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
+                        : "border-slate-200/50 bg-slate-50 opacity-50 dark:bg-slate-800/40"
+                        }`}
                     >
                       <button
                         type="button"
@@ -3529,10 +3507,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                   const contentTopMm = isFirstPage
                     ? (settings.headerEnabled ? Math.max(36, settings.topMm) : settings.topMm)
                     : (settings.continuationHeader === "minimal"
-                        ? Math.max(15, settings.continuationTopMm || 16)
-                        : settings.continuationHeader === "full"
-                          ? (settings.headerEnabled ? Math.max(36, settings.topMm) : settings.topMm)
-                          : Math.max(10, settings.continuationTopMm ? Math.min(settings.continuationTopMm, 12) : 11));
+                      ? Math.max(15, settings.continuationTopMm || 16)
+                      : settings.continuationHeader === "full"
+                        ? (settings.headerEnabled ? Math.max(36, settings.topMm) : settings.topMm)
+                        : Math.max(10, settings.continuationTopMm ? Math.min(settings.continuationTopMm, 12) : 11));
 
                   const densityGap = {
                     compact: 2.4,
@@ -3738,10 +3716,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                               top: isFirstPage
                                 ? (settings.headerEnabled ? "7.5mm" : `${settings.topMm}mm`)
                                 : (settings.continuationHeader === "minimal"
-                                    ? "5.5mm"
-                                    : settings.continuationHeader === "none"
-                                      ? `${settings.topMm || 7.5}mm`
-                                      : "7.5mm"),
+                                  ? "5.5mm"
+                                  : settings.continuationHeader === "none"
+                                    ? `${settings.topMm || 7.5}mm`
+                                    : "7.5mm"),
                               bottom: `${settings.bottomMm}mm`,
                               right: `${region.right}mm`,
                               left: `${region.left}mm`,
@@ -3904,10 +3882,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                       {settings.templateStyle === "exam"
                                         ? "ورقة اختبار رسمي معتمد"
                                         : settings.templateStyle === "tech"
-                                        ? "بنك الأسئلة والتقييمات"
-                                        : settings.templateStyle === "emerald"
-                                        ? "التقييم الشامل والتدريبات"
-                                        : "مذكرة تدريبات وبنك أسئلة"}
+                                          ? "بنك الأسئلة والتقييمات"
+                                          : settings.templateStyle === "emerald"
+                                            ? "التقييم الشامل والتدريبات"
+                                            : "مذكرة تدريبات وبنك أسئلة"}
                                     </span>
                                   </div>
                                 </div>
@@ -4036,11 +4014,11 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                 const rawQ = item.rawQuestion;
                                 const qIdx = rawQ
                                   ? questions.findIndex(
-                                      (q) => q === rawQ || (rawQ.id && q.id === rawQ.id) || q.statement === rawQ.statement
-                                    )
+                                    (q) => q === rawQ || (rawQ.id && q.id === rawQ.id) || q.statement === rawQ.statement
+                                  )
                                   : questions.findIndex(
-                                      (q) => q.statement === activeQuestions[item.qNumber - settings.questionStart]?.statement
-                                    );
+                                    (q) => q.statement === activeQuestions[item.qNumber - settings.questionStart]?.statement
+                                  );
                                 const targetIdx = qIdx !== -1 ? qIdx : item.qNumber - settings.questionStart;
                                 const currentQ = questions[targetIdx];
 
@@ -4051,7 +4029,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                     style={{ width: "100%", boxSizing: "border-box" }}
                                   >
                                     <div dangerouslySetInnerHTML={{ __html: item.html }} style={{ width: "100%", boxSizing: "border-box" }} />
-                                    
+
                                     {/* Action toolbar on question hover */}
                                     <div className="no-print absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 z-10">
                                       <button
