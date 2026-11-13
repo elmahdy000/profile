@@ -106,7 +106,7 @@ export function SubAdminDashboard() {
           <div className="mb-6 flex items-center gap-3 border-b border-[#E4EAF2] pb-5">
             <img src="/logo.webp" alt="شعار المنصة" className="h-11 w-11 rounded-xl border border-[#E4EAF2] object-cover" />
             <div>
-              <strong className="block text-sm font-black text-[#0F172A]">أكاديمية د. محمود</strong>
+              <strong className="block text-sm font-black text-[#0F172A]">منصة د. محمود المهدي</strong>
               <span className="text-xs text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">لوحة المشرف المساعد</span>
             </div>
           </div>

@@ -1776,7 +1776,7 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
                                   const clean = (raw || "").replace(/\D/g, "");
                                   const phoneWithCountry = clean.startsWith("20") ? clean : clean.startsWith("0") ? `20${clean.slice(1)}` : `20${clean}`;
                                   const statusText = record.status === "present" ? "حاضر ✓" : record.status === "absent" ? "غائب ✕" : record.status === "late" ? "متأخر ⏳" : "لم يُسجل بعد";
-                                  const msg = `السلام عليكم ورحمة الله، من أكاديمية د. محمود المهدي:\nنحيطكم علماً بحالة حضور الطالب (${record.name}) لحصة اليوم (${selectedDate}): [${statusText}].\nنتمنى له دوام التوفيق والتميز.`;
+                                  const msg = `السلام عليكم ورحمة الله، من منصة د. محمود المهدي:\nنحيطكم علماً بحالة حضور الطالب (${record.name}) لحصة اليوم (${selectedDate}): [${statusText}].\nنتمنى له دوام التوفيق والتميز.`;
                                   window.open(`https://wa.me/${phoneWithCountry}?text=${encodeURIComponent(msg)}`, "_blank");
                                 }}
                                 title="إرسال إشعار مباشر لولي الأمر عبر واتساب"

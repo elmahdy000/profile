@@ -61,77 +61,111 @@ export function findScheduleConflicts(centers: OfflineCenterItem[]): { itemA: Of
 }
 
 export const defaultOfflineCenters: OfflineCenterItem[] = [
+  // ─── القسم العربي (Arabic Section) ───
+  // أيام سبت - اتنين - أربع
+  {
+    id: "rafal-arabic-130pm",
+    name: "سنتر رافال (Rafal) - عربي",
+    area: "بجوار الثانوية العسكرية",
+    grade: "ثانوية عامة وبكالوريا - عربي",
+    timeStr: "1:30 ظهراً",
+    daysStr: "سبت - اتنين - أربع",
+    color: "emerald",
+  },
+  {
+    id: "rafal-arabic-3pm",
+    name: "سنتر رافال (Rafal) - عربي",
+    area: "بجوار الثانوية العسكرية",
+    grade: "ثانوية عامة وبكالوريا - عربي",
+    timeStr: "3:00 عصراً",
+    daysStr: "سبت - اتنين - أربع",
+    color: "emerald",
+  },
+  {
+    id: "zag-arabic-5pm",
+    name: "سنتر زاج (Zag) - عربي",
+    area: "منطقة الفلل",
+    grade: "ثانوية عامة وبكالوريا - عربي",
+    timeStr: "5:00 مساءً",
+    daysStr: "سبت - اتنين - أربع",
+    color: "blue",
+  },
+  // أيام أحد - تلات - خميس
+  {
+    id: "future-arabic-3pm",
+    name: "سنتر فيوتشر (Future) - عربي",
+    area: "الزقازيق",
+    grade: "ثانوية عامة وبكالوريا - عربي",
+    timeStr: "3:00 عصراً",
+    daysStr: "حد - تلات - خميس",
+    color: "amber",
+  },
+  {
+    id: "qanayat-arabic-6pm",
+    name: "سنتر القنايات - عربي",
+    area: "القنايات",
+    grade: "ثانوية عامة وبكالوريا - عربي",
+    timeStr: "6:00 مساءً",
+    daysStr: "حد - تلات - خميس",
+    color: "cyan",
+  },
+  {
+    id: "qanayat-arabic-7pm",
+    name: "سنتر القنايات - عربي",
+    area: "القنايات",
+    grade: "ثانوية عامة وبكالوريا - عربي",
+    timeStr: "7:00 مساءً",
+    daysStr: "حد - تلات - خميس",
+    color: "cyan",
+  },
+
+  // ─── قسم اللغات (Languages Section) ───
+  // أيام أحد - تلات - خميس
   {
     id: "eduverse-languages-10am",
-    name: "سنتر إديوفيرس أكاديمي (EduVerse) - لغات",
+    name: "سنتر إديوفيرس (Eduverse) - لغات",
     area: "منطقة الفلل",
-    grade: "ثانوية عامة - لغات",
+    grade: "ثانوية عامة وبكالوريا - لغات",
     timeStr: "10:00 صباحاً",
     daysStr: "حد - تلات - خميس",
     color: "indigo",
   },
   {
     id: "eduverse-languages-11am",
-    name: "سنتر إديوفيرس أكاديمي (EduVerse) - لغات",
+    name: "سنتر إديوفيرس (Eduverse) - لغات",
     area: "منطقة الفلل",
-    grade: "ثانوية عامة - لغات",
+    grade: "ثانوية عامة وبكالوريا - لغات",
     timeStr: "11:00 صباحاً",
     daysStr: "حد - تلات - خميس",
     color: "indigo",
   },
   {
-    id: "future-arabic-3pm",
-    name: "سنتر فيوتشر (Future) - عربي",
-    area: "الزقازيق",
-    grade: "ثانوية عامة - عربي",
-    timeStr: "3:00 مساءً",
+    id: "eduverse-languages-1230pm",
+    name: "سنتر إديوفيرس (Eduverse) - لغات",
+    area: "منطقة الفلل",
+    grade: "ثانوية عامة وبكالوريا - لغات",
+    timeStr: "12:30 ظهراً",
     daysStr: "حد - تلات - خميس",
-    color: "amber",
+    color: "indigo",
   },
   {
-    id: "magd-languages-4pm",
-    name: "سنتر المجد (El-Magd) - لغات",
-    area: "الزقازيق",
-    grade: "ثانوية عامة - لغات",
+    id: "eduverse-languages-4pm",
+    name: "سنتر إديوفيرس (Eduverse) - لغات",
+    area: "منطقة الفلل",
+    grade: "ثانوية عامة وبكالوريا - لغات",
     timeStr: "4:00 عصراً",
     daysStr: "حد - تلات - خميس",
     color: "purple",
   },
+  // أيام سبت - اتنين - أربع
   {
-    id: "qanayat-630pm",
-    name: "سنتر القنايات",
-    area: "القنايات",
-    grade: "تانية ثانوي (بكالوريا)",
-    timeStr: "6:30 مساءً",
-    daysStr: "حد - تلات - خميس",
-    color: "cyan",
-  },
-  {
-    id: "rafal-academy-130pm",
-    name: "سنتر رافال أكاديمي (Rafal Academy) - عربي",
-    area: "بجوار الثانوية العسكرية",
-    grade: "ثانوية عامة - عربي",
-    timeStr: "1:30 ظهراً",
+    id: "hennawy-languages-10am",
+    name: "سنتر الحناوي - لغات",
+    area: "الزقازيق - الحناوي",
+    grade: "ثانوية عامة وبكالوريا - لغات",
+    timeStr: "10:00 صباحاً",
     daysStr: "سبت - اتنين - أربع",
-    color: "emerald",
-  },
-  {
-    id: "rafal-academy-3pm",
-    name: "سنتر رافال أكاديمي (Rafal Academy) - عربي",
-    area: "بجوار الثانوية العسكرية",
-    grade: "ثانوية عامة - عربي",
-    timeStr: "3:00 عصراً",
-    daysStr: "سبت - اتنين - أربع",
-    color: "emerald",
-  },
-  {
-    id: "zag-academy-5pm",
-    name: "سنتر زاج أكاديمي (Zag Academy) - عربي",
-    area: "منطقة الفلل",
-    grade: "ثانوية عامة - عربي",
-    timeStr: "5:00 مساءً",
-    daysStr: "سبت - اتنين - أربع",
-    color: "blue",
+    color: "rose",
   },
 ];
 
@@ -302,7 +336,7 @@ export const CentersTab: React.FC<CentersTabProps> = ({
                         type="text"
                         value={editForm.name}
                         onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                        placeholder="مثال: سنتر زاج أكاديمي (Zag Academy)"
+                        placeholder="مثال: سنتر زاج (Zag) - عربي"
                         className="w-full h-9 rounded-xl border border-border bg-background px-3 text-xs font-bold text-foreground focus:border-primary focus:outline-none"
                       />
                     </div>

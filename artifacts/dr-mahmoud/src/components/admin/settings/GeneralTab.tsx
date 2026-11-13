@@ -96,7 +96,7 @@ export const GeneralTab: React.FC<GeneralTabProps> = ({
             }
             rows={3}
             className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
-            placeholder="أكاديمية د. محمود المهدي لعلوم الحاسب والبرمجة بالزقازيق وأونلاين. تأسيس عملي واحترافي من الصفر لطلاب الثانوية والجامعات..."
+            placeholder="منصة د. محمود المهدي لعلوم الحاسب والذكاء الاصطناعي بالزقازيق وأونلاين. تأسيس عملي واحترافي من الصفر لطلاب الثانوية والجامعات..."
           />
           <p className="text-[11px] text-muted-foreground">الوصف الرئيسي الذي يظهر في نتائج نتائج بحث جوجل لمنصة د. محمود المهدي.</p>
         </div>

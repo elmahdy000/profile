@@ -1690,17 +1690,33 @@ router.post("/admin/learning/question-bank/batch-import", requireAdmin, async (r
   }
 });
 
-router.delete("/admin/learning/question-bank/:id", requireSuperAdmin, async (req, res, next) => {
+router.delete("/admin/learning/question-bank/:id", requireAdmin, async (req, res, next) => {
   try {
-    const [deleted] = await db
+    const targetId = Number(req.params.id);
+    let [deleted] = await db
       .delete(questionBankTable)
-      .where(eq(questionBankTable.id, Number(req.params.id)))
+      .where(eq(questionBankTable.id, targetId))
       .returning();
+
+    if (!deleted) {
+      const [essayDeleted] = await db
+        .delete(essayQuestionBankTable)
+        .where(eq(essayQuestionBankTable.id, targetId))
+        .returning();
+      deleted = essayDeleted;
+    }
+
     if (!deleted) {
       res.status(404).json({ error: "السؤال غير موجود في البنك" });
       return;
     }
-    await logAudit(req, "DELETE_QUESTION", "question_bank", String(deleted.id), `حذف سؤال من بنك الأسئلة: ${(deleted.question as any)?.questionText || "سؤال"}`);
+    await logAudit(
+      req,
+      "DELETE_QUESTION",
+      "question_bank",
+      String(deleted.id),
+      `حذف سؤال من بنك الأسئلة: ${(deleted as any)?.question?.questionText || (deleted as any)?.statement || "سؤال"}`
+    );
     res.json({ success: true });
   } catch (error) {
     next(error);

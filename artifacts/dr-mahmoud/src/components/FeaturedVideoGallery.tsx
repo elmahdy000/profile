@@ -768,7 +768,7 @@ export function FeaturedVideoGallery() {
               <div className="p-5 sm:p-7 space-y-5 bg-gradient-to-b from-slate-950 to-slate-900">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-xs font-bold text-sky-400">
-                    <span>محاضرة من داخل منصة أكاديمية د. محمود المهدي</span>
+                    <span>محاضرة من داخل منصة د. محمود المهدي</span>
                   </div>
                   <h3
                     id="modal-video-title"

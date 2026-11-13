@@ -186,7 +186,7 @@ export function ParentPortal() {
           description: "ستصلك التنبيهات الفورية بدرجات ابنك في الاختبارات حتى لو كان المتصفح في الخلفية.",
         });
         try {
-          new Notification("أكاديمية د. محمود المهدي", {
+          new Notification("منصة د. محمود المهدي", {
             body: "تم تفعيل التنبيهات الفورية بنجاح لولي الأمر!",
             icon: "/favicon.ico",
           });
@@ -433,7 +433,7 @@ export function ParentPortal() {
               <span>بوابة ولي الأمر الرسمية لمتابعة الطالب</span>
             </div>
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">أكاديمية د. محمود المهدي للبرمجة</h1>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">منصة د. محمود المهدي للبرمجة</h1>
           <p className="text-sm text-slate-500 max-w-lg mx-auto">
             متابعة مباشرة لنتائج اختبارات الطالب، سجل الحضور والغياب، ملاحظات السلوك من المشرفين، وحالة المصاريف الشهرية.
           </p>
@@ -902,7 +902,7 @@ export function ParentPortal() {
                             type="button"
                             onClick={() => {
                               const scoreStr = quiz.totalQuestions ? `${quiz.score} من ${quiz.totalQuestions}` : `${quiz.score}%`;
-                              const text = `📊 تقرير اختبار - أكاديمية د. محمود المهدي للبرمجة:\nالطالب: ${reportData.student.name}\nالاختبار: ${title}\nالنتيجة: ${scoreStr} (${pct}%)\nالحالة: ${quiz.passed ? "اجتاز الاختبار بنجاح ✓" : "يحتاج لمراجعة ✕"}\nالتاريخ: ${formatDate(quiz.createdAt)}`;
+                              const text = `📊 تقرير اختبار - منصة د. محمود المهدي للبرمجة:\nالطالب: ${reportData.student.name}\nالاختبار: ${title}\nالنتيجة: ${scoreStr} (${pct}%)\nالحالة: ${quiz.passed ? "اجتاز الاختبار بنجاح ✓" : "يحتاج لمراجعة ✕"}\nالتاريخ: ${formatDate(quiz.createdAt)}`;
                               window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
                             }}
                             className="p-2 rounded-xl bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 transition-all shadow-2xs"

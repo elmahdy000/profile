@@ -113,7 +113,7 @@ const DEFAULT_SETTINGS: MemoSettings = {
   headerEnabled: true,
   continuationHeader: "minimal",
   headerText: "مذكرة التدريبات الشاملة وبنك الأسئلة",
-  subHeaderText: "أكاديمية د. محمود المهدي | الحاسب الآلي والبرمجة",
+  subHeaderText: "د. محمود المهدي | الحاسب الآلي والبرمجة",
   guideView: false,
   showAnswers: false,
   showExplain: false,
@@ -129,7 +129,7 @@ const DEFAULT_SETTINGS: MemoSettings = {
   questionStart: 1,
   pageStart: 1,
   maxQuestions: 0,
-  footerText: "أكاديمية د. محمود المهدي | الحاسب الآلي والذكاء الاصطناعي",
+  footerText: "د. محمود المهدي | الحاسب الآلي والذكاء الاصطناعي",
   showTotalPages: true,
   numPosition: "left",
   studentFields: true,
@@ -966,8 +966,17 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       comfortable: 4.0,
     }[settings.density || "balanced"];
 
-    // Page 1 available content height
-    const p1Top = settings.headerEnabled ? Math.max(34, settings.topMm) : settings.topMm;
+    // Page 1 available content height with dynamic header awareness
+    let p1HeaderH = 0;
+    if (settings.headerEnabled) {
+      const titleChars = settings.headerText?.length || 20;
+      const titleLines = Math.max(1, Math.ceil(titleChars / 42));
+      const hasSub = Boolean(settings.subHeaderText?.trim());
+      const subLines = hasSub ? Math.max(1, Math.ceil((settings.subHeaderText?.length || 20) / 60)) : 0;
+      // Tier 1 (~13mm) + Tier 2 Title (titleLines * 5.5mm) + Subtitle (subLines * 4.2mm) + Divider & margins (~5mm)
+      p1HeaderH = 13 + (titleLines * 5.5) + (subLines * 4.2) + 5;
+    }
+    const p1Top = settings.headerEnabled ? (8.5 + p1HeaderH) : settings.topMm;
     const p1AvailableH = 297 - p1Top - settings.bottomMm;
 
     // Continuation Page available content height (massively increased usable space!)
@@ -982,8 +991,8 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     }
     const contAvailableH = 297 - contTop - settings.bottomMm;
 
-    const all: Array<Array<{ html: string; h: number; qNumber: number }>> = [];
-    let current: Array<{ html: string; h: number; qNumber: number }> = [];
+    const all: Array<Array<{ html: string; h: number; qNumber: number; rawQuestion?: any; qIndex?: number }>> = [];
+    let current: Array<{ html: string; h: number; qNumber: number; rawQuestion?: any; qIndex?: number }> = [];
     let currentUsedH = 0;
     let count = 0;
 
@@ -1021,7 +1030,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
         );
       }
 
-      current.push({ html, h, qNumber: actualN });
+      current.push({ html, h, qNumber: actualN, rawQuestion: q, qIndex: i });
       currentUsedH += postAddedGap + h + postFirstOffset;
       count++;
     });
@@ -1049,12 +1058,13 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     return () => window.removeEventListener("resize", updateScale);
   }, [autoScale]);
 
-  // Helper to remove any duplicate mode suffixes from headerText
+  // Helper to remove any duplicate mode suffixes from headerText and ensure "أكاديمية" is removed
   const cleanHeaderText = (text: string) => {
     return (text || "")
       .replace(/(\s*\[\s*(نموذج الإجابة|نسخة المعلم|نسخة الطالب|Model Answer|Teacher Copy|Student Copy)\s*\])+/gi, "")
       .replace(/(\s*\(\s*(نموذج الإجابة|نسخة المعلم|نسخة الطالب|Model Answer|Teacher Copy|Student Copy)\s*\))+/gi, "")
       .replace(/(\s*(نموذج الإجابة|نسخة المعلم|نسخة الطالب))+/gi, "")
+      .replace(/أكاديمية\s*/g, "")
       .trim();
   };
 
@@ -1244,7 +1254,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             ? "ltr"
             : "rtl",
         headerText: lessonName && lessonName !== "all" ? `${unitName} - ${lessonName}` : unitName,
-        subHeaderText: `أكاديمية د. محمود المهدي · ${selectedStageName.replace(/·/g, "•")}`,
+        subHeaderText: `د. محمود المهدي • ${selectedStageName.replace(/·/g, "•")}`,
       }));
 
       toast({
@@ -1340,7 +1350,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             ? "ltr"
             : "rtl",
         headerText: `${unitTitle} - ${lessonTitle}`,
-        subHeaderText: `أكاديمية د. محمود المهدي ▪ ${selectedStageName.replace(/·/g, "•")}`,
+        subHeaderText: `د. محمود المهدي • ${selectedStageName.replace(/·/g, "•")}`,
       }));
 
       toast({
@@ -2078,7 +2088,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: "lines", title: "فواصل خطية أكاديمية", desc: "خفيف موفر للورق (الموصى به)" },
+                    { id: "lines", title: "فواصل خطية مبسطة", desc: "خفيف موفر للورق (الموصى به)" },
                     { id: "cards", title: "بطاقات بإطار محدد", desc: "إطار كلاسيكي كامل" },
                     { id: "dashed", title: "فواصل منقطة ناعمة", desc: "حدود ناعمة وبسيطة" },
                   ].map((cs) => (
@@ -2193,7 +2203,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                       type="text"
                       value={settings.subHeaderText}
                       onChange={(e) => setSettings({ ...settings, subHeaderText: e.target.value })}
-                      placeholder="العنوان الفرعي أو اسم الأكاديمية"
+                      placeholder="العنوان الفرعي أو التخصص"
                       className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-600 dark:bg-slate-800 dark:border-slate-700"
                     />
                   </div>
@@ -3017,329 +3027,395 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                             />
                           )}
 
-                          {/* First Page Full Header */}
-                          {isFirstPage && settings.headerEnabled && (
-                            <div
-                              style={{
-                                position: "absolute",
-                                top: "8.5mm",
-                                right: `${region.right}mm`,
-                                left: `${region.left}mm`,
-                                width: `calc(210mm - ${region.left + region.right}mm)`,
-                                boxSizing: "border-box",
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: "1.6mm",
-                                zIndex: 2,
-                                color: "#0f172a",
-                              }}
-                            >
-                              {/* Tier 1: Dr. Mahmoud Elmahdy Luxury Branding + Document Type Badge */}
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "space-between",
-                                  width: "100%",
-                                  boxSizing: "border-box",
-                                }}
-                              >
-                                {/* Dr / Elmahdy Distinctive Seal & Signature */}
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "2.5mm",
-                                    background: theme.sealBg,
-                                    border: theme.sealBorder,
-                                    borderRadius: "3mm",
-                                    padding: "1.2mm 3mm",
-                                    boxShadow: theme.sealShadow,
-                                  }}
-                                >
-                                  {/* Crest */}
-                                  <div
-                                    style={{
-                                      width: "7.5mm",
-                                      height: "7.5mm",
-                                      borderRadius: "50%",
-                                      background: theme.crestBg,
-                                      border: theme.crestBorder,
-                                      display: "flex",
-                                      flexDirection: "column",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      color: theme.crestColor,
-                                      fontWeight: 900,
-                                      fontSize: "4pt",
-                                      lineHeight: 1.1,
-                                      flexShrink: 0,
-                                    }}
-                                  >
-                                    <span style={{ fontSize: "5pt" }}>★</span>
-                                    <span>DR</span>
-                                  </div>
-
-                                  {/* Text */}
-                                  <div style={{ display: "flex", flexDirection: "column" }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "1.5mm" }}>
-                                      <span
-                                        style={{
-                                          fontSize: "9.5pt",
-                                          fontWeight: 900,
-                                          color: theme.drTextColor,
-                                          fontFamily: "'Cairo', sans-serif",
-                                          lineHeight: 1.2,
-                                        }}
-                                      >
-                                        د. محمود المهدي
-                                      </span>
-                                      <span
-                                        style={{
-                                          fontSize: "6pt",
-                                          fontWeight: 800,
-                                          background: theme.drPillBg,
-                                          color: theme.drPillColor,
-                                          padding: "0.4mm 1.8mm",
-                                          borderRadius: "1mm",
-                                          border: theme.drPillBorder,
-                                          letterSpacing: "0.5px",
-                                          lineHeight: 1.2,
-                                        }}
-                                      >
-                                        Dr / Elmahdy
-                                      </span>
-                                    </div>
-                                    <span
-                                      style={{
-                                        fontSize: "6.8pt",
-                                        fontWeight: 700,
-                                        color: theme.drSubTextColor,
-                                        fontFamily: "'Cairo', sans-serif",
-                                        lineHeight: 1.2,
-                                      }}
-                                    >
-                                      أكاديمية د. محمود المهدي
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {/* Document Type Badge */}
-                                <div style={{ textAlign: isRtl ? "left" : "right" }}>
-                                  <span
-                                    style={{
-                                      display: "inline-block",
-                                      padding: "1.2mm 3.5mm",
-                                      borderRadius: "1.8mm",
-                                      backgroundColor: theme.badgeBg,
-                                      color: theme.badgeColor,
-                                      fontSize: "8pt",
-                                      fontWeight: 800,
-                                      border: theme.badgeBorder,
-                                      fontFamily: "'Cairo', sans-serif",
-                                      letterSpacing: "0.3px",
-                                    }}
-                                  >
-                                    {settings.templateStyle === "exam"
-                                      ? "ورقة اختبار رسمي معتمد"
-                                      : settings.templateStyle === "tech"
-                                      ? "بنك الأسئلة والتقييمات"
-                                      : settings.templateStyle === "emerald"
-                                      ? "التقييم الأكاديمي الشامل"
-                                      : "مذكرة تدريبات وبنك أسئلة"}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* Tier 2: Dynamic Titles (Never cut off!) */}
-                              <div style={{ width: "100%", boxSizing: "border-box", padding: "0 0.5mm 1mm 0.5mm" }}>
-                                <div
-                                  style={{
-                                    fontSize: "11.5pt",
-                                    fontWeight: 900,
-                                    color: "#0f172a",
-                                    lineHeight: 1.35,
-                                    wordBreak: "normal",
-                                    overflowWrap: "anywhere",
-                                    fontFamily: "'Cairo', sans-serif",
-                                  }}
-                                >
-                                  {settings.headerText}
-                                </div>
-                                {settings.subHeaderText && (
-                                  <div
-                                    style={{
-                                      fontSize: "8pt",
-                                      color: "#64748b",
-                                      fontWeight: 600,
-                                      marginTop: "1.5mm",
-                                      lineHeight: 1.4,
-                                      wordBreak: "normal",
-                                      overflowWrap: "anywhere",
-                                      fontFamily: "'Cairo', sans-serif",
-                                    }}
-                                  >
-                                    {settings.subHeaderText}
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Tier 3: Decorative Divider Line placed strictly BELOW all titles with safe clearance */}
-                              <div
-                                style={{
-                                  width: "100%",
-                                  marginTop: "2.5mm",
-                                  marginBottom: "0.5mm",
-                                  borderBottom: theme.headerBorder,
-                                }}
-                              />
-                            </div>
-                          )}
-
-                          {/* Continuation Running Header (Page 2+) */}
-                          {!isFirstPage && settings.continuationHeader === "minimal" && (
-                            <div
-                              style={{
-                                position: "absolute",
-                                top: "6mm",
-                                right: `${region.right}mm`,
-                                left: `${region.left}mm`,
-                                width: `calc(210mm - ${region.left + region.right}mm)`,
-                                boxSizing: "border-box",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                paddingBottom: "1.4mm",
-                                borderBottom: `1.2px solid ${theme.accentColor}35`,
-                                zIndex: 2,
-                                color: "#0f172a",
-                              }}
-                            >
-                              <div style={{ display: "flex", alignItems: "center", gap: "2mm", maxWidth: "68%" }}>
-                                <span
-                                  style={{
-                                    fontSize: "7.5pt",
-                                    fontWeight: 800,
-                                    background: theme.drPillBg,
-                                    color: theme.drPillColor,
-                                    padding: "0.3mm 1.8mm",
-                                    borderRadius: "1mm",
-                                    border: theme.drPillBorder,
-                                    whiteSpace: "nowrap",
-                                  }}
-                                >
-                                  {settings.templateStyle === "exam" ? "امتحان" : "مذكرة"}
-                                </span>
-                                <span
-                                  style={{
-                                    fontSize: "8.5pt",
-                                    fontWeight: 800,
-                                    color: "#1e293b",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                    fontFamily: "'Cairo', sans-serif",
-                                  }}
-                                >
-                                  {settings.headerText}
-                                </span>
-                              </div>
-                              <div style={{ display: "flex", alignItems: "center", gap: "1.5mm" }}>
-                                <span style={{ fontSize: "8pt", fontWeight: 800, color: theme.drTextColor, fontFamily: "'Cairo', sans-serif" }}>
-                                  د. محمود المهدي
-                                </span>
-                                <span style={{ fontSize: "6.5pt", color: "#64748b", fontWeight: 700 }}>
-                                  • Dr / Elmahdy
-                                </span>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Visual guide overlay */}
-                          {settings.guideView && (
-                            <div
-                              style={{
-                                position: "absolute",
-                                top: `${contentTopMm}mm`,
-                                bottom: `${settings.bottomMm}mm`,
-                                right: `${region.right}mm`,
-                                left: `${region.left}mm`,
-                                width: `calc(210mm - ${region.left + region.right}mm)`,
-                                boxSizing: "border-box",
-                                border: "1px dashed #b9a05d",
-                                backgroundColor: "rgba(224,196,113,0.05)",
-                                zIndex: 2,
-                                pointerEvents: "none",
-                              }}
-                            >
-                              <span
-                                style={{
-                                  position: "absolute",
-                                  top: 0,
-                                  right: 0,
-                                  background: "#eed9a5",
-                                  color: "#624b1d",
-                                  fontSize: "9px",
-                                  padding: "1px 4px",
-                                }}
-                              >
-                                مساحة الكتابة
-                              </span>
-                            </div>
-                          )}
-
-                          {/* Body Content Area */}
+                          {/* Unified Printable Page Container (Header -> Student Strip -> Questions) in Natural Flow */}
                           <div
                             style={{
                               position: "absolute",
-                              top: `${contentTopMm}mm`,
+                              top: isFirstPage
+                                ? (settings.headerEnabled ? "7.5mm" : `${settings.topMm}mm`)
+                                : (settings.continuationHeader === "minimal"
+                                    ? "5.5mm"
+                                    : settings.continuationHeader === "none"
+                                      ? `${settings.topMm || 7.5}mm`
+                                      : "7.5mm"),
                               bottom: `${settings.bottomMm}mm`,
                               right: `${region.right}mm`,
                               left: `${region.left}mm`,
                               width: `calc(210mm - ${region.left + region.right}mm)`,
                               boxSizing: "border-box",
+                              display: "flex",
+                              flexDirection: "column",
                               zIndex: 1,
                               overflow: "hidden",
                             }}
                           >
-                            <div style={{ display: "flex", flexDirection: "column", gap: `${densityGap}mm`, width: "100%", boxSizing: "border-box" }}>
-                              {actualPageIdx === 0 && settings.studentFields && (
-                                <div dangerouslySetInnerHTML={{ __html: studentStripHtml }} style={{ width: "100%", boxSizing: "border-box" }} />
-                              )}
-                              {pageItems.map((item, itemIdx) => (
-                                <div
-                                  key={itemIdx}
-                                  className="group relative"
-                                  style={{ width: "100%", boxSizing: "border-box" }}
+                            {/* Visual guide outline when activated */}
+                            {settings.guideView && (
+                              <div
+                                style={{
+                                  position: "absolute",
+                                  inset: 0,
+                                  border: "1px dashed #b9a05d",
+                                  backgroundColor: "rgba(224,196,113,0.03)",
+                                  pointerEvents: "none",
+                                  zIndex: 0,
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    position: "absolute",
+                                    top: 0,
+                                    right: 0,
+                                    background: "#eed9a5",
+                                    color: "#624b1d",
+                                    fontSize: "9px",
+                                    padding: "1px 4px",
+                                  }}
                                 >
-                                  <div dangerouslySetInnerHTML={{ __html: item.html }} style={{ width: "100%", boxSizing: "border-box" }} />
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const qIdx = questions.findIndex(
-                                        (q) => q.statement === activeQuestions[item.qNumber - settings.questionStart]?.statement
-                                      );
-                                      const targetIdx = qIdx !== -1 ? qIdx : item.qNumber - settings.questionStart;
-                                      if (questions[targetIdx]) {
-                                        setEditingQuestion({
-                                          index: targetIdx,
-                                          data: {
-                                            ...questions[targetIdx],
-                                            options: questions[targetIdx].options
-                                              ? [...questions[targetIdx].options.map((o) => ({ ...o }))]
-                                              : [],
-                                          },
-                                        });
-                                      }
+                                  مساحة المحتوى
+                                </span>
+                              </div>
+                            )}
+
+                            {/* 1. First Page Full Header */}
+                            {isFirstPage && settings.headerEnabled && (
+                              <div
+                                style={{
+                                  width: "100%",
+                                  flexShrink: 0,
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: "1.5mm",
+                                  marginBottom: "2.5mm",
+                                  color: "#0f172a",
+                                  boxSizing: "border-box",
+                                }}
+                              >
+                                {/* Tier 1: Dr. Mahmoud Elmahdy Luxury Branding + Document Type Badge */}
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    width: "100%",
+                                    boxSizing: "border-box",
+                                  }}
+                                >
+                                  {/* Dr / Elmahdy Distinctive Seal & Signature */}
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "2.5mm",
+                                      background: theme.sealBg,
+                                      border: theme.sealBorder,
+                                      borderRadius: "3mm",
+                                      padding: "1.2mm 3.2mm",
+                                      boxShadow: theme.sealShadow,
                                     }}
-                                    className="no-print absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/95 dark:bg-slate-800/95 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:text-primary hover:border-primary shadow-xs rounded px-2 py-0.5 text-[10px] font-bold flex items-center gap-1 cursor-pointer z-10"
-                                    title="تعديل هذا السؤال مباشرة"
                                   >
-                                    <Edit3 className="h-3 w-3 text-primary" />
-                                    تعديل
-                                  </button>
+                                    {/* Crest */}
+                                    <div
+                                      style={{
+                                        width: "7.5mm",
+                                        height: "7.5mm",
+                                        borderRadius: "50%",
+                                        background: theme.crestBg,
+                                        border: theme.crestBorder,
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        color: theme.crestColor,
+                                        fontWeight: 900,
+                                        fontSize: "4pt",
+                                        lineHeight: 1.1,
+                                        flexShrink: 0,
+                                      }}
+                                    >
+                                      <span style={{ fontSize: "5pt" }}>★</span>
+                                      <span>DR</span>
+                                    </div>
+
+                                    {/* Text */}
+                                    <div style={{ display: "flex", flexDirection: "column" }}>
+                                      <div style={{ display: "flex", alignItems: "center", gap: "1.5mm" }}>
+                                        <span
+                                          style={{
+                                            fontSize: "9.5pt",
+                                            fontWeight: 900,
+                                            color: theme.drTextColor,
+                                            fontFamily: "'Cairo', sans-serif",
+                                            lineHeight: 1.2,
+                                          }}
+                                        >
+                                          د. محمود المهدي
+                                        </span>
+                                        <span
+                                          style={{
+                                            fontSize: "6.5pt",
+                                            fontWeight: 800,
+                                            background: theme.drPillBg,
+                                            color: theme.drPillColor,
+                                            padding: "0.4mm 2.2mm",
+                                            borderRadius: "1.2mm",
+                                            border: theme.drPillBorder,
+                                            letterSpacing: "0.5px",
+                                            lineHeight: 1.2,
+                                          }}
+                                        >
+                                          Dr / Elmahdy
+                                        </span>
+                                      </div>
+                                      <span
+                                        style={{
+                                          fontSize: "6.8pt",
+                                          fontWeight: 700,
+                                          color: theme.drSubTextColor,
+                                          fontFamily: "'Cairo', sans-serif",
+                                          lineHeight: 1.2,
+                                        }}
+                                      >
+                                        الحاسب الآلي والذكاء الاصطناعي
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {/* Document Type Badge */}
+                                  <div style={{ textAlign: isRtl ? "left" : "right" }}>
+                                    <span
+                                      style={{
+                                        display: "inline-block",
+                                        padding: "1.2mm 3.5mm",
+                                        borderRadius: "1.8mm",
+                                        backgroundColor: theme.badgeBg,
+                                        color: theme.badgeColor,
+                                        fontSize: "8pt",
+                                        fontWeight: 800,
+                                        border: theme.badgeBorder,
+                                        fontFamily: "'Cairo', sans-serif",
+                                        letterSpacing: "0.3px",
+                                      }}
+                                    >
+                                      {settings.templateStyle === "exam"
+                                        ? "ورقة اختبار رسمي معتمد"
+                                        : settings.templateStyle === "tech"
+                                        ? "بنك الأسئلة والتقييمات"
+                                        : settings.templateStyle === "emerald"
+                                        ? "التقييم الشامل والتدريبات"
+                                        : "مذكرة تدريبات وبنك أسئلة"}
+                                    </span>
+                                  </div>
                                 </div>
-                              ))}
+
+                                {/* Tier 2: Dynamic Titles (Full wrap, never cut off!) */}
+                                <div style={{ width: "100%", boxSizing: "border-box", padding: "0 0.5mm" }}>
+                                  <div
+                                    style={{
+                                      fontSize: "11pt",
+                                      fontWeight: 900,
+                                      color: "#0f172a",
+                                      lineHeight: 1.35,
+                                      wordBreak: "normal",
+                                      overflowWrap: "anywhere",
+                                      fontFamily: "'Cairo', sans-serif",
+                                    }}
+                                  >
+                                    {settings.headerText}
+                                  </div>
+                                  {settings.subHeaderText && (
+                                    <div
+                                      style={{
+                                        fontSize: "7.8pt",
+                                        color: "#64748b",
+                                        fontWeight: 600,
+                                        marginTop: "1.2mm",
+                                        lineHeight: 1.4,
+                                        wordBreak: "normal",
+                                        overflowWrap: "anywhere",
+                                        fontFamily: "'Cairo', sans-serif",
+                                      }}
+                                    >
+                                      {settings.subHeaderText}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Tier 3: Decorative Divider Line placed strictly BELOW all titles */}
+                                <div
+                                  style={{
+                                    width: "100%",
+                                    marginTop: "2mm",
+                                    borderBottom: theme.headerBorder,
+                                  }}
+                                />
+                              </div>
+                            )}
+
+                            {/* 2. Continuation Running Header (Page 2+) */}
+                            {!isFirstPage && settings.continuationHeader === "minimal" && (
+                              <div
+                                style={{
+                                  width: "100%",
+                                  flexShrink: 0,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  paddingBottom: "1.4mm",
+                                  marginBottom: "2.5mm",
+                                  borderBottom: `1.2px solid ${theme.accentColor}35`,
+                                  color: "#0f172a",
+                                  boxSizing: "border-box",
+                                }}
+                              >
+                                <div style={{ display: "flex", alignItems: "center", gap: "2mm", maxWidth: "68%" }}>
+                                  <span
+                                    style={{
+                                      fontSize: "7.5pt",
+                                      fontWeight: 800,
+                                      background: theme.drPillBg,
+                                      color: theme.drPillColor,
+                                      padding: "0.3mm 1.8mm",
+                                      borderRadius: "1mm",
+                                      border: theme.drPillBorder,
+                                      whiteSpace: "nowrap",
+                                    }}
+                                  >
+                                    {settings.templateStyle === "exam" ? "امتحان" : "مذكرة"}
+                                  </span>
+                                  <span
+                                    style={{
+                                      fontSize: "8.5pt",
+                                      fontWeight: 800,
+                                      color: "#1e293b",
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      whiteSpace: "nowrap",
+                                      fontFamily: "'Cairo', sans-serif",
+                                    }}
+                                  >
+                                    {settings.headerText}
+                                  </span>
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: "1.5mm" }}>
+                                  <span style={{ fontSize: "8pt", fontWeight: 800, color: theme.drTextColor, fontFamily: "'Cairo', sans-serif" }}>
+                                    د. محمود المهدي
+                                  </span>
+                                  <span style={{ fontSize: "6.5pt", color: "#64748b", fontWeight: 700 }}>
+                                    • Dr / Elmahdy
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* 3. Student Fields Strip (Page 1 only) */}
+                            {actualPageIdx === 0 && settings.studentFields && (
+                              <div
+                                dangerouslySetInnerHTML={{ __html: studentStripHtml }}
+                                style={{ width: "100%", flexShrink: 0, marginBottom: `${densityGap}mm`, boxSizing: "border-box" }}
+                              />
+                            )}
+
+                            {/* 4. Questions List */}
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: `${densityGap}mm`,
+                                width: "100%",
+                                boxSizing: "border-box",
+                                flex: 1,
+                                minHeight: 0,
+                              }}
+                            >
+                              {pageItems.map((item, itemIdx) => {
+                                const rawQ = item.rawQuestion;
+                                const qIdx = rawQ
+                                  ? questions.findIndex(
+                                      (q) => q === rawQ || (rawQ.id && q.id === rawQ.id) || q.statement === rawQ.statement
+                                    )
+                                  : questions.findIndex(
+                                      (q) => q.statement === activeQuestions[item.qNumber - settings.questionStart]?.statement
+                                    );
+                                const targetIdx = qIdx !== -1 ? qIdx : item.qNumber - settings.questionStart;
+                                const currentQ = questions[targetIdx];
+
+                                return (
+                                  <div
+                                    key={itemIdx}
+                                    className="group relative"
+                                    style={{ width: "100%", boxSizing: "border-box" }}
+                                  >
+                                    <div dangerouslySetInnerHTML={{ __html: item.html }} style={{ width: "100%", boxSizing: "border-box" }} />
+                                    
+                                    {/* Action toolbar on question hover */}
+                                    <div className="no-print absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 z-10">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (currentQ) {
+                                            setEditingQuestion({
+                                              index: targetIdx,
+                                              data: {
+                                                ...currentQ,
+                                                options: currentQ.options
+                                                  ? [...currentQ.options.map((o) => ({ ...o }))]
+                                                  : [],
+                                              },
+                                            });
+                                          }
+                                        }}
+                                        className="bg-white/95 dark:bg-slate-800/95 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:text-primary hover:border-primary shadow-xs rounded px-2 py-0.5 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                                        title="تعديل هذا السؤال مباشرة"
+                                      >
+                                        <Edit3 className="h-3 w-3 text-primary" />
+                                        تعديل
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (window.confirm("هل تريد حذف هذا السؤال من المذكرة الحالية؟")) {
+                                            setQuestions((prev) => prev.filter((_, idx) => idx !== targetIdx));
+                                            toast({ title: "تم حذف السؤال من المذكرة بنجاح" });
+                                          }
+                                        }}
+                                        className="bg-white/95 dark:bg-slate-800/95 border border-rose-300 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 shadow-xs rounded px-2 py-0.5 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                                        title="حذف هذا السؤال من المذكرة / الطباعة"
+                                      >
+                                        <Trash2 className="h-3 w-3 text-rose-600" />
+                                        حذف من المذكرة
+                                      </button>
+
+                                      {currentQ?.id && (
+                                        <button
+                                          type="button"
+                                          onClick={async () => {
+                                            if (
+                                              window.confirm(
+                                                `هل تريد بالتأكيد حذف هذا السؤال نهائياً من بنك الأسئلة الرئيسي في قاعدة البيانات؟ (رقم السؤال: ${currentQ.id})`
+                                              )
+                                            ) {
+                                              try {
+                                                await adminApi(`/api/admin/learning/question-bank/${currentQ.id}`, { method: "DELETE" });
+                                                setQuestions((prev) => prev.filter((_, idx) => idx !== targetIdx));
+                                                toast({ title: "تم حذف السؤال نهائياً من بنك الأسئلة" });
+                                              } catch (err: any) {
+                                                toast({ variant: "destructive", description: err.message || "تعذر حذف السؤال من بنك الأسئلة" });
+                                              }
+                                            }
+                                          }}
+                                          className="bg-rose-600 text-white hover:bg-rose-700 shadow-xs rounded px-1.5 py-0.5 text-[9.5px] font-bold flex items-center gap-0.5 cursor-pointer"
+                                          title="حذف نهائي من قاعدة بيانات بنك الأسئلة"
+                                        >
+                                          <Trash2 className="h-2.5 w-2.5" />
+                                          حذف من البنك
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
 

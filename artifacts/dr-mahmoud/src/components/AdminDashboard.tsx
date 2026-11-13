@@ -1876,7 +1876,7 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-black text-slate-900">أكاديمية د. محمود المهدي</h2>
+                    <h2 className="text-sm font-black text-slate-900">منصة د. محمود المهدي</h2>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> السيرفر نشط
                     </span>

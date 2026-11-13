@@ -149,7 +149,7 @@ export function StudentCardTab({
                   DR
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-white">أكاديمية د. محمود المهدي</h3>
+                  <h3 className="text-sm font-black text-white">د. محمود المهدي</h3>
                   <p className="text-[10.5px] text-slate-300">بطاقة الطالب الذكية وكود الحضور المعتمد</p>
                 </div>
               </div>

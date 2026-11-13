@@ -203,6 +203,24 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
       }
     }
 
+    // Automatically update student profile center & appointment slot in real time upon attendance recording
+    if (centerName && centerName !== "all" && centerName !== "بدون سنتر محدد") {
+      try {
+        await db
+          .update(studentsTable)
+          .set({
+            centerName,
+            appointmentSlot: (appointmentSlot && appointmentSlot !== "all") ? appointmentSlot : (student as any).appointmentSlot,
+            centerConfirmed: true,
+            centerConfirmedAt: now,
+            learningMode: "offline",
+          })
+          .where(eq(studentsTable.id, student.id));
+      } catch (err) {
+        console.error("Failed to update student profile center:", err);
+      }
+    }
+
     // Check if parent account is registered
     const [parent] = await db
       .select()
@@ -551,6 +569,24 @@ router.post("/admin/attendance/manual-status", requireAdmin, async (req: Request
         .where(eq(studentAttendanceTable.id, existing.id))
         .returning();
       updatedAttendance = row;
+    }
+
+    // Automatically update student profile center & appointment slot in real time if marked present/late
+    if ((status === "present" || status === "late") && centerName && centerName !== "all" && centerName !== "بدون سنتر محدد") {
+      try {
+        await db
+          .update(studentsTable)
+          .set({
+            centerName,
+            appointmentSlot: (appointmentSlot && appointmentSlot !== "all") ? appointmentSlot : (student as any).appointmentSlot,
+            centerConfirmed: true,
+            centerConfirmedAt: now,
+            learningMode: "offline",
+          })
+          .where(eq(studentsTable.id, student.id));
+      } catch (err) {
+        console.error("Failed to update student profile center manually:", err);
+      }
     } else {
       const [row] = await db
         .insert(studentAttendanceTable)
@@ -567,6 +603,24 @@ router.post("/admin/attendance/manual-status", requireAdmin, async (req: Request
         })
         .returning();
       updatedAttendance = row;
+    }
+
+    // Automatically update student profile center & appointment slot in real time if marked present/late
+    if ((status === "present" || status === "late") && centerName && centerName !== "all" && centerName !== "بدون سنتر محدد") {
+      try {
+        await db
+          .update(studentsTable)
+          .set({
+            centerName,
+            appointmentSlot: (appointmentSlot && appointmentSlot !== "all") ? appointmentSlot : (student as any).appointmentSlot,
+            centerConfirmed: true,
+            centerConfirmedAt: now,
+            learningMode: "offline",
+          })
+          .where(eq(studentsTable.id, student.id));
+      } catch (err) {
+        console.error("Failed to update student profile center manually:", err);
+      }
     }
 
     // Parent Notification handling
