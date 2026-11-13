@@ -3376,7 +3376,15 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                         type="button"
                                         onClick={() => {
                                           if (window.confirm("هل تريد حذف هذا السؤال من المذكرة الحالية؟")) {
-                                            setQuestions((prev) => prev.filter((_, idx) => idx !== targetIdx));
+                                            setQuestions((prev) =>
+                                              prev.filter((q, idx) => {
+                                                if (currentQ && q === currentQ) return false;
+                                                if (currentQ?.id && q.id === currentQ.id) return false;
+                                                if (rawQ?.id && q.id === rawQ.id) return false;
+                                                if (rawQ?.statement && q.statement === rawQ.statement) return false;
+                                                return idx !== targetIdx;
+                                              })
+                                            );
                                             toast({ title: "تم حذف السؤال من المذكرة بنجاح" });
                                           }
                                         }}
@@ -3398,7 +3406,15 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                             ) {
                                               try {
                                                 await adminApi(`/api/admin/learning/question-bank/${currentQ.id}`, { method: "DELETE" });
-                                                setQuestions((prev) => prev.filter((_, idx) => idx !== targetIdx));
+                                                setQuestions((prev) =>
+                                                  prev.filter((q, idx) => {
+                                                    if (currentQ && q === currentQ) return false;
+                                                    if (currentQ?.id && q.id === currentQ.id) return false;
+                                                    if (rawQ?.id && q.id === rawQ.id) return false;
+                                                    if (rawQ?.statement && q.statement === rawQ.statement) return false;
+                                                    return idx !== targetIdx;
+                                                  })
+                                                );
                                                 toast({ title: "تم حذف السؤال نهائياً من بنك الأسئلة" });
                                               } catch (err: any) {
                                                 toast({ variant: "destructive", description: err.message || "تعذر حذف السؤال من بنك الأسئلة" });

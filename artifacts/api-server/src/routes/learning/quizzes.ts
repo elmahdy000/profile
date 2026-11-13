@@ -893,7 +893,7 @@ router.patch(
 
 router.delete(
   "/admin/learning/quizzes/:id",
-  requireSuperAdmin,
+  requireAdmin,
   async (req, res, next) => {
     try {
       const [quiz] = await db
