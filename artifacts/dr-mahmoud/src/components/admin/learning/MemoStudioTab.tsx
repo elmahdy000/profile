@@ -100,6 +100,9 @@ interface MemoSettings {
   showTotalPages: boolean;
   numPosition: "left" | "right" | "center";
   studentFields: boolean;
+  showWatermark: boolean;
+  watermarkText: string;
+  watermarkOpacity: number;
 }
 
 const DEFAULT_SETTINGS: MemoSettings = {
@@ -113,7 +116,7 @@ const DEFAULT_SETTINGS: MemoSettings = {
   headerEnabled: true,
   continuationHeader: "minimal",
   headerText: "مذكرة التدريبات الشاملة وبنك الأسئلة",
-  subHeaderText: "د. محمود المهدي | الحاسب الآلي والبرمجة",
+  subHeaderText: "د. محمود المهدي | الحاسب الآلي والذكاء الاصطناعي",
   guideView: false,
   showAnswers: false,
   showExplain: false,
@@ -133,6 +136,17 @@ const DEFAULT_SETTINGS: MemoSettings = {
   showTotalPages: true,
   numPosition: "left",
   studentFields: true,
+  showWatermark: true,
+  watermarkText: "د. محمود المهدي — الحاسب الآلي والذكاء الاصطناعي",
+  watermarkOpacity: 0.05,
+};
+
+// Global sanitizer to purge any "أكاديمية" or legacy titles from strings
+export const sanitizeMemoText = (txt: string) => {
+  return (txt || "")
+    .replace(/أكاديمية\s*/g, "")
+    .replace(/خبير وموجه[^•|]+/g, "")
+    .trim();
 };
 
 interface ThemeConfig {
@@ -665,7 +679,23 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
   const [settings, setSettings] = useState<MemoSettings>(() => {
     try {
       const saved = localStorage.getItem("drelmahdy_memo_settings");
-      return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.subHeaderText) {
+          parsed.subHeaderText = sanitizeMemoText(parsed.subHeaderText);
+        }
+        if (parsed.headerText) {
+          parsed.headerText = sanitizeMemoText(parsed.headerText);
+        }
+        if (parsed.watermarkText) {
+          parsed.watermarkText = sanitizeMemoText(parsed.watermarkText);
+        }
+        if (parsed.footerText) {
+          parsed.footerText = sanitizeMemoText(parsed.footerText);
+        }
+        return { ...DEFAULT_SETTINGS, ...parsed };
+      }
+      return DEFAULT_SETTINGS;
     } catch {
       return DEFAULT_SETTINGS;
     }
@@ -956,7 +986,54 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     });
   }, [questions, selectedTypeFilter]);
 
-  // Intelligent Pagination Engine: Real Height-Based with Page 1 vs Continuation segregation & 3mm tolerance
+  // Accurate dynamic height measurements for headers
+  const p1HeaderMeasuredH = useMemo(() => {
+    if (!settings.headerEnabled) return 0;
+    const badgeText = settings.templateStyle === "exam"
+      ? "ورقة اختبار رسمي معتمد"
+      : settings.templateStyle === "tech"
+      ? "بنك الأسئلة والتقييمات"
+      : settings.templateStyle === "emerald"
+      ? "التقييم الشامل والتدريبات"
+      : "مذكرة تدريبات وبنك أسئلة";
+    const cleanTitle = sanitizeMemoText(settings.headerText);
+    const cleanSub = sanitizeMemoText(settings.subHeaderText);
+
+    const testHtml = `
+      <div style="width:100%;margin-bottom:2.5mm;color:#0f172a;box-sizing:border-box;">
+        <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:2mm;">
+          <div style="display:flex;align-items:center;gap:2.5mm;padding:1.2mm 3.2mm;">
+            <div style="width:7.5mm;height:7.5mm;border-radius:50%;"></div>
+            <div style="display:flex;flex-direction:column;">
+              <span style="font-size:9.5pt;font-weight:900;">د. محمود المهدي Dr / Elmahdy</span>
+              <span style="font-size:6.8pt;font-weight:700;">الحاسب الآلي والذكاء الاصطناعي</span>
+            </div>
+          </div>
+          <div><span style="padding:1.2mm 3.5mm;font-size:8pt;font-weight:800;">${badgeText}</span></div>
+        </div>
+        <div style="width:100%;padding:0 0.5mm;">
+          <div style="font-size:11pt;font-weight:900;line-height:1.35;word-break:normal;overflow-wrap:anywhere;">${cleanTitle}</div>
+          ${cleanSub ? `<div style="font-size:7.8pt;font-weight:600;margin-top:1.2mm;line-height:1.4;word-break:normal;overflow-wrap:anywhere;">${cleanSub}</div>` : ""}
+        </div>
+        <div style="width:100%;margin-top:2mm;border-bottom:2px solid #000;"></div>
+      </div>
+    `;
+    return measureHeight(testHtml, region.width);
+  }, [settings.headerEnabled, settings.templateStyle, settings.headerText, settings.subHeaderText, region.width]);
+
+  const contHeaderMeasuredH = useMemo(() => {
+    if (settings.continuationHeader !== "minimal") return 0;
+    const cleanTitle = sanitizeMemoText(settings.headerText);
+    const testHtml = `
+      <div style="width:100%;display:flex;align-items:center;justify-content:space-between;padding-bottom:1.4mm;margin-bottom:2.5mm;border-bottom:1.2px solid #000;box-sizing:border-box;">
+        <span style="font-size:8.5pt;font-weight:800;">${cleanTitle}</span>
+        <span style="font-size:8pt;font-weight:800;">د. محمود المهدي • Dr / Elmahdy</span>
+      </div>
+    `;
+    return measureHeight(testHtml, region.width);
+  }, [settings.continuationHeader, settings.headerText, region.width]);
+
+  // Intelligent Content-Aware Pagination Engine: Zero Cutoffs & Slicing Protection
   const pages = useMemo(() => {
     const warns: string[] = [];
     const max = settings.maxQuestions || 99999;
@@ -966,38 +1043,25 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       comfortable: 4.0,
     }[settings.density || "balanced"];
 
-    // Page 1 available content height with dynamic header awareness
-    let p1HeaderH = 0;
-    if (settings.headerEnabled) {
-      const titleChars = settings.headerText?.length || 20;
-      const titleLines = Math.max(1, Math.ceil(titleChars / 42));
-      const hasSub = Boolean(settings.subHeaderText?.trim());
-      const subLines = hasSub ? Math.max(1, Math.ceil((settings.subHeaderText?.length || 20) / 60)) : 0;
-      // Tier 1 (~13mm) + Tier 2 Title (titleLines * 5.5mm) + Subtitle (subLines * 4.2mm) + Divider & margins (~5mm)
-      p1HeaderH = 13 + (titleLines * 5.5) + (subLines * 4.2) + 5;
-    }
-    const p1Top = settings.headerEnabled ? (8.5 + p1HeaderH) : settings.topMm;
-    const p1AvailableH = 297 - p1Top - settings.bottomMm;
+    const studentH = settings.studentFields ? measureHeight(studentStripHtml, region.width) : 0;
+    const safetyBuffer = 4.0; // 4mm safety buffer ensures NO question is ever sliced across page breaks
 
-    // Continuation Page available content height (massively increased usable space!)
-    let contTop = 10;
-    if (settings.continuationHeader === "minimal") {
-      contTop = Math.max(12, settings.continuationTopMm || 13);
-    } else if (settings.continuationHeader === "full") {
-      contTop = p1Top;
-    } else {
-      // "none"
-      contTop = Math.max(8, settings.continuationTopMm ? Math.min(settings.continuationTopMm, 10) : 8);
-    }
-    const contAvailableH = 297 - contTop - settings.bottomMm;
+    // Page 1 available content height
+    const p1Top = settings.headerEnabled ? 7.5 : (settings.topMm || 12);
+    const p1AvailableH = 297 - p1Top - (settings.headerEnabled ? (p1HeaderMeasuredH + 2.5) : 0) - (settings.studentFields ? (studentH + densityGap) : 0) - settings.bottomMm - safetyBuffer;
+
+    // Continuation Page available content height
+    const contTop = settings.continuationHeader === "minimal"
+      ? 5.5
+      : settings.continuationHeader === "none"
+        ? (settings.topMm || 7.5)
+        : (settings.topMm || 12);
+    const contAvailableH = 297 - contTop - (settings.continuationHeader === "minimal" ? (contHeaderMeasuredH + 2.5) : 0) - settings.bottomMm - safetyBuffer;
 
     const all: Array<Array<{ html: string; h: number; qNumber: number; rawQuestion?: any; qIndex?: number }>> = [];
     let current: Array<{ html: string; h: number; qNumber: number; rawQuestion?: any; qIndex?: number }> = [];
     let currentUsedH = 0;
     let count = 0;
-
-    const studentH = settings.studentFields ? measureHeight(studentStripHtml, region.width) : 0;
-    const toleranceMm = 3.0; // Tolerance to prevent questions that nearly fit from jumping to next page
 
     activeQuestions.forEach((q, i) => {
       const isQuestion = !["TEXT", "DEFINITION"].includes(q.type);
@@ -1009,10 +1073,9 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
 
       const isFirstPage = all.length === 0;
       const targetAvailableH = isFirstPage ? p1AvailableH : contAvailableH;
-      const firstPageOffset = isFirstPage && settings.studentFields && current.length === 0 ? studentH + densityGap : 0;
-      const addedGap = current.length === 0 ? 0 : densityGap;
+      const gap = current.length === 0 ? 0 : densityGap;
 
-      if (count >= max || (current.length > 0 && currentUsedH + addedGap + h + firstPageOffset > targetAvailableH + toleranceMm)) {
+      if (count >= max || (current.length > 0 && currentUsedH + gap + h > targetAvailableH)) {
         if (current.length) {
           all.push(current);
           current = [];
@@ -1020,18 +1083,15 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
         }
       }
 
-      const postIsFirst = all.length === 0;
-      const postFirstOffset = postIsFirst && settings.studentFields && current.length === 0 ? studentH + densityGap : 0;
-      const postAddedGap = current.length === 0 ? 0 : densityGap;
-
-      if (h + postFirstOffset > targetAvailableH + toleranceMm) {
+      const effectiveTargetH = all.length === 0 ? p1AvailableH : contAvailableH;
+      if (h > effectiveTargetH) {
         warns.push(
           `السؤال ${actualN} أطول من المساحة المتاحة في صفحة A4 (${Math.ceil(h)} مم). يُنصح باختيار كثافة "مضغوط" أو تقليل حجم الخط.`,
         );
       }
 
       current.push({ html, h, qNumber: actualN, rawQuestion: q, qIndex: i });
-      currentUsedH += postAddedGap + h + postFirstOffset;
+      currentUsedH += (current.length === 1 ? 0 : densityGap) + h;
       count++;
     });
 
@@ -1041,7 +1101,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     if (all.length === 0) all.push([]);
     setWarnings(warns);
     return all;
-  }, [activeQuestions, settings, region, studentStripHtml]);
+  }, [activeQuestions, settings, region, studentStripHtml, p1HeaderMeasuredH, contHeaderMeasuredH]);
 
   // Adjust display scale based on container width when autoScale is enabled
   useEffect(() => {
@@ -1254,7 +1314,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             ? "ltr"
             : "rtl",
         headerText: lessonName && lessonName !== "all" ? `${unitName} - ${lessonName}` : unitName,
-        subHeaderText: `د. محمود المهدي • ${selectedStageName.replace(/·/g, "•")}`,
+        subHeaderText: sanitizeMemoText(`د. محمود المهدي • ${selectedStageName.replace(/·/g, "•")}`),
       }));
 
       toast({
@@ -1350,7 +1410,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             ? "ltr"
             : "rtl",
         headerText: `${unitTitle} - ${lessonTitle}`,
-        subHeaderText: `د. محمود المهدي • ${selectedStageName.replace(/·/g, "•")}`,
+        subHeaderText: sanitizeMemoText(`د. محمود المهدي • ${selectedStageName.replace(/·/g, "•")}`),
       }));
 
       toast({
@@ -1376,12 +1436,193 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     setQuestions((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  // Pristine isolated iframe print execution
+  // Pure in-memory generator for pristine printable A4 sheets
+  const generateSheetHtml = (
+    pageItems: Array<{ html: string; h: number; qNumber: number }>,
+    pageIdx: number,
+    totalPages: number,
+  ) => {
+    const theme = getThemeConfig(settings.templateStyle);
+    const isFirstPage = pageIdx === 0;
+    const isRtl = settings.contentDir === "rtl";
+    const densityGap = {
+      compact: 2.0,
+      balanced: 2.8,
+      comfortable: 4.0,
+    }[settings.density || "balanced"];
+
+    // Template decorators
+    let decoratorsHtml = "";
+    if (settings.templateStyle === "royal") {
+      decoratorsHtml = `
+        <div style="position:absolute;top:0;left:0;right:0;height:4mm;background-color:#0f172a;border-bottom:1.5mm solid #d97706;z-index:2;"></div>
+        <div style="position:absolute;inset:5mm;border:1px solid rgba(217,119,6,0.3);pointer-events:none;z-index:0;"></div>
+      `;
+    } else if (settings.templateStyle === "exam") {
+      decoratorsHtml = `<div style="position:absolute;inset:6mm;border:1.5px solid #0f172a;pointer-events:none;z-index:0;"></div>`;
+    } else if (settings.templateStyle === "tech") {
+      decoratorsHtml = `
+        <div style="position:absolute;top:0;left:0;right:0;height:3.5mm;background:linear-gradient(90deg,#0369a1 0%,#0284c7 50%,#38bdf8 100%);z-index:2;"></div>
+        <div style="position:absolute;inset:6mm;border:1px solid rgba(2,132,199,0.25);pointer-events:none;z-index:0;"></div>
+      `;
+    } else if (settings.templateStyle === "emerald") {
+      decoratorsHtml = `
+        <div style="position:absolute;top:0;left:0;right:0;height:3.5mm;background-color:#064e3b;border-bottom:1.2mm solid #059669;z-index:2;"></div>
+        <div style="position:absolute;inset:6mm;border:1px solid rgba(5,150,105,0.25);pointer-events:none;z-index:0;"></div>
+      `;
+    } else if (settings.templateStyle === "minimal") {
+      decoratorsHtml = `<div style="position:absolute;inset:6mm;border:1px solid #cbd5e1;pointer-events:none;z-index:0;"></div>`;
+    }
+
+    // Watermark
+    let watermarkHtml = "";
+    if (settings.showWatermark) {
+      const wmText = sanitizeMemoText(settings.watermarkText || "د. محمود المهدي — الحاسب الآلي والذكاء الاصطناعي");
+      const opacity = settings.watermarkOpacity ?? 0.05;
+      watermarkHtml = `
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:0;overflow:hidden;">
+          <div style="transform:rotate(-32deg);font-size:24pt;font-weight:900;color:rgba(15,23,42,${opacity});white-space:nowrap;letter-spacing:2.5px;font-family:'Cairo',sans-serif;user-select:none;">
+            ${wmText}
+          </div>
+        </div>
+      `;
+    }
+
+    // Header
+    let headerHtml = "";
+    if (isFirstPage && settings.headerEnabled) {
+      const badgeText = settings.templateStyle === "exam"
+        ? "ورقة اختبار رسمي معتمد"
+        : settings.templateStyle === "tech"
+        ? "بنك الأسئلة والتقييمات"
+        : settings.templateStyle === "emerald"
+        ? "التقييم الشامل والتدريبات"
+        : "مذكرة تدريبات وبنك أسئلة";
+
+      const cleanTitle = sanitizeMemoText(settings.headerText);
+      const cleanSub = sanitizeMemoText(settings.subHeaderText);
+
+      headerHtml = `
+        <div style="width:100%;flex-shrink:0;display:flex;flex-direction:column;gap:1.5mm;margin-bottom:2.5mm;color:#0f172a;box-sizing:border-box;">
+          <div style="display:flex;align-items:center;justify-content:space-between;width:100%;box-sizing:border-box;">
+            <div style="display:flex;align-items:center;gap:2.5mm;background:${theme.sealBg};border:${theme.sealBorder};border-radius:3mm;padding:1.2mm 3.2mm;box-shadow:${theme.sealShadow};">
+              <div style="width:7.5mm;height:7.5mm;border-radius:50%;background:${theme.crestBg};border:${theme.crestBorder};display:flex;flex-direction:column;align-items:center;justify-content:center;color:${theme.crestColor};font-weight:900;font-size:4pt;line-height:1.1;flex-shrink:0;">
+                <span style="font-size:5pt;">★</span>
+                <span>DR</span>
+              </div>
+              <div style="display:flex;flex-direction:column;">
+                <div style="display:flex;align-items:center;gap:1.5mm;">
+                  <span style="font-size:9.5pt;font-weight:900;color:${theme.drTextColor};font-family:'Cairo',sans-serif;line-height:1.2;">د. محمود المهدي</span>
+                  <span style="font-size:6.5pt;font-weight:800;background:${theme.drPillBg};color:${theme.drPillColor};padding:0.4mm 2.2mm;border-radius:1.2mm;border:${theme.drPillBorder};letter-spacing:0.5px;line-height:1.2;">Dr / Elmahdy</span>
+                </div>
+                <span style="font-size:6.8pt;font-weight:700;color:${theme.drSubTextColor};font-family:'Cairo',sans-serif;line-height:1.2;">الحاسب الآلي والذكاء الاصطناعي</span>
+              </div>
+            </div>
+            <div style="text-align:${isRtl ? "left" : "right"};">
+              <span style="display:inline-block;padding:1.2mm 3.5mm;border-radius:1.8mm;background-color:${theme.badgeBg};color:${theme.badgeColor};font-size:8pt;font-weight:800;border:${theme.badgeBorder};font-family:'Cairo',sans-serif;letter-spacing:0.3px;">
+                ${badgeText}
+              </span>
+            </div>
+          </div>
+          <div style="width:100%;box-sizing:border-box;padding:0 0.5mm;">
+            <div style="font-size:11pt;font-weight:900;color:#0f172a;line-height:1.35;word-break:normal;overflow-wrap:anywhere;font-family:'Cairo',sans-serif;">
+              ${cleanTitle}
+            </div>
+            ${cleanSub ? `
+              <div style="font-size:7.8pt;color:#64748b;font-weight:600;margin-top:1.2mm;line-height:1.4;word-break:normal;overflow-wrap:anywhere;font-family:'Cairo',sans-serif;">
+                ${cleanSub}
+              </div>
+            ` : ""}
+          </div>
+          <div style="width:100%;margin-top:2mm;border-bottom:${theme.headerBorder};"></div>
+        </div>
+      `;
+    } else if (!isFirstPage && settings.continuationHeader === "minimal") {
+      const cleanTitle = sanitizeMemoText(settings.headerText);
+      headerHtml = `
+        <div style="width:100%;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding-bottom:1.4mm;margin-bottom:2.5mm;border-bottom:1.2px solid ${theme.accentColor}35;color:#0f172a;box-sizing:border-box;">
+          <div style="display:flex;align-items:center;gap:2mm;max-width:68%;">
+            <span style="font-size:7.5pt;font-weight:800;background:${theme.drPillBg};color:${theme.drPillColor};padding:0.3mm 1.8mm;border-radius:1mm;border:${theme.drPillBorder};white-space:nowrap;">
+              ${settings.templateStyle === "exam" ? "امتحان" : "مذكرة"}
+            </span>
+            <span style="font-size:8.5pt;font-weight:800;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Cairo',sans-serif;">
+              ${cleanTitle}
+            </span>
+          </div>
+          <div style="display:flex;align-items:center;gap:1.5mm;">
+            <span style="font-size:8pt;font-weight:800;color:${theme.drTextColor};font-family:'Cairo',sans-serif;">
+              د. محمود المهدي
+            </span>
+            <span style="font-size:6.5pt;color:#64748b;font-weight:700;">
+              • Dr / Elmahdy
+            </span>
+          </div>
+        </div>
+      `;
+    }
+
+    // Student strip
+    const studentHtml = (isFirstPage && settings.studentFields) ? `
+      <div style="width:100%;flex-shrink:0;margin-bottom:${densityGap}mm;box-sizing:border-box;">
+        ${studentStripHtml}
+      </div>
+    ` : "";
+
+    // Questions
+    const questionsHtml = `
+      <div style="display:flex;flex-direction:column;gap:${densityGap}mm;width:100%;box-sizing:border-box;flex:1;min-height:0;">
+        ${pageItems.map((item) => item.html).join("")}
+      </div>
+    `;
+
+    // Top offset
+    const topOffset = isFirstPage
+      ? (settings.headerEnabled ? 7.5 : (settings.topMm || 12))
+      : (settings.continuationHeader === "minimal"
+          ? 5.5
+          : settings.continuationHeader === "none"
+            ? (settings.topMm || 7.5)
+            : 7.5);
+
+    // Footer
+    const footerHtml = `
+      <div style="position:absolute;bottom:0;left:0;right:0;height:${settings.bottomMm}mm;display:flex;align-items:center;justify-content:space-between;padding:0 ${region.left}mm;box-sizing:border-box;border-top:1px solid #f1f5f9;font-size:7.5pt;color:#64748b;font-family:'Cairo',sans-serif;z-index:2;background:#ffffff;">
+        <span style="background:${theme.pageNumberBg};color:${theme.pageNumberColor};border:${theme.pageNumberBorder};padding:0.4mm 2.2mm;border-radius:1.2mm;font-weight:bold;font-size:7.5pt;">
+          ${settings.pageStart + pageIdx} ${settings.showTotalPages ? ` / ${totalPages}` : ""}
+        </span>
+        <span style="font-weight:bold;color:#475569;">
+          ${sanitizeMemoText(settings.footerText || "د. محمود المهدي | الحاسب الآلي والذكاء الاصطناعي")}
+        </span>
+      </div>
+    `;
+
+    return `
+      <div class="print-page-shell" style="width:210mm;height:297mm;min-height:297mm;max-height:297mm;page-break-after:${pageIdx < totalPages - 1 ? "always" : "auto"};break-after:${pageIdx < totalPages - 1 ? "page" : "auto"};position:relative;overflow:hidden;background:#ffffff;box-sizing:border-box;margin:0;padding:0;">
+        <div class="memo-sheet" style="position:relative;width:210mm;height:297mm;min-height:297mm;max-height:297mm;box-sizing:border-box;overflow:hidden;background:#ffffff;font-family:${settings.fontSelect};font-size:${settings.fontSize}pt;line-height:${settings.lineHeight};direction:${settings.contentDir};">
+          ${decoratorsHtml}
+          ${watermarkHtml}
+          <div style="position:absolute;top:${topOffset}mm;bottom:${settings.bottomMm}mm;right:${region.right}mm;left:${region.left}mm;width:calc(210mm - ${region.left + region.right}mm);box-sizing:border-box;display:flex;flex-direction:column;z-index:1;overflow:hidden;">
+            ${headerHtml}
+            ${studentHtml}
+            ${questionsHtml}
+          </div>
+          ${footerHtml}
+        </div>
+      </div>
+    `;
+  };
+
+  // Pristine isolated iframe print execution - zero dashboard leak, 100% in-memory pristine generation
   const executeIframePrint = () => {
-    const sheetNodes = Array.from(document.querySelectorAll(".memo-sheet"));
-    if (sheetNodes.length === 0) {
-      window.print();
+    if (!pages || pages.length === 0) {
+      toast({ variant: "destructive", description: "لا توجد صفحات جاهزة للطباعة." });
       return;
+    }
+
+    // Remove any stale iframe
+    const oldIframe = document.getElementById("memo-print-iframe");
+    if (oldIframe && document.body.contains(oldIframe)) {
+      document.body.removeChild(oldIframe);
     }
 
     const iframe = document.createElement("iframe");
@@ -1397,44 +1638,28 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
 
     const doc = iframe.contentWindow?.document;
     if (!doc) {
-      window.print();
+      toast({ variant: "destructive", description: "تعذر فتح نافذة الطباعة المنعزلة." });
       return;
     }
 
     let sheetsHtml = "";
-    sheetNodes.forEach((node, idx) => {
-      const clone = node.cloneNode(true) as HTMLElement;
-      clone.style.transform = "none";
-      clone.style.position = "relative";
-      clone.style.margin = "0";
-      clone.style.width = "210mm";
-      clone.style.height = "297mm";
-      clone.style.minHeight = "297mm";
-      clone.style.maxHeight = "297mm";
-      clone.style.boxSizing = "border-box";
-      clone.style.overflow = "hidden";
-      clone.style.backgroundColor = "#ffffff";
-
-      // Remove edit/delete action buttons from print
-      clone.querySelectorAll(".no-print, button").forEach((el) => el.remove());
-
-      sheetsHtml += `
-        <div class="print-page-shell" style="width: 210mm; height: 297mm; min-height: 297mm; max-height: 297mm; page-break-after: ${idx < sheetNodes.length - 1 ? "always" : "auto"}; break-after: ${idx < sheetNodes.length - 1 ? "page" : "auto"}; page-break-inside: avoid; break-inside: avoid; position: relative; overflow: hidden; background: #ffffff; margin: 0; padding: 0; box-sizing: border-box;">
-          ${clone.outerHTML}
-        </div>
-      `;
+    pages.forEach((pageItems, idx) => {
+      sheetsHtml += generateSheetHtml(pageItems, idx, pages.length);
     });
+
+    const isRtl = settings.contentDir === "rtl";
+    const title = sanitizeMemoText(settings.headerText) || "مذكرة A4 - د. محمود المهدي";
 
     doc.open();
     doc.write(`
       <!DOCTYPE html>
-      <html dir="${settings.contentDir || "rtl"}" lang="${settings.contentDir === "ltr" ? "en" : "ar"}">
+      <html dir="${isRtl ? "rtl" : "ltr"}" lang="${isRtl ? "ar" : "en"}">
         <head>
           <meta charset="utf-8">
-          <title>${settings.headerText || "مذكرة A4 - د. محمود المهدي"}</title>
+          <title>${title}</title>
           <link rel="preconnect" href="https://fonts.googleapis.com">
           <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-          <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+          <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Almarai:wght@400;700;800&family=Amiri:wght@400;700&family=Tajawal:wght@400;700;800&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
           <style>
             @page {
               size: A4 portrait;
@@ -1451,7 +1676,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
               width: 210mm !important;
               background: #ffffff !important;
               font-family: ${settings.fontSelect || "'Cairo', sans-serif"} !important;
-              direction: ${settings.contentDir || "rtl"} !important;
+              direction: ${isRtl ? "rtl" : "ltr"} !important;
             }
             .print-page-shell {
               width: 210mm !important;
@@ -1499,9 +1724,9 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
           if (document.body.contains(iframe)) {
             document.body.removeChild(iframe);
           }
-        }, 3000);
+        }, 5000);
       }
-    }, 450);
+    }, 400);
   };
 
   // Print execution: Pristine, isolated iframe print with zero dashboard leak
@@ -1510,17 +1735,20 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       toast({ variant: "destructive", description: "لا توجد أسئلة أو صفحات لطباعتها." });
       return;
     }
-
-    if (!showAllPages) {
-      setShowAllPages(true);
-      setTimeout(() => {
-        executeIframePrint();
-      }, 150);
-      return;
-    }
-
     executeIframePrint();
   };
+
+  // Keyboard shortcut Ctrl+P / Cmd+P listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p") {
+        e.preventDefault();
+        handlePrint();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handlePrint]);
 
   // Export Questions to Microsoft Word (.doc format with RTL, tables & styles)
   const handleExportWord = () => {
@@ -1530,8 +1758,8 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     }
 
     const isRtl = settings.contentDir === "rtl";
-    const title = settings.headerText || "مذكرة تدريبات وبنك أسئلة";
-    const subTitle = settings.subHeaderText || "";
+    const title = sanitizeMemoText(settings.headerText) || "مذكرة تدريبات وبنك أسئلة";
+    const subTitle = sanitizeMemoText(settings.subHeaderText) || "";
 
     let wordContent = `
       <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
@@ -1738,6 +1966,9 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     });
 
     wordContent += `
+          </div>
+          <div style="text-align: center; margin-top: 24px; padding-top: 10px; border-top: 1px solid #cbd5e1; font-size: 9pt; color: #64748b;">
+            ${sanitizeMemoText(settings.footerText || "د. محمود المهدي | الحاسب الآلي والذكاء الاصطناعي")}
           </div>
         </div>
       </body>
@@ -2691,6 +2922,49 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                   </div>
                 </div>
               </div>
+
+              {/* Academic Watermark Protection */}
+              <div className="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-xs font-black text-slate-900 dark:text-white block">
+                      العلامة المائية المخصصة (Watermark):
+                    </label>
+                    <span className="text-[10px] text-slate-500">حماية وتوثيق ملكية المذكرة عند التصوير والطباعة.</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={settings.showWatermark}
+                    onChange={(e) => setSettings({ ...settings, showWatermark: e.target.checked })}
+                    className="h-4 w-4 rounded accent-primary cursor-pointer"
+                  />
+                </div>
+                {settings.showWatermark && (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={settings.watermarkText}
+                      onChange={(e) => setSettings({ ...settings, watermarkText: e.target.value })}
+                      placeholder="نص العلامة المائية"
+                      className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
+                    />
+                    <div className="flex items-center gap-3">
+                      <label className="text-[11px] text-slate-600 font-bold whitespace-nowrap">درجة الوضوح:</label>
+                      <input
+                        type="range"
+                        min="2"
+                        max="15"
+                        value={Math.round((settings.watermarkOpacity || 0.05) * 100)}
+                        onChange={(e) => setSettings({ ...settings, watermarkOpacity: Number(e.target.value) / 100 })}
+                        className="flex-1 accent-primary"
+                      />
+                      <span className="text-[11px] font-bold text-slate-500 w-8 text-left">
+                        {Math.round((settings.watermarkOpacity || 0.05) * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -3426,6 +3700,37 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                             />
                           )}
 
+                          {/* Watermark Protection */}
+                          {settings.showWatermark && (
+                            <div
+                              style={{
+                                position: "absolute",
+                                inset: 0,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                pointerEvents: "none",
+                                zIndex: 0,
+                                overflow: "hidden",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  transform: "rotate(-32deg)",
+                                  fontSize: "24pt",
+                                  fontWeight: 900,
+                                  color: `rgba(15, 23, 42, ${settings.watermarkOpacity ?? 0.05})`,
+                                  whiteSpace: "nowrap",
+                                  letterSpacing: "2.5px",
+                                  fontFamily: "'Cairo', sans-serif",
+                                  userSelect: "none",
+                                }}
+                              >
+                                {sanitizeMemoText(settings.watermarkText || "د. محمود المهدي — الحاسب الآلي والذكاء الاصطناعي")}
+                              </div>
+                            </div>
+                          )}
+
                           {/* Unified Printable Page Container (Header -> Student Strip -> Questions) in Natural Flow */}
                           <div
                             style={{
@@ -3620,7 +3925,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                       fontFamily: "'Cairo', sans-serif",
                                     }}
                                   >
-                                    {settings.headerText}
+                                    {sanitizeMemoText(settings.headerText)}
                                   </div>
                                   {settings.subHeaderText && (
                                     <div
@@ -3635,7 +3940,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                         fontFamily: "'Cairo', sans-serif",
                                       }}
                                     >
-                                      {settings.subHeaderText}
+                                      {sanitizeMemoText(settings.subHeaderText)}
                                     </div>
                                   )}
                                 </div>
@@ -3693,7 +3998,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                       fontFamily: "'Cairo', sans-serif",
                                     }}
                                   >
-                                    {settings.headerText}
+                                    {sanitizeMemoText(settings.headerText)}
                                   </span>
                                 </div>
                                 <div style={{ display: "flex", alignItems: "center", gap: "1.5mm" }}>
@@ -3854,7 +4159,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                 zIndex: 1,
                               }}
                             >
-                              {settings.footerText}
+                              {sanitizeMemoText(settings.footerText)}
                             </div>
                           )}
 

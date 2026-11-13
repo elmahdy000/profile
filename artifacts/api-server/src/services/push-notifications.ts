@@ -125,7 +125,7 @@ async function sendRawPush(
     };
 
     const formattedPayload = JSON.stringify({
-      title: payload.title || "أكاديمية د. محمود المهدي",
+      title: payload.title || "منصة د. محمود المهدي",
       body: payload.body || "لديك إشعار جديد",
       icon: payload.icon || "/web-app-manifest-192x192.png",
       badge: payload.badge || "/favicon-96x96.png",
