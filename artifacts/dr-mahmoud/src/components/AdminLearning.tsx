@@ -36,6 +36,7 @@ import {
   QrCode,
   Sparkles,
   FileEdit,
+  Printer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -57,6 +58,7 @@ import { TestBankTab } from "./admin/learning/TestBankTab";
 import { SelfAssessmentAdminTab } from "./admin/learning/SelfAssessmentAdminTab";
 import { EssayExamsAdminTab } from "./admin/learning/EssayExamsAdminTab";
 import { KholasaAdminTab } from "./kholasa/KholasaAdminTab";
+import { MemoStudioTab } from "./admin/learning/MemoStudioTab";
 
 type Student = PlatformStudent & {
   accessCode?: string | null;
@@ -242,6 +244,7 @@ export type AdminLearningTab =
   | "files"
   | "testbank"
   | "kholasa"
+  | "memo-studio"
   | "quizzes"
   | "essay-exams"
   | "subscriptions"
@@ -1305,6 +1308,7 @@ export function AdminLearning({
     ["files", "الملفات", Folder],
     ["testbank", "بنك الأسئلة الشامل 📚", BookOpen],
     ["kholasa", "الزتونات والخرائط 💎", Sparkles],
+    ["memo-studio", "استوديو المذكرات والطباعة 🖨️", Printer],
     ["quizzes", "الاختبارات", ClipboardCheck],
     ["essay-exams", "الامتحانات وبنك الأسئلة المقالية", FileEdit],
     ["self-assessment-packs", "باقات التقييم الذاتي ⚡", Sparkles],
@@ -1330,6 +1334,7 @@ export function AdminLearning({
     files: ["مكتبة الملفات التعليمية", "ارفع الملفات وحدد مكان ظهورها للطلاب أو داخل الدروس."],
     testbank: ["بنك الأسئلة الشامل وتوليد الامتحانات", "تنظيم الأسئلة هرمياً: المرحلة ⬅️ الوحدة ⬅️ الدرس، رفع الملفات (Word/PDF/نص) وتوليد الامتحانات تلقائياً."],
     kholasa: ["إدارة المحتوى والزتونة والأسئلة والاختبارات", "مركز موحد ومنظم لكل درس: الفيديو، التعريفات، الزتونة، الخرائط الذهنية، البطاقات، بنك الأسئلة، ورفع أو توليد الاختبارات."],
+    "memo-studio": ["استوديو المذكرات والطباعة A4 الاحترافية", "صمم وطبّق هوامش وأغلفة المذكرات وحوّل أي درس أو اختبار لورقة A4 جاهزة للطباعة والتصدير PDF مع نسخة للطالب ونسخة للمعلم."],
     quizzes: ["بناء وإدارة الاختبارات", "أنشئ الاختبارات وحدد الجمهور والإعدادات والأسئلة ثم انشرها."],
     "essay-exams": ["الامتحانات المقالية وبنك الأسئلة المقالي المستقل", "رفع واستيراد الأسئلة المقالية من ملفات Word و PDF، إدارة بنك الأسئلة المقالي، إنشاء الامتحانات ورصد درجات إجابات الطلاب."],
     reports: ["التقارير والمتابعة", "راقب نشاط الطلاب والتقدم ومؤشرات الأداء التعليمية."],
@@ -2330,6 +2335,13 @@ export function AdminLearning({
             <KholasaAdminTab
               adminApi={adminApi}
               videoOptions={videoOptions}
+            />
+          )}
+          {tab === "memo-studio" && (
+            <MemoStudioTab
+              quizzes={quizzes}
+              learningCourses={learningCourses}
+              adminApi={adminApi}
             />
           )}
           {tab === "quizzes" && (
