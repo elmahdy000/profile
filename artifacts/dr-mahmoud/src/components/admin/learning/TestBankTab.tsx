@@ -150,13 +150,34 @@ export function TestBankTab({
   initialTab?: "explorer" | "upload" | "generate" | "auto_daily";
 }) {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"explorer" | "upload" | "generate" | "auto_daily">(initialTab);
+  const [activeTab, setActiveTab] = useState<"explorer" | "upload" | "generate" | "auto_daily">(() => {
+    if (typeof window !== "undefined") {
+      const mode = new URLSearchParams(window.location.search).get("mode");
+      if (mode === "generate" || mode === "upload" || mode === "auto_daily" || mode === "explorer") {
+        return mode;
+      }
+    }
+    return initialTab;
+  });
 
   useEffect(() => {
     if (initialTab) {
       setActiveTab(initialTab);
     }
   }, [initialTab]);
+
+  useEffect(() => {
+    const handleUrl = () => {
+      if (typeof window !== "undefined") {
+        const mode = new URLSearchParams(window.location.search).get("mode");
+        if (mode === "generate" || mode === "upload" || mode === "auto_daily" || mode === "explorer") {
+          setActiveTab(mode);
+        }
+      }
+    };
+    window.addEventListener("popstate", handleUrl);
+    return () => window.removeEventListener("popstate", handleUrl);
+  }, []);
 
   // Tree & Statistics
   const [treeData, setTreeData] = useState<StageNode[]>([]);

@@ -218,24 +218,54 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
       title: "التقييم والاختبارات",
       items: [
         {
-          id: "testbank",
-          label: "بنك الأسئلة الشامل 📚",
-          icon: BookOpen,
+          id: "exam-generator",
+          label: "مولد الامتحانات (بالوحدات والدروس) 🚀",
+          icon: Sparkles,
           onClick: () => {
+            if (typeof window !== "undefined") {
+              const url = new URL(window.location.href);
+              url.searchParams.set("mode", "generate");
+              window.history.replaceState(null, "", url.toString());
+              window.dispatchEvent(new Event("popstate"));
+            }
             setActiveTab("learning");
             setLearningSubTab("testbank");
           },
-          active: activeTab === "learning" && learningSubTab === "testbank",
+          active: activeTab === "learning" && learningSubTab === "testbank" && typeof window !== "undefined" && new URLSearchParams(window.location.search).get("mode") === "generate",
+          badge: "توليد فوري ⚡",
+          badgeColor: "bg-indigo-600 text-white font-black animate-pulse",
         },
         {
           id: "quizzes",
-          label: "منظومة الاختبارات",
+          label: "الاختبارات والامتحانات (إدارة ونتائج) 📝",
           icon: ClipboardCheck,
           onClick: () => {
+            if (typeof window !== "undefined") {
+              const url = new URL(window.location.href);
+              url.searchParams.delete("mode");
+              window.history.replaceState(null, "", url.toString());
+              window.dispatchEvent(new Event("popstate"));
+            }
             setActiveTab("learning");
             setLearningSubTab("quizzes");
           },
           active: activeTab === "learning" && learningSubTab === "quizzes",
+        },
+        {
+          id: "testbank",
+          label: "بنك الأسئلة وتصفح الدروس 📚",
+          icon: BookOpen,
+          onClick: () => {
+            if (typeof window !== "undefined") {
+              const url = new URL(window.location.href);
+              url.searchParams.delete("mode");
+              window.history.replaceState(null, "", url.toString());
+              window.dispatchEvent(new Event("popstate"));
+            }
+            setActiveTab("learning");
+            setLearningSubTab("testbank");
+          },
+          active: activeTab === "learning" && learningSubTab === "testbank" && (typeof window === "undefined" || new URLSearchParams(window.location.search).get("mode") !== "generate"),
         },
         {
           id: "essay-exams",
@@ -400,7 +430,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
                     >
                       <Icon className={`h-4.5 w-4.5 shrink-0 ${item.active ? "text-[#1677FF]" : "text-[#94A3B8] group-hover:text-white"}`} />
                       {!isCollapsed && <span className="flex-1 text-right truncate">{item.label}</span>}
-                      {!isCollapsed && item.badge !== undefined && item.badge > 0 && (
+                      {!isCollapsed && item.badge !== undefined && (typeof item.badge === "number" ? item.badge > 0 : Boolean(item.badge)) && (
                         <span
                           className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
                             ("badgeColor" in item && item.badgeColor) ? item.badgeColor : "bg-[#1677FF] text-white"

@@ -262,7 +262,28 @@ export function AdminLearning({
 }) {
   const { toast } = useToast();
   const [tab, setTabState] = useState<AdminLearningTab>(initialTab);
-  const [testBankInitialTab, setTestBankInitialTab] = useState<"explorer" | "upload" | "generate" | "auto_daily">("explorer");
+  const [testBankInitialTab, setTestBankInitialTab] = useState<"explorer" | "upload" | "generate" | "auto_daily">(() => {
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      const mode = sp.get("mode") || sp.get("subtab");
+      if (mode === "generate" || mode === "upload" || mode === "auto_daily") return mode as any;
+    }
+    return "explorer";
+  });
+
+  useEffect(() => {
+    const handleUrl = () => {
+      if (typeof window !== "undefined") {
+        const sp = new URLSearchParams(window.location.search);
+        const mode = sp.get("mode") || sp.get("subtab");
+        if (mode === "generate" || mode === "upload" || mode === "auto_daily" || mode === "explorer") {
+          setTestBankInitialTab(mode as any);
+        }
+      }
+    };
+    window.addEventListener("popstate", handleUrl);
+    return () => window.removeEventListener("popstate", handleUrl);
+  }, []);
 
   const setTab = React.useCallback(
     (newTab: AdminLearningTab) => {
@@ -1307,10 +1328,10 @@ export function AdminLearning({
     ["subscriptions", "الاشتراكات الشهرية", CreditCard],
     ["payments", "إيصالات الدفع", FileCheck2],
     ["files", "الملفات", Folder],
-    ["testbank", "بنك الأسئلة الشامل 📚", BookOpen],
+    ["testbank", "بنك الأسئلة ومولد الامتحانات 🚀", BookOpen],
     ["kholasa", "الزتونات والخرائط 💎", Sparkles],
     ["memo-studio", "استوديو المذكرات والطباعة 🖨️", Printer],
-    ["quizzes", "الاختبارات", ClipboardCheck],
+    ["quizzes", "الاختبارات والامتحانات 📝", ClipboardCheck],
     ["essay-exams", "الامتحانات وبنك الأسئلة المقالية", FileEdit],
     ["self-assessment-packs", "باقات التقييم الذاتي ⚡", Sparkles],
     ["notifications", "إرسال إشعار", Bell],
