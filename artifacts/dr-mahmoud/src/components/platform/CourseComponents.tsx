@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BookOpen,
   CheckCircle2,
@@ -21,10 +21,12 @@ import {
   Lock,
   Eye,
   SlidersHorizontal,
-  FolderOpen
+  FolderOpen,
+  FolderDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { type VideoItem, getVideoThumbnail } from "@/lib/video";
+import { isLessonSavedOffline, saveLessonPackage, removeLessonOffline } from "@/lib/offlineStorage";
 
 // Helper for attached files extraction
 function getAttachedFiles(item: VideoItem, files: any[]) {
@@ -547,6 +549,46 @@ export function RedesignedLessonCard({
   const isInProgress = item.progress > 0 && !isCompleted;
   const isNotStarted = !isCompleted && !isInProgress;
 
+  const [isSavedOffline, setIsSavedOffline] = useState(false);
+  const [isSavingOffline, setIsSavingOffline] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (item.id) {
+      void isLessonSavedOffline(item.id).then((saved) => {
+        if (!cancelled) setIsSavedOffline(saved);
+      });
+    }
+    const onVaultChange = () => {
+      if (item.id) {
+        void isLessonSavedOffline(item.id).then((saved) => {
+          if (!cancelled) setIsSavedOffline(saved);
+        });
+      }
+    };
+    window.addEventListener("dr_offline_vault_changed", onVaultChange);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("dr_offline_vault_changed", onVaultChange);
+    };
+  }, [item.id]);
+
+  const handleToggleOfflineCard = async () => {
+    if (!item.id || isSavingOffline) return;
+    setIsSavingOffline(true);
+    try {
+      if (isSavedOffline) {
+        await removeLessonOffline(item.id);
+        setIsSavedOffline(false);
+      } else {
+        await saveLessonPackage(item);
+        setIsSavedOffline(true);
+      }
+    } finally {
+      setIsSavingOffline(false);
+    }
+  };
+
   return (
     <article className="flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-card p-4 shadow-2xs hover:border-blue-500/40 hover:shadow-xs transition-all duration-200 dark:border-[#1E2E48] dark:bg-[#0A101D] relative overflow-hidden">
       <div className="space-y-3">
@@ -592,11 +634,32 @@ export function RedesignedLessonCard({
             )}
           </div>
 
-          {/* Bookmark Action */}
-          <div className="absolute top-2.5 left-2.5 flex items-center gap-1">
+          {/* Actions Bar (Offline Save & Bookmark) */}
+          <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-10">
+            {/* Quick Offline Save Button */}
             <button
               type="button"
-              onClick={() => onToggleBookmark(item.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                void handleToggleOfflineCard();
+              }}
+              title={isSavedOffline ? "الدرس محفوظ للأوفلاين (انقر للحذف)" : "حفظ محتوى الدرس للأوفلاين بدون إنترنت"}
+              className={`h-7 px-2 flex items-center gap-1 rounded-md text-[10px] font-black transition-all cursor-pointer backdrop-blur-md ${
+                isSavedOffline
+                  ? "bg-amber-500 text-slate-950 shadow-md font-bold"
+                  : "bg-black/60 text-white hover:bg-black/80 hover:text-amber-300"
+              }`}
+            >
+              <FolderDown className={`h-3.5 w-3.5 ${isSavedOffline ? "text-slate-950 fill-current" : ""}`} />
+              <span>{isSavedOffline ? "أوفلاين ✓" : "حفظ ⚡"}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleBookmark(item.id);
+              }}
               className="grid h-7 w-7 place-items-center rounded-md bg-black/60 text-white hover:bg-black/80 transition-colors cursor-pointer"
             >
               <Bookmark className={`h-3.5 w-3.5 ${bookmarks.includes(item.id || 0) ? "fill-blue-500 text-blue-500" : ""}`} />

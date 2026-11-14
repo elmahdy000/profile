@@ -16,7 +16,7 @@ import { KholasaDefinitionsView } from "@/components/kholasa/KholasaDefinitionsV
 import { KholasaLessonQuestionsView } from "@/components/kholasa/KholasaLessonQuestionsView";
 import type { KholasaMaterial } from "@/components/kholasa/types";
 import {
-  saveLessonOffline,
+  saveLessonPackage,
   removeLessonOffline,
   isLessonSavedOffline,
 } from "@/lib/offlineStorage";
@@ -401,16 +401,7 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
         await removeLessonOffline(item.id);
         setIsSavedOffline(false);
       } else {
-        await saveLessonOffline({
-          id: item.id,
-          title: item.title,
-          category: item.category,
-          stage: item.stage,
-          description: item.description,
-          thumbnailUrl: getYoutubeThumbnail(item.videoUrl),
-          material: kholasaMaterial || undefined,
-          savedAt: Date.now(),
-        });
+        await saveLessonPackage(item, kholasaMaterial);
         setIsSavedOffline(true);
       }
     } catch (e) {

@@ -4,6 +4,8 @@
  * and real-time reactive event dispatching.
  */
 
+import { getYoutubeThumbnail } from "./video";
+
 export interface OfflineSavedLesson {
   id: number;
   title: string;
@@ -94,11 +96,32 @@ function dispatchVaultChanged() {
 
 // ── 1. Lessons Offline API ───────────────────────────────────────────────────
 
-export async function saveLessonOffline(lesson: OfflineSavedLesson): Promise<boolean> {
+export async function saveLessonOffline(lesson: any): Promise<boolean> {
   try {
+    const mat = lesson.material;
     const lessonItem: OfflineSavedLesson = {
-      ...lesson,
-      savedAt: lesson.savedAt || new Date().toISOString(),
+      id: Number(lesson.id),
+      title: lesson.title || mat?.lesson || "درس تعليمي",
+      courseTitle: lesson.courseTitle || lesson.category || mat?.unit || "المادة التعليمية",
+      grade: lesson.grade || lesson.stage || mat?.stage || "",
+      unit: lesson.unit || mat?.unit || lesson.stage || "",
+      description: lesson.description || mat?.topic || mat?.summary || "",
+      duration: lesson.duration,
+      thumbnailUrl: lesson.thumbnailUrl || (lesson.videoUrl ? getYoutubeThumbnail(lesson.videoUrl) : undefined),
+      notes: lesson.notes,
+      summaryContent:
+        lesson.summaryContent ||
+        mat?.zatonaContent ||
+        mat?.summary ||
+        lesson.description ||
+        "ملخص وشرح الدرس متاح للمذاكرة ومراجعة المفاهيم أوفلاين.",
+      keyPoints: lesson.keyPoints || (Array.isArray(mat?.keyPoints) ? mat.keyPoints : []),
+      definitions: lesson.definitions || (Array.isArray(mat?.definitions) ? mat.definitions : []),
+      mindmapNodes: lesson.mindmapNodes || (Array.isArray(mat?.mindmapImages) ? mat.mindmapImages : []),
+      flashcards: lesson.flashcards || (Array.isArray(mat?.flashcards) ? mat.flashcards : []),
+      questions: lesson.questions || (Array.isArray(mat?.questions) ? mat.questions : []),
+      files: lesson.files,
+      savedAt: typeof lesson.savedAt === "string" ? lesson.savedAt : new Date().toISOString(),
     };
 
     if (isIndexedDBAvailable()) {
@@ -190,6 +213,226 @@ export async function isLessonSavedOffline(lessonId: number): Promise<boolean> {
     });
   } catch {
     return false;
+  }
+}
+
+/**
+ * High-level helper to save a lesson and its complete bundle (kholasa, definitions,
+ * flashcards, and questions) with one click from any screen.
+ */
+export async function saveLessonPackage(
+  item: {
+    id: number;
+    title: string;
+    category?: string;
+    stage?: string;
+    description?: string;
+    videoUrl?: string;
+    youtubeUrl?: string;
+    meta?: { duration?: string };
+    pdfFileId?: number | null;
+  },
+  kholasaMaterial?: any | null
+): Promise<boolean> {
+  try {
+    let material = kholasaMaterial;
+
+    // If online and material is missing or incomplete, attempt fetching the kholasa bundle
+    if (!material && typeof window !== "undefined" && navigator.onLine && item.id) {
+      try {
+        const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
+        const res = await fetch(`/api/learning/kholasa/video/${item.id}`, {
+          credentials: "include",
+          headers: deviceId ? { "X-Device-Id": deviceId } : {},
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.material) {
+            material = data.material;
+          }
+        }
+      } catch (e) {
+        console.warn("Could not fetch online kholasa material for offline pack:", e);
+      }
+    }
+
+    // Extract questions if material exists and has an ID
+    let questionsList: any[] = [];
+    if (material?.questions && Array.isArray(material.questions)) {
+      questionsList = material.questions;
+    } else if (material?.id && typeof window !== "undefined" && navigator.onLine) {
+      try {
+        const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
+        const resQ = await fetch(`/api/learning/kholasa/materials/${material.id}/questions?type=mcq&page=1&limit=20`, {
+          credentials: "include",
+          headers: deviceId ? { "X-Device-Id": deviceId } : {},
+        });
+        if (resQ.ok) {
+          const qData = await resQ.json();
+          if (Array.isArray(qData.items)) {
+            questionsList = qData.items.map((it: any) => ({
+              id: it.id,
+              prompt: it.question?.prompt || it.prompt,
+              options: it.question?.options || it.options || [],
+              correctAnswer: it.question?.correctAnswer ?? it.correctOption ?? 0,
+              explanation: it.question?.explanation || it.explanation,
+              translation: it.translation,
+              type: "mcq",
+            }));
+          }
+        }
+      } catch (e) {
+        console.warn("Could not fetch online questions for lesson pack:", e);
+      }
+    }
+
+    const payload: OfflineSavedLesson = {
+      id: Number(item.id),
+      title: item.title,
+      courseTitle: item.category || material?.unit || "المادة التعليمية",
+      grade: item.stage || material?.stage || "",
+      unit: material?.unit || item.stage || "",
+      description: item.description || material?.topic || "",
+      thumbnailUrl: item.videoUrl ? getYoutubeThumbnail(item.videoUrl) : undefined,
+      summaryContent:
+        material?.zatonaContent ||
+        material?.summary ||
+        item.description ||
+        "ملخص وشرح الدرس متاح للمذاكرة ومراجعة المفاهيم أوفلاين.",
+      keyPoints: Array.isArray(material?.keyPoints) ? material.keyPoints : [],
+      definitions: Array.isArray(material?.definitions) ? material.definitions : [],
+      mindmapNodes: Array.isArray(material?.mindmapImages) ? material.mindmapImages : [],
+      flashcards: Array.isArray(material?.flashcards) ? material.flashcards : [],
+      questions: questionsList,
+      savedAt: new Date().toISOString(),
+    };
+
+    const saved = await saveLessonOffline(payload);
+
+    // Also save individual questions to the questions bank store for cross-lesson practice
+    if (questionsList.length > 0) {
+      for (const q of questionsList) {
+        await saveQuestionOffline({
+          id: `q_${item.id}_${q.id}`,
+          lessonId: Number(item.id),
+          lessonTitle: item.title,
+          unit: material?.unit || item.stage,
+          type: q.type || "mcq",
+          prompt: q.prompt,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          explanation: q.explanation,
+          translation: q.translation,
+          savedAt: new Date().toISOString(),
+        }).catch(() => {});
+      }
+    }
+
+    return saved;
+  } catch (err) {
+    console.error("Failed to save complete lesson package:", err);
+    return false;
+  }
+}
+
+/**
+ * 1-Click Starter Pack: Downloads all available lesson summaries, definitions,
+ * flashcards, and questions for the student in one click.
+ */
+export async function downloadStarterPack(): Promise<{ savedLessons: number; savedQuestions: number }> {
+  try {
+    const deviceId = typeof localStorage !== "undefined" ? localStorage.getItem("dr_mahmoud_device_id") || "" : "";
+    const headers = deviceId ? { "X-Device-Id": deviceId } : {};
+
+    let savedLessons = 0;
+    let savedQuestions = 0;
+
+    // 1. Try fetching kholasa materials
+    let materials: any[] = [];
+    try {
+      const res = await fetch("/api/learning/kholasa/materials", {
+        credentials: "include",
+        headers,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        materials = Array.isArray(data.materials) ? data.materials : Array.isArray(data) ? data : [];
+      }
+    } catch (e) {
+      console.warn("Could not fetch kholasa materials:", e);
+    }
+
+    for (const mat of materials) {
+      if (!mat.id) continue;
+
+      const lessonPayload: OfflineSavedLesson = {
+        id: Number(mat.id),
+        title: mat.lesson || mat.title || "درس تعليمي",
+        courseTitle: mat.unit || "المادة التعليمية",
+        unit: mat.unit || "",
+        description: mat.topic || mat.summary || "",
+        summaryContent: mat.zatonaContent || mat.summary || "ملخص وشرح الدرس للمذاكرة بدون إنترنت.",
+        definitions: Array.isArray(mat.definitions) ? mat.definitions : [],
+        flashcards: Array.isArray(mat.flashcards) ? mat.flashcards : [],
+        mindmapNodes: Array.isArray(mat.mindmapImages) ? mat.mindmapImages : [],
+        questions: Array.isArray(mat.questions) ? mat.questions : [],
+        savedAt: new Date().toISOString(),
+      };
+
+      await saveLessonOffline(lessonPayload);
+      savedLessons++;
+
+      // Also save individual questions
+      if (Array.isArray(mat.questions)) {
+        for (const q of mat.questions) {
+          if (!q.prompt) continue;
+          await saveQuestionOffline({
+            id: `mat_${mat.id}_${q.id || Math.random()}`,
+            lessonId: Number(mat.id),
+            lessonTitle: mat.lesson || mat.title,
+            unit: mat.unit,
+            type: q.type || "mcq",
+            prompt: q.prompt,
+            options: q.options,
+            correctAnswer: q.correctAnswer,
+            explanation: q.explanation,
+            translation: q.translation,
+            savedAt: new Date().toISOString(),
+          }).catch(() => {});
+          savedQuestions++;
+        }
+      }
+    }
+
+    // 2. Also fetch course videos to ensure any top-level videos are covered
+    try {
+      const resV = await fetch("/api/videos", {
+        credentials: "include",
+        headers,
+      });
+      if (resV.ok) {
+        const videos = await resV.json();
+        if (Array.isArray(videos)) {
+          for (const v of videos.slice(0, 5)) {
+            if (v.id) {
+              const already = await isLessonSavedOffline(v.id);
+              if (!already) {
+                await saveLessonPackage(v);
+                savedLessons++;
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Could not fetch video list for pack:", e);
+    }
+
+    dispatchVaultChanged();
+    return { savedLessons, savedQuestions };
+  } catch (e: any) {
+    console.error("Download starter pack error:", e);
+    throw e;
   }
 }
 

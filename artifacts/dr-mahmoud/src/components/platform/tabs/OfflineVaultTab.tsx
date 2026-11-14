@@ -29,6 +29,7 @@ import {
   removeQuestionOffline,
   clearOfflineVault,
   syncVaultWithAccount,
+  downloadStarterPack,
   type OfflineSavedLesson,
   type OfflineSavedQuestion,
 } from "@/lib/offlineStorage";
@@ -54,6 +55,7 @@ export const OfflineVaultTab: React.FC<OfflineVaultTabProps> = ({
   const [questions, setQuestions] = useState<OfflineSavedQuestion[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [isDownloadingStarterPack, setIsDownloadingStarterPack] = useState<boolean>(false);
 
   // Active Offline Lesson Modal
   const [selectedLessonForModal, setSelectedLessonForModal] = useState<OfflineSavedLesson | null>(null);
@@ -121,6 +123,35 @@ export const OfflineVaultTab: React.FC<OfflineVaultTabProps> = ({
       });
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  // Download Starter Pack
+  const handleDownloadStarterPack = async () => {
+    if (!isOnline) {
+      toast({
+        variant: "destructive",
+        description: "يلزم الاتصال بالإنترنت أول مرة فقط لتحميل حزمة المذاكرة للأوفلاين.",
+      });
+      return;
+    }
+
+    setIsDownloadingStarterPack(true);
+    try {
+      const res = await downloadStarterPack();
+      toast({
+        title: "تم تجهيز حزمة البداية السريعة ⚡",
+        description: `تم حفظ ${res.savedLessons} درساً و ${res.savedQuestions} سؤالاً كاملاً في جهازك للمذاكرة بدون إنترنت.`,
+      });
+      await loadLocalVaultData();
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "خطأ",
+        description: err.message || "حدث خطأ أثناء تحميل الحزمة السريعة.",
+      });
+    } finally {
+      setIsDownloadingStarterPack(false);
     }
   };
 
@@ -409,28 +440,85 @@ export const OfflineVaultTab: React.FC<OfflineVaultTabProps> = ({
         /* ── SUB-TAB 1: LESSONS ── */
         <div>
           {filteredLessons.length === 0 ? (
-            <div className="bg-white dark:bg-[#0B1528] rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center space-y-4">
-              <div className="h-14 w-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 grid place-items-center mx-auto">
-                <BookOpen className="h-7 w-7" />
+            <div className="space-y-6">
+              <div className="bg-white dark:bg-[#0B1528] rounded-3xl border border-dashed border-indigo-200 dark:border-indigo-900/60 p-8 sm:p-12 text-center space-y-5 shadow-xs">
+                <div className="h-16 w-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 grid place-items-center mx-auto shadow-inner">
+                  <BookOpen className="h-8 w-8" />
+                </div>
+                <div className="max-w-md mx-auto space-y-1.5">
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                    لم تقم بحفظ أي دروس في وضع الأوفلاين بعد
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                    يمكنك بنقرة واحدة تحميل حزمة البداية السريعة للاحتفاظ بدروسك وملخصاتك وبنك أسئلتك كاملة على جهازك للمذاكرة والتطبيق بدون الحاجة للإنترنت.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                  <Button
+                    type="button"
+                    onClick={handleDownloadStarterPack}
+                    disabled={isDownloadingStarterPack || !isOnline}
+                    className="rounded-2xl px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-black text-xs gap-2 shadow-md shadow-indigo-600/25 active:scale-95 transition-all"
+                  >
+                    <Sparkles className={`h-4 w-4 ${isDownloadingStarterPack ? "animate-spin" : ""}`} />
+                    <span>{isDownloadingStarterPack ? "جارٍ تحميل حزمة الأوفلاين..." : "تحميل حزمة البداية السريعة للأوفلاين ⚡"}</span>
+                  </Button>
+
+                  {onNavigateToLessons && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={onNavigateToLessons}
+                      className="rounded-2xl px-4 py-2.5 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs gap-1.5"
+                    >
+                      <BookOpen className="h-4 w-4" />
+                      <span>تصفح دروس المنصة لاختيار دروس محددة</span>
+                    </Button>
+                  )}
+                </div>
               </div>
-              <div className="max-w-md mx-auto space-y-1">
-                <h3 className="text-base font-black text-slate-900 dark:text-white">
-                  لم تقم بحفظ أي دروس في وضع الأوفلاين بعد
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                  عند مشاهدتك لأي درس على المنصة، اضغط على زر <b>"حفظ للأوفلاين ⚡"</b> للاحتفاظ بالشرح المقروء، الخرائط الذهنية، الكروت، وأسئلة الدرس هنا لمذاكرتها بدون إنترنت.
-                </p>
+
+              {/* 3-Step Interactive Guide */}
+              <div className="bg-gradient-to-br from-slate-50 to-indigo-50/40 dark:from-slate-900 dark:to-indigo-950/30 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 space-y-4">
+                <div className="flex items-center gap-2">
+                  <span className="p-1.5 rounded-xl bg-indigo-600 text-white font-black text-xs">
+                    💡
+                  </span>
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white">
+                    دليل استخدام وضع الأوفلاين (بدون إنترنت):
+                  </h4>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                  <div className="bg-white dark:bg-[#0B1528] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 text-[10px] font-black">
+                      1. حفظ الدرس بنقرة واحدة
+                    </span>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                      عند فتح قائمة الدروس أو داخل مشغل الحصة، اضغط على <b>"حفظ للأوفلاين ⚡"</b> ليتم تخزين الملخص والخرائط الذهنية وبنك الأسئلة فورياً.
+                    </p>
+                  </div>
+
+                  <div className="bg-white dark:bg-[#0B1528] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-black">
+                      2. المذاكرة وحل الأسئلة بدون نت
+                    </span>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                      افتح محفظة الأوفلاين في أي وقت بدون إنترنت لقراءة الشروح، مراجعة التعريفات، وحل الأسئلة التفاعلية مع معرفة الإجابات الصحيحة والتفسير.
+                    </p>
+                  </div>
+
+                  <div className="bg-white dark:bg-[#0B1528] p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 text-[10px] font-black">
+                      3. المزامنة السحابية بحسابك
+                    </span>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                      بمجرد اتصالك بالإنترنت، يتم حفظ تقدمك تلقائياً ومزامنة كل ما قمت بحفظه مع سيرفر حسابك ليظل معك على أي جهاز.
+                    </p>
+                  </div>
+                </div>
               </div>
-              {onNavigateToLessons && (
-                <Button
-                  type="button"
-                  onClick={onNavigateToLessons}
-                  className="rounded-xl px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs gap-1.5 shadow-xs"
-                >
-                  <BookOpen className="h-4 w-4" />
-                  <span>تصفح فيديوهات ودروس المنصة</span>
-                </Button>
-              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
