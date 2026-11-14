@@ -285,6 +285,41 @@ export function TestBankTab({
   const [skipDuplicatesOnImport, setSkipDuplicatesOnImport] = useState<boolean>(true);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [isImporting, setIsImporting] = useState<boolean>(false);
+  const [previewFilter, setPreviewFilter] = useState<"ALL" | "NEW" | "DUPLICATES" | "ESSAY">("ALL");
+  const [previewSearchQuery, setPreviewSearchQuery] = useState<string>("");
+
+  const displayedPreviewQuestions = useMemo(() => {
+    return previewQuestions
+      .map((q, originalIndex) => ({ q, originalIndex }))
+      .filter(({ q }) => {
+        if (previewFilter === "NEW" && q.isDuplicate) return false;
+        if (previewFilter === "DUPLICATES" && !q.isDuplicate) return false;
+        if (previewFilter === "ESSAY" && q.questionType !== "essay") return false;
+        if (previewSearchQuery.trim()) {
+          const s = previewSearchQuery.toLowerCase();
+          const matchPrompt = (q.prompt || "").toLowerCase().includes(s);
+          const matchOpt = (q.options || []).some((opt) => (opt || "").toLowerCase().includes(s));
+          const matchExp = (q.explanation || "").toLowerCase().includes(s);
+          if (!matchPrompt && !matchOpt && !matchExp) return false;
+        }
+        return true;
+      });
+  }, [previewQuestions, previewFilter, previewSearchQuery]);
+
+  const handleRemoveAllDuplicatesFromPreview = () => {
+    const kept = previewQuestions.filter((q) => !q.isDuplicate);
+    setPreviewQuestions(kept);
+    if (uploadBreakdown) {
+      setUploadBreakdown({
+        ...uploadBreakdown,
+        total: kept.length,
+        newQuestions: kept.length,
+        totalDuplicates: 0,
+        bankDuplicates: 0,
+        batchDuplicates: 0,
+      });
+    }
+  };
 
   // Direct Quiz Settings on Upload
   const [createQuizDirectly, setCreateQuizDirectly] = useState<boolean>(true);
@@ -957,10 +992,11 @@ export function TestBankTab({
         }),
       });
 
+      const enrichMsg = res.enrichedExistingCount > 0 ? ` و إثراء ${res.enrichedExistingCount} سؤال بالبنك بالتفسير` : "";
       if (res.quiz) {
         toast({
           title: `تم إنشاء ونشر الاختبار "${res.quiz.title}" وحفظ الأسئلة في البنك بنجاح! 🚀`,
-          description: `تم حفظ ${res.count} سؤالاً جديداً ${res.skippedDuplicates > 0 ? `(تم تخطي ${res.skippedDuplicates} مكرر لمنع التكرار)` : ""}`,
+          description: `تم حفظ ${res.count} سؤالاً جديداً ${res.skippedDuplicates > 0 ? `(تم تخطي ${res.skippedDuplicates} مكرر)` : ""}${enrichMsg}`,
         });
         setGeneratedQuizSuccess(res.quiz);
       } else {
@@ -968,7 +1004,7 @@ export function TestBankTab({
           title: uploadScope === "unit"
             ? `تم حفظ ${res.count} سؤالاً في بنك الوحدة (${uploadUnit}) بنجاح! 🎉`
             : `تم حفظ ${res.count} سؤالاً في بنك درس (${targetLesson}) بنجاح! 🎉`,
-          description: res.skippedDuplicates > 0 ? `(تم تخطي ${res.skippedDuplicates} سؤالاً مكرراً لحفظ نظافة البنك ومنع الازدواجية)` : undefined,
+          description: `${res.skippedDuplicates > 0 ? `تم تخطي ${res.skippedDuplicates} سؤالاً مكرراً لحفظ نظافة البنك.` : ""}${enrichMsg}`,
         });
       }
 
@@ -2847,170 +2883,271 @@ export function TestBankTab({
                 </div>
               )}
 
+              {/* Preview Search & Filter Toolbar */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 bg-muted/40 rounded-2xl border border-border">
+                {/* Search Bar */}
+                <div className="relative flex-1">
+                  <Search className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={previewSearchQuery}
+                    onChange={(e) => setPreviewSearchQuery(e.target.value)}
+                    placeholder="بحث سريع في الأسئلة المستخرجة أو الخيارات أو التفسير..."
+                    className="w-full h-9 pr-9 pl-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                  {previewSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setPreviewSearchQuery("")}
+                      className="absolute left-2.5 top-2.5 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Filter Pills */}
+                <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewFilter("ALL")}
+                    className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                      previewFilter === "ALL"
+                        ? "bg-primary text-primary-foreground shadow-xs"
+                        : "bg-background border border-border text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    الكل ({previewQuestions.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewFilter("NEW")}
+                    className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                      previewFilter === "NEW"
+                        ? "bg-emerald-600 text-white shadow-xs"
+                        : "bg-background border border-border text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    جديدة ({previewQuestions.filter((q) => !q.isDuplicate).length})
+                  </button>
+                  {previewQuestions.some((q) => q.isDuplicate) && (
+                    <button
+                      type="button"
+                      onClick={() => setPreviewFilter("DUPLICATES")}
+                      className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                        previewFilter === "DUPLICATES"
+                          ? "bg-rose-600 text-white shadow-xs"
+                          : "bg-background border border-border text-rose-700 dark:text-rose-300 hover:bg-rose-500/10"
+                      }`}
+                    >
+                      مكررات ({previewQuestions.filter((q) => q.isDuplicate).length})
+                    </button>
+                  )}
+                  {previewQuestions.some((q) => q.questionType === "essay") && (
+                    <button
+                      type="button"
+                      onClick={() => setPreviewFilter("ESSAY")}
+                      className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                        previewFilter === "ESSAY"
+                          ? "bg-amber-600 text-white shadow-xs"
+                          : "bg-background border border-border text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
+                      }`}
+                    >
+                      مقالي ({previewQuestions.filter((q) => q.questionType === "essay").length})
+                    </button>
+                  )}
+
+                  {/* 1-Click Duplicate Cleaner Button */}
+                  {previewQuestions.some((q) => q.isDuplicate) && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRemoveAllDuplicatesFromPreview}
+                      className="h-8 px-2.5 text-xs font-bold text-rose-600 hover:bg-rose-50 border-rose-300 dark:border-rose-800"
+                      title="استبعاد جميع الأسئلة المكررة دفعة واحدة من قائمة الاستيراد"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 ml-1" />
+                      استبعاد المكرر ({previewQuestions.filter((q) => q.isDuplicate).length})
+                    </Button>
+                  )}
+                </div>
+              </div>
+
               {/* Preview Cards */}
               <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
-                {previewQuestions.map((q, idx) => {
-                  const isEnglish = isEnglishQuestion(q.prompt, q.options);
-                  return (
-                    <div
-                      key={idx}
-                      className="p-4 rounded-2xl border border-border bg-muted/20 space-y-3"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-600 text-white text-xs font-black">
-                          {idx + 1}
-                        </span>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span
-                            className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
-                              q.questionType === "essay"
-                                ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20"
-                                : q.questionType === "true_false"
-                                ? "bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20"
-                                : "bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"
-                            }`}
-                          >
-                            {q.questionType === "essay"
-                              ? "✍️ مقالي"
-                              : q.questionType === "true_false"
-                              ? "⚖️ صواب وخطأ"
-                              : "📝 اختيار من متعدد"}
-                          </span>
-
-                          {q.isBankDuplicate && (
-                            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
-                              ⚠️ مكرر في البنك {q.existingBankLocation ? `(${q.existingBankLocation})` : ""}
-                            </span>
-                          )}
-
-                          {q.isBatchDuplicate && !q.isBankDuplicate && (
-                            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                              ⚠️ مكرر داخل هذا الملف
-                            </span>
-                          )}
-
-                          <span
-                            className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
-                              isEnglish
-                                ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
-                                : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
-                            }`}
-                          >
-                            {isEnglish ? "EN (LTR)" : "عربي (RTL)"}
-                          </span>
-                          <select
-                            value={q.difficulty || "medium"}
-                            onChange={(e) => {
-                              const val = e.target.value as "easy" | "medium" | "hard";
-                              setPreviewQuestions((prev) => {
-                                const updated = [...prev];
-                                updated[idx] = { ...updated[idx], difficulty: val };
-                                return updated;
-                              });
-                            }}
-                            className="h-7 px-2 rounded-lg border border-border bg-card text-[11px] font-bold cursor-pointer"
-                          >
-                            <option value="easy">سهل 🟢</option>
-                            <option value="medium">متوسط 🟡</option>
-                            <option value="hard">صعب 🔴</option>
-                          </select>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setPreviewQuestions((prev) => prev.filter((_, i) => i !== idx));
-                            }}
-                            title="استبعاد هذا السؤال من الاستيراد"
-                            className="text-slate-400 hover:text-rose-600 p-1 cursor-pointer"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      <p
-                        dir={isEnglish ? "ltr" : "rtl"}
-                        className={`text-xs font-bold text-foreground whitespace-pre-line leading-relaxed ${
-                          isEnglish ? "text-left font-sans" : "text-right font-sans"
-                        }`}
+                {displayedPreviewQuestions.length === 0 ? (
+                  <div className="p-8 text-center bg-muted/20 rounded-2xl border border-dashed border-border text-xs text-muted-foreground">
+                    لا توجد أسئلة تطابق الفلترة أو البحث الحالي.
+                  </div>
+                ) : (
+                  displayedPreviewQuestions.map(({ q, originalIndex }) => {
+                    const isEnglish = isEnglishQuestion(q.prompt, q.options);
+                    return (
+                      <div
+                        key={originalIndex}
+                        className="p-4 rounded-2xl border border-border bg-muted/20 space-y-3"
                       >
-                        {q.prompt}
-                      </p>
-
-                      {q.questionType === "essay" ? (
-                        <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/20 space-y-2">
-                          <div className="flex items-center justify-between text-xs font-bold text-amber-800 dark:text-amber-300">
-                            <span>💡 الإجابة النموذجية / عناصر التصحيح المقالي:</span>
-                            <span className="text-[11px] font-normal text-muted-foreground">
-                              درجة السؤال: {q.points || uploadPoints}
+                        <div className="flex items-center justify-between">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-600 text-white text-xs font-black">
+                            {originalIndex + 1}
+                          </span>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span
+                              className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
+                                q.questionType === "essay"
+                                  ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20"
+                                  : q.questionType === "true_false"
+                                  ? "bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20"
+                                  : "bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"
+                              }`}
+                            >
+                              {q.questionType === "essay"
+                                ? "✍️ مقالي"
+                                : q.questionType === "true_false"
+                                ? "⚖️ صواب وخطأ"
+                                : "📝 اختيار من متعدد"}
                             </span>
-                          </div>
-                          <textarea
-                            rows={2}
-                            value={q.correctAnswer || q.explanation || ""}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setPreviewQuestions((prev) => {
-                                const updated = [...prev];
-                                updated[idx] = { ...updated[idx], correctAnswer: val, explanation: val };
-                                return updated;
-                              });
-                            }}
-                            placeholder="اكتب الإجابة النموذجية أو عناصر الدرجة هنا..."
-                            className="w-full p-2.5 rounded-lg border border-border bg-background text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500"
-                          />
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs" dir={isEnglish ? "ltr" : "rtl"}>
-                          {(q.options || []).map((opt, oIdx) => {
-                            const isCorrect = oIdx === q.correctIndex;
-                            const letter = getOptionLabel(oIdx, isEnglish);
-                            return (
-                              <div
-                                key={oIdx}
-                                dir={isEnglish ? "ltr" : "rtl"}
-                                onClick={() => {
-                                  setPreviewQuestions((prev) => {
-                                    const updated = [...prev];
-                                    updated[idx] = { ...updated[idx], correctIndex: oIdx };
-                                    return updated;
-                                  });
-                                }}
-                                className={`p-2 rounded-xl flex items-start gap-2 border cursor-pointer transition-all ${
-                                  isCorrect
-                                    ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-800 dark:text-emerald-300 font-bold ring-2 ring-emerald-500/20 shadow-xs"
-                                    : "bg-background border-border text-foreground hover:border-emerald-500/40 hover:bg-muted/40"
-                                }`}
-                                title="اضغط لتحديد هذا الخيار كإجابة صحيحة لهذا السؤال"
-                              >
-                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-black bg-muted mt-0.5">
-                                  {letter}
-                                </span>
-                                <span className={`flex-1 whitespace-normal break-words leading-relaxed ${isEnglish ? "text-left font-sans font-medium" : "text-right font-medium"}`}>
-                                  {opt}
-                                </span>
-                                {isCorrect && (
-                                  <Check className={`h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5 ${isEnglish ? "ml-auto" : "mr-auto"}`} />
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
 
-                      {q.explanation && (
+                            {q.isBankDuplicate && (
+                              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                                ⚠️ مكرر في البنك {q.existingBankLocation ? `(${q.existingBankLocation})` : ""}
+                              </span>
+                            )}
+
+                            {q.isBatchDuplicate && !q.isBankDuplicate && (
+                              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                                ⚠️ مكرر داخل هذا الملف
+                              </span>
+                            )}
+
+                            <span
+                              className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
+                                isEnglish
+                                  ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+                                  : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                              }`}
+                            >
+                              {isEnglish ? "EN (LTR)" : "عربي (RTL)"}
+                            </span>
+                            <select
+                              value={q.difficulty || "medium"}
+                              onChange={(e) => {
+                                const val = e.target.value as "easy" | "medium" | "hard";
+                                setPreviewQuestions((prev) => {
+                                  const updated = [...prev];
+                                  updated[originalIndex] = { ...updated[originalIndex], difficulty: val };
+                                  return updated;
+                                });
+                              }}
+                              className="h-7 px-2 rounded-lg border border-border bg-card text-[11px] font-bold cursor-pointer"
+                            >
+                              <option value="easy">سهل 🟢</option>
+                              <option value="medium">متوسط 🟡</option>
+                              <option value="hard">صعب 🔴</option>
+                            </select>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPreviewQuestions((prev) => prev.filter((_, i) => i !== originalIndex));
+                              }}
+                              title="استبعاد هذا السؤال من الاستيراد"
+                              className="text-slate-400 hover:text-rose-600 p-1 cursor-pointer"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+
                         <p
                           dir={isEnglish ? "ltr" : "rtl"}
-                          className={`text-[11px] text-muted-foreground pt-1 ${isEnglish ? "text-left font-sans" : "text-right"}`}
+                          className={`text-xs font-bold text-foreground whitespace-pre-line leading-relaxed ${
+                            isEnglish ? "text-left font-sans" : "text-right font-sans"
+                          }`}
                         >
-                          <strong className="text-primary font-bold">
-                            {isEnglish ? "Explanation:" : "التفسير:"}
-                          </strong>{" "}
-                          <span>{q.explanation}</span>
+                          {q.prompt}
                         </p>
-                      )}
-                    </div>
-                  );
-                })}
+
+                        {q.questionType === "essay" ? (
+                          <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/20 space-y-2">
+                            <div className="flex items-center justify-between text-xs font-bold text-amber-800 dark:text-amber-300">
+                              <span>💡 الإجابة النموذجية / عناصر التصحيح المقالي:</span>
+                              <span className="text-[11px] font-normal text-muted-foreground">
+                                درجة السؤال: {q.points || uploadPoints}
+                              </span>
+                            </div>
+                            <textarea
+                              rows={2}
+                              value={q.correctAnswer || q.explanation || ""}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setPreviewQuestions((prev) => {
+                                  const updated = [...prev];
+                                  updated[originalIndex] = {
+                                    ...updated[originalIndex],
+                                    correctAnswer: val,
+                                    explanation: val,
+                                  };
+                                  return updated;
+                                });
+                              }}
+                              placeholder="اكتب الإجابة النموذجية أو عناصر الدرجة هنا..."
+                              className="w-full p-2.5 rounded-lg border border-border bg-background text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500"
+                            />
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs" dir={isEnglish ? "ltr" : "rtl"}>
+                            {(q.options || []).map((opt, oIdx) => {
+                              const isCorrect = oIdx === q.correctIndex;
+                              const letter = getOptionLabel(oIdx, isEnglish);
+                              return (
+                                <div
+                                  key={oIdx}
+                                  dir={isEnglish ? "ltr" : "rtl"}
+                                  onClick={() => {
+                                    setPreviewQuestions((prev) => {
+                                      const updated = [...prev];
+                                      updated[originalIndex] = { ...updated[originalIndex], correctIndex: oIdx };
+                                      return updated;
+                                    });
+                                  }}
+                                  className={`p-2 rounded-xl flex items-start gap-2 border cursor-pointer transition-all ${
+                                    isCorrect
+                                      ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-800 dark:text-emerald-300 font-bold ring-2 ring-emerald-500/20 shadow-xs"
+                                      : "bg-background border-border text-foreground hover:border-emerald-500/40 hover:bg-muted/40"
+                                  }`}
+                                  title="اضغط لتحديد هذا الخيار كإجابة صحيحة لهذا السؤال"
+                                >
+                                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-black bg-muted mt-0.5">
+                                    {letter}
+                                  </span>
+                                  <span className={`flex-1 whitespace-normal break-words leading-relaxed ${isEnglish ? "text-left font-sans font-medium" : "text-right font-medium"}`}>
+                                    {opt}
+                                  </span>
+                                  {isCorrect && (
+                                    <Check className={`h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5 ${isEnglish ? "ml-auto" : "mr-auto"}`} />
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {q.explanation && (
+                          <p
+                            dir={isEnglish ? "ltr" : "rtl"}
+                            className={`text-[11px] text-muted-foreground pt-1 ${isEnglish ? "text-left font-sans" : "text-right"}`}
+                          >
+                            <strong className="text-primary font-bold">
+                              {isEnglish ? "Explanation:" : "التفسير:"}
+                            </strong>{" "}
+                            <span>{q.explanation}</span>
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
           )}

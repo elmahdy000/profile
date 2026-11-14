@@ -270,6 +270,53 @@ async function extractTextFromUpload(buffer: Buffer, originalname: string): Prom
   return text;
 }
 
+export function isNoiseLine(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed) return true;
+  // Dotted / dashed student handwriting lines (e.g. "..............." or "_ _ _ _ _")
+  if (/^[\.\_\-\s]{4,}$/.test(trimmed)) return true;
+  // PDF page number markers: e.g. "-- 3 of 87 --" or "-- Page 5 --"
+  if (/^--\s*\d+\s+(?:of|من|page)\s+\d+\s*--$/i.test(trimmed)) return true;
+  // Ministry form headers / dates / grade labels
+  if (/التاريخ.*(?:الأسبوع|األسبوع)/i.test(trimmed) || /الفصل الدرا.*(?:الأول|األول)/i.test(trimmed)) return true;
+  // Ministry section transition banners (e.g. أولاً: المهام الأدائية، ثانياً: أداءات منزلية)
+  if (/^(?:أولاً|ثانياً|ثالثاً|رابعاً|خامساً|أوالً|ثانيًا|ثالثًا)\s*[:\-]?\s*(?:أداءات منزلية|المهام الأدائية|امهام األدائية|تقييم)/i.test(trimmed)) return true;
+  return false;
+}
+
+export function formatModelAnswer(text: string): string {
+  if (!text) return "";
+  let formatted = text.trim();
+  const lineCount = formatted.split("\n").length;
+  if (lineCount >= 3) {
+    return formatted.replace(/\n{3,}/g, "\n\n").trim();
+  }
+  formatted = formatted.replace(
+    /(?:^|\s+)((?:[0-9]+|[٠-٩]+)[\.\-\)\:]|\([0-9]+|[٠-٩]+\)|[أ-دA-Da-d][\.\-\)])\s+/g,
+    (match, prefix, offset) => {
+      return offset === 0 ? `${prefix} ` : `\n${prefix} `;
+    }
+  );
+  formatted = formatted.replace(/\s+([•–—])\s+/g, "\n$1 ");
+  formatted = formatted.replace(/\n{3,}/g, "\n\n").trim();
+  return formatted;
+}
+
+export function parseJsonSafe(raw: string): any {
+  let cleaned = raw.trim();
+  if (cleaned.startsWith("```")) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  }
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    const normalized = cleaned
+      .replace(/[“”«»]/g, '"')
+      .replace(/[‘’]/g, "'");
+    return JSON.parse(normalized);
+  }
+}
+
 function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; warnings: string[] } {
   // 1. Clean invisible RTL markers, normalize Arabic digits, normalize newlines, & strip markdown artifacts
   let cleanedText = rawText
@@ -379,7 +426,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   const lines = cleanedText
     .split("\n")
     .map((line) => line.replace(/\s+/g, " ").trim())
-    .filter((line) => Boolean(line) && !line.match(/^[\_\-\*]{3,}$/));
+    .filter((line) => Boolean(line) && !line.match(/^[\_\-\*]{3,}$/) && !isNoiseLine(line));
 
   const questions: QuizQuestion[] = [];
   const warnings: string[] = [];
@@ -479,23 +526,25 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
       }
     } else if (finalPrompt && current.options.length === 0) {
       // ✅ ESSAY QUESTION SUPPORT: No options provided, treat as Essay
+      const formattedAns = formatModelAnswer(current.explanation ? current.explanation.trim() : "");
       questions.push({
         prompt: finalPrompt,
         options: [],
         correctIndex: -1,
-        correctAnswer: current.explanation ? current.explanation.trim() : "",
-        explanation: current.explanation ? current.explanation.trim() : undefined,
+        correctAnswer: formattedAns,
+        explanation: formattedAns || undefined,
         questionType: "essay",
       } as any);
     } else if (finalPrompt && current.options.length === 1) {
       // ✅ ESSAY QUESTION WITH SINGLE ANSWER LINE: Treat as model answer / essay
-      const singleOpt = current.options[0].trim();
+      const singleOpt = formatModelAnswer(current.options[0].trim());
+      const fullAns = current.explanation ? `${singleOpt}\n${formatModelAnswer(current.explanation.trim())}` : singleOpt;
       questions.push({
         prompt: finalPrompt,
         options: [],
         correctIndex: -1,
-        correctAnswer: singleOpt,
-        explanation: current.explanation ? `${singleOpt}\n${current.explanation.trim()}` : singleOpt,
+        correctAnswer: fullAns,
+        explanation: fullAns,
         questionType: "essay",
       } as any);
     } else if (current.prompt) {
