@@ -56,6 +56,27 @@ router.get("/admin/learning/question-bank", requireAdmin, async (req, res, next)
   }
 });
 
+// Helper: Determine if a question is True/False or MCQ
+export function isTrueFalseQuestion(q: any): boolean {
+  if (!q) return false;
+  if (q.questionType === "true_false") return true;
+  if (Array.isArray(q.options) && q.options.length === 2) {
+    return q.options.some((o: any) => {
+      if (typeof o !== "string") return false;
+      const lower = o.toLowerCase().trim();
+      return (
+        lower.includes("صواب") ||
+        lower.includes("صح") ||
+        lower.includes("خطأ") ||
+        lower.includes("خطا") ||
+        lower === "true" ||
+        lower === "false"
+      );
+    });
+  }
+  return false;
+}
+
 // GET /api/admin/learning/test-bank/tree - Hierarchical structure Stage -> Unit -> Lesson with stats
 router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, next) => {
   try {
@@ -69,6 +90,7 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
         points: questionBankTable.points,
         courseId: questionBankTable.courseId,
         lessonId: questionBankTable.lessonId,
+        question: questionBankTable.question,
       })
       .from(questionBankTable);
 
@@ -136,10 +158,14 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
     const stagesMap: Record<string, {
       stage: string;
       totalQuestions: number;
+      mcqCount: number;
+      tfCount: number;
       totalEssays: number;
       units: Record<string, {
         unit: string;
         totalQuestions: number;
+        mcqCount: number;
+        tfCount: number;
         totalEssays: number;
         difficulty: { easy: number; medium: number; hard: number };
         lessons: Record<string, {
@@ -147,6 +173,8 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
           lessonId: number | null;
           courseId: number | null;
           totalQuestions: number;
+          mcqCount: number;
+          tfCount: number;
           totalEssays: number;
           difficulty: { easy: number; medium: number; hard: number };
         }>;
@@ -155,7 +183,7 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
 
     // Initialize all system stages so they appear in tree even if 0 questions
     for (const st of systemStagesSet) {
-      stagesMap[st] = { stage: st, totalQuestions: 0, totalEssays: 0, units: {} };
+      stagesMap[st] = { stage: st, totalQuestions: 0, mcqCount: 0, tfCount: 0, totalEssays: 0, units: {} };
     }
 
     // 1. Populate from Kholasa Curriculum Materials (Ensures empty/new units and lessons show up)
@@ -166,12 +194,14 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
       if (!unit || !lesson) continue;
 
       if (!stagesMap[stage]) {
-        stagesMap[stage] = { stage, totalQuestions: 0, totalEssays: 0, units: {} };
+        stagesMap[stage] = { stage, totalQuestions: 0, mcqCount: 0, tfCount: 0, totalEssays: 0, units: {} };
       }
       if (!stagesMap[stage].units[unit]) {
         stagesMap[stage].units[unit] = {
           unit,
           totalQuestions: 0,
+          mcqCount: 0,
+          tfCount: 0,
           totalEssays: 0,
           difficulty: { easy: 0, medium: 0, hard: 0 },
           lessons: {},
@@ -183,6 +213,8 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
           lessonId: km.videoId || null,
           courseId: km.courseId || null,
           totalQuestions: 0,
+          mcqCount: 0,
+          tfCount: 0,
           totalEssays: 0,
           difficulty: { easy: 0, medium: 0, hard: 0 },
         };
@@ -202,16 +234,24 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
       const unit = String(row.unit || "الوحدة العامة").trim();
       const lesson = String(row.lesson || "الدرس العام").trim();
       const diff = (row.difficulty === "easy" || row.difficulty === "hard") ? row.difficulty : "medium";
+      const isTf = isTrueFalseQuestion(row.question);
 
       if (!stagesMap[stage]) {
-        stagesMap[stage] = { stage, totalQuestions: 0, totalEssays: 0, units: {} };
+        stagesMap[stage] = { stage, totalQuestions: 0, mcqCount: 0, tfCount: 0, totalEssays: 0, units: {} };
       }
       stagesMap[stage].totalQuestions++;
+      if (isTf) {
+        stagesMap[stage].tfCount = (stagesMap[stage].tfCount || 0) + 1;
+      } else {
+        stagesMap[stage].mcqCount = (stagesMap[stage].mcqCount || 0) + 1;
+      }
 
       if (!stagesMap[stage].units[unit]) {
         stagesMap[stage].units[unit] = {
           unit,
           totalQuestions: 0,
+          mcqCount: 0,
+          tfCount: 0,
           totalEssays: 0,
           difficulty: { easy: 0, medium: 0, hard: 0 },
           lessons: {},
@@ -219,6 +259,11 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
       }
       stagesMap[stage].units[unit].totalQuestions++;
       stagesMap[stage].units[unit].difficulty[diff]++;
+      if (isTf) {
+        stagesMap[stage].units[unit].tfCount = (stagesMap[stage].units[unit].tfCount || 0) + 1;
+      } else {
+        stagesMap[stage].units[unit].mcqCount = (stagesMap[stage].units[unit].mcqCount || 0) + 1;
+      }
 
       if (!stagesMap[stage].units[unit].lessons[lesson]) {
         stagesMap[stage].units[unit].lessons[lesson] = {
@@ -226,6 +271,8 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
           lessonId: row.lessonId || null,
           courseId: row.courseId || null,
           totalQuestions: 0,
+          mcqCount: 0,
+          tfCount: 0,
           totalEssays: 0,
           difficulty: { easy: 0, medium: 0, hard: 0 },
         };
@@ -239,6 +286,11 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
       }
       stagesMap[stage].units[unit].lessons[lesson].totalQuestions++;
       stagesMap[stage].units[unit].lessons[lesson].difficulty[diff]++;
+      if (isTf) {
+        stagesMap[stage].units[unit].lessons[lesson].tfCount = (stagesMap[stage].units[unit].lessons[lesson].tfCount || 0) + 1;
+      } else {
+        stagesMap[stage].units[unit].lessons[lesson].mcqCount = (stagesMap[stage].units[unit].lessons[lesson].mcqCount || 0) + 1;
+      }
     }
 
     // 3. Populate Essay Questions counts
@@ -248,7 +300,7 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
       const lesson = String(eqRow.lesson || "الدرس العام").trim();
 
       if (!stagesMap[stage]) {
-        stagesMap[stage] = { stage, totalQuestions: 0, totalEssays: 0, units: {} };
+        stagesMap[stage] = { stage, totalQuestions: 0, mcqCount: 0, tfCount: 0, totalEssays: 0, units: {} };
       }
       stagesMap[stage].totalEssays = (stagesMap[stage].totalEssays || 0) + 1;
 
@@ -256,6 +308,8 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
         stagesMap[stage].units[unit] = {
           unit,
           totalQuestions: 0,
+          mcqCount: 0,
+          tfCount: 0,
           totalEssays: 0,
           difficulty: { easy: 0, medium: 0, hard: 0 },
           lessons: {},
@@ -269,6 +323,8 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
           lessonId: null,
           courseId: null,
           totalQuestions: 0,
+          mcqCount: 0,
+          tfCount: 0,
           totalEssays: 0,
           difficulty: { easy: 0, medium: 0, hard: 0 },
         };
@@ -279,16 +335,26 @@ router.get("/admin/learning/test-bank/tree", requireAdmin, async (_req, res, nex
     const tree = Object.values(stagesMap).map((st) => ({
       stage: st.stage,
       totalQuestions: st.totalQuestions,
+      mcqCount: st.mcqCount || 0,
+      tfCount: st.tfCount || 0,
       totalEssays: st.totalEssays || 0,
       units: Object.values(st.units)
         .sort((a, b) => parseUnitSortOrder(a.unit) - parseUnitSortOrder(b.unit))
         .map((u) => ({
           unit: u.unit,
           totalQuestions: u.totalQuestions,
+          mcqCount: u.mcqCount || 0,
+          tfCount: u.tfCount || 0,
           totalEssays: u.totalEssays || 0,
           difficulty: u.difficulty,
           lessons: Object.values(u.lessons)
-            .sort((a, b) => parseLessonSortOrder(a.lesson) - parseLessonSortOrder(b.lesson)),
+            .sort((a, b) => parseLessonSortOrder(a.lesson) - parseLessonSortOrder(b.lesson))
+            .map((l) => ({
+              ...l,
+              mcqCount: l.mcqCount || 0,
+              tfCount: l.tfCount || 0,
+              totalEssays: l.totalEssays || 0,
+            })),
         })),
     }));
 
@@ -1123,7 +1189,7 @@ interface GenerateQuizParams {
   stages?: string[];
   unit?: string;
   lesson?: string;
-  lessons?: string[];
+  lessons?: (string | { lesson: string; lessonId?: number })[];
   courseId?: number | string | null;
   videoId?: number | string | null;
   scope?: string;
@@ -1137,6 +1203,61 @@ interface GenerateQuizParams {
   requiredProgress?: number | string;
   isPublished?: boolean;
   questionType?: string;
+
+  // Step-by-Step Custom Distribution Modes
+  distributionMode?: "balanced" | "by_type" | "by_lesson" | "advanced";
+  typeDistribution?: { mcq?: number; true_false?: number; essay?: number };
+  lessonDistribution?: Record<string, number>;
+  advancedDistribution?: Record<string, { mcq?: number; true_false?: number; essay?: number }>;
+}
+
+// Helper: Balanced sampling across target lessons
+function pickFromPoolBalanced(
+  pool: any[],
+  count: number,
+  targetLessons: string[],
+  getTargetLesson: (q: any) => string,
+  canPick: (q: any) => boolean,
+  pickQuestion: (q: any) => void
+) {
+  if (count <= 0 || pool.length === 0) return;
+  const byLesson = new Map<string, any[]>();
+  for (const t of targetLessons) byLesson.set(t, []);
+  for (const q of pool) {
+    const l = getTargetLesson(q);
+    if (!byLesson.has(l)) byLesson.set(l, []);
+    byLesson.get(l)!.push(q);
+  }
+  for (const [k, list] of byLesson.entries()) {
+    byLesson.set(k, [...list].sort(() => Math.random() - 0.5));
+  }
+
+  const activeLessons = targetLessons.length > 0 ? targetLessons : Array.from(byLesson.keys());
+  let picked = 0;
+  let rounds = 0;
+  while (picked < count && rounds < 100) {
+    let pickedInThisRound = 0;
+    for (const lName of activeLessons) {
+      if (picked >= count) break;
+      const list = byLesson.get(lName) || [];
+      const item = list.find((it) => canPick(it));
+      if (item) {
+        pickQuestion(item);
+        picked++;
+        pickedInThisRound++;
+      }
+    }
+    if (pickedInThisRound === 0) {
+      const rem = pool.filter((it) => canPick(it)).sort(() => Math.random() - 0.5);
+      for (const item of rem) {
+        if (picked >= count) break;
+        pickQuestion(item);
+        picked++;
+      }
+      break;
+    }
+    rounds++;
+  }
 }
 
 // Unified Core Generator: Strict Lesson Isolation, Fair Balancing & Full Model Answers
@@ -1161,6 +1282,10 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
     requiredProgress,
     isPublished,
     questionType,
+    distributionMode = "balanced",
+    typeDistribution,
+    lessonDistribution,
+    advancedDistribution,
   } = params;
 
   if (!title || !title.trim()) {
@@ -1186,7 +1311,6 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
   let resolvedVideoId = isMultiLesson ? null : (Number(videoId) || null);
   let resolvedCourseId = Number(courseId) || null;
 
-  const qCount = Math.max(1, Math.min(100, Number(count || 10)));
   let query = db.select().from(questionBankTable);
   const conditions = [];
 
@@ -1214,18 +1338,104 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
 
   // STRICT ZERO-LEAKAGE LESSON FILTER:
   // When specific lessons are targeted, every single question MUST match one of the target lessons!
-  const strictlyFiltered = hasSpecificLessons
+  const strictlyFilteredMcqTf = hasSpecificLessons
     ? candidateQuestions.filter((q) =>
         isLessonMatch(q.lesson, targetLessons, q.lessonId, resolvedVideoId ? [resolvedVideoId] : [])
       )
     : candidateQuestions;
 
-  // 1. Guarantee zero duplicate prompts or IDs right from the question pool
+  // Fetch Essay questions when requested or needed
+  const shouldFetchEssays =
+    questionType === "essay" ||
+    (distributionMode === "by_type" && (Number(typeDistribution?.essay) || 0) > 0) ||
+    distributionMode === "advanced" ||
+    distributionMode === "by_lesson";
+
+  let candidateEssays: Array<{
+    id: number;
+    stage: string | null;
+    unit: string | null;
+    lesson: string | null;
+    difficulty: string;
+    points: number;
+    prompt: string;
+    modelAnswer: string;
+    explanation: string | null;
+  }> = [];
+
+  if (shouldFetchEssays) {
+    const essayConditions = [];
+    if (stage && stage !== "all") {
+      essayConditions.push(
+        or(
+          eq(essayQuestionBankTable.stage, stage),
+          sql`${essayQuestionBankTable.stages}::jsonb @> ${JSON.stringify([stage])}::jsonb`
+        )
+      );
+    }
+    if (unit && unit !== "all" && !isMultiLesson) {
+      essayConditions.push(eq(essayQuestionBankTable.unit, unit));
+    }
+    candidateEssays = await (essayConditions.length
+      ? db
+          .select({
+            id: essayQuestionBankTable.id,
+            stage: essayQuestionBankTable.stage,
+            unit: essayQuestionBankTable.unit,
+            lesson: essayQuestionBankTable.lesson,
+            difficulty: essayQuestionBankTable.difficulty,
+            points: essayQuestionBankTable.points,
+            prompt: essayQuestionBankTable.prompt,
+            modelAnswer: essayQuestionBankTable.modelAnswer,
+            explanation: essayQuestionBankTable.explanation,
+          })
+          .from(essayQuestionBankTable)
+          .where(and(...essayConditions))
+      : db
+          .select({
+            id: essayQuestionBankTable.id,
+            stage: essayQuestionBankTable.stage,
+            unit: essayQuestionBankTable.unit,
+            lesson: essayQuestionBankTable.lesson,
+            difficulty: essayQuestionBankTable.difficulty,
+            points: essayQuestionBankTable.points,
+            prompt: essayQuestionBankTable.prompt,
+            modelAnswer: essayQuestionBankTable.modelAnswer,
+            explanation: essayQuestionBankTable.explanation,
+          })
+          .from(essayQuestionBankTable));
+  }
+
+  const strictlyFilteredEssays = hasSpecificLessons
+    ? candidateEssays.filter((eq) => isLessonMatch(eq.lesson, targetLessons))
+    : candidateEssays;
+
+  type CandidateItem = {
+    id: number;
+    isEssay: boolean;
+    stage: string | null;
+    unit: string | null;
+    lesson: string | null;
+    lessonId: number | null;
+    difficulty: "easy" | "medium" | "hard";
+    points: number;
+    kind: "mcq" | "true_false" | "essay";
+    question: {
+      prompt: string;
+      options: string[];
+      correctIndex: number;
+      correctAnswer?: string;
+      explanation?: string;
+      imageUrl?: string;
+      questionType: "mcq" | "true_false" | "essay";
+    };
+  };
+
   const seenBankPrompts = new Set<string>();
   const seenBankIds = new Set<number>();
-  const uniqueAvailable: typeof strictlyFiltered = [];
+  const uniqueAvailable: CandidateItem[] = [];
 
-  for (const q of strictlyFiltered) {
+  for (const q of strictlyFilteredMcqTf) {
     if (!isCompleteValidQuestion(q.question)) continue;
     if (seenBankIds.has(q.id)) continue;
     seenBankIds.add(q.id);
@@ -1235,12 +1445,59 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
       if (seenBankPrompts.has(pKey)) continue;
       seenBankPrompts.add(pKey);
     }
+
+    const isTf = isTrueFalseQuestion(q.question);
+    const kind: "mcq" | "true_false" = isTf ? "true_false" : "mcq";
+    const diff = (q.difficulty === "easy" || q.difficulty === "hard") ? q.difficulty : "medium";
+
     uniqueAvailable.push({
-      ...q,
+      id: q.id,
+      isEssay: false,
+      stage: q.stage,
+      unit: q.unit,
+      lesson: q.lesson,
+      lessonId: q.lessonId,
+      difficulty: diff,
+      points: q.points || 1,
+      kind,
       question: {
-        ...q.question,
         prompt: q.question.prompt.replace(/\r?\n\s*[A-Da-dأابجده]\)\s*$/, "").trim(),
         options: (q.question.options || []).map(cleanOptionString),
+        correctIndex: q.question.correctIndex,
+        correctAnswer: q.question.options[q.question.correctIndex]?.trim(),
+        explanation: q.question.explanation || "",
+        imageUrl: q.question.imageUrl,
+        questionType: kind,
+      },
+    });
+  }
+
+  for (const eq of strictlyFilteredEssays) {
+    if (!eq.prompt || !eq.prompt.trim()) continue;
+    const pKey = normalizeQuestionPrompt(eq.prompt);
+    if (pKey) {
+      if (seenBankPrompts.has(pKey)) continue;
+      seenBankPrompts.add(pKey);
+    }
+    const diff = (eq.difficulty === "easy" || eq.difficulty === "hard") ? eq.difficulty : "medium";
+
+    uniqueAvailable.push({
+      id: -eq.id,
+      isEssay: true,
+      stage: eq.stage,
+      unit: eq.unit,
+      lesson: eq.lesson,
+      lessonId: null,
+      difficulty: diff,
+      points: eq.points || 5,
+      kind: "essay",
+      question: {
+        prompt: eq.prompt.trim(),
+        options: [],
+        correctIndex: -1,
+        correctAnswer: eq.modelAnswer?.trim() || "",
+        explanation: eq.explanation || "",
+        questionType: "essay",
       },
     });
   }
@@ -1253,125 +1510,215 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
     );
   }
 
-  let selectedRows: typeof uniqueAvailable = [];
-  let targetCount = Math.min(qCount, uniqueAvailable.length);
+  const getTargetLesson = (item: CandidateItem): string => {
+    if (!hasSpecificLessons) return item.lesson || "عام";
+    const matched = targetLessons.find((t) =>
+      isLessonMatch(item.lesson, [t], item.lessonId, resolvedVideoId ? [resolvedVideoId] : [])
+    );
+    return matched || targetLessons[0];
+  };
 
   const pickedSet = new Set<number>();
   const pickedPrompts = new Set<string>();
+  const selectedRows: CandidateItem[] = [];
 
-  const canPick = (item: (typeof uniqueAvailable)[0]) => {
+  const canPick = (item: CandidateItem) => {
     if (pickedSet.has(item.id)) return false;
     const pKey = normalizeQuestionPrompt(item.question?.prompt);
     if (pKey && pickedPrompts.has(pKey)) return false;
     return true;
   };
 
-  const pickQuestion = (item: (typeof uniqueAvailable)[0]) => {
+  const pickQuestion = (item: CandidateItem) => {
     pickedSet.add(item.id);
     const pKey = normalizeQuestionPrompt(item.question?.prompt);
     if (pKey) pickedPrompts.add(pKey);
     selectedRows.push(item);
   };
 
-  if (hasSpecificLessons) {
-    // Fair balanced sampling across target lessons
-    const byLesson = new Map<string, typeof uniqueAvailable>();
+  // ── SELECTION EXECUTION BY DISTRIBUTION MODE ──
+
+  if (distributionMode === "by_type" && typeDistribution) {
+    const reqMcq = Math.max(0, Number(typeDistribution.mcq) || 0);
+    const reqTf = Math.max(0, Number(typeDistribution.true_false) || 0);
+    const reqEssay = Math.max(0, Number(typeDistribution.essay) || 0);
+
+    const availMcq = uniqueAvailable.filter((q) => q.kind === "mcq");
+    const availTf = uniqueAvailable.filter((q) => q.kind === "true_false");
+    const availEssay = uniqueAvailable.filter((q) => q.kind === "essay");
+
+    if (reqMcq > availMcq.length) {
+      throw new Error(`عجز في أسئلة الاختيار من متعدد: المطلوب ${reqMcq} والمتوفر في النطاق المحدد ${availMcq.length} فقط`);
+    }
+    if (reqTf > availTf.length) {
+      throw new Error(`عجز في أسئلة الصواب والخطأ: المطلوب ${reqTf} والمتوفر في النطاق المحدد ${availTf.length} فقط`);
+    }
+    if (reqEssay > availEssay.length) {
+      throw new Error(`عجز في الأسئلة المقالية: المطلوب ${reqEssay} والمتوفر في النطاق المحدد ${availEssay.length} فقط`);
+    }
+
+    pickFromPoolBalanced(availMcq, reqMcq, targetLessons, getTargetLesson, canPick, pickQuestion);
+    pickFromPoolBalanced(availTf, reqTf, targetLessons, getTargetLesson, canPick, pickQuestion);
+    pickFromPoolBalanced(availEssay, reqEssay, targetLessons, getTargetLesson, canPick, pickQuestion);
+  } else if (distributionMode === "by_lesson" && lessonDistribution) {
     for (const t of targetLessons) {
-      byLesson.set(t, []);
-    }
+      const reqCount = Math.max(0, Number(lessonDistribution[t]) || 0);
+      const lessonPool = uniqueAvailable.filter((q) => getTargetLesson(q) === t);
 
-    for (const q of uniqueAvailable) {
-      let matchedTarget = targetLessons.find((t) =>
-        isLessonMatch(q.lesson, [t], q.lessonId, resolvedVideoId ? [resolvedVideoId] : [])
-      );
-      if (!matchedTarget) matchedTarget = targetLessons[0];
-      byLesson.get(matchedTarget)!.push(q);
-    }
+      if (reqCount > lessonPool.length) {
+        throw new Error(`عجز في أسئلة الدرس "${t}": المطلوب ${reqCount} والمتوفر ${lessonPool.length} فقط`);
+      }
 
-    // Shuffle within each lesson pool
-    for (const [key, list] of byLesson.entries()) {
-      byLesson.set(key, [...list].sort(() => Math.random() - 0.5));
-    }
-
-    const lessonsWithQuestions = targetLessons.filter((t) => (byLesson.get(t) || []).length > 0);
-    const effectiveLessons = lessonsWithQuestions.length > 0 ? lessonsWithQuestions : targetLessons;
-
-    const quotaPerLesson = Math.max(1, Math.ceil(targetCount / effectiveLessons.length));
-
-    // Round 1: Balanced pick from each lesson
-    for (const lName of effectiveLessons) {
-      const list = byLesson.get(lName) || [];
+      const shuffled = [...lessonPool].sort(() => Math.random() - 0.5);
       let pickedFromLesson = 0;
-      for (const item of list) {
-        if (selectedRows.length < targetCount && pickedFromLesson < quotaPerLesson && canPick(item)) {
+      for (const item of shuffled) {
+        if (pickedFromLesson >= reqCount) break;
+        if (canPick(item)) {
           pickQuestion(item);
           pickedFromLesson++;
         }
       }
     }
+  } else if (distributionMode === "advanced" && advancedDistribution) {
+    for (const t of targetLessons) {
+      const cell = advancedDistribution[t] || {};
+      const reqMcq = Math.max(0, Number(cell.mcq) || 0);
+      const reqTf = Math.max(0, Number(cell.true_false) || 0);
+      const reqEssay = Math.max(0, Number(cell.essay) || 0);
 
-    // Round 2 (if remainder needed): Fill strictly from other SELECTED lessons ONLY!
-    if (selectedRows.length < targetCount) {
-      const remainingSelected = uniqueAvailable
-        .filter((q) => canPick(q) && isLessonMatch(q.lesson, targetLessons, q.lessonId))
-        .sort(() => Math.random() - 0.5);
+      const lessonPool = uniqueAvailable.filter((q) => getTargetLesson(q) === t);
+      const availMcq = lessonPool.filter((q) => q.kind === "mcq");
+      const availTf = lessonPool.filter((q) => q.kind === "true_false");
+      const availEssay = lessonPool.filter((q) => q.kind === "essay");
 
-      for (const item of remainingSelected) {
-        if (selectedRows.length < targetCount) {
-          pickQuestion(item);
-        }
+      if (reqMcq > availMcq.length) {
+        throw new Error(`عجز في أسئلة الاختيار من متعدد للدرس "${t}": المطلوب ${reqMcq} والمتوفر ${availMcq.length} فقط`);
       }
-    }
+      if (reqTf > availTf.length) {
+        throw new Error(`عجز في أسئلة الصواب والخطأ للدرس "${t}": المطلوب ${reqTf} والمتوفر ${availTf.length} فقط`);
+      }
+      if (reqEssay > availEssay.length) {
+        throw new Error(`عجز في الأسئلة المقالية للدرس "${t}": المطلوب ${reqEssay} والمتوفر ${availEssay.length} فقط`);
+      }
 
-    // Shuffle final questions so lessons blend naturally
-    if (shuffleQuestions !== false) {
-      selectedRows.sort(() => Math.random() - 0.5);
-    }
-  } else if (difficultyDistribution && typeof difficultyDistribution === "object") {
-    const easyCount = Math.max(0, Number(difficultyDistribution.easy) || 0);
-    const medCount = Math.max(0, Number(difficultyDistribution.medium) || 0);
-    const hardCount = Math.max(0, Number(difficultyDistribution.hard) || 0);
-    const sum = easyCount + medCount + hardCount;
-    if (sum > 0) {
-      targetCount = Math.min(sum, uniqueAvailable.length);
-    }
+      const shuffMcq = [...availMcq].sort(() => Math.random() - 0.5);
+      let pMcq = 0;
+      for (const item of shuffMcq) {
+        if (pMcq >= reqMcq) break;
+        if (canPick(item)) { pickQuestion(item); pMcq++; }
+      }
 
-    const easyPool = uniqueAvailable.filter((q) => q.difficulty === "easy").sort(() => Math.random() - 0.5);
-    const medPool = uniqueAvailable.filter((q) => q.difficulty === "medium").sort(() => Math.random() - 0.5);
-    const hardPool = uniqueAvailable.filter((q) => q.difficulty === "hard").sort(() => Math.random() - 0.5);
+      const shuffTf = [...availTf].sort(() => Math.random() - 0.5);
+      let pTf = 0;
+      for (const item of shuffTf) {
+        if (pTf >= reqTf) break;
+        if (canPick(item)) { pickQuestion(item); pTf++; }
+      }
 
-    for (const item of easyPool) {
-      if (selectedRows.filter((r) => r.difficulty === "easy").length >= easyCount) break;
-      if (canPick(item)) pickQuestion(item);
-    }
-    for (const item of medPool) {
-      if (selectedRows.filter((r) => r.difficulty === "medium").length >= medCount) break;
-      if (canPick(item)) pickQuestion(item);
-    }
-    for (const item of hardPool) {
-      if (selectedRows.filter((r) => r.difficulty === "hard").length >= hardCount) break;
-      if (canPick(item)) pickQuestion(item);
-    }
-
-    if (selectedRows.length < targetCount) {
-      const remaining = uniqueAvailable.filter(canPick).sort(() => Math.random() - 0.5);
-      for (const item of remaining) {
-        if (selectedRows.length < targetCount) {
-          pickQuestion(item);
-        }
+      const shuffEssay = [...availEssay].sort(() => Math.random() - 0.5);
+      let pEssay = 0;
+      for (const item of shuffEssay) {
+        if (pEssay >= reqEssay) break;
+        if (canPick(item)) { pickQuestion(item); pEssay++; }
       }
     }
   } else {
-    const shuffled = [...uniqueAvailable].sort(() => Math.random() - 0.5);
-    for (const item of shuffled) {
-      if (selectedRows.length < targetCount && canPick(item)) {
-        pickQuestion(item);
+    // Mode: balanced (fair sampling across target lessons with zero leakage)
+    const qCount = Math.max(1, Math.min(200, Number(count || 10)));
+    let targetCount = Math.min(qCount, uniqueAvailable.length);
+
+    if (hasSpecificLessons) {
+      const byLesson = new Map<string, CandidateItem[]>();
+      for (const t of targetLessons) {
+        byLesson.set(t, []);
+      }
+
+      for (const q of uniqueAvailable) {
+        const matchedTarget = getTargetLesson(q);
+        byLesson.get(matchedTarget)?.push(q);
+      }
+
+      for (const [key, list] of byLesson.entries()) {
+        byLesson.set(key, [...list].sort(() => Math.random() - 0.5));
+      }
+
+      const lessonsWithQuestions = targetLessons.filter((t) => (byLesson.get(t) || []).length > 0);
+      const effectiveLessons = lessonsWithQuestions.length > 0 ? lessonsWithQuestions : targetLessons;
+      const quotaPerLesson = Math.max(1, Math.ceil(targetCount / effectiveLessons.length));
+
+      for (const lName of effectiveLessons) {
+        const list = byLesson.get(lName) || [];
+        let pickedFromLesson = 0;
+        for (const item of list) {
+          if (selectedRows.length < targetCount && pickedFromLesson < quotaPerLesson && canPick(item)) {
+            pickQuestion(item);
+            pickedFromLesson++;
+          }
+        }
+      }
+
+      if (selectedRows.length < targetCount) {
+        const remainingSelected = uniqueAvailable
+          .filter((q) => canPick(q))
+          .sort(() => Math.random() - 0.5);
+
+        for (const item of remainingSelected) {
+          if (selectedRows.length < targetCount) {
+            pickQuestion(item);
+          }
+        }
+      }
+    } else if (difficultyDistribution && typeof difficultyDistribution === "object") {
+      const easyCount = Math.max(0, Number(difficultyDistribution.easy) || 0);
+      const medCount = Math.max(0, Number(difficultyDistribution.medium) || 0);
+      const hardCount = Math.max(0, Number(difficultyDistribution.hard) || 0);
+      const sum = easyCount + medCount + hardCount;
+      if (sum > 0) {
+        targetCount = Math.min(sum, uniqueAvailable.length);
+      }
+
+      const easyPool = uniqueAvailable.filter((q) => q.difficulty === "easy").sort(() => Math.random() - 0.5);
+      const medPool = uniqueAvailable.filter((q) => q.difficulty === "medium").sort(() => Math.random() - 0.5);
+      const hardPool = uniqueAvailable.filter((q) => q.difficulty === "hard").sort(() => Math.random() - 0.5);
+
+      for (const item of easyPool) {
+        if (selectedRows.filter((r) => r.difficulty === "easy").length >= easyCount) break;
+        if (canPick(item)) pickQuestion(item);
+      }
+      for (const item of medPool) {
+        if (selectedRows.filter((r) => r.difficulty === "medium").length >= medCount) break;
+        if (canPick(item)) pickQuestion(item);
+      }
+      for (const item of hardPool) {
+        if (selectedRows.filter((r) => r.difficulty === "hard").length >= hardCount) break;
+        if (canPick(item)) pickQuestion(item);
+      }
+
+      if (selectedRows.length < targetCount) {
+        const remaining = uniqueAvailable.filter(canPick).sort(() => Math.random() - 0.5);
+        for (const item of remaining) {
+          if (selectedRows.length < targetCount) {
+            pickQuestion(item);
+          }
+        }
+      }
+    } else {
+      const shuffled = [...uniqueAvailable].sort(() => Math.random() - 0.5);
+      for (const item of shuffled) {
+        if (selectedRows.length < targetCount && canPick(item)) {
+          pickQuestion(item);
+        }
       }
     }
   }
 
   if (selectedRows.length === 0) {
     throw new Error("تعذر اختيار أسئلة للاختبار");
+  }
+
+  // Shuffle final questions if enabled
+  if (shuffleQuestions !== false) {
+    selectedRows.sort(() => Math.random() - 0.5);
   }
 
   const finalQuestions: QuizQuestion[] = [];
@@ -1383,6 +1730,23 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
     if (pKey) finalPrompts.add(pKey);
 
     const q = r.question;
+
+    if (r.kind === "essay") {
+      finalQuestions.push({
+        prompt: q.prompt,
+        options: [],
+        correctIndex: -1,
+        correctAnswer: q.correctAnswer || "",
+        explanation: q.explanation || "",
+        lesson: r.lesson || (hasSpecificLessons ? targetLessons[0] : undefined),
+        unit: r.unit || undefined,
+        difficulty: r.difficulty || undefined,
+        points: r.points || 5,
+        questionType: "essay",
+      });
+      continue;
+    }
+
     if (typeof q.correctIndex !== "number" || q.correctIndex < 0 || q.correctIndex >= q.options.length) {
       continue;
     }
@@ -1403,7 +1767,7 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
       unit: r.unit || undefined,
       difficulty: r.difficulty || undefined,
       points: r.points || 1,
-      questionType: q.questionType || (q.options?.length === 2 ? "true_false" : "mcq"),
+      questionType: r.kind,
     });
   }
 
@@ -1500,7 +1864,7 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
   return {
     newQuiz,
     finalQuestions,
-    targetCount,
+    targetCount: finalQuestions.length,
     targetLessons,
   };
 }
