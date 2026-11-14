@@ -476,16 +476,22 @@ export default function AdminDashboard() {
     query: { enabled: isAuthenticated } as any,
   });
 
-  const [learningCounts, setLearningCounts] = useState<{ students: number; quizzes: number }>({ students: 0, quizzes: 0 });
+  const [learningCounts, setLearningCounts] = useState<{ students: number; quizzes: number; pendingReceipts: number }>({
+    students: 0,
+    quizzes: 0,
+    pendingReceipts: 0,
+  });
   useEffect(() => {
     if (isAuthenticated) {
       Promise.all([
         fetch("/api/admin/students", { credentials: "include" }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
         fetch("/api/admin/learning/quizzes", { credentials: "include" }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
-      ]).then(([st, qz]) => {
+        fetch("/api/admin/payment-receipts", { credentials: "include" }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+      ]).then(([st, qz, rc]) => {
         setLearningCounts({
           students: Array.isArray(st) ? st.length : 0,
           quizzes: Array.isArray(qz) ? qz.length : 0,
+          pendingReceipts: Array.isArray(rc) ? rc.filter((r: any) => r.status === "pending").length : 0,
         });
       });
     }
@@ -1897,6 +1903,7 @@ export default function AdminDashboard() {
         curriculumsCount={curriculumsQuery.data?.length}
         videosCount={videosQuery.data?.length}
         adminRole={adminRole}
+        pendingReceiptsCount={learningCounts.pendingReceipts}
       />
 
       <main className="flex-1 min-w-0 min-h-screen px-4 py-6 md:px-8 lg:px-10 lg:py-8">
@@ -2004,7 +2011,7 @@ export default function AdminDashboard() {
                     coursesCount: (coursesQuery.data || []).length,
                     curriculumsCount: (curriculumsQuery.data || []).length,
                     podcastsCount: (podcastsQuery.data || []).length,
-                    pendingReceiptsCount,
+                    pendingReceiptsCount: learningCounts.pendingReceipts,
                   }}
                   adminRole={adminRole}
                 />
