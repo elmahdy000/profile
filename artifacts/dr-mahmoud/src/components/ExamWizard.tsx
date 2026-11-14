@@ -127,6 +127,29 @@ export function ExamWizard({
   onNavigateToMemoStudio,
 }: ExamWizardProps) {
   const { toast } = useToast();
+  const [activeViewTab, setActiveViewTab] = useState<"list" | "create">(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("action") === "create" || params.get("mode") === "create") {
+        return "create";
+      }
+    }
+    return editingQuizId ? "create" : "list";
+  });
+
+  useEffect(() => {
+    if (editingQuizId) {
+      setActiveViewTab("create");
+    }
+  }, [editingQuizId]);
+
+  const cleanStageLabel = (stage: string) => {
+    return stage
+      .replace(/^البكالوريا\s*-\s*/, "")
+      .replace(/^الثانوية العامة\s*-\s*/, "")
+      .replace(/^المرحلة الجامعية\s*-\s*/, "");
+  };
+
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [questionSource, setQuestionSource] = useState<"manual" | "file" | "bank">("manual");
   const [collapsedQuestions, setCollapsedQuestions] = useState<Set<number>>(new Set());
@@ -148,6 +171,7 @@ export function ExamWizard({
             title: payload.title || prev.title,
             questions: payload.questions || [],
           }));
+          setActiveViewTab("create");
           setCurrentStep(2);
           toast({
             title: "تم استيراد أسئلة الامتحان من استوديو المذكرات 🚀",
@@ -438,42 +462,96 @@ export function ExamWizard({
 
   return (
     <div className="mx-auto w-full max-w-[1180px] space-y-6 pb-24 font-sans text-slate-900" dir="rtl">
-      {/* Header */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      {/* Top Main Navigation Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xs">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-black text-slate-900 sm:text-3xl">
-              {editingQuizId ? "تعديل الاختبار" : "إنشاء اختبار جديد"}
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900">
+              منظومة الامتحانات والاختبارات 🚀
             </h1>
-            <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
-              {quizForm.isPublished ? "منشور 🟢" : "مسودة 📝"}
+            <span className="bg-violet-100 text-violet-800 text-xs font-black px-2.5 py-0.5 rounded-full border border-violet-200">
+              {quizzes.length} اختبار
             </span>
           </div>
-          <p className="mt-1 text-xs text-slate-500 sm:text-sm">
-            أضف بيانات الاختبار وحدد إعداداته ثم أنشئ الأسئلة بكل سهولة.
+          <p className="text-xs text-slate-500 mt-0.5">
+            المكان الموحد لمتابعة الاختبارات المنشورة، طباعة أوراق الامتحان A4 للسنتر، وتوليد أو إنشاء اختبارات جديدة.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
-            <Check className="h-3.5 w-3.5" /> تم الحفظ تلقائيًا
-          </span>
+
+        <div className="flex items-center gap-2 flex-wrap">
           {onNavigateToTestBank && (
             <Button
               type="button"
               onClick={() => onNavigateToTestBank("generate")}
-              className="bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold h-9 px-3.5 rounded-xl cursor-pointer shadow-xs"
+              className="bg-violet-600 hover:bg-violet-700 text-white text-xs font-black h-10 px-4 rounded-xl gap-2 shadow-xs cursor-pointer"
             >
-              <Sparkles className="h-4 w-4 ml-1.5" />
-              توليد من بنك الأسئلة 📚
+              <Sparkles className="h-4 w-4 text-amber-300" />
+              المولد الذكي بالوحدات والدروس ⚡
             </Button>
           )}
-          {editingQuizId && (
-            <Button variant="ghost" size="sm" onClick={resetQuizForm}>
-              إلغاء التعديل
+
+          {activeViewTab === "list" ? (
+            <Button
+              type="button"
+              onClick={() => {
+                resetQuizForm();
+                setActiveViewTab("create");
+              }}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black h-10 px-4 rounded-xl gap-1.5 shadow-xs cursor-pointer"
+            >
+              <Plus className="h-4 w-4" />
+              إنشاء اختبار يدوي جديد ➕
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                resetQuizForm();
+                setActiveViewTab("list");
+              }}
+              className="text-xs font-black h-10 px-4 rounded-xl gap-1.5 cursor-pointer text-slate-700 hover:bg-slate-100 border-slate-300"
+            >
+              <ChevronRight className="h-4 w-4 rtl:rotate-0 ltr:rotate-180" />
+              العودة لقائمة الاختبارات ({quizzes.length})
             </Button>
           )}
         </div>
       </div>
+
+      {activeViewTab === "create" && (
+        <>
+          {/* Header */}
+          <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-black text-slate-900 sm:text-2xl">
+                  {editingQuizId ? "تعديل الاختبار" : "إنشاء اختبار جديد"}
+                </h2>
+                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
+                  {quizForm.isPublished ? "منشور 🟢" : "مسودة 📝"}
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-slate-500 sm:text-sm">
+                أضف بيانات الاختبار وحدد إعداداته ثم أنشئ الأسئلة بكل سهولة.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+                <Check className="h-3.5 w-3.5" /> تم الحفظ تلقائيًا
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  resetQuizForm();
+                  setActiveViewTab("list");
+                }}
+              >
+                إلغاء والعودة
+              </Button>
+            </div>
+          </div>
 
       {/* Smart Quick Generator Banner for Unit & Lesson Exams */}
       {onNavigateToTestBank && !editingQuizId && (
@@ -556,7 +634,10 @@ export function ExamWizard({
         <span className="text-xs text-slate-400 font-bold">الخطوة {currentStep} من 4</span>
       </div>
 
-      <form onSubmit={createQuiz}>
+      <form onSubmit={async (e) => {
+        await createQuiz(e);
+        setActiveViewTab("list");
+      }}>
         {/* STEP 1: Basic Information */}
         {currentStep === 1 && (
           <div className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -584,12 +665,13 @@ export function ExamWizard({
                   value={quizForm.courseId}
                   onChange={(e) => {
                     const course = learningCourses.find((item) => String(item.id) === e.target.value);
+                    const defaultStages = course?.stages?.length ? course.stages : [];
                     setQuizForm({
                       ...quizForm,
                       courseId: e.target.value,
                       category: course?.title || "",
-                      stage: "",
-                      stages: [],
+                      stage: defaultStages[0] || "",
+                      stages: defaultStages,
                       videoId: "",
                     });
                   }}
@@ -671,12 +753,12 @@ export function ExamWizard({
                     <div className="flex flex-wrap gap-1.5 border-b border-slate-200 pb-3">
                       <span className="ml-1 text-xs font-bold text-slate-500">المحدد ({quizForm.stages.length}):</span>
                       {quizForm.stages.map((st) => (
-                        <span key={st} className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-blue-800">
-                          {st}
+                        <span key={st} title={st} className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-blue-800">
+                          {cleanStageLabel(st)}
                           <button
                             type="button"
                             onClick={() => setQuizForm({ ...quizForm, stages: quizForm.stages.filter((s) => s !== st) })}
-                            className="hover:text-red-600"
+                            className="hover:text-red-600 font-black ml-0.5"
                           >
                             ×
                           </button>
@@ -696,19 +778,20 @@ export function ExamWizard({
                               <button
                                 key={stage}
                                 type="button"
+                                title={stage}
                                 onClick={() => {
                                   const stages = selected
                                     ? quizForm.stages.filter((item) => item !== stage)
                                     : [...quizForm.stages, stage];
                                   setQuizForm({ ...quizForm, stages, stage: stages[0] || "", videoId: "" });
                                 }}
-                                className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition ${
+                                className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition cursor-pointer ${
                                   selected
                                     ? "border-primary bg-primary text-white shadow-sm"
                                     : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
                                 }`}
                               >
-                                {stage}
+                                {cleanStageLabel(stage)}
                               </button>
                             );
                           })}
@@ -1383,15 +1466,19 @@ export function ExamWizard({
             </div>
           </div>
         </div>
-      </form>
+        </form>
+      </>
+    )}
 
-      {/* GLOBAL MASTER EXAMS SWITCH */}
-      <div className="mt-8">
-        <GlobalExamsMasterToggle adminApi={adminApi} />
-      </div>
+      {activeViewTab === "list" && (
+        <div className="space-y-6">
+          {/* GLOBAL MASTER EXAMS SWITCH */}
+          <div className="mt-2">
+            <GlobalExamsMasterToggle adminApi={adminApi} />
+          </div>
 
-      {/* QUIZZES LIST SIDE PANEL / SECTION */}
-      <div className="mt-12 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm space-y-5">
+          {/* QUIZZES LIST SIDE PANEL / SECTION */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm space-y-5">
         {/* Section Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4">
           <div className="flex items-center gap-3">
@@ -1783,6 +1870,7 @@ export function ExamWizard({
                       onClick={() => {
                         editQuiz(q);
                         setCurrentStep(1);
+                        setActiveViewTab("create");
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
                       className="h-8 flex-1 text-xs font-bold"
@@ -1819,6 +1907,8 @@ export function ExamWizard({
           </div>
         )}
       </div>
+    </div>
+  )}
 
       {/* QUICK PREVIEW QUIZ MODAL */}
       {previewQuiz && (
@@ -1961,6 +2051,7 @@ export function ExamWizard({
                   editQuiz(previewQuiz);
                   setPreviewQuiz(null);
                   setCurrentStep(1);
+                  setActiveViewTab("create");
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
                 className="text-xs font-bold gap-1.5"
