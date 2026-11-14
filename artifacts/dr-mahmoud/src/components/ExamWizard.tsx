@@ -105,7 +105,7 @@ type ExamWizardProps = {
   editQuiz: (q: QuizItem) => void;
   toggleQuiz: (q: QuizItem) => Promise<void>;
   deleteQuiz: (id: number) => Promise<void>;
-  onNavigateToTestBank?: () => void;
+  onNavigateToTestBank?: (targetTab?: "explorer" | "upload" | "generate" | "auto_daily") => void;
 };
 
 export function ExamWizard({
@@ -435,7 +435,7 @@ export function ExamWizard({
           {onNavigateToTestBank && (
             <Button
               type="button"
-              onClick={onNavigateToTestBank}
+              onClick={() => onNavigateToTestBank("generate")}
               className="bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold h-9 px-3.5 rounded-xl cursor-pointer shadow-xs"
             >
               <Sparkles className="h-4 w-4 ml-1.5" />
@@ -449,6 +449,33 @@ export function ExamWizard({
           )}
         </div>
       </div>
+
+      {/* Smart Quick Generator Banner for Unit & Lesson Exams */}
+      {onNavigateToTestBank && !editingQuizId && (
+        <div className="rounded-2xl border border-violet-200/90 bg-gradient-to-r from-violet-50 via-indigo-50/70 to-purple-50 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-11 w-11 rounded-2xl bg-violet-600 text-white grid place-items-center shrink-0 shadow-md shadow-violet-600/20">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-sm sm:text-base font-black text-slate-900">
+                تريد عمل امتحان سريع على وحدة كاملة أو دروس محددة ونشره فوراً؟ ⚡
+              </h3>
+              <p className="text-xs text-slate-600 mt-0.5">
+                اختر المرحلة والوحدة أو أي دروس محددة، وسيقوم النظام بسحب وتوزيع الأسئلة تلقائياً ونشر الامتحان مباشرة في حسابات الطلاب المؤهلين.
+              </p>
+            </div>
+          </div>
+          <Button
+            type="button"
+            onClick={() => onNavigateToTestBank("generate")}
+            className="rounded-xl px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-black text-xs gap-1.5 shadow-md shadow-violet-600/20 active:scale-95 transition-all shrink-0 cursor-pointer"
+          >
+            <Sparkles className="h-4 w-4" />
+            <span>فتح مولد الامتحانات بالوحدات والدروس 🚀</span>
+          </Button>
+        </div>
+      )}
 
       {/* Stepper (Desktop Horizontal Stepper) */}
       <div className="hidden grid-cols-4 gap-3 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm md:grid">

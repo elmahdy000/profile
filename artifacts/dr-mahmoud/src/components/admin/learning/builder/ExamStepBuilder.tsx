@@ -227,7 +227,7 @@ export function ExamStepBuilder({
   const [maxAttempts, setMaxAttempts] = useState<number>(3);
   const [shuffleQuestions, setShuffleQuestions] = useState<boolean>(true);
   const [showExplanations, setShowExplanations] = useState<boolean>(true);
-  const [publishMode, setPublishMode] = useState<"draft" | "publish">("draft");
+  const [publishMode, setPublishMode] = useState<"draft" | "publish">("publish");
 
   // Keep total questions within capacity if capacity is smaller than default
   useEffect(() => {

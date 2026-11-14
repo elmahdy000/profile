@@ -222,7 +222,7 @@ export async function isLessonSavedOffline(lessonId: number): Promise<boolean> {
  */
 export async function saveLessonPackage(
   item: {
-    id: number;
+    id?: number;
     title: string;
     category?: string;
     stage?: string;
@@ -234,6 +234,7 @@ export async function saveLessonPackage(
   },
   kholasaMaterial?: any | null
 ): Promise<boolean> {
+  if (!item || !item.id) return false;
   try {
     let material = kholasaMaterial;
 

@@ -16,6 +16,7 @@ import {
 } from "@workspace/db";
 import { requireAdmin, requireSuperAdmin } from "../../middleware/auth";
 import { canStudentAccessContent } from "../../middleware/student-auth";
+import { sendPushToStudents } from "../../services/push-notifications";
 import { logAudit } from "../../lib/audit";
 import {
   parseUnitSortOrder,
@@ -1855,6 +1856,16 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
             message: `${newQuiz.title} جاهز الآن داخل منصة الاختبارات.`,
           }))
         );
+
+        // Also trigger Web Push notifications
+        void sendPushToStudents(
+          recipients.map((s) => s.id),
+          {
+            title: "اختبار جديد متاح لك 📝",
+            body: `${newQuiz.title} جاهز الآن للاختبار والتقييم داخل حسابك.`,
+            url: "/platform",
+          }
+        ).catch(() => {});
       }
     } catch (notifErr) {
       console.error("[GENERATE_EXAM_NOTIFICATION_ERROR]", notifErr);

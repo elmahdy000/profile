@@ -262,6 +262,7 @@ export function AdminLearning({
 }) {
   const { toast } = useToast();
   const [tab, setTabState] = useState<AdminLearningTab>(initialTab);
+  const [testBankInitialTab, setTestBankInitialTab] = useState<"explorer" | "upload" | "generate" | "auto_daily">("explorer");
 
   const setTab = React.useCallback(
     (newTab: AdminLearningTab) => {
@@ -2329,6 +2330,7 @@ export function AdminLearning({
             <TestBankTab
               adminApi={adminApi}
               onNavigateToQuizzes={() => setTab("quizzes")}
+              initialTab={testBankInitialTab}
             />
           )}
           {tab === "kholasa" && (
@@ -2358,7 +2360,10 @@ export function AdminLearning({
               editQuiz={editQuiz}
               toggleQuiz={toggleQuiz}
               deleteQuiz={deleteQuiz}
-              onNavigateToTestBank={() => setTab("testbank")}
+              onNavigateToTestBank={(targetSubTab = "generate") => {
+                setTestBankInitialTab(targetSubTab);
+                setTab("testbank");
+              }}
             />
           )}
           {tab === "essay-exams" && (

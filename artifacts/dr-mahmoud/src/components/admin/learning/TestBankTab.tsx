@@ -143,12 +143,20 @@ export function parseLessonSortOrder(lessonName: string): number {
 export function TestBankTab({
   adminApi,
   onNavigateToQuizzes,
+  initialTab = "explorer",
 }: {
   adminApi: <T>(url: string, options?: RequestInit) => Promise<T>;
   onNavigateToQuizzes?: () => void;
+  initialTab?: "explorer" | "upload" | "generate" | "auto_daily";
 }) {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"explorer" | "upload" | "generate" | "auto_daily">("explorer");
+  const [activeTab, setActiveTab] = useState<"explorer" | "upload" | "generate" | "auto_daily">(initialTab);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   // Tree & Statistics
   const [treeData, setTreeData] = useState<StageNode[]>([]);
