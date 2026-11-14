@@ -469,7 +469,10 @@ export function parseEssayQuestions(rawText: string): { questions: QuizQuestion[
   const pushCurrent = () => {
     if (!current) return;
     let p = current.prompt.trim();
-    p = p.replace(/^(?:(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-\/]?\s*\(?\d+\)?|السؤال\s+(?:الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر)|\(?\d+\)?[\.\:\-\)\/\—\–])\s*/i, "").trim();
+    p = p
+      .replace(/^(?:(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-\/]?\s*\(?\d+\)?\s*[:：\-\/]?|السؤال\s+(?:الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر)\s*[:：\-\/]?|\(?\d+\)?[\.\:\-\)\/\—\–]\s*)/i, "")
+      .replace(/^[:：\-]\s*/, "")
+      .trim();
     if (!p) {
       current = null;
       return;
@@ -488,7 +491,8 @@ export function parseEssayQuestions(rawText: string): { questions: QuizQuestion[
     collectingAnswer = false;
   };
 
-  const Q_HEADER_RE = /^(?:(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-\/]?\s*\(?\d+\)?|السؤال\s+(?:الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر)|\(?\d+\)?[\.\:\-\)\/\—\–])\s*(.*)$/i;
+  const EXPLICIT_Q_RE = /^(?:(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-\/]?\s*\(?\d+\)?\s*[:：\-\/]?|السؤال\s+(?:الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر)\s*[:：\-\/]?)\s*(.*)$/i;
+  const BARE_NUM_RE = /^\(?\d+\)?[\.\:\-\)\/\—\–]\s*(.*)$/;
   const ANS_HEADER_RE = /^(?:(?:الإجابة(?:\s+النموذجية)?|الاجابة(?:\s+النموذجية)?|إجابة|اجابة|عناصر\s+(?:الإجابة|الدرجة)|الحل|Model\s*Answer|Answer)\s*[:：\-]\s*)(.*)$/i;
   const PTS_RE = /(?:درجة(?:\s+السؤال)?|الدرجة|Points|Score)\s*[:：\-]\s*(\d+)/i;
 
@@ -510,11 +514,20 @@ export function parseEssayQuestions(rawText: string): { questions: QuizQuestion[
       continue;
     }
 
-    const qMatch = line.match(Q_HEADER_RE);
-    if (qMatch) {
+    const explicitQMatch = line.match(EXPLICIT_Q_RE);
+    const bareNumberMatch = line.match(BARE_NUM_RE);
+
+    const isQuestionLine =
+      explicitQMatch ||
+      (!collectingAnswer && bareNumberMatch) ||
+      (bareNumberMatch && /[\؟\?]/.test(line)) ||
+      (bareNumberMatch && /^\(?\d+\)?[\.\:\-\)\/\—\–]\s*(?:ما|ماذا|علل|فسر|قارن|اذكر|وضح|اشرح|عرف|حدد|صنف|كيف|لماذا|Explain|What|How|Compare|Describe|Discuss)\b/i.test(line));
+
+    if (isQuestionLine) {
       pushCurrent();
+      const extracted = explicitQMatch ? explicitQMatch[1] : (bareNumberMatch ? bareNumberMatch[1] : line);
       current = {
-        prompt: qMatch[1].trim() || line,
+        prompt: extracted.replace(/^[:：\-]\s*/, "").trim() || line,
         modelAnswer: "",
       };
       collectingAnswer = false;
