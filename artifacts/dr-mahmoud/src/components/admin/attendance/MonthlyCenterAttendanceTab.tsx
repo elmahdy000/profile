@@ -696,9 +696,7 @@ export const MonthlyCenterAttendanceTab: React.FC = () => {
             <span className="text-[10px] text-slate-400 block mt-0.5 truncate">
               {selectedCenter === "all"
                 ? "في جميع السناتر"
-                : selectedCenter.trim().startsWith("سنتر")
-                ? `في ${selectedCenter.trim()}`
-                : `في سنتر ${selectedCenter.trim()}`}
+                : `في ${selectedCenter.trim().replace(/^(في\s+)?(سنتر\s+)?/, "سنتر ")}`}
             </span>
           </div>
         </div>
