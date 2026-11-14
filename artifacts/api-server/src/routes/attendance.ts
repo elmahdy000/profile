@@ -348,7 +348,11 @@ router.get("/admin/attendance/daily", requireAdmin, async (req: Request, res, ne
         appointmentSlot: (studentsTable as any).appointmentSlot,
       })
       .from(studentsTable)
-      .where(eq(studentsTable.status, "approved"))
+      .where(
+        sql`${studentsTable.status} = 'approved' OR ${studentsTable.id} IN (
+          SELECT student_id FROM student_attendance WHERE date = ${date}
+        )`
+      )
       .orderBy(studentsTable.name);
 
     // Fetch all attendance records for this date

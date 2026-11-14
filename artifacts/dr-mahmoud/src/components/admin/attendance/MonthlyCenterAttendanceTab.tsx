@@ -692,7 +692,13 @@ export const MonthlyCenterAttendanceTab: React.FC = () => {
             <Users className="h-4 w-4 text-slate-400" />
           </div>
           <strong className="text-2xl font-black text-slate-800">{stats.totalStudents}</strong>
-          <span className="text-[10px] text-slate-400 block mt-0.5">في سنتر {selectedCenter}</span>
+          <span className="text-[10px] text-slate-400 block mt-0.5">
+            {selectedCenter === "all"
+              ? "في جميع السناتر"
+              : selectedCenter.startsWith("سنتر")
+              ? `في ${selectedCenter}`
+              : `في سنتر ${selectedCenter}`}
+          </span>
         </div>
 
         {/* Present */}
@@ -820,7 +826,7 @@ export const MonthlyCenterAttendanceTab: React.FC = () => {
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-indigo-600" />
             <h3 className="text-xs font-black text-slate-800">
-              كشف طلاب {selectedCenter} — ليوم {selectedWeekdayName} ({selectedDateStr})
+              كشف طلاب {selectedCenter === "all" ? "جميع السناتر" : selectedCenter} — ليوم {selectedWeekdayName} ({selectedDateStr})
             </h3>
             <span className="text-[11px] font-bold text-slate-500">
               ({filteredRecords.length} طالب)
