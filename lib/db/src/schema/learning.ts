@@ -96,6 +96,9 @@ export type QuizQuestion = {
   questionType?: "mcq" | "true_false" | "short_answer" | "essay";
   translation?: string;       // Arabic/English translation of the question statement
   concept?: string;           // Core concept tag for diagnosis & mistake review
+  lesson?: string;            // Lesson attribution for transparent review
+  unit?: string;              // Unit attribution
+  difficulty?: string;        // Question difficulty (easy, medium, hard)
 };
 
 export const quizzesTable = pgTable("quizzes", {

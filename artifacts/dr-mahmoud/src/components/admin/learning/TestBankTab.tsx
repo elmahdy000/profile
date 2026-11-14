@@ -4848,6 +4848,19 @@ export function TestBankTab({
                           <span className="text-[11px] text-muted-foreground font-bold">
                             {q.points || 1} {q.points === 1 ? "درجة" : "درجات"}
                           </span>
+                          {q.lesson && (
+                            <span
+                              className="text-[10px] font-black px-2 py-0.5 rounded-md bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20 max-w-[220px] truncate"
+                              title={`الدرس: ${q.lesson}`}
+                            >
+                              📖 {q.lesson}
+                            </span>
+                          )}
+                          {q.difficulty && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                              {q.difficulty === "easy" ? "سهل 🟢" : q.difficulty === "hard" ? "صعب 🔴" : "متوسط 🟡"}
+                            </span>
+                          )}
                         </div>
 
                         <div className="flex items-center gap-1.5 flex-wrap">
@@ -5331,10 +5344,20 @@ export function TestBankTab({
         unit={selectedUnit}
         lesson={selectedLesson}
         totalAvailableQuestions={lessonQuestions.length}
+        availableUnitLessons={
+          currentStageNode?.units.find((u) => u.unit === selectedUnit)?.lessons.map((l) => ({
+            lesson: l.lesson,
+            totalQuestions: l.totalQuestions,
+          })) || []
+        }
         adminApi={adminApi}
-        onSuccess={() => {
+        onSuccess={(createdQuiz) => {
           loadTree();
           setLessonWorkspaceTab("quizzes");
+          if (createdQuiz && createdQuiz.id) {
+            setGeneratedQuizSuccess(createdQuiz);
+            setReviewingQuiz(createdQuiz);
+          }
         }}
       />
     </div>

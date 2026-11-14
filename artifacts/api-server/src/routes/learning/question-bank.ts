@@ -1069,365 +1069,459 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
   });
 });
 
-// POST /api/admin/learning/test-bank/generate-exam - Generate full quiz directly from Test Bank
-router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req, res, next) => {
-  try {
-    const {
-      title,
-      stage,
-      stages,
-      unit,
-      lesson,
-      lessons,
-      courseId,
-      videoId,
-      scope,
-      count,
-      difficultyDistribution,
-      durationMinutes,
-      passingScore,
-      maxAttempts,
-      shuffleQuestions,
-      showExplanations,
-      requiredProgress,
-      isPublished,
-      questionType,
-    } = req.body;
+// Helper: Normalize lesson string for robust Arabic matching
+export function normalizeLessonKey(str: string): string {
+  return (str || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\u064B-\u065F]/g, "") // remove tashkeel
+    .replace(/[ـ\s]+/g, " ")
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ة/g, "ه")
+    .replace(/ى/g, "ي")
+    .replace(/^(الدرس|المحاضرة|الفصل)\s*(الاول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|\d+)\s*[:\-·•]?\s*/i, "")
+    .replace(/^[:\-·•\d\.\s]+/, "")
+    .trim();
+}
 
-    if (!title || !title.trim()) {
-      res.status(400).json({ error: "عنوان الاختبار مطلوب" });
-      return;
+export function isLessonMatch(
+  dbLesson: string | null | undefined,
+  targetLessons: string[],
+  dbLessonId?: number | null,
+  targetLessonIds?: (number | null | undefined)[]
+): boolean {
+  if (!targetLessons || targetLessons.length === 0) return true;
+  if (dbLessonId && targetLessonIds?.length && targetLessonIds.includes(dbLessonId)) return true;
+
+  const rawDb = (dbLesson || "").trim();
+  if (!rawDb) return false;
+
+  const normDb = normalizeLessonKey(rawDb);
+
+  for (const target of targetLessons) {
+    const rawTarget = (target || "").trim();
+    if (!rawTarget) continue;
+
+    if (rawDb.toLowerCase() === rawTarget.toLowerCase()) return true;
+
+    const normTarget = normalizeLessonKey(rawTarget);
+    if (normDb && normTarget) {
+      if (normDb === normTarget || normDb.includes(normTarget) || normTarget.includes(normDb)) {
+        return true;
+      }
     }
 
-    const cleanedLessons: string[] = Array.isArray(lessons)
-      ? lessons
-          .map((l: any) => (typeof l === "string" ? l.trim() : String(l?.lesson || "").trim()))
-          .filter((l): l is string => Boolean(l && l.length > 0))
-      : [];
-    const isMultiLesson = cleanedLessons.length > 0;
+    if (rawDb.includes(rawTarget) || rawTarget.includes(rawDb)) return true;
+  }
 
-    let resolvedVideoId = isMultiLesson ? null : (Number(videoId || req.body.lessonId) || null);
-    let resolvedCourseId = Number(courseId) || null;
+  return false;
+}
 
-    const qCount = Math.max(1, Math.min(100, Number(count || 10)));
-    let query = db.select().from(questionBankTable);
-    const conditions = [];
+interface GenerateQuizParams {
+  title: string;
+  stage?: string;
+  stages?: string[];
+  unit?: string;
+  lesson?: string;
+  lessons?: string[];
+  courseId?: number | string | null;
+  videoId?: number | string | null;
+  scope?: string;
+  count?: number | string;
+  difficultyDistribution?: { easy?: number; medium?: number; hard?: number };
+  durationMinutes?: number | string | null;
+  passingScore?: number | string;
+  maxAttempts?: number | string;
+  shuffleQuestions?: boolean;
+  showExplanations?: boolean;
+  requiredProgress?: number | string;
+  isPublished?: boolean;
+  questionType?: string;
+}
 
-    if (stage && stage !== "all") {
-      conditions.push(
-        or(
-          eq(questionBankTable.stage, stage),
-          sql`${questionBankTable.stages}::jsonb @> ${JSON.stringify([stage])}::jsonb`
-        )
+// Unified Core Generator: Strict Lesson Isolation, Fair Balancing & Full Model Answers
+async function generateQuizFromBank(params: GenerateQuizParams) {
+  const {
+    title,
+    stage,
+    stages,
+    unit,
+    lesson,
+    lessons,
+    courseId,
+    videoId,
+    scope,
+    count,
+    difficultyDistribution,
+    durationMinutes,
+    passingScore,
+    maxAttempts,
+    shuffleQuestions,
+    showExplanations,
+    requiredProgress,
+    isPublished,
+    questionType,
+  } = params;
+
+  if (!title || !title.trim()) {
+    throw new Error("عنوان الاختبار مطلوب");
+  }
+
+  const cleanedLessons: string[] = Array.isArray(lessons)
+    ? lessons
+        .map((l: any) => (typeof l === "string" ? l.trim() : String(l?.lesson || "").trim()))
+        .filter((l): l is string => Boolean(l && l.length > 0))
+    : [];
+
+  const singleLesson = (lesson && typeof lesson === "string" && lesson.trim() !== "all") ? lesson.trim() : null;
+
+  // Unified list of targeted lessons
+  const targetLessons: string[] = cleanedLessons.length > 0
+    ? cleanedLessons
+    : (singleLesson ? [singleLesson] : []);
+
+  const hasSpecificLessons = targetLessons.length > 0;
+  const isMultiLesson = cleanedLessons.length > 0;
+
+  let resolvedVideoId = isMultiLesson ? null : (Number(videoId) || null);
+  let resolvedCourseId = Number(courseId) || null;
+
+  const qCount = Math.max(1, Math.min(100, Number(count || 10)));
+  let query = db.select().from(questionBankTable);
+  const conditions = [];
+
+  if (stage && stage !== "all") {
+    conditions.push(
+      or(
+        eq(questionBankTable.stage, stage),
+        sql`${questionBankTable.stages}::jsonb @> ${JSON.stringify([stage])}::jsonb`
+      )
+    );
+  }
+
+  // Only filter unit if not multi-lesson (multi-lesson may span units)
+  if (unit && unit !== "all" && !isMultiLesson) {
+    conditions.push(eq(questionBankTable.unit, unit));
+  }
+
+  if (questionType === "true_false") {
+    conditions.push(sql`COALESCE(${questionBankTable.question}->>'questionType', 'mcq') = 'true_false'`);
+  } else if (questionType === "mcq") {
+    conditions.push(sql`COALESCE(${questionBankTable.question}->>'questionType', 'mcq') <> 'true_false'`);
+  }
+
+  const candidateQuestions = await (conditions.length ? query.where(and(...conditions)) : query);
+
+  // STRICT ZERO-LEAKAGE LESSON FILTER:
+  // When specific lessons are targeted, every single question MUST match one of the target lessons!
+  const strictlyFiltered = hasSpecificLessons
+    ? candidateQuestions.filter((q) =>
+        isLessonMatch(q.lesson, targetLessons, q.lessonId, resolvedVideoId ? [resolvedVideoId] : [])
+      )
+    : candidateQuestions;
+
+  // 1. Guarantee zero duplicate prompts or IDs right from the question pool
+  const seenBankPrompts = new Set<string>();
+  const seenBankIds = new Set<number>();
+  const uniqueAvailable: typeof strictlyFiltered = [];
+
+  for (const q of strictlyFiltered) {
+    if (!isCompleteValidQuestion(q.question)) continue;
+    if (seenBankIds.has(q.id)) continue;
+    seenBankIds.add(q.id);
+
+    const pKey = normalizeQuestionPrompt(q.question?.prompt);
+    if (pKey) {
+      if (seenBankPrompts.has(pKey)) continue;
+      seenBankPrompts.add(pKey);
+    }
+    uniqueAvailable.push({
+      ...q,
+      question: {
+        ...q.question,
+        prompt: q.question.prompt.replace(/\r?\n\s*[A-Da-dأابجده]\)\s*$/, "").trim(),
+        options: (q.question.options || []).map(cleanOptionString),
+      },
+    });
+  }
+
+  if (uniqueAvailable.length === 0) {
+    throw new Error(
+      hasSpecificLessons
+        ? `لا توجد أسئلة متوفرة في بنك الأسئلة للدروس المحددة (${targetLessons.join("، ")}). يرجى التأكد من إضافة أسئلة لهذه الدروس أولاً.`
+        : "لا توجد أسئلة متوفرة في بنك الأسئلة لهذا النطاق."
+    );
+  }
+
+  let selectedRows: typeof uniqueAvailable = [];
+  let targetCount = Math.min(qCount, uniqueAvailable.length);
+
+  const pickedSet = new Set<number>();
+  const pickedPrompts = new Set<string>();
+
+  const canPick = (item: (typeof uniqueAvailable)[0]) => {
+    if (pickedSet.has(item.id)) return false;
+    const pKey = normalizeQuestionPrompt(item.question?.prompt);
+    if (pKey && pickedPrompts.has(pKey)) return false;
+    return true;
+  };
+
+  const pickQuestion = (item: (typeof uniqueAvailable)[0]) => {
+    pickedSet.add(item.id);
+    const pKey = normalizeQuestionPrompt(item.question?.prompt);
+    if (pKey) pickedPrompts.add(pKey);
+    selectedRows.push(item);
+  };
+
+  if (hasSpecificLessons) {
+    // Fair balanced sampling across target lessons
+    const byLesson = new Map<string, typeof uniqueAvailable>();
+    for (const t of targetLessons) {
+      byLesson.set(t, []);
+    }
+
+    for (const q of uniqueAvailable) {
+      let matchedTarget = targetLessons.find((t) =>
+        isLessonMatch(q.lesson, [t], q.lessonId, resolvedVideoId ? [resolvedVideoId] : [])
       );
-    }
-    if (unit && unit !== "all") {
-      conditions.push(eq(questionBankTable.unit, unit));
-    }
-    if (isMultiLesson) {
-      conditions.push(inArray(questionBankTable.lesson, cleanedLessons));
-    } else if (lesson && lesson !== "all") {
-      const cleanLes = lesson.trim();
-      if (resolvedVideoId) {
-        conditions.push(
-          or(
-            eq(questionBankTable.lessonId, resolvedVideoId),
-            eq(questionBankTable.lesson, cleanLes),
-            ilike(questionBankTable.lesson, `%${cleanLes}%`)
-          )
-        );
-      } else {
-        conditions.push(
-          or(
-            eq(questionBankTable.lesson, cleanLes),
-            ilike(questionBankTable.lesson, `%${cleanLes}%`)
-          )
-        );
-      }
-    } else if (resolvedVideoId) {
-      conditions.push(eq(questionBankTable.lessonId, resolvedVideoId));
+      if (!matchedTarget) matchedTarget = targetLessons[0];
+      byLesson.get(matchedTarget)!.push(q);
     }
 
-    if (questionType === "true_false") {
-      conditions.push(sql`COALESCE(${questionBankTable.question}->>'questionType', 'mcq') = 'true_false'`);
-    } else if (questionType === "mcq") {
-      conditions.push(sql`COALESCE(${questionBankTable.question}->>'questionType', 'mcq') <> 'true_false'`);
+    // Shuffle within each lesson pool
+    for (const [key, list] of byLesson.entries()) {
+      byLesson.set(key, [...list].sort(() => Math.random() - 0.5));
     }
 
-    const availableQuestions = await (conditions.length ? query.where(and(...conditions)) : query);
+    const lessonsWithQuestions = targetLessons.filter((t) => (byLesson.get(t) || []).length > 0);
+    const effectiveLessons = lessonsWithQuestions.length > 0 ? lessonsWithQuestions : targetLessons;
 
-    // 1. Guarantee zero duplicate prompts or IDs right from the question pool
-    const seenBankPrompts = new Set<string>();
-    const seenBankIds = new Set<number>();
-    const uniqueAvailable: typeof availableQuestions = [];
+    const quotaPerLesson = Math.max(1, Math.ceil(targetCount / effectiveLessons.length));
 
-    for (const q of availableQuestions) {
-      if (!isCompleteValidQuestion(q.question)) continue;
-      if (seenBankIds.has(q.id)) continue;
-      seenBankIds.add(q.id);
-
-      const pKey = normalizeQuestionPrompt(q.question?.prompt);
-      if (pKey) {
-        if (seenBankPrompts.has(pKey)) continue;
-        seenBankPrompts.add(pKey);
-      }
-      uniqueAvailable.push({
-        ...q,
-        question: {
-          ...q.question,
-          prompt: q.question.prompt.replace(/\r?\n\s*[A-Da-dأابجده]\)\s*$/, "").trim(),
-          options: (q.question.options || []).map(cleanOptionString),
-        },
-      });
-    }
-
-    if (uniqueAvailable.length === 0) {
-      res.status(404).json({ error: "لا توجد أسئلة متوفرة في بنك الأسئلة لهذا النطاق (المرحلة/الوحدة/الدروس المختارة)" });
-      return;
-    }
-
-    let selectedRows: typeof uniqueAvailable = [];
-    let targetCount = Math.min(qCount, uniqueAvailable.length);
-
-    const pickedSet = new Set<number>();
-    const pickedPrompts = new Set<string>();
-
-    const canPick = (item: (typeof uniqueAvailable)[0]) => {
-      if (pickedSet.has(item.id)) return false;
-      const pKey = normalizeQuestionPrompt(item.question?.prompt);
-      if (pKey && pickedPrompts.has(pKey)) return false;
-      return true;
-    };
-
-    const pickQuestion = (item: (typeof uniqueAvailable)[0]) => {
-      pickedSet.add(item.id);
-      const pKey = normalizeQuestionPrompt(item.question?.prompt);
-      if (pKey) pickedPrompts.add(pKey);
-      selectedRows.push(item);
-    };
-
-    if (isMultiLesson) {
-      // Fair balanced sampling across selected lessons to avoid student confusion or bias
-      const byLesson = new Map<string, typeof uniqueAvailable>();
-      for (const q of uniqueAvailable) {
-        const lKey = q.lesson || "عام";
-        if (!byLesson.has(lKey)) byLesson.set(lKey, []);
-        byLesson.get(lKey)!.push(q);
-      }
-
-      // Shuffle questions within each lesson pool
-      for (const [key, list] of byLesson.entries()) {
-        byLesson.set(key, [...list].sort(() => Math.random() - 0.5));
-      }
-
-      const activeLessons = cleanedLessons.filter((l) => byLesson.has(l) && byLesson.get(l)!.length > 0);
-      const effectiveLessons = activeLessons.length > 0 ? activeLessons : Array.from(byLesson.keys());
-
-      const quotaPerLesson = Math.max(1, Math.ceil(targetCount / effectiveLessons.length));
-
-      for (const lName of effectiveLessons) {
-        const list = byLesson.get(lName) || [];
-        let pickedFromLesson = 0;
-        for (const item of list) {
-          if (selectedRows.length < targetCount && pickedFromLesson < quotaPerLesson && canPick(item)) {
-            pickQuestion(item);
-            pickedFromLesson++;
-          }
+    // Round 1: Balanced pick from each lesson
+    for (const lName of effectiveLessons) {
+      const list = byLesson.get(lName) || [];
+      let pickedFromLesson = 0;
+      for (const item of list) {
+        if (selectedRows.length < targetCount && pickedFromLesson < quotaPerLesson && canPick(item)) {
+          pickQuestion(item);
+          pickedFromLesson++;
         }
       }
+    }
 
-      // Fill remainder if lessons have fewer questions than quota
-      if (selectedRows.length < targetCount) {
-        const remaining = uniqueAvailable
-          .filter(canPick)
-          .sort(() => Math.random() - 0.5);
-        for (const item of remaining) {
-          if (selectedRows.length < targetCount) {
-            pickQuestion(item);
-          }
-        }
-      }
+    // Round 2 (if remainder needed): Fill strictly from other SELECTED lessons ONLY!
+    if (selectedRows.length < targetCount) {
+      const remainingSelected = uniqueAvailable
+        .filter((q) => canPick(q) && isLessonMatch(q.lesson, targetLessons, q.lessonId))
+        .sort(() => Math.random() - 0.5);
 
-      // Shuffle final questions so lessons are naturally interspersed
-      if (shuffleQuestions !== false) {
-        selectedRows.sort(() => Math.random() - 0.5);
-      }
-    } else if (difficultyDistribution && typeof difficultyDistribution === "object") {
-      const easyCount = Math.max(0, Number(difficultyDistribution.easy) || 0);
-      const medCount = Math.max(0, Number(difficultyDistribution.medium) || 0);
-      const hardCount = Math.max(0, Number(difficultyDistribution.hard) || 0);
-      const sum = easyCount + medCount + hardCount;
-      if (sum > 0) {
-        targetCount = Math.min(sum, uniqueAvailable.length);
-      }
-
-      const easyPool = uniqueAvailable.filter((q) => q.difficulty === "easy").sort(() => Math.random() - 0.5);
-      const medPool = uniqueAvailable.filter((q) => q.difficulty === "medium").sort(() => Math.random() - 0.5);
-      const hardPool = uniqueAvailable.filter((q) => q.difficulty === "hard").sort(() => Math.random() - 0.5);
-
-      for (const item of easyPool) {
-        if (selectedRows.filter((r) => r.difficulty === "easy").length >= easyCount) break;
-        if (canPick(item)) pickQuestion(item);
-      }
-      for (const item of medPool) {
-        if (selectedRows.filter((r) => r.difficulty === "medium").length >= medCount) break;
-        if (canPick(item)) pickQuestion(item);
-      }
-      for (const item of hardPool) {
-        if (selectedRows.filter((r) => r.difficulty === "hard").length >= hardCount) break;
-        if (canPick(item)) pickQuestion(item);
-      }
-
-      if (selectedRows.length < targetCount) {
-        const remaining = uniqueAvailable.filter(canPick).sort(() => Math.random() - 0.5);
-        for (const item of remaining) {
-          if (selectedRows.length < targetCount) {
-            pickQuestion(item);
-          }
-        }
-      }
-    } else {
-      const shuffled = [...uniqueAvailable].sort(() => Math.random() - 0.5);
-      for (const item of shuffled) {
-        if (selectedRows.length < targetCount && canPick(item)) {
+      for (const item of remainingSelected) {
+        if (selectedRows.length < targetCount) {
           pickQuestion(item);
         }
       }
     }
 
-    if (selectedRows.length === 0) {
-      res.status(404).json({ error: "تعذر اختيار أسئلة للاختبار" });
-      return;
+    // Shuffle final questions so lessons blend naturally
+    if (shuffleQuestions !== false) {
+      selectedRows.sort(() => Math.random() - 0.5);
+    }
+  } else if (difficultyDistribution && typeof difficultyDistribution === "object") {
+    const easyCount = Math.max(0, Number(difficultyDistribution.easy) || 0);
+    const medCount = Math.max(0, Number(difficultyDistribution.medium) || 0);
+    const hardCount = Math.max(0, Number(difficultyDistribution.hard) || 0);
+    const sum = easyCount + medCount + hardCount;
+    if (sum > 0) {
+      targetCount = Math.min(sum, uniqueAvailable.length);
     }
 
-    const finalQuestions: QuizQuestion[] = [];
-    const finalPrompts = new Set<string>();
-    for (const r of selectedRows) {
-      const pKey = normalizeQuestionPrompt(r.question.prompt);
-      if (pKey && finalPrompts.has(pKey)) continue;
-      if (pKey) finalPrompts.add(pKey);
+    const easyPool = uniqueAvailable.filter((q) => q.difficulty === "easy").sort(() => Math.random() - 0.5);
+    const medPool = uniqueAvailable.filter((q) => q.difficulty === "medium").sort(() => Math.random() - 0.5);
+    const hardPool = uniqueAvailable.filter((q) => q.difficulty === "hard").sort(() => Math.random() - 0.5);
 
-      // ✅ Validation: تأكد من صحة correctIndex
-      const q = r.question;
-      if (typeof q.correctIndex !== 'number' || q.correctIndex < 0 || q.correctIndex >= q.options.length) {
-        console.error(`❌ سؤال معطوب تم تخطيه - correctIndex=${q.correctIndex}, options.length=${q.options.length}, prompt="${q.prompt?.substring(0, 50)}..."`);
-        continue;
-      }
-
-      const correctAnswer = q.options[q.correctIndex]?.trim();
-      if (!correctAnswer) {
-        console.error(`❌ سؤال معطوب تم تخطيه - الإجابة الصحيحة فاضية, prompt="${q.prompt?.substring(0, 50)}..."`);
-        continue;
-      }
-
-      finalQuestions.push({
-        prompt: r.question.prompt,
-        options: r.question.options,
-        correctIndex: r.question.correctIndex,
-        correctAnswer: correctAnswer,  // ✅ حفظ النص الفعلي للإجابة الصحيحة
-        explanation: r.question.explanation,
-        imageUrl: r.question.imageUrl,
-      });
+    for (const item of easyPool) {
+      if (selectedRows.filter((r) => r.difficulty === "easy").length >= easyCount) break;
+      if (canPick(item)) pickQuestion(item);
+    }
+    for (const item of medPool) {
+      if (selectedRows.filter((r) => r.difficulty === "medium").length >= medCount) break;
+      if (canPick(item)) pickQuestion(item);
+    }
+    for (const item of hardPool) {
+      if (selectedRows.filter((r) => r.difficulty === "hard").length >= hardCount) break;
+      if (canPick(item)) pickQuestion(item);
     }
 
-    let quizCategory = stage || "عام";
-    let isLessonScope = !isMultiLesson && scope === "lesson" && Boolean(resolvedVideoId);
-
-    if (resolvedVideoId) {
-      const [video] = await db.select().from(videosTable).where(eq(videosTable.id, resolvedVideoId)).limit(1);
-      if (video) {
-        resolvedCourseId = video.courseId ?? resolvedCourseId;
-        quizCategory = video.category || quizCategory;
-        isLessonScope = true;
-      }
-    }
-
-    let finalStages = Array.isArray(stages) && stages.length ? stages : (stage && stage !== "all" ? [stage] : []);
-
-    if (resolvedCourseId) {
-      const [course] = await db.select().from(coursesTable).where(eq(coursesTable.id, resolvedCourseId)).limit(1);
-      if (course) {
-        quizCategory = course.title;
-        if (Array.isArray(course.stages) && course.stages.length) {
-          finalStages = Array.from(new Set([...finalStages, ...course.stages]));
+    if (selectedRows.length < targetCount) {
+      const remaining = uniqueAvailable.filter(canPick).sort(() => Math.random() - 0.5);
+      for (const item of remaining) {
+        if (selectedRows.length < targetCount) {
+          pickQuestion(item);
         }
       }
     }
+  } else {
+    const shuffled = [...uniqueAvailable].sort(() => Math.random() - 0.5);
+    for (const item of shuffled) {
+      if (selectedRows.length < targetCount && canPick(item)) {
+        pickQuestion(item);
+      }
+    }
+  }
 
-    if (finalStages.length === 0) {
-      finalStages = ["عام"];
+  if (selectedRows.length === 0) {
+    throw new Error("تعذر اختيار أسئلة للاختبار");
+  }
+
+  const finalQuestions: QuizQuestion[] = [];
+  const finalPrompts = new Set<string>();
+
+  for (const r of selectedRows) {
+    const pKey = normalizeQuestionPrompt(r.question.prompt);
+    if (pKey && finalPrompts.has(pKey)) continue;
+    if (pKey) finalPrompts.add(pKey);
+
+    const q = r.question;
+    if (typeof q.correctIndex !== "number" || q.correctIndex < 0 || q.correctIndex >= q.options.length) {
+      continue;
     }
 
-    const examDescription = isMultiLesson
-      ? `اختبار مراجعة شامل على الدروس: ${cleanedLessons.join("، ")} (${stage || ""})`
-      : `اختبار تم توليده آلياً من بنك الأسئلة (${stage || ""} - ${unit || ""} - ${lesson || ""})`.trim();
-
-    const [newQuiz] = await db
-      .insert(quizzesTable)
-      .values({
-        title: title.trim(),
-        courseId: resolvedCourseId,
-        videoId: isLessonScope ? resolvedVideoId : null,
-        scope: isLessonScope ? "lesson" : "course",
-        description: examDescription,
-        category: quizCategory,
-        stage: finalStages[0] || null,
-        stages: finalStages,
-        durationMinutes: durationMinutes ? Number(durationMinutes) : null,
-        passingScore: Math.max(0, Math.min(100, Number(passingScore ?? 60))),
-        maxAttempts: Math.max(0, Math.min(20, Number(maxAttempts ?? 3))),
-        shuffleQuestions: shuffleQuestions !== false,
-        showExplanations: showExplanations !== false,
-        requiredProgress: isLessonScope ? Math.max(0, Math.min(100, Number(requiredProgress ?? 80))) : 0,
-        questions: finalQuestions,
-        isPublished: isPublished !== false,
-      })
-      .returning();
-
-    // CRITICAL: Link newly generated quiz directly to the video lesson and unlink previous quiz
-    if (isLessonScope && resolvedVideoId) {
-      await db
-        .update(quizzesTable)
-        .set({ videoId: null })
-        .where(and(eq(quizzesTable.videoId, resolvedVideoId), ne(quizzesTable.id, newQuiz.id)));
-      await db
-        .update(videosTable)
-        .set({ quizId: newQuiz.id })
-        .where(eq(videosTable.id, resolvedVideoId));
+    const correctAnswer = q.options[q.correctIndex]?.trim();
+    if (!correctAnswer) {
+      continue;
     }
 
-    // Send notifications to enrolled/matching approved students
-    if (newQuiz.isPublished) {
-      try {
-        const approvedStudents = await db.select().from(studentsTable).where(eq(studentsTable.status, "approved"));
-        const recipients = approvedStudents.filter((student) =>
-          canStudentAccessContent(student, newQuiz.category, newQuiz.stage, newQuiz.stages, newQuiz.courseId)
+    finalQuestions.push({
+      prompt: q.prompt,
+      options: q.options,
+      correctIndex: q.correctIndex,
+      correctAnswer: correctAnswer,
+      explanation: q.explanation || "",
+      imageUrl: q.imageUrl,
+      lesson: r.lesson || (hasSpecificLessons ? targetLessons[0] : undefined),
+      unit: r.unit || undefined,
+      difficulty: r.difficulty || undefined,
+      points: r.points || 1,
+      questionType: q.questionType || (q.options?.length === 2 ? "true_false" : "mcq"),
+    });
+  }
+
+  let quizCategory = stage || "عام";
+  let isLessonScope = !isMultiLesson && scope === "lesson" && Boolean(resolvedVideoId);
+
+  if (resolvedVideoId) {
+    const [video] = await db.select().from(videosTable).where(eq(videosTable.id, resolvedVideoId)).limit(1);
+    if (video) {
+      resolvedCourseId = video.courseId ?? resolvedCourseId;
+      quizCategory = video.category || quizCategory;
+      isLessonScope = true;
+    }
+  }
+
+  let finalStages = Array.isArray(stages) && stages.length ? stages : (stage && stage !== "all" ? [stage] : []);
+
+  if (resolvedCourseId) {
+    const [course] = await db.select().from(coursesTable).where(eq(coursesTable.id, resolvedCourseId)).limit(1);
+    if (course) {
+      quizCategory = course.title;
+      if (Array.isArray(course.stages) && course.stages.length) {
+        finalStages = Array.from(new Set([...finalStages, ...course.stages]));
+      }
+    }
+  }
+
+  if (finalStages.length === 0) {
+    finalStages = ["عام"];
+  }
+
+  const examDescription = hasSpecificLessons
+    ? `اختبار تقييمي مميز يغطي حصرياً الدروس: ${targetLessons.join("، ")} (${stage || ""})`
+    : `اختبار تم توليده آلياً من بنك الأسئلة (${stage || ""} - ${unit || ""} - ${lesson || ""})`.trim();
+
+  const [newQuiz] = await db
+    .insert(quizzesTable)
+    .values({
+      title: title.trim(),
+      courseId: resolvedCourseId,
+      videoId: isLessonScope ? resolvedVideoId : null,
+      scope: isLessonScope ? "lesson" : "course",
+      description: examDescription,
+      category: quizCategory,
+      stage: finalStages[0] || null,
+      stages: finalStages,
+      unit: unit && unit !== "all" ? unit : null,
+      lesson: hasSpecificLessons ? targetLessons.join("، ") : (lesson && lesson !== "all" ? lesson : null),
+      durationMinutes: durationMinutes ? Number(durationMinutes) : null,
+      passingScore: Math.max(0, Math.min(100, Number(passingScore ?? 60))),
+      maxAttempts: Math.max(0, Math.min(20, Number(maxAttempts ?? 3))),
+      shuffleQuestions: shuffleQuestions !== false,
+      showExplanations: showExplanations !== false,
+      requiredProgress: isLessonScope ? Math.max(0, Math.min(100, Number(requiredProgress ?? 80))) : 0,
+      questions: finalQuestions,
+      isPublished: isPublished !== false,
+    })
+    .returning();
+
+  // Link newly generated quiz directly to the video lesson and unlink previous quiz
+  if (isLessonScope && resolvedVideoId) {
+    await db
+      .update(quizzesTable)
+      .set({ videoId: null })
+      .where(and(eq(quizzesTable.videoId, resolvedVideoId), ne(quizzesTable.id, newQuiz.id)));
+    await db
+      .update(videosTable)
+      .set({ quizId: newQuiz.id })
+      .where(eq(videosTable.id, resolvedVideoId));
+  }
+
+  // Send notifications to enrolled/matching approved students
+  if (newQuiz.isPublished) {
+    try {
+      const approvedStudents = await db.select().from(studentsTable).where(eq(studentsTable.status, "approved"));
+      const recipients = approvedStudents.filter((student) =>
+        canStudentAccessContent(student, newQuiz.category, newQuiz.stage, newQuiz.stages, newQuiz.courseId)
+      );
+      if (recipients.length > 0) {
+        await db.insert(studentNotificationsTable).values(
+          recipients.map((student) => ({
+            studentId: student.id,
+            type: "quiz",
+            title: "اختبار جديد متاح لك",
+            message: `${newQuiz.title} جاهز الآن داخل منصة الاختبارات.`,
+          }))
         );
-        if (recipients.length > 0) {
-          await db.insert(studentNotificationsTable).values(
-            recipients.map((student) => ({
-              studentId: student.id,
-              type: "quiz",
-              title: "اختبار جديد متاح لك",
-              message: `${newQuiz.title} جاهز الآن داخل منصة الاختبارات.`,
-            }))
-          );
-        }
-      } catch (notifErr) {
-        console.error("[GENERATE_EXAM_NOTIFICATION_ERROR]", notifErr);
       }
+    } catch (notifErr) {
+      console.error("[GENERATE_EXAM_NOTIFICATION_ERROR]", notifErr);
     }
+  }
+
+  return {
+    newQuiz,
+    finalQuestions,
+    targetCount,
+    targetLessons,
+  };
+}
+
+// POST /api/admin/learning/test-bank/generate-exam - Generate full quiz directly from Test Bank
+router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req, res, next) => {
+  try {
+    const result = await generateQuizFromBank(req.body);
 
     res.status(201).json({
-      ...newQuiz,
-      requestedCount: targetCount,
-      actualCount: finalQuestions.length,
-      note: finalQuestions.length < targetCount
-        ? `تم توليد الاختبار بـ ${finalQuestions.length} سؤالاً نظراً لاكتمال الأسئلة المتاحة بالبنك لهذا النطاق.`
+      ...result.newQuiz,
+      quiz: result.newQuiz,
+      requestedCount: result.targetCount,
+      actualCount: result.finalQuestions.length,
+      selectedLessons: result.targetLessons,
+      note: result.finalQuestions.length < result.targetCount
+        ? `تم توليد الاختبار بـ ${result.finalQuestions.length} سؤالاً (كامل الأسئلة المتوفرة في الدروس المحددة).`
         : undefined,
     });
-  } catch (error) {
-    next(error);
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || "تعذر توليد الاختبار من بنك الأسئلة" });
   }
 });
 
@@ -1736,63 +1830,44 @@ router.delete("/admin/learning/question-bank/:id", requireAdmin, async (req, res
 // Generate Quiz from Question Bank automatically
 router.post("/admin/learning/question-bank/generate-quiz", requireAdmin, async (req, res, next) => {
   try {
-    const { title, courseId, count, category, stage, stages, difficulty, passingScore, durationMinutes } = req.body;
-    const qCount = Math.max(1, Math.min(50, Number(count || 10)));
+    const isExplicitPublish = req.body.isPublished !== undefined
+      ? Boolean(req.body.isPublished)
+      : req.body.publishMode === "publish";
 
-    let targetStages: string[] = Array.isArray(stages) && stages.length
-      ? stages.map((s: unknown) => String(s).trim()).filter(Boolean)
-      : stage && stage !== "all"
-        ? [String(stage).trim()]
-        : [];
-
-    if (targetStages.length === 0 && courseId) {
-      const [course] = await db
-        .select({ stages: coursesTable.stages })
-        .from(coursesTable)
-        .where(eq(coursesTable.id, Number(courseId)))
-        .limit(1);
-      if (Array.isArray(course?.stages) && course.stages.length > 0) {
-        targetStages = course.stages;
-      }
-    }
-
-    const conditions = [];
-    if (targetStages.length > 0) {
-      conditions.push(inArray(questionBankTable.stage, targetStages));
-    } else if (courseId) {
-      conditions.push(eq(questionBankTable.courseId, Number(courseId)));
-    } else if (category && category !== "all") {
-      conditions.push(or(eq(questionBankTable.category, category), eq(questionBankTable.category, "عام")));
-    }
-
-    if (difficulty && difficulty !== "all") {
-      conditions.push(eq(questionBankTable.difficulty, String(difficulty)));
-    }
-
-    const rows = await db
-      .select()
-      .from(questionBankTable)
-      .where(conditions.length ? and(...conditions) : undefined)
-      .orderBy(sql`random()`)
-      .limit(qCount * 2);
-
-    const validRows = rows.filter((r) => isCompleteValidQuestion(r.question)).slice(0, qCount);
-
-    if (validRows.length === 0) {
-      res.status(404).json({ error: "لا توجد أسئلة كافية في البنك تطابق هذا البحث أو المرحلة" });
-      return;
-    }
-
-    const selectedQuestions = validRows.map((item) => item.question);
-
-    res.json({
-      title: title || `اختبار عشوائي من بنك الأسئلة (${selectedQuestions.length} سؤال)`,
-      questions: selectedQuestions,
-      passingScore: Number(passingScore) || 60,
-      durationMinutes: durationMinutes ? Number(durationMinutes) : null,
+    const result = await generateQuizFromBank({
+      title: req.body.title || "اختبار آلي من بنك الأسئلة",
+      stage: req.body.stage,
+      stages: req.body.stages,
+      unit: req.body.unit,
+      lesson: req.body.lesson,
+      lessons: req.body.lessons,
+      courseId: req.body.courseId,
+      videoId: req.body.videoId,
+      scope: req.body.scope,
+      count: req.body.count,
+      difficultyDistribution: req.body.difficultyDistribution,
+      durationMinutes: req.body.durationMinutes,
+      passingScore: req.body.passingScore,
+      maxAttempts: req.body.maxAttempts,
+      shuffleQuestions: req.body.shuffleQuestions !== false,
+      showExplanations: req.body.showExplanations !== false,
+      requiredProgress: req.body.requiredProgress,
+      isPublished: isExplicitPublish,
+      questionType: req.body.questionType,
     });
-  } catch (error) {
-    next(error);
+
+    res.status(201).json({
+      ...result.newQuiz,
+      quiz: result.newQuiz,
+      title: result.newQuiz.title,
+      questions: result.newQuiz.questions,
+      passingScore: result.newQuiz.passingScore,
+      durationMinutes: result.newQuiz.durationMinutes,
+      actualCount: result.finalQuestions.length,
+      selectedLessons: result.targetLessons,
+    });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || "تعذر توليد الاختبار من بنك الأسئلة" });
   }
 });
 
