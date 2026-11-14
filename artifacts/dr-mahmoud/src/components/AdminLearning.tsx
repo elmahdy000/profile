@@ -37,6 +37,7 @@ import {
   Sparkles,
   FileEdit,
   Printer,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -251,6 +252,55 @@ export type AdminLearningTab =
   | "reports"
   | "self-assessment-packs";
 
+const TAB_GROUPS: {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  tabIds: string[];
+}[] = [
+  {
+    id: "all",
+    label: "عرض الكل (17)",
+    icon: LayoutDashboard,
+    tabIds: [],
+  },
+  {
+    id: "students",
+    label: "👥 شؤون الطلاب والسناتر",
+    icon: Users,
+    tabIds: ["attendance", "center-bookings", "students", "summaries"],
+  },
+  {
+    id: "exams",
+    label: "📝 مركز التقييم والامتحانات",
+    icon: ClipboardCheck,
+    tabIds: ["testbank", "quizzes", "essay-exams", "grades-sheet"],
+  },
+  {
+    id: "content",
+    label: "📚 المحتوى والمذكرات",
+    icon: BookOpen,
+    tabIds: ["kholasa", "memo-studio", "files"],
+  },
+  {
+    id: "finance",
+    label: "💳 المعاملات المالية",
+    icon: FileCheck2,
+    tabIds: ["payments", "subscriptions", "self-assessment-packs"],
+  },
+  {
+    id: "ops",
+    label: "📊 المتابعة والعمليات",
+    icon: BarChart3,
+    tabIds: ["overview", "notifications", "reports"],
+  },
+];
+
+const findGroupForTab = (tabId: string): string => {
+  const match = TAB_GROUPS.find((g) => g.tabIds.includes(tabId));
+  return match ? match.id : "all";
+};
+
 export function AdminLearning({
   role = "superadmin",
   initialTab = "students",
@@ -262,6 +312,16 @@ export function AdminLearning({
 }) {
   const { toast } = useToast();
   const [tab, setTabState] = useState<AdminLearningTab>(initialTab);
+  const [activeGroup, setActiveGroup] = useState<string>(() => findGroupForTab(initialTab || "overview"));
+
+  useEffect(() => {
+    if (tab) {
+      const g = findGroupForTab(tab);
+      if (g !== "all") {
+        setActiveGroup(g);
+      }
+    }
+  }, [tab]);
   const [testBankInitialTab, setTestBankInitialTab] = useState<"explorer" | "upload" | "generate" | "auto_daily">(() => {
     if (typeof window !== "undefined") {
       const sp = new URLSearchParams(window.location.search);
@@ -1343,6 +1403,25 @@ export function AdminLearning({
   const tabs = role === "subadmin"
     ? allTabs.filter(([value]) => SUBADMIN_TABS.has(value))
     : allTabs;
+
+  const availableGroups = useMemo(() => {
+    return TAB_GROUPS.filter((g) => {
+      if (g.id === "all") return true;
+      return g.tabIds.some((id) => tabs.some(([val]) => val === id));
+    });
+  }, [tabs]);
+
+  const displayedTabs = useMemo(() => {
+    if (activeGroup === "all") return tabs;
+    const groupDef = TAB_GROUPS.find((g) => g.id === activeGroup);
+    if (!groupDef || groupDef.tabIds.length === 0) return tabs;
+    const groupTabSet = new Set(groupDef.tabIds);
+    return tabs.filter(([val]) => groupTabSet.has(val));
+  }, [tabs, activeGroup]);
+
+  const pendingReceiptsCount = useMemo(() => {
+    return paymentReceipts.filter((r) => r.status === "pending").length;
+  }, [paymentReceipts]);
   const tabMeta: Record<string, [string, string]> = {
     overview: ["اللوحة التشغيلية وإحصائيات المنصة", "نظرة عامة على أعداد الطلاب، المشتركين، والتوزيع حسب المراحل والكورسات."],
     attendance: ["تسجيل الحضور والغياب اليومي (QR Code)", "مسح سريع لكود الطالب بالكاميرا، تسجيل الحضور فورياً، إشعار ولي الأمر، ويومية كاملة بالغياب."],
@@ -1404,23 +1483,72 @@ export function AdminLearning({
         </div>
       </div>
 
-      {/* 5. Management Tabs Bar (RTL Horizontal Scroll on Mobile) */}
-      <div className="no-print w-full overflow-x-auto overflow-y-hidden pb-1 scrollbar-none">
-        <div className="flex w-max min-w-full gap-2 rounded-2xl border border-[#E2E8F0] bg-white p-1.5 shadow-xs">
-          {tabs.map(([value, label, Icon]) => (
-            <button
-              key={value}
-              onClick={() => setTab(value as any)}
-              className={`flex-none flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-xs font-semibold transition-all whitespace-nowrap ${
-                tab === value
-                  ? "bg-[#2563EB] text-white shadow-xs shadow-blue-500/20"
-                  : "bg-transparent text-[#475569] hover:bg-[#F6F8FC] hover:text-[#0F172A]"
-              }`}
-            >
-              <Icon className="h-4 w-4 shrink-0" strokeWidth={1.8} />
-              <span>{label}</span>
-            </button>
-          ))}
+      {/* 5. Clean Enterprise 2-Tier Navigation */}
+      <div className="no-print space-y-2.5">
+        {/* Tier 1: Domain Hub Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          <span className="text-[11px] font-bold text-[#64748B] shrink-0 ml-1">القسم الرئيسي:</span>
+          {availableGroups.map((group) => {
+            const isSelected = activeGroup === group.id;
+            const GroupIcon = group.icon;
+            const hasActiveTab = group.tabIds.includes(tab);
+            return (
+              <button
+                key={group.id}
+                type="button"
+                onClick={() => {
+                  setActiveGroup(group.id);
+                  if (group.id !== "all" && !group.tabIds.includes(tab)) {
+                    const firstAvailable = tabs.find(([val]) => group.tabIds.includes(val));
+                    if (firstAvailable) {
+                      setTab(firstAvailable[0] as any);
+                    }
+                  }
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                  isSelected
+                    ? "bg-[#0F172A] text-white shadow-xs"
+                    : hasActiveTab
+                    ? "bg-blue-50 text-blue-700 border border-blue-200"
+                    : "bg-white text-[#475569] hover:bg-[#F6F8FC] border border-[#E2E8F0]"
+                }`}
+              >
+                <GroupIcon className="h-3.5 w-3.5" />
+                <span>{group.label}</span>
+                {hasActiveTab && group.id !== "all" && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Tier 2: Active Domain Subtabs Bar */}
+        <div className="w-full overflow-x-auto overflow-y-hidden pb-1 scrollbar-none">
+          <div className="flex w-max min-w-full gap-2 rounded-2xl border border-[#E2E8F0] bg-white p-1.5 shadow-xs">
+            {displayedTabs.map(([value, label, Icon]) => {
+              const isReceiptsTab = value === "payments" && pendingReceiptsCount > 0;
+              return (
+                <button
+                  key={value}
+                  onClick={() => setTab(value as any)}
+                  className={`flex-none flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                    tab === value
+                      ? "bg-[#2563EB] text-white shadow-xs shadow-blue-500/20"
+                      : "bg-transparent text-[#475569] hover:bg-[#F6F8FC] hover:text-[#0F172A]"
+                  }`}
+                >
+                  <Icon className="h-4 w-4 shrink-0" strokeWidth={1.8} />
+                  <span>{label}</span>
+                  {isReceiptsTab && (
+                    <span className="rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] font-black text-slate-950 animate-pulse">
+                      {pendingReceiptsCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 

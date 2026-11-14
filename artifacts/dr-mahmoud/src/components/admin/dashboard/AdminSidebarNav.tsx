@@ -32,6 +32,7 @@ import {
   FileEdit,
   Printer,
   CalendarDays,
+  CreditCard,
 } from "lucide-react";
 
 interface AdminSidebarNavProps {
@@ -73,7 +74,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
 
   const navGroups = [
     {
-      title: "الرئيسية والمتابعة",
+      title: "غرفة العمليات والمتابعة",
       items: [
         {
           id: "learning-overview",
@@ -85,10 +86,30 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           },
           active: activeTab === "learning" && (learningSubTab as string) === "overview",
         },
+        {
+          id: "notifications",
+          label: "إرسال الإشعارات والرسائل",
+          icon: Bell,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("notifications");
+          },
+          active: activeTab === "learning" && learningSubTab === "notifications",
+        },
+        {
+          id: "reports",
+          label: "التقارير الشاملة",
+          icon: FileText,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("reports");
+          },
+          active: activeTab === "learning" && learningSubTab === "reports",
+        },
       ],
     },
     {
-      title: "الطلاب وحجوزات السناتر",
+      title: "شؤون الطلاب والسناتر",
       items: [
         {
           id: "monthly-attendance",
@@ -107,28 +128,24 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           active: activeTab === "learning" && learningSubTab === "attendance",
         },
         {
-          id: "center-bookings",
-          label: "جدول حجوزات السناتر",
-          icon: MapPin,
-          onClick: () => {
-            setActiveTab("learning");
-            setLearningSubTab("center-bookings" as any);
-          },
-          active: activeTab === "learning" && (learningSubTab as string) === "center-bookings",
-        },
-        {
           id: "attendance",
-          label: "مسح الحضور (QR Scanner)",
+          label: "مسح الحضور (QR Scanner) 📷",
           icon: QrCode,
           onClick: () => {
             setActiveTab("learning");
             setLearningSubTab("attendance");
+            if (typeof window !== "undefined") {
+              const url = new URL(window.location.href);
+              url.searchParams.delete("mode");
+              window.history.replaceState(null, "", url.toString());
+              window.dispatchEvent(new Event("popstate"));
+            }
           },
-          active: activeTab === "learning" && learningSubTab === "attendance",
+          active: activeTab === "learning" && learningSubTab === "attendance" && (typeof window === "undefined" || new URLSearchParams(window.location.search).get("mode") !== "monthly_centers"),
         },
         {
           id: "students",
-          label: "إدارة جميع الطلاب",
+          label: "إدارة جميع الطلاب 👥",
           icon: Users,
           onClick: () => {
             setActiveTab("learning");
@@ -137,34 +154,25 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           active: activeTab === "learning" && learningSubTab === "students",
         },
         {
-          id: "payments",
-          label: "إيصالات الدفع",
-          icon: FileCheck2,
+          id: "center-bookings",
+          label: "جدول حجوزات السناتر 📍",
+          icon: MapPin,
           onClick: () => {
             setActiveTab("learning");
-            setLearningSubTab("payments");
+            setLearningSubTab("center-bookings" as any);
           },
-          active: activeTab === "learning" && learningSubTab === "payments",
-          badge: pendingReceiptsCount > 0 ? pendingReceiptsCount : undefined,
-          badgeColor: "bg-amber-500 text-slate-950 font-black",
-        },
-        {
-          id: "subscriptions",
-          label: "الاشتراكات الشهرية",
-          icon: Activity,
-          onClick: () => setActiveTab("subscriptions"),
-          active: activeTab === "subscriptions",
+          active: activeTab === "learning" && (learningSubTab as string) === "center-bookings",
         },
         {
           id: "parents",
-          label: "حسابات أولياء الأمور",
+          label: "حسابات أولياء الأمور 🛡️",
           icon: ShieldCheck,
           onClick: () => setActiveTab("parents"),
           active: activeTab === "parents",
         },
         {
           id: "student-analytics",
-          label: "تحليلات الأداء والمشاهدات",
+          label: "تحليلات الأداء والمشاهدات 📈",
           icon: BarChart3,
           onClick: () => setActiveTab("student-analytics"),
           active: activeTab === "student-analytics",
@@ -172,50 +180,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
       ],
     },
     {
-      title: "المحتوى التعليمي",
-      items: [
-        {
-          id: "courses",
-          label: "الكورسات التدريبية",
-          icon: BookOpen,
-          onClick: () => setActiveTab("courses"),
-          active: activeTab === "courses",
-        },
-        {
-          id: "curriculums",
-          label: "المناهج التعليمية",
-          icon: Library,
-          onClick: () => setActiveTab("curriculums"),
-          active: activeTab === "curriculums",
-        },
-        {
-          id: "videos",
-          label: "مكتبة الفيديوهات",
-          icon: VideoIcon,
-          onClick: () => setActiveTab("videos"),
-          active: activeTab === "videos",
-        },
-        {
-          id: "upload-video",
-          label: "رفع فيديو جديد 📤",
-          icon: Upload,
-          onClick: () => setActiveTab("upload-video"),
-          active: activeTab === "upload-video",
-        },
-        {
-          id: "kholasa",
-          label: "الزتونة والخرائط الذهنية ⚡",
-          icon: Sparkles,
-          onClick: () => {
-            setActiveTab("learning");
-            setLearningSubTab("kholasa");
-          },
-          active: activeTab === "learning" && learningSubTab === "kholasa",
-        },
-      ],
-    },
-    {
-      title: "التقييم والاختبارات",
+      title: "مركز التقييم والامتحانات",
       items: [
         {
           id: "exam-generator",
@@ -237,7 +202,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
         {
           id: "quizzes",
-          label: "الاختبارات والامتحانات (إدارة ونتائج) 📝",
+          label: "الاختبارات والامتحانات المنشورة 📝",
           icon: ClipboardCheck,
           onClick: () => {
             if (typeof window !== "undefined") {
@@ -269,23 +234,13 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
         {
           id: "essay-exams",
-          label: "الامتحانات المقالية ✍️",
+          label: "الامتحانات المقالية وتصحيحها ✍️",
           icon: FileEdit,
           onClick: () => {
             setActiveTab("learning");
             setLearningSubTab("essay-exams");
           },
           active: activeTab === "learning" && learningSubTab === "essay-exams",
-        },
-        {
-          id: "self-assessment-packs",
-          label: "باقات التقييم الذاتي ⚡",
-          icon: Sparkles,
-          onClick: () => {
-            setActiveTab("learning");
-            setLearningSubTab("self-assessment-packs");
-          },
-          active: activeTab === "learning" && learningSubTab === "self-assessment-packs",
         },
         {
           id: "grades-sheet",
@@ -296,6 +251,49 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
             setLearningSubTab("grades-sheet");
           },
           active: activeTab === "learning" && learningSubTab === "grades-sheet",
+        },
+      ],
+    },
+    {
+      title: "المحتوى والمناهج التعليمية",
+      items: [
+        {
+          id: "courses",
+          label: "الكورسات التدريبية 📖",
+          icon: BookOpen,
+          onClick: () => setActiveTab("courses"),
+          active: activeTab === "courses",
+        },
+        {
+          id: "curriculums",
+          label: "المناهج التعليمية 🏛️",
+          icon: Library,
+          onClick: () => setActiveTab("curriculums"),
+          active: activeTab === "curriculums",
+        },
+        {
+          id: "videos",
+          label: "مكتبة الفيديوهات 🎥",
+          icon: VideoIcon,
+          onClick: () => setActiveTab("videos"),
+          active: activeTab === "videos",
+        },
+        {
+          id: "upload-video",
+          label: "رفع فيديو جديد 📤",
+          icon: Upload,
+          onClick: () => setActiveTab("upload-video"),
+          active: activeTab === "upload-video",
+        },
+        {
+          id: "kholasa",
+          label: "الزتونة والخرائط الذهنية ⚡",
+          icon: Sparkles,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("kholasa");
+          },
+          active: activeTab === "learning" && learningSubTab === "kholasa",
         },
         {
           id: "memo-studio",
@@ -309,7 +307,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
         {
           id: "files",
-          label: "المذكرات والملفات",
+          label: "المذكرات والملفات التعليمية 📁",
           icon: FileDown,
           onClick: () => {
             setActiveTab("learning");
@@ -320,43 +318,52 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
       ],
     },
     {
-      title: "التواصل والرسائل",
+      title: "المعاملات المالية والاشتراكات",
       items: [
         {
-          id: "notifications",
-          label: "إرسال الإشعارات والرسائل",
-          icon: Bell,
+          id: "payments",
+          label: "إيصالات الدفع والتحويلات 💳",
+          icon: FileCheck2,
           onClick: () => {
             setActiveTab("learning");
-            setLearningSubTab("notifications");
+            setLearningSubTab("payments");
           },
-          active: activeTab === "learning" && learningSubTab === "notifications",
+          active: activeTab === "learning" && learningSubTab === "payments",
+          badge: pendingReceiptsCount > 0 ? pendingReceiptsCount : undefined,
+          badgeColor: "bg-amber-500 text-slate-950 font-black",
         },
         {
-          id: "podcasts",
-          label: "البودكاست الصوتي",
-          icon: Mic,
-          onClick: () => setActiveTab("podcasts"),
-          active: activeTab === "podcasts",
+          id: "subscriptions",
+          label: "الاشتراكات الشهرية والتجديد 📅",
+          icon: CreditCard,
+          onClick: () => setActiveTab("subscriptions"),
+          active: activeTab === "subscriptions",
+        },
+        {
+          id: "self-assessment-packs",
+          label: "باقات التقييم الذاتي ⚡",
+          icon: Sparkles,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("self-assessment-packs");
+          },
+          active: activeTab === "learning" && learningSubTab === "self-assessment-packs",
         },
       ],
     },
     {
-      title: "التقارير والإعدادات",
+      title: "التواصل والإعدادات العامة",
       items: [
         {
-          id: "reports",
-          label: "التقارير الشاملة",
-          icon: FileText,
-          onClick: () => {
-            setActiveTab("learning");
-            setLearningSubTab("reports");
-          },
-          active: activeTab === "learning" && learningSubTab === "reports",
+          id: "podcasts",
+          label: "البودكاست الصوتي 🎙️",
+          icon: Mic,
+          onClick: () => setActiveTab("podcasts"),
+          active: activeTab === "podcasts",
         },
         {
           id: "settings",
-          label: "إعدادات النظام",
+          label: "إعدادات النظام ⚙️",
           icon: Settings,
           onClick: () => setActiveTab("settings"),
           active: activeTab === "settings",
