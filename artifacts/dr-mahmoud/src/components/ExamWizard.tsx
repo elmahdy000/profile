@@ -107,6 +107,7 @@ type ExamWizardProps = {
   toggleQuiz: (q: QuizItem) => Promise<void>;
   deleteQuiz: (id: number) => Promise<void>;
   onNavigateToTestBank?: (targetTab?: "explorer" | "upload" | "generate" | "auto_daily") => void;
+  onNavigateToMemoStudio?: () => void;
 };
 
 export function ExamWizard({
@@ -123,6 +124,7 @@ export function ExamWizard({
   toggleQuiz,
   deleteQuiz,
   onNavigateToTestBank,
+  onNavigateToMemoStudio,
 }: ExamWizardProps) {
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
@@ -1754,7 +1756,11 @@ export function ExamWizard({
                       onClick={() => {
                         if (typeof window !== "undefined") {
                           sessionStorage.setItem("memo_studio_import_quiz", JSON.stringify(q));
-                          window.location.href = "/admin/memo-studio";
+                          if (onNavigateToMemoStudio) {
+                            onNavigateToMemoStudio();
+                          } else {
+                            window.location.href = "/admin/memo-studio";
+                          }
                         }
                       }}
                       className="h-8 px-2.5 text-xs font-bold text-slate-800 hover:text-slate-900 hover:bg-slate-100 border-slate-300"

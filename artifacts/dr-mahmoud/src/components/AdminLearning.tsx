@@ -2493,6 +2493,7 @@ export function AdminLearning({
             <TestBankTab
               adminApi={adminApi}
               onNavigateToQuizzes={() => setTab("quizzes")}
+              onNavigateToMemoStudio={() => setTab("memo-studio")}
               initialTab={testBankInitialTab}
             />
           )}
@@ -2507,6 +2508,7 @@ export function AdminLearning({
               quizzes={quizzes}
               learningCourses={learningCourses}
               adminApi={adminApi}
+              onNavigateToQuizzes={() => setTab("quizzes")}
             />
           )}
           {tab === "quizzes" && (
@@ -2527,6 +2529,7 @@ export function AdminLearning({
                 setTestBankInitialTab(targetSubTab);
                 setTab("testbank");
               }}
+              onNavigateToMemoStudio={() => setTab("memo-studio")}
             />
           )}
           {tab === "essay-exams" && (

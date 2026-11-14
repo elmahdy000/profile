@@ -668,12 +668,14 @@ export interface MemoStudioTabProps {
   quizzes?: Array<{ id: number; title: string; category?: string; questions?: any[] }>;
   learningCourses?: Array<{ id: number; title: string; category?: string }>;
   adminApi: <T = any>(endpoint: string, options?: RequestInit) => Promise<T>;
+  onNavigateToQuizzes?: () => void;
 }
 
 export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
   quizzes = [],
   learningCourses = [],
   adminApi,
+  onNavigateToQuizzes,
 }) => {
   const { toast } = useToast();
   const [activeStep, setActiveStep] = useState<"content" | "design" | "export">("content");
@@ -1229,7 +1231,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       ...prev,
       templateStyle: "exam",
       headerText: quiz.title || prev.headerText,
-      subHeaderText: `امتحان رسمي · المدة: ${quiz.durationMinutes ? `${quiz.durationMinutes} دقيقة` : "مفتوح"} · درجة النجاح: ${quiz.passingScore}%`,
+      subHeaderText: `${quiz.stage ? `المرحلة: ${quiz.stage} · ` : ""}امتحان رسمي · المدة: ${quiz.durationMinutes ? `${quiz.durationMinutes} دقيقة` : "مفتوح"} · درجة النجاح: ${quiz.passingScore != null ? `${quiz.passingScore}%` : "60%"}`,
     }));
     toast({ title: `تم تحميل ${normalized.length} سؤال من اختبار: ${quiz.title}` });
   };
@@ -2083,15 +2085,24 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
               }
               const quizPayload = {
                 title: settings.headerText || "اختبار جديد من استوديو المذكرات",
-                questions: questions.filter(q => q.enabled).map(q => ({
-                  prompt: q.statement || q.prompt || "",
-                  options: q.options?.map(o => o.text) || [],
-                  correctIndex: Math.max(0, q.options?.findIndex(o => o.isCorrect) ?? 0),
-                  explanation: q.explanation || "",
-                })),
+                questions: questions.filter(q => q.enabled).map(q => {
+                  const isEssay = q.type === "ESSAY" || (!q.options || q.options.length === 0);
+                  const isTrueFalse = q.type === "TRUE_FALSE";
+                  return {
+                    prompt: q.statement || q.prompt || "",
+                    options: isEssay ? [] : (q.options?.map(o => o.text) || []),
+                    correctIndex: isEssay ? -1 : Math.max(0, q.options?.findIndex(o => o.isCorrect) ?? 0),
+                    explanation: q.explanation || "",
+                    questionType: isEssay ? "essay" : isTrueFalse ? "true_false" : "mcq",
+                  };
+                }),
               };
               sessionStorage.setItem("exam_wizard_import_payload", JSON.stringify(quizPayload));
-              window.location.href = "/admin/quizzes";
+              if (onNavigateToQuizzes) {
+                onNavigateToQuizzes();
+              } else {
+                window.location.href = "/admin/quizzes";
+              }
             }}
             className="bg-violet-600 hover:bg-violet-700 text-white font-extrabold text-xs flex items-center gap-2 px-4 py-2.5 shadow-lg shadow-violet-600/25 cursor-pointer"
             title="نشر هذا الاختبار إلكترونياً للطلاب على المنصة"

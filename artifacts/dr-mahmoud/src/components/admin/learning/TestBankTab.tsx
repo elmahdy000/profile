@@ -143,10 +143,12 @@ export function parseLessonSortOrder(lessonName: string): number {
 export function TestBankTab({
   adminApi,
   onNavigateToQuizzes,
+  onNavigateToMemoStudio,
   initialTab = "explorer",
 }: {
   adminApi: <T>(url: string, options?: RequestInit) => Promise<T>;
   onNavigateToQuizzes?: () => void;
+  onNavigateToMemoStudio?: () => void;
   initialTab?: "explorer" | "upload" | "generate" | "auto_daily";
 }) {
   const { toast } = useToast();
@@ -2958,7 +2960,11 @@ export function TestBankTab({
                   onClick={() => {
                     if (typeof window !== "undefined") {
                       sessionStorage.setItem("memo_studio_import_quiz", JSON.stringify(generatedQuizSuccess));
-                      window.location.href = "/admin/memo-studio";
+                      if (onNavigateToMemoStudio) {
+                        onNavigateToMemoStudio();
+                      } else {
+                        window.location.href = "/admin/memo-studio";
+                      }
                     }
                   }}
                   className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold h-11 px-5 shadow-md cursor-pointer flex items-center gap-2 border border-slate-700"
