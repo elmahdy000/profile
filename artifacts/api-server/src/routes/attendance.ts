@@ -55,9 +55,15 @@ function normalizeArabicText(str?: string | null): string {
   if (!str) return "";
   return String(str)
     .toLowerCase()
+    .replace(/أكاديمية\s*/g, "")
+    .replace(/اكاديمية\s*/g, "")
+    .replace(/اكاديمي\s*/g, "")
+    .replace(/أكاديمي\s*/g, "")
+    .replace(/academy\s*/gi, "")
     .replace(/[أإآ]/g, "ا")
     .replace(/ة/g, "ه")
     .replace(/ى/g, "ي")
+    .replace(/[\(\)\-]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }

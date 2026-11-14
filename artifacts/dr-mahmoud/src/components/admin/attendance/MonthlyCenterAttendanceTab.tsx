@@ -134,8 +134,8 @@ export const MonthlyCenterAttendanceTab: React.FC = () => {
     return parseInt(parts[2], 10) || new Date().getDate();
   });
 
-  // Selected Center (defaults to Hennawy or first official center)
-  const [selectedCenter, setSelectedCenter] = useState<string>("سنتر الحناوي - لغات");
+  // Selected Center ("all" or center name, default "all" so assistant sees all centers directly)
+  const [selectedCenter, setSelectedCenter] = useState<string>("all");
 
   // Filter & Search States
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -525,9 +525,37 @@ export const MonthlyCenterAttendanceTab: React.FC = () => {
             <MapPin className="h-3.5 w-3.5 text-indigo-600" />
             اختر السنتر المستهدف (مع إبراز سنتر الحناوي ومواعيد الزقازيق):
           </label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+            {/* All Centers Option */}
+            <button
+              type="button"
+              onClick={() => setSelectedCenter("all")}
+              className={`p-3 rounded-xl border text-right transition-all flex flex-col justify-between gap-1.5 relative overflow-hidden ${
+                selectedCenter === "all"
+                  ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/20"
+                  : "bg-white hover:bg-slate-50 text-slate-800 border-slate-200"
+              }`}
+            >
+              <div className="flex items-center justify-between w-full">
+                <span
+                  className={`text-[10px] font-black px-1.5 py-0.5 rounded ${
+                    selectedCenter === "all" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  الكل
+                </span>
+                {selectedCenter === "all" && <Check className="h-3.5 w-3.5" />}
+              </div>
+              <strong className="text-xs font-black block leading-snug truncate">
+                جميع السناتر
+              </strong>
+              <span className={`text-[10px] font-medium truncate ${selectedCenter === "all" ? "text-white/80" : "text-slate-400"}`}>
+                كل المجموعات
+              </span>
+            </button>
+
             {centersList.map((cName) => {
-              const isSelected = normalizeCenterName(selectedCenter) === normalizeCenterName(cName);
+              const isSelected = selectedCenter !== "all" && normalizeCenterName(selectedCenter) === normalizeCenterName(cName);
               const isHennawy = cName.includes("حناو");
               return (
                 <button
