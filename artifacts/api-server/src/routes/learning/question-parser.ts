@@ -459,19 +459,47 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
           : 0;
 
       const correctAnswer = current.options[validIndex]?.trim();
+      const isTrueFalse =
+        current.options.length === 2 &&
+        current.options.some((o) => {
+          const norm = o.trim().toLowerCase();
+          return norm === "صواب" || norm === "صح" || norm === "صحيح" || norm === "true" || norm === "خطأ" || norm === "خطا" || norm === "false";
+        });
 
       questions.push({
         prompt: finalPrompt,
         options: current.options,
         correctIndex: validIndex,
-        correctAnswer: correctAnswer,  // ✅ حفظ النص الفعلي
+        correctAnswer: correctAnswer,
         explanation: current.explanation ? current.explanation.trim() : undefined,
-      });
+        questionType: isTrueFalse ? "true_false" : "mcq",
+      } as any);
       if (current.correctIndex === null) {
         warnings.push(`لم يتم العثور على إجابة صريحة للسؤال: «${finalPrompt.slice(0, 50)}...». تم تعيين الخيار الأول افتراضيًا.`);
       }
+    } else if (finalPrompt && current.options.length === 0) {
+      // ✅ ESSAY QUESTION SUPPORT: No options provided, treat as Essay
+      questions.push({
+        prompt: finalPrompt,
+        options: [],
+        correctIndex: -1,
+        correctAnswer: current.explanation ? current.explanation.trim() : "",
+        explanation: current.explanation ? current.explanation.trim() : undefined,
+        questionType: "essay",
+      } as any);
+    } else if (finalPrompt && current.options.length === 1) {
+      // ✅ ESSAY QUESTION WITH SINGLE ANSWER LINE: Treat as model answer / essay
+      const singleOpt = current.options[0].trim();
+      questions.push({
+        prompt: finalPrompt,
+        options: [],
+        correctIndex: -1,
+        correctAnswer: singleOpt,
+        explanation: current.explanation ? `${singleOpt}\n${current.explanation.trim()}` : singleOpt,
+        questionType: "essay",
+      } as any);
     } else if (current.prompt) {
-      warnings.push(`تم تجاوز: «${current.prompt.slice(0, 50)}...» لأنه يحتاج اختيارين على الأقل (يحتوي على ${current.options.length}).`);
+      warnings.push(`تم تجاوز: «${current.prompt.slice(0, 50)}...» لعدم كفاية نص السؤال.`);
     }
     current = null;
   };
@@ -595,7 +623,7 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
       hasFoundAnswer = true;
       const answerVal = answerMatch[1].trim();
 
-      // True / False check
+      // True / False check or Essay Model Answer
       const normAns = answerVal.toLowerCase().replace(/[\(\)\[\]]/g, "").trim();
       if (current.options.length === 0) {
         if (normAns === "صواب" || normAns === "صح" || normAns === "صحيح" || normAns === "true" || normAns === "t") {
@@ -605,6 +633,10 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
         } else if (normAns === "خطأ" || normAns === "خطا" || normAns === "غير صحيح" || normAns === "false" || normAns === "f") {
           current.options = ["صواب", "خطأ"];
           current.correctIndex = 1;
+          continue;
+        } else {
+          // Model answer for an essay question
+          current.explanation = current.explanation ? `${current.explanation}\n${answerVal}` : answerVal;
           continue;
         }
       }

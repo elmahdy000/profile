@@ -58,10 +58,16 @@ type Question = {
   prompt: string;
   options: string[];
   correctIndex: number;
+  correctAnswer?: string;
   explanation?: string;
   imageUrl?: string;
   points?: number;
   difficulty?: "easy" | "medium" | "hard";
+  questionType?: "mcq" | "true_false" | "essay";
+  isDuplicate?: boolean;
+  isBankDuplicate?: boolean;
+  isBatchDuplicate?: boolean;
+  existingBankLocation?: string;
   stage?: string;
   unit?: string;
   lesson?: string;
@@ -266,6 +272,17 @@ export function TestBankTab({
   const [rawText, setRawText] = useState<string>("");
   const [previewQuestions, setPreviewQuestions] = useState<Question[]>([]);
   const [previewWarnings, setPreviewWarnings] = useState<string[]>([]);
+  const [uploadBreakdown, setUploadBreakdown] = useState<{
+    total: number;
+    newQuestions: number;
+    totalDuplicates: number;
+    bankDuplicates: number;
+    batchDuplicates: number;
+    mcq: number;
+    trueFalse: number;
+    essay: number;
+  } | null>(null);
+  const [skipDuplicatesOnImport, setSkipDuplicatesOnImport] = useState<boolean>(true);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [isImporting, setIsImporting] = useState<boolean>(false);
 
@@ -816,6 +833,7 @@ export function TestBankTab({
     setIsAnalyzing(true);
     setPreviewQuestions([]);
     setPreviewWarnings([]);
+    setUploadBreakdown(null);
 
     try {
       let res: any;
@@ -854,6 +872,11 @@ export function TestBankTab({
 
       setPreviewQuestions(res.questions || []);
       setPreviewWarnings(res.warnings || []);
+      if (res.breakdown) {
+        setUploadBreakdown(res.breakdown);
+      } else {
+        setUploadBreakdown(null);
+      }
       if ((res.questions || []).length === 0) {
         if (res.extractedText && res.extractedText.trim()) {
           setRawText(res.extractedText);
@@ -924,6 +947,7 @@ export function TestBankTab({
           points: uploadPoints,
           courseId: uploadCourseId ? Number(uploadCourseId) : undefined,
           lessonId: uploadScope === "lesson" && uploadLessonId ? Number(uploadLessonId) : undefined,
+          skipDuplicates: skipDuplicatesOnImport,
           createQuiz: shouldCreateQuiz,
           quizTitle: quizTitleInput.trim() || defaultQuizTitle,
           durationMinutes: quizDurationInput || 30,
@@ -936,6 +960,7 @@ export function TestBankTab({
       if (res.quiz) {
         toast({
           title: `تم إنشاء ونشر الاختبار "${res.quiz.title}" وحفظ الأسئلة في البنك بنجاح! 🚀`,
+          description: `تم حفظ ${res.count} سؤالاً جديداً ${res.skippedDuplicates > 0 ? `(تم تخطي ${res.skippedDuplicates} مكرر لمنع التكرار)` : ""}`,
         });
         setGeneratedQuizSuccess(res.quiz);
       } else {
@@ -943,6 +968,7 @@ export function TestBankTab({
           title: uploadScope === "unit"
             ? `تم حفظ ${res.count} سؤالاً في بنك الوحدة (${uploadUnit}) بنجاح! 🎉`
             : `تم حفظ ${res.count} سؤالاً في بنك درس (${targetLesson}) بنجاح! 🎉`,
+          description: res.skippedDuplicates > 0 ? `(تم تخطي ${res.skippedDuplicates} سؤالاً مكرراً لحفظ نظافة البنك ومنع الازدواجية)` : undefined,
         });
       }
 
@@ -2693,6 +2719,57 @@ export function TestBankTab({
                 </div>
               </div>
 
+              {/* شريط تفاصيل التحليل وتوزيع الأسئلة ومقارنة البنك */}
+              {uploadBreakdown && (
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center gap-2 p-3.5 bg-muted/40 rounded-2xl border border-border">
+                    <span className="text-xs font-black text-foreground ml-2">📊 تقرير التحليل وتوزيع الأسئلة:</span>
+                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20">
+                      📝 اختيار من متعدد: {uploadBreakdown.mcq}
+                    </span>
+                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20">
+                      ⚖️ صواب وخطأ: {uploadBreakdown.trueFalse}
+                    </span>
+                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                      ✍️ مقالي: {uploadBreakdown.essay}
+                    </span>
+                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                      ✨ أسئلة جديدة للحفظ: {uploadBreakdown.newQuestions}
+                    </span>
+                    {uploadBreakdown.totalDuplicates > 0 && (
+                      <span className="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20">
+                        ⚠️ مكرر في البنك: {uploadBreakdown.bankDuplicates} {uploadBreakdown.batchDuplicates > 0 ? `(+${uploadBreakdown.batchDuplicates} في الملف)` : ""}
+                      </span>
+                    )}
+                  </div>
+
+                  {uploadBreakdown.totalDuplicates > 0 && (
+                    <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
+                        <div>
+                          <p className="text-xs font-black text-amber-900 dark:text-amber-200">
+                            تم رصد ({uploadBreakdown.totalDuplicates}) أسئلة مكررة ({uploadBreakdown.bankDuplicates} موجودة مسبقاً في البنك{uploadBreakdown.batchDuplicates > 0 ? ` + ${uploadBreakdown.batchDuplicates} مكررة داخل الملف` : ""})
+                          </p>
+                          <p className="text-[11px] text-amber-700 dark:text-amber-300">
+                            لحماية بنك الأسئلة من الحشو والازدواجية، يتم تخطي الأسئلة المكررة تلقائياً عند الحفظ ليبقى البنك نقياً.
+                          </p>
+                        </div>
+                      </div>
+                      <label className="flex items-center gap-2 bg-background/80 px-3 py-1.5 rounded-xl border border-amber-500/40 cursor-pointer shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={skipDuplicatesOnImport}
+                          onChange={(e) => setSkipDuplicatesOnImport(e.target.checked)}
+                          className="h-4 w-4 rounded text-amber-600 focus:ring-amber-500"
+                        />
+                        <span className="text-xs font-bold text-foreground">تخطي المكرر تلقائياً ✅</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* بطاقة إعدادات الاختبار المباشر للطلاب */}
               <div className="rounded-2xl border border-violet-500/30 bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-transparent p-5 space-y-4">
                 <div className="flex items-center justify-between">
@@ -2783,7 +2860,35 @@ export function TestBankTab({
                         <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-600 text-white text-xs font-black">
                           {idx + 1}
                         </span>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
+                              q.questionType === "essay"
+                                ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20"
+                                : q.questionType === "true_false"
+                                ? "bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20"
+                                : "bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20"
+                            }`}
+                          >
+                            {q.questionType === "essay"
+                              ? "✍️ مقالي"
+                              : q.questionType === "true_false"
+                              ? "⚖️ صواب وخطأ"
+                              : "📝 اختيار من متعدد"}
+                          </span>
+
+                          {q.isBankDuplicate && (
+                            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+                              ⚠️ مكرر في البنك {q.existingBankLocation ? `(${q.existingBankLocation})` : ""}
+                            </span>
+                          )}
+
+                          {q.isBatchDuplicate && !q.isBankDuplicate && (
+                            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                              ⚠️ مكرر داخل هذا الملف
+                            </span>
+                          )}
+
                           <span
                             className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
                               isEnglish
@@ -2831,41 +2936,66 @@ export function TestBankTab({
                         {q.prompt}
                       </p>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs" dir={isEnglish ? "ltr" : "rtl"}>
-                        {q.options.map((opt, oIdx) => {
-                          const isCorrect = oIdx === q.correctIndex;
-                          const letter = getOptionLabel(oIdx, isEnglish);
-                          return (
-                            <div
-                              key={oIdx}
-                              dir={isEnglish ? "ltr" : "rtl"}
-                              onClick={() => {
-                                setPreviewQuestions((prev) => {
-                                  const updated = [...prev];
-                                  updated[idx] = { ...updated[idx], correctIndex: oIdx };
-                                  return updated;
-                                });
-                              }}
-                              className={`p-2 rounded-xl flex items-start gap-2 border cursor-pointer transition-all ${
-                                isCorrect
-                                  ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-800 dark:text-emerald-300 font-bold ring-2 ring-emerald-500/20 shadow-xs"
-                                  : "bg-background border-border text-foreground hover:border-emerald-500/40 hover:bg-muted/40"
-                              }`}
-                              title="اضغط لتحديد هذا الخيار كإجابة صحيحة لهذا السؤال"
-                            >
-                              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-black bg-muted mt-0.5">
-                                {letter}
-                              </span>
-                              <span className={`flex-1 whitespace-normal break-words leading-relaxed ${isEnglish ? "text-left font-sans font-medium" : "text-right font-medium"}`}>
-                                {opt}
-                              </span>
-                              {isCorrect && (
-                                <Check className={`h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5 ${isEnglish ? "ml-auto" : "mr-auto"}`} />
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
+                      {q.questionType === "essay" ? (
+                        <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/20 space-y-2">
+                          <div className="flex items-center justify-between text-xs font-bold text-amber-800 dark:text-amber-300">
+                            <span>💡 الإجابة النموذجية / عناصر التصحيح المقالي:</span>
+                            <span className="text-[11px] font-normal text-muted-foreground">
+                              درجة السؤال: {q.points || uploadPoints}
+                            </span>
+                          </div>
+                          <textarea
+                            rows={2}
+                            value={q.correctAnswer || q.explanation || ""}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setPreviewQuestions((prev) => {
+                                const updated = [...prev];
+                                updated[idx] = { ...updated[idx], correctAnswer: val, explanation: val };
+                                return updated;
+                              });
+                            }}
+                            placeholder="اكتب الإجابة النموذجية أو عناصر الدرجة هنا..."
+                            className="w-full p-2.5 rounded-lg border border-border bg-background text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          />
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs" dir={isEnglish ? "ltr" : "rtl"}>
+                          {(q.options || []).map((opt, oIdx) => {
+                            const isCorrect = oIdx === q.correctIndex;
+                            const letter = getOptionLabel(oIdx, isEnglish);
+                            return (
+                              <div
+                                key={oIdx}
+                                dir={isEnglish ? "ltr" : "rtl"}
+                                onClick={() => {
+                                  setPreviewQuestions((prev) => {
+                                    const updated = [...prev];
+                                    updated[idx] = { ...updated[idx], correctIndex: oIdx };
+                                    return updated;
+                                  });
+                                }}
+                                className={`p-2 rounded-xl flex items-start gap-2 border cursor-pointer transition-all ${
+                                  isCorrect
+                                    ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-800 dark:text-emerald-300 font-bold ring-2 ring-emerald-500/20 shadow-xs"
+                                    : "bg-background border-border text-foreground hover:border-emerald-500/40 hover:bg-muted/40"
+                                }`}
+                                title="اضغط لتحديد هذا الخيار كإجابة صحيحة لهذا السؤال"
+                              >
+                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-black bg-muted mt-0.5">
+                                  {letter}
+                                </span>
+                                <span className={`flex-1 whitespace-normal break-words leading-relaxed ${isEnglish ? "text-left font-sans font-medium" : "text-right font-medium"}`}>
+                                  {opt}
+                                </span>
+                                {isCorrect && (
+                                  <Check className={`h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5 ${isEnglish ? "ml-auto" : "mr-auto"}`} />
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
 
                       {q.explanation && (
                         <p

@@ -30,6 +30,7 @@ import {
   extractTextFromUpload,
   parseImportedQuestions,
   validateQuestions,
+  optionIndex,
 } from "./question-parser";
 
 const router: IRouter = Router();
@@ -825,6 +826,181 @@ router.get("/admin/learning/test-bank/questions", requireAdmin, async (req, res,
   }
 });
 
+// ── Universal Question Extractors & Normalizers ──
+
+function extractQuestionsFromJson(parsedJson: any): any[] {
+  if (Array.isArray(parsedJson)) return parsedJson;
+  if (!parsedJson || typeof parsedJson !== "object") return [];
+  if (Array.isArray(parsedJson.questions)) return parsedJson.questions;
+  if (Array.isArray(parsedJson.items)) return parsedJson.items;
+  if (Array.isArray(parsedJson.data)) return parsedJson.data;
+  if (parsedJson.exam && Array.isArray(parsedJson.exam.questions)) return parsedJson.exam.questions;
+  if (parsedJson.quiz && Array.isArray(parsedJson.quiz.questions)) return parsedJson.quiz.questions;
+  if (Array.isArray(parsedJson.bank)) return parsedJson.bank;
+  if (Array.isArray(parsedJson.test)) return parsedJson.test;
+  if (Array.isArray(parsedJson.results)) return parsedJson.results;
+
+  for (const key of Object.keys(parsedJson)) {
+    const val = parsedJson[key];
+    if (Array.isArray(val) && val.length > 0 && typeof val[0] === "object" && val[0] !== null) {
+      if (val[0].prompt || val[0].question || val[0].questionText || val[0].title || val[0].statement || val[0].text) {
+        return val;
+      }
+    }
+  }
+  return [];
+}
+
+function normalizeRawQuestion(item: any, defaultDiff: string = "medium", defaultPts: number = 1): QuizQuestion | null {
+  if (!item || typeof item !== "object") return null;
+
+  const rawPrompt =
+    item.prompt ||
+    item.question ||
+    item.questionText ||
+    item.title ||
+    item.statement ||
+    item.text ||
+    item.q;
+  if (!rawPrompt || typeof rawPrompt !== "string" || !rawPrompt.trim()) return null;
+  const prompt = rawPrompt.trim();
+
+  let options: string[] = [];
+  const rawOpts = item.options || item.choices || item.answers;
+  if (Array.isArray(rawOpts)) {
+    options = rawOpts
+      .map((o) => {
+        if (typeof o === "string") return o.trim();
+        if (typeof o === "number") return String(o);
+        if (o && typeof o === "object") {
+          return String(o.text || o.title || o.label || o.value || o.option || "").trim();
+        }
+        return String(o || "").trim();
+      })
+      .filter(Boolean);
+  }
+
+  const explanation = String(
+    item.explanation ||
+      item.solution ||
+      item.notes ||
+      item.hint ||
+      item.modelAnswer ||
+      item.model_answer ||
+      ""
+  ).trim();
+
+  let questionType: "mcq" | "true_false" | "essay" = "mcq";
+  const rawType = String(item.questionType || item.type || item.kind || "").toLowerCase().trim();
+
+  const isTFByOpts =
+    options.length === 2 &&
+    options.some((o) => {
+      const norm = o.toLowerCase().trim();
+      return (
+        norm === "صواب" ||
+        norm === "صح" ||
+        norm === "صحيح" ||
+        norm === "true" ||
+        norm === "خطأ" ||
+        norm === "خطا" ||
+        norm === "false"
+      );
+    });
+
+  if (
+    rawType === "essay" ||
+    rawType === "مقالي" ||
+    rawType === "مقالي قصير" ||
+    rawType === "short_answer" ||
+    rawType === "text" ||
+    options.length === 0
+  ) {
+    questionType = "essay";
+  } else if (
+    rawType === "true_false" ||
+    rawType === "tf" ||
+    rawType === "boolean" ||
+    rawType === "صح وخطأ" ||
+    rawType === "صواب وخطأ" ||
+    isTFByOpts
+  ) {
+    questionType = "true_false";
+  } else {
+    questionType = "mcq";
+  }
+
+  let correctAnswer = String(item.correctAnswer || item.answer || item.correct_answer || "").trim();
+  if (questionType === "essay") {
+    if (!correctAnswer && options.length === 1) {
+      correctAnswer = options[0];
+    }
+    if (!correctAnswer && explanation) {
+      correctAnswer = explanation;
+    }
+    options = [];
+  }
+
+  let correctIndex = -1;
+  if (questionType !== "essay") {
+    if (typeof item.correctIndex === "number" && item.correctIndex >= 0 && item.correctIndex < options.length) {
+      correctIndex = item.correctIndex;
+    } else if (typeof item.correct_index === "number" && item.correct_index >= 0 && item.correct_index < options.length) {
+      correctIndex = item.correct_index;
+    } else if (correctAnswer) {
+      const foundIdx = options.findIndex((o) => o.toLowerCase().trim() === correctAnswer.toLowerCase().trim());
+      if (foundIdx >= 0) {
+        correctIndex = foundIdx;
+      } else {
+        const optLetterIdx = optionIndex(correctAnswer);
+        if (optLetterIdx !== null && optLetterIdx < options.length) {
+          correctIndex = optLetterIdx;
+        } else {
+          correctIndex = 0;
+        }
+      }
+    } else {
+      if (Array.isArray(rawOpts)) {
+        const markedIdx = rawOpts.findIndex(
+          (o) => o && typeof o === "object" && (o.isCorrect === true || o.correct === true)
+        );
+        if (markedIdx >= 0 && markedIdx < options.length) {
+          correctIndex = markedIdx;
+        }
+      }
+      if (correctIndex === -1) correctIndex = 0;
+    }
+    if (!correctAnswer && options[correctIndex]) {
+      correctAnswer = options[correctIndex];
+    }
+  }
+
+  return {
+    prompt,
+    options,
+    correctIndex,
+    correctAnswer: correctAnswer || undefined,
+    explanation: explanation || undefined,
+    questionType,
+    difficulty: item.difficulty || defaultDiff,
+    points: typeof item.points === "number" ? item.points : typeof item.score === "number" ? item.score : defaultPts,
+    translation: item.translation || undefined,
+    concept: item.concept || undefined,
+    imageUrl: item.imageUrl || item.image || undefined,
+  } as any;
+}
+
+function normalizePromptForDedupe(str: string): string {
+  return String(str || "")
+    .replace(/[\?\؟\,\.\!\،\:\;\-\_\(\)\[\]\{\}\"\'\`]/g, "")
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ة/g, "ه")
+    .replace(/ى/g, "ي")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
 // POST /api/admin/learning/test-bank/upload & /batch-import - Upload file or raw text to create questions for a specific Lesson
 router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batch-import"], requireAdmin, (req, res, next) => {
   quizImportUpload(req, res, async (uploadError) => {
@@ -841,6 +1017,7 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
       const defaultDifficulty = String(req.body.difficulty || "medium").trim();
       const defaultPoints = Number(req.body.points) || 1;
       const previewOnly = req.body.previewOnly === "true" || req.body.previewOnly === true;
+      const skipDuplicates = req.body.skipDuplicates !== false && req.body.skipDuplicates !== "false";
 
       // Smart resolution if lessonId (videoId) was passed
       if (lessonId) {
@@ -869,13 +1046,12 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
         if (extension === ".json") {
           try {
             const parsedJson = JSON.parse(req.file.buffer.toString("utf8"));
-            if (Array.isArray(parsedJson)) {
-              questionsToProcess = parsedJson;
-            } else if (parsedJson.questions && Array.isArray(parsedJson.questions)) {
-              questionsToProcess = parsedJson.questions;
-            }
+            const rawList = extractQuestionsFromJson(parsedJson);
+            questionsToProcess = rawList
+              .map((item) => normalizeRawQuestion(item, defaultDifficulty, defaultPoints))
+              .filter(Boolean) as QuizQuestion[];
           } catch {
-            res.status(400).json({ error: "ملف JSON غير صالح" });
+            res.status(400).json({ error: "ملف JSON غير صالح أو به خطأ برمجي" });
             return;
           }
         } else {
@@ -904,25 +1080,48 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
       } else if (req.body.rawQuestions) {
         try {
           const raw = typeof req.body.rawQuestions === "string" ? JSON.parse(req.body.rawQuestions) : req.body.rawQuestions;
-          if (Array.isArray(raw)) questionsToProcess = raw;
+          const rawList = extractQuestionsFromJson(raw);
+          questionsToProcess = rawList
+            .map((item) => normalizeRawQuestion(item, defaultDifficulty, defaultPoints))
+            .filter(Boolean) as QuizQuestion[];
         } catch {
           res.status(400).json({ error: "بيانات الأسئلة غير صالحة" });
           return;
         }
       } else if (req.body.questions && Array.isArray(req.body.questions)) {
-        questionsToProcess = req.body.questions;
+        questionsToProcess = req.body.questions
+          .map((item: any) => normalizeRawQuestion(item, defaultDifficulty, defaultPoints))
+          .filter(Boolean) as QuizQuestion[];
       } else if (req.body.text) {
         extractedText = String(req.body.text);
-        const parsed = parseImportedQuestions(extractedText);
-        questionsToProcess = parsed.questions;
-        warnings = parsed.warnings;
+        let parsedFromJson = false;
+        if (extractedText.trim().startsWith("{") || extractedText.trim().startsWith("[")) {
+          try {
+            const raw = JSON.parse(extractedText);
+            const rawList = extractQuestionsFromJson(raw);
+            if (rawList.length > 0) {
+              questionsToProcess = rawList
+                .map((item) => normalizeRawQuestion(item, defaultDifficulty, defaultPoints))
+                .filter(Boolean) as QuizQuestion[];
+              parsedFromJson = true;
+            }
+          } catch {
+            // Not valid JSON, continue with text parser
+          }
+        }
+        if (!parsedFromJson) {
+          const parsed = parseImportedQuestions(extractedText);
+          questionsToProcess = parsed.questions;
+          warnings = parsed.warnings;
+        }
       } else {
         res.status(400).json({ error: "يرجى اختيار ملف أو إرسال نص الأسئلة" });
         return;
       }
 
+      // Valid questions: any question with a non-empty prompt (MCQ, True/False, Essay)
       const validQuestions = questionsToProcess.filter(
-        (q) => q && typeof q.prompt === "string" && q.prompt.trim() && Array.isArray(q.options) && q.options.length >= 2
+        (q) => q && typeof q.prompt === "string" && q.prompt.trim().length > 0
       );
 
       if (validQuestions.length === 0) {
@@ -933,74 +1132,145 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
             questions: [],
             extractedText: extractedText.trim(),
             warnings: [
-              "تم استخراج النص من الملف بنجاح، لكن لم يتم التعرف على نمط الأسئلة والخيارات آلياً.",
-              "تم وضع النص المستخرج في محرر 'نص مباشر' بالأسفل لتتمكن من مراجعته وتعديل تنسيقه بسهولة.",
+              "تم فحص الملف/النص، ولكن لم يتم التعرف على بنية واضحة للأسئلة.",
+              "تم وضع النص في المحرر لتعديله أو مراجعته يدوياً.",
             ],
           });
           return;
         }
         res.status(422).json({
-          error: "لم يتم التعرف على أي أسئلة صالحة. تأكد من وجود نص السؤال والخيارات والإجابة الصحيحة.",
+          error: "لم يتم التعرف على أي أسئلة صالحة. تأكد من وجود نص السؤال.",
           extractedTextSnippet: extractedText.slice(0, 300),
         });
         return;
       }
 
+      // ── Database Duplicate Comparison against Question Bank ──
+      const existingMcqConditions = [eq(questionBankTable.stage, stage)];
+      if (unit && unit !== "الوحدة العامة") existingMcqConditions.push(eq(questionBankTable.unit, unit));
+      if (lesson && lesson !== "شامل الوحدة") existingMcqConditions.push(eq(questionBankTable.lesson, lesson));
+
+      const existingMcqRows = await db
+        .select({
+          id: questionBankTable.id,
+          prompt: sql<string>`${questionBankTable.question}->>'prompt'`,
+          unit: questionBankTable.unit,
+          lesson: questionBankTable.lesson,
+        })
+        .from(questionBankTable)
+        .where(and(...existingMcqConditions));
+
+      const existingEssayConditions = [eq(essayQuestionBankTable.stage, stage)];
+      if (unit && unit !== "الوحدة العامة") existingEssayConditions.push(eq(essayQuestionBankTable.unit, unit));
+      if (lesson && lesson !== "شامل الوحدة") existingEssayConditions.push(eq(essayQuestionBankTable.lesson, lesson));
+
+      const existingEssayRows = await db
+        .select({
+          id: essayQuestionBankTable.id,
+          prompt: essayQuestionBankTable.prompt,
+          unit: essayQuestionBankTable.unit,
+          lesson: essayQuestionBankTable.lesson,
+        })
+        .from(essayQuestionBankTable)
+        .where(and(...existingEssayConditions));
+
+      const existingBankPrompts = new Map<string, { id: number; location: string }>();
+      for (const r of existingMcqRows) {
+        const norm = normalizePromptForDedupe(r.prompt);
+        if (norm) existingBankPrompts.set(norm, { id: r.id, location: `${r.unit || ""} / ${r.lesson || ""}` });
+      }
+      for (const r of existingEssayRows) {
+        const norm = normalizePromptForDedupe(r.prompt);
+        if (norm) existingBankPrompts.set(norm, { id: r.id, location: `${r.unit || ""} / ${r.lesson || ""}` });
+      }
+
+      // Mark duplicates and compute accurate breakdown
+      const seenInBatch = new Set<string>();
+      let mcqCount = 0;
+      let trueFalseCount = 0;
+      let essayCount = 0;
+      let bankDuplicateCount = 0;
+      let batchDuplicateCount = 0;
+
+      const enrichedQuestions = validQuestions.map((q) => {
+        const norm = normalizePromptForDedupe(q.prompt);
+        const inBank = existingBankPrompts.has(norm);
+        const inBatch = seenInBatch.has(norm);
+
+        if (inBatch) {
+          batchDuplicateCount++;
+        } else {
+          seenInBatch.add(norm);
+        }
+
+        if (inBank) {
+          bankDuplicateCount++;
+        }
+
+        const qType =
+          (q as any).questionType ||
+          (!q.options || q.options.length === 0 ? "essay" : q.options.length === 2 ? "true_false" : "mcq");
+
+        if (qType === "essay") essayCount++;
+        else if (qType === "true_false") trueFalseCount++;
+        else mcqCount++;
+
+        const isDuplicate = inBank || inBatch;
+        const bankMatch = inBank ? existingBankPrompts.get(norm) : undefined;
+
+        return {
+          ...q,
+          questionType: qType,
+          isDuplicate,
+          isBankDuplicate: inBank,
+          isBatchDuplicate: inBatch,
+          existingBankLocation: bankMatch?.location,
+        };
+      });
+
+      const totalDuplicates = enrichedQuestions.filter((q) => q.isDuplicate).length;
+      const newQuestionsCount = enrichedQuestions.filter((q) => !q.isDuplicate).length;
+
+      // ── Preview Mode: Return comparison & breakdown immediately ──
       if (previewOnly) {
         res.json({
           preview: true,
           totalDetected: validQuestions.length,
+          breakdown: {
+            total: validQuestions.length,
+            newQuestions: newQuestionsCount,
+            totalDuplicates,
+            bankDuplicates: bankDuplicateCount,
+            batchDuplicates: batchDuplicateCount,
+            mcq: mcqCount,
+            trueFalse: trueFalseCount,
+            essay: essayCount,
+          },
+          questions: enrichedQuestions,
           warnings,
-          questions: validQuestions,
           extractedText: extractedText.trim(),
         });
         return;
       }
 
-      // 1. Deduplicate within this uploaded batch
-      const seenPromptsInBatch = new Set<string>();
-      const batchUniqueQuestions: QuizQuestion[] = [];
-      for (const q of validQuestions) {
-        const key = String(q.prompt).trim().toLowerCase();
-        if (!seenPromptsInBatch.has(key)) {
-          seenPromptsInBatch.add(key);
-          batchUniqueQuestions.push(q);
-        }
-      }
+      // ── Final Commit Mode: Save to Database ──
+      const toInsert = skipDuplicates
+        ? enrichedQuestions.filter((q) => !q.isDuplicate)
+        : enrichedQuestions;
 
-      // 2. Deduplicate against existing questions in DB for this stage/unit/lesson
-      const existingRows = await db
-        .select({
-          id: questionBankTable.id,
-          prompt: sql<string>`${questionBankTable.question}->>'prompt'`,
-        })
-        .from(questionBankTable)
-        .where(
-          and(
-            eq(questionBankTable.stage, stage),
-            eq(questionBankTable.unit, unit),
-            eq(questionBankTable.lesson, lesson)
-          )
-        );
+      const mcqsAndTFs = toInsert.filter((q) => q.questionType !== "essay");
+      const essays = toInsert.filter((q) => q.questionType === "essay");
 
-      const existingPrompts = new Set(existingRows.map((r) => (r.prompt || "").trim().toLowerCase()));
-      const nonDuplicates = batchUniqueQuestions.filter(
-        (q) => !existingPrompts.has(String(q.prompt).trim().toLowerCase())
-      );
-
-      let insertedCount = 0;
-      if (nonDuplicates.length > 0) {
-        // Insert non-duplicate questions into question bank
+      let insertedMcqCount = 0;
+      if (mcqsAndTFs.length > 0) {
         const inserted = await db
           .insert(questionBankTable)
           .values(
-            nonDuplicates.map((q) => {
-              const opts = q.options.map((o: unknown) => String(o).trim());
+            mcqsAndTFs.map((q) => {
+              const opts = (q.options || []).map((o: unknown) => String(o).trim());
               const cIdx = Math.max(0, Math.min(opts.length - 1, Number(q.correctIndex) || 0));
               const inferredType: "mcq" | "true_false" =
-                (q as any).questionType === "true_false" || opts.length === 2
-                  ? "true_false"
-                  : "mcq";
+                q.questionType === "true_false" || opts.length === 2 ? "true_false" : "mcq";
               return {
                 courseId,
                 category: "عام",
@@ -1013,12 +1283,12 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
                 points: q.points || defaultPoints,
                 concept: (q as any).concept ? String((q as any).concept).trim() : null,
                 translation: (q as any).translation ? String((q as any).translation).trim() : null,
-                tags: [stage, unit, lesson].filter(Boolean),
+                tags: [stage, unit, lesson, inferredType].filter(Boolean),
                 question: {
                   prompt: String(q.prompt).trim(),
                   options: opts,
                   correctIndex: cIdx,
-                  correctAnswer: (q as any).correctAnswer ? String((q as any).correctAnswer).trim() : opts[cIdx],
+                  correctAnswer: (q as any).correctAnswer ? String((q as any).correctAnswer).trim() : opts[cIdx] || "",
                   questionType: inferredType,
                   explanation: String(q.explanation || "").trim() || undefined,
                   translation: (q as any).translation ? String((q as any).translation).trim() : undefined,
@@ -1030,22 +1300,79 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
             })
           )
           .returning();
-        insertedCount = inserted.length;
+        insertedMcqCount = inserted.length;
       }
+
+      let insertedEssayCount = 0;
+      if (essays.length > 0) {
+        // 1. Insert into essayQuestionBankTable for essay evaluation and grading
+        const essayInserts = essays.map((q) => ({
+          courseId,
+          subject: "عام",
+          stage,
+          stages: [stage],
+          category: "عام",
+          unit,
+          lesson,
+          difficulty: (q as any).difficulty || defaultDifficulty,
+          points: q.points || defaultPoints,
+          prompt: String(q.prompt).trim(),
+          modelAnswer: String((q as any).correctAnswer || q.explanation || "إجابة مقالية نموذجية").trim(),
+          explanation: String(q.explanation || "").trim() || undefined,
+          translation: (q as any).translation ? String((q as any).translation).trim() : undefined,
+          imageUrl: String(q.imageUrl || "").trim() || undefined,
+          tags: [stage, unit, lesson, "essay"].filter(Boolean),
+        }));
+        const insertedEssays = await db.insert(essayQuestionBankTable).values(essayInserts).returning();
+        insertedEssayCount = insertedEssays.length;
+
+        // 2. Also insert into questionBankTable with questionType: "essay" for unified access & count
+        const unifiedEssays = essays.map((q) => ({
+          courseId,
+          category: "عام",
+          stage,
+          stages: [stage],
+          unit,
+          lesson,
+          lessonId: lessonId || null,
+          difficulty: (q as any).difficulty || defaultDifficulty,
+          points: q.points || defaultPoints,
+          concept: (q as any).concept ? String((q as any).concept).trim() : null,
+          translation: (q as any).translation ? String((q as any).translation).trim() : null,
+          tags: [stage, unit, lesson, "essay"].filter(Boolean),
+          question: {
+            prompt: String(q.prompt).trim(),
+            options: [],
+            correctIndex: -1,
+            correctAnswer: String((q as any).correctAnswer || q.explanation || "").trim(),
+            questionType: "essay" as const,
+            explanation: String(q.explanation || "").trim() || undefined,
+            translation: (q as any).translation ? String((q as any).translation).trim() : undefined,
+            concept: (q as any).concept ? String((q as any).concept).trim() : undefined,
+            imageUrl: String(q.imageUrl || "").trim() || undefined,
+            points: q.points || defaultPoints,
+          },
+        }));
+        await db.insert(questionBankTable).values(unifiedEssays);
+      }
+
+      const totalInserted = insertedMcqCount + insertedEssayCount;
 
       // Optional: Direct Quiz Creation on the fly
       let createdQuiz: any = null;
       if (req.body.createQuiz === true || req.body.createQuiz === "true") {
-        const quizTitle = String(req.body.quizTitle || "").trim() || (lesson === "شامل الوحدة" ? `اختبار شامل على ${unit}` : `اختبار على ${lesson}`);
+        const quizTitle =
+          String(req.body.quizTitle || "").trim() ||
+          (lesson === "شامل الوحدة" ? `اختبار شامل على ${unit}` : `اختبار على ${lesson}`);
         const durationMinutes = Number(req.body.durationMinutes) || 30;
         const passingScore = Number(req.body.passingScore) || 60;
         const maxAttempts = Number(req.body.maxAttempts) || 3;
         const isPublished = req.body.isPublished !== false && req.body.isPublished !== "false";
-        
+
         let quizCategory = stage || "عام";
         let resolvedCourseId = courseId;
         let resolvedVideoId = lessonId;
-        
+
         if (resolvedVideoId) {
           const [video] = await db.select().from(videosTable).where(eq(videosTable.id, resolvedVideoId)).limit(1);
           if (video) {
@@ -1053,7 +1380,7 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
             quizCategory = video.category || quizCategory;
           }
         }
-        
+
         let finalStages = [stage];
         if (resolvedCourseId) {
           const [course] = await db.select().from(coursesTable).where(eq(coursesTable.id, resolvedCourseId)).limit(1);
@@ -1066,15 +1393,21 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
         }
 
         const isLessonScope = Boolean(resolvedVideoId);
-        const quizQuestionsFormatted = validQuestions.map((q) => {
-          const cIdx = Math.max(0, Math.min(q.options.length - 1, Number(q.correctIndex) || 0));
+        const quizQuestionsFormatted = toInsert.map((q) => {
+          const isEssay = q.questionType === "essay" || !q.options || q.options.length === 0;
+          const opts = Array.isArray(q.options) ? q.options.map((o: unknown) => String(o).trim()) : [];
+          const cIdx = isEssay ? -1 : Math.max(0, Math.min(opts.length - 1, Number(q.correctIndex) || 0));
           return {
             prompt: String(q.prompt).trim(),
-            options: q.options.map((o: unknown) => String(o).trim()),
+            options: opts,
             correctIndex: cIdx,
-            correctAnswer: q.options[cIdx]?.trim() || "",
+            correctAnswer: isEssay
+              ? String((q as any).correctAnswer || q.explanation || "").trim()
+              : opts[cIdx] || "",
             explanation: String(q.explanation || "").trim() || undefined,
             imageUrl: String(q.imageUrl || "").trim() || undefined,
+            questionType: q.questionType || (isEssay ? "essay" : opts.length === 2 ? "true_false" : "mcq"),
+            points: q.points || defaultPoints,
           };
         });
 
@@ -1105,24 +1438,31 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
             .update(quizzesTable)
             .set({ videoId: null })
             .where(and(eq(quizzesTable.videoId, resolvedVideoId), ne(quizzesTable.id, newQuiz.id)));
-          await db
-            .update(videosTable)
-            .set({ quizId: newQuiz.id })
-            .where(eq(videosTable.id, resolvedVideoId));
+          await db.update(videosTable).set({ quizId: newQuiz.id }).where(eq(videosTable.id, resolvedVideoId));
         }
 
         createdQuiz = newQuiz;
       }
 
-      const skippedDuplicates = validQuestions.length - nonDuplicates.length;
-      if (skippedDuplicates > 0 && nonDuplicates.length === 0 && !createdQuiz) {
-        warnings.push("جميع الأسئلة كانت موجودة بالفعل في بنك هذا الدرس (تم تخطي التكرار).");
+      const skippedDuplicates = validQuestions.length - toInsert.length;
+      if (skippedDuplicates > 0 && totalInserted === 0 && !createdQuiz) {
+        warnings.push("جميع الأسئلة كانت موجودة بالفعل في بنك هذا الدرس (تم تخطي التكرار بنجاح).");
       }
 
       res.status(201).json({
         success: true,
-        count: insertedCount,
+        count: totalInserted,
+        insertedMcqCount,
+        insertedEssayCount,
         skippedDuplicates,
+        breakdown: {
+          total: validQuestions.length,
+          inserted: totalInserted,
+          skipped: skippedDuplicates,
+          mcq: insertedMcqCount,
+          trueFalse: mcqsAndTFs.filter((q) => q.questionType === "true_false").length,
+          essay: insertedEssayCount,
+        },
         warnings,
         stage,
         unit,
