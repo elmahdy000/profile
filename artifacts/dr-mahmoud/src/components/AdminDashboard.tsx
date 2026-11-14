@@ -75,7 +75,9 @@ import {
   BarChart3,
   ClipboardCheck,
   FileCheck2,
+  LayoutGrid,
 } from "lucide-react";
+import { AdminLaunchpadView } from "./admin/dashboard/AdminLaunchpadView";
 import { AdminSettings } from "./AdminSettings";
 import { AdminLearning, type AdminLearningTab } from "./AdminLearning";
 import { StudentAnalyticsTab } from "./admin/learning/StudentAnalyticsTab";
@@ -129,6 +131,7 @@ const getYoutubeThumbnail = (url: string) => {
 };
 
 export type AdminTopTab =
+  | "hub"
   | "courses"
   | "podcasts"
   | "curriculums"
@@ -156,6 +159,10 @@ export function parseAdminUrl(pathname: string, search = ""): { activeTab: Admin
   }
   if (!slug) {
     slug = queryTab;
+  }
+
+  if (!slug || slug === "hub" || slug === "launchpad" || slug === "cards") {
+    return { activeTab: "hub", learningSubTab: "overview" };
   }
 
   switch (slug) {
@@ -262,6 +269,7 @@ export function getAdminUrlForTab(activeTab: AdminTopTab, learningSubTab: AdminL
     }
   }
   switch (activeTab) {
+    case "hub": return "/admin";
     case "courses": return "/admin/courses";
     case "curriculums": return "/admin/curriculums";
     case "videos": return "/admin/videos";
@@ -285,7 +293,7 @@ export default function AdminDashboard() {
     return null;
   }, []);
 
-  const [activeTab, setActiveTabState] = useState<AdminTopTab>(initialRoute?.activeTab || "learning");
+  const [activeTab, setActiveTabState] = useState<AdminTopTab>(initialRoute?.activeTab || "hub");
   const [learningSubTab, setLearningSubTabState] = useState<AdminLearningTab>(initialRoute?.learningSubTab || "students");
 
   useEffect(() => {
@@ -467,6 +475,21 @@ export default function AdminDashboard() {
   const videosQuery = useListVideos({
     query: { enabled: isAuthenticated } as any,
   });
+
+  const [learningCounts, setLearningCounts] = useState<{ students: number; quizzes: number }>({ students: 0, quizzes: 0 });
+  useEffect(() => {
+    if (isAuthenticated) {
+      Promise.all([
+        fetch("/api/admin/students", { credentials: "include" }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+        fetch("/api/admin/learning/quizzes", { credentials: "include" }).then((r) => (r.ok ? r.json() : [])).catch(() => []),
+      ]).then(([st, qz]) => {
+        setLearningCounts({
+          students: Array.isArray(st) ? st.length : 0,
+          quizzes: Array.isArray(qz) ? qz.length : 0,
+        });
+      });
+    }
+  }, [isAuthenticated]);
 
   // Mutations
   const updateBookingStatusMutation = useUpdateBookingStatus();
@@ -1898,6 +1921,20 @@ export default function AdminDashboard() {
 
               {/* Action shortcuts */}
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTabState("hub");
+                    setLocation("/admin");
+                  }}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                    activeTab === "hub"
+                      ? "bg-slate-900 text-white shadow-md ring-2 ring-blue-500/30"
+                      : "bg-blue-600 hover:bg-blue-700 text-white"
+                  }`}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" /> بوابة البطاقات 🏠
+                </button>
                 <AdminNotificationsCenter
                   onNavigate={handleNavigateFromNotification}
                   bookingsCount={(bookingsQuery.data || []).filter((b) => b.status === "pending").length}
@@ -1938,6 +1975,41 @@ export default function AdminDashboard() {
             </div>
 
             <div key={activeTab} className="animate-[fadeIn_0.2s_ease-in-out]">
+              {activeTab === "hub" && (
+                <AdminLaunchpadView
+                  onNavigate={({ tab, subTab, mode }) => {
+                    if (mode && typeof window !== "undefined") {
+                      const url = new URL(window.location.href);
+                      url.searchParams.set("mode", mode);
+                      window.history.replaceState(null, "", url.toString());
+                      window.dispatchEvent(new Event("popstate"));
+                    } else if (typeof window !== "undefined") {
+                      const url = new URL(window.location.href);
+                      url.searchParams.delete("mode");
+                      window.history.replaceState(null, "", url.toString());
+                      window.dispatchEvent(new Event("popstate"));
+                    }
+                    if (tab === "learning" && subTab) {
+                      handleLearningSubTabChange(subTab);
+                      setActiveTabState("learning");
+                      setLocation(getAdminUrlForTab("learning", subTab));
+                    } else {
+                      handleTabChange(tab);
+                    }
+                  }}
+                  stats={{
+                    studentsCount: learningCounts.students,
+                    quizzesCount: learningCounts.quizzes,
+                    videosCount: (videosQuery.data || []).length,
+                    coursesCount: (coursesQuery.data || []).length,
+                    curriculumsCount: (curriculumsQuery.data || []).length,
+                    podcastsCount: (podcastsQuery.data || []).length,
+                    pendingReceiptsCount,
+                  }}
+                  adminRole={adminRole}
+                />
+              )}
+
               {activeTab === "courses" && (
                 <CoursesTab
                   coursesQuery={coursesQuery}

@@ -38,6 +38,7 @@ import {
   FileEdit,
   Printer,
   Users,
+  LayoutGrid,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -1454,6 +1455,19 @@ export function AdminLearning({
           </p>
         </div>
         <div className="flex items-center gap-2.5 shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                window.location.href = "/admin";
+              }
+            }}
+            className="h-10 px-4 rounded-xl border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-700 text-xs font-black shadow-2xs transition-all cursor-pointer"
+          >
+            <LayoutGrid className="h-4 w-4 ml-1.5 text-blue-600" />
+            بوابة البطاقات 🏠
+          </Button>
           <Button
             type="button"
             onClick={() => {

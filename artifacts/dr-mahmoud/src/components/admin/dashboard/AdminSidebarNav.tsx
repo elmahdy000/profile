@@ -33,6 +33,7 @@ import {
   Printer,
   CalendarDays,
   CreditCard,
+  LayoutGrid,
 } from "lucide-react";
 
 interface AdminSidebarNavProps {
@@ -73,6 +74,22 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const navGroups = [
+    {
+      title: "بوابة التحكم الرئيسية",
+      items: [
+        {
+          id: "launchpad-hub",
+          label: "لوحة البطاقات السريعة 🚀",
+          icon: LayoutGrid,
+          onClick: () => {
+            setActiveTab("hub");
+          },
+          active: activeTab === "hub",
+          badge: "الرئيسية ⭐",
+          badgeColor: "bg-emerald-600 text-white font-black",
+        },
+      ],
+    },
     {
       title: "غرفة العمليات والمتابعة",
       items: [
