@@ -927,7 +927,12 @@ function extractQuestionsFromJson(parsedJson: any): any[] {
   return [];
 }
 
-function normalizeRawQuestion(rawInput: any, defaultDiff: string = "medium", defaultPts: number = 1): QuizQuestion | null {
+function normalizeRawQuestion(
+  rawInput: any,
+  defaultDiff: string = "medium",
+  defaultPts: number = 1,
+  forcedType: string = "auto"
+): QuizQuestion | null {
   if (!rawInput || typeof rawInput !== "object") return null;
 
   // Flatten nested question payload (e.g. { id, question: { prompt, options, ... } })
@@ -1005,19 +1010,32 @@ function normalizeRawQuestion(rawInput: any, defaultDiff: string = "medium", def
   const isTFByType = /true_false|true|false|boolean|tf|صح|صواب|خطأ|خطا/i.test(rawType);
   const isEssayByType = /essay|مقالي|مقال|short_answer|text/i.test(rawType);
 
-  if (isEssayByType) {
-    questionType = "essay";
-  } else if (isTFByType || isTFByOpts) {
+  const mode = String(forcedType || "auto").toLowerCase().trim();
+  if (mode === "true_false" || mode === "tf") {
     questionType = "true_false";
-    // If True/False but options were omitted in the JSON, auto-populate standard binary options
     if (options.length === 0) {
       const isEnglish = /[a-zA-Z]/.test(prompt);
       options = isEnglish ? ["True", "False"] : ["صواب", "خطأ"];
     }
-  } else if (options.length === 0) {
+  } else if (mode === "essay") {
     questionType = "essay";
-  } else {
+    options = [];
+  } else if (mode === "mcq") {
     questionType = "mcq";
+  } else {
+    if (isEssayByType) {
+      questionType = "essay";
+    } else if (isTFByType || isTFByOpts) {
+      questionType = "true_false";
+      if (options.length === 0) {
+        const isEnglish = /[a-zA-Z]/.test(prompt);
+        options = isEnglish ? ["True", "False"] : ["صواب", "خطأ"];
+      }
+    } else if (options.length === 0) {
+      questionType = "essay";
+    } else {
+      questionType = "mcq";
+    }
   }
 
   let correctAnswer = String(item.correctAnswer || item.answer || item.correct_answer || item.correct || "").trim();
@@ -1128,6 +1146,7 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
       const defaultPoints = Number(req.body.points) || 1;
       const previewOnly = req.body.previewOnly === "true" || req.body.previewOnly === true;
       const skipDuplicates = req.body.skipDuplicates !== false && req.body.skipDuplicates !== "false";
+      const targetType = String(req.body.questionType || req.body.targetType || "auto").toLowerCase().trim();
 
       // Smart resolution if lessonId (videoId) was passed
       if (lessonId) {
@@ -1158,7 +1177,7 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
             const parsedJson = parseJsonSafe(req.file.buffer.toString("utf8"));
             const rawList = extractQuestionsFromJson(parsedJson);
             questionsToProcess = rawList
-              .map((item) => normalizeRawQuestion(item, defaultDifficulty, defaultPoints))
+              .map((item) => normalizeRawQuestion(item, defaultDifficulty, defaultPoints, targetType))
               .filter(Boolean) as QuizQuestion[];
           } catch {
             res.status(400).json({ error: "ملف JSON غير صالح أو به خطأ برمجي" });
@@ -1183,7 +1202,7 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
             res.status(422).json({ error: "لم نتمكن من استخراج نص صالح من الملف" });
             return;
           }
-          const parsed = parseImportedQuestions(extractedText);
+          const parsed = parseImportedQuestions(extractedText, targetType);
           questionsToProcess = parsed.questions;
           warnings = parsed.warnings;
         }
@@ -1192,7 +1211,7 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
           const raw = typeof req.body.rawQuestions === "string" ? parseJsonSafe(req.body.rawQuestions) : req.body.rawQuestions;
           const rawList = extractQuestionsFromJson(raw);
           questionsToProcess = rawList
-            .map((item) => normalizeRawQuestion(item, defaultDifficulty, defaultPoints))
+            .map((item) => normalizeRawQuestion(item, defaultDifficulty, defaultPoints, targetType))
             .filter(Boolean) as QuizQuestion[];
         } catch {
           res.status(400).json({ error: "بيانات الأسئلة غير صالحة" });
@@ -1200,7 +1219,7 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
         }
       } else if (req.body.questions && Array.isArray(req.body.questions)) {
         questionsToProcess = req.body.questions
-          .map((item: any) => normalizeRawQuestion(item, defaultDifficulty, defaultPoints))
+          .map((item: any) => normalizeRawQuestion(item, defaultDifficulty, defaultPoints, targetType))
           .filter(Boolean) as QuizQuestion[];
       } else if (req.body.text) {
         extractedText = String(req.body.text);
@@ -1215,7 +1234,7 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
             const rawList = extractQuestionsFromJson(raw);
             if (rawList.length > 0) {
               questionsToProcess = rawList
-                .map((item) => normalizeRawQuestion(item, defaultDifficulty, defaultPoints))
+                .map((item) => normalizeRawQuestion(item, defaultDifficulty, defaultPoints, targetType))
                 .filter(Boolean) as QuizQuestion[];
               parsedFromJson = true;
             }
@@ -1224,7 +1243,7 @@ router.post(["/admin/learning/test-bank/upload", "/admin/learning/test-bank/batc
           }
         }
         if (!parsedFromJson) {
-          const parsed = parseImportedQuestions(extractedText);
+          const parsed = parseImportedQuestions(extractedText, targetType);
           questionsToProcess = parsed.questions;
           warnings = parsed.warnings;
         }

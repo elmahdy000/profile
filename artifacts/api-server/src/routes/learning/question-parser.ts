@@ -317,7 +317,239 @@ export function parseJsonSafe(raw: string): any {
   }
 }
 
-function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; warnings: string[] } {
+export function parseTrueFalseQuestions(rawText: string): { questions: QuizQuestion[]; warnings: string[] } {
+  let cleaned = rawText
+    .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
+    .replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))
+    .replace(/[\u200B-\u200F\u202A-\u202E\uFEFF\u061C]/g, "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .trim();
+
+  const lines = cleaned
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => Boolean(l) && !l.match(/^[\_\-\*]{3,}$/) && !isNoiseLine(l));
+
+  const questions: QuizQuestion[] = [];
+  const warnings: string[] = [];
+
+  type TFItem = {
+    prompt: string;
+    isTrue: boolean | null;
+    explanation: string;
+  };
+
+  let current: TFItem | null = null;
+
+  const pushCurrent = () => {
+    if (!current) return;
+    let p = current.prompt.trim();
+    p = p.replace(/^(?:(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-\/]?\s*\(?\d+\)?|السؤال\s+(?:الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر)|\(?\d+\)?[\.\:\-\)\/\—\–])\s*/i, "").trim();
+    if (!p) {
+      current = null;
+      return;
+    }
+    const isEnglish = /[a-zA-Z]/.test(p);
+    const options = isEnglish ? ["True", "False"] : ["صواب", "خطأ"];
+    const isTrue = current.isTrue !== false; // default to true if unmarked
+    const correctIndex = isTrue ? 0 : 1;
+    const correctAnswer = options[correctIndex];
+
+    questions.push({
+      prompt: p,
+      options,
+      correctIndex,
+      correctAnswer,
+      explanation: current.explanation ? current.explanation.trim() : undefined,
+      questionType: "true_false",
+    } as any);
+
+    if (current.isTrue === null) {
+      warnings.push(`السؤال: «${p.slice(0, 45)}...» لم تُحدد إجابته صراحة، عُين "صواب" افتراضياً.`);
+    }
+    current = null;
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+
+    // Check for answer line: "الإجابة: صواب" / "الحل: خطأ"
+    const ansMatch = line.match(/^(?:(?:الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|الجواب|الحل|Answer)\s*[:：\-]\s*)(.*)$/i);
+    if (ansMatch && current) {
+      const val = ansMatch[1].toLowerCase().trim();
+      if (/^(صح|صواب|صحيح|true|نعم|t|1)$/i.test(val)) {
+        current.isTrue = true;
+      } else if (/^(خطأ|خطا|false|لا|غير\s*صحيح|f|0)$/i.test(val)) {
+        current.isTrue = false;
+      }
+      continue;
+    }
+
+    // Check for explanation: "التفسير: ..." / "السبب: ..."
+    const expMatch = line.match(/^(?:التفسير|تفسير|السبب|سبب|الشرح|شرح|التوضيح|توضيح|Explanation|Reason|Note)\s*[:：\-]\s*(.*)$/i);
+    if (expMatch && current) {
+      current.explanation = (current.explanation ? current.explanation + "\n" : "") + (expMatch[1] || "").trim();
+      continue;
+    }
+
+    // Check for inline answer marks: "(صح)", "(خطأ)", "(✓)", "(✗)", "[x]"
+    let inlineIsTrue: boolean | null = null;
+    const inlineTrueMatch = line.match(/[\(\[]\s*(?:صح|صواب|صحيح|true|نعم|✓|√)\s*[\)\]]\s*$/i);
+    const inlineFalseMatch = line.match(/[\(\[]\s*(?:خطأ|خطا|false|لا|غير\s*صحيح|✗|x|X)\s*[\)\]]\s*$/i);
+
+    if (inlineTrueMatch) {
+      inlineIsTrue = true;
+      line = line.replace(inlineTrueMatch[0], "").trim();
+    } else if (inlineFalseMatch) {
+      inlineIsTrue = false;
+      line = line.replace(inlineFalseMatch[0], "").trim();
+    }
+
+    // Check if line starts a new question header
+    const qHeaderMatch = line.match(/^(?:(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-\/]?\s*\(?\d+\)?|السؤال\s+(?:الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر)|\(?\d+\)?[\.\:\-\)\/\—\–])\s*(.*)$/i);
+
+    if (qHeaderMatch) {
+      pushCurrent();
+      current = {
+        prompt: qHeaderMatch[1].trim() || line,
+        isTrue: inlineIsTrue,
+        explanation: "",
+      };
+      continue;
+    }
+
+    if (current) {
+      if (inlineIsTrue !== null) {
+        current.isTrue = inlineIsTrue;
+      } else if (!current.explanation) {
+        current.prompt += " " + line;
+      } else {
+        current.explanation += "\n" + line;
+      }
+    } else {
+      current = {
+        prompt: line,
+        isTrue: inlineIsTrue,
+        explanation: "",
+      };
+    }
+  }
+
+  pushCurrent();
+  return { questions, warnings };
+}
+
+export function parseEssayQuestions(rawText: string): { questions: QuizQuestion[]; warnings: string[] } {
+  let cleaned = rawText
+    .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
+    .replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))
+    .replace(/[\u200B-\u200F\u202A-\u202E\uFEFF\u061C]/g, "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .trim();
+
+  const lines = cleaned
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => Boolean(l) && !l.match(/^[\_\-\*]{3,}$/) && !isNoiseLine(l));
+
+  const questions: QuizQuestion[] = [];
+  const warnings: string[] = [];
+
+  type EssayItem = {
+    prompt: string;
+    modelAnswer: string;
+    points?: number;
+  };
+
+  let current: EssayItem | null = null;
+  let collectingAnswer = false;
+
+  const pushCurrent = () => {
+    if (!current) return;
+    let p = current.prompt.trim();
+    p = p.replace(/^(?:(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-\/]?\s*\(?\d+\)?|السؤال\s+(?:الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر)|\(?\d+\)?[\.\:\-\)\/\—\–])\s*/i, "").trim();
+    if (!p) {
+      current = null;
+      return;
+    }
+    const formattedAns = formatModelAnswer(current.modelAnswer.trim());
+    questions.push({
+      prompt: p,
+      options: [],
+      correctIndex: -1,
+      correctAnswer: formattedAns,
+      explanation: formattedAns || undefined,
+      questionType: "essay",
+      points: current.points || 1,
+    } as any);
+    current = null;
+    collectingAnswer = false;
+  };
+
+  const Q_HEADER_RE = /^(?:(?:(?:ال)?س(?:ؤال)?(?:\s*رقم)?|Q(?:uestion)?)\s*[:：\-\/]?\s*\(?\d+\)?|السؤال\s+(?:الأول|الثاني|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر)|\(?\d+\)?[\.\:\-\)\/\—\–])\s*(.*)$/i;
+  const ANS_HEADER_RE = /^(?:(?:الإجابة(?:\s+النموذجية)?|الاجابة(?:\s+النموذجية)?|إجابة|اجابة|عناصر\s+(?:الإجابة|الدرجة)|الحل|Model\s*Answer|Answer)\s*[:：\-]\s*)(.*)$/i;
+  const PTS_RE = /(?:درجة(?:\s+السؤال)?|الدرجة|Points|Score)\s*[:：\-]\s*(\d+)/i;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    const ptsMatch = line.match(PTS_RE);
+    if (ptsMatch && current) {
+      current.points = parseInt(ptsMatch[1], 10);
+      continue;
+    }
+
+    const ansMatch = line.match(ANS_HEADER_RE);
+    if (ansMatch && current) {
+      collectingAnswer = true;
+      if (ansMatch[1].trim()) {
+        current.modelAnswer = (current.modelAnswer ? current.modelAnswer + "\n" : "") + ansMatch[1].trim();
+      }
+      continue;
+    }
+
+    const qMatch = line.match(Q_HEADER_RE);
+    if (qMatch) {
+      pushCurrent();
+      current = {
+        prompt: qMatch[1].trim() || line,
+        modelAnswer: "",
+      };
+      collectingAnswer = false;
+      continue;
+    }
+
+    if (current) {
+      if (collectingAnswer) {
+        current.modelAnswer = (current.modelAnswer ? current.modelAnswer + "\n" : "") + line;
+      } else {
+        current.prompt += "\n" + line;
+      }
+    } else {
+      current = {
+        prompt: line,
+        modelAnswer: "",
+      };
+    }
+  }
+
+  pushCurrent();
+  return { questions, warnings };
+}
+
+export function parseMcqQuestions(rawText: string): { questions: QuizQuestion[]; warnings: string[] } {
+  const result = parseUniversalQuestions(rawText);
+  // Ensure every returned question has options and is strictly typed as mcq
+  const mcqs = result.questions.filter((q) => q.options && q.options.length >= 2).map((q) => ({
+    ...q,
+    questionType: "mcq" as const,
+  }));
+  return { questions: mcqs, warnings: result.warnings };
+}
+
+function parseUniversalQuestions(rawText: string): { questions: QuizQuestion[]; warnings: string[] } {
   // 1. Clean invisible RTL markers, normalize Arabic digits, normalize newlines, & strip markdown artifacts
   let cleanedText = rawText
     .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
@@ -792,6 +1024,23 @@ function parseImportedQuestions(rawText: string): { questions: QuizQuestion[]; w
   return { questions: deduplicatedQuestions, warnings };
 }
 
+export function parseImportedQuestions(
+  rawText: string,
+  targetType: string = "auto"
+): { questions: QuizQuestion[]; warnings: string[] } {
+  const mode = String(targetType || "auto").toLowerCase().trim();
+  if (mode === "true_false" || mode === "tf") {
+    return parseTrueFalseQuestions(rawText);
+  }
+  if (mode === "essay") {
+    return parseEssayQuestions(rawText);
+  }
+  if (mode === "mcq") {
+    return parseMcqQuestions(rawText);
+  }
+  return parseUniversalQuestions(rawText);
+}
+
 
 
 export {
@@ -802,5 +1051,4 @@ export {
   extractFromZip,
   extractTextFromDocxXml,
   extractTextFromUpload,
-  parseImportedQuestions,
 };

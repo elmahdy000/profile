@@ -268,6 +268,7 @@ export function TestBankTab({
   const [customLessonInput, setCustomLessonInput] = useState<string>("");
   const [uploadDifficulty, setUploadDifficulty] = useState<string>("medium");
   const [uploadPoints, setUploadPoints] = useState<number>(1);
+  const [uploadQuestionType, setUploadQuestionType] = useState<"auto" | "mcq" | "true_false" | "essay">("auto");
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [rawText, setRawText] = useState<string>("");
   const [previewQuestions, setPreviewQuestions] = useState<Question[]>([]);
@@ -881,6 +882,7 @@ export function TestBankTab({
         formData.append("lesson", targetLesson);
         formData.append("difficulty", uploadDifficulty);
         formData.append("points", String(uploadPoints));
+        formData.append("questionType", uploadQuestionType);
         if (uploadCourseId) formData.append("courseId", uploadCourseId);
         if (uploadScope === "lesson" && uploadLessonId) formData.append("lessonId", uploadLessonId);
 
@@ -899,6 +901,7 @@ export function TestBankTab({
             lesson: targetLesson,
             difficulty: uploadDifficulty,
             points: uploadPoints,
+            questionType: uploadQuestionType,
             courseId: uploadCourseId ? Number(uploadCourseId) : undefined,
             lessonId: uploadScope === "lesson" && uploadLessonId ? Number(uploadLessonId) : undefined,
           }),
@@ -980,6 +983,7 @@ export function TestBankTab({
           lesson: targetLesson,
           difficulty: uploadDifficulty,
           points: uploadPoints,
+          questionType: uploadQuestionType,
           courseId: uploadCourseId ? Number(uploadCourseId) : undefined,
           lessonId: uploadScope === "lesson" && uploadLessonId ? Number(uploadLessonId) : undefined,
           skipDuplicates: skipDuplicatesOnImport,
@@ -2599,10 +2603,125 @@ export function TestBankTab({
               )}
             </div>
 
-            {/* الخطوة ٤: ملف الأسئلة أو نص الأسئلة */}
+            {/* الخطوة ٤: تحديد نوع الأسئلة في هذا الملف لتشغيل الـ Parser المناسب */}
             <div className="space-y-3 pt-2 border-t border-border/60">
               <label className="text-xs font-black text-foreground flex items-center gap-2">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-black">٤</span>
+                <span>تحديد نوع الأسئلة في هذا الملف (لتشغيل الـ Parser البرمجي المخصص له بدقة):</span>
+              </label>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setUploadQuestionType("auto")}
+                  className={`p-3 rounded-2xl border text-right transition-all cursor-pointer flex flex-col justify-between ${
+                    uploadQuestionType === "auto"
+                      ? "border-primary bg-primary/10 text-primary ring-2 ring-primary/20 shadow-xs"
+                      : "border-border bg-card hover:bg-muted/50 text-foreground"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-black">🤖 ذكي وتلقائي</span>
+                    <Sparkles className="h-4 w-4 text-primary" />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-snug">
+                    ملفات مجمعة أو JSON يحتوي على كل الأنواع (MCQ ومقالي وصح/خطأ)
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setUploadQuestionType("mcq")}
+                  className={`p-3 rounded-2xl border text-right transition-all cursor-pointer flex flex-col justify-between ${
+                    uploadQuestionType === "mcq"
+                      ? "border-blue-600 bg-blue-500/10 text-blue-700 dark:text-blue-300 ring-2 ring-blue-500/20 shadow-xs"
+                      : "border-border bg-card hover:bg-muted/50 text-foreground"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-black">📝 اختيار من متعدد</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-700 dark:text-blue-300">MCQ</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-snug">
+                    أسئلة ذات 4 خيارات (أ، ب، ج، د) وتحديد الإجابة الصحيحة والتفسير
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setUploadQuestionType("true_false")}
+                  className={`p-3 rounded-2xl border text-right transition-all cursor-pointer flex flex-col justify-between ${
+                    uploadQuestionType === "true_false"
+                      ? "border-teal-600 bg-teal-500/10 text-teal-700 dark:text-teal-300 ring-2 ring-teal-500/20 shadow-xs"
+                      : "border-border bg-card hover:bg-muted/50 text-foreground"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-black">⚖️ صواب أو خطأ</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-500/15 text-teal-700 dark:text-teal-300">T / F</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-snug">
+                    عبارات صح وخطأ مع إنشاء الخيارات الثنائية ومطابقة الحل تلقائياً
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setUploadQuestionType("essay")}
+                  className={`p-3 rounded-2xl border text-right transition-all cursor-pointer flex flex-col justify-between ${
+                    uploadQuestionType === "essay"
+                      ? "border-amber-600 bg-amber-500/10 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500/20 shadow-xs"
+                      : "border-border bg-card hover:bg-muted/50 text-foreground"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-black">✍️ أسئلة مقالية</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-300">Essay</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-snug">
+                    رأس السؤال + الإجابة النموذجية وعناصر التصحيح لورقة الامتحان A4
+                  </p>
+                </button>
+              </div>
+
+              {/* بطاقة التنسيق الموصى به ونموذج سريع */}
+              <div className="p-3 rounded-xl bg-muted/40 border border-border text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Info className="h-4 w-4 shrink-0 text-primary" />
+                  <span>
+                    {uploadQuestionType === "mcq" && "الـ Parser المخصص للـ MCQ يبحث عن أ، ب، ج، د مع علامة الإجابة مثل (الإجابة: ب)."}
+                    {uploadQuestionType === "true_false" && "الـ Parser المخصص للصواب والخطأ يتعرف على (صح / خطأ / صواب) في نهاية كل جملة أو كسطر إجابة مستقل."}
+                    {uploadQuestionType === "essay" && "الـ Parser المخصص للمقالي يستخرج نص السؤال والإجابة النموذجية المكتوبة تحته مع التنسيق التلقائي للأسطر."}
+                    {uploadQuestionType === "auto" && "الـ Parser الذكي والتلقائي يقرأ ملفات الـ JSON المتشعبة والملفات المختلطة تلقائياً."}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (uploadQuestionType === "mcq") {
+                      setRawText(`1- ما هي وحدة قياس كمية المادة في النظام الدولي للوحدات (SI)؟\nأ) الكيلوجرام\nب) المول\nج) المتر\nد) الثانية\nالإجابة الصحيحة: ب\nالتفسير: المول هو الوحدة الأساسية لكمية المادة.\n\n2- أي مما يلي يُعد من لغات البرمجة كائنية التوجه؟\nأ) HTML\nب) C++\nج) CSS\nد) SQL\nالإجابة الصحيحة: ب`);
+                    } else if (uploadQuestionType === "true_false") {
+                      setRawText(`1- استُخدمت الحواسيب الإلكترونية الأولى في الأغراض العسكرية والحسابات العلمية. (صح)\nالتفسير: صممت لحساب مسارات القذائف.\n\n2- انتشرت الهواتف الذكية في السبعينيات قبل الحواسيب الشخصية. (خطأ)\nالتفسير: الهواتف الذكية ظهرت في أواخر التسعينيات والألفية.\n\n3- شهدت التسعينيات إتاحة الإنترنت للاستخدام التجاري. (صواب)`);
+                    } else if (uploadQuestionType === "essay") {
+                      setRawText(`س1: اذكر ثلاثة من أهم أهداف الذكاء الاصطناعي في قطاع التعليم؟\nالإجابة النموذجية:\n1. تخصيص تجربة التعلم لكل طالب حسب مستواه.\n2. التصحيح التلقائي الفوري والتقييم الذكي.\n3. توفير المساعدين التعليميين الذكيين على مدار الساعة.\nدرجة السؤال: 3\n\nس2: ما هو الفرق الجوهري بين التعلم الإشرافي والتعلم غير الإشرافي؟\nالإجابة النموذجية:\nالتعلم الإشرافي يعتمد على بيانات مصنفة مسبقاً (Labeled Data)، بينما التعلم غير الإشرافي يكتشف الأنماط في البيانات غير المصنفة.`);
+                    } else {
+                      setRawText(`1- ما هي لغة برمجة تطبيقات الويب الأساسية في المتصفح؟\nأ) Python\nب) JavaScript\nج) C++\nد) Java\nالإجابة: ب\n\n2- يعتبر الذكاء الاصطناعي فرعاً من علوم الحاسوب. (صح)\n\nس3: ما هي مميزات التعليم الإلكتروني التفاعلي؟\nالإجابة النموذجية:\n- المرونة في الوقت والمكان.\n- سهولة تتبع أداء الطالب.`);
+                    }
+                    setUploadFile(null);
+                    toast({ title: "تم إدراج نموذج تجريبي جاهز في المحرر 📋" });
+                  }}
+                  className="text-xs font-bold text-primary hover:underline shrink-0 cursor-pointer flex items-center gap-1"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                  <span>إدراج نص تجريبي جاهز في المحرر 📋</span>
+                </button>
+              </div>
+            </div>
+
+            {/* الخطوة ٥: ملف الأسئلة أو نص الأسئلة */}
+            <div className="space-y-3 pt-2 border-t border-border/60">
+              <label className="text-xs font-black text-foreground flex items-center gap-2">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px] font-black">٥</span>
                 <span>ملف الأسئلة أو نص الأسئلة (يدعم Word و PDF و TXT و JSON):</span>
               </label>
 
@@ -2708,7 +2827,7 @@ export function TestBankTab({
             </Button>
           </div>
 
-          {/* الخطوة ٥: معاينة الأسئلة وخيارات الحفظ ونشر الاختبار الفوري */}
+          {/* الخطوة ٦: معاينة الأسئلة وخيارات الحفظ ونشر الاختبار الفوري */}
           {previewQuestions.length > 0 && (
             <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 space-y-6 shadow-sm animate-in fade-in">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
