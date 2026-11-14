@@ -3521,7 +3521,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
 
                   return (
                     <div key={actualPageIdx} className="flex flex-col items-center gap-2 max-w-full">
-                      <div className="text-[11px] font-bold text-slate-400">
+                      <div className="no-print memo-preview-page-label text-[11px] font-bold text-slate-400">
                         ورقة A4 — صفحة {pageNumber} من {pages.length}
                       </div>
 
@@ -4564,7 +4564,11 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
         @import url('https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Inter:wght@400;600;700;800&family=Noto+Naskh+Arabic:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap');
 
         @media print {
-          body, html {
+          @page {
+            size: A4 portrait;
+            margin: 0mm !important;
+          }
+          html, body {
             background: #ffffff !important;
             margin: 0 !important;
             padding: 0 !important;
@@ -4572,24 +4576,36 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
-          #root, main, .app-layout, .container, [class*="layout"] {
+          /* Strictly hide everything in the document by default to eliminate any dashboard or outer layout leakage */
+          body * {
+            visibility: hidden !important;
+          }
+          /* Expose only the memo print container and its descendants */
+          .memo-print-root,
+          .memo-print-root * {
+            visibility: visible !important;
+          }
+          .memo-print-root {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 210mm !important;
             margin: 0 !important;
             padding: 0 !important;
             border: none !important;
-            max-width: none !important;
-            width: 100% !important;
+            background: #ffffff !important;
+            box-shadow: none !important;
+            display: block !important;
+            overflow: visible !important;
+            z-index: 999999 !important;
           }
-          header, nav, aside, .topbar, button, input, select, textarea, .no-print,
+          .no-print,
+          .no-print *,
+          .memo-preview-page-label,
+          header, nav, aside, .topbar, button, input, select, textarea,
           [role="tablist"], [data-radix-portal] {
             display: none !important;
             visibility: hidden !important;
-          }
-          .memo-print-root {
-            display: block !important;
-            background: transparent !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            border: none !important;
           }
           .memo-page-shell {
             width: 210mm !important;
@@ -4621,10 +4637,6 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             overflow: hidden !important;
             page-break-inside: avoid !important;
             break-inside: avoid !important;
-          }
-          @page {
-            size: A4 portrait;
-            margin: 0mm !important;
           }
         }
       `}</style>
