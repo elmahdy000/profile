@@ -39,7 +39,8 @@ import {
   Zap,
   Info,
   ClipboardCheck,
-  Download
+  Download,
+  Printer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
