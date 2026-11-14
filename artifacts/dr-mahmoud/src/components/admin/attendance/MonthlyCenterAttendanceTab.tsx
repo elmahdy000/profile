@@ -684,71 +684,83 @@ export const MonthlyCenterAttendanceTab: React.FC = () => {
       </div>
 
       {/* ─── 4. Live Attendance Cockpit Counters ─── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
         {/* Total Enrolled */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500 text-xs font-bold mb-1">
             <span>إجمالي المقيدين</span>
             <Users className="h-4 w-4 text-slate-400" />
           </div>
-          <strong className="text-2xl font-black text-slate-800">{stats.totalStudents}</strong>
-          <span className="text-[10px] text-slate-400 block mt-0.5">
-            {selectedCenter === "all"
-              ? "في جميع السناتر"
-              : selectedCenter.startsWith("سنتر")
-              ? `في ${selectedCenter}`
-              : `في سنتر ${selectedCenter}`}
-          </span>
+          <div>
+            <strong className="text-xl sm:text-2xl font-black text-slate-800">{stats.totalStudents}</strong>
+            <span className="text-[10px] text-slate-400 block mt-0.5 truncate">
+              {selectedCenter === "all"
+                ? "في جميع السناتر"
+                : selectedCenter.startsWith("سنتر")
+                ? `في ${selectedCenter}`
+                : `في سنتر ${selectedCenter}`}
+            </span>
+          </div>
         </div>
 
         {/* Present */}
-        <div className="bg-white p-4 rounded-2xl border border-emerald-200 shadow-xs bg-emerald-50/20">
+        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-emerald-200/80 shadow-xs bg-emerald-50/30 flex flex-col justify-between">
           <div className="flex items-center justify-between text-emerald-700 text-xs font-bold mb-1">
             <span>حاضرون</span>
             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
           </div>
-          <strong className="text-2xl font-black text-emerald-600">{stats.presentCount}</strong>
-          <span className="text-[10px] text-emerald-700 block mt-0.5">مسجل حضور رسمي</span>
+          <div>
+            <strong className="text-xl sm:text-2xl font-black text-emerald-600">{stats.presentCount}</strong>
+            <span className="text-[10px] text-emerald-700 block mt-0.5">مسجل حضور رسمي</span>
+          </div>
         </div>
 
         {/* Absent */}
-        <div className="bg-white p-4 rounded-2xl border border-red-200 shadow-xs bg-red-50/20">
+        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-red-200/80 shadow-xs bg-red-50/30 flex flex-col justify-between">
           <div className="flex items-center justify-between text-red-700 text-xs font-bold mb-1">
             <span>غائبون</span>
             <XCircle className="h-4 w-4 text-red-600" />
           </div>
-          <strong className="text-2xl font-black text-red-600">{stats.absentCount}</strong>
-          <span className="text-[10px] text-red-700 block mt-0.5">لم يحضروا الحصة</span>
+          <div>
+            <strong className="text-xl sm:text-2xl font-black text-red-600">{stats.absentCount}</strong>
+            <span className="text-[10px] text-red-700 block mt-0.5">لم يحضروا الحصة</span>
+          </div>
         </div>
 
         {/* Late */}
-        <div className="bg-white p-4 rounded-2xl border border-amber-200 shadow-xs bg-amber-50/20">
+        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-amber-200/80 shadow-xs bg-amber-50/30 flex flex-col justify-between">
           <div className="flex items-center justify-between text-amber-700 text-xs font-bold mb-1">
             <span>متأخرون</span>
             <Clock className="h-4 w-4 text-amber-600" />
           </div>
-          <strong className="text-2xl font-black text-amber-600">{stats.lateCount}</strong>
-          <span className="text-[10px] text-amber-700 block mt-0.5">حضروا بعد الموعد</span>
+          <div>
+            <strong className="text-xl sm:text-2xl font-black text-amber-600">{stats.lateCount}</strong>
+            <span className="text-[10px] text-amber-700 block mt-0.5">حضروا بعد الموعد</span>
+          </div>
         </div>
 
         {/* Unmarked */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500 text-xs font-bold mb-1">
             <span>غير مسجلين</span>
             <HelpCircle className="h-4 w-4 text-slate-400" />
           </div>
-          <strong className="text-2xl font-black text-slate-600">{stats.unmarkedCount}</strong>
-          <span className="text-[10px] text-slate-400 block mt-0.5">في انتظار الرصد</span>
+          <div>
+            <strong className="text-xl sm:text-2xl font-black text-slate-600">{stats.unmarkedCount}</strong>
+            <span className="text-[10px] text-slate-400 block mt-0.5">في انتظار الرصد</span>
+          </div>
         </div>
 
         {/* Attendance Rate */}
-        <div className="bg-white p-4 rounded-2xl border border-indigo-200 shadow-xs bg-indigo-50/20">
+        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-indigo-200/80 shadow-xs bg-indigo-50/30 flex flex-col justify-between">
           <div className="flex items-center justify-between text-indigo-700 text-xs font-bold mb-1">
             <span>نسبة الحضور</span>
             <ShieldCheck className="h-4 w-4 text-indigo-600" />
           </div>
-          <strong className="text-2xl font-black text-indigo-600">{stats.attendanceRate}%</strong>
-          <span className="text-[10px] text-indigo-700 block mt-0.5">حاضر + متأخر</span>
+          <div>
+            <strong className="text-xl sm:text-2xl font-black text-indigo-600">{stats.attendanceRate}%</strong>
+            <span className="text-[10px] text-indigo-700 block mt-0.5">حاضر + متأخر</span>
+          </div>
         </div>
       </div>
 
