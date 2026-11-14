@@ -50,6 +50,13 @@ defaultOfflineCenters.forEach((c) => {
     });
   }
 });
+// Ensure aliases for Hennawy exist so any query or select finds it immediately
+if (!centerMap.has("سنتر الحناوي - لغات")) {
+  centerMap.set("سنتر الحناوي - لغات", {
+    name: "سنتر الحناوي - لغات",
+    location: "الزقازيق - الحناوي",
+  });
+}
 export const OFFICIAL_CENTERS = Array.from(centerMap.values());
 
 export const OFFICIAL_SLOTS = Array.from(
@@ -68,6 +75,12 @@ export function normalizeSlotName(rawSlot?: string | null): string {
 export function normalizeCenterName(rawName?: string | null): string {
   if (!rawName || !rawName.trim()) return "بدون سنتر محدد";
   const clean = rawName.trim().toLowerCase();
+  if (clean.includes("حناو") || clean.includes("hennaw") || clean.includes("hinaw") || clean.includes("الحناوي") || clean.includes("الحناوى")) {
+    return "سنتر الحناوي - لغات";
+  }
+  if (clean.includes("قنايات") || clean.includes("qanayat")) {
+    return "سنتر القنايات - عربي";
+  }
   if (clean.includes("فيوتشر") || clean.includes("future")) {
     return "سنتر فيوتشر (Future) - عربي";
   }

@@ -28,8 +28,9 @@ import {
   FileSpreadsheet,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { OFFICIAL_CENTERS, OFFICIAL_SLOTS, normalizeSlotName } from "../learning/StudentDrawer";
+import { OFFICIAL_CENTERS, OFFICIAL_SLOTS, normalizeSlotName, normalizeCenterName } from "../learning/StudentDrawer";
 import { defaultOfflineCenters } from "../settings/CentersTab";
+import { MonthlyCenterAttendanceTab } from "./MonthlyCenterAttendanceTab";
 
 export interface GroupBreakdownItem {
   centerName: string;
@@ -147,8 +148,8 @@ function triggerHaptic() {
 export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin" | "subadmin" }) {
   const { toast } = useToast();
 
-  // Mode: "scanner" or "sheet"
-  const [activeTab, setActiveTab] = useState<"scanner" | "sheet">("scanner");
+  // Mode: "scanner" or "sheet" or "monthly_centers"
+  const [activeTab, setActiveTab] = useState<"scanner" | "sheet" | "monthly_centers">("monthly_centers");
 
   // Date Selection (defaults to Africa/Cairo today YYYY-MM-DD)
   const todayStr = useMemo(() => {
@@ -216,11 +217,12 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
   const availableCenters = useMemo(() => {
     const set = new Set<string>();
     OFFICIAL_CENTERS.forEach((c) => set.add(c.name));
+    set.add("سنتر الحناوي - لغات");
     records.forEach((r) => {
-      if (r.center) set.add(r.center);
+      if (r.center) set.add(normalizeCenterName(r.center));
     });
     groupBreakdown.forEach((g) => {
-      if (g.centerName && g.centerName !== "بدون سنتر محدد") set.add(g.centerName);
+      if (g.centerName && g.centerName !== "بدون سنتر محدد") set.add(normalizeCenterName(g.centerName));
     });
     return Array.from(set);
   }, [records, groupBreakdown]);
@@ -742,8 +744,20 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
       }
 
       // Center
-      if (centerFilter !== "all" && r.center !== centerFilter && r.enrolledCenter !== centerFilter) {
-        return false;
+      if (centerFilter !== "all") {
+        const normFilter = normalizeCenterName(centerFilter);
+        const normActual = normalizeCenterName(r.center);
+        const normEnrolled = normalizeCenterName(r.enrolledCenter);
+        const matchesCenter =
+          r.center === centerFilter ||
+          r.enrolledCenter === centerFilter ||
+          normActual === normFilter ||
+          normEnrolled === normFilter ||
+          (r.center && r.center.includes(centerFilter)) ||
+          (r.enrolledCenter && r.enrolledCenter.includes(centerFilter));
+        if (!matchesCenter) {
+          return false;
+        }
       }
 
       // Slot
@@ -832,6 +846,22 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
 
       {/* 2. Top Navigation Tabs */}
       <div className="flex items-center gap-3 border-b border-[#E2E8F0]">
+        <button
+          type="button"
+          onClick={() => setActiveTab("monthly_centers")}
+          className={`flex items-center gap-2 pb-3.5 px-2 text-sm font-black border-b-2 transition-all ${
+            activeTab === "monthly_centers"
+              ? "border-indigo-600 text-indigo-600"
+              : "border-transparent text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          <Calendar className="h-4 w-4" />
+          <span>دفتر الحضور بالشهور والسناتر 📅</span>
+          <span className="px-2 py-0.5 text-[10px] rounded-full bg-indigo-100 text-indigo-700 font-bold">
+            جديد وشامل
+          </span>
+        </button>
+
         <button
           type="button"
           onClick={() => setActiveTab("scanner")}
@@ -925,7 +955,12 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
         </div>
       </div>
 
-      {/* 4. Scanner Tab Content */}
+      {/* 4. Monthly & Center Tab Content */}
+      {activeTab === "monthly_centers" && (
+        <MonthlyCenterAttendanceTab />
+      )}
+
+      {/* 5. Scanner Tab Content */}
       {activeTab === "scanner" && (
         <div className="space-y-4">
           {/* Active Center & Appointment Slot Selector Bar */}

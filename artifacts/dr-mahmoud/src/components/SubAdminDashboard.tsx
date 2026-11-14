@@ -10,6 +10,7 @@ import {
   BarChart3,
   QrCode,
   Sparkles,
+  CalendarDays,
 } from "lucide-react";
 import { AdminLearning, type AdminLearningTab } from "./AdminLearning";
 
@@ -113,6 +114,30 @@ export function SubAdminDashboard() {
 
           <nav className="flex-1 space-y-2">
             <span className="block px-3 pb-1 pt-1 text-[11px] font-bold tracking-wider text-[#64748B]">الخدمات والعمليات السريعة</span>
+
+            {/* Monthly Center Attendance Quick Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileSidebarOpen(false);
+                setCurrentTab("attendance");
+                if (typeof window !== "undefined") {
+                  const params = new URLSearchParams(window.location.search);
+                  params.delete("mode");
+                  params.delete("status");
+                  window.history.replaceState(null, "", `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`);
+                  window.dispatchEvent(new Event("popstate"));
+                }
+              }}
+              className={`w-full flex items-center gap-3 rounded-xl px-3.5 py-3 text-xs font-bold transition-all shadow-xs ${
+                currentTab === "attendance"
+                  ? "bg-indigo-600 text-white shadow-indigo-600/30"
+                  : "bg-indigo-50 text-indigo-700 hover:bg-indigo-100/80 border border-indigo-200/60"
+              }`}
+            >
+              <CalendarDays className="h-4 w-4" />
+              <span>دفتر الحضور بالشهور والسناتر 📅</span>
+            </button>
 
             {/* Attendance QR Scanner Button */}
             <button

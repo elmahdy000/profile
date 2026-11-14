@@ -51,6 +51,17 @@ function normalizeSlot(s?: string | null): string {
     .trim();
 }
 
+function normalizeArabicText(str?: string | null): string {
+  if (!str) return "";
+  return String(str)
+    .toLowerCase()
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ة/g, "ه")
+    .replace(/ى/g, "ي")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 // ─── 1. POST /api/admin/attendance/scan ───────────────────────────────────────
 // Rapid QR Code Scanner Attendance Endpoint
 router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, next) => {
@@ -460,7 +471,12 @@ router.get("/admin/attendance/daily", requireAdmin, async (req: Request, res, ne
       records = records.filter((r) => r.grade?.toLowerCase().includes(stageFilter.toLowerCase()));
     }
     if (centerFilter && centerFilter !== "all") {
-      records = records.filter((r) => r.centerName?.toLowerCase().includes(centerFilter.toLowerCase()) || r.enrolledCenter?.toLowerCase().includes(centerFilter.toLowerCase()));
+      const normQuery = normalizeArabicText(centerFilter);
+      records = records.filter((r) => {
+        const c1 = normalizeArabicText(r.centerName);
+        const c2 = normalizeArabicText(r.enrolledCenter);
+        return c1.includes(normQuery) || c2.includes(normQuery) || normQuery.includes(c1) || normQuery.includes(c2);
+      });
     }
     if (slotFilter && slotFilter !== "all") {
       const targetSlot = normalizeSlot(slotFilter);
