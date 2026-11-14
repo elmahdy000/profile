@@ -482,10 +482,23 @@ router.get("/admin/attendance/daily", requireAdmin, async (req: Request, res, ne
     }
     if (centerFilter && centerFilter !== "all") {
       const normQuery = normalizeArabicText(centerFilter);
+      // Extract key keyword if query has multiple words (e.g. "حناوي" from "سنتر الحناوي - لغات")
+      const queryKeywords = normQuery.split(" ").filter((w) => w.length >= 3 && w !== "سنتر" && w !== "لغات" && w !== "عربي");
       records = records.filter((r) => {
         const c1 = normalizeArabicText(r.centerName);
         const c2 = normalizeArabicText(r.enrolledCenter);
-        return c1.includes(normQuery) || c2.includes(normQuery) || normQuery.includes(c1) || normQuery.includes(c2);
+        
+        // Exact or substring match
+        if (c1 && (c1.includes(normQuery) || normQuery.includes(c1))) return true;
+        if (c2 && (c2.includes(normQuery) || normQuery.includes(c2))) return true;
+
+        // Keyword match (e.g. "حناوي")
+        if (queryKeywords.length > 0) {
+          const matchKw = queryKeywords.some((kw) => c1.includes(kw) || c2.includes(kw));
+          if (matchKw) return true;
+        }
+
+        return false;
       });
     }
     if (slotFilter && slotFilter !== "all") {
