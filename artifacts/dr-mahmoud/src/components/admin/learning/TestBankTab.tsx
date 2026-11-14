@@ -3021,6 +3021,12 @@ export function TestBankTab({
                               </span>
                             )}
 
+                            {((q as any).unit || (q as any).lesson) && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/20 max-w-[220px] truncate" title={`${(q as any).unit || ""} - ${(q as any).lesson || ""}`}>
+                                📂 {[(q as any).unit, (q as any).lesson].filter(Boolean).join(" / ")}
+                              </span>
+                            )}
+
                             <span
                               className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
                                 isEnglish
