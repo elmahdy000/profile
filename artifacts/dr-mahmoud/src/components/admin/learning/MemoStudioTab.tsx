@@ -1234,6 +1234,23 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     toast({ title: `تم تحميل ${normalized.length} سؤال من اختبار: ${quiz.title}` });
   };
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const importedQuiz = sessionStorage.getItem("memo_studio_import_quiz");
+      if (importedQuiz) {
+        try {
+          const parsed = JSON.parse(importedQuiz);
+          sessionStorage.removeItem("memo_studio_import_quiz");
+          handleLoadFromQuiz(parsed);
+          toast({
+            title: "تم استيراد الاختبار بنجاح في استوديو المذكرات والطباعة 🖨️",
+            description: `جاهز للطباعة وتصدير A4: ${parsed.title}`,
+          });
+        } catch (e) {}
+      }
+    }
+  }, []);
+
   // Load from Question Bank (Specific Unit or Lesson, or entire Unit) with question type filter
   const handleLoadFromBank = async (
     unitName: string,
@@ -2056,6 +2073,31 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
           >
             <CheckCircle className="h-3.5 w-3.5 text-amber-400" />
             نسخة المعلم (مع الإجابات)
+          </Button>
+          <Button
+            type="button"
+            onClick={() => {
+              if (!questions.length) {
+                toast({ variant: "destructive", description: "لا توجد أسئلة لنشرها كاختبار." });
+                return;
+              }
+              const quizPayload = {
+                title: settings.headerText || "اختبار جديد من استوديو المذكرات",
+                questions: questions.filter(q => q.enabled).map(q => ({
+                  prompt: q.statement || q.prompt || "",
+                  options: q.options?.map(o => o.text) || [],
+                  correctIndex: Math.max(0, q.options?.findIndex(o => o.isCorrect) ?? 0),
+                  explanation: q.explanation || "",
+                })),
+              };
+              sessionStorage.setItem("exam_wizard_import_payload", JSON.stringify(quizPayload));
+              window.location.href = "/admin/quizzes";
+            }}
+            className="bg-violet-600 hover:bg-violet-700 text-white font-extrabold text-xs flex items-center gap-2 px-4 py-2.5 shadow-lg shadow-violet-600/25 cursor-pointer"
+            title="نشر هذا الاختبار إلكترونياً للطلاب على المنصة"
+          >
+            <Sparkles className="h-4 w-4" />
+            نشر إلكترونياً للطلاب 🚀
           </Button>
           <Button
             type="button"

@@ -2953,6 +2953,19 @@ export function TestBankTab({
                   </Button>
                 )}
 
+                <Button
+                  type="button"
+                  onClick={() => {
+                    if (typeof window !== "undefined") {
+                      sessionStorage.setItem("memo_studio_import_quiz", JSON.stringify(generatedQuizSuccess));
+                      window.location.href = "/admin/memo-studio";
+                    }
+                  }}
+                  className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold h-11 px-5 shadow-md cursor-pointer flex items-center gap-2 border border-slate-700"
+                >
+                  <Printer className="h-4 w-4 text-emerald-400" /> طباعة ورقة امتحان A4 للسنتر (طالب ومعلم) 🖨️
+                </Button>
+
                 {onNavigateToQuizzes && (
                   <Button
                     type="button"

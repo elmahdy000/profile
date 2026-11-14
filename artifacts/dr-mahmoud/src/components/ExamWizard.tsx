@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import {
   Check,
   ChevronLeft,
@@ -31,7 +31,8 @@ import {
   Filter,
   Calendar,
   RotateCcw,
-  Download
+  Download,
+  Printer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -132,6 +133,28 @@ export function ExamWizard({
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
   const quizImportInputRef = useRef<HTMLInputElement>(null);
   const [previewQuiz, setPreviewQuiz] = useState<QuizItem | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const imported = sessionStorage.getItem("exam_wizard_import_payload");
+      if (imported) {
+        try {
+          const payload = JSON.parse(imported);
+          sessionStorage.removeItem("exam_wizard_import_payload");
+          setQuizForm((prev: QuizFormState) => ({
+            ...prev,
+            title: payload.title || prev.title,
+            questions: payload.questions || [],
+          }));
+          setCurrentStep(2);
+          toast({
+            title: "تم استيراد أسئلة الامتحان من استوديو المذكرات 🚀",
+            description: `جاهز للنشر للطلاب: ${payload.questions?.length || 0} أسئلة`,
+          });
+        } catch (e) {}
+      }
+    }
+  }, []);
 
   // Filter states for Quizzes list section
   const [quizListStageFilter, setQuizListStageFilter] = useState<string>("all");
@@ -1725,6 +1748,20 @@ export function ExamWizard({
 
                   {/* Action Buttons */}
                   <div className="flex items-center gap-1.5 border-t border-slate-200/70 pt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (typeof window !== "undefined") {
+                          sessionStorage.setItem("memo_studio_import_quiz", JSON.stringify(q));
+                          window.location.href = "/admin/memo-studio";
+                        }
+                      }}
+                      className="h-8 px-2.5 text-xs font-bold text-slate-800 hover:text-slate-900 hover:bg-slate-100 border-slate-300"
+                      title="تصدير وطباعة ورقة امتحان A4 للسنتر (نسخة الطالب والمعلم)"
+                    >
+                      <Printer className="h-3.5 w-3.5 ml-1 text-slate-600" /> طباعة A4 🖨️
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"

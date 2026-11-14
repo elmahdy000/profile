@@ -52,6 +52,11 @@ export interface LaunchpadCardItem {
     mode?: string;
   };
   highlight?: boolean;
+  quickActions?: Array<{
+    label: string;
+    target: { tab: AdminTopTab; subTab?: AdminLearningTab; mode?: string };
+    highlight?: boolean;
+  }>;
 }
 
 interface AdminLaunchpadViewProps {
@@ -78,68 +83,65 @@ export function AdminLaunchpadView({
 
   const cards: LaunchpadCardItem[] = useMemo(() => {
     return [
-      // ── 1. منظومة الامتحانات والاختبارات ──
+      // ── 1. منظومة الامتحانات والمولد الذكي ──
       {
-        id: "exam-generator",
-        title: "مولد الامتحانات الذكي السريع 🚀",
-        description: "توليد فوري لاختبار على وحدة أو دروس محددة مع تحديد عدد الأسئلة والصعوبة والنشر الفوري للطلاب.",
+        id: "unified-exams-hub",
+        title: "منظومة الامتحانات والمولد الذكي 🚀",
+        description: "المكان الموحد لتوليد الامتحانات من بنك الأسئلة بالوحدات والدروس، نشرها رقمياً للطلاب لحلها ومتابعتهم، أو طباعتها ورقة امتحان A4 للسنتر، مع متابعة نتائج الطلاب وتصحيح المقالي.",
         category: "exams",
         icon: Sparkles,
         gradient: "from-violet-600 via-indigo-600 to-purple-700",
         iconBg: "bg-violet-500/10 text-violet-600 border-violet-200",
-        badge: "توليد فوري ⚡",
-        badgeColor: "bg-violet-600 text-white animate-pulse",
+        badge: "توليد • نشر أونلاين • طباعة A4 • نتائج",
+        badgeColor: "bg-violet-600 text-white font-black animate-pulse",
+        count: stats.quizzesCount ? `${stats.quizzesCount} اختبار نشط` : undefined,
         highlight: true,
-        target: { tab: "learning", subTab: "testbank", mode: "generate" },
+        target: { tab: "learning", subTab: "quizzes" },
+        quickActions: [
+          {
+            label: "🚀 مولد الامتحانات الذكي",
+            target: { tab: "learning", subTab: "testbank", mode: "generate" },
+            highlight: true,
+          },
+          {
+            label: `📋 الاختبارات المنشورة (${stats.quizzesCount || 0})`,
+            target: { tab: "learning", subTab: "quizzes" },
+          },
+          {
+            label: "🖨️ طباعة امتحان A4 للسنتر",
+            target: { tab: "learning", subTab: "memo-studio" },
+          },
+          {
+            label: "✍️ تصحيح المقالي",
+            target: { tab: "learning", subTab: "essay-exams" },
+          },
+          {
+            label: "📊 شيت درجات الطلاب",
+            target: { tab: "learning", subTab: "grades-sheet" },
+          },
+        ],
       },
       {
         id: "testbank",
-        title: "بنك الأسئلة وتصفح الدروس 📚",
-        description: "تنظيم الأسئلة هرمياً بالوحدات والدروس، وتصفح الأسئلة واستيرادها من ملفات Word و PDF.",
+        title: "بنك الأسئلة الشامل ومستودع المنهج 📚",
+        description: "مستودع ومكتبة الأسئلة المنظم هرمياً (المرحلة ⬅️ الوحدة ⬅️ الدرس). تصفح الأسئلة، فلترتها، استيرادها ورفعها من ملفات Word و PDF، وإضافة وتعديل الأسئلة.",
         category: "exams",
         icon: BookOpen,
         gradient: "from-blue-600 to-indigo-600",
         iconBg: "bg-blue-500/10 text-blue-600 border-blue-200",
-        badge: "بنك الأسئلة",
+        badge: "مستودع الأسئلة والملازم",
         badgeColor: "bg-blue-50 text-blue-700 border-blue-200",
-        target: { tab: "learning", subTab: "testbank" },
-      },
-      {
-        id: "quizzes",
-        title: "الاختبارات والامتحانات المنشورة 📝",
-        description: "إدارة الاختبارات الفعالة، النتائج، نسب النجاح، فتح وغلق المحاولات، ومتابعة الطلاب الذين يحلون الامتحان.",
-        category: "exams",
-        icon: ClipboardCheck,
-        gradient: "from-emerald-600 to-teal-700",
-        iconBg: "bg-emerald-500/10 text-emerald-600 border-emerald-200",
-        badge: "إدارة ونشر",
-        badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
-        count: stats.quizzesCount,
-        target: { tab: "learning", subTab: "quizzes" },
-      },
-      {
-        id: "essay-exams",
-        title: "الامتحانات المقالية وتصحيحها ✍️",
-        description: "بنك الأسئلة المقالية المستقل، استلام إجابات الطلاب المصورة بالكاميرا، والتصحيح ورصد الدرجات.",
-        category: "exams",
-        icon: FileEdit,
-        gradient: "from-amber-600 to-orange-600",
-        iconBg: "bg-amber-500/10 text-amber-600 border-amber-200",
-        badge: "تصحيح مقالي",
-        badgeColor: "bg-amber-50 text-amber-700 border-amber-200",
-        target: { tab: "learning", subTab: "essay-exams" },
-      },
-      {
-        id: "grades-sheet",
-        title: "شيت درجات الاختبارات الموحد 📊",
-        description: "كشف تفاعلي كامل لعرض نتائج درجات الطلاب والفلترة الحية وتصدير شيت Excel لجميع الاختبارات.",
-        category: "exams",
-        icon: FileSpreadsheet,
-        gradient: "from-fuchsia-600 to-pink-600",
-        iconBg: "bg-fuchsia-500/10 text-fuchsia-600 border-fuchsia-200",
-        badge: "كشوف الدرجات",
-        badgeColor: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200",
-        target: { tab: "learning", subTab: "grades-sheet" },
+        target: { tab: "learning", subTab: "testbank", mode: "explorer" },
+        quickActions: [
+          {
+            label: "📂 تصفح شجرة المنهج والدروس",
+            target: { tab: "learning", subTab: "testbank", mode: "explorer" },
+          },
+          {
+            label: "📤 رفع واستيراد أسئلة (Word/PDF)",
+            target: { tab: "learning", subTab: "testbank", mode: "upload" },
+          },
+        ],
       },
 
       // ── 2. شؤون الطلاب وحضور السناتر ──
@@ -600,6 +602,29 @@ export function AdminLaunchpadView({
                 <p className="mt-2 text-xs sm:text-sm text-slate-500 leading-relaxed line-clamp-3">
                   {card.description}
                 </p>
+
+                {/* Quick Action Pills if available */}
+                {card.quickActions && card.quickActions.length > 0 && (
+                  <div className="mt-4 pt-3 border-t border-slate-100/90 flex flex-wrap gap-1.5">
+                    {card.quickActions.map((action, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onNavigate(action.target);
+                        }}
+                        className={`px-2.5 py-1 rounded-xl text-[11px] font-black transition-all flex items-center gap-1 cursor-pointer active:scale-95 border ${
+                          action.highlight
+                            ? "bg-violet-600 text-white hover:bg-violet-700 border-violet-600 shadow-2xs"
+                            : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+                        }`}
+                      >
+                        <span>{action.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Card Footer: Action Button */}
