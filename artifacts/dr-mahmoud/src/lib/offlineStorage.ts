@@ -222,14 +222,14 @@ export async function isLessonSavedOffline(lessonId: number): Promise<boolean> {
  */
 export async function saveLessonPackage(
   item: {
-    id?: number;
+    id?: number | null;
     title: string;
-    category?: string;
-    stage?: string;
-    description?: string;
-    videoUrl?: string;
-    youtubeUrl?: string;
-    meta?: { duration?: string };
+    category?: string | null;
+    stage?: string | null;
+    description?: string | null;
+    videoUrl?: string | null;
+    youtubeUrl?: string | null;
+    meta?: { duration?: string } | null;
     pdfFileId?: number | null;
   },
   kholasaMaterial?: any | null
@@ -242,9 +242,10 @@ export async function saveLessonPackage(
     if (!material && typeof window !== "undefined" && navigator.onLine && item.id) {
       try {
         const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
+        const headers: HeadersInit = deviceId ? { "X-Device-Id": deviceId } : {};
         const res = await fetch(`/api/learning/kholasa/video/${item.id}`, {
           credentials: "include",
-          headers: deviceId ? { "X-Device-Id": deviceId } : {},
+          headers,
         });
         if (res.ok) {
           const data = await res.json();
@@ -264,9 +265,10 @@ export async function saveLessonPackage(
     } else if (material?.id && typeof window !== "undefined" && navigator.onLine) {
       try {
         const deviceId = localStorage.getItem("dr_mahmoud_device_id") || "";
+        const headers: HeadersInit = deviceId ? { "X-Device-Id": deviceId } : {};
         const resQ = await fetch(`/api/learning/kholasa/materials/${material.id}/questions?type=mcq&page=1&limit=20`, {
           credentials: "include",
-          headers: deviceId ? { "X-Device-Id": deviceId } : {},
+          headers,
         });
         if (resQ.ok) {
           const qData = await resQ.json();
@@ -343,7 +345,7 @@ export async function saveLessonPackage(
 export async function downloadStarterPack(): Promise<{ savedLessons: number; savedQuestions: number }> {
   try {
     const deviceId = typeof localStorage !== "undefined" ? localStorage.getItem("dr_mahmoud_device_id") || "" : "";
-    const headers = deviceId ? { "X-Device-Id": deviceId } : {};
+    const headers: HeadersInit = deviceId ? { "X-Device-Id": deviceId } : {};
 
     let savedLessons = 0;
     let savedQuestions = 0;
