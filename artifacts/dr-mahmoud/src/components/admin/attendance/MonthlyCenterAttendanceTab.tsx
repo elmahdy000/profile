@@ -231,15 +231,23 @@ export const MonthlyCenterAttendanceTab: React.FC = () => {
         throw new Error("فشل تحميل بيانات الحضور لليوم والسنتر المحددين.");
       }
 
-      const data: DailyAttendanceResponse = await res.json();
+      const data = await res.json();
+      const statsData = data.stats || data.summary || {
+        totalStudents: 0,
+        presentCount: 0,
+        absentCount: 0,
+        lateCount: 0,
+        unmarkedCount: 0,
+        attendanceRate: 0,
+      };
       setRecords(data.records || []);
       setStats({
-        totalStudents: data.totalStudents || 0,
-        presentCount: data.presentCount || 0,
-        absentCount: data.absentCount || 0,
-        lateCount: data.lateCount || 0,
-        unmarkedCount: data.unmarkedCount || 0,
-        attendanceRate: data.attendanceRate || 0,
+        totalStudents: statsData.totalStudents || 0,
+        presentCount: statsData.presentCount || 0,
+        absentCount: statsData.absentCount || 0,
+        lateCount: statsData.lateCount || 0,
+        unmarkedCount: statsData.unmarkedCount || 0,
+        attendanceRate: statsData.attendanceRate || 0,
       });
     } catch (err: any) {
       console.error("Fetch attendance error:", err);
