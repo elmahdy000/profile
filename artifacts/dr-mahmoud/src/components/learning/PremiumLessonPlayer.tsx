@@ -15,6 +15,11 @@ import { KholasaFlashcardsView } from "@/components/kholasa/KholasaFlashcardsVie
 import { KholasaDefinitionsView } from "@/components/kholasa/KholasaDefinitionsView";
 import { KholasaLessonQuestionsView } from "@/components/kholasa/KholasaLessonQuestionsView";
 import type { KholasaMaterial } from "@/components/kholasa/types";
+import {
+  saveLessonOffline,
+  removeLessonOffline,
+  isLessonSavedOffline,
+} from "@/lib/offlineStorage";
 
 import Hls from "hls.js";
 
@@ -373,6 +378,47 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
   const [saving, setSaving] = useState(false);
   const [studentInfo, setStudentInfo] = useState<{ name: string; phone: string } | null>(null);
   const [wmPosition, setWmPosition] = useState<{ top: string; left: string }>({ top: "10%", left: "15%" });
+  const [isSavedOffline, setIsSavedOffline] = useState(false);
+  const [savingOffline, setSavingOffline] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (item.id) {
+      void isLessonSavedOffline(item.id).then((saved) => {
+        if (!cancelled) setIsSavedOffline(saved);
+      });
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [item.id]);
+
+  const handleToggleOffline = async () => {
+    if (!item.id) return;
+    setSavingOffline(true);
+    try {
+      if (isSavedOffline) {
+        await removeLessonOffline(item.id);
+        setIsSavedOffline(false);
+      } else {
+        await saveLessonOffline({
+          id: item.id,
+          title: item.title,
+          category: item.category,
+          stage: item.stage,
+          description: item.description,
+          thumbnailUrl: getYoutubeThumbnail(item.videoUrl),
+          material: kholasaMaterial || undefined,
+          savedAt: Date.now(),
+        });
+        setIsSavedOffline(true);
+      }
+    } catch (e) {
+      console.error("Failed to toggle offline lesson:", e);
+    } finally {
+      setSavingOffline(false);
+    }
+  };
 
   useEffect(() => {
     setKholasaMaterial(null);
@@ -1050,6 +1096,26 @@ export function PremiumLessonPlayer({ item, lessons, files = [], quizzes = [], o
               <div className="flex flex-wrap items-center gap-2 border-b border-white/10 p-3 sm:px-5">
                 <button disabled={!previous} onClick={() => previous && onSelectLesson(previous)} className="inline-flex h-11 items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-bold text-slate-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-40"><ChevronRight className="h-4 w-4" />السابق</button>
                 <button disabled={!next} onClick={() => next && onSelectLesson(next)} className="inline-flex h-11 items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-3 text-sm font-bold text-slate-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:opacity-40">التالي<ChevronLeft className="h-4 w-4" /></button>
+                <button
+                  type="button"
+                  onClick={() => void handleToggleOffline()}
+                  disabled={savingOffline}
+                  className={`inline-flex h-11 items-center gap-1.5 rounded-xl border px-3 text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                    isSavedOffline
+                      ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
+                      : "border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
+                  }`}
+                  title={isSavedOffline ? "الدرس محفوظ في محفظتك للأوفلاين" : "حفظ محتوى الدرس والزتونة والأسئلة للتشغيل بدون إنترنت"}
+                >
+                  {savingOffline ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : isSavedOffline ? (
+                    <Check className="h-4 w-4 text-emerald-400" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 text-amber-400" />
+                  )}
+                  <span>{isSavedOffline ? "محفوظ أوفلاين ⚡" : "حفظ للأوفلاين ⚡"}</span>
+                </button>
                 <div className="mr-auto flex items-center gap-3"><span className="text-xs font-bold text-slate-400">{progress}% مكتمل</span><button disabled={progress >= 100 || saving} onClick={() => void markComplete()} className="inline-flex h-11 min-w-36 items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 text-sm font-extrabold text-slate-950 hover:bg-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 disabled:bg-emerald-500/20 disabled:text-emerald-300">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}{progress >= 100 ? "تم إكمال الدرس" : "تحديد كمكتمل"}</button></div>
               </div>
 

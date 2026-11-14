@@ -40,6 +40,7 @@ import {
   KeyRound,
   Target,
   QrCode,
+  FolderDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { VideoLessonsSection } from "@/components/YoutubeSection";
@@ -70,6 +71,8 @@ import { LockedContentNotice } from "./tabs/LockedContentNotice";
 import { CommandPaletteModal } from "./CommandPaletteModal";
 import { KholasaLessonsTab } from "@/components/kholasa/KholasaLessonsTab";
 import { MistakeHubTab } from "@/components/kholasa/MistakeHubTab";
+import { OfflineVaultTab } from "./tabs/OfflineVaultTab";
+import { OfflineModeBanner } from "./OfflineModeBanner";
 import { BidiStatement } from "@/components/kholasa/BidiStatement";
 import { splitModelAnswerTranslation, isPrimarilyEnglish } from "@/components/kholasa/kholasa-speech";
 
@@ -302,6 +305,7 @@ export function getNotificationTarget(notification: { title: string; message: st
 export type PlatformTab =
   | "dashboard"
   | "lessons"
+  | "offline-vault"
   | "kholasa"
   | "mistakes"
   | "essay-exams"
@@ -318,6 +322,10 @@ export function resolveTabFromPath(pathname: string): PlatformTab {
     case "lessons":
     case "videos":
       return "lessons";
+    case "offline-vault":
+    case "offline":
+    case "saved":
+      return "offline-vault";
     case "kholasa":
       return "kholasa";
     case "mistakes":
@@ -369,6 +377,7 @@ export function StudentPlatform() {
     const tabTitles: Record<PlatformTab, string> = {
       dashboard: "الرئيسية",
       lessons: "فيديوهات المنصة والدروس",
+      "offline-vault": "محفظة الأوفلاين والمحتوى المحفوظ ⚡",
       kholasa: "الخلاصة والخرائط الذهنية",
       mistakes: "ركن غلطاتي والتشخيص الذكي",
       "essay-exams": "الامتحانات المقالية",
@@ -1102,6 +1111,7 @@ export function StudentPlatform() {
       items: [
         { id: "dashboard" as const, label: "الرئيسية", icon: Home },
         { id: "lessons" as const, label: "فيديوهات المنصة", icon: BookOpen },
+        { id: "offline-vault" as const, label: "محفظة الأوفلاين ⚡", icon: FolderDown },
         { id: "kholasa" as const, label: "الخلاصة", icon: Sparkles },
         { id: "summaries" as const, label: "مذكراتي وتلخيصاتي", icon: FileText },
         { id: "files" as const, label: "الملفات والملازم", icon: FolderOpen },
@@ -1128,6 +1138,7 @@ export function StudentPlatform() {
   const navLabels: Record<string, string> = {
     dashboard: "الرئيسية",
     lessons: "فيديوهات المنصة",
+    "offline-vault": "محفظة الأوفلاين ⚡",
     kholasa: "الخلاصة",
     mistakes: "ركن غلطاتي",
     "essay-exams": "الامتحانات المقالية",
@@ -1351,6 +1362,7 @@ export function StudentPlatform() {
                 <span className="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5 bg-slate-100/90 dark:bg-[#0D1726] px-2.5 py-1 rounded-lg border border-slate-200/70 dark:border-[#1E2E48] shadow-2xs">
                   {tab === "dashboard" && <Home className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
                   {tab === "lessons" && <BookOpen className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
+                  {tab === "offline-vault" && <FolderDown className="h-3.5 w-3.5 text-amber-500" />}
                   {tab === "kholasa" && <Sparkles className="h-3.5 w-3.5 text-amber-500" />}
                   {tab === "mistakes" && <Target className="h-3.5 w-3.5 text-rose-500" />}
                   {tab === "quizzes" && <ClipboardCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
@@ -1580,6 +1592,8 @@ export function StudentPlatform() {
                 </div>
               </div>
             )}
+            <OfflineModeBanner onOpenVault={() => setTab("offline-vault")} />
+
             <AnimatePresence mode="wait">
               <motion.div
                 key={tab}
@@ -1617,6 +1631,11 @@ export function StudentPlatform() {
               onStartQuiz={startQuiz}
               initialVideoId={initialVideoId}
               onInitialVideoHandled={() => setInitialVideoId(null)}
+            />
+          ) : tab === "offline-vault" ? (
+            <OfflineVaultTab
+              onBackToDashboard={() => setTab("dashboard")}
+              onNavigateToLessons={() => setTab("lessons")}
             />
           ) : tab === "kholasa" ? (
             isUnpaid ? (

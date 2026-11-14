@@ -13,6 +13,7 @@ import selfAssessmentRouter from "./learning/self-assessment";
 import essayExamsRouter from "./learning/essay-exams";
 import essayQuestionBankRouter from "./learning/essay-question-bank";
 import kholasaRouter from "./learning/kholasa";
+import offlineVaultRouter from "./learning/offline-vault";
 
 const router: IRouter = Router();
 
@@ -29,6 +30,7 @@ router.use(selfAssessmentRouter);
 router.use(essayExamsRouter);
 router.use(essayQuestionBankRouter);
 router.use(kholasaRouter);
+router.use(offlineVaultRouter);
 
 // Re-exports for backward compatibility
 export { logAudit } from "../lib/audit";
