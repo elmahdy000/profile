@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useLocation } from "wouter";
 import {
   Users,
   LogOut,
@@ -15,12 +16,67 @@ import {
 import { AdminLearning, type AdminLearningTab } from "./AdminLearning";
 
 export function SubAdminDashboard() {
+  const [location, setLocation] = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   // Bug 1 fix: store the logged-in subadmin's actual name from the API
   const [adminUsername, setAdminUsername] = useState<string>("مشرف مساعد");
-  const [currentTab, setCurrentTab] = useState<AdminLearningTab>("attendance");
+
+  // Derive initial tab from URL route (e.g. /subadmin/students, /subadmin/center-bookings)
+  const initialTab = useMemo<AdminLearningTab>(() => {
+    const clean = (typeof window !== "undefined" ? window.location.pathname : location).toLowerCase().replace(/\/+$/, "");
+    const segments = clean.split("/").filter(Boolean);
+    const slug = segments[1] || "";
+    switch (slug) {
+      case "students": return "students";
+      case "center-bookings":
+      case "bookings": return "center-bookings";
+      case "attendance":
+      case "monthly-attendance": return "attendance";
+      case "self-assessment-packs":
+      case "self-assessment": return "self-assessment-packs";
+      case "payments": return "payments";
+      case "subscriptions": return "subscriptions";
+      case "grades-sheet": return "grades-sheet";
+      case "summaries": return "summaries";
+      case "reports": return "reports";
+      default: return "attendance";
+    }
+  }, [location]);
+
+  const [currentTab, setCurrentTabState] = useState<AdminLearningTab>(initialTab);
+
+  // Sync tab with URL navigation
+  const handleTabChange = useCallback((tab: AdminLearningTab) => {
+    setCurrentTabState(tab);
+    const targetUrl = `/subadmin/${tab}`;
+    if (location !== targetUrl) {
+      setLocation(targetUrl);
+    }
+  }, [location, setLocation]);
+
+  useEffect(() => {
+    const clean = location.toLowerCase().replace(/\/+$/, "");
+    const segments = clean.split("/").filter(Boolean);
+    const slug = segments[1] || "";
+    if (slug) {
+      switch (slug) {
+        case "students": setCurrentTabState("students"); break;
+        case "center-bookings":
+        case "bookings": setCurrentTabState("center-bookings"); break;
+        case "attendance":
+        case "monthly-attendance": setCurrentTabState("attendance"); break;
+        case "self-assessment-packs":
+        case "self-assessment": setCurrentTabState("self-assessment-packs"); break;
+        case "payments": setCurrentTabState("payments"); break;
+        case "subscriptions": setCurrentTabState("subscriptions"); break;
+        case "grades-sheet": setCurrentTabState("grades-sheet"); break;
+        case "summaries": setCurrentTabState("summaries"); break;
+        case "reports": setCurrentTabState("reports"); break;
+      }
+    }
+  }, [location]);
 
   useEffect(() => {
     localStorage.removeItem("dr_mahmoud_admin_pwd");
@@ -120,12 +176,11 @@ export function SubAdminDashboard() {
               type="button"
               onClick={() => {
                 setIsMobileSidebarOpen(false);
-                setCurrentTab("attendance");
+                handleTabChange("attendance");
                 if (typeof window !== "undefined") {
-                  const params = new URLSearchParams(window.location.search);
-                  params.delete("mode");
-                  params.delete("status");
-                  window.history.replaceState(null, "", `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`);
+                  const url = new URL(window.location.href);
+                  url.searchParams.set("mode", "monthly_centers");
+                  window.history.replaceState(null, "", url.toString());
                   window.dispatchEvent(new Event("popstate"));
                 }
               }}
@@ -144,12 +199,11 @@ export function SubAdminDashboard() {
               type="button"
               onClick={() => {
                 setIsMobileSidebarOpen(false);
-                setCurrentTab("attendance");
+                handleTabChange("attendance");
                 if (typeof window !== "undefined") {
-                  const params = new URLSearchParams(window.location.search);
-                  params.delete("mode");
-                  params.delete("status");
-                  window.history.replaceState(null, "", `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`);
+                  const url = new URL(window.location.href);
+                  url.searchParams.set("mode", "scanner");
+                  window.history.replaceState(null, "", url.toString());
                   window.dispatchEvent(new Event("popstate"));
                 }
               }}
@@ -168,14 +222,7 @@ export function SubAdminDashboard() {
               type="button"
               onClick={() => {
                 setIsMobileSidebarOpen(false);
-                setCurrentTab("students");
-                if (typeof window !== "undefined") {
-                  const params = new URLSearchParams(window.location.search);
-                  params.delete("mode");
-                  params.delete("status");
-                  window.history.replaceState(null, "", `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`);
-                  window.dispatchEvent(new Event("popstate"));
-                }
+                handleTabChange("students");
               }}
               className={`w-full flex items-center gap-3 rounded-xl px-3.5 py-3 text-xs font-bold transition-all shadow-xs ${
                 currentTab === "students"
@@ -192,14 +239,7 @@ export function SubAdminDashboard() {
               type="button"
               onClick={() => {
                 setIsMobileSidebarOpen(false);
-                setCurrentTab("center-bookings");
-                if (typeof window !== "undefined") {
-                  const params = new URLSearchParams(window.location.search);
-                  params.set("mode", "offline");
-                  params.delete("status");
-                  window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
-                  window.dispatchEvent(new Event("popstate"));
-                }
+                handleTabChange("center-bookings");
               }}
               className={`w-full flex items-center gap-3 rounded-xl px-3.5 py-3 text-xs font-bold transition-all shadow-xs ${
                 currentTab === "center-bookings"
@@ -216,14 +256,7 @@ export function SubAdminDashboard() {
               type="button"
               onClick={() => {
                 setIsMobileSidebarOpen(false);
-                setCurrentTab("self-assessment-packs");
-                if (typeof window !== "undefined") {
-                  const params = new URLSearchParams(window.location.search);
-                  params.delete("mode");
-                  params.delete("status");
-                  window.history.replaceState(null, "", `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`);
-                  window.dispatchEvent(new Event("popstate"));
-                }
+                handleTabChange("self-assessment-packs");
               }}
               className={`w-full flex items-center gap-3 rounded-xl px-3.5 py-3 text-xs font-bold transition-all shadow-xs ${
                 currentTab === "self-assessment-packs"
@@ -295,7 +328,7 @@ export function SubAdminDashboard() {
           </div>
 
           {/* Subadmin has full access to attendance, students, center-bookings, subscriptions, payments */}
-          <AdminLearning role="subadmin" initialTab={currentTab} onTabChange={(t) => setCurrentTab(t)} />
+          <AdminLearning role="subadmin" initialTab={currentTab} onTabChange={(t) => handleTabChange(t)} />
         </div>
       </main>
     </div>

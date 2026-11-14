@@ -200,7 +200,16 @@ export function parseAdminUrl(pathname: string, search = ""): { activeTab: Admin
     case "summaries":
       return { activeTab: "learning", learningSubTab: "summaries" };
     case "attendance":
+    case "monthly-attendance":
+    case "attendance-scanner":
       return { activeTab: "learning", learningSubTab: "attendance" };
+    case "memo-studio":
+    case "print-studio":
+    case "memo":
+      return { activeTab: "learning", learningSubTab: "memo-studio" };
+    case "kholasa":
+    case "zatona":
+      return { activeTab: "learning", learningSubTab: "kholasa" };
     case "overview":
     case "dashboard":
       return { activeTab: "learning", learningSubTab: "overview" };
@@ -247,6 +256,8 @@ export function getAdminUrlForTab(activeTab: AdminTopTab, learningSubTab: AdminL
       case "reports": return "/admin/reports";
       case "self-assessment-packs": return "/admin/self-assessment-packs";
       case "essay-exams": return "/admin/essay-exams";
+      case "memo-studio": return "/admin/memo-studio";
+      case "kholasa": return "/admin/kholasa";
       default: return "/admin/students";
     }
   }

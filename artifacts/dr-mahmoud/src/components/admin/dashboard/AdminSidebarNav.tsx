@@ -30,6 +30,8 @@ import {
   Sparkles,
   QrCode,
   FileEdit,
+  Printer,
+  CalendarDays,
 } from "lucide-react";
 
 interface AdminSidebarNavProps {
@@ -88,6 +90,22 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
     {
       title: "الطلاب وحجوزات السناتر",
       items: [
+        {
+          id: "monthly-attendance",
+          label: "دفتر الحضور بالشهور والسناتر 📅",
+          icon: CalendarDays,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("attendance");
+            if (typeof window !== "undefined") {
+              const url = new URL(window.location.href);
+              url.searchParams.set("mode", "monthly_centers");
+              window.history.replaceState(null, "", url.toString());
+              window.dispatchEvent(new Event("popstate"));
+            }
+          },
+          active: activeTab === "learning" && learningSubTab === "attendance",
+        },
         {
           id: "center-bookings",
           label: "جدول حجوزات السناتر",
@@ -248,6 +266,16 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
             setLearningSubTab("grades-sheet");
           },
           active: activeTab === "learning" && learningSubTab === "grades-sheet",
+        },
+        {
+          id: "memo-studio",
+          label: "استوديو المذكرات والطباعة 🖨️",
+          icon: Printer,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("memo-studio");
+          },
+          active: activeTab === "learning" && learningSubTab === "memo-studio",
         },
         {
           id: "files",

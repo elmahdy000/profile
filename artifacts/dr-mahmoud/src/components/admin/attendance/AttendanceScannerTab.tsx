@@ -26,6 +26,7 @@ import {
   Volume2,
   VolumeX,
   FileSpreadsheet,
+  Building2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { OFFICIAL_CENTERS, OFFICIAL_SLOTS, normalizeSlotName, normalizeCenterName } from "../learning/StudentDrawer";
