@@ -353,11 +353,6 @@ router.post("/learning/essay-exams/:id/submit", requireStudent, async (req, res,
     const examQuestions: EssayQuestion[] = Array.isArray(exam.questions) ? exam.questions : [];
     const validAnswers: EssayAnswer[] = Array.isArray(answers) ? answers : [];
 
-    // مدة الـ 15 دقيقة الإلزامية كحد أدنى للمحاولة والحل الورقي قبل فتح الحل النموذجي
-    const MIN_ATTEMPT_SECONDS = 15 * 60; // 15 دقيقة = 900 ثانية
-    const examDurationSec = (exam.durationMinutes || 60) * 60;
-    const effectiveMinSeconds = Math.min(MIN_ATTEMPT_SECONDS, examDurationSec);
-
     // التحقق من الوقت المنقضي منذ بدء الاختبار
     const [existing] = await db
       .select()
@@ -373,18 +368,7 @@ router.post("/learning/essay-exams/:id/submit", requireStudent, async (req, res,
     const reportedTimeSpent = Number(timeSpentSeconds) || elapsedSeconds;
     const totalTimeSpent = Math.max(elapsedSeconds, reportedTimeSpent);
 
-    // إذا لم تنقضِ الـ 15 دقيقة بعد، ولم ينتهِ وقت الامتحان الكلي، يتم تنبيه الطالب
-    if (totalTimeSpent < effectiveMinSeconds) {
-      const remainingCooldown = effectiveMinSeconds - totalTimeSpent;
-      const remMinutes = Math.ceil(remainingCooldown / 60);
-      res.status(400).json({
-        error: `عزيزي الطالب: هذا الاختبار مخصص للحل والتدريب التحريري في ورقتك الخارجية. يُرجى قضاء 15 دقيقة على الأقل في محاولة الحل والتفكير قبل فتح الحل النموذجي. متبقي لديك (${remMinutes}) دقيقة.`,
-        cooldownRemainingSeconds: remainingCooldown,
-      });
-      return;
-    }
-
-    // قبول إجابات الطالب الورقية (لا يُشترط رفع صور أو نصوص)
+    // قبول إجابات الطالب الورقية والمكتوبة والصور المرفوعة فوراً
     let submission: typeof essayExamSubmissionsTable.$inferSelect;
 
     if (existing) {

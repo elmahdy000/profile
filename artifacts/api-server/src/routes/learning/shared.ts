@@ -132,7 +132,14 @@ export const essayAnswerUpload = multer({
   limits: { fileSize: 30 * 1024 * 1024 }, // 30MB
   fileFilter: (_req, file, cb) => {
     const mime = (file.mimetype || "").toLowerCase();
-    if (mime.startsWith("image/") || mime === "application/pdf" || mime === "application/x-pdf") {
+    const ext = path.extname(file.originalname || "").toLowerCase();
+    if (
+      mime.startsWith("image/") ||
+      mime === "application/pdf" ||
+      mime === "application/x-pdf" ||
+      allowedImageExtensions.has(ext) ||
+      ext === ".pdf"
+    ) {
       cb(null, true);
     } else {
       cb(new Error("يرجى رفع صورة (JPG, PNG, WebP, HEIC) أو ملف PDF لورقة الإجابة."));
