@@ -219,7 +219,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
         {
           id: "quizzes",
-          label: "الاختبارات والامتحانات المنشورة 📝",
+          label: "منظومة الامتحانات والمولد الذكي 🚀",
           icon: ClipboardCheck,
           onClick: () => {
             if (typeof window !== "undefined") {
@@ -235,7 +235,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
         {
           id: "testbank",
-          label: "بنك الأسئلة وتصفح الدروس 📚",
+          label: "بنك الأسئلة ومستودع المنهج 📚",
           icon: BookOpen,
           onClick: () => {
             if (typeof window !== "undefined") {
@@ -251,7 +251,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
         {
           id: "essay-exams",
-          label: "الامتحانات المقالية وتصحيحها ✍️",
+          label: "تصحيح المقالي واستلام الإجابات ✍️",
           icon: FileEdit,
           onClick: () => {
             setActiveTab("learning");

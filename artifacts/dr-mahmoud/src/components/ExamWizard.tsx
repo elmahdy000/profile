@@ -1836,70 +1836,75 @@ export function ExamWizard({
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex items-center gap-1.5 border-t border-slate-200/70 pt-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (typeof window !== "undefined") {
-                          sessionStorage.setItem("memo_studio_import_quiz", JSON.stringify(q));
-                          if (onNavigateToMemoStudio) {
-                            onNavigateToMemoStudio();
-                          } else {
-                            window.location.href = "/admin/memo-studio";
+                  <div className="space-y-2 border-t border-slate-200/70 pt-3">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (typeof window !== "undefined") {
+                            sessionStorage.setItem("memo_studio_import_quiz", JSON.stringify(q));
+                            if (onNavigateToMemoStudio) {
+                              onNavigateToMemoStudio();
+                            } else {
+                              window.location.href = "/admin/memo-studio";
+                            }
                           }
-                        }
-                      }}
-                      className="h-8 px-2.5 text-xs font-bold text-slate-800 hover:text-slate-900 hover:bg-slate-100 border-slate-300"
-                      title="تصدير وطباعة ورقة امتحان A4 للسنتر (نسخة الطالب والمعلم)"
-                    >
-                      <Printer className="h-3.5 w-3.5 ml-1 text-slate-600" /> طباعة A4 🖨️
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPreviewQuiz(q)}
-                      className="h-8 flex-1 text-xs font-bold text-violet-600 hover:text-violet-700 hover:bg-violet-50"
-                      title="معاينة أسئلة الاختبار"
-                    >
-                      <Eye className="h-3.5 w-3.5 ml-1" /> معاينة
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        editQuiz(q);
-                        setCurrentStep(1);
-                        setActiveViewTab("create");
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      }}
-                      className="h-8 flex-1 text-xs font-bold"
-                      title="تعديل الاختبار"
-                    >
-                      <Edit2 className="h-3.5 w-3.5 ml-1" /> تعديل
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => toggleQuiz(q)}
-                      className={`h-8 text-xs font-bold ${
-                        q.isPublished
-                          ? "hover:bg-amber-50 hover:text-amber-700"
-                          : "hover:bg-emerald-50 hover:text-emerald-700"
-                      }`}
-                      title={q.isPublished ? "إخفاء الاختبار ونقله للمسودات" : "نشر الاختبار للطلاب"}
-                    >
-                      {q.isPublished ? "إخفاء" : "نشر"}
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => deleteQuiz(q.id)}
-                      className="h-8 px-2.5 text-xs"
-                      title="حذف الاختبار نهائياً"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                        }}
+                        className="h-8 flex-1 text-xs font-bold text-slate-800 hover:text-slate-900 hover:bg-slate-100 border-slate-300"
+                        title="تصدير وطباعة ورقة امتحان A4 للسنتر (نسخة الطالب والمعلم)"
+                      >
+                        <Printer className="h-3.5 w-3.5 ml-1 text-slate-600" /> طباعة A4 للسنتر 🖨️
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPreviewQuiz(q)}
+                        className="h-8 px-3 text-xs font-bold text-violet-600 hover:text-violet-700 hover:bg-violet-50"
+                        title="معاينة أسئلة الاختبار"
+                      >
+                        <Eye className="h-3.5 w-3.5 ml-1" /> معاينة
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          editQuiz(q);
+                          setCurrentStep(1);
+                          setActiveViewTab("create");
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        className="h-8 flex-1 text-xs font-bold"
+                        title="تعديل الاختبار"
+                      >
+                        <Edit2 className="h-3.5 w-3.5 ml-1" /> تعديل
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleQuiz(q)}
+                        className={`h-8 flex-1 text-xs font-bold ${
+                          q.isPublished
+                            ? "hover:bg-amber-50 hover:text-amber-700 text-amber-700"
+                            : "hover:bg-emerald-50 hover:text-emerald-700 text-emerald-700"
+                        }`}
+                        title={q.isPublished ? "إخفاء الاختبار ونقله للمسودات" : "نشر الاختبار للطلاب"}
+                      >
+                        {q.isPublished ? "إخفاء 🔒" : "نشر 🚀"}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => deleteQuiz(q.id)}
+                        className="h-8 px-2.5 text-xs shrink-0"
+                        title="حذف الاختبار نهائياً"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </div>
                 </article>
               );
