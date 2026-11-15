@@ -556,7 +556,8 @@ export function StudentPlatform() {
     correct: number;
     total: number;
     attemptsUsed: number;
-    attemptsRemaining: number | null;
+    attemptsRemaining?: number | null;
+    details?: Array<{ questionIndex: number; prompt?: string; selectedOption: number; correctOption: number; isCorrect: boolean }>;
   } | null>(null);
   const [quizSubmitting, setQuizSubmitting] = useState(false);
   const [quizElapsedSeconds, setQuizElapsedSeconds] = useState(0);
@@ -695,6 +696,7 @@ export function StudentPlatform() {
         correct: res.correct,
         total: res.total,
         attemptsUsed: res.attemptsUsed,
+        attemptsRemaining: null,
         details: res.details,
       });
       setQuizTimeRemaining(null);

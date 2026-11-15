@@ -16,6 +16,7 @@ import {
   AlertCircle,
   RefreshCw,
   Eye,
+  EyeOff,
   X,
   Copy,
   Clock,
