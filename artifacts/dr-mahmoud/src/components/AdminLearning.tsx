@@ -1457,19 +1457,6 @@ export function AdminLearning({
         <div className="flex items-center gap-2.5 shrink-0">
           <Button
             type="button"
-            variant="outline"
-            onClick={() => {
-              if (typeof window !== "undefined") {
-                window.location.href = "/admin";
-              }
-            }}
-            className="h-10 px-4 rounded-xl border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-700 text-xs font-black shadow-2xs transition-all cursor-pointer"
-          >
-            <LayoutGrid className="h-4 w-4 ml-1.5 text-blue-600" />
-            بوابة البطاقات 🏠
-          </Button>
-          <Button
-            type="button"
             onClick={() => {
               setTab("files");
               setTimeout(
@@ -1568,6 +1555,7 @@ export function AdminLearning({
 
       {/* Active Section Info Header */}
       {(() => {
+        if (tab === "testbank") return null;
         const urlMode = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("mode") : null;
         const urlStatus = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("status") : null;
         const activeTitle = tab === "students" && urlMode === "offline"

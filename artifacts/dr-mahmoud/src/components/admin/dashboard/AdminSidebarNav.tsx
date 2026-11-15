@@ -129,36 +129,14 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
       title: "شؤون الطلاب والسناتر",
       items: [
         {
-          id: "monthly-attendance",
-          label: "دفتر الحضور بالشهور والسناتر 📅",
-          icon: CalendarDays,
-          onClick: () => {
-            setActiveTab("learning");
-            setLearningSubTab("attendance");
-            if (typeof window !== "undefined") {
-              const url = new URL(window.location.href);
-              url.searchParams.set("mode", "monthly_centers");
-              window.history.replaceState(null, "", url.toString());
-              window.dispatchEvent(new Event("popstate"));
-            }
-          },
-          active: activeTab === "learning" && learningSubTab === "attendance",
-        },
-        {
           id: "attendance",
-          label: "مسح الحضور (QR Scanner) 📷",
+          label: "سجل وحضور السناتر (QR) 📷",
           icon: QrCode,
           onClick: () => {
             setActiveTab("learning");
             setLearningSubTab("attendance");
-            if (typeof window !== "undefined") {
-              const url = new URL(window.location.href);
-              url.searchParams.delete("mode");
-              window.history.replaceState(null, "", url.toString());
-              window.dispatchEvent(new Event("popstate"));
-            }
           },
-          active: activeTab === "learning" && learningSubTab === "attendance" && (typeof window === "undefined" || new URLSearchParams(window.location.search).get("mode") !== "monthly_centers"),
+          active: activeTab === "learning" && learningSubTab === "attendance",
         },
         {
           id: "students",
@@ -200,26 +178,26 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
       title: "مركز التقييم والامتحانات",
       items: [
         {
-          id: "exam-generator",
-          label: "مولد الامتحانات (بالوحدات والدروس) 🚀",
-          icon: Sparkles,
+          id: "testbank",
+          label: "بنك الأسئلة ومولد الامتحانات 🚀",
+          icon: BookOpen,
           onClick: () => {
             if (typeof window !== "undefined") {
               const url = new URL(window.location.href);
-              url.searchParams.set("mode", "generate");
+              url.searchParams.delete("mode");
               window.history.replaceState(null, "", url.toString());
               window.dispatchEvent(new Event("popstate"));
             }
             setActiveTab("learning");
             setLearningSubTab("testbank");
           },
-          active: activeTab === "learning" && learningSubTab === "testbank" && typeof window !== "undefined" && new URLSearchParams(window.location.search).get("mode") === "generate",
-          badge: "توليد فوري ⚡",
-          badgeColor: "bg-indigo-600 text-white font-black animate-pulse",
+          active: activeTab === "learning" && learningSubTab === "testbank",
+          badge: "البنك والمولد ⚡",
+          badgeColor: "bg-indigo-600 text-white font-black",
         },
         {
           id: "quizzes",
-          label: "منظومة الامتحانات والمولد الذكي 🚀",
+          label: "إدارة ونشر الاختبارات 📋",
           icon: ClipboardCheck,
           onClick: () => {
             if (typeof window !== "undefined") {
@@ -234,22 +212,6 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           active: activeTab === "learning" && learningSubTab === "quizzes",
         },
         {
-          id: "testbank",
-          label: "بنك الأسئلة ومستودع المنهج 📚",
-          icon: BookOpen,
-          onClick: () => {
-            if (typeof window !== "undefined") {
-              const url = new URL(window.location.href);
-              url.searchParams.delete("mode");
-              window.history.replaceState(null, "", url.toString());
-              window.dispatchEvent(new Event("popstate"));
-            }
-            setActiveTab("learning");
-            setLearningSubTab("testbank");
-          },
-          active: activeTab === "learning" && learningSubTab === "testbank" && (typeof window === "undefined" || new URLSearchParams(window.location.search).get("mode") !== "generate"),
-        },
-        {
           id: "essay-exams",
           label: "تصحيح المقالي واستلام الإجابات ✍️",
           icon: FileEdit,
@@ -261,7 +223,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
         {
           id: "grades-sheet",
-          label: "شيت درجات الاختبارات 📊",
+          label: "شيت درجات ونتائج الاختبارات 📊",
           icon: FileSpreadsheet,
           onClick: () => {
             setActiveTab("learning");
@@ -294,13 +256,6 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           icon: VideoIcon,
           onClick: () => setActiveTab("videos"),
           active: activeTab === "videos",
-        },
-        {
-          id: "upload-video",
-          label: "رفع فيديو جديد 📤",
-          icon: Upload,
-          onClick: () => setActiveTab("upload-video"),
-          active: activeTab === "upload-video",
         },
         {
           id: "kholasa",
@@ -353,8 +308,11 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           id: "subscriptions",
           label: "الاشتراكات الشهرية والتجديد 📅",
           icon: CreditCard,
-          onClick: () => setActiveTab("subscriptions"),
-          active: activeTab === "subscriptions",
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("subscriptions");
+          },
+          active: activeTab === "learning" && learningSubTab === "subscriptions",
         },
         {
           id: "self-assessment-packs",
