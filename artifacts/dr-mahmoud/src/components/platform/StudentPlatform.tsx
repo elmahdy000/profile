@@ -548,6 +548,7 @@ export function StudentPlatform() {
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [quizAnswers, setQuizAnswers] = useState<number[]>([]);
+  const [essayTextAnswers, setEssayTextAnswers] = useState<Record<number, string>>({});
   const [quizTimeRemaining, setQuizTimeRemaining] = useState<number | null>(null);
   const [quizStartTime, setQuizStartTime] = useState<number>(0);
   const [quizResult, setQuizResult] = useState<{
@@ -656,6 +657,7 @@ export function StudentPlatform() {
     // _originalTotal is carried on every question so submitQuiz can build the right-sized array
     setActiveQuiz({ ...quiz, questions: mappedQuestions });
     setQuizAnswers(initialAnswers);
+    setEssayTextAnswers({});
     setQuizResult(null);
     setShowQuizReauthModal(false);
     setReauthError("");
@@ -689,6 +691,14 @@ export function StudentPlatform() {
         return found ? found.selectedOption : -1;
       });
 
+      const loadedEssayAnswers: Record<number, string> = {};
+      res.details?.forEach((d: any) => {
+        if (d.textAnswer) {
+          loadedEssayAnswers[d.questionIndex] = d.textAnswer;
+        }
+      });
+      setEssayTextAnswers(loadedEssayAnswers);
+
       setQuizAnswers(studentAnswers);
       setQuizResult({
         score: res.score,
@@ -716,7 +726,16 @@ export function StudentPlatform() {
 
     // Check if there are unanswered questions when manually submitted
     if (!isAuto) {
-      const answeredCount = quizAnswers.filter((a) => a >= 0).length;
+      const answeredCount = activeQuiz.questions.filter((q: any, i: number) => {
+        const isEssay = q.questionType === "essay" || (!q.options || q.options.length === 0);
+        if (isEssay) {
+          const origIdx = q._originalIndex !== undefined ? q._originalIndex : i;
+          const txt = essayTextAnswers[origIdx] ?? essayTextAnswers[i] ?? "";
+          return txt.trim().length > 0;
+        }
+        return (quizAnswers[i] ?? -1) >= 0;
+      }).length;
+
       const totalQuestions = activeQuiz.questions.length;
       if (answeredCount < totalQuestions) {
         const remaining = totalQuestions - answeredCount;
@@ -737,14 +756,20 @@ export function StudentPlatform() {
 
     const detailedAnswers = activeQuiz.questions.map((q: any, i: number) => {
       const originalIdx: number = q._originalIndex !== undefined ? q._originalIndex : i;
+      const isEssay = q.questionType === "essay" || (!q.options || q.options.length === 0);
+      const textAns = essayTextAnswers[originalIdx] ?? essayTextAnswers[i] ?? "";
+      const optVal = isEssay ? (textAns.trim() ? 0 : -1) : (quizAnswers[i] ?? -1);
+
       if (originalIdx >= 0 && originalIdx < originalTotal) {
-        answersToSend[originalIdx] = quizAnswers[i] ?? -1;
+        answersToSend[originalIdx] = optVal;
       }
       return {
         prompt: q.prompt,
-        selectedOption: quizAnswers[i] ?? -1,
+        selectedOption: optVal,
+        textAnswer: textAns,
         originalIndex: originalIdx,
         questionIndex: i,
+        questionType: q.questionType,
       };
     });
 
@@ -2200,9 +2225,13 @@ export function StudentPlatform() {
 
                           {quizResult && (
                             <span className={`text-xs font-bold px-3 py-1 rounded-full shrink-0 shadow-2xs ${
-                              isCorrect ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" : "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/20"
+                              isEssay
+                                ? "bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/20"
+                                : isCorrect
+                                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                                : "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/20"
                             }`}>
-                              {isCorrect ? "✓ إجابة صحيحة" : "✗ إجابة خاطئة"}
+                              {isEssay ? "✍️ سؤال مقالي (تم التوثيق)" : isCorrect ? "✓ إجابة صحيحة" : "✗ إجابة خاطئة"}
                             </span>
                           )}
                         </div>
@@ -2228,67 +2257,100 @@ export function StudentPlatform() {
                         </div>
                       )}
 
-                      {/* Options Radio List */}
-                      <div className="space-y-3 pt-1" dir={isEng ? "ltr" : "rtl"}>
-                        {q.options.map((option, oi) => {
-                          const optionSelected = quizAnswers[qi] === oi;
-                          const correctOptionIndex = detail ? detail.correctOption : q.correctIndex;
-                          const optionIsCorrect = correctOptionIndex !== undefined && correctOptionIndex === oi;
-                          let optionStyle = "border-slate-200/80 dark:border-[#1F314A] hover:bg-slate-50/70 dark:hover:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-700";
-
-                          if (quizResult) {
-                            if (optionIsCorrect) {
-                              optionStyle = "border-emerald-500 bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 font-bold";
-                            } else if (optionSelected && !optionIsCorrect) {
-                              optionStyle = "border-red-500 bg-red-500/15 text-red-800 dark:text-red-200 line-through opacity-80";
-                            } else {
-                              optionStyle = "border-slate-200/80 dark:border-slate-800 opacity-50";
-                            }
-                          } else if (optionSelected) {
-                            optionStyle = "border-blue-600 dark:border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 text-blue-950 dark:text-blue-100 font-bold ring-2 ring-blue-500/20 shadow-xs";
-                          }
-
-                          const letter = getOptionLetter(oi, isEng);
-
-                          return (
-                            <label
-                              key={oi}
-                              dir={isEng ? "ltr" : "rtl"}
-                              className={`flex min-h-12 sm:min-h-14 cursor-pointer items-center gap-3 sm:gap-3.5 rounded-2xl border px-3.5 sm:px-4 py-3 sm:py-3.5 transition-all select-none active:scale-[0.99] ${optionStyle}`}
-                            >
-                              <input
-                                type="radio"
-                                disabled={Boolean(quizResult)}
-                                name={`q-${qi}`}
-                                checked={optionSelected}
-                                onChange={() => {
-                                  const nextAnswers = quizAnswers.map((a, i) => (i === qi ? oi : a));
-                                  setQuizAnswers(nextAnswers);
-                                  try {
-                                    localStorage.setItem(
-                                      `dr_mahmoud_quiz_draft_${activeQuiz.id}`,
-                                      JSON.stringify({ answers: nextAnswers, savedAt: Date.now() }),
-                                    );
-                                  } catch {}
-                                }}
-                                className="text-blue-600 focus:ring-blue-500 h-4 w-4 shrink-0 cursor-pointer"
-                              />
-                              <span
-                                className={`flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl text-xs sm:text-sm font-black font-mono transition-colors ${
-                                  optionSelected
-                                    ? "bg-blue-600 text-white shadow-2xs"
-                                    : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-                                }`}
-                              >
-                                {letter}
-                              </span>
-                              <span dir={isEng ? "ltr" : "rtl"} className={`text-sm sm:text-base font-semibold flex-1 leading-relaxed break-words whitespace-pre-line ${isEng ? "text-left" : "text-right"}`}>
-                                {option}
-                              </span>
+                      {/* Essay Question Input or Options Radio List */}
+                      {isEssay ? (
+                        <div className="space-y-3 pt-1">
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                              <FileText className="h-4 w-4 text-purple-600" />
+                              <span>إجابة الطالب المقالية:</span>
                             </label>
-                          );
-                        })}
-                      </div>
+                            <textarea
+                              disabled={Boolean(quizResult)}
+                              rows={4}
+                              value={essayTextAnswers[origIdx] ?? essayTextAnswers[qi] ?? ""}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setEssayTextAnswers((prev) => ({ ...prev, [origIdx]: val, [qi]: val }));
+                              }}
+                              placeholder="اكتب إجابتك المقالية وخطوات الحل هنا بالتفصيل..."
+                              className="w-full p-3.5 rounded-2xl border border-slate-200/80 dark:border-[#1F314A] bg-background text-sm font-medium focus:ring-2 focus:ring-purple-500/30 focus:outline-none"
+                            />
+                          </div>
+
+                          {quizResult && (
+                            <div className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 space-y-1.5">
+                              <strong className="text-xs font-black text-emerald-800 dark:text-emerald-300 block">
+                                الإجابة النموذجية المعتمدة والمعيارية:
+                              </strong>
+                              <p className="text-xs sm:text-sm font-bold text-foreground whitespace-pre-line leading-relaxed select-text">
+                                {q.correctAnswer || q.explanation || "لم يتم تحديد إجابة نموذجية"}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-3 pt-1" dir={isEng ? "ltr" : "rtl"}>
+                          {q.options.map((option, oi) => {
+                            const optionSelected = quizAnswers[qi] === oi;
+                            const correctOptionIndex = detail ? detail.correctOption : q.correctIndex;
+                            const optionIsCorrect = correctOptionIndex !== undefined && correctOptionIndex === oi;
+                            let optionStyle = "border-slate-200/80 dark:border-[#1F314A] hover:bg-slate-50/70 dark:hover:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-700";
+
+                            if (quizResult) {
+                              if (optionIsCorrect) {
+                                optionStyle = "border-emerald-500 bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 font-bold";
+                              } else if (optionSelected && !optionIsCorrect) {
+                                optionStyle = "border-red-500 bg-red-500/15 text-red-800 dark:text-red-200 line-through opacity-80";
+                              } else {
+                                optionStyle = "border-slate-200/80 dark:border-slate-800 opacity-50";
+                              }
+                            } else if (optionSelected) {
+                              optionStyle = "border-blue-600 dark:border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 text-blue-950 dark:text-blue-100 font-bold ring-2 ring-blue-500/20 shadow-xs";
+                            }
+
+                            const letter = getOptionLetter(oi, isEng);
+
+                            return (
+                              <label
+                                key={oi}
+                                dir={isEng ? "ltr" : "rtl"}
+                                className={`flex min-h-12 sm:min-h-14 cursor-pointer items-center gap-3 sm:gap-3.5 rounded-2xl border px-3.5 sm:px-4 py-3 sm:py-3.5 transition-all select-none active:scale-[0.99] ${optionStyle}`}
+                              >
+                                <input
+                                  type="radio"
+                                  disabled={Boolean(quizResult)}
+                                  name={`q-${qi}`}
+                                  checked={optionSelected}
+                                  onChange={() => {
+                                    const nextAnswers = quizAnswers.map((a, i) => (i === qi ? oi : a));
+                                    setQuizAnswers(nextAnswers);
+                                    try {
+                                      localStorage.setItem(
+                                        `dr_mahmoud_quiz_draft_${activeQuiz.id}`,
+                                        JSON.stringify({ answers: nextAnswers, savedAt: Date.now() }),
+                                      );
+                                    } catch {}
+                                  }}
+                                  className="text-blue-600 focus:ring-blue-500 h-4 w-4 shrink-0 cursor-pointer"
+                                />
+                                <span
+                                  className={`flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl text-xs sm:text-sm font-black font-mono transition-colors ${
+                                    optionSelected
+                                      ? "bg-blue-600 text-white shadow-2xs"
+                                      : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                                  }`}
+                                >
+                                  {letter}
+                                </span>
+                                <span dir={isEng ? "ltr" : "rtl"} className={`text-sm sm:text-base font-semibold flex-1 leading-relaxed break-words whitespace-pre-line ${isEng ? "text-left" : "text-right"}`}>
+                                  {option}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      )}
 
                       {quizResult && activeQuiz.showExplanations !== false && q.explanation && (() => {
                         const { main: expMain, translation: expTrans } = splitModelAnswerTranslation(q.explanation);

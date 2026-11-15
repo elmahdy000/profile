@@ -1905,6 +1905,8 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
     conditions.push(sql`COALESCE(${questionBankTable.question}->>'questionType', 'mcq') = 'true_false'`);
   } else if (questionType === "mcq") {
     conditions.push(sql`COALESCE(${questionBankTable.question}->>'questionType', 'mcq') <> 'true_false'`);
+  } else if (questionType === "essay") {
+    conditions.push(sql`1=0`);
   }
 
   const candidateQuestions = await (conditions.length ? query.where(and(...conditions)) : query);
@@ -1920,6 +1922,8 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
   // Fetch Essay questions when requested or needed
   const shouldFetchEssays =
     questionType === "essay" ||
+    questionType === "all" ||
+    !questionType ||
     (distributionMode === "by_type" && (Number(typeDistribution?.essay) || 0) > 0) ||
     distributionMode === "advanced" ||
     distributionMode === "by_lesson";

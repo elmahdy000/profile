@@ -335,8 +335,9 @@ export function CurriculumExamsView({
             {/* Questions List */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
               {(selectedQuizForReview.questions || []).map((q: any, idx: number) => {
+                const isEssay = q.questionType === "essay" || (!q.options || q.options.length === 0);
+                const isTf = !isEssay && (q.questionType === "true_false" || (q.options && q.options.length === 2 && (q.options.includes("صواب") || q.options.includes("صح"))));
                 const correctOptionText = q.correctAnswer || (q.options && typeof q.correctIndex === "number" ? q.options[q.correctIndex] : "");
-                const isTf = q.questionType === "true_false" || (q.options && q.options.length === 2 && (q.options.includes("صواب") || q.options.includes("صح")));
 
                 return (
                   <div
@@ -350,11 +351,13 @@ export function CurriculumExamsView({
                           {idx + 1}
                         </span>
                         <span className={`text-[10px] font-black px-2 py-0.5 rounded border ${
-                          isTf
+                          isEssay
+                            ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
+                            : isTf
                             ? "bg-purple-500/10 text-purple-600 border-purple-500/20"
                             : "bg-blue-500/10 text-blue-600 border-blue-500/20"
                         }`}>
-                          {isTf ? "صواب أم خطأ" : "اختيار من متعدد"}
+                          {isEssay ? "✍️ سؤال مقالي" : isTf ? "صواب أم خطأ" : "اختيار من متعدد"}
                         </span>
                         {q.lesson && (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-muted text-muted-foreground">
@@ -363,7 +366,7 @@ export function CurriculumExamsView({
                         )}
                       </div>
                       <span className="text-[11px] font-bold text-muted-foreground">
-                        {q.points || 1} درجة
+                        {q.points || (isEssay ? 5 : 1)} درجات
                       </span>
                     </div>
 
@@ -372,44 +375,67 @@ export function CurriculumExamsView({
                       {q.prompt}
                     </p>
 
-                    {/* Options */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                      {q.options?.map((opt: string, oIdx: number) => {
-                        const isCorrect = typeof q.correctIndex === "number" ? oIdx === q.correctIndex : opt.trim() === correctOptionText.trim();
-                        const letter = ["أ", "ب", "ج", "د", "هـ"][oIdx] || String(oIdx + 1);
+                    {/* Options or Essay Model Answer */}
+                    {isEssay ? (
+                      <div className="p-3.5 rounded-xl border border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 space-y-1.5">
+                        <div className="flex items-center justify-between text-xs font-black text-amber-800 dark:text-amber-300">
+                          <span className="flex items-center gap-1.5">
+                            <FileText className="h-4 w-4" />
+                            <span>الإجابة النموذجية المعتمدة للسؤال المقالي:</span>
+                          </span>
+                          {!showAnswers && (
+                            <span className="text-[10px] font-bold text-muted-foreground">(مخفية)</span>
+                          )}
+                        </div>
+                        {showAnswers ? (
+                          <p className="text-xs sm:text-sm font-bold text-foreground whitespace-pre-line leading-relaxed select-text pt-1">
+                            {q.correctAnswer || q.explanation || "لم يتم تحديد إجابة نموذجية"}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-muted-foreground italic">
+                            (تم إخفاء الإجابة النموذجية - اضغط على زر إظهار الإجابات بالأعلى لعرضها)
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                        {q.options?.map((opt: string, oIdx: number) => {
+                          const isCorrect = typeof q.correctIndex === "number" ? oIdx === q.correctIndex : opt.trim() === correctOptionText.trim();
+                          const letter = ["أ", "ب", "ج", "د", "هـ"][oIdx] || String(oIdx + 1);
 
-                        const highlightCorrect = showAnswers && isCorrect;
+                          const highlightCorrect = showAnswers && isCorrect;
 
-                        return (
-                          <div
-                            key={oIdx}
-                            className={`p-2.5 rounded-lg border text-xs flex items-center justify-between gap-2 transition-all ${
-                              highlightCorrect
-                                ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-800 dark:text-emerald-200 font-black shadow-2xs"
-                                : "bg-muted/20 border-border text-foreground font-medium"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className={`grid h-5 w-5 shrink-0 place-items-center rounded text-[10px] font-black ${
-                                highlightCorrect ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground"
-                              }`}>
-                                {letter}
-                              </span>
-                              <span className="truncate">{opt}</span>
+                          return (
+                            <div
+                              key={oIdx}
+                              className={`p-2.5 rounded-lg border text-xs flex items-center justify-between gap-2 transition-all ${
+                                highlightCorrect
+                                  ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-800 dark:text-emerald-200 font-black shadow-2xs"
+                                  : "bg-muted/20 border-border text-foreground font-medium"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className={`grid h-5 w-5 shrink-0 place-items-center rounded text-[10px] font-black ${
+                                  highlightCorrect ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground"
+                                }`}>
+                                  {letter}
+                                </span>
+                                <span className="truncate">{opt}</span>
+                              </div>
+                              {highlightCorrect && (
+                                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 shrink-0 flex items-center gap-0.5">
+                                  <Check className="h-3 w-3" />
+                                  <span>الإجابة الصحيحة</span>
+                                </span>
+                              )}
                             </div>
-                            {highlightCorrect && (
-                              <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 shrink-0 flex items-center gap-0.5">
-                                <Check className="h-3 w-3" />
-                                <span>الإجابة الصحيحة</span>
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+                          );
+                        })}
+                      </div>
+                    )}
 
                     {/* Explanation */}
-                    {showAnswers && q.explanation && (
+                    {showAnswers && !isEssay && q.explanation && (
                       <div className="p-2.5 rounded-lg bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40 text-[11px] text-blue-900 dark:text-blue-200 font-medium">
                         <strong className="font-black ml-1">تفسير الإجابة:</strong>
                         <span>{q.explanation}</span>

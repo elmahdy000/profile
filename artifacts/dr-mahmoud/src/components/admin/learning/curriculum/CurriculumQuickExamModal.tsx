@@ -98,7 +98,7 @@ export function CurriculumQuickExamModal({
 
   const [title, setTitle] = useState("");
   const [questionsCount, setQuestionsCount] = useState<number>(10);
-  const [questionType, setQuestionType] = useState<"all" | "mcq" | "true_false">("all");
+  const [questionType, setQuestionType] = useState<"all" | "mcq" | "true_false" | "essay">("all");
   const [durationMinutes, setDurationMinutes] = useState<number>(30);
   const [passingScore, setPassingScore] = useState<number>(60);
   const [maxAttempts, setMaxAttempts] = useState<number>(3);
@@ -303,8 +303,9 @@ export function CurriculumQuickExamModal({
   if (!isOpen) return null;
 
   // Breakdown counts of reviewed questions
-  const reviewedMcqCount = reviewedQuestions.filter((q) => q.questionType !== "true_false" && q.options?.length > 2).length;
-  const reviewedTfCount = reviewedQuestions.length - reviewedMcqCount;
+  const reviewedMcqCount = reviewedQuestions.filter((q) => q.questionType !== "true_false" && q.questionType !== "essay" && q.options?.length > 2).length;
+  const reviewedEssayCount = reviewedQuestions.filter((q) => q.questionType === "essay" || (!q.options || q.options.length === 0)).length;
+  const reviewedTfCount = reviewedQuestions.length - reviewedMcqCount - reviewedEssayCount;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200" dir="rtl">
@@ -567,7 +568,8 @@ export function CurriculumQuickExamModal({
                     onChange={(e) => setQuestionType(e.target.value as any)}
                     className="w-full h-9 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none cursor-pointer"
                   >
-                    <option value="all">مزيج شامل (MCQ + صواب وخطأ)</option>
+                    <option value="all">مزيج شامل لجميع الأسئلة (اختيار من متعدد + صح وغلط + مقالي)</option>
+                    <option value="essay">أسئلة مقالية فقط (Essay Questions ✍️)</option>
                     <option value="mcq">اختيار من متعدد فقط (MCQ)</option>
                     <option value="true_false">صواب أم خطأ فقط (True/False)</option>
                   </select>
@@ -682,6 +684,11 @@ export function CurriculumQuickExamModal({
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 border border-purple-500/20">
                     {reviewedTfCount} صواب وخطأ
                   </span>
+                  {reviewedEssayCount > 0 && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                      {reviewedEssayCount} أسئلة مقالية ✍️
+                    </span>
+                  )}
                 </div>
                 <p className="text-[11px] text-muted-foreground">
                   يمكنك مراجعة كل سؤال وحذف أي سؤال لا ترغب به قبل الضغط على النشر النهائي.
@@ -743,7 +750,8 @@ export function CurriculumQuickExamModal({
                 </div>
               ) : (
                 reviewedQuestions.map((q, idx) => {
-                  const isTf = q.questionType === "true_false" || (q.options && q.options.length === 2 && (q.options.includes("صواب") || q.options.includes("صح")));
+                  const isEssay = q.questionType === "essay" || (!q.options || q.options.length === 0);
+                  const isTf = !isEssay && (q.questionType === "true_false" || (q.options && q.options.length === 2 && (q.options.includes("صواب") || q.options.includes("صح"))));
                   const correctOptionText = q.correctAnswer || (q.options && typeof q.correctIndex === "number" ? q.options[q.correctIndex] : "");
 
                   return (
@@ -758,11 +766,13 @@ export function CurriculumQuickExamModal({
                             {idx + 1}
                           </span>
                           <span className={`text-[10px] font-black px-2 py-0.5 rounded border ${
-                            isTf
+                            isEssay
+                              ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
+                              : isTf
                               ? "bg-purple-500/10 text-purple-600 border-purple-500/20"
                               : "bg-blue-500/10 text-blue-600 border-blue-500/20"
                           }`}>
-                            {isTf ? "صواب أم خطأ" : "اختيار من متعدد"}
+                            {isEssay ? "✍️ سؤال مقالي" : isTf ? "صواب أم خطأ" : "اختيار من متعدد"}
                           </span>
                           {q.lesson && (
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-muted/60 text-muted-foreground truncate max-w-[200px]">
@@ -787,39 +797,49 @@ export function CurriculumQuickExamModal({
                         {q.prompt}
                       </p>
 
-                      {/* Options */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                        {q.options?.map((opt, oIdx) => {
-                          const isCorrect = typeof q.correctIndex === "number" ? oIdx === q.correctIndex : opt.trim() === correctOptionText.trim();
-                          const letter = ["أ", "ب", "ج", "د", "هـ"][oIdx] || String(oIdx + 1);
+                      {/* Options or Essay Model Answer */}
+                      {isEssay ? (
+                        <div className="p-3 rounded-xl border border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 space-y-1">
+                          <span className="text-xs font-black text-amber-800 dark:text-amber-300 block">
+                            الإجابة النموذجية المعتمدة:
+                          </span>
+                          <p className="text-xs sm:text-sm font-bold text-foreground whitespace-pre-line leading-relaxed">
+                            {q.correctAnswer || q.explanation || "لم يتم تحديد إجابة نموذجية"}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                          {q.options?.map((opt, oIdx) => {
+                            const isCorrect = typeof q.correctIndex === "number" ? oIdx === q.correctIndex : opt.trim() === correctOptionText.trim();
+                            const letter = ["أ", "ب", "ج", "د", "هـ"][oIdx] || String(oIdx + 1);
 
-                          return (
-                            <div
-                              key={oIdx}
-                              className={`p-2 rounded-lg border text-xs flex items-center justify-between gap-2 transition-all ${
-                                isCorrect
-                                  ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-800 dark:text-emerald-200 font-black shadow-2xs"
-                                  : "bg-muted/20 border-border text-foreground font-medium"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className={`grid h-5 w-5 shrink-0 place-items-center rounded text-[10px] font-black ${
-                                  isCorrect ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground"
-                                }`}>
-                                  {letter}
-                                </span>
-                                <span className="truncate">{opt}</span>
+                            return (
+                              <div
+                                key={oIdx}
+                                className={`p-2 rounded-lg border text-xs flex items-center justify-between gap-2 transition-all ${
+                                  isCorrect
+                                    ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-800 dark:text-emerald-200 font-black shadow-2xs"
+                                    : "bg-muted/20 border-border text-foreground font-medium"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className={`grid h-5 w-5 shrink-0 place-items-center rounded text-[10px] font-black ${
+                                    isCorrect ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground"
+                                  }`}>
+                                    {letter}
+                                  </span>
+                                  <span className="truncate">{opt}</span>
+                                </div>
+                                {isCorrect && (
+                                  <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 shrink-0">
+                                    الإجابة الصحيحة ✓
+                                  </span>
+                                )}
                               </div>
-                              {isCorrect && (
-                                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 shrink-0 flex items-center gap-0.5">
-                                  <Check className="h-3 w-3" />
-                                  <span>الإجابة الصحيحة</span>
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
+                            );
+                          })}
+                        </div>
+                      )}
 
                       {/* Explanation if available */}
                       {q.explanation && (

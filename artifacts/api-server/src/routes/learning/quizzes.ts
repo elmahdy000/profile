@@ -1184,10 +1184,22 @@ router.post(
       // Build details with resolved student answer
       const details = quiz.questions.map((question, index) => {
         const selectedOption = resolvedAnswers[index];
+        const isEssay = question.questionType === "essay" || (!question.options || question.options.length === 0);
+
+        let studentTextAnswer = "";
+        if (isEssay) {
+          const foundDetailed = rawDetailedAnswers.find(
+            (d: any) =>
+              (typeof d?.originalIndex === "number" && d.originalIndex === index) ||
+              (typeof d?.questionIndex === "number" && d.questionIndex === index) ||
+              (d?.prompt && normalizeQuestionPrompt(d.prompt) === normalizeQuestionPrompt(question.prompt))
+          );
+          studentTextAnswer = String(foundDetailed?.textAnswer || "").trim();
+        }
 
         // 1. Resolve true correct option index from correctAnswer if possible
         let resolvedCorrectOption = question.correctIndex;
-        if (question.correctAnswer) {
+        if (question.correctAnswer && question.options) {
           const matchIdx = question.options.findIndex(
             (opt) => opt?.trim() === question.correctAnswer?.trim()
           );
@@ -1196,9 +1208,11 @@ router.post(
           }
         }
 
-        // ✅ مطابقة بالنص الفعلي (أكثر أماناً من correctIndex)
+        // ✅ مطابقة بالنص الفعلي أو استلام الإجابة المقالية
         let isCorrect = false;
-        if (selectedOption >= 0 && selectedOption < question.options.length) {
+        if (isEssay) {
+          isCorrect = Boolean(studentTextAnswer);
+        } else if (question.options && selectedOption >= 0 && selectedOption < question.options.length) {
           const selectedAnswer = question.options[selectedOption]?.trim();
           const correctAnswer = question.correctAnswer?.trim() || question.options[question.correctIndex]?.trim();
 
@@ -1217,6 +1231,9 @@ router.post(
           selectedOption,
           correctOption: resolvedCorrectOption,
           isCorrect,
+          isEssay,
+          textAnswer: studentTextAnswer,
+          modelAnswer: question.correctAnswer || question.explanation || "",
         };
       });
 
