@@ -221,7 +221,17 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
     }
 
     // Automatically update student profile center & appointment slot in real time upon attendance recording
-    if (centerName && centerName !== "all" && centerName !== "بدون سنتر محدد") {
+    // IMPORTANT: Only update center if the student does NOT already have a confirmed center assigned.
+    // This prevents scanner session center from overwriting the student's registered center.
+    const studentEnrolledCenter = (student as any).centerName || (student as any).center || null;
+    const studentHasCenter = Boolean(studentEnrolledCenter && String(studentEnrolledCenter).trim());
+    const shouldUpdateCenter =
+      centerName &&
+      centerName !== "all" &&
+      centerName !== "بدون سنتر محدد" &&
+      !studentHasCenter; // Only update if student has no center yet
+
+    if (shouldUpdateCenter) {
       try {
         await db
           .update(studentsTable)
@@ -235,6 +245,28 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
           .where(eq(studentsTable.id, student.id));
       } catch (err) {
         console.error("Failed to update student profile center:", err);
+      }
+    } else if (
+      centerName &&
+      centerName !== "all" &&
+      centerName !== "بدون سنتر محدد" &&
+      studentHasCenter &&
+      !isCrossCenter
+    ) {
+      // Student already has a center — only update the appointmentSlot if a new one was provided from the scanner
+      // and learningMode to offline (but never overwrite centerName)
+      if (appointmentSlot && appointmentSlot !== "all" && !(student as any).appointmentSlot) {
+        try {
+          await db
+            .update(studentsTable)
+            .set({
+              appointmentSlot,
+              learningMode: "offline",
+            })
+            .where(eq(studentsTable.id, student.id));
+        } catch (err) {
+          console.error("Failed to update student appointment slot:", err);
+        }
       }
     }
 

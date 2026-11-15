@@ -137,6 +137,9 @@ export const MonthlyCenterAttendanceTab: React.FC = () => {
   // Selected Center ("all" or center name, default "all" so assistant sees all centers directly)
   const [selectedCenter, setSelectedCenter] = useState<string>("all");
 
+  // Selected Slot ("all" or specific slot name)
+  const [selectedSlot, setSelectedSlot] = useState<string>("all");
+
   // Filter & Search States
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [gradeFilter, setGradeFilter] = useState<string>("all");
@@ -396,9 +399,29 @@ export const MonthlyCenterAttendanceTab: React.FC = () => {
     window.open(url, "_blank");
   };
 
+  // Available slots dynamically extracted from current records
+  const availableSlots = useMemo(() => {
+    const set = new Set<string>();
+    records.forEach((r) => {
+      const slot = r.appointmentSlot || r.enrolledSlot;
+      if (slot && String(slot).trim()) {
+        set.add(String(slot).trim());
+      }
+    });
+    return Array.from(set);
+  }, [records]);
+
   // Filtered Records based on status & search
   const filteredRecords = useMemo(() => {
     return records.filter((r) => {
+      // Slot filter
+      if (selectedSlot !== "all") {
+        const studentSlot = normalizeSlotName(r.appointmentSlot || r.enrolledSlot);
+        const targetSlot = normalizeSlotName(selectedSlot);
+        if (studentSlot !== targetSlot) {
+          return false;
+        }
+      }
       // Status filter
       if (statusFilter !== "all" && r.status !== statusFilter) {
         return false;
@@ -419,7 +442,7 @@ export const MonthlyCenterAttendanceTab: React.FC = () => {
       }
       return true;
     });
-  }, [records, statusFilter, gradeFilter, searchQuery]);
+  }, [records, selectedSlot, statusFilter, gradeFilter, searchQuery]);
 
   // Month navigation helpers
   const handlePrevMonth = () => {
@@ -569,7 +592,10 @@ export const MonthlyCenterAttendanceTab: React.FC = () => {
                 <button
                   key={cName}
                   type="button"
-                  onClick={() => setSelectedCenter(cName)}
+                  onClick={() => {
+                    setSelectedCenter(cName);
+                    setSelectedSlot("all");
+                  }}
                   className={`p-3 rounded-xl border text-right transition-all flex flex-col justify-between gap-1.5 relative overflow-hidden ${
                     isSelected
                       ? isHennawy
@@ -611,6 +637,56 @@ export const MonthlyCenterAttendanceTab: React.FC = () => {
             })}
           </div>
         </div>
+
+        {/* ─── 2.1 Slot / Time Group Filter ─── */}
+        {availableSlots.length > 0 && (
+          <div className="mt-4 pt-3 border-t border-slate-100">
+            <label className="text-xs font-black text-slate-700 block mb-2 flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5 text-indigo-600" />
+              اختر موعد / مجموعة الحصة (الوقت):
+            </label>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedSlot("all")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                  selectedSlot === "all"
+                    ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                    : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                كل المواعيد والأوقات ({records.length})
+              </button>
+              {availableSlots.map((slot) => {
+                const count = records.filter(
+                  (r) => normalizeSlotName(r.appointmentSlot || r.enrolledSlot) === normalizeSlotName(slot)
+                ).length;
+                const isSelected = selectedSlot !== "all" && normalizeSlotName(selectedSlot) === normalizeSlotName(slot);
+                return (
+                  <button
+                    key={slot}
+                    type="button"
+                    onClick={() => setSelectedSlot(slot)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 ${
+                      isSelected
+                        ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
+                        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    <span>{slot}</span>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                        isSelected ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* ─── 3. Days of the Month Horizontal Strip ─── */}
         <div className="mt-5 pt-4 border-t border-slate-100">
@@ -789,6 +865,22 @@ export const MonthlyCenterAttendanceTab: React.FC = () => {
             <option value="late">متأخر فقط 🟡</option>
             <option value="unmarked">غير مسجل ⚪</option>
           </select>
+
+          {/* Slot / Time Quick Dropdown Filter */}
+          {availableSlots.length > 0 && (
+            <select
+              value={selectedSlot}
+              onChange={(e) => setSelectedSlot(e.target.value)}
+              className="px-3 py-1.5 rounded-xl border border-indigo-200 text-xs font-bold text-indigo-700 bg-indigo-50/50 outline-none max-w-[220px]"
+            >
+              <option value="all">كل المواعيد والأوقات</option>
+              {availableSlots.map((slot) => (
+                <option key={slot} value={slot}>
+                  {slot}
+                </option>
+              ))}
+            </select>
+          )}
 
           {/* Refresh Button */}
           <Button

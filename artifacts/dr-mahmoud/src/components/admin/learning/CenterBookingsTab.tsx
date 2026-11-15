@@ -110,11 +110,11 @@ export function CenterBookingsTab({
   const handleOpenEdit = (student: ExtendedStudent) => {
     setEditingStudent(student);
     setEditFormData({
-      centerName: student.centerName || "سنتر رافال (Rafal) - عربي",
-      appointmentSlot: student.appointmentSlot || "سبت - اتنين - أربع (الساعة 3:00 عصراً)",
+      centerName: student.centerName || "",
+      appointmentSlot: student.appointmentSlot || "",
       parentPhone: student.parentPhone || "",
       schoolName: student.schoolName || "",
-      languageTrack: student.languageTrack || "عربي",
+      languageTrack: student.languageTrack || "",
     });
   };
 
