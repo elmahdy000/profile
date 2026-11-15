@@ -1322,6 +1322,66 @@ router.post(
   },
 );
 
+// GET /api/learning/quizzes/:id/review - Retrieve completed quiz attempt with model answers for review
+router.get("/learning/quizzes/:id/review", requireStudent, async (req, res, next) => {
+  try {
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    const quizId = Number(req.params.id);
+    if (!Number.isInteger(quizId)) {
+      res.status(400).json({ error: "Invalid quiz id" });
+      return;
+    }
+    const [quiz] = await db.select().from(quizzesTable).where(eq(quizzesTable.id, quizId)).limit(1);
+    if (!quiz) {
+      res.status(404).json({ error: "الاختبار غير موجود" });
+      return;
+    }
+    if (!canStudentAccessContent(student, quiz.category, quiz.stage, quiz.stages, quiz.courseId)) {
+      res.status(403).json({ error: "غير مسموح لك بالوصول لهذا الاختبار" });
+      return;
+    }
+    const [lastAttempt] = await db
+      .select()
+      .from(quizAttemptsTable)
+      .where(and(eq(quizAttemptsTable.quizId, quizId), eq(quizAttemptsTable.studentId, student.id)))
+      .orderBy(desc(quizAttemptsTable.id))
+      .limit(1);
+
+    if (!lastAttempt) {
+      res.status(404).json({ error: "لم تقم بحل هذا الاختبار بعد، يرجى بدئه أولاً." });
+      return;
+    }
+
+    const studentAnswers = lastAttempt.answers || [];
+    const storedDetails = (lastAttempt.details as any[]) || [];
+
+    const details = quiz.questions.map((q, idx) => {
+      const stored = storedDetails.find((d: any) => d.questionIndex === idx || d.originalIndex === idx);
+      const selected = stored ? stored.selectedOption : (studentAnswers[idx] ?? -1);
+      const isCorrect = selected === q.correctIndex;
+      return {
+        questionIndex: idx,
+        selectedOption: selected,
+        correctOption: q.correctIndex,
+        isCorrect,
+      };
+    });
+
+    res.json({
+      quiz,
+      attempt: lastAttempt,
+      score: lastAttempt.score,
+      passed: lastAttempt.passed,
+      correct: details.filter((d) => d.isCorrect).length,
+      total: quiz.questions.length,
+      attemptsUsed: 1,
+      details,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get(
   "/admin/learning/attempts",
   requireAdmin,

@@ -7,11 +7,18 @@ import {
   Award,
   RefreshCw,
   Eye,
+  EyeOff,
   Trash2,
   CheckCircle2,
   AlertCircle,
   Loader2,
   Sparkles,
+  Check,
+  Printer,
+  X,
+  FileCheck2,
+  BookOpen,
+  Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +29,7 @@ interface CurriculumExamsViewProps {
   lesson: string;
   adminApi: <T>(url: string, options?: RequestInit) => Promise<T>;
   onCreateExamClick: () => void;
+  onReviewQuiz?: (quiz: any) => void;
 }
 
 export function CurriculumExamsView({
@@ -30,11 +38,16 @@ export function CurriculumExamsView({
   lesson,
   adminApi,
   onCreateExamClick,
+  onReviewQuiz,
 }: CurriculumExamsViewProps) {
   const { toast } = useToast();
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [togglingId, setTogglingId] = useState<number | null>(null);
+
+  // Review modal state
+  const [selectedQuizForReview, setSelectedQuizForReview] = useState<any | null>(null);
+  const [showAnswers, setShowAnswers] = useState<boolean>(true);
 
   const loadQuizzes = async () => {
     if (!stage || !unit) return;
@@ -84,8 +97,21 @@ export function CurriculumExamsView({
       });
       toast({ title: `تم حذف الامتحان (${title}) بنجاح 🗑️` });
       setQuizzes((prev) => prev.filter((q) => q.id !== quizId));
+      if (selectedQuizForReview?.id === quizId) {
+        setSelectedQuizForReview(null);
+      }
     } catch (err: any) {
       toast({ variant: "destructive", title: "حصلت مشكلة", description: err.message || "تعذر حذف الامتحان" });
+    }
+  };
+
+  // Open review modal
+  const handleOpenReview = (quiz: any) => {
+    if (onReviewQuiz) {
+      onReviewQuiz(quiz);
+    } else {
+      setSelectedQuizForReview(quiz);
+      setShowAnswers(true);
     }
   };
 
@@ -96,7 +122,7 @@ export function CurriculumExamsView({
         <div>
           <h4 className="text-sm font-black text-foreground flex items-center gap-2">
             <ClipboardCheck className="h-4 w-4 text-primary" />
-            <span>الامتحانات والاختبارات المرتبطة ({quizzes.length})</span>
+            <span>الامتحانات والاختبارات المخزنة ({quizzes.length})</span>
           </h4>
           <p className="text-[11px] text-muted-foreground font-semibold">
             {lesson === "all" ? `كل اختبارات ${unit}` : `اختبارات الدرس: ${lesson}`}
@@ -137,7 +163,7 @@ export function CurriculumExamsView({
           <ClipboardCheck className="h-10 w-10 text-muted-foreground/40 mx-auto" />
           <h5 className="text-sm font-black text-foreground">لا توجد امتحانات إلكترونية مرتبطة بهذا الدرس بعد</h5>
           <p className="text-xs text-muted-foreground max-w-md mx-auto">
-            يمكنك إنشاء امتحان إلكتروني فوري وسحب الأسئلة تلقائياً من بنك أسئلة هذا الدرس بضغطة زر واحدة.
+            يمكنك إنشاء امتحان إلكتروني فوري وسحب الأسئلة تلقائياً من بنك أسئلة هذا الدرس بضغطة زر واحدة، ويتم تخزينه فوراً مع إمكانية مراجعة إجاباته في أي وقت.
           </p>
           <Button
             type="button"
@@ -153,63 +179,89 @@ export function CurriculumExamsView({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
           {quizzes.map((quiz) => {
             const qCount = Array.isArray(quiz.questions) ? quiz.questions.length : 0;
+            const isHomework = quiz.scope === "homework" || quiz.category === "واجب";
+
             return (
               <div
                 key={quiz.id}
-                className="rounded-2xl border border-border/80 bg-card p-4 space-y-3 shadow-2xs hover:border-primary/40 transition-all"
+                className="rounded-2xl border border-border/80 bg-card p-4 space-y-3 shadow-2xs hover:border-primary/40 transition-all flex flex-col justify-between"
               >
-                {/* Title & Status */}
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <span
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black mb-1.5 ${
-                        quiz.isPublished
-                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
-                          : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
-                      }`}
+                <div className="space-y-2.5">
+                  {/* Title & Status */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black border ${
+                            quiz.isPublished
+                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                              : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                          }`}
+                        >
+                          <span className={`h-1.5 w-1.5 rounded-full ${quiz.isPublished ? "bg-emerald-500" : "bg-amber-500"}`} />
+                          {quiz.isPublished ? "منشور ومتاح للطلاب" : "مسودة مغلقة"}
+                        </span>
+
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black border ${
+                          isHomework
+                            ? "bg-amber-500/15 text-amber-600 border-amber-500/30"
+                            : "bg-violet-500/15 text-violet-600 border-violet-500/30"
+                        }`}>
+                          {isHomework ? "واجب منزلي 📚" : "امتحان إلكتروني 📝"}
+                        </span>
+                      </div>
+
+                      <h5 className="text-xs sm:text-sm font-black text-foreground line-clamp-2 leading-tight">
+                        {quiz.title}
+                      </h5>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteQuiz(quiz.id, quiz.title)}
+                      className="p-1 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+                      title="حذف الامتحان"
                     >
-                      <span className={`h-1.5 w-1.5 rounded-full ${quiz.isPublished ? "bg-emerald-500" : "bg-amber-500"}`} />
-                      {quiz.isPublished ? "منشور ومتاح للطلاب" : "مسودة مغلقة"}
-                    </span>
-                    <h5 className="text-xs sm:text-sm font-black text-foreground line-clamp-2 leading-tight">
-                      {quiz.title}
-                    </h5>
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
-                  <button
+
+                  {/* Metadata Row */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[11px] font-bold text-muted-foreground border-t border-border/50">
+                    <span className="flex items-center gap-1 bg-muted/40 px-2 py-0.5 rounded-md">
+                      <ClipboardCheck className="h-3 w-3 text-primary" /> {qCount} سؤال
+                    </span>
+                    <span className="flex items-center gap-1 bg-muted/40 px-2 py-0.5 rounded-md">
+                      <Clock className="h-3 w-3 text-amber-500" /> {quiz.durationMinutes ? `${quiz.durationMinutes} دقيقة` : "مفتوح"}
+                    </span>
+                    <span className="flex items-center gap-1 bg-muted/40 px-2 py-0.5 rounded-md">
+                      <Award className="h-3 w-3 text-emerald-500" /> النجاح: {quiz.passingScore}%
+                    </span>
+                    <span className="flex items-center gap-1 bg-muted/40 px-2 py-0.5 rounded-md">
+                      <RefreshCw className="h-3 w-3 text-blue-500" /> {quiz.maxAttempts ? `${quiz.maxAttempts} محاولات` : "بلا حدود"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Actions: Direct Button to Show Answers & Review */}
+                <div className="flex items-center justify-between pt-2 border-t border-border/50 gap-2">
+                  <Button
                     type="button"
-                    onClick={() => handleDeleteQuiz(quiz.id, quiz.title)}
-                    className="p-1 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
-                    title="حذف الامتحان"
+                    size="sm"
+                    onClick={() => handleOpenReview(quiz)}
+                    className="h-8 text-xs font-bold gap-1.5 bg-violet-600 hover:bg-violet-700 text-white cursor-pointer shadow-xs flex-1"
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
+                    <Eye className="h-3.5 w-3.5" />
+                    <span>إظهار الإجابات والمراجعة 👁️</span>
+                  </Button>
 
-                {/* Metadata Row */}
-                <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] font-bold text-muted-foreground border-t border-border/50">
-                  <span className="flex items-center gap-1 bg-muted/40 px-2 py-0.5 rounded-md">
-                    <ClipboardCheck className="h-3 w-3 text-primary" /> {qCount} سؤال
-                  </span>
-                  <span className="flex items-center gap-1 bg-muted/40 px-2 py-0.5 rounded-md">
-                    <Clock className="h-3 w-3 text-amber-500" /> {quiz.durationMinutes ? `${quiz.durationMinutes} دقيقة` : "مفتوح"}
-                  </span>
-                  <span className="flex items-center gap-1 bg-muted/40 px-2 py-0.5 rounded-md">
-                    <Award className="h-3 w-3 text-emerald-500" /> النجاح: {quiz.passingScore}%
-                  </span>
-                  <span className="flex items-center gap-1 bg-muted/40 px-2 py-0.5 rounded-md">
-                    <RefreshCw className="h-3 w-3 text-blue-500" /> {quiz.maxAttempts ? `${quiz.maxAttempts} محاولات` : "بلا حدود"}
-                  </span>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center justify-between pt-1">
                   <Button
                     type="button"
                     size="sm"
                     variant="outline"
                     onClick={() => handleTogglePublish(quiz)}
                     disabled={togglingId === quiz.id}
-                    className={`h-8 text-[11px] font-bold rounded-xl gap-1 cursor-pointer ${
+                    className={`h-8 text-[11px] font-bold rounded-xl gap-1 cursor-pointer shrink-0 ${
                       quiz.isPublished
                         ? "text-amber-600 border-amber-300 hover:bg-amber-50"
                         : "text-emerald-600 border-emerald-300 hover:bg-emerald-50"
@@ -218,25 +270,173 @@ export function CurriculumExamsView({
                     {togglingId === quiz.id ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
                     ) : quiz.isPublished ? (
-                      "إخفاء عن الطلاب"
+                      "إخفاء"
                     ) : (
-                      "نشر للطلاب الآن"
+                      "نشر"
                     )}
                   </Button>
-
-                  <a
-                    href={`/platform/quizzes`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1"
-                  >
-                    <Eye className="h-3.5 w-3.5" />
-                    معاينة بالمنصة
-                  </a>
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* ── Standalone Exam & Answers Review Modal ── */}
+      {selectedQuizForReview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200" dir="rtl">
+          <div className="w-full max-w-3xl max-h-[92vh] flex flex-col rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-border/60 p-4 sm:p-5 shrink-0 bg-muted/15">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-600/10 text-violet-600 border border-violet-600/20 shadow-xs">
+                  <FileCheck2 className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
+                  <h3 className="text-sm sm:text-base font-black text-foreground truncate">
+                    {selectedQuizForReview.title}
+                  </h3>
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-semibold flex-wrap">
+                    <span>{selectedQuizForReview.questions?.length || 0} أسئلة</span>
+                    <span>•</span>
+                    <span>نسبة النجاح: {selectedQuizForReview.passingScore}%</span>
+                    <span>•</span>
+                    <span>{selectedQuizForReview.stage || stage}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Toggle Answers Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowAnswers((prev) => !prev)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer border shadow-2xs ${
+                    showAnswers
+                      ? "bg-emerald-500/15 border-emerald-500 text-emerald-700 dark:text-emerald-300"
+                      : "bg-muted border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                  title="الضغط هنا يُظهر أو يُخفي الإجابات النموذجية لجميع الأسئلة فوراً"
+                >
+                  {showAnswers ? <Eye className="h-4 w-4 text-emerald-600" /> : <EyeOff className="h-4 w-4" />}
+                  <span>{showAnswers ? "الإجابات: معروضة ✓" : "الإجابات: مخفية 🙈"}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedQuizForReview(null)}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Questions List */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+              {(selectedQuizForReview.questions || []).map((q: any, idx: number) => {
+                const correctOptionText = q.correctAnswer || (q.options && typeof q.correctIndex === "number" ? q.options[q.correctIndex] : "");
+                const isTf = q.questionType === "true_false" || (q.options && q.options.length === 2 && (q.options.includes("صواب") || q.options.includes("صح")));
+
+                return (
+                  <div
+                    key={idx}
+                    className="p-4 rounded-xl border border-border bg-card dark:bg-[#070D18] shadow-2xs space-y-3"
+                  >
+                    {/* Header */}
+                    <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="grid h-6 w-6 place-items-center rounded-lg bg-primary text-white text-xs font-black">
+                          {idx + 1}
+                        </span>
+                        <span className={`text-[10px] font-black px-2 py-0.5 rounded border ${
+                          isTf
+                            ? "bg-purple-500/10 text-purple-600 border-purple-500/20"
+                            : "bg-blue-500/10 text-blue-600 border-blue-500/20"
+                        }`}>
+                          {isTf ? "صواب أم خطأ" : "اختيار من متعدد"}
+                        </span>
+                        {q.lesson && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-muted text-muted-foreground">
+                            📖 {q.lesson}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[11px] font-bold text-muted-foreground">
+                        {q.points || 1} درجة
+                      </span>
+                    </div>
+
+                    {/* Question Prompt */}
+                    <p className="text-xs sm:text-sm font-black text-foreground leading-relaxed select-text" dir="auto">
+                      {q.prompt}
+                    </p>
+
+                    {/* Options */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                      {q.options?.map((opt: string, oIdx: number) => {
+                        const isCorrect = typeof q.correctIndex === "number" ? oIdx === q.correctIndex : opt.trim() === correctOptionText.trim();
+                        const letter = ["أ", "ب", "ج", "د", "هـ"][oIdx] || String(oIdx + 1);
+
+                        const highlightCorrect = showAnswers && isCorrect;
+
+                        return (
+                          <div
+                            key={oIdx}
+                            className={`p-2.5 rounded-lg border text-xs flex items-center justify-between gap-2 transition-all ${
+                              highlightCorrect
+                                ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-800 dark:text-emerald-200 font-black shadow-2xs"
+                                : "bg-muted/20 border-border text-foreground font-medium"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className={`grid h-5 w-5 shrink-0 place-items-center rounded text-[10px] font-black ${
+                                highlightCorrect ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground"
+                              }`}>
+                                {letter}
+                              </span>
+                              <span className="truncate">{opt}</span>
+                            </div>
+                            {highlightCorrect && (
+                              <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 shrink-0 flex items-center gap-0.5">
+                                <Check className="h-3 w-3" />
+                                <span>الإجابة الصحيحة</span>
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Explanation */}
+                    {showAnswers && q.explanation && (
+                      <div className="p-2.5 rounded-lg bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900/40 text-[11px] text-blue-900 dark:text-blue-200 font-medium">
+                        <strong className="font-black ml-1">تفسير الإجابة:</strong>
+                        <span>{q.explanation}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-muted/20 border-t border-border/60 shrink-0 flex items-center justify-between gap-2">
+              <span className="text-xs text-muted-foreground font-bold">
+                تم حفظ وتخزين هذا الاختبار بشكل دائم في النظام.
+              </span>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedQuizForReview(null)}
+                className="text-xs font-bold"
+              >
+                إغلاق النافذة
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -232,9 +232,11 @@ export function ExamFilters({
 export function ExamCard({
   quiz,
   onStartQuiz,
+  onReviewQuiz,
 }: {
   quiz: Quiz;
   onStartQuiz: (quiz: Quiz) => void;
+  onReviewQuiz?: (quiz: Quiz) => void;
 }) {
   const attemptsUsed = quiz.attemptsUsed || 0;
   const maxAttempts = quiz.maxAttempts;
@@ -382,30 +384,43 @@ export function ExamCard({
 
       {/* 6. Clean Action Button */}
       <div className="pt-2.5 mt-2">
-        <Button
-          type="button"
-          onClick={() => onStartQuiz(quiz)}
-          disabled={isLocked || (attemptsLeft !== null && attemptsLeft <= 0)}
-          className={`w-full h-9 rounded-xl text-xs font-bold shadow-2xs transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer ${
-            isLocked || (attemptsLeft !== null && attemptsLeft <= 0)
-              ? "bg-slate-100 dark:bg-[#0F172A] text-slate-400 dark:text-slate-500 border border-slate-200/80 dark:border-[#1E2E48] cursor-not-allowed"
-              : isCompleted
-              ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20"
-              : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20"
-          }`}
-        >
-          {isLocked ? (
-            "غير متاح حالياً"
-          ) : attemptsLeft !== null && attemptsLeft <= 0 ? (
-            "خلصت كل محاولاتك"
-          ) : isCompleted ? (
-            <>
-              <Eye className="h-3.5 w-3.5" /> عرض النتيجة / إعادة المحاولة
-            </>
-          ) : (
-            "ابدأ الاختبار"
-          )}
-        </Button>
+        {isCompleted ? (
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              onClick={() => (onReviewQuiz ? onReviewQuiz(quiz) : onStartQuiz(quiz))}
+              className="flex-1 h-9 rounded-xl text-xs font-black shadow-2xs transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              <Eye className="h-3.5 w-3.5" />
+              <span>مراجعة الإجابات 👁️</span>
+            </Button>
+            {attemptsLeft === null || attemptsLeft > 0 ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onStartQuiz(quiz)}
+                className="h-9 px-3 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shrink-0"
+                title="إعادة المحاولة"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">إعادة</span>
+              </Button>
+            ) : null}
+          </div>
+        ) : (
+          <Button
+            type="button"
+            onClick={() => onStartQuiz(quiz)}
+            disabled={isLocked || (attemptsLeft !== null && attemptsLeft <= 0)}
+            className={`w-full h-9 rounded-xl text-xs font-bold shadow-2xs transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer ${
+              isLocked || (attemptsLeft !== null && attemptsLeft <= 0)
+                ? "bg-slate-100 dark:bg-[#0F172A] text-slate-400 dark:text-slate-500 border border-slate-200/80 dark:border-[#1E2E48] cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20"
+            }`}
+          >
+            {isLocked ? "غير متاح حالياً" : attemptsLeft !== null && attemptsLeft <= 0 ? "خلصت كل محاولاتك" : "ابدأ الاختبار 🚀"}
+          </Button>
+        )}
       </div>
     </article>
   );
@@ -449,9 +464,11 @@ export function EmptyExamsState({
 export function QuizzesTab({
   quizzes,
   onStartQuiz,
+  onReviewQuiz,
 }: {
   quizzes: Quiz[];
   onStartQuiz: (quiz: Quiz) => void;
+  onReviewQuiz?: (quiz: Quiz) => void;
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [courseFilter, setCourseFilter] = useState("all");
@@ -536,7 +553,12 @@ export function QuizzesTab({
       {filteredQuizzes.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4 w-full">
           {filteredQuizzes.map((quiz) => (
-            <ExamCard key={quiz.id} quiz={quiz} onStartQuiz={onStartQuiz} />
+            <ExamCard
+              key={quiz.id}
+              quiz={quiz}
+              onStartQuiz={onStartQuiz}
+              onReviewQuiz={onReviewQuiz}
+            />
           ))}
         </div>
       ) : (

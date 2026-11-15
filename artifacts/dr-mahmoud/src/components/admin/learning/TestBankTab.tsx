@@ -370,6 +370,7 @@ export function TestBankTab({
   const [generatedQuizSuccess, setGeneratedQuizSuccess] = useState<any | null>(null);
   const [genPublishMode, setGenPublishMode] = useState<"draft" | "publish">("draft");
   const [reviewingQuiz, setReviewingQuiz] = useState<any | null>(null);
+  const [reviewShowAnswers, setReviewShowAnswers] = useState<boolean>(true);
   const [isSavingQuizQuestions, setIsSavingQuizQuestions] = useState<boolean>(false);
   const [editingQuizQuestionIdx, setEditingQuizQuestionIdx] = useState<number | null>(null);
   const [replacingQuestionIdx, setReplacingQuestionIdx] = useState<number | null>(null);
@@ -2155,6 +2156,7 @@ export function TestBankTab({
                       lesson={selectedLesson}
                       adminApi={adminApi}
                       onCreateExamClick={() => setShowQuickExamModal(true)}
+                      onReviewQuiz={(quiz) => setReviewingQuiz(quiz)}
                     />
                   ) : (
                     <>
@@ -4455,6 +4457,21 @@ export function TestBankTab({
               </div>
 
               <div className="flex items-center gap-2">
+                {/* Direct Toggle Answers Button */}
+                <button
+                  type="button"
+                  onClick={() => setReviewShowAnswers((prev) => !prev)}
+                  className={`h-9 px-3 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer border shadow-2xs ${
+                    reviewShowAnswers
+                      ? "bg-emerald-500/15 border-emerald-500 text-emerald-700 dark:text-emerald-300"
+                      : "bg-muted border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                  title="الضغط هنا يُظهر أو يُخفي الإجابات النموذجية"
+                >
+                  {reviewShowAnswers ? <Eye className="h-4 w-4 text-emerald-600" /> : <EyeOff className="h-4 w-4" />}
+                  <span>{reviewShowAnswers ? "الإجابات: معروضة ✓" : "الإجابات: مخفية 🙈"}</span>
+                </button>
+
                 {/* Publish / Unpublish direct toggle button */}
                 {!reviewingQuiz.isPublished ? (
                   <Button
@@ -4729,20 +4746,21 @@ export function TestBankTab({
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1" dir={isEnglish ? "ltr" : "rtl"}>
                             {(q.options || []).map((opt: string, oIdx: number) => {
                               const isCorrect = oIdx === q.correctIndex;
+                              const highlightCorrect = reviewShowAnswers && isCorrect;
                               const letter = getOptionLabel(oIdx, isEnglish);
                               return (
                                 <div
                                   key={oIdx}
                                   dir={isEnglish ? "ltr" : "rtl"}
                                   className={`p-2 rounded-xl text-xs font-semibold flex items-start gap-2 border ${
-                                    isCorrect
+                                    highlightCorrect
                                       ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-800 dark:text-emerald-300 font-bold"
                                       : "bg-muted/40 border-border text-foreground"
                                   }`}
                                 >
                                   <span
                                     className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[10px] font-black mt-0.5 ${
-                                      isCorrect ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground"
+                                      highlightCorrect ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground"
                                     }`}
                                   >
                                     {letter}
@@ -4750,7 +4768,7 @@ export function TestBankTab({
                                   <span className={`flex-1 whitespace-normal break-words leading-relaxed ${isEnglish ? "text-left font-sans font-medium" : "text-right font-medium"}`}>
                                     {opt}
                                   </span>
-                                  {isCorrect && (
+                                  {highlightCorrect && (
                                     <Check className={`h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5 ${isEnglish ? "ml-auto" : "mr-auto"}`} />
                                   )}
                                 </div>
@@ -4759,7 +4777,7 @@ export function TestBankTab({
                           </div>
 
                           {/* Explanation */}
-                          {q.explanation && (
+                          {reviewShowAnswers && q.explanation && (
                             <div
                               dir={isEnglish ? "ltr" : "rtl"}
                               className={`p-2.5 rounded-xl bg-primary/5 border border-primary/15 text-[11px] text-primary space-y-0.5 ${

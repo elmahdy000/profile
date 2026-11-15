@@ -572,6 +572,7 @@ router.get("/admin/learning/curriculum/quizzes", requireAdmin, async (req, res, 
     }
     if (unit && unit !== "all") {
       allQuizzes = allQuizzes.filter(q => 
+        q.unit === unit ||
         (q.title && q.title.includes(unit)) || 
         (q.category && q.category.includes(unit)) ||
         (q.description && q.description.includes(unit))
@@ -579,6 +580,8 @@ router.get("/admin/learning/curriculum/quizzes", requireAdmin, async (req, res, 
     }
     if (lesson && lesson !== "all") {
       allQuizzes = allQuizzes.filter(q => 
+        q.lesson === lesson ||
+        (q.lesson && q.lesson.includes(lesson)) ||
         (q.title && q.title.includes(lesson)) || 
         (q.description && q.description.includes(lesson))
       );

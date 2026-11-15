@@ -664,6 +664,49 @@ export function StudentPlatform() {
     setQuizTimeRemaining(quiz.durationMinutes ? quiz.durationMinutes * 60 : null);
   };
 
+  const startQuizReview = async (quiz: Quiz) => {
+    try {
+      const res = await api<{
+        quiz: Quiz;
+        attempt: any;
+        score: number;
+        passed: boolean;
+        correct: number;
+        total: number;
+        attemptsUsed: number;
+        details?: Array<{ questionIndex: number; selectedOption: number; correctOption: number; isCorrect: boolean }>;
+      }>(`/api/learning/quizzes/${quiz.id}/review`);
+
+      const reviewQuiz = res.quiz || quiz;
+      const originalTotal = reviewQuiz.questions.length;
+      const mappedQuestions = reviewQuiz.questions.map((q, idx) => ({ ...q, _originalIndex: idx, _originalTotal: originalTotal }));
+
+      setActiveQuiz({ ...reviewQuiz, questions: mappedQuestions });
+
+      const studentAnswers = mappedQuestions.map((_, idx) => {
+        const found = res.details?.find((d) => d.questionIndex === idx);
+        return found ? found.selectedOption : -1;
+      });
+
+      setQuizAnswers(studentAnswers);
+      setQuizResult({
+        score: res.score,
+        passed: res.passed,
+        correct: res.correct,
+        total: res.total,
+        attemptsUsed: res.attemptsUsed,
+        details: res.details,
+      });
+      setQuizTimeRemaining(null);
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "تنبيه",
+        description: err.message || "تعذر تحميل مراجعة إجابات هذا الاختبار",
+      });
+    }
+  };
+
   const submitQuiz = async (isAuto = false) => {
     // Guard against double/late submission: timer expiry, anti-cheat auto-submit,
     // and the manual button can all fire close together. Only submit once.
@@ -1745,7 +1788,11 @@ export function StudentPlatform() {
                 onOpenPayment={() => setShowPaymentModal(true)}
               />
             ) : (
-              <HomeworkTab homework={homeworkQuizzes} onStartHomework={startQuiz} />
+              <HomeworkTab
+                homework={homeworkQuizzes}
+                onStartHomework={startQuiz}
+                onReviewHomework={startQuizReview}
+              />
             )
           ) : tab === "quizzes" ? (
             isUnpaid ? (
@@ -1756,7 +1803,11 @@ export function StudentPlatform() {
                 onOpenPayment={() => setShowPaymentModal(true)}
               />
             ) : (
-              <QuizzesTab quizzes={examQuizzes} onStartQuiz={startQuiz} />
+              <QuizzesTab
+                quizzes={examQuizzes}
+                onStartQuiz={startQuiz}
+                onReviewQuiz={startQuizReview}
+              />
             )
           ) : tab === "self-assessment" ? (
             isUnpaid ? (

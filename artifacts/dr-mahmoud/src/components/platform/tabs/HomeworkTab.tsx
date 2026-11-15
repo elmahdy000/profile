@@ -14,15 +14,17 @@ import {
   AlertCircle,
   Award,
   Layers,
+  Eye,
 } from "lucide-react";
 import type { Quiz } from "@/types/platform";
 
 interface HomeworkTabProps {
   homework: Quiz[];
   onStartHomework: (quiz: Quiz) => void;
+  onReviewHomework?: (quiz: Quiz) => void;
 }
 
-export function HomeworkTab({ homework, onStartHomework }: HomeworkTabProps) {
+export function HomeworkTab({ homework, onStartHomework, onReviewHomework }: HomeworkTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "completed">("all");
   const [sortBy, setSortBy] = useState<"latest" | "score">("latest");
@@ -313,27 +315,34 @@ export function HomeworkTab({ homework, onStartHomework }: HomeworkTabProps) {
                     <div className="text-center py-1.5 text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-950/50 rounded-xl border border-amber-200">
                       {hw.lockedReason || "الواجب مغلق حالياً"}
                     </div>
+                  ) : isCompleted ? (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => (onReviewHomework ? onReviewHomework(hw) : onStartHomework(hw))}
+                        className="flex-1 h-9 rounded-xl text-xs font-black shadow-xs transition-all active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        <span>مراجعة الإجابات 👁️</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onStartHomework(hw)}
+                        className="h-9 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer shrink-0 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700"
+                        title="إعادة المحاولة"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">إعادة</span>
+                      </button>
+                    </div>
                   ) : (
                     <button
                       type="button"
                       onClick={() => onStartHomework(hw)}
-                      className={`w-full h-9 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-98 ${
-                        isCompleted
-                          ? "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
-                          : "bg-amber-600 hover:bg-amber-700 text-white"
-                      }`}
+                      className="w-full h-9 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-98 bg-amber-600 hover:bg-amber-700 text-white"
                     >
-                      {isCompleted ? (
-                        <>
-                          <RotateCcw className="h-3.5 w-3.5" />
-                          <span>إعادة حل الواجب والمراجعة</span>
-                        </>
-                      ) : (
-                        <>
-                          <BookCheck className="h-4 w-4" />
-                          <span>بدء حل الواجب الآن 🚀</span>
-                        </>
-                      )}
+                      <BookCheck className="h-4 w-4" />
+                      <span>بدء حل الواجب الآن 🚀</span>
                     </button>
                   )}
                 </div>
