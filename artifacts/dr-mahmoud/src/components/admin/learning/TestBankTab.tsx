@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+﻿import React, { useState, useEffect, useMemo } from "react";
 import {
   BookOpen,
   Layers,
@@ -49,6 +49,7 @@ import { CurriculumUnitModal } from "./curriculum/CurriculumUnitModal";
 import { CurriculumLessonModal } from "./curriculum/CurriculumLessonModal";
 import { CurriculumQuestionModal } from "./curriculum/CurriculumQuestionModal";
 import { CurriculumQuickExamModal } from "./curriculum/CurriculumQuickExamModal";
+import { CurriculumExportModal } from "./curriculum/CurriculumExportModal";
 import { CurriculumExamsView } from "./curriculum/CurriculumExamsView";
 import { CurriculumEssaysView } from "./curriculum/CurriculumEssaysView";
 import { ExamStepBuilder } from "./builder/ExamStepBuilder";
@@ -253,6 +254,9 @@ export function TestBankTab({
   const [curriculumQuestionData, setCurriculumQuestionData] = useState<any | null>(null);
 
   const [showQuickExamModal, setShowQuickExamModal] = useState<boolean>(false);
+  const [showExportModal, setShowExportModal] = useState<boolean>(false);
+  const [exportModalTarget, setExportModalTarget] = useState<{ unit: string; lesson: string }>({ unit: "", lesson: "" });
+  const [typeFilter, setTypeFilter] = useState<"all" | "mcq" | "true_false">("all");
   const [lessonWorkspaceTab, setLessonWorkspaceTab] = useState<"mcq" | "essays" | "quizzes">("mcq");
 
   // Upload Tab State (Unified Step-by-Step Wizard)
@@ -658,6 +662,16 @@ export function TestBankTab({
   // Filtered questions in explorer
   const filteredQuestions = useMemo(() => {
     return lessonQuestions.filter((q) => {
+      // Type Filter (All, MCQ, True/False)
+      if (typeFilter !== "all") {
+        const qData = q.question || {};
+        const isTf =
+          q.questionType === "true_false" ||
+          qData.questionType === "true_false" ||
+          (Array.isArray(qData.options) && qData.options.length === 2);
+        if (typeFilter === "true_false" && !isTf) return false;
+        if (typeFilter === "mcq" && isTf) return false;
+      }
       if (diffFilter !== "all" && q.difficulty !== diffFilter) return false;
       if (searchQuery.trim()) {
         const p = (q.question?.prompt || "").toLowerCase();
@@ -667,7 +681,7 @@ export function TestBankTab({
       }
       return true;
     });
-  }, [lessonQuestions, diffFilter, searchQuery]);
+  }, [lessonQuestions, typeFilter, diffFilter, searchQuery]);
 
   // Clear entire lesson questions or entire unit
   const handleClearLesson = async () => {
@@ -1824,19 +1838,15 @@ export function TestBankTab({
                           </button>
                           <button
                             type="button"
-                            disabled={exportingTarget === `${unitObj.unit}_all`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleExportQuestionsJson(unitObj.unit);
+                              setExportModalTarget({ unit: unitObj.unit, lesson: "all" });
+                              setShowExportModal(true);
                             }}
                             className="p-1 rounded-md text-muted-foreground hover:text-blue-600 hover:bg-blue-500/10 transition-colors cursor-pointer"
-                            title="تصدير جميع أسئلة الوحدة بصيغة JSON"
+                            title="تصدير جميع أسئلة الوحدة"
                           >
-                            {exportingTarget === `${unitObj.unit}_all` ? (
-                              <RefreshCw className="h-3.5 w-3.5 animate-spin text-blue-600" />
-                            ) : (
-                              <Download className="h-3.5 w-3.5" />
-                            )}
+                            <Download className="h-3.5 w-3.5" />
                           </button>
                           <button
                             type="button"
@@ -1933,21 +1943,17 @@ export function TestBankTab({
                                 </button>
                                 <button
                                   type="button"
-                                  disabled={exportingTarget === `${unitObj.unit}_${lessonObj.lesson}`}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleExportQuestionsJson(unitObj.unit, lessonObj.lesson);
+                                    setExportModalTarget({ unit: unitObj.unit, lesson: lessonObj.lesson });
+                                    setShowExportModal(true);
                                   }}
                                   className={`p-1 rounded hover:bg-blue-500/10 transition-colors cursor-pointer ${
                                     isSelected ? "text-white/80 hover:text-blue-200" : "text-muted-foreground hover:text-blue-600"
                                   }`}
-                                  title="تصدير أسئلة هذا الدرس بصيغة JSON"
+                                  title="تصدير أسئلة هذا الدرس (نماذج وورد / طلاب / JSON)"
                                 >
-                                  {exportingTarget === `${unitObj.unit}_${lessonObj.lesson}` ? (
-                                    <RefreshCw className="h-3 w-3 animate-spin text-blue-600" />
-                                  ) : (
-                                    <Download className="h-3 w-3" />
-                                  )}
+                                  <Download className="h-3 w-3" />
                                 </button>
                                 <button
                                   type="button"
@@ -2049,17 +2055,15 @@ export function TestBankTab({
                       <Button
                         type="button"
                         variant="outline"
-                        disabled={exportingTarget === `${selectedUnit}_${selectedLesson}`}
-                        onClick={() => handleExportQuestionsJson(selectedUnit, selectedLesson)}
-                        title={selectedLesson === "all" ? "تصدير جميع أسئلة الوحدة بصيغة JSON" : "تصدير جميع أسئلة هذا الدرس بصيغة JSON"}
+                        onClick={() => {
+                          setExportModalTarget({ unit: selectedUnit, lesson: selectedLesson });
+                          setShowExportModal(true);
+                        }}
+                        title={selectedLesson === "all" ? "تصدير جميع أسئلة الوحدة (نماذج وورد / طلاب / JSON)" : "تصدير جميع أسئلة هذا الدرس (نماذج وورد / طلاب / JSON)"}
                         className="text-blue-600 border-blue-200 hover:bg-blue-50 h-9 px-2.5 text-xs font-bold cursor-pointer gap-1"
                       >
-                        {exportingTarget === `${selectedUnit}_${selectedLesson}` ? (
-                          <RefreshCw className="h-4 w-4 animate-spin text-blue-600" />
-                        ) : (
-                          <Download className="h-4 w-4" />
-                        )}
-                        <span>تصدير JSON</span>
+                        <Download className="h-4 w-4" />
+                        <span>تصدير الأسئلة</span>
                       </Button>
                       <Button
                         type="button"
@@ -2153,6 +2157,16 @@ export function TestBankTab({
                       />
                     </div>
                     <select
+                      value={typeFilter}
+                      onChange={(e) => setTypeFilter(e.target.value as any)}
+                      className="h-9 px-3 rounded-xl border border-border bg-card text-xs font-bold text-foreground focus:outline-none cursor-pointer"
+                    >
+                      <option value="all">كل أنواع الأسئلة</option>
+                      <option value="mcq">اختيار من متعدد (MCQ)</option>
+                      <option value="true_false">صواب وخطأ (True/False)</option>
+                    </select>
+
+                    <select
                       value={diffFilter}
                       onChange={(e) => setDiffFilter(e.target.value)}
                       className="h-9 px-3 rounded-xl border border-border bg-card text-xs font-bold text-foreground focus:outline-none cursor-pointer"
@@ -2217,6 +2231,19 @@ export function TestBankTab({
                                 <span className="text-[10px] text-muted-foreground font-bold">
                                   {q.points || 1} درجة
                                 </span>
+                                {Boolean(
+                                  q.questionType === "true_false" ||
+                                  questionData.questionType === "true_false" ||
+                                  (Array.isArray(questionData.options) && questionData.options.length === 2)
+                                ) ? (
+                                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20">
+                                    صواب / خطأ
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-700 dark:text-violet-300 border border-violet-500/20">
+                                    اختيار من متعدد
+                                  </span>
+                                )}
                               </div>
 
                               <div className="flex items-center gap-1">
@@ -5003,6 +5030,16 @@ export function TestBankTab({
             setReviewingQuiz(createdQuiz);
           }
         }}
+      />
+
+      <CurriculumExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        stage={selectedStage}
+        unit={exportModalTarget.unit}
+        lesson={exportModalTarget.lesson}
+        totalQuestions={exportModalTarget.lesson === selectedLesson ? filteredQuestions.length : 0}
+        adminApi={adminApi}
       />
     </div>
   );
