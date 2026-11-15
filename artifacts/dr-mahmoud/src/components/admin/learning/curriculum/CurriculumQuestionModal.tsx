@@ -57,9 +57,15 @@ export function CurriculumQuestionModal({
         if (isEssay) {
           setModelAnswer(initialData.modelAnswer || initialData.model_answer || "");
         } else if (isTf) {
-          const opts = Array.isArray(qObj.options) ? qObj.options : ["صح", "خطأ"];
+          const opts = Array.isArray(qObj.options) ? qObj.options : ["صواب", "خطأ"];
           const corrIdx = typeof qObj.correctIndex === "number" ? qObj.correctIndex : 0;
-          setTfCorrect(corrIdx === 0 || opts[corrIdx]?.includes("صح") || opts[corrIdx]?.toLowerCase() === "true");
+          const selectedOptionText = opts[corrIdx] || "";
+          const isMarkedTrue =
+            corrIdx === 0 ||
+            selectedOptionText.includes("صواب") ||
+            selectedOptionText.includes("صح") ||
+            selectedOptionText.toLowerCase().includes("true");
+          setTfCorrect(isMarkedTrue);
         } else {
           setOptions(Array.isArray(qObj.options) && qObj.options.length >= 2 ? qObj.options : ["", "", "", ""]);
           setCorrectIndex(typeof qObj.correctIndex === "number" ? qObj.correctIndex : 0);
@@ -160,7 +166,8 @@ export function CurriculumQuestionModal({
         let finalCorrectIdx: number;
 
         if (questionType === "true_false") {
-          finalOptions = ["صح (True)", "خطأ (False)"];
+          const isEng = /[a-zA-Z]/.test(prompt);
+          finalOptions = isEng ? ["True", "False"] : ["صواب", "خطأ"];
           finalCorrectIdx = tfCorrect ? 0 : 1;
         } else {
           finalOptions = options.map((o) => o.trim()).filter(Boolean);

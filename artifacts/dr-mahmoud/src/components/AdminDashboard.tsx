@@ -91,7 +91,6 @@ import { UploadVideoTab } from "./admin/dashboard/UploadVideoTab";
 import { CourseModal } from "./admin/dashboard/CourseModal";
 import { PodcastModal } from "./admin/dashboard/PodcastModal";
 import { CurriculumModal } from "./admin/dashboard/CurriculumModal";
-import { VideoModal } from "./admin/dashboard/VideoModal";
 import { PreviewVideoModal } from "./admin/dashboard/PreviewVideoModal";
 import { AdminLoginView } from "./admin/dashboard/AdminLoginView";
 import { useToast } from "@/hooks/use-toast";
@@ -862,7 +861,6 @@ export default function AdminDashboard() {
       });
     }
     setSelectedVideoFile(null);
-    setIsVideoModalOpen(true);
     setActiveTab("upload-video");
   };
 
@@ -2134,34 +2132,6 @@ export default function AdminDashboard() {
         handleSlotImageUpload={handleSlotImageUpload}
         createMutation={createCurriculumMutation}
         updateMutation={updateCurriculumMutation}
-      />
-
-      <VideoModal
-        isOpen={isVideoModalOpen}
-        onClose={() => setIsVideoModalOpen(false)}
-        mode={videoModalMode}
-        form={videoForm}
-        setForm={setVideoForm}
-        onSubmit={handleVideoSubmit}
-        videosQuery={videosQuery}
-        useLatestLessonSettings={useLatestLessonSettings}
-        getNextLessonNumber={getNextLessonNumber}
-        coursesQuery={coursesQuery}
-        learningFiles={learningFiles}
-        learningQuizzes={learningQuizzes}
-        selectedVideoId={selectedVideoId}
-        isThumbnailUploading={isThumbnailUploading}
-        handleThumbnailImageUpload={handleThumbnailImageUpload}
-        isVideoUploading={isVideoUploading}
-        videoUploadProgress={videoUploadProgress}
-        videoUploadStats={videoUploadStats}
-        selectedVideoFile={selectedVideoFile}
-        setSelectedVideoFile={setSelectedVideoFile}
-        selectedVideoPreviewUrl={selectedVideoPreviewUrl}
-        uploadSelectedVideo={uploadSelectedVideo}
-        handleVideoFileSelection={handleVideoFileSelection}
-        createMutation={createVideoMutation}
-        updateMutation={updateVideoMutation}
       />
 
       <PreviewVideoModal
