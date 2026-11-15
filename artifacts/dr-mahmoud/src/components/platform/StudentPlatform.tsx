@@ -38,6 +38,7 @@ import {
   FileEdit,
   Search,
   KeyRound,
+  BookCheck,
   Target,
   QrCode,
   FolderDown,
@@ -58,6 +59,7 @@ import { ProfileTab } from "./tabs/ProfileTab";
 import { StudentCardTab } from "./tabs/StudentCardTab";
 import { FilesTab } from "./tabs/FilesTab";
 import { QuizzesTab } from "./tabs/QuizzesTab";
+import { HomeworkTab } from "./tabs/HomeworkTab";
 import { DashboardTab } from "./tabs/DashboardTab";
 import { AccessScreen } from "./tabs/AccessScreen";
 import { StudentSummariesTab } from "./tabs/StudentSummariesTab";
@@ -154,7 +156,7 @@ async function cropAvatar(file: File): Promise<Blob> {
 
 
 export function getNotificationTarget(notification: { title: string; message: string; type?: string | null }): {
-  tab: "dashboard" | "lessons" | "essay-exams" | "summaries" | "files" | "quizzes" | "self-assessment" | "profile" | "external";
+  tab: "dashboard" | "lessons" | "essay-exams" | "summaries" | "files" | "quizzes" | "homework" | "self-assessment" | "profile" | "external";
   label: string;
   url?: string;
 } {
@@ -176,6 +178,15 @@ export function getNotificationTarget(notification: { title: string; message: st
     titleMsg.includes("تكريم")
   ) {
     return { tab: "external", label: "لوحة الشرف 🏆", url: "/honor-board" };
+  }
+
+  // 3. Homework (الواجبات والمهام المنزلية)
+  if (
+    type === "homework" ||
+    type === "hw" ||
+    titleMsg.includes("واجب")
+  ) {
+    return { tab: "homework", label: "الواجب المنزلي 📚" };
   }
 
   // 3. Self-Assessment (باقات التقييم والتدريب الذاتي)
@@ -312,6 +323,7 @@ export type PlatformTab =
   | "summaries"
   | "files"
   | "quizzes"
+  | "homework"
   | "self-assessment"
   | "card"
   | "profile";
@@ -341,6 +353,12 @@ export function resolveTabFromPath(pathname: string): PlatformTab {
     case "quizzes":
     case "exams":
       return "quizzes";
+    case "homework":
+    case "hw":
+    case "assignments":
+    case "home-work":
+    case "homeworks":
+      return "homework";
     case "self-assessment":
     case "assessment":
       return "self-assessment";
@@ -384,6 +402,7 @@ export function StudentPlatform() {
       summaries: "مذكراتي وتلخيصاتي",
       files: "الملفات والملازم التعليمية",
       quizzes: "الاختبارات الإلكترونية",
+      homework: "الواجبات والمهام المنزلية",
       "self-assessment": "التقييم الذاتي وبنك الأسئلة",
       card: "بطاقة الطالب ورمز الحضور QR",
       profile: "الحساب الشخصي والإعدادات",
@@ -412,6 +431,15 @@ export function StudentPlatform() {
   const handleNotificationClickRef = useRef<(n: StudentNotification) => void>(() => {});
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const isUnpaid = Boolean(student && (student.status !== "approved" || student.paymentStatus !== "paid"));
+
+  const homeworkQuizzes = useMemo(
+    () => quizzes.filter((q) => q.scope === "homework" || q.category === "واجب" || q.title.toLowerCase().includes("واجب")),
+    [quizzes]
+  );
+  const examQuizzes = useMemo(
+    () => quizzes.filter((q) => !(q.scope === "homework" || q.category === "واجب" || q.title.toLowerCase().includes("واجب"))),
+    [quizzes]
+  );
 
   const {
     isSupported: isPushSupported,
@@ -1094,6 +1122,7 @@ export function StudentPlatform() {
   const nav = [
     ["dashboard", "الرئيسية", Home],
     ["lessons", "فيديوهات المنصة", BookOpen],
+    ["homework", "الواجب المنزلي 📚", BookCheck],
     ["kholasa", "الخلاصة", Sparkles],
     ["mistakes", "ركن غلطاتي 🎯", Target],
     ["essay-exams", "الامتحانات المقالية ✍️", FileEdit],
@@ -1111,6 +1140,7 @@ export function StudentPlatform() {
       items: [
         { id: "dashboard" as const, label: "الرئيسية", icon: Home },
         { id: "lessons" as const, label: "فيديوهات المنصة", icon: BookOpen },
+        { id: "homework" as const, label: "الواجب المنزلي 📚", icon: BookCheck },
         { id: "offline-vault" as const, label: "محفظة الأوفلاين ⚡", icon: FolderDown },
         { id: "kholasa" as const, label: "الخلاصة", icon: Sparkles },
         { id: "summaries" as const, label: "مذكراتي وتلخيصاتي", icon: FileText },
@@ -1138,6 +1168,7 @@ export function StudentPlatform() {
   const navLabels: Record<string, string> = {
     dashboard: "الرئيسية",
     lessons: "فيديوهات المنصة",
+    homework: "الواجب المنزلي 📚",
     "offline-vault": "محفظة الأوفلاين ⚡",
     kholasa: "الخلاصة",
     mistakes: "ركن غلطاتي",
@@ -1260,7 +1291,7 @@ export function StudentPlatform() {
                   {section.title}
                 </div>
                 {section.items.map((item) => {
-                  const isLockedTab = isUnpaid && ["quizzes", "essay-exams", "self-assessment", "kholasa", "mistakes", "files", "summaries"].includes(item.id);
+                  const isLockedTab = isUnpaid && ["quizzes", "homework", "essay-exams", "self-assessment", "kholasa", "mistakes", "files", "summaries"].includes(item.id);
                   const isPreviewTab = isUnpaid && item.id === "lessons";
                   const isActive = tab === item.id;
                   const Icon = item.icon;
@@ -1365,6 +1396,7 @@ export function StudentPlatform() {
                   {tab === "offline-vault" && <FolderDown className="h-3.5 w-3.5 text-amber-500" />}
                   {tab === "kholasa" && <Sparkles className="h-3.5 w-3.5 text-amber-500" />}
                   {tab === "mistakes" && <Target className="h-3.5 w-3.5 text-rose-500" />}
+                  {tab === "homework" && <BookCheck className="h-3.5 w-3.5 text-amber-500" />}
                   {tab === "quizzes" && <ClipboardCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
                   {tab === "essay-exams" && <FileEdit className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
                   {tab === "summaries" && <FileText className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
@@ -1704,6 +1736,17 @@ export function StudentPlatform() {
             ) : (
               <FilesTab files={files} />
             )
+          ) : tab === "homework" ? (
+            isUnpaid ? (
+              <LockedContentNotice
+                title="الواجبات والمهام المنزلية"
+                description="تم قفل الواجبات والمهام المنزلية لحين سداد اشتراك الشهر الجديد وتأكيد الدفع."
+                onGoToPreview={() => setTab("lessons")}
+                onOpenPayment={() => setShowPaymentModal(true)}
+              />
+            ) : (
+              <HomeworkTab homework={homeworkQuizzes} onStartHomework={startQuiz} />
+            )
           ) : tab === "quizzes" ? (
             isUnpaid ? (
               <LockedContentNotice
@@ -1713,7 +1756,7 @@ export function StudentPlatform() {
                 onOpenPayment={() => setShowPaymentModal(true)}
               />
             ) : (
-              <QuizzesTab quizzes={quizzes} onStartQuiz={startQuiz} />
+              <QuizzesTab quizzes={examQuizzes} onStartQuiz={startQuiz} />
             )
           ) : tab === "self-assessment" ? (
             isUnpaid ? (
@@ -1804,13 +1847,13 @@ export function StudentPlatform() {
             onClick={() => setSidebarOpen((prev) => !prev)}
             aria-label="فتح القائمة الكاملة"
             className={`my-1 flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-bold transition-all duration-150 active:scale-95 cursor-pointer relative ${
-              sidebarOpen || ["files", "profile", "essay-exams", "self-assessment", "mistakes", "summaries"].includes(tab)
+              sidebarOpen || ["files", "profile", "essay-exams", "self-assessment", "mistakes", "summaries", "homework"].includes(tab)
                 ? "bg-blue-50/80 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-black before:absolute before:top-0 before:h-0.5 before:w-6 before:bg-blue-600 dark:before:bg-blue-400 before:rounded-full"
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
             }`}
           >
             <Menu className="h-[20px] w-[20px]" />
-            <span className="truncate max-w-[60px]">{["files", "profile", "essay-exams", "self-assessment", "mistakes", "summaries"].includes(tab) ? (navLabels[tab] || "المزيد") : "المزيد"}</span>
+            <span className="truncate max-w-[60px]">{["files", "profile", "essay-exams", "self-assessment", "mistakes", "summaries", "homework"].includes(tab) ? (navLabels[tab] || "المزيد") : "المزيد"}</span>
           </button>
         </div>
       </nav>
@@ -1830,8 +1873,12 @@ export function StudentPlatform() {
                 {/* Title and stats on Right (RTL) */}
                 <div className="min-w-0 flex-1 space-y-1 text-right">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="inline-flex items-center gap-1 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/80 dark:border-blue-800/60 px-2 py-0.5 text-xs font-black shadow-2xs">
-                      اختبار إلكتروني
+                    <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-black shadow-2xs border ${
+                      activeQuiz.scope === "homework" || activeQuiz.category === "واجب"
+                        ? "bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border-amber-200/80 dark:border-amber-800/60"
+                        : "bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border-blue-200/80 dark:border-blue-800/60"
+                    }`}>
+                      {activeQuiz.scope === "homework" || activeQuiz.category === "واجب" ? "واجب منزلي 📚" : "اختبار إلكتروني 📝"}
                     </span>
                     <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight truncate" dir="auto">
                       {activeQuiz.title}

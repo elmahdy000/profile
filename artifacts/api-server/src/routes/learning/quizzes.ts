@@ -692,7 +692,7 @@ router.post("/admin/learning/quizzes", requireAdmin, async (req, res, next) => {
     }
     const courseId = Number(req.body.courseId);
     const videoId = Number(req.body.videoId) || null;
-    const scope = req.body.scope === "lesson" ? "lesson" : "course";
+    const scope = req.body.scope === "lesson" ? "lesson" : req.body.scope === "homework" ? "homework" : "course";
     const stages = normalizeStringList(req.body.stages ?? req.body.stage);
     const [course] = Number.isInteger(courseId) ? await db.select().from(coursesTable).where(eq(coursesTable.id, courseId)).limit(1) : [];
     if (!course || stages.length === 0 || stages.some((stage: string) => Array.isArray(course.stages) && course.stages.length > 0 && !course.stages.includes(stage))) {
@@ -774,7 +774,7 @@ router.patch(
       const courseId = req.body.courseId !== undefined
         ? (req.body.courseId && Number(req.body.courseId) > 0 ? Number(req.body.courseId) : null)
         : current.courseId;
-      const scope = req.body.scope !== undefined ? (req.body.scope === "lesson" ? "lesson" : "course") : current.scope;
+      const scope = req.body.scope !== undefined ? (req.body.scope === "lesson" ? "lesson" : req.body.scope === "homework" ? "homework" : "course") : current.scope;
       const videoId = scope === "lesson"
         ? (req.body.videoId !== undefined ? (Number(req.body.videoId) || null) : current.videoId)
         : null;

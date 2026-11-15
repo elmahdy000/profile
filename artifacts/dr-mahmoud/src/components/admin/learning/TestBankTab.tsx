@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   BookOpen,
   Layers,
@@ -254,6 +254,7 @@ export function TestBankTab({
   const [curriculumQuestionData, setCurriculumQuestionData] = useState<any | null>(null);
 
   const [showQuickExamModal, setShowQuickExamModal] = useState<boolean>(false);
+  const [quickExamModalMode, setQuickExamModalMode] = useState<"exam" | "homework">("exam");
   const [showExportModal, setShowExportModal] = useState<boolean>(false);
   const [exportModalTarget, setExportModalTarget] = useState<{ unit: string; lesson: string }>({ unit: "", lesson: "" });
   const [typeFilter, setTypeFilter] = useState<"all" | "mcq" | "true_false">("all");
@@ -2021,10 +2022,23 @@ export function TestBankTab({
                       </Button>
                       <Button
                         type="button"
-                        onClick={() => setShowQuickExamModal(true)}
+                        onClick={() => {
+                          setQuickExamModalMode("exam");
+                          setShowQuickExamModal(true);
+                        }}
                         className="bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold h-9 cursor-pointer gap-1 shadow-xs"
                       >
                         <Sparkles className="h-3.5 w-3.5" /> عمل امتحان منه
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          setQuickExamModalMode("homework");
+                          setShowQuickExamModal(true);
+                        }}
+                        className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold h-9 cursor-pointer gap-1 shadow-xs"
+                      >
+                        <BookOpen className="h-3.5 w-3.5" /> إسناد واجب منه 📚
                       </Button>
                       <Button
                         type="button"
@@ -5011,6 +5025,7 @@ export function TestBankTab({
       <CurriculumQuickExamModal
         isOpen={showQuickExamModal}
         onClose={() => setShowQuickExamModal(false)}
+        initialMode={quickExamModalMode}
         stage={selectedStage}
         unit={selectedUnit}
         lesson={selectedLesson}

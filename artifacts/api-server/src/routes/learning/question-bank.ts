@@ -1767,6 +1767,9 @@ interface GenerateQuizParams {
   requiredProgress?: number | string;
   isPublished?: boolean;
   questionType?: string;
+  isHomework?: boolean;
+  previewOnly?: boolean;
+  customQuestions?: QuizQuestion[];
 
   // Step-by-Step Custom Distribution Modes
   distributionMode?: "balanced" | "by_type" | "by_lesson" | "advanced";
@@ -1846,6 +1849,9 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
     requiredProgress,
     isPublished,
     questionType,
+    isHomework,
+    previewOnly,
+    customQuestions,
     distributionMode = "balanced",
     typeDistribution,
     lessonDistribution,
@@ -2276,69 +2282,109 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
     }
   }
 
-  if (selectedRows.length === 0) {
-    throw new Error("تعذر اختيار أسئلة للاختبار");
-  }
+  let finalQuestions: QuizQuestion[] = [];
 
-  // Shuffle final questions if enabled
-  if (shuffleQuestions !== false) {
-    selectedRows.sort(() => Math.random() - 0.5);
-  }
+  if (Array.isArray(customQuestions) && customQuestions.length > 0) {
+    // Direct adoption of reviewed custom questions (MCQ & True/False)
+    for (const q of customQuestions) {
+      if (!q.prompt || !q.prompt.trim()) continue;
+      const opts = (q.options || []).map(cleanOptionString);
+      const isTf = opts.length === 2 && (opts.includes("صواب") || opts.includes("صح") || opts.includes("True") || opts.includes("true"));
+      const kind = isTf ? "true_false" : (q.questionType === "true_false" ? "true_false" : "mcq");
+      const safeCorrectIdx = typeof q.correctIndex === "number" && q.correctIndex >= 0 && q.correctIndex < opts.length ? q.correctIndex : 0;
+      finalQuestions.push({
+        prompt: q.prompt.trim(),
+        options: opts,
+        correctIndex: safeCorrectIdx,
+        correctAnswer: q.correctAnswer?.trim() || opts[safeCorrectIdx] || "",
+        explanation: q.explanation || "",
+        imageUrl: q.imageUrl,
+        lesson: q.lesson || (hasSpecificLessons ? targetLessons[0] : undefined),
+        unit: q.unit || (unit && unit !== "all" ? unit : undefined),
+        difficulty: q.difficulty || "medium",
+        points: q.points || 1,
+        questionType: kind,
+      });
+    }
+  } else {
+    if (selectedRows.length === 0) {
+      throw new Error("تعذر اختيار أسئلة للاختبار");
+    }
 
-  const finalQuestions: QuizQuestion[] = [];
-  const finalPrompts = new Set<string>();
+    // Shuffle final questions if enabled
+    if (shuffleQuestions !== false) {
+      selectedRows.sort(() => Math.random() - 0.5);
+    }
 
-  for (const r of selectedRows) {
-    const pKey = normalizeQuestionPrompt(r.question.prompt);
-    if (pKey && finalPrompts.has(pKey)) continue;
-    if (pKey) finalPrompts.add(pKey);
+    const finalPrompts = new Set<string>();
 
-    const q = r.question;
+    for (const r of selectedRows) {
+      const pKey = normalizeQuestionPrompt(r.question.prompt);
+      if (pKey && finalPrompts.has(pKey)) continue;
+      if (pKey) finalPrompts.add(pKey);
 
-    if (r.kind === "essay") {
+      const q = r.question;
+
+      if (r.kind === "essay") {
+        finalQuestions.push({
+          prompt: q.prompt,
+          options: [],
+          correctIndex: -1,
+          correctAnswer: q.correctAnswer || "",
+          explanation: q.explanation || "",
+          lesson: r.lesson || (hasSpecificLessons ? targetLessons[0] : undefined),
+          unit: r.unit || undefined,
+          difficulty: r.difficulty || undefined,
+          points: r.points || 5,
+          questionType: "essay",
+        });
+        continue;
+      }
+
+      if (typeof q.correctIndex !== "number" || q.correctIndex < 0 || q.correctIndex >= q.options.length) {
+        continue;
+      }
+
+      const correctAnswer = q.options[q.correctIndex]?.trim();
+      if (!correctAnswer) {
+        continue;
+      }
+
       finalQuestions.push({
         prompt: q.prompt,
-        options: [],
-        correctIndex: -1,
-        correctAnswer: q.correctAnswer || "",
+        options: q.options,
+        correctIndex: q.correctIndex,
+        correctAnswer: correctAnswer,
         explanation: q.explanation || "",
+        imageUrl: q.imageUrl,
         lesson: r.lesson || (hasSpecificLessons ? targetLessons[0] : undefined),
         unit: r.unit || undefined,
         difficulty: r.difficulty || undefined,
-        points: r.points || 5,
-        questionType: "essay",
+        points: r.points || 1,
+        questionType: r.kind,
       });
-      continue;
     }
-
-    if (typeof q.correctIndex !== "number" || q.correctIndex < 0 || q.correctIndex >= q.options.length) {
-      continue;
-    }
-
-    const correctAnswer = q.options[q.correctIndex]?.trim();
-    if (!correctAnswer) {
-      continue;
-    }
-
-    finalQuestions.push({
-      prompt: q.prompt,
-      options: q.options,
-      correctIndex: q.correctIndex,
-      correctAnswer: correctAnswer,
-      explanation: q.explanation || "",
-      imageUrl: q.imageUrl,
-      lesson: r.lesson || (hasSpecificLessons ? targetLessons[0] : undefined),
-      unit: r.unit || undefined,
-      difficulty: r.difficulty || undefined,
-      points: r.points || 1,
-      questionType: r.kind,
-    });
   }
 
-  let quizCategory = stage || "عام";
-  let isLessonScope = !isMultiLesson && scope === "lesson" && Boolean(resolvedVideoId);
+  if (finalQuestions.length === 0) {
+    throw new Error("لا توجد أسئلة صالحة متبقية بعد التصفية والمراجعة.");
+  }
 
-  if (resolvedVideoId) {
+  // If previewOnly is requested, return candidate questions immediately without persisting
+  if (previewOnly) {
+    return {
+      newQuiz: null,
+      finalQuestions,
+      targetCount: finalQuestions.length,
+      targetLessons,
+    };
+  }
+
+  const isHomeworkMode = Boolean(isHomework) || scope === "homework";
+  let quizCategory = isHomeworkMode ? "واجب" : (stage || "عام");
+  let isLessonScope = !isHomeworkMode && !isMultiLesson && scope === "lesson" && Boolean(resolvedVideoId);
+
+  if (!isHomeworkMode && resolvedVideoId) {
     const [video] = await db.select().from(videosTable).where(eq(videosTable.id, resolvedVideoId)).limit(1);
     if (video) {
       resolvedCourseId = video.courseId ?? resolvedCourseId;
@@ -2349,7 +2395,7 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
 
   let finalStages = Array.isArray(stages) && stages.length ? stages : (stage && stage !== "all" ? [stage] : []);
 
-  if (resolvedCourseId) {
+  if (!isHomeworkMode && resolvedCourseId) {
     const [course] = await db.select().from(coursesTable).where(eq(coursesTable.id, resolvedCourseId)).limit(1);
     if (course) {
       quizCategory = course.title;
@@ -2363,26 +2409,32 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
     finalStages = ["عام"];
   }
 
-  const examDescription = hasSpecificLessons
-    ? `اختبار تقييمي مميز يغطي حصرياً الدروس: ${targetLessons.join("، ")} (${stage || ""})`
-    : `اختبار تم توليده آلياً من بنك الأسئلة (${stage || ""} - ${unit || ""} - ${lesson || ""})`.trim();
+  const examDescription = isHomeworkMode
+    ? (hasSpecificLessons
+        ? `واجب منزلي مميز يغطي الدروس: ${targetLessons.join("، ")} (${stage || ""})`
+        : `واجب منزلي مقرّر (${stage || ""} - ${unit || ""})`).trim()
+    : (hasSpecificLessons
+        ? `اختبار تقييمي مميز يغطي حصرياً الدروس: ${targetLessons.join("، ")} (${stage || ""})`
+        : `اختبار تم توليده آلياً من بنك الأسئلة (${stage || ""} - ${unit || ""} - ${lesson || ""})`).trim();
+
+  const finalScope = isHomeworkMode ? "homework" : (isLessonScope ? "lesson" : "course");
 
   const [newQuiz] = await db
     .insert(quizzesTable)
     .values({
       title: title.trim(),
-      courseId: resolvedCourseId,
+      courseId: isHomeworkMode ? null : resolvedCourseId,
       videoId: isLessonScope ? resolvedVideoId : null,
-      scope: isLessonScope ? "lesson" : "course",
+      scope: finalScope,
       description: examDescription,
-      category: quizCategory,
+      category: isHomeworkMode ? "واجب" : quizCategory,
       stage: finalStages[0] || null,
       stages: finalStages,
       unit: unit && unit !== "all" ? unit : null,
       lesson: hasSpecificLessons ? targetLessons.join("، ") : (lesson && lesson !== "all" ? lesson : null),
-      durationMinutes: durationMinutes ? Number(durationMinutes) : null,
+      durationMinutes: durationMinutes ? Number(durationMinutes) : (isHomeworkMode ? null : 30),
       passingScore: Math.max(0, Math.min(100, Number(passingScore ?? 60))),
-      maxAttempts: Math.max(0, Math.min(20, Number(maxAttempts ?? 3))),
+      maxAttempts: Math.max(0, Math.min(20, Number(maxAttempts ?? (isHomeworkMode ? 3 : 3)))),
       shuffleQuestions: shuffleQuestions !== false,
       showExplanations: showExplanations !== false,
       requiredProgress: isLessonScope ? Math.max(0, Math.min(100, Number(requiredProgress ?? 80))) : 0,
@@ -2411,12 +2463,17 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
         canStudentAccessContent(student, newQuiz.category, newQuiz.stage, newQuiz.stages, newQuiz.courseId)
       );
       if (recipients.length > 0) {
+        const notifTitle = isHomeworkMode ? "واجب منزلي جديد متاح لك 📚" : "اختبار جديد متاح لك 📝";
+        const notifMsg = isHomeworkMode
+          ? `${newQuiz.title} جاهز الآن داخل تبويب الواجب بحسابك.`
+          : `${newQuiz.title} جاهز الآن داخل منصة الاختبارات.`;
+
         await db.insert(studentNotificationsTable).values(
           recipients.map((student) => ({
             studentId: student.id,
-            type: "quiz",
-            title: "اختبار جديد متاح لك",
-            message: `${newQuiz.title} جاهز الآن داخل منصة الاختبارات.`,
+            type: isHomeworkMode ? "homework" : "quiz",
+            title: notifTitle,
+            message: notifMsg,
           }))
         );
 
@@ -2424,9 +2481,9 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
         void sendPushToStudents(
           recipients.map((s) => s.id),
           {
-            title: "اختبار جديد متاح لك 📝",
-            body: `${newQuiz.title} جاهز الآن للاختبار والتقييم داخل حسابك.`,
-            url: "/platform",
+            title: notifTitle,
+            body: notifMsg,
+            url: isHomeworkMode ? "/platform/homework" : "/platform/quizzes",
           }
         ).catch(() => {});
       }
@@ -2447,6 +2504,7 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
 router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req, res, next) => {
   try {
     const result = await generateQuizFromBank(req.body);
+    if (!result.newQuiz) throw new Error("تعذر توليد الاختبار");
 
     res.status(201).json({
       ...result.newQuiz,
@@ -2460,6 +2518,20 @@ router.post("/admin/learning/test-bank/generate-exam", requireAdmin, async (req,
     });
   } catch (error: any) {
     res.status(400).json({ error: error.message || "تعذر توليد الاختبار من بنك الأسئلة" });
+  }
+});
+
+// POST /api/admin/learning/test-bank/preview-exam - Preview questions for review before creating exam or homework
+router.post("/admin/learning/test-bank/preview-exam", requireAdmin, async (req, res, next) => {
+  try {
+    const result = await generateQuizFromBank({ ...req.body, previewOnly: true });
+    res.json({
+      questions: result.finalQuestions,
+      targetCount: result.targetCount,
+      targetLessons: result.targetLessons,
+    });
+  } catch (error: any) {
+    res.status(400).json({ error: error.message || "تعذر استخراج ومعاينة الأسئلة من بنك الأسئلة" });
   }
 });
 
@@ -2793,6 +2865,7 @@ router.post("/admin/learning/question-bank/generate-quiz", requireAdmin, async (
       isPublished: isExplicitPublish,
       questionType: req.body.questionType,
     });
+    if (!result.newQuiz) throw new Error("تعذر توليد الاختبار");
 
     res.status(201).json({
       ...result.newQuiz,

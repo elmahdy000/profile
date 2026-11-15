@@ -52,17 +52,25 @@ export type QuizQuestion = {
   correctAnswer?: string;  // النص الفعلي للإجابة الصحيحة (أكثر أماناً من correctIndex)
   explanation?: string;
   imageUrl?: string;
+  questionType?: "mcq" | "true_false" | "short_answer" | "essay" | string;
+  lesson?: string;
+  unit?: string;
+  difficulty?: string;
+  points?: number;
 };
 
 export type Quiz = {
   id: number;
-  scope?: "course" | "lesson";
+  scope?: "course" | "lesson" | "homework" | "unit" | string;
   videoId?: number | null;
   requiredProgress?: number;
   title: string;
   description?: string | null;
   category: string;
   stage?: string | null;
+  stages?: string[];
+  unit?: string | null;
+  lesson?: string | null;
   durationMinutes?: number | null;
   passingScore: number;
   maxAttempts?: number | null;
@@ -74,6 +82,8 @@ export type Quiz = {
   locked?: boolean;
   lockedReason?: string | null;
   questions: QuizQuestion[];
+  isHomework?: boolean;
+  createdAt?: string;
 };
 
 export type VideoSummary = {
