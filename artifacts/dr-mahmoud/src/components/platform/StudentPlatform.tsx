@@ -28,6 +28,7 @@ import {
   Eye,
   EyeOff,
   Copy,
+  Printer,
   Sparkles,
   AlertCircle,
   Code2,
@@ -2129,6 +2130,35 @@ export function StudentPlatform() {
                     <div className="mt-4 pt-2 text-center text-xs font-bold text-slate-500 dark:text-slate-400">
                       <span>↓ مرر لأسفل لمراجعة الأسئلة والشروحات التفصيلية</span>
                     </div>
+                  </div>
+                )}
+
+                {/* Manual Submission Notice for Homework */}
+                {(activeQuiz.scope === "homework" || activeQuiz.category === "واجب") && (
+                  <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-900 dark:text-amber-200" dir="rtl">
+                    <div className="flex items-start gap-3">
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300">
+                        <FileText className="h-5 w-5" />
+                      </span>
+                      <div className="space-y-0.5">
+                        <h4 className="text-xs sm:text-sm font-black text-amber-900 dark:text-amber-100">
+                          تعليمات تسليم الواجب: تسليم يدوي بالحصة
+                        </h4>
+                        <p className="text-xs text-amber-800/90 dark:text-amber-300/90 leading-relaxed font-medium">
+                          يُرجى كتابة إجابات هذه الأسئلة وحلها في كشكول الواجب الخاص بك، لتسليمها يدوياً لمساعد المعلم في موعد الحصة القادمة بالسنتر.
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.print()}
+                      className="shrink-0 h-9 px-3.5 rounded-xl border-amber-400/60 text-amber-900 dark:text-amber-200 hover:bg-amber-500/20 text-xs font-bold gap-1.5 cursor-pointer shadow-xs"
+                    >
+                      <Printer className="h-4 w-4" />
+                      <span>طباعة الأسئلة 🖨️</span>
+                    </Button>
                   </div>
                 )}
 
