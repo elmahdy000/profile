@@ -2302,24 +2302,25 @@ async function generateQuizFromBank(params: GenerateQuizParams) {
   let finalQuestions: QuizQuestion[] = [];
 
   if (Array.isArray(customQuestions) && customQuestions.length > 0) {
-    // Direct adoption of reviewed custom questions (MCQ & True/False)
+    // Direct adoption of reviewed custom questions (MCQ, True/False, and Essay)
     for (const q of customQuestions) {
       if (!q.prompt || !q.prompt.trim()) continue;
       const opts = (q.options || []).map(cleanOptionString);
-      const isTf = opts.length === 2 && (opts.includes("صواب") || opts.includes("صح") || opts.includes("True") || opts.includes("true"));
-      const kind = isTf ? "true_false" : (q.questionType === "true_false" ? "true_false" : "mcq");
-      const safeCorrectIdx = typeof q.correctIndex === "number" && q.correctIndex >= 0 && q.correctIndex < opts.length ? q.correctIndex : 0;
+      const isEssay = q.questionType === "essay" || opts.length === 0;
+      const isTf = !isEssay && (q.questionType === "true_false" || (opts.length === 2 && (opts.includes("صواب") || opts.includes("صح") || opts.includes("True") || opts.includes("true"))));
+      const kind: "mcq" | "true_false" | "essay" = isEssay ? "essay" : (isTf ? "true_false" : "mcq");
+      const safeCorrectIdx = isEssay ? -1 : (typeof q.correctIndex === "number" && q.correctIndex >= 0 && q.correctIndex < opts.length ? q.correctIndex : 0);
       finalQuestions.push({
         prompt: q.prompt.trim(),
-        options: opts,
+        options: isEssay ? [] : opts,
         correctIndex: safeCorrectIdx,
-        correctAnswer: q.correctAnswer?.trim() || opts[safeCorrectIdx] || "",
+        correctAnswer: isEssay ? (q.correctAnswer?.trim() || "") : (q.correctAnswer?.trim() || opts[safeCorrectIdx] || ""),
         explanation: q.explanation || "",
         imageUrl: q.imageUrl,
         lesson: q.lesson || (hasSpecificLessons ? targetLessons[0] : undefined),
         unit: q.unit || (unit && unit !== "all" ? unit : undefined),
         difficulty: q.difficulty || "medium",
-        points: q.points || 1,
+        points: q.points || (isEssay ? 5 : 1),
         questionType: kind,
       });
     }

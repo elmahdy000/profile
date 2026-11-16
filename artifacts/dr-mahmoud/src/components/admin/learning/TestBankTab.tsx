@@ -5059,7 +5059,7 @@ export function TestBankTab({
         lesson={selectedLesson}
         totalAvailableQuestions={lessonQuestions.length}
         availableUnitLessons={
-          currentStageNode?.units.find((u) => u.unit === selectedUnit)?.lessons.map((l) => ({
+          currentStageNode?.units.find((u) => (u.unit || "").trim() === (selectedUnit || "").trim())?.lessons.map((l) => ({
             lesson: l.lesson,
             totalQuestions: l.totalQuestions,
             mcqCount: l.mcqCount ?? l.totalQuestions,

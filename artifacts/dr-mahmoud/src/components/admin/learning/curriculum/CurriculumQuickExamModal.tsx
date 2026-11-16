@@ -111,15 +111,15 @@ export function CurriculumQuickExamModal({
   const activeAvailableCount = useMemo(() => {
     if (examScope === "single") {
       if (unitLessonsList.length > 0) {
-        const found = unitLessonsList.find((l) => l.lesson === lesson);
+        const found = unitLessonsList.find((l) => (l.lesson || "").trim() === (lesson || "").trim());
         if (found) return getLessonCountByType(found);
       }
       return questionType === "essay" ? 0 : totalAvailableQuestions;
     }
     if (examScope === "multi") {
-      const selectedSet = new Set(selectedMultiLessons);
+      const selectedSet = new Set(selectedMultiLessons.map((s) => s.trim()));
       return unitLessonsList
-        .filter((l) => selectedSet.has(l.lesson))
+        .filter((l) => selectedSet.has((l.lesson || "").trim()))
         .reduce((sum, l) => sum + getLessonCountByType(l), 0);
     }
     // Unit scope
