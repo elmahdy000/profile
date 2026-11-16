@@ -36,7 +36,19 @@ export function canStudentAccessCategory(
   category: string,
 ): boolean {
   const normalized = normalizeCategory(category);
-  if (!normalized || normalized === "عام" || normalized === "general") {
+  if (
+    !normalized ||
+    normalized === "عام" ||
+    normalized === "general" ||
+    normalized === "واجب" ||
+    normalized.includes("واجب") ||
+    normalized === "homework" ||
+    normalized === "hw" ||
+    normalized === "مهام" ||
+    normalized.includes("مهام") ||
+    normalized === "assignment" ||
+    normalized === "assignments"
+  ) {
     return true;
   }
   const allowed = getStudentAllowedCategories(student);
@@ -401,6 +413,15 @@ export function canStudentAccessContent(
     if (!stageMatches) return false;
   }
 
+  const isHomeworkContent =
+    category === "واجب" ||
+    normCategory === "واجب" ||
+    normCategory.includes("واجب") ||
+    normCategory === "homework" ||
+    normCategory === "hw" ||
+    normCategory === "assignment" ||
+    normCategory === "assignments";
+
   // Accounts with explicit course assignments match assigned courses OR any content matching their registered stage
   if (hasExplicitCourseAssignments) {
     if (courseId) {
@@ -409,16 +430,16 @@ export function canStudentAccessContent(
       }
       return false;
     }
-    if (stageMatches && canStudentAccessCategory(student, category)) {
+    if (stageMatches && (isHomeworkContent || canStudentAccessCategory(student, category))) {
       return true;
     }
     return false;
   }
 
   if (isGeneralContent || hasCategoryGeneralStage) {
-    return categoryMatches || (stageMatches && canStudentAccessCategory(student, category));
+    return isHomeworkContent || categoryMatches || (stageMatches && canStudentAccessCategory(student, category));
   }
-  return stageMatches && categoryMatches;
+  return stageMatches && (isHomeworkContent || categoryMatches);
 }
 
 export function canStudentAccessLearningMode(
