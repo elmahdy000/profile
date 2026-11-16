@@ -1939,115 +1939,139 @@ export function StudentPlatform() {
 
       <AnimatePresence>
         {linkedPreviewFile && <AppFilePreviewModal file={linkedPreviewFile} onClose={() => setLinkedPreviewFile(null)} />}
-        {activeQuiz && (
-          <motion.div
-            className="fixed inset-0 z-[100] bg-slate-50/95 dark:bg-[#070D18]/95 backdrop-blur-md flex flex-col overflow-hidden select-none md:select-auto"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            {/* ── 1. Sticky Full-Width Header Bar ── */}
-            <header className="sticky top-0 z-30 shrink-0 border-b border-slate-200/80 dark:border-[#1E2E48] bg-white/90 dark:bg-[#070D18]/90 backdrop-blur-xl shadow-xs">
-              <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3" dir="rtl">
-                {/* Title and stats on Right (RTL) */}
-                <div className="min-w-0 flex-1 space-y-1 text-right">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-black shadow-2xs border ${
-                      activeQuiz.scope === "homework" || activeQuiz.category === "واجب"
-                        ? "bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border-amber-200/80 dark:border-amber-800/60"
-                        : "bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border-blue-200/80 dark:border-blue-800/60"
-                    }`}>
-                      {activeQuiz.scope === "homework" || activeQuiz.category === "واجب" ? "واجب منزلي 📚" : "اختبار إلكتروني 📝"}
-                    </span>
-                    <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight truncate" dir="auto">
-                      {activeQuiz.title}
-                    </h2>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
-                    <span><span className="font-mono tabular-nums">{activeQuiz.questionsToShow && activeQuiz.questionsToShow > 0 ? activeQuiz.questionsToShow : activeQuiz.questions.length}</span> سؤال</span>
-                    <span>•</span>
-                    <span>نسبة النجاح <span className="font-mono tabular-nums">{activeQuiz.passingScore}%</span></span>
-                    {!quizResult && (
-                      <>
-                        <span>•</span>
-                        <span className="font-extrabold text-blue-600 dark:text-blue-400">
-                          أجبت: <span className="font-mono tabular-nums">{quizAnswers.filter((a) => a >= 0).length}</span> / <span className="font-mono tabular-nums">{activeQuiz.questions.length}</span>
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Left side (LTR): Timer & Safe Exit button */}
-                <div className="flex items-center gap-2 sm:gap-3 shrink-0" dir="ltr">
-                  {!quizResult && (
-                    <div
-                      className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-bold shadow-2xs transition-all duration-300 ${
-                        quizTimeRemaining === null
-                          ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700"
-                          : quizTimeRemaining < 30
-                          ? "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/40 animate-pulse ring-2 ring-red-500/20"
-                          : quizTimeRemaining < 60
-                          ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
-                          : "bg-blue-50/80 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-500/25 shadow-2xs"
-                      }`}
-                    >
-                      <Clock className="h-4 w-4 shrink-0" />
-                      <span className="font-black font-mono text-sm sm:text-base tabular-nums tracking-wider">
-                        {quizTimeRemaining !== null
-                          ? `${Math.floor(quizTimeRemaining / 60)}:${String(quizTimeRemaining % 60).padStart(2, "0")}`
-                          : `${Math.floor(quizElapsedSeconds / 60)}:${String(quizElapsedSeconds % 60).padStart(2, "0")}`
-                        }
+        {activeQuiz && (() => {
+          const isHomework = activeQuiz.scope === "homework" || activeQuiz.category === "واجب";
+          return (
+            <motion.div
+              className="fixed inset-0 z-[100] bg-slate-50/95 dark:bg-[#070D18]/95 backdrop-blur-md flex flex-col overflow-hidden select-none md:select-auto"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              {/* ── 1. Sticky Full-Width Header Bar ── */}
+              <header className="sticky top-0 z-30 shrink-0 border-b border-slate-200/80 dark:border-[#1E2E48] bg-white/90 dark:bg-[#070D18]/90 backdrop-blur-xl shadow-xs">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3" dir="rtl">
+                  {/* Title and stats on Right (RTL) */}
+                  <div className="min-w-0 flex-1 space-y-1 text-right">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-black shadow-2xs border ${
+                        isHomework
+                          ? "bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border-amber-200/80 dark:border-amber-800/60"
+                          : "bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border-blue-200/80 dark:border-blue-800/60"
+                      }`}>
+                        {isHomework ? "واجب منزلي (تسليم ورقي بالحصة) 📝" : "اختبار إلكتروني 📝"}
                       </span>
-                      {quizTimeRemaining !== null && (
-                        <span className="text-[10px] font-bold font-mono opacity-70">
-                          {(() => {
-                            const totalSeconds = Math.round((activeQuiz.durationMinutes ?? 0) * 60);
-                            return `/ ${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, "0")}`;
-                          })()}
-                        </span>
+                      <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight truncate" dir="auto">
+                        {activeQuiz.title}
+                      </h2>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
+                      <span><span className="font-mono tabular-nums">{activeQuiz.questionsToShow && activeQuiz.questionsToShow > 0 ? activeQuiz.questionsToShow : activeQuiz.questions.length}</span> سؤال</span>
+                      {isHomework ? (
+                        <>
+                          <span>•</span>
+                          <span className="text-amber-600 dark:text-amber-400 font-black">يُحل في الكشكول ويُسلّم يدوياً بالحصة ✍️</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>•</span>
+                          <span>نسبة النجاح <span className="font-mono tabular-nums">{activeQuiz.passingScore}%</span></span>
+                          {!quizResult && (
+                            <>
+                              <span>•</span>
+                              <span className="font-extrabold text-blue-600 dark:text-blue-400">
+                                أجبت: <span className="font-mono tabular-nums">{quizAnswers.filter((a) => a >= 0).length}</span> / <span className="font-mono tabular-nums">{activeQuiz.questions.length}</span>
+                              </span>
+                            </>
+                          )}
+                        </>
                       )}
                     </div>
-                  )}
+                  </div>
 
-                  {/* Explicit Exit button that requires confirmation */}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      if (!quizResult) {
-                        if (
-                          !window.confirm(
-                            "هل أنت متأكد من رغبتك في الخروج من الاختبار؟ لن يتم حفظ إجاباتك إلا عند الضغط على زر 'تسليم وتصحيح الاختبار'."
-                          )
-                        ) {
-                          return;
+                  {/* Left side (LTR): Actions */}
+                  <div className="flex items-center gap-2 sm:gap-3 shrink-0" dir="ltr">
+                    {isHomework ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.print()}
+                        className="h-9 px-3.5 rounded-xl border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 text-xs font-bold gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        <Printer className="h-4 w-4" />
+                        <span>طباعة الواجب 🖨️</span>
+                      </Button>
+                    ) : (
+                      !quizResult && (
+                        <div
+                          className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-bold shadow-2xs transition-all duration-300 ${
+                            quizTimeRemaining === null
+                              ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700"
+                              : quizTimeRemaining < 30
+                              ? "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/40 animate-pulse ring-2 ring-red-500/20"
+                              : quizTimeRemaining < 60
+                              ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                              : "bg-blue-50/80 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-500/25 shadow-2xs"
+                          }`}
+                        >
+                          <Clock className="h-4 w-4 shrink-0" />
+                          <span className="font-black font-mono text-sm sm:text-base tabular-nums tracking-wider">
+                            {quizTimeRemaining !== null
+                              ? `${Math.floor(quizTimeRemaining / 60)}:${String(quizTimeRemaining % 60).padStart(2, "0")}`
+                              : `${Math.floor(quizElapsedSeconds / 60)}:${String(quizElapsedSeconds % 60).padStart(2, "0")}`
+                            }
+                          </span>
+                          {quizTimeRemaining !== null && (
+                            <span className="text-[10px] font-bold font-mono opacity-70">
+                              {(() => {
+                                const totalSeconds = Math.round((activeQuiz.durationMinutes ?? 0) * 60);
+                                return `/ ${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, "0")}`;
+                              })()}
+                            </span>
+                          )}
+                        </div>
+                      )
+                    )}
+
+                    {/* Exit button */}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        if (!quizResult && !isHomework) {
+                          if (
+                            !window.confirm(
+                              "هل أنت متأكد من رغبتك في الخروج من الاختبار؟ لن يتم حفظ إجاباتك إلا عند الضغط على زر 'تسليم وتصحيح الاختبار'."
+                            )
+                          ) {
+                            return;
+                          }
                         }
-                      }
-                      setActiveQuiz(null);
-                      setQuizResult(null);
-                    }}
-                    className="h-9 px-3 text-xs font-bold text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-all cursor-pointer"
-                  >
-                    <X className="h-4 w-4 ml-1" />
-                    {quizResult ? "إغلاق" : "خروج"}
-                  </Button>
+                        setActiveQuiz(null);
+                        setQuizResult(null);
+                      }}
+                      className="h-9 px-3 text-xs font-bold text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-all cursor-pointer"
+                    >
+                      <X className="h-4 w-4 ml-1" />
+                      <span>{quizResult || isHomework ? "إغلاق" : "خروج"}</span>
+                    </Button>
+                  </div>
                 </div>
-              </div>
 
-              {/* Progress bar for countdown */}
-              {quizTimeRemaining !== null && !quizResult && activeQuiz.durationMinutes && (
-                <div className="h-1 w-full bg-slate-200/80 dark:bg-slate-800 overflow-hidden">
-                  <div
-                    className={`h-full transition-all duration-1000 ease-linear ${
-                      quizTimeRemaining < 30 ? "bg-red-500" : quizTimeRemaining < 60 ? "bg-amber-500" : "bg-blue-600"
-                    }`}
-                    style={{ width: `${(quizTimeRemaining / (activeQuiz.durationMinutes * 60)) * 100}%` }}
-                  />
-                </div>
-              )}
-            </header>
+                {/* Progress bar for countdown */}
+                {!isHomework && quizTimeRemaining !== null && !quizResult && activeQuiz.durationMinutes && (
+                  <div className="h-1 w-full bg-slate-200/80 dark:bg-slate-800 overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-1000 ease-linear ${
+                        quizTimeRemaining < 30 ? "bg-red-500" : quizTimeRemaining < 60 ? "bg-amber-500" : "bg-blue-600"
+                      }`}
+                      style={{ width: `${(quizTimeRemaining / (activeQuiz.durationMinutes * 60)) * 100}%` }}
+                    />
+                  </div>
+                )}
+              </header>
 
             {/* ── 2. Full-Screen Scrollable Content (Takes 100% Height, Comfortable Reading) ── */}
             <div
@@ -2134,18 +2158,18 @@ export function StudentPlatform() {
                 )}
 
                 {/* Manual Submission Notice for Homework */}
-                {(activeQuiz.scope === "homework" || activeQuiz.category === "واجب") && (
-                  <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-900 dark:text-amber-200" dir="rtl">
+                {isHomework && (
+                  <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border-2 border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-900 dark:text-amber-200" dir="rtl">
                     <div className="flex items-start gap-3">
                       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-300">
-                        <FileText className="h-5 w-5" />
+                        <BookCheck className="h-5 w-5" />
                       </span>
-                      <div className="space-y-0.5">
+                      <div className="space-y-1">
                         <h4 className="text-xs sm:text-sm font-black text-amber-900 dark:text-amber-100">
-                          تعليمات تسليم الواجب: تسليم يدوي بالحصة
+                          📌 تعليمات تسليم الواجب: تسليم يدوي ورقي بالحصة
                         </h4>
                         <p className="text-xs text-amber-800/90 dark:text-amber-300/90 leading-relaxed font-medium">
-                          يُرجى كتابة إجابات هذه الأسئلة وحلها في كشكول الواجب الخاص بك، لتسليمها يدوياً لمساعد المعلم في موعد الحصة القادمة بالسنتر.
+                          هذا الواجب مخصص للمذاكرة والتطبيق الورقي؛ يُرجى نقل وحل الأسئلة في كشكول الواجب الخاص بك، لتسليمها باليد لمساعد المعلم في موعد الحصة القادمة بالسنتر. لست بحاجة لكتابة الإجابات أو تسليمها إلكترونياً على المنصة.
                         </p>
                       </div>
                     </div>
@@ -2154,7 +2178,7 @@ export function StudentPlatform() {
                       variant="outline"
                       size="sm"
                       onClick={() => window.print()}
-                      className="shrink-0 h-9 px-3.5 rounded-xl border-amber-400/60 text-amber-900 dark:text-amber-200 hover:bg-amber-500/20 text-xs font-bold gap-1.5 cursor-pointer shadow-xs"
+                      className="shrink-0 h-9 px-3.5 rounded-xl border-amber-400/60 bg-white/70 dark:bg-slate-900/50 text-amber-900 dark:text-amber-200 hover:bg-amber-500/20 text-xs font-bold gap-1.5 cursor-pointer shadow-xs"
                     >
                       <Printer className="h-4 w-4" />
                       <span>طباعة الأسئلة 🖨️</span>
@@ -2291,23 +2315,32 @@ export function StudentPlatform() {
                       {/* Essay Question Input or Options Radio List */}
                       {isEssay ? (
                         <div className="space-y-3 pt-1">
-                          <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                              <FileText className="h-4 w-4 text-purple-600" />
-                              <span>إجابة الطالب المقالية:</span>
-                            </label>
-                            <textarea
-                              disabled={Boolean(quizResult)}
-                              rows={4}
-                              value={essayTextAnswers[origIdx] ?? essayTextAnswers[qi] ?? ""}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setEssayTextAnswers((prev) => ({ ...prev, [origIdx]: val, [qi]: val }));
-                              }}
-                              placeholder="اكتب إجابتك المقالية وخطوات الحل هنا بالتفصيل..."
-                              className="w-full p-3.5 rounded-2xl border border-slate-200/80 dark:border-[#1F314A] bg-background text-sm font-medium focus:ring-2 focus:ring-purple-500/30 focus:outline-none"
-                            />
-                          </div>
+                          {isHomework ? (
+                            <div className="p-3.5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-dashed border-amber-300/80 dark:border-amber-700/60 text-right">
+                              <span className="text-xs font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                                <FileText className="h-4 w-4 text-amber-600" />
+                                <span>سؤال مقالي — يُنقل ويُحل في كشكول الواجب بخط اليد ✍️</span>
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="space-y-1.5">
+                              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                <FileText className="h-4 w-4 text-purple-600" />
+                                <span>إجابة الطالب المقالية:</span>
+                              </label>
+                              <textarea
+                                disabled={Boolean(quizResult)}
+                                rows={4}
+                                value={essayTextAnswers[origIdx] ?? essayTextAnswers[qi] ?? ""}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setEssayTextAnswers((prev) => ({ ...prev, [origIdx]: val, [qi]: val }));
+                                }}
+                                placeholder="اكتب إجابتك المقالية وخطوات الحل هنا بالتفصيل..."
+                                className="w-full p-3.5 rounded-2xl border border-slate-200/80 dark:border-[#1F314A] bg-background text-sm font-medium focus:ring-2 focus:ring-purple-500/30 focus:outline-none"
+                              />
+                            </div>
+                          )}
 
                           {quizResult && (
                             <div className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 space-y-1.5">
@@ -2412,7 +2445,33 @@ export function StudentPlatform() {
                 })}
 
                 {/* ── 3. Bottom Action Section ── */}
-                {!quizResult ? (
+                {isHomework ? (
+                  <div className="pt-4 pb-8 space-y-4 text-center" dir="rtl">
+                    <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs sm:text-sm font-bold flex items-center justify-center gap-2">
+                      <span className="text-base">✍️</span>
+                      <span>تذكير بالتسليم: انقل وحل أسئلة هذا الواجب في كشكولك الورقي وسلّمه باليد لمساعد المعلم في الحصة القادمة.</span>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                      <Button
+                        onClick={() => window.print()}
+                        className="w-full sm:w-auto h-12 px-6 text-sm sm:text-base font-black rounded-xl shadow-lg bg-amber-600 hover:bg-amber-700 text-white transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <Printer className="h-5 w-5" />
+                        <span>طباعة ورقة أسئلة الواجب (A4) 🖨️</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setActiveQuiz(null);
+                          setQuizResult(null);
+                        }}
+                        className="w-full sm:w-auto h-12 px-6 text-sm sm:text-base font-black rounded-xl border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
+                      >
+                        <span>إغلاق والعودة للمنصة ✕</span>
+                      </Button>
+                    </div>
+                  </div>
+                ) : !quizResult ? (
                   <div className="pt-4 pb-8 space-y-3 text-center">
                     <Button
                       onClick={() => submitQuiz(false)}
@@ -2448,7 +2507,7 @@ export function StudentPlatform() {
               </div>
             </div>
           </motion.div>
-        )}
+        ); })()}
         {lightboxImage && (
           <motion.div
             initial={{ opacity: 0 }}

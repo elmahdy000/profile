@@ -113,37 +113,37 @@ export function HomeworkTab({ homework, onStartHomework, onReviewHomework }: Hom
         </div>
 
         <div className="rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-3 sm:p-4 shadow-2xs flex items-center gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40">
-            <CheckCircle2 className="h-5 w-5" />
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40">
+            <BookCheck className="h-5 w-5" />
           </span>
           <div>
-            <span className="block text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">تم تسليمها بنجاح</span>
-            <strong className="text-lg sm:text-xl font-black font-mono tabular-nums text-emerald-600 dark:text-emerald-400">
-              {completedCount}
+            <span className="block text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">طريقة التسليم</span>
+            <strong className="text-xs sm:text-sm font-black text-amber-700 dark:text-amber-300">
+              تسليم ورقي بالحصة ✍️
             </strong>
           </div>
         </div>
 
         <div className="rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-3 sm:p-4 shadow-2xs flex items-center gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/40">
-            <Clock className="h-5 w-5" />
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40">
+            <CheckCircle2 className="h-5 w-5" />
           </span>
           <div>
-            <span className="block text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">واجبات مطلوبة</span>
-            <strong className="text-lg sm:text-xl font-black font-mono tabular-nums text-amber-600 dark:text-amber-400">
-              {pendingCount}
+            <span className="block text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">مكان الحل</span>
+            <strong className="text-xs sm:text-sm font-black text-emerald-700 dark:text-emerald-300">
+              كشكول الواجب 📓
             </strong>
           </div>
         </div>
 
         <div className="rounded-2xl border border-slate-200/80 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] p-3 sm:p-4 shadow-2xs flex items-center gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-900/40">
-            <TrendingUp className="h-5 w-5" />
+            <Award className="h-5 w-5" />
           </span>
           <div>
-            <span className="block text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">متوسط الدرجات</span>
-            <strong className="text-lg sm:text-xl font-black font-mono tabular-nums text-purple-600 dark:text-purple-400">
-              {averageScore !== null ? `${averageScore}%` : "—"}
+            <span className="block text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400">طباعة الأسئلة</span>
+            <strong className="text-xs sm:text-sm font-black text-purple-700 dark:text-purple-300">
+              متاح طباعة A4 🖨️
             </strong>
           </div>
         </div>
@@ -158,45 +158,14 @@ export function HomeworkTab({ homework, onStartHomework, onReviewHomework }: Hom
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ابحث باسم الواجب أو الدرس..."
+              placeholder="ابحث باسم الواجب أو الدرس أو الوحدة..."
               className="h-9 w-full rounded-xl border border-slate-200/80 dark:border-[#1E2E48] bg-slate-50/70 dark:bg-[#0F172A] pr-9 pl-3 text-xs font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-amber-500 focus:outline-none transition-all"
             />
           </div>
 
-          <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-[#0F172A] rounded-xl border border-slate-200/60 dark:border-[#1E2E48]">
-            <button
-              type="button"
-              onClick={() => setStatusFilter("all")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                statusFilter === "all"
-                  ? "bg-amber-600 text-white shadow-xs font-black"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-              }`}
-            >
-              الكل ({totalCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter("pending")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                statusFilter === "pending"
-                  ? "bg-amber-600 text-white shadow-xs font-black"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-              }`}
-            >
-              مطلوب ({pendingCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter("completed")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                statusFilter === "completed"
-                  ? "bg-amber-600 text-white shadow-xs font-black"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-              }`}
-            >
-              تم التسليم ({completedCount})
-            </button>
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 px-2">
+            <span>عدد الواجبات المتاحة:</span>
+            <span className="font-mono font-black text-amber-600 dark:text-amber-400">{filteredHomework.length}</span>
           </div>
         </div>
       </div>
@@ -205,53 +174,20 @@ export function HomeworkTab({ homework, onStartHomework, onReviewHomework }: Hom
       {filteredHomework.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4 w-full">
           {filteredHomework.map((hw) => {
-            const isCompleted = (hw.attemptsUsed || 0) > 0;
             const isLocked = Boolean(hw.locked);
             const questionsCount = hw.questionsToShow && hw.questionsToShow > 0 ? hw.questionsToShow : hw.questions.length;
-            const passed = hw.bestScore !== null && hw.bestScore !== undefined && hw.bestScore >= (hw.passingScore || 60);
 
             return (
               <article
                 key={hw.id}
-                className={`group relative flex flex-col justify-between rounded-2xl border p-4 shadow-2xs transition-all duration-200 overflow-hidden ${
-                  isLocked
-                    ? "border-slate-200/60 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/40 opacity-75"
-                    : isCompleted
-                    ? "border-emerald-300/70 dark:border-emerald-700/60 bg-card dark:bg-[#0A101D] hover:border-emerald-500"
-                    : "border-slate-200/90 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] hover:border-amber-500/50"
-                }`}
+                className="group relative flex flex-col justify-between rounded-2xl border p-4 shadow-2xs transition-all duration-200 overflow-hidden border-slate-200/90 dark:border-[#1E2E48] bg-card dark:bg-[#0A101D] hover:border-amber-500/50"
               >
                 <div className="space-y-3">
                   {/* Top Status & Questions Count */}
                   <div className="flex items-center justify-between gap-2">
-                    <span
-                      className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-bold border ${
-                        isLocked
-                          ? "bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border-amber-200/80"
-                          : isCompleted
-                          ? "bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border-emerald-200/80"
-                          : "bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border-amber-200/80"
-                      }`}
-                    >
-                      {isLocked ? (
-                        <>
-                          <Lock className="h-3 w-3" />
-                          <span>مغلق</span>
-                        </>
-                      ) : isCompleted ? (
-                        <>
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                          <span>تم التسليم بنجاح ✓</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="relative flex h-1.5 w-1.5">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-600" />
-                          </span>
-                          <span>مطلوب حله 📝</span>
-                        </>
-                      )}
+                    <span className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-bold border bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border-amber-200/80">
+                      <BookCheck className="h-3.5 w-3.5 text-amber-600" />
+                      <span>تسليم يدوي ورقي 📝</span>
                     </span>
 
                     <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
@@ -283,71 +219,25 @@ export function HomeworkTab({ homework, onStartHomework, onReviewHomework }: Hom
                     )}
                   </div>
 
-                  {/* Score / Status Details */}
-                  {isCompleted && hw.bestScore !== null && hw.bestScore !== undefined && (
-                    <div className="p-2.5 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/40 flex items-center justify-between text-xs">
-                      <span className="font-bold text-slate-600 dark:text-slate-300">درجة التسليم:</span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-mono text-sm font-black text-emerald-700 dark:text-emerald-300">
-                          {hw.bestScore}%
-                        </span>
-                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${
-                          passed
-                            ? "bg-emerald-600 text-white"
-                            : "bg-rose-500 text-white"
-                        }`}>
-                          {passed ? "ناجح" : "يحتاج مراجعة"}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {!isCompleted && !isLocked && (
-                    <div className="text-[11px] text-amber-800 dark:text-amber-300 font-bold bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/30 flex items-start gap-1.5 leading-relaxed">
-                      <span className="shrink-0 text-xs">✍️</span>
-                      <span>
-                        <strong>تسليم يدوي ورقي:</strong> يُكتب حل هذا الواجب في كشكول الواجب ويُسلّم باليد لمساعد المعلم في الحصة القادمة.
-                      </span>
-                    </div>
-                  )}
+                  {/* Submission Instructions Box */}
+                  <div className="text-[11px] text-amber-900 dark:text-amber-200 font-medium bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/30 flex items-start gap-1.5 leading-relaxed">
+                    <span className="shrink-0 text-xs">✍️</span>
+                    <span>
+                      <strong>تسليم ورقي بالحصة:</strong> يُحل هذا الواجب في كشكول الواجب الخاص بك، ويُسلّم يدوياً لمساعد المعلم في الحصة القادمة بالسنتر.
+                    </span>
+                  </div>
                 </div>
 
                 {/* Card Action Button */}
                 <div className="pt-4 border-t border-slate-100 dark:border-[#1E2E48] mt-3">
-                  {isLocked ? (
-                    <div className="text-center py-1.5 text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-950/50 rounded-xl border border-amber-200">
-                      {hw.lockedReason || "الواجب مغلق حالياً"}
-                    </div>
-                  ) : isCompleted ? (
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => (onReviewHomework ? onReviewHomework(hw) : onStartHomework(hw))}
-                        className="flex-1 h-9 rounded-xl text-xs font-black shadow-xs transition-all active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white"
-                      >
-                        <Eye className="h-3.5 w-3.5" />
-                        <span>مراجعة الأسئلة والإجابات 👁️</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onStartHomework(hw)}
-                        className="h-9 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer shrink-0 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700"
-                        title="إعادة الفتح"
-                      >
-                        <RotateCcw className="h-3.5 w-3.5" />
-                        <span className="hidden sm:inline">إعادة</span>
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => onStartHomework(hw)}
-                      className="w-full h-9 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-98 bg-amber-600 hover:bg-amber-700 text-white"
-                    >
-                      <BookCheck className="h-4 w-4" />
-                      <span>استعراض أسئلة الواجب والحل 📝</span>
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => onStartHomework(hw)}
+                    className="w-full h-10 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-98 bg-amber-600 hover:bg-amber-700 text-white"
+                  >
+                    <BookCheck className="h-4 w-4" />
+                    <span>استعراض وطباعة أسئلة الواجب 📄</span>
+                  </button>
                 </div>
               </article>
             );
