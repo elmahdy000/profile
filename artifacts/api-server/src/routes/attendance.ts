@@ -354,6 +354,268 @@ router.post("/admin/attendance/scan", requireAdmin, async (req: Request, res, ne
   }
 });
 
+// ─── 1.5. POST /api/admin/attendance/bulk-sync ────────────────────────────────
+// Batch sync queued offline attendance records
+router.post("/admin/attendance/bulk-sync", requireAdmin, async (req: Request, res, next) => {
+  try {
+    const rawScans = Array.isArray(req.body.scans) ? req.body.scans : [];
+    if (rawScans.length === 0) {
+      res.json({ success: true, syncedCount: 0, results: [] });
+      return;
+    }
+
+    const adminIdentity = getAdminIdentity(req);
+    const recordedBy =
+      adminIdentity?.username ||
+      (adminIdentity?.role === "superadmin" ? "د. محمود المهدي (أوفلاين مزامنة)" : "مشرف مساعد (أوفلاين مزامنة)");
+
+    const results: Array<{
+      localId: string;
+      qrCode: string;
+      studentId?: number;
+      studentName?: string;
+      success: boolean;
+      alreadyRecorded?: boolean;
+      isCrossGroup?: boolean;
+      isCrossCenter?: boolean;
+      error?: string;
+    }> = [];
+
+    let syncedCount = 0;
+
+    for (const scanItem of rawScans) {
+      const localId = String(scanItem.localId || "");
+      const rawInput = String(scanItem.qrCode ?? scanItem.code ?? "").trim();
+      const date = String(scanItem.date || getTodayCairoDate()).trim();
+      const centerOverride = scanItem.centerName ? String(scanItem.centerName).trim() : null;
+      const slotOverride = scanItem.appointmentSlot ? String(scanItem.appointmentSlot).trim() : null;
+      const notes = scanItem.notes ? String(scanItem.notes).trim() : null;
+      const notifyParent = scanItem.notifyParent !== false;
+      const scannedAtDate = scanItem.scannedAt ? new Date(scanItem.scannedAt) : new Date();
+
+      if (!rawInput) {
+        results.push({
+          localId,
+          qrCode: rawInput,
+          success: false,
+          error: "كود الطالب مفقود",
+        });
+        continue;
+      }
+
+      try {
+        let extractedStudentId: number | null = null;
+        let extractedPhone = "";
+        let extractedAccessCode = "";
+
+        const stdMatch = rawInput.match(/^STD-(\d+)-?(\d+)?$/i);
+        if (stdMatch) {
+          extractedStudentId = Number(stdMatch[1]);
+          if (stdMatch[2]) extractedPhone = stdMatch[2];
+        } else if (/^ID:\s*(\d+)$/i.test(rawInput)) {
+          extractedStudentId = Number(rawInput.replace(/^ID:\s*/i, ""));
+        } else {
+          const cleanInputDigits = cleanDigits(rawInput);
+          if (cleanInputDigits.length >= 8 && cleanInputDigits.startsWith("01")) {
+            extractedPhone = cleanInputDigits;
+          } else if (/^\d+$/.test(rawInput) && Number(rawInput) > 0 && Number(rawInput) < 100000) {
+            extractedStudentId = Number(rawInput);
+          }
+          extractedAccessCode = normalizeArabicDigits(rawInput).toUpperCase();
+        }
+
+        const lookupConditions: any[] = [];
+        if (extractedStudentId && Number.isSafeInteger(extractedStudentId)) {
+          lookupConditions.push(eq(studentsTable.id, extractedStudentId));
+        }
+        if (extractedAccessCode) {
+          lookupConditions.push(sql`UPPER(${studentsTable.accessCode}) = ${extractedAccessCode}`);
+        }
+        if (extractedPhone) {
+          lookupConditions.push(
+            sql`REPLACE(TRANSLATE(${studentsTable.phone}, '٠١٢٣٤٥٦٧٨٩', '0123456789'), ' ', '') LIKE ${`%${extractedPhone.slice(-8)}%`}`
+          );
+        }
+
+        if (lookupConditions.length === 0) {
+          results.push({
+            localId,
+            qrCode: rawInput,
+            success: false,
+            error: "صيغة كود غير صالحة",
+          });
+          continue;
+        }
+
+        const [student] = await db
+          .select()
+          .from(studentsTable)
+          .where(sql`(${sql.join(lookupConditions, sql` OR `)})`)
+          .limit(1);
+
+        if (!student) {
+          results.push({
+            localId,
+            qrCode: rawInput,
+            success: false,
+            error: "لم يتم العثور على طالب بهذا الكود",
+          });
+          continue;
+        }
+
+        const centerName =
+          centerOverride && centerOverride !== "all"
+            ? centerOverride
+            : (student as any).centerName || (student as any).center || "السنتر الرئيسي";
+        const appointmentSlot =
+          slotOverride && slotOverride !== "all"
+            ? slotOverride
+            : (student as any).appointmentSlot || null;
+        const academicStage = student.grade || "عام";
+
+        const enrolledSlot = (student as any).appointmentSlot || null;
+        const enrolledCenter = (student as any).centerName || (student as any).center || null;
+        const isCrossGroup = Boolean(
+          slotOverride &&
+            slotOverride !== "all" &&
+            enrolledSlot &&
+            normalizeSlot(slotOverride) !== normalizeSlot(enrolledSlot)
+        );
+        const isCrossCenter = Boolean(
+          centerOverride &&
+            centerOverride !== "all" &&
+            enrolledCenter &&
+            centerOverride.trim() !== enrolledCenter.trim() &&
+            !centerOverride.includes(enrolledCenter.trim()) &&
+            !enrolledCenter.includes(centerOverride.trim())
+        );
+
+        // Check if attendance already recorded today
+        const [existingRecord] = await db
+          .select()
+          .from(studentAttendanceTable)
+          .where(
+            and(
+              eq(studentAttendanceTable.studentId, student.id),
+              eq(studentAttendanceTable.date, date)
+            )
+          )
+          .limit(1);
+
+        const now = isNaN(scannedAtDate.getTime()) ? new Date() : scannedAtDate;
+        let attendanceRecord = existingRecord;
+        let alreadyRecorded = false;
+
+        if (existingRecord && existingRecord.status === "present") {
+          alreadyRecorded = true;
+        } else {
+          if (existingRecord) {
+            const [updated] = await db
+              .update(studentAttendanceTable)
+              .set({
+                status: "present",
+                attendedAt: now,
+                recordedBy,
+                centerName,
+                appointmentSlot,
+                academicStage,
+                notes: notes || (isCrossGroup ? `حضور تعويضي أوفلاين (الموعد الأصلي: ${enrolledSlot})` : existingRecord.notes),
+                updatedAt: new Date(),
+              })
+              .where(eq(studentAttendanceTable.id, existingRecord.id))
+              .returning();
+            attendanceRecord = updated;
+          } else {
+            const [inserted] = await db
+              .insert(studentAttendanceTable)
+              .values({
+                studentId: student.id,
+                date,
+                status: "present",
+                attendedAt: now,
+                recordedBy,
+                centerName,
+                appointmentSlot,
+                academicStage,
+                notes: notes || (isCrossGroup ? `حضور تعويضي أوفلاين (الموعد الأصلي: ${enrolledSlot})` : "تسجيل أوفلاين متزامن"),
+                parentNotified: false,
+              })
+              .returning();
+            attendanceRecord = inserted;
+          }
+          syncedCount++;
+        }
+
+        // Notify parent if requested and not notified yet
+        if (!alreadyRecorded && notifyParent && !attendanceRecord?.parentNotified) {
+          const timeStr = new Intl.DateTimeFormat("ar-EG", {
+            timeZone: "Africa/Cairo",
+            hour: "numeric",
+            minute: "numeric",
+            hour12: true,
+          }).format(now);
+
+          try {
+            await db.insert(studentNotificationsTable).values({
+              studentId: student.id,
+              title: "تسجيل حضور الحصة 📍 (مزامنة)",
+              message: `تم تأكيد تسجيل حضور الطالب (${student.name}) لحصة اليوم (${date}) في تمام الساعة ${timeStr}. نتمنى له دوام التوفيق والتميز.`,
+              type: "attendance",
+            });
+
+            await db
+              .update(studentAttendanceTable)
+              .set({
+                parentNotified: true,
+                parentNotifiedAt: new Date(),
+              })
+              .where(eq(studentAttendanceTable.id, attendanceRecord.id));
+          } catch (notifErr) {
+            console.error("Failed to insert bulk attendance notification:", notifErr);
+          }
+        }
+
+        results.push({
+          localId,
+          qrCode: rawInput,
+          studentId: student.id,
+          studentName: student.name,
+          success: true,
+          alreadyRecorded,
+          isCrossGroup,
+          isCrossCenter,
+        });
+      } catch (scanErr: any) {
+        results.push({
+          localId,
+          qrCode: rawInput,
+          success: false,
+          error: scanErr.message || "فشل تسجيل حضور الطالب",
+        });
+      }
+    }
+
+    if (syncedCount > 0) {
+      await logAudit(
+        req,
+        "ATTENDANCE_BULK_SYNC",
+        "attendance",
+        null,
+        `مزامنة حضور أوفلاين لـ ${syncedCount} طالب بنجاح`
+      );
+    }
+
+    res.json({
+      success: true,
+      syncedCount,
+      totalReceived: rawScans.length,
+      results,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // ─── 2. GET /api/admin/attendance/daily ────────────────────────────────────────
 // Full Daily Attendance Sheet with Filtering & Real-time Counts & Group Breakdown
 router.get("/admin/attendance/daily", requireAdmin, async (req: Request, res, next) => {

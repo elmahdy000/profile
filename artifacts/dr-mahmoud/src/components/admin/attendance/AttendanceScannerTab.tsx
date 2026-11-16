@@ -28,11 +28,21 @@ import {
   FileSpreadsheet,
   Building2,
   ShieldCheck,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { OFFICIAL_CENTERS, OFFICIAL_SLOTS, normalizeSlotName, normalizeCenterName } from "../learning/StudentDrawer";
 import { defaultOfflineCenters } from "../settings/CentersTab";
 import { MonthlyCenterAttendanceTab } from "./MonthlyCenterAttendanceTab";
+import {
+  cacheStudentRoster,
+  findStudentOffline,
+  queueOfflineScan,
+  getPendingOfflineCount,
+  syncOfflineAttendance,
+  EVENT_ATTENDANCE_QUEUE_CHANGED,
+} from "@/lib/offlineAttendance";
 
 export interface GroupBreakdownItem {
   centerName: string;
@@ -178,6 +188,11 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
   // Active Session Selection for Scanner (Center & Time Slot)
   const [selectedCenter, setSelectedCenter] = useState<string>("all");
   const [selectedSlot, setSelectedSlot] = useState<string>("all");
+
+  // Offline & Synchronization State
+  const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== "undefined" ? navigator.onLine : true);
+  const [pendingOfflineCount, setPendingOfflineCount] = useState<number>(0);
+  const [isSyncingOffline, setIsSyncingOffline] = useState<boolean>(false);
 
   // Daily Sheet State
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
@@ -355,6 +370,16 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
     });
   };
 
+  // Update offline pending count
+  const updateQueueCount = useCallback(async () => {
+    try {
+      const count = await getPendingOfflineCount();
+      setPendingOfflineCount(count);
+    } catch {
+      // Ignore
+    }
+  }, []);
+
   // Load Daily Attendance Sheet
   const loadDailySheet = useCallback(async (date: string) => {
     setIsLoadingRecords(true);
@@ -376,20 +401,184 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
         unmarkedCount: 0,
         attendanceRate: 0,
       });
+
+      // Cache student roster locally in IndexedDB / localStorage for offline identification!
+      if (data.records && Array.isArray(data.records) && data.records.length > 0) {
+        void cacheStudentRoster(data.records);
+      }
     } catch (err: any) {
-      toast({
-        variant: "destructive",
-        title: "خطأ في تحميل البيانات",
-        description: err.message,
-      });
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        console.warn("Offline: Using currently cached attendance data.");
+      } else {
+        toast({
+          variant: "destructive",
+          title: "خطأ في تحميل البيانات",
+          description: err.message,
+        });
+      }
     } finally {
       setIsLoadingRecords(false);
     }
   }, [toast]);
 
+  // Sync offline queued scans
+  const handleManualSync = useCallback(async () => {
+    if (isSyncingOffline) return;
+    setIsSyncingOffline(true);
+    try {
+      const res = await syncOfflineAttendance();
+      if (res.syncedCount > 0) {
+        toast({
+          title: "تمت المزامنة بنجاح 🔄",
+          description: `تم حفظ ومزامنة ${res.syncedCount} عملية حضور أوفلاين بنجاح مع السيرفر.`,
+        });
+        void loadDailySheet(selectedDate);
+      } else if (res.failedCount > 0) {
+        toast({
+          variant: "destructive",
+          title: "تعذر إكمال بعض عمليات المزامنة",
+          description: `فشلت مزامنة ${res.failedCount} عملية. تأكد من استقرار الإنترنت.`,
+        });
+      } else {
+        toast({
+          title: "جميع السجلات متزامنة 🟢",
+          description: "لا توجد تسجيلات حضور أوفلاين معلقة حالياً.",
+        });
+      }
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "خطأ أثناء المزامنة",
+        description: err.message,
+      });
+    } finally {
+      setIsSyncingOffline(false);
+      void updateQueueCount();
+    }
+  }, [isSyncingOffline, selectedDate, loadDailySheet, toast, updateQueueCount]);
+
+  // Network & Queue Change Listeners
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      void handleManualSync();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener(EVENT_ATTENDANCE_QUEUE_CHANGED, updateQueueCount);
+
+    void updateQueueCount();
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener(EVENT_ATTENDANCE_QUEUE_CHANGED, updateQueueCount);
+    };
+  }, [handleManualSync, updateQueueCount]);
+
   useEffect(() => {
     void loadDailySheet(selectedDate);
   }, [selectedDate, loadDailySheet]);
+
+  // Offline Attendance Scan Fallback Handler
+  const executeOfflineScan = useCallback(async (code: string) => {
+    // 1. Look up student from offline cached roster
+    const cachedStudent = await findStudentOffline(code);
+
+    const nowCairo = new Intl.DateTimeFormat("ar-EG", {
+      timeZone: "Africa/Cairo",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+    }).format(new Date());
+
+    const studentName = cachedStudent?.name || `طالب (كود: ${code})`;
+    const studentGrade = cachedStudent?.grade || "";
+    const activeCenter = (selectedCenter && selectedCenter !== "all") ? selectedCenter : (cachedStudent?.center || "السنتر الرئيسي");
+    const activeSlot = (selectedSlot && selectedSlot !== "all") ? selectedSlot : (cachedStudent?.appointmentSlot || null);
+
+    // 2. Queue the scan offline
+    await queueOfflineScan({
+      qrCode: code,
+      date: selectedDate,
+      centerName: activeCenter,
+      appointmentSlot: activeSlot || undefined,
+      status: "present",
+      notes: "تسجيل أوفلاين (في انتظار المزامنة)",
+      notifyParent: true,
+      scannedAt: new Date().toISOString(),
+      studentInfo: cachedStudent || undefined,
+    });
+
+    // 3. Audio & Haptic feedback
+    if (soundEnabled) playScanSound("success");
+    triggerHaptic();
+
+    // 4. Toast notification
+    toast({
+      title: "تم تسجيل الحضور محلياً (أوفلاين) 📴",
+      description: cachedStudent
+        ? `${studentName} (${studentGrade || "حضور سنتر"}) - سيتم المزامنة تلقائياً عند توفر النت`
+        : `تم حفظ الكود [${code}] محلياً - سيتم المزامنة تلقائياً عند توفر النت`,
+    });
+
+    // 5. Update last scanned card
+    const scannedItem: LastScannedStudent = {
+      name: studentName,
+      phone: cachedStudent?.phone || "",
+      accessCode: cachedStudent?.accessCode || code,
+      grade: studentGrade,
+      center: activeCenter,
+      appointmentSlot: activeSlot,
+      enrolledSlot: cachedStudent?.enrolledSlot,
+      enrolledCenter: cachedStudent?.enrolledCenter,
+      isCrossGroup: false,
+      checkInTime: nowCairo,
+      status: "present",
+      parentNotified: false,
+      parentName: cachedStudent?.parentName,
+      parentPhone: cachedStudent?.parentPhone,
+      notes: "أوفلاين - في انتظار المزامنة",
+    };
+
+    setLastScanned(scannedItem);
+    setRecentScans((prev) => [
+      scannedItem,
+      ...prev.filter((p) => p.accessCode !== scannedItem.accessCode).slice(0, 9),
+    ]);
+
+    // 6. Update in-memory daily sheet records table immediately
+    setRecords((prev) =>
+      prev.map((r) => {
+        const isMatch = cachedStudent?.studentId
+          ? r.studentId === cachedStudent.studentId
+          : r.accessCode === code || r.phone === code;
+        if (isMatch) {
+          return {
+            ...r,
+            status: "present",
+            checkInTime: nowCairo,
+            notes: "أوفلاين - معلق للمزامنة",
+          };
+        }
+        return r;
+      })
+    );
+
+    // 7. Update active statistics
+    setStats((prev) => ({
+      ...prev,
+      presentCount: prev.presentCount + 1,
+      unmarkedCount: Math.max(0, prev.unmarkedCount - 1),
+      attendanceRate: prev.totalStudents > 0
+        ? Math.round(((prev.presentCount + 1 + prev.lateCount) / prev.totalStudents) * 100)
+        : 100,
+    }));
+  }, [selectedCenter, selectedSlot, selectedDate, soundEnabled, toast]);
 
   // Handle Scanning / Submitting QR code or student identifier
   const handleProcessCode = useCallback(async (rawCode: string) => {
@@ -410,6 +599,12 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
     setIsProcessingScan(true);
 
     try {
+      // 1. If device is explicitly offline, proceed directly to offline vault
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        await executeOfflineScan(code);
+        return;
+      }
+
       const res = await fetch("/api/admin/attendance/scan", {
         method: "POST",
         credentials: "include",
@@ -423,6 +618,13 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
           notifyParent: true,
         }),
       });
+
+      // If server responded with 5xx bad gateway / service unavailable, fall back to offline queue
+      if (!res.ok && res.status >= 500) {
+        console.warn("Server temporarily unavailable (status " + res.status + "), saving scan offline...");
+        await executeOfflineScan(code);
+        return;
+      }
 
       const data = await res.json();
 
@@ -482,17 +684,23 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
       // Silently refresh the daily sheet
       void loadDailySheet(selectedDate);
     } catch (err: any) {
-      if (soundEnabled) playScanSound("error");
-      toast({
-        variant: "destructive",
-        title: "خطأ في الاتصال بالخادم",
-        description: err.message,
-      });
+      // If network fails (Failed to fetch, connection dropped), safely fall back to offline storage
+      console.warn("Network error during attendance scan, saving offline:", err);
+      try {
+        await executeOfflineScan(code);
+      } catch (offlineErr: any) {
+        if (soundEnabled) playScanSound("error");
+        toast({
+          variant: "destructive",
+          title: "خطأ في تسجيل الحضور",
+          description: offlineErr.message || err.message,
+        });
+      }
     } finally {
       setIsProcessingScan(false);
       setManualInput("");
     }
-  }, [selectedDate, selectedCenter, selectedSlot, soundEnabled, toast, loadDailySheet]);
+  }, [selectedDate, selectedCenter, selectedSlot, soundEnabled, toast, loadDailySheet, executeOfflineScan]);
 
   // Start Camera Feed
   const startCamera = useCallback(async () => {
@@ -833,18 +1041,87 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
             {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
           </button>
 
+          {/* Online / Offline status badge */}
+          {isOnline ? (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs font-bold shadow-xs">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>متصل</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-300 bg-amber-50 text-amber-900 text-xs font-bold shadow-xs">
+              <WifiOff className="h-3.5 w-3.5 text-amber-700 animate-pulse" />
+              <span>أوفلاين 📴</span>
+            </div>
+          )}
+
           {/* Refresh */}
           <button
             type="button"
             onClick={() => void loadDailySheet(selectedDate)}
             disabled={isLoadingRecords}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E2E8F0] bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition-all shadow-xs disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E2E8F0] bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition-all shadow-xs disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoadingRecords ? "animate-spin text-blue-600" : ""}`} />
             <span>تحديث</span>
           </button>
         </div>
       </div>
+
+      {/* Offline & Sync Status Banner */}
+      {(!isOnline || pendingOfflineCount > 0) && (
+        <div
+          className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs ${
+            !isOnline
+              ? "bg-amber-50/90 border-amber-300 text-amber-900"
+              : "bg-blue-50/90 border-blue-200 text-blue-900"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className={`p-2.5 rounded-xl shrink-0 ${
+                !isOnline ? "bg-amber-200/80 text-amber-800" : "bg-blue-200/80 text-blue-800"
+              }`}
+            >
+              {!isOnline ? (
+                <WifiOff className="h-5 w-5 animate-pulse" />
+              ) : (
+                <RefreshCw className={`h-5 w-5 ${isSyncingOffline ? "animate-spin text-blue-600" : ""}`} />
+              )}
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="font-black text-sm">
+                  {!isOnline
+                    ? "وضع الحضور بدون إنترنت (أوفلاين) 📴"
+                    : "تم الاتصال بالإنترنت - توجد سجلات جاهزة للمزامنة 🔄"}
+                </h4>
+                {pendingOfflineCount > 0 && (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-200/90 text-amber-900 border border-amber-300">
+                    {pendingOfflineCount} تسجيلات معلقة
+                  </span>
+                )}
+              </div>
+              <p className="text-xs mt-0.5 opacity-90 leading-relaxed">
+                {!isOnline
+                  ? "يمكنك الاستمرار في مسح كروت الطلاب بالكاميرا أو إدخال الأكواد. يتم التحقق من بيانات الطلاب وتسجيل الحضور محلياً بنجاح، وستتم المزامنة تلقائياً بمجرد عودة الاتصال."
+                  : `لديك ${pendingOfflineCount} عملية حضور تم تسجيلها أثناء انقطاع الشبكة. انقر على زر المزامنة لتحديث السيرفر وإشعار أولياء الأمور.`}
+              </p>
+            </div>
+          </div>
+
+          {pendingOfflineCount > 0 && (
+            <button
+              type="button"
+              onClick={() => void handleManualSync()}
+              disabled={isSyncingOffline || !isOnline}
+              className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs shadow-md transition-all disabled:opacity-50 cursor-pointer shrink-0"
+            >
+              <RefreshCw className={`h-4 w-4 ${isSyncingOffline ? "animate-spin" : ""}`} />
+              <span>{isSyncingOffline ? "جارِ المزامنة..." : `مزامنة الآن (${pendingOfflineCount})`}</span>
+            </button>
+          )}
+        </div>
+      )}
 
       {/* 2. Top Navigation Tabs - Fully Responsive Segmented Bar */}
       <div className="bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/90 shadow-xs">
@@ -1785,9 +2062,16 @@ export function AttendanceScannerTab({ role = "subadmin" }: { role?: "superadmin
                         {/* Status Badge */}
                         <td className="py-3 px-4">
                           {record.status === "present" && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-bold text-[11px]">
-                              <CheckCircle2 className="h-3 w-3" /> حاضر
-                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-bold text-[11px]">
+                                <CheckCircle2 className="h-3 w-3" /> حاضر
+                              </span>
+                              {record.notes?.includes("أوفلاين") && (
+                                <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-300 font-bold text-[10px]" title="تم تسجيل الحضور بدون إنترنت بانتظار المزامنة">
+                                  أوفلاين 📴
+                                </span>
+                              )}
+                            </div>
                           )}
                           {record.status === "absent" && (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-100 text-red-800 font-bold text-[11px]">
