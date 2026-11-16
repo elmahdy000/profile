@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Maximize2,
   FileSpreadsheet,
   GraduationCap,
@@ -36,6 +37,9 @@ import {
   User,
   CheckCircle,
   ListOrdered,
+  MoveUp,
+  MoveDown,
+  Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -106,6 +110,9 @@ interface MemoSettings {
   showWatermark: boolean;
   watermarkText: string;
   watermarkOpacity: number;
+  numberingStyle?: "continuous" | "per_type";
+  essayLines?: number;
+  showAnswerSummary?: boolean;
 }
 
 const DEFAULT_SETTINGS: MemoSettings = {
@@ -142,6 +149,9 @@ const DEFAULT_SETTINGS: MemoSettings = {
   showWatermark: false,
   watermarkText: "د. محمود المهدي — الحاسب الآلي والذكاء الاصطناعي",
   watermarkOpacity: 0.05,
+  numberingStyle: "continuous",
+  essayLines: 3,
+  showAnswerSummary: false,
 };
 
 // Global sanitizer to purge any "أكاديمية" or legacy titles from strings
@@ -215,210 +225,186 @@ const getThemeConfig = (style: MemoSettings["templateStyle"]): ThemeConfig => {
     case "tech":
       return {
         accentColor: "#0284c7",
-        secondaryAccent: "#38bdf8",
+        secondaryAccent: "#0369a1",
         cardBorderColor: "#e0f2fe",
-        cardBorderRight: "3.5px solid #0284c7",
-        numBadgeBg: "linear-gradient(135deg, #0f172a 0%, #0369a1 100%)",
-        numBadgeColor: "#38bdf8",
-        numBadgeBorder: "1px solid #0284c7",
-        headerBorder: "2.5px solid #0284c7",
-        headerTopAccent: "#0284c7",
-        badgeBg: "#0369a1",
+        cardBorderRight: "3px solid #0284c7",
+        numBadgeBg: "linear-gradient(135deg, #0284c7, #0369a1)",
+        numBadgeColor: "#ffffff",
+        numBadgeBorder: "none",
+        headerBorder: "2px solid #0284c7",
+        headerTopAccent: "linear-gradient(90deg, #0284c7, #38bdf8, #0284c7)",
+        badgeBg: "linear-gradient(135deg, #0284c7, #0369a1)",
         badgeColor: "#ffffff",
         badgeBorder: "1px solid #38bdf8",
-        sealBg: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-        sealBorder: "1.5px solid #0284c7",
-        sealShadow: "0 2px 8px rgba(2, 132, 199, 0.2)",
-        crestBg: "linear-gradient(135deg, #0284c7 0%, #38bdf8 100%)",
-        crestBorder: "1px solid #7dd3fc",
-        crestColor: "#0f172a",
-        drTextColor: "#0284c7",
-        drSubTextColor: "#94a3b8",
-        drPillBg: "rgba(2, 132, 199, 0.15)",
-        drPillColor: "#38bdf8",
-        drPillBorder: "1px solid #0284c7",
-        pageNumberBg: "#0369a1",
+        sealBg: "#f0f9ff",
+        sealBorder: "2px solid #0284c7",
+        sealShadow: "0 0 10px rgba(2, 132, 199, 0.15)",
+        crestBg: "linear-gradient(135deg, #0284c7, #075985)",
+        crestBorder: "1.5px solid #38bdf8",
+        crestColor: "#ffffff",
+        drTextColor: "#0369a1",
+        drSubTextColor: "#0284c7",
+        drPillBg: "#e0f2fe",
+        drPillColor: "#0369a1",
+        drPillBorder: "1px solid #bae6fd",
+        pageNumberBg: "linear-gradient(135deg, #0284c7, #0369a1)",
         pageNumberColor: "#ffffff",
         pageNumberBorder: "1px solid #38bdf8",
       };
     case "emerald":
       return {
         accentColor: "#059669",
-        secondaryAccent: "#10b981",
+        secondaryAccent: "#047857",
         cardBorderColor: "#d1fae5",
-        cardBorderRight: "3.5px solid #059669",
-        numBadgeBg: "#064e3b",
+        cardBorderRight: "3px solid #059669",
+        numBadgeBg: "linear-gradient(135deg, #059669, #047857)",
         numBadgeColor: "#ffffff",
-        numBadgeBorder: "1px solid #059669",
-        headerBorder: "2.5px solid #059669",
-        headerTopAccent: "#047857",
-        badgeBg: "#064e3b",
+        numBadgeBorder: "none",
+        headerBorder: "2px solid #059669",
+        headerTopAccent: "linear-gradient(90deg, #059669, #34d399, #059669)",
+        badgeBg: "linear-gradient(135deg, #059669, #047857)",
         badgeColor: "#ffffff",
-        badgeBorder: "1px solid #10b981",
-        sealBg: "#f0fdf4",
-        sealBorder: "1.5px solid #059669",
-        sealShadow: "0 2px 6px rgba(5, 150, 105, 0.15)",
-        crestBg: "linear-gradient(135deg, #064e3b 0%, #059669 100%)",
-        crestBorder: "1px solid #10b981",
+        badgeBorder: "1px solid #6ee7b7",
+        sealBg: "#ecfdf5",
+        sealBorder: "2px solid #059669",
+        sealShadow: "0 0 10px rgba(5, 150, 105, 0.15)",
+        crestBg: "linear-gradient(135deg, #059669, #065f46)",
+        crestBorder: "1.5px solid #6ee7b7",
         crestColor: "#ffffff",
-        drTextColor: "#064e3b",
-        drSubTextColor: "#047857",
-        drPillBg: "#dcfce7",
-        drPillColor: "#064e3b",
-        drPillBorder: "1px solid #86efac",
-        pageNumberBg: "#064e3b",
+        drTextColor: "#047857",
+        drSubTextColor: "#059669",
+        drPillBg: "#d1fae5",
+        drPillColor: "#047857",
+        drPillBorder: "1px solid #a7f3d0",
+        pageNumberBg: "linear-gradient(135deg, #059669, #047857)",
         pageNumberColor: "#ffffff",
-        pageNumberBorder: "1px solid #10b981",
+        pageNumberBorder: "1px solid #6ee7b7",
       };
     case "minimal":
       return {
         accentColor: "#334155",
         secondaryAccent: "#64748b",
         cardBorderColor: "#e2e8f0",
-        cardBorderRight: "3px solid #334155",
-        numBadgeBg: "#f8fafc",
+        cardBorderRight: "2px solid #64748b",
+        numBadgeBg: "#f1f5f9",
         numBadgeColor: "#0f172a",
-        numBadgeBorder: "1.5px solid #334155",
-        headerBorder: "2px solid #0f172a",
-        headerTopAccent: "transparent",
-        badgeBg: "#ffffff",
-        badgeColor: "#0f172a",
-        badgeBorder: "1.5px solid #0f172a",
+        numBadgeBorder: "1px solid #cbd5e1",
+        headerBorder: "1px solid #cbd5e1",
+        headerTopAccent: "#64748b",
+        badgeBg: "#f1f5f9",
+        badgeColor: "#334155",
+        badgeBorder: "1px solid #cbd5e1",
         sealBg: "#ffffff",
-        sealBorder: "1.5px solid #0f172a",
+        sealBorder: "1px solid #cbd5e1",
         sealShadow: "none",
-        crestBg: "#ffffff",
-        crestBorder: "1.5px solid #0f172a",
-        crestColor: "#0f172a",
-        drTextColor: "#0f172a",
-        drSubTextColor: "#475569",
-        drPillBg: "#f1f5f9",
-        drPillColor: "#0f172a",
-        drPillBorder: "1px solid #94a3b8",
-        pageNumberBg: "#ffffff",
-        pageNumberColor: "#0f172a",
-        pageNumberBorder: "1.5px solid #0f172a",
+        crestBg: "#f8fafc",
+        crestBorder: "1px solid #cbd5e1",
+        crestColor: "#334155",
+        drTextColor: "#1e293b",
+        drSubTextColor: "#64748b",
+        drPillBg: "#f8fafc",
+        drPillColor: "#334155",
+        drPillBorder: "1px solid #e2e8f0",
+        pageNumberBg: "#f1f5f9",
+        pageNumberColor: "#334155",
+        pageNumberBorder: "1px solid #cbd5e1",
       };
     case "royal":
     default:
       return {
-        accentColor: "#d97706",
-        secondaryAccent: "#f59e0b",
+        accentColor: "#b45309",
+        secondaryAccent: "#92400e",
         cardBorderColor: "#fef3c7",
-        cardBorderRight: "3.5px solid #d97706",
-        numBadgeBg: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-        numBadgeColor: "#f59e0b",
-        numBadgeBorder: "1px solid #d97706",
-        headerBorder: "2.5px solid #d97706",
-        headerTopAccent: "#0f172a",
-        badgeBg: "#0f172a",
+        cardBorderRight: "3px solid #b45309",
+        numBadgeBg: "linear-gradient(135deg, #b45309, #78350f)",
+        numBadgeColor: "#ffffff",
+        numBadgeBorder: "none",
+        headerBorder: "2px solid #b45309",
+        headerTopAccent: "linear-gradient(90deg, #b45309, #f59e0b, #b45309)",
+        badgeBg: "linear-gradient(135deg, #b45309, #92400e)",
         badgeColor: "#ffffff",
-        badgeBorder: "1px solid #f59e0b",
-        sealBg: "linear-gradient(135deg, #fffbeb 0%, #ffffff 100%)",
-        sealBorder: "1.5px solid #d97706",
-        sealShadow: "0 2px 6px rgba(217, 119, 6, 0.18)",
-        crestBg: "linear-gradient(135deg, #d97706 0%, #b45309 100%)",
-        crestBorder: "1px solid #fef3c7",
+        badgeBorder: "1px solid #fbbf24",
+        sealBg: "#fffbeb",
+        sealBorder: "2px solid #b45309",
+        sealShadow: "0 0 10px rgba(180, 83, 9, 0.15)",
+        crestBg: "linear-gradient(135deg, #b45309, #78350f)",
+        crestBorder: "1.5px solid #f59e0b",
         crestColor: "#ffffff",
-        drTextColor: "#0f172a",
+        drTextColor: "#92400e",
         drSubTextColor: "#b45309",
         drPillBg: "#fef3c7",
         drPillColor: "#92400e",
         drPillBorder: "1px solid #fde68a",
-        pageNumberBg: "#0f172a",
-        pageNumberColor: "#f59e0b",
-        pageNumberBorder: "1px solid #d97706",
+        pageNumberBg: "linear-gradient(135deg, #b45309, #92400e)",
+        pageNumberColor: "#ffffff",
+        pageNumberBorder: "1px solid #fbbf24",
       };
   }
 };
 
-const SAMPLE_QUESTIONS: any[] = [
+const ARABIC_LETTERS = ["أ", "ب", "ج", "د", "هـ", "و", "ز", "ح"];
+const ENGLISH_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
+
+const SAMPLE_QUESTIONS: QuizQuestion[] = [
   {
-    type: "MCQ",
-    statement: "نص السؤال التجريبي الأول: اختر الإجابة الصحيحة من البدائل التالية المتعلقة بمفاهيم الذكاء الاصطناعي.",
+    statement: "ما هو المفهوم الأساسي للذكاء الاصطناعي التوليدي (Generative AI)؟",
     options: [
-      { text: "الخوارزميات التقليدية فقط", isCorrect: false },
-      { text: "تعلم الآلة والشبكات العصبية العميقة", isCorrect: true },
-      { text: "أنظمة التخزين السحابي الساكنة", isCorrect: false },
-      { text: "معالجات الرسوميات البسيطة", isCorrect: false },
+      { text: "توليد محتوى جديد مثل النصوص والصور والأكواد البرمجية", isCorrect: true },
+      { text: "البحث في قواعد البيانات التقليدية فقط", isCorrect: false },
+      { text: "ضغط الملفات الرقمية وتسريع نقلها", isCorrect: false },
+      { text: "حماية الأجهزة من الفيروسات والبرمجيات الخبيثة", isCorrect: false },
     ],
-    answer: "تعلم الآلة والشبكات العصبية العميقة",
-    explanation: "تفسير توضيحي: الشبكات العصبية تمثل الركيزة الأساسية للتعلم العميق وتحليل البيانات المعقدة.",
+    answer: "توليد محتوى جديد مثل النصوص والصور والأكواد البرمجية",
+    explanation: "الذكاء الاصطناعي التوليدي قادر على إنشاء محتوى أصلي وجديد بناءً على البيانات التي تم تدريبه عليها.",
+    translation: "What is the primary concept of Generative AI?",
   },
   {
-    type: "MCQ",
-    statement: "أي الاختيارات التالية يُمثّل الإجراء الأنسب لحماية الخصوصية الرقمية عند استخدام تقنيات الذكاء الاصطناعي؟",
+    statement: "تُعد الخوارزميات الجينية أحد نماذج التعلم الآلي المستوحاة من التطور البيولوجي الطبيعي.",
     options: [
-      "مشاركة كافة البيانات بدون قيود",
-      "تطبيق التشفير الشامل وسياسات تقليل البيانات",
-      "تعطيل جدران الحماية بالكامل",
-      "استخدام كلمات مرور مكررة وسهلة",
+      { text: "صواب", isCorrect: true },
+      { text: "خطأ", isCorrect: false },
     ],
-    answer: "تطبيق التشفير الشامل وسياسات تقليل البيانات",
-  },
-  {
-    type: "TRUE_FALSE",
-    statement: "يساعد الذكاء الاصطناعي في تحليل البيانات الطبية والتنبؤ المبكر بالأمراض بدقة عالية.",
-    options: ["صواب", "خطأ"],
     answer: "صواب",
+    explanation: "الخوارزميات الجينية تحاكي عملية الانتقاء الطبيعي والوراثة للوصول إلى الحلول المثلى.",
+    translation: "Genetic algorithms are machine learning models inspired by biological evolution.",
   },
   {
-    type: "ESSAY",
-    statement: "اشرح باختصار أهمية الأخلاقيات الرقمية عند تصميم وتدريب نماذج الذكاء الاصطناعي التوليدي.",
-    answer: "الإجابة النموذجية: لضمان العدالة، وتفادي التحيز والتمييز، وحماية الملكية الفكرية وسرية بيانات المستخدمين.",
-  },
-  {
-    type: "MCQ",
-    statement: "Which of the following is considered a primary objective of cybersecurity in modern computer systems?",
-    translation: "أي مما يلي يُعد هدفاً رئيسياً للأمن السيبراني في أنظمة الحاسب الحديثة؟",
-    options: [
-      "Increasing power consumption",
-      "Ensuring confidentiality, integrity, and availability (CIA triad)",
-      "Deleting system log files automatically",
-      "Overclocking central processing units",
-    ],
-    answer: "Ensuring confidentiality, integrity, and availability (CIA triad)",
-    explanation: "Explanation: The CIA triad represents the foundational model of information security.",
+    statement: "اذكر باختصار مع التوضيح ثلاثة استخدامات رئيسية للذكاء الاصطناعي في قطاع التعليم الحديث.",
+    options: [],
+    answer: "1. تخصيص مسارات التعلم لكل طالب وفق قدراته الفردية.\n2. التصحيح الآلي للواجبات والتقييم الفوري.\n3. توفير معلمين افتراضيين ومساعدين أذكياء متاحين على مدار الساعة.",
+    explanation: "يسهم الذكاء الاصطناعي في تحسين كفاءة التعليم ومراعاة الفروق الفردية بين المتعلمين.",
+    translation: "Briefly state and explain three major applications of AI in modern education.",
   },
 ];
 
-const ARABIC_LETTERS = ["أ", "ب", "ج", "د", "هـ", "و", "ز", "ح", "ط", "ي"];
-const ENGLISH_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+function textValue(val: any): string {
+  if (val == null) return "";
+  if (typeof val === "string") return val.trim();
+  if (typeof val === "object") {
+    return textValue(val.statement || val.prompt || val.text || val.question || val.definition || val.value || "");
+  }
+  return String(val).trim();
+}
 
-function normalizeType(x: any): "MCQ" | "TRUE_FALSE" | "ESSAY" | "DEFINITION" | "TEXT" {
-  const t = String(x || "").toUpperCase().replace(/[\s-]+/g, "_");
-  if (["MCQ", "MULTIPLE_CHOICE", "CHOICE", "MULTIPLECHOICE", "اختيار_من_متعدد", "اختيارات"].includes(t)) return "MCQ";
-  if (["TRUE_FALSE", "TRUEFALSE", "TF", "T_F", "صواب_وخطأ", "صح_وخطأ", "صح_أم_خطأ", "صواب_أم_خطأ"].includes(t)) return "TRUE_FALSE";
-  if ([
-    "ESSAY",
-    "ESSAYS",
-    "ESSAYQUESTIONS",
-    "ESSAY_QUESTIONS",
-    "SHORT_ANSWER",
-    "LONG_ANSWER",
-    "مقالي",
-    "مقالى",
-    "سؤال_مقالي",
-    "سؤال_مقالى",
-    "أسئلة_مقالية",
-    "اسئلة_مقالية",
-    "OPEN_ENDED",
-    "WRITTEN",
-  ].includes(t)) return "ESSAY";
-  if (["DEFINITION", "DEFINE", "تعريف", "تعريفات"].includes(t)) return "DEFINITION";
-  if (["TEXT", "PARAGRAPH", "NOTE", "CONTENT", "ملاحظة"].includes(t)) return "TEXT";
+function normalizeType(raw: string | undefined): "MCQ" | "TRUE_FALSE" | "ESSAY" | "DEFINITION" | "TEXT" {
+  if (!raw) return "MCQ";
+  const s = String(raw).toUpperCase().trim();
+  if (s.includes("TF") || s.includes("TRUE") || s.includes("FALSE") || s.includes("صواب") || s.includes("خطأ") || s === "BOOLEAN") {
+    return "TRUE_FALSE";
+  }
+  if (s.includes("ESSAY") || s.includes("مقال") || s.includes("OPEN") || s.includes("WRITTEN") || s.includes("SUBJECTIVE")) {
+    return "ESSAY";
+  }
+  if (s.includes("DEF") || s.includes("تعريف") || s.includes("TERM") || s.includes("CONCEPT")) {
+    return "DEFINITION";
+  }
+  if (s.includes("TEXT") || s.includes("NOTE") || s.includes("ملاحظة")) {
+    return "TEXT";
+  }
   return "MCQ";
 }
 
-function textValue(v: any): string {
-  if (v === undefined || v === null) return "";
-  if (typeof v === "object" && !Array.isArray(v)) {
-    return String(v.text ?? v.value ?? v.label ?? v.statement ?? v.prompt ?? "");
-  }
-  return String(v);
-}
-
-function normalizeQuestion(raw: any, i: number): NormalizedQuestion {
+function normalizeQuestion(raw: any, i: number = 0): NormalizedQuestion {
   const statement = textValue(
     raw.statement ?? raw.prompt ?? raw.question ?? raw.questionText ?? raw.text ?? raw.definition ?? "",
   );
@@ -427,7 +413,6 @@ function normalizeQuestion(raw: any, i: number): NormalizedQuestion {
     opt = Object.entries(opt).map(([k, v]) => ({ label: k, text: textValue(v) }));
   }
 
-  // Detect type intelligently
   const explicitType =
     raw.questionType ??
     raw.question?.questionType ??
@@ -435,6 +420,7 @@ function normalizeQuestion(raw: any, i: number): NormalizedQuestion {
     raw.question?.type ??
     raw.question_type ??
     raw.category;
+
   let type: "MCQ" | "TRUE_FALSE" | "ESSAY" | "DEFINITION" | "TEXT";
 
   if (explicitType) {
@@ -444,43 +430,26 @@ function normalizeQuestion(raw: any, i: number): NormalizedQuestion {
   } else if (raw.modelAnswer || raw.model_answer || raw.answerTranslation || raw.answer_translation) {
     type = "ESSAY";
   } else if (opt && opt.length > 0) {
-    type =
-      opt.length === 2
-        ? "TRUE_FALSE"
-        : "MCQ";
+    type = opt.length === 2 ? "TRUE_FALSE" : "MCQ";
   } else {
     type = "ESSAY";
   }
 
-  // If options are empty or length is 0, but an answer exists, it must be an ESSAY question!
   if (type === "MCQ" && (!opt || opt.length === 0) && (raw.answer || raw.modelAnswer || raw.model_answer)) {
     type = "ESSAY";
   }
 
   const options = opt.map((o: any, idx: number) => ({
     text: textValue(o),
-    isCorrect:
-      typeof o === "object" && o !== null
-        ? Boolean(o.isCorrect ?? o.correct ?? (raw.correctIndex !== undefined && raw.correctIndex === idx))
-        : raw.correctIndex !== undefined && raw.correctIndex === idx,
+    isCorrect: Boolean(o?.isCorrect || (typeof raw.correctIndex === "number" && raw.correctIndex === idx)),
+    id: o?.id ?? idx,
   }));
 
-  let ans =
-    raw.answer ??
-    raw.correctAnswer ??
-    raw.correct_answer ??
-    raw.modelAnswer ??
-    raw.model_answer ??
-    "";
-  if (typeof ans === "number" && options[ans]) ans = options[ans].text;
-  if (Array.isArray(ans)) ans = ans.map(textValue).join(" / ");
-  if (typeof ans === "object" && ans !== null) ans = textValue(ans);
-  if (!ans) {
-    const correct = options.filter((x: any) => x.isCorrect).map((x: any) => x.text);
-    if (correct.length) ans = correct.join(" / ");
+  let ans = textValue(raw.answer ?? raw.correctAnswer ?? raw.modelAnswer ?? raw.model_answer ?? "");
+  if (!ans && typeof raw.correctIndex === "number" && options[raw.correctIndex]) {
+    ans = options[raw.correctIndex].text;
   }
 
-  // Translation: handles promptTranslation, answerTranslation, etc.
   let translation = textValue(
     raw.translation ?? raw.arabicTranslation ?? raw.translation_ar ?? raw.promptTranslation ?? "",
   );
@@ -503,7 +472,6 @@ function normalizeQuestion(raw: any, i: number): NormalizedQuestion {
   };
 }
 
-// Helper: Extract multi-level sections and questions from arbitrary JSON
 interface ParsedJsonSection {
   id: string;
   title: string;
@@ -518,7 +486,6 @@ function parseJsonSections(data: any): ParsedJsonSection[] {
   function walk(node: any, path: string = "", name: string = "") {
     if (!node) return;
 
-    // Direct essayQuestions array inside an object
     if (Array.isArray(node.essayQuestions) && node.essayQuestions.length > 0) {
       const parentTitle =
         node.lesson || node.lessonName || node.unit || node.unitName || node.title || name || "أسئلة مقالية";
@@ -531,7 +498,6 @@ function parseJsonSections(data: any): ParsedJsonSection[] {
       });
     }
 
-    // Direct mcqQuestions array inside an object
     if (Array.isArray(node.mcqQuestions) && node.mcqQuestions.length > 0) {
       const parentTitle =
         node.lesson || node.lessonName || node.unit || node.unitName || node.title || name || "اختيار من متعدد";
@@ -544,7 +510,6 @@ function parseJsonSections(data: any): ParsedJsonSection[] {
       });
     }
 
-    // Direct general questions array inside an object
     const qList =
       node.questions ||
       node.items ||
@@ -571,94 +536,41 @@ function parseJsonSections(data: any): ParsedJsonSection[] {
       return;
     }
 
-    // Node is an Array
     if (Array.isArray(node)) {
       if (!node.length) return;
-      // Are elements questions themselves?
       const isQuestionArray = node.some(
         (x) =>
           x &&
-          (x.statement ||
+          (x.prompt ||
+            x.statement ||
             x.question ||
-            x.prompt ||
-            x.questionText ||
             x.options ||
-            x.choices ||
             x.modelAnswer),
       );
       if (isQuestionArray) {
+        const title = name || `مجموعة أسئلة (${node.length})`;
         sections.push({
           id: `sec-${sections.length}-${Math.random().toString(36).substring(2, 7)}`,
-          title: name || `مجموعة أسئلة ${sections.length + 1}`,
-          path: path || "الرئيسية",
+          title,
+          path: path ? `${path} > ${title}` : title,
           count: node.length,
           questions: node,
         });
         return;
       }
-      // Otherwise elements are sections / units
       node.forEach((item, idx) => {
-        const itemTitle =
-          item &&
-          (item.title ||
-            item.name ||
-            item.unit ||
-            item.unitName ||
-            item.lesson ||
-            item.lessonName ||
-            `عنصر ${idx + 1}`);
-        walk(item, path ? `${path} > ${itemTitle}` : itemTitle, itemTitle);
+        walk(item, path ? `${path}[${idx}]` : `[${idx}]`, `${name || "عنصر"} ${idx + 1}`);
       });
       return;
     }
 
-    // Node is a dictionary / object
     if (typeof node === "object") {
-      for (const [key, val] of Object.entries(node)) {
-        if (
-          ["settings", "metadata", "config", "author", "version", "_instructions", "totals"].includes(
-            key.toLowerCase(),
-          )
-        )
-          continue;
-        if (key === "essayQuestions" || key === "mcqQuestions") continue; // Handled explicitly above
-
-        if (Array.isArray(val)) {
-          const isQ = val.some(
-            (x) =>
-              x &&
-              (x.statement ||
-                x.question ||
-                x.prompt ||
-                x.questionText ||
-                x.options ||
-                x.choices ||
-                x.modelAnswer),
-          );
-          if (isQ) {
-            const isEssaySection =
-              key.toLowerCase().includes("essay") || key.includes("مقالي") || key.includes("مقالى");
-            sections.push({
-              id: `sec-${sections.length}-${Math.random().toString(36).substring(2, 7)}`,
-              title: key,
-              path: path ? `${path} > ${key}` : key,
-              count: val.length,
-              questions: isEssaySection
-                ? val.map((item: any) => ({ ...item, type: "ESSAY" }))
-                : val,
-            });
-          } else {
-            val.forEach((item: any, idx: number) => {
-              const childName =
-                (item && (item.title || item.name || item.unit || item.lesson)) ||
-                `${key} [${idx + 1}]`;
-              walk(item, path ? `${path} > ${key}` : key, childName);
-            });
-          }
-        } else if (typeof val === "object" && val !== null) {
-          walk(val, path ? `${path} > ${key}` : key, key);
-        }
-      }
+      Object.keys(node).forEach((key) => {
+        if (key === "essayQuestions" || key === "mcqQuestions") return;
+        const val = node[key];
+        const nextPath = path ? `${path} > ${key}` : key;
+        walk(val, nextPath, key);
+      });
     }
   }
 
@@ -666,10 +578,10 @@ function parseJsonSections(data: any): ParsedJsonSection[] {
   return sections;
 }
 
-export interface MemoStudioTabProps {
-  quizzes?: Array<{ id: number; title: string; category?: string; questions?: any[] }>;
-  learningCourses?: Array<{ id: number; title: string; category?: string }>;
-  adminApi: <T = any>(endpoint: string, options?: RequestInit) => Promise<T>;
+interface MemoStudioTabProps {
+  quizzes?: any[];
+  learningCourses?: any[];
+  adminApi: <T>(endpoint: string, options?: any) => Promise<T>;
   onNavigateToQuizzes?: () => void;
 }
 
@@ -680,27 +592,35 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
   onNavigateToQuizzes,
 }) => {
   const { toast } = useToast();
-  const [activeStep, setActiveStep] = useState<"content" | "design" | "export">("content");
+
+  // 4 Main Configuration Steps
+  const [activeStep, setActiveStep] = useState<"step1_source" | "step2_distribute" | "step3_design" | "step4_questions">("step1_source");
   const [contentSourceTab, setContentSourceTab] = useState<"curriculum" | "quizzes" | "external">("curriculum");
 
+  // Step 1: Hierarchical Stage & Track Selectors
+  const [stageGradeFilter, setStageGradeFilter] = useState<"2nd" | "1st" | "other">("2nd");
+  const [stageTrackFilter, setStageTrackFilter] = useState<"ar" | "en">("ar");
+
+  // Step 2: Multi-Type Selection & Distribution
+  const [selectedQuestionTypes, setSelectedQuestionTypes] = useState<("MCQ" | "TRUE_FALSE" | "ESSAY")[]>([
+    "MCQ",
+    "TRUE_FALSE",
+    "ESSAY",
+  ]);
+  const [lessonAllocations, setLessonAllocations] = useState<Record<string, { mcq: number; tf: number; essay: number }>>({});
+  const [targetBatchCount, setTargetBatchCount] = useState<number>(20);
+
+  // Settings State
   const [settings, setSettings] = useState<MemoSettings>(() => {
     try {
       const saved = localStorage.getItem("drelmahdy_memo_settings");
       if (saved) {
         const parsed = JSON.parse(saved);
-        parsed.showWatermark = false; // Strictly default to no watermark as requested
-        if (parsed.subHeaderText) {
-          parsed.subHeaderText = sanitizeMemoText(parsed.subHeaderText);
-        }
-        if (parsed.headerText) {
-          parsed.headerText = sanitizeMemoText(parsed.headerText);
-        }
-        if (parsed.watermarkText) {
-          parsed.watermarkText = sanitizeMemoText(parsed.watermarkText);
-        }
-        if (parsed.footerText) {
-          parsed.footerText = sanitizeMemoText(parsed.footerText);
-        }
+        parsed.showWatermark = false;
+        if (parsed.subHeaderText) parsed.subHeaderText = sanitizeMemoText(parsed.subHeaderText);
+        if (parsed.headerText) parsed.headerText = sanitizeMemoText(parsed.headerText);
+        if (parsed.watermarkText) parsed.watermarkText = sanitizeMemoText(parsed.watermarkText);
+        if (parsed.footerText) parsed.footerText = sanitizeMemoText(parsed.footerText);
         return { ...DEFAULT_SETTINGS, ...parsed };
       }
       return DEFAULT_SETTINGS;
@@ -712,26 +632,19 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
   const [questions, setQuestions] = useState<NormalizedQuestion[]>(() =>
     SAMPLE_QUESTIONS.map(normalizeQuestion),
   );
-  const [backgroundImg, setBackgroundImg] = useState<string>("");
-  const [bgFileName, setBgFileName] = useState<string>("");
-  const [jsonInput, setJsonInput] = useState<string>("");
-
-  // Question type filtering
-  const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>("ALL");
-  const [bankTypeFilter, setBankTypeFilter] = useState<string>("ALL");
+  const [isEditingDocTitle, setIsEditingDocTitle] = useState<boolean>(false);
+  const [mobileWorkspaceTab, setMobileWorkspaceTab] = useState<"config" | "preview">("config");
 
   // Multi-level JSON Import State
+  const [jsonInput, setJsonInput] = useState<string>("");
   const [detectedJsonSections, setDetectedJsonSections] = useState<ParsedJsonSection[]>([]);
   const [selectedSectionIds, setSelectedSectionIds] = useState<string[]>([]);
-  const [jsonTypeFilter, setJsonTypeFilter] = useState<string>("ALL");
   const [showJsonSectionPicker, setShowJsonSectionPicker] = useState<boolean>(false);
 
   // Curriculum Bank tree
   const [treeData, setTreeData] = useState<any[]>([]);
   const [loadingTree, setLoadingTree] = useState(false);
   const [selectedStageName, setSelectedStageName] = useState<string>("");
-  const [selectedUnitName, setSelectedUnitName] = useState<string>("");
-  const [selectedLessonName, setSelectedLessonName] = useState<string>("");
   const [selectedLessons, setSelectedLessons] = useState<Array<{
     unit: string;
     lesson: string;
@@ -740,27 +653,8 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     tfCount?: number;
     totalEssays?: number;
   }>>([]);
+  const [expandedUnits, setExpandedUnits] = useState<Record<string, boolean>>({});
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
-  const [randomCount, setRandomCount] = useState<number>(20);
-
-  // Helper to get questions count per type (MCQ, True/False, Essay, etc.)
-  const getLessonCountForType = (les: any, filterType: string = bankTypeFilter) => {
-    if (!les) return 0;
-    if (filterType === "TRUE_FALSE") return les.tfCount ?? 0;
-    if (filterType === "MCQ") return les.mcqCount ?? les.totalQuestions ?? 0;
-    if (filterType === "ESSAY") return les.totalEssays ?? 0;
-    if (filterType === "DEFINITION") return 0;
-    return (les.totalQuestions || 0) + (les.totalEssays || 0);
-  };
-
-  const getUnitCountForType = (u: any, filterType: string = bankTypeFilter) => {
-    if (!u) return 0;
-    if (filterType === "TRUE_FALSE") return u.tfCount ?? 0;
-    if (filterType === "MCQ") return u.mcqCount ?? u.totalQuestions ?? 0;
-    if (filterType === "ESSAY") return u.totalEssays ?? 0;
-    if (filterType === "DEFINITION") return 0;
-    return (u.totalQuestions || 0) + (u.totalEssays || 0);
-  };
 
   // Question editing modal & creation
   const [editingQuestion, setEditingQuestion] = useState<{
@@ -775,12 +669,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
   const [scale, setScale] = useState<number>(0.72);
   const [autoScale, setAutoScale] = useState<boolean>(true);
   const [warnings, setWarnings] = useState<string[]>([]);
-  const [previewTab, setPreviewTab] = useState<"preview" | "questions_list">("preview");
 
   const paperAreaRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
 
-  // Language helper: detects if text contains Arabic characters
   const isArabicText = (text: string) => /[\u0600-\u06FF]/.test(text || "");
 
   // Save settings locally
@@ -792,18 +684,13 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     }
   }, [settings]);
 
-  // Load Question Bank Tree properly
+  // Load Question Bank Tree
   const loadTree = async () => {
     try {
       setLoadingTree(true);
       const res = await adminApi<any>("/api/admin/learning/test-bank/tree");
       if (res && Array.isArray(res.tree) && res.tree.length > 0) {
         setTreeData(res.tree);
-        // Default select stage with most questions
-        const bestStage = [...res.tree].sort((a, b) => (b.totalQuestions || 0) - (a.totalQuestions || 0))[0];
-        if (bestStage && !selectedStageName) {
-          setSelectedStageName(bestStage.stage);
-        }
       }
     } catch (err) {
       console.warn("Could not load question bank tree", err);
@@ -816,31 +703,98 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     loadTree();
   }, []);
 
-  // Calculate region printable area in mm
+  // Hierarchical Stage Selector logic: isolates Arabic vs Languages cleanly!
+  useEffect(() => {
+    if (!treeData.length) return;
+
+    const matched = treeData.filter((st) => {
+      const name = String(st.stage || "").toLowerCase();
+      const isLang = name.includes("لغات") || name.includes("languages") || name.includes("language");
+      if (stageTrackFilter === "en" && !isLang) return false;
+      if (stageTrackFilter === "ar" && isLang) return false;
+
+      if (stageGradeFilter === "2nd") {
+        return name.includes("ثاني") || name.includes("تانية") || name.includes("2nd") || name.includes("second");
+      }
+      if (stageGradeFilter === "1st") {
+        return name.includes("أول") || name.includes("أولى") || name.includes("1st") || name.includes("first");
+      }
+      return true;
+    });
+
+    if (matched.length > 0) {
+      if (!selectedStageName || !matched.some((m) => m.stage === selectedStageName)) {
+        setSelectedStageName(matched[0].stage);
+      }
+    } else if (treeData.length > 0 && !selectedStageName) {
+      setSelectedStageName(treeData[0].stage);
+    }
+  }, [treeData, stageGradeFilter, stageTrackFilter]);
+
+  // Active stage and units in tree
+  const activeTreeStage = treeData.find((st) => st.stage === selectedStageName);
+  const stageUnits = activeTreeStage?.units || [];
+
+  // Auto-expand first unit when stage changes
+  useEffect(() => {
+    if (stageUnits.length > 0) {
+      setExpandedUnits((prev) => {
+        if (Object.keys(prev).length === 0) {
+          return { [stageUnits[0].unit]: true };
+        }
+        return prev;
+      });
+    }
+  }, [stageUnits]);
+
+  // Sync lessonAllocations with selectedLessons
+  useEffect(() => {
+    setLessonAllocations((prev) => {
+      const next = { ...prev };
+      selectedLessons.forEach((item) => {
+        const key = `${item.unit}:::${item.lesson}`;
+        if (!next[key]) {
+          next[key] = { mcq: 0, tf: 0, essay: 0 };
+        }
+      });
+      return next;
+    });
+  }, [selectedLessons]);
+
+  // Printable region in mm
   const region = useMemo(() => {
     let top = Math.max(12, Math.min(120, settings.topMm));
-    if (settings.headerEnabled && top < 32) {
-      top = 32;
-    }
+    if (settings.headerEnabled && top < 32) top = 32;
     let bottom = Math.max(8, Math.min(100, settings.bottomMm));
-    let right = Math.max(6, Math.min(60, settings.rightMm));
-    let left = Math.max(6, Math.min(60, settings.leftMm));
-    if (top + bottom > 280) bottom = 280 - top;
-    if (right + left > 185) {
-      right = 12;
-      left = 12;
-    }
+    let right = Math.max(6, Math.min(50, settings.rightMm));
+    let left = Math.max(6, Math.min(50, settings.leftMm));
     return {
       top,
       bottom,
-      left,
       right,
-      width: 210 - left - right,
+      left,
+      width: 210 - right - left,
       height: 297 - top - bottom,
     };
   }, [settings.topMm, settings.bottomMm, settings.rightMm, settings.leftMm, settings.headerEnabled]);
 
-  // Measure card height in mm using off-screen DOM
+  // Auto-scale preview canvas
+  useEffect(() => {
+    if (!autoScale) return;
+    const updateScale = () => {
+      if (paperAreaRef.current) {
+        const availableW = paperAreaRef.current.clientWidth - 32;
+        const a4PxW = (210 * 96) / 25.4;
+        const calc = Math.min(1.0, Math.max(0.45, availableW / a4PxW));
+        setScale(parseFloat(calc.toFixed(2)));
+      }
+    };
+    updateScale();
+    window.addEventListener("resize", updateScale);
+    return () => window.removeEventListener("resize", updateScale);
+  }, [autoScale]);
+
+  // Offscreen measurement engine
   const measureHeight = (html: string, widthMm: number): number => {
     if (!measureRef.current) return 30;
     const holder = measureRef.current;
@@ -874,12 +828,9 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     </div>`;
   }, [settings.templateStyle, settings.contentDir]);
 
-  // Card HTML generator with Compact Academic Lines, Adaptive MCQ Columns & Strict BiDi Alignment
+  // Card HTML generator with support for mixed question types and ruled essay lines
   const getCardHtml = (q: NormalizedQuestion, qNumber: number) => {
-    const isDocRtl = settings.contentDir === "rtl";
     const theme = getThemeConfig(settings.templateStyle);
-
-    // Language detection: Arabic vs English/Latin
     const stmtIsArabic = isArabicText(q.statement);
     const stmtDir = stmtIsArabic ? "rtl" : "ltr";
     const stmtAlign = stmtIsArabic ? "right" : "left";
@@ -888,8 +839,8 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       MCQ: stmtIsArabic ? "اختر الإجابة الصحيحة" : "Multiple choice",
       TRUE_FALSE: stmtIsArabic ? "صواب أم خطأ" : "True / False",
       ESSAY: stmtIsArabic ? "سؤال مقالي" : "Essay",
-      DEFINITION: stmtIsArabic ? "تعريف" : "Definition",
-      TEXT: stmtIsArabic ? "ملاحظة" : "Note",
+      DEFINITION: stmtIsArabic ? "تعريف ومصطلح" : "Definition",
+      TEXT: stmtIsArabic ? "ملاحظة هامة" : "Note",
     }[q.type];
 
     const densityConfig = {
@@ -917,7 +868,6 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
           ? [{ text: stmtIsArabic ? "صواب" : "True" }, { text: stmtIsArabic ? "خطأ" : "False" }]
           : [];
 
-    // Adaptive MCQ Option Columns
     let colStyle = "grid-template-columns: repeat(2, minmax(0, 1fr));";
     if (settings.optionLayout === "auto") {
       const maxLen = Math.max(...opts.map((o) => (o.text || "").trim().length), 0);
@@ -956,14 +906,25 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
         </div>`
       : "";
 
-    // Container styling based on cardStyle (lines vs cards vs dashed)
+    // Blank lined space for student handwritten essay answers
+    const essayRuledLinesHtml =
+      q.type === "ESSAY" && !settings.showAnswers && (settings.essayLines ?? 3) > 0
+        ? `<div style="margin-top:2.2mm;margin-bottom:1mm;padding-inline-start:7.5mm;display:flex;flex-direction:column;gap:3.2mm;">
+            ${Array.from({ length: settings.essayLines ?? 3 })
+              .map(
+                () =>
+                  `<div style="border-bottom:1px dotted #94a3b8;width:100%;height:3.5mm;"></div>`,
+              )
+              .join("")}
+          </div>`
+        : "";
+
     let containerStyle = "";
     if (settings.cardStyle === "lines") {
       containerStyle = `border-bottom: 1px solid ${theme.cardBorderColor}; padding: ${densityConfig.pad}; padding-bottom: 1.5mm; margin-bottom: 0.5mm; background: transparent;`;
     } else if (settings.cardStyle === "dashed") {
       containerStyle = `border-bottom: 1px dashed #cbd5e1; padding: ${densityConfig.pad}; padding-bottom: 1.5mm; margin-bottom: 0.5mm; background: transparent;`;
     } else {
-      // "cards"
       containerStyle = `border: 1px solid ${theme.cardBorderColor}; border-${stmtIsArabic ? "right" : "left"}: ${theme.cardBorderRight}; border-radius: 2mm; padding: ${densityConfig.pad}; background: rgba(255,255,255,0.98);`;
     }
 
@@ -989,47 +950,28 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
         </div>
       </div>
       ${optionsHtml}
+      ${essayRuledLinesHtml}
       ${settings.showAnswers && q.answer ? `<div style="box-sizing:border-box;background:#f0fdf4;border-${stmtIsArabic ? "right" : "left"}:2px solid #16a34a;border-radius:1.5mm;margin-top:1.4mm;margin-inline-start:7.5mm;padding:1.2mm 2.2mm;font-size:0.9em;color:#166534;white-space:pre-wrap;overflow-wrap:anywhere;direction:${ansDir};text-align:${ansAlign};"><span style="font-weight:bold;">${ansIsArabic ? "الإجابة النموذجية:" : "Model Answer:"}</span> ${q.answer}</div>` : ""}
       ${settings.showExplain && q.explanation ? `<div style="box-sizing:border-box;background:#fefce8;border-${stmtIsArabic ? "right" : "left"}:2px solid #ca8a04;border-radius:1.5mm;margin-top:1.0mm;margin-inline-start:7.5mm;padding:1.2mm 2.2mm;font-size:0.86em;color:#854d0e;white-space:pre-wrap;overflow-wrap:anywhere;direction:${expDir};text-align:${expAlign};"><span style="font-weight:bold;">${expIsArabic ? "التفسير والتعليل:" : "Explanation:"}</span> ${q.explanation}</div>` : ""}
     </article>`;
   };
 
-  // Compile question counts by type
-  const typeCounts = useMemo(() => {
-    const counts: Record<string, number> = {
-      ALL: questions.length,
-      MCQ: 0,
-      TRUE_FALSE: 0,
-      ESSAY: 0,
-      DEFINITION: 0,
-      TEXT: 0,
-    };
-    questions.forEach((q) => {
-      if (counts[q.type] !== undefined) counts[q.type]++;
-      else counts[q.type] = 1;
-    });
-    return counts;
+  // Compile active enabled questions
+  const activeQuestions = useMemo(() => {
+    return questions.filter((q) => q.enabled);
   }, [questions]);
 
-  // Compile active enabled and filtered questions
-  const activeQuestions = useMemo(() => {
-    return questions.filter((q) => {
-      if (!q.enabled) return false;
-      if (selectedTypeFilter !== "ALL" && q.type !== selectedTypeFilter) return false;
-      return true;
-    });
-  }, [questions, selectedTypeFilter]);
-
-  // Accurate dynamic height measurements for headers
+  // Dynamic height measurements for headers
   const p1HeaderMeasuredH = useMemo(() => {
     if (!settings.headerEnabled) return 0;
-    const badgeText = settings.templateStyle === "exam"
-      ? "ورقة اختبار رسمي معتمد"
-      : settings.templateStyle === "tech"
-        ? "بنك الأسئلة والتقييمات"
-        : settings.templateStyle === "emerald"
-          ? "التقييم الشامل والتدريبات"
-          : "مذكرة تدريبات وبنك أسئلة";
+    const badgeText =
+      settings.templateStyle === "exam"
+        ? "ورقة اختبار رسمي معتمد"
+        : settings.templateStyle === "tech"
+          ? "بنك الأسئلة والتقييمات"
+          : settings.templateStyle === "emerald"
+            ? "التقييم الشامل والتدريبات"
+            : "مذكرة تدريبات وبنك أسئلة";
     const cleanTitle = sanitizeMemoText(settings.headerText);
     const cleanSub = sanitizeMemoText(settings.subHeaderText);
 
@@ -1049,7 +991,6 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
           <div style="font-size:11pt;font-weight:900;line-height:1.35;word-break:normal;overflow-wrap:anywhere;">${cleanTitle}</div>
           ${cleanSub ? `<div style="font-size:7.8pt;font-weight:600;margin-top:1.2mm;line-height:1.4;word-break:normal;overflow-wrap:anywhere;">${cleanSub}</div>` : ""}
         </div>
-        <div style="width:100%;margin-top:2mm;border-bottom:2px solid #000;"></div>
       </div>
     `;
     return measureHeight(testHtml, region.width);
@@ -1067,7 +1008,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     return measureHeight(testHtml, region.width);
   }, [settings.continuationHeader, settings.headerText, region.width]);
 
-  // Intelligent Content-Aware Pagination Engine: Zero Cutoffs & Slicing Protection
+  // Content-Aware A4 Pagination Engine: Zero Cutoffs & Slicing Protection
   const pages = useMemo(() => {
     const warns: string[] = [];
     const max = settings.maxQuestions || 99999;
@@ -1078,31 +1019,39 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     }[settings.density || "balanced"];
 
     const studentH = settings.studentFields ? measureHeight(studentStripHtml, region.width) : 0;
-    const safetyBuffer = 4.0; // 4mm safety buffer ensures NO question is ever sliced across page breaks
+    const safetyBuffer = 4.0;
 
-    // Page 1 available content height
     const p1Top = settings.headerEnabled ? 7.5 : (settings.topMm || 12);
-    const p1AvailableH = 297 - p1Top - (settings.headerEnabled ? (p1HeaderMeasuredH + 2.5) : 0) - (settings.studentFields ? (studentH + densityGap) : 0) - settings.bottomMm - safetyBuffer;
+    const p1AvailableH =
+      297 -
+      p1Top -
+      (settings.headerEnabled ? p1HeaderMeasuredH + 2.5 : 0) -
+      (settings.studentFields ? studentH + densityGap : 0) -
+      settings.bottomMm -
+      safetyBuffer;
 
-    // Continuation Page available content height
-    const contTop = settings.continuationHeader === "minimal"
-      ? 5.5
-      : settings.continuationHeader === "none"
-        ? (settings.topMm || 7.5)
-        : (settings.topMm || 12);
-    const contAvailableH = 297 - contTop - (settings.continuationHeader === "minimal" ? (contHeaderMeasuredH + 2.5) : 0) - settings.bottomMm - safetyBuffer;
+    const contTop =
+      settings.continuationHeader === "minimal"
+        ? 5.5
+        : settings.continuationHeader === "none"
+          ? settings.topMm || 7.5
+          : settings.topMm || 12;
+    const contAvailableH =
+      297 -
+      contTop -
+      (settings.continuationHeader === "minimal" ? contHeaderMeasuredH + 2.5 : 0) -
+      settings.bottomMm -
+      safetyBuffer;
 
     const all: Array<Array<{ html: string; h: number; qNumber: number; rawQuestion?: any; qIndex?: number }>> = [];
     let current: Array<{ html: string; h: number; qNumber: number; rawQuestion?: any; qIndex?: number }> = [];
     let currentUsedH = 0;
     let count = 0;
 
-    activeQuestions.forEach((q, i) => {
-      const isQuestion = !["TEXT", "DEFINITION"].includes(q.type);
-      const actualN =
-        settings.questionStart +
-        activeQuestions.slice(0, i).filter((x) => !["TEXT", "DEFINITION"].includes(x.type)).length;
-      const html = getCardHtml(q, actualN);
+    for (let idx = 0; idx < activeQuestions.length; idx++) {
+      const q = activeQuestions[idx];
+      const qNumber = settings.questionStart + count;
+      const html = getCardHtml(q, qNumber);
       const h = measureHeight(html, region.width);
 
       const isFirstPage = all.length === 0;
@@ -1120,39 +1069,33 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       const effectiveTargetH = all.length === 0 ? p1AvailableH : contAvailableH;
       if (h > effectiveTargetH) {
         warns.push(
-          `السؤال ${actualN} أطول من المساحة المتاحة في صفحة A4 (${Math.ceil(h)} مم). يُنصح باختيار كثافة "مضغوط" أو تقليل حجم الخط.`,
+          `السؤال #${qNumber} طويل جداً (${Math.round(h)}mm) وقد يستهلك مساحة الصفحة بمفرده. يُنصح بتقليل طول الفقرة.`,
         );
       }
 
-      current.push({ html, h, qNumber: actualN, rawQuestion: q, qIndex: i });
+      current.push({ html, h, qNumber, rawQuestion: q, qIndex: idx });
       currentUsedH += (current.length === 1 ? 0 : densityGap) + h;
       count++;
-    });
+
+      if (count >= max) break;
+    }
 
     if (current.length) {
       all.push(current);
     }
-    if (all.length === 0) all.push([]);
+
     setWarnings(warns);
     return all;
-  }, [activeQuestions, settings, region, studentStripHtml, p1HeaderMeasuredH, contHeaderMeasuredH]);
+  }, [
+    activeQuestions,
+    settings,
+    region.width,
+    p1HeaderMeasuredH,
+    contHeaderMeasuredH,
+    studentStripHtml,
+  ]);
 
-  // Adjust display scale based on container width when autoScale is enabled
-  useEffect(() => {
-    const updateScale = () => {
-      if (!autoScale || !paperAreaRef.current) return;
-      const containerW = paperAreaRef.current.clientWidth;
-      if (!containerW) return;
-      const a4WidthPx = (210 * 96) / 25.4; // ~793.7px
-      const calculated = Math.max(0.35, Math.min(0.85, (containerW - 48) / a4WidthPx));
-      setScale(Number(calculated.toFixed(2)));
-    };
-    updateScale();
-    window.addEventListener("resize", updateScale);
-    return () => window.removeEventListener("resize", updateScale);
-  }, [autoScale]);
-
-  // Helper to remove any duplicate mode suffixes from headerText and ensure "أكاديمية" is removed
+  // Clean Header Text
   const cleanHeaderText = (text: string) => {
     return (text || "")
       .replace(/(\s*\[\s*(نموذج الإجابة|نسخة المعلم|نسخة الطالب|Model Answer|Teacher Copy|Student Copy)\s*\])+/gi, "")
@@ -1162,541 +1105,43 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       .trim();
   };
 
-  // Quick mode presets: Student vs Teacher
+  // Student vs Teacher Modes
   const setStudentMode = () => {
     setSettings((prev) => ({
       ...prev,
       showAnswers: false,
       showExplain: false,
-      studentFields: true,
       headerText: cleanHeaderText(prev.headerText),
     }));
-    toast({ title: "تم تفعيل نمط (نسخة الطالب)", description: "تم إخفاء الإجابات والتفسيرات وتفعيل شريط اسم وبيانات الطالب." });
+    toast({
+      title: "تم تفعيل نسخة الطالب 👨‍🎓",
+      description: "المستند الآن بدون حلول جاهزة، مع أسطر مسطرة لكتابة إجابة الأسئلة المقالية يدوياً.",
+    });
   };
 
   const setTeacherMode = () => {
-    setSettings((prev) => ({
-      ...prev,
-      showAnswers: true,
-      showExplain: true,
-      studentFields: false,
-      headerText: `${cleanHeaderText(prev.headerText)} [نموذج الإجابة]`,
-    }));
-    toast({ title: "تم تفعيل نمط (نسخة المعلم)", description: "تم إظهار الإجابات النموذجية والتفسيرات الكاملة لكل سؤال." });
-  };
-
-  // Apply questions from selected parsed sections with optional question type filter
-  const applyQuestionsFromSections = (secs: ParsedJsonSection[], typeFilter: string = "ALL") => {
-    let allRaw: any[] = [];
-    secs.forEach((s) => {
-      allRaw.push(...s.questions);
+    setSettings((prev) => {
+      const base = cleanHeaderText(prev.headerText);
+      return {
+        ...prev,
+        showAnswers: true,
+        showExplain: true,
+        headerText: `${base} [نموذج الإجابة للمعلم]`,
+      };
     });
-    let normalized = allRaw.map((q, idx) => normalizeQuestion(q, idx));
-    if (typeFilter !== "ALL") {
-      normalized = normalized.filter((q) => q.type === typeFilter);
-    }
-    if (!normalized.length) {
-      toast({
-        variant: "destructive",
-        title: "تنبيه",
-        description: "لم يتم العثور على أسئلة تطابق النوع المحدد.",
-      });
-      return;
-    }
-    setQuestions(normalized);
-    setPageIndex(0);
-    setSelectedTypeFilter("ALL");
     toast({
-      title: "تم استيراد الأسئلة بنجاح!",
-      description: `تم إدراج ${normalized.length} سؤال داخل المذكرة.`,
+      title: "تم تفعيل نسخة المعلم 👨‍🏫",
+      description: "المستند يحتوي الآن على الإجابات النموذجية وسبب وتفسير كل حل.",
     });
   };
 
-  // Import JSON handler (supports single or multi-level JSON)
-  const handleImportJson = (text: string) => {
-    try {
-      const data = JSON.parse(text);
-      if (data && data.settings && typeof data.settings === "object") {
-        setSettings((prev) => ({ ...prev, ...data.settings }));
-      }
-      const detected = parseJsonSections(data);
-      if (!detected.length) {
-        toast({ variant: "destructive", title: "تنبيه", description: "لم يتم العثور على أي أسئلة داخل ملف JSON." });
-        return;
-      }
-
-      if (detected.length === 1) {
-        // Single section or flat list: load immediately
-        applyQuestionsFromSections(detected, "ALL");
-        setShowJsonSectionPicker(false);
-      } else {
-        // Multi-level detected!
-        setDetectedJsonSections(detected);
-        setSelectedSectionIds(detected.map((s) => s.id));
-        setJsonTypeFilter("ALL");
-        setShowJsonSectionPicker(true);
-        toast({
-          title: "تم اكتشاف ملف JSON متعدد الوحدات / الأقسام!",
-          description: `تم العثور على ${detected.length} أقسام. يمكنك تحديد ما ترغب به بالأسفل.`,
-        });
-      }
-    } catch (e: any) {
-      toast({ variant: "destructive", title: "خطأ في قراءة JSON", description: e.message });
-    }
-  };
-
-  // Load from Quiz
-  const handleLoadFromQuiz = (quiz: any) => {
-    if (!quiz || !quiz.questions?.length) {
-      toast({ variant: "destructive", description: "هذا الاختبار لا يحتوي على أسئلة متاحة." });
-      return;
-    }
-    const normalized = quiz.questions.map((q: any, idx: number) => normalizeQuestion(q, idx));
-    setQuestions(normalized);
-    setPageIndex(0);
-    setSelectedTypeFilter("ALL");
-    setSettings((prev) => ({
-      ...prev,
-      templateStyle: "exam",
-      headerText: quiz.title || prev.headerText,
-      subHeaderText: `${quiz.stage ? `المرحلة: ${quiz.stage} · ` : ""}امتحان رسمي · المدة: ${quiz.durationMinutes ? `${quiz.durationMinutes} دقيقة` : "مفتوح"} · درجة النجاح: ${quiz.passingScore != null ? `${quiz.passingScore}%` : "60%"}`,
-    }));
-    toast({ title: `تم تحميل ${normalized.length} سؤال من اختبار: ${quiz.title}` });
-  };
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const importedQuiz = sessionStorage.getItem("memo_studio_import_quiz");
-      if (importedQuiz) {
-        try {
-          const parsed = JSON.parse(importedQuiz);
-          sessionStorage.removeItem("memo_studio_import_quiz");
-          handleLoadFromQuiz(parsed);
-          toast({
-            title: "تم استيراد الاختبار بنجاح في استوديو المذكرات والطباعة 🖨️",
-            description: `جاهز للطباعة وتصدير A4: ${parsed.title}`,
-          });
-        } catch (e) {}
-      }
-    }
-  }, []);
-
-  // Load from Question Bank (Specific Unit or Lesson, or entire Unit) with question type filter
-  const handleLoadFromBank = async (
-    unitName: string,
-    lessonName?: string,
-    countLimit?: number,
-    typeFilter?: string,
-  ) => {
-    if (!selectedStageName || !unitName) return;
-    try {
-      setIsLoadingQuestions(true);
-      const params = new URLSearchParams({ stage: selectedStageName, unit: unitName });
-      if (lessonName && lessonName !== "all") {
-        params.set("lesson", lessonName);
-      }
-      const effectiveType = typeFilter || bankTypeFilter;
-      if (effectiveType && effectiveType !== "ALL") {
-        params.set("type", effectiveType);
-      }
-      const res = await adminApi<any[]>(`/api/admin/learning/test-bank/questions?${params.toString()}`);
-      if (!res || !res.length) {
-        toast({ variant: "destructive", description: "لم يتم العثور على أسئلة في بنك الأسئلة لهذا التحديد." });
-        return;
-      }
-
-      let selectedRows = res;
-
-      // Filter by question type if requested
-      if (effectiveType && effectiveType !== "ALL") {
-        selectedRows = selectedRows.filter((item) => {
-          const qObj = item.question || item;
-          const t = normalizeType(
-            qObj.type ??
-            item.type ??
-            qObj.questionType ??
-            item.questionType ??
-            qObj.question_type ??
-            (qObj.definition ? "DEFINITION" : (qObj.modelAnswer || item.modelAnswer) ? "ESSAY" : (qObj.options?.length === 2 || item.options?.length === 2) ? "TRUE_FALSE" : (qObj.options?.length > 2 || item.options?.length > 2) ? "MCQ" : "ESSAY"),
-          );
-          return t === effectiveType;
-        });
-      }
-
-      if (!selectedRows.length) {
-        toast({
-          variant: "destructive",
-          description: `لا توجد أسئلة من نوع (${effectiveType}) في هذا التحديد.`,
-        });
-        return;
-      }
-
-      if (countLimit && countLimit > 0 && countLimit < selectedRows.length) {
-        // Pick random subset
-        const shuffled = [...selectedRows].sort(() => 0.5 - Math.random());
-        selectedRows = shuffled.slice(0, countLimit);
-      }
-
-      const mapped = selectedRows.map((item, idx) => {
-        const qObj = item.question || item;
-        return normalizeQuestion(
-          {
-            ...item,
-            ...qObj,
-            id: item.id || `q-${idx}`,
-            statement: qObj.prompt || qObj.statement || item.prompt || "",
-            options: qObj.options || item.options || [],
-            answer: qObj.modelAnswer || item.modelAnswer || qObj.correctAnswer || item.answer || "",
-            modelAnswer: qObj.modelAnswer || item.modelAnswer,
-            explanation: qObj.explanation || item.explanation || "",
-            translation: qObj.translation || item.translation || "",
-            type: qObj.type || item.type,
-          },
-          idx,
-        );
-      });
-
-      setQuestions(mapped);
-      setPageIndex(0);
-      setSelectedTypeFilter("ALL");
-      setSettings((prev) => ({
-        ...prev,
-        contentDir:
-          selectedStageName.toLowerCase().includes("لغات") ||
-            selectedStageName.toLowerCase().includes("lang")
-            ? "ltr"
-            : "rtl",
-        headerText: lessonName && lessonName !== "all" ? `${unitName} - ${lessonName}` : unitName,
-        subHeaderText: sanitizeMemoText(`د. محمود المهدي • ${selectedStageName.replace(/·/g, "•")}`),
-      }));
-
-      toast({
-        title: "تم جلب وتنسيق الأسئلة بنجاح!",
-        description: `تم سحب ${mapped.length} سؤال من أصل ${res.length} سؤال متاح.`,
-      });
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "خطأ في جلب الأسئلة", description: err.message });
-    } finally {
-      setIsLoadingQuestions(false);
-    }
-  };
-
-  // Bulk Load from multiple selected lessons simultaneously
-  const handleLoadFromSelectedLessons = async (countLimit?: number) => {
-    if (!selectedStageName || !selectedLessons.length) return;
-    try {
-      setIsLoadingQuestions(true);
-      const fetchPromises = selectedLessons.map(async (item) => {
-        const params = new URLSearchParams({
-          stage: selectedStageName,
-          unit: item.unit,
-          lesson: item.lesson,
-        });
-        if (bankTypeFilter && bankTypeFilter !== "ALL") {
-          params.set("type", bankTypeFilter);
-        }
-        return adminApi<any[]>(`/api/admin/learning/test-bank/questions?${params.toString()}`);
-      });
-
-      const results = await Promise.all(fetchPromises);
-      const combined: any[] = [];
-      const seenTexts = new Set<string>();
-
-      for (const list of results) {
-        if (Array.isArray(list)) {
-          for (const item of list) {
-            const qObj = item.question || item;
-            const textKey = (qObj.text || qObj.statement || qObj.prompt || item.prompt || "").trim();
-            if (textKey && !seenTexts.has(textKey)) {
-              seenTexts.add(textKey);
-              combined.push(item);
-            }
-          }
-        }
-      }
-
-      let filteredCombined = combined;
-      if (bankTypeFilter && bankTypeFilter !== "ALL") {
-        filteredCombined = combined.filter((item) => {
-          const qObj = item.question || item;
-          const detected = normalizeType(
-            qObj.type ??
-            item.type ??
-            qObj.questionType ??
-            item.questionType ??
-            qObj.question_type ??
-            (qObj.definition ? "DEFINITION" : (qObj.modelAnswer || item.modelAnswer) ? "ESSAY" : (qObj.options?.length === 2 || item.options?.length === 2) ? "TRUE_FALSE" : (qObj.options?.length > 2 || item.options?.length > 2) ? "MCQ" : "ESSAY")
-          );
-          return detected === bankTypeFilter;
-        });
-      }
-
-      if (!filteredCombined.length) {
-        toast({
-          variant: "destructive",
-          description: `لم يتم العثور على أسئلة من نوع (${
-            bankTypeFilter === "TRUE_FALSE" ? "صواب وخطأ" :
-            bankTypeFilter === "MCQ" ? "اختيار من متعدد" :
-            bankTypeFilter === "ESSAY" ? "أسئلة مقالية" :
-            bankTypeFilter
-          }) للدروس المحددة.`
-        });
-        return;
-      }
-
-      let finalRows = filteredCombined;
-      if (countLimit && countLimit > 0 && finalRows.length > countLimit) {
-        finalRows = [...finalRows].sort(() => 0.5 - Math.random()).slice(0, countLimit);
-      }
-
-      const mapped = finalRows.map((item, idx) => {
-        const qObj = item.question || item;
-        return normalizeQuestion(
-          {
-            ...item,
-            ...qObj,
-            id: item.id || `q-${idx}`,
-            statement: qObj.prompt || qObj.statement || item.prompt || "",
-            options: qObj.options || item.options || [],
-            answer: qObj.modelAnswer || item.modelAnswer || qObj.correctAnswer || item.answer || "",
-            modelAnswer: qObj.modelAnswer || item.modelAnswer,
-            explanation: qObj.explanation || item.explanation || "",
-            translation: qObj.translation || item.translation || "",
-            type: qObj.type || item.type,
-          },
-          idx,
-        );
-      });
-
-      setQuestions(mapped);
-      setPageIndex(0);
-      setSelectedTypeFilter("ALL");
-
-      const uniqueUnits = Array.from(new Set(selectedLessons.map((l) => l.unit)));
-      const unitTitle = uniqueUnits.length === 1 ? uniqueUnits[0] : `${uniqueUnits.length} وحدات دراسية`;
-      const lessonTitle =
-        selectedLessons.length === 1
-          ? selectedLessons[0].lesson
-          : `${selectedLessons.length} دروس مختارة (${selectedLessons.map((x) => x.lesson).slice(0, 2).join("، ")}${selectedLessons.length > 2 ? "..." : ""})`;
-
-      setSettings((prev) => ({
-        ...prev,
-        contentDir:
-          selectedStageName.toLowerCase().includes("لغات") ||
-            selectedStageName.toLowerCase().includes("lang")
-            ? "ltr"
-            : "rtl",
-        headerText: `${unitTitle} - ${lessonTitle}`,
-        subHeaderText: sanitizeMemoText(`د. محمود المهدي • ${selectedStageName.replace(/·/g, "•")}`),
-      }));
-
-      toast({
-        title: "تم استيراد أسئلة الدروس المحددة بنجاح",
-        description: `تم جلب ${mapped.length} سؤال من أصل ${selectedLessons.length} دروس تم تحديدها.`,
-      });
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "خطأ في جلب أسئلة الدروس", description: err.message });
-    } finally {
-      setIsLoadingQuestions(false);
-    }
-  };
-
-  // Toggle single question enabled
-  const toggleQuestionEnabled = (idx: number) => {
-    setQuestions((prev) =>
-      prev.map((q, i) => (i === idx ? { ...q, enabled: !q.enabled } : q)),
-    );
-  };
-
-  // Remove question
-  const removeQuestion = (idx: number) => {
-    setQuestions((prev) => prev.filter((_, i) => i !== idx));
-  };
-
-  // Pure in-memory generator for pristine printable A4 sheets
-  const generateSheetHtml = (
-    pageItems: Array<{ html: string; h: number; qNumber: number }>,
-    pageIdx: number,
-    totalPages: number,
-  ) => {
-    const theme = getThemeConfig(settings.templateStyle);
-    const isFirstPage = pageIdx === 0;
-    const isRtl = settings.contentDir === "rtl";
-    const densityGap = {
-      compact: 2.0,
-      balanced: 2.8,
-      comfortable: 4.0,
-    }[settings.density || "balanced"];
-
-    // Template decorators
-    let decoratorsHtml = "";
-    if (settings.templateStyle === "royal") {
-      decoratorsHtml = `
-        <div style="position:absolute;top:0;left:0;right:0;height:4mm;background-color:#0f172a;border-bottom:1.5mm solid #d97706;z-index:2;"></div>
-        <div style="position:absolute;inset:5mm;border:1px solid rgba(217,119,6,0.3);pointer-events:none;z-index:0;"></div>
-      `;
-    } else if (settings.templateStyle === "exam") {
-      decoratorsHtml = `<div style="position:absolute;inset:6mm;border:1.5px solid #0f172a;pointer-events:none;z-index:0;"></div>`;
-    } else if (settings.templateStyle === "tech") {
-      decoratorsHtml = `
-        <div style="position:absolute;top:0;left:0;right:0;height:3.5mm;background:linear-gradient(90deg,#0369a1 0%,#0284c7 50%,#38bdf8 100%);z-index:2;"></div>
-        <div style="position:absolute;inset:6mm;border:1px solid rgba(2,132,199,0.25);pointer-events:none;z-index:0;"></div>
-      `;
-    } else if (settings.templateStyle === "emerald") {
-      decoratorsHtml = `
-        <div style="position:absolute;top:0;left:0;right:0;height:3.5mm;background-color:#064e3b;border-bottom:1.2mm solid #059669;z-index:2;"></div>
-        <div style="position:absolute;inset:6mm;border:1px solid rgba(5,150,105,0.25);pointer-events:none;z-index:0;"></div>
-      `;
-    } else if (settings.templateStyle === "minimal") {
-      decoratorsHtml = `<div style="position:absolute;inset:6mm;border:1px solid #cbd5e1;pointer-events:none;z-index:0;"></div>`;
-    }
-
-    // Watermark
-    let watermarkHtml = "";
-    if (settings.showWatermark) {
-      const wmText = sanitizeMemoText(settings.watermarkText || "د. محمود المهدي — الحاسب الآلي والذكاء الاصطناعي");
-      const opacity = settings.watermarkOpacity ?? 0.05;
-      watermarkHtml = `
-        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:0;overflow:hidden;">
-          <div style="transform:rotate(-32deg);font-size:24pt;font-weight:900;color:rgba(15,23,42,${opacity});white-space:nowrap;letter-spacing:2.5px;font-family:'Cairo',sans-serif;user-select:none;">
-            ${wmText}
-          </div>
-        </div>
-      `;
-    }
-
-    // Header
-    let headerHtml = "";
-    if (isFirstPage && settings.headerEnabled) {
-      const badgeText = settings.templateStyle === "exam"
-        ? "ورقة اختبار رسمي معتمد"
-        : settings.templateStyle === "tech"
-          ? "بنك الأسئلة والتقييمات"
-          : settings.templateStyle === "emerald"
-            ? "التقييم الشامل والتدريبات"
-            : "مذكرة تدريبات وبنك أسئلة";
-
-      const cleanTitle = sanitizeMemoText(settings.headerText);
-      const cleanSub = sanitizeMemoText(settings.subHeaderText);
-
-      headerHtml = `
-        <div style="width:100%;flex-shrink:0;display:flex;flex-direction:column;gap:1.5mm;margin-bottom:2.5mm;color:#0f172a;box-sizing:border-box;">
-          <div style="display:flex;align-items:center;justify-content:space-between;width:100%;box-sizing:border-box;">
-            <div style="display:flex;align-items:center;gap:2.5mm;background:${theme.sealBg};border:${theme.sealBorder};border-radius:3mm;padding:1.2mm 3.2mm;box-shadow:${theme.sealShadow};">
-              <div style="width:7.5mm;height:7.5mm;border-radius:50%;background:${theme.crestBg};border:${theme.crestBorder};display:flex;flex-direction:column;align-items:center;justify-content:center;color:${theme.crestColor};font-weight:900;font-size:4pt;line-height:1.1;flex-shrink:0;">
-                <span style="font-size:5pt;">★</span>
-                <span>DR</span>
-              </div>
-              <div style="display:flex;flex-direction:column;">
-                <div style="display:flex;align-items:center;gap:1.5mm;">
-                  <span style="font-size:9.5pt;font-weight:900;color:${theme.drTextColor};font-family:'Cairo',sans-serif;line-height:1.2;">د. محمود المهدي</span>
-                  <span style="font-size:6.5pt;font-weight:800;background:${theme.drPillBg};color:${theme.drPillColor};padding:0.4mm 2.2mm;border-radius:1.2mm;border:${theme.drPillBorder};letter-spacing:0.5px;line-height:1.2;">Dr / Elmahdy</span>
-                </div>
-                <span style="font-size:6.8pt;font-weight:700;color:${theme.drSubTextColor};font-family:'Cairo',sans-serif;line-height:1.2;">الحاسب الآلي والذكاء الاصطناعي</span>
-              </div>
-            </div>
-            <div style="text-align:${isRtl ? "left" : "right"};">
-              <span style="display:inline-block;padding:1.2mm 3.5mm;border-radius:1.8mm;background-color:${theme.badgeBg};color:${theme.badgeColor};font-size:8pt;font-weight:800;border:${theme.badgeBorder};font-family:'Cairo',sans-serif;letter-spacing:0.3px;">
-                ${badgeText}
-              </span>
-            </div>
-          </div>
-          <div style="width:100%;box-sizing:border-box;padding:0 0.5mm;">
-            <div style="font-size:11pt;font-weight:900;color:#0f172a;line-height:1.35;word-break:normal;overflow-wrap:anywhere;font-family:'Cairo',sans-serif;">
-              ${cleanTitle}
-            </div>
-            ${cleanSub ? `
-              <div style="font-size:7.8pt;color:#64748b;font-weight:600;margin-top:1.2mm;line-height:1.4;word-break:normal;overflow-wrap:anywhere;font-family:'Cairo',sans-serif;">
-                ${cleanSub}
-              </div>
-            ` : ""}
-          </div>
-          <div style="width:100%;margin-top:2mm;border-bottom:${theme.headerBorder};"></div>
-        </div>
-      `;
-    } else if (!isFirstPage && settings.continuationHeader === "minimal") {
-      const cleanTitle = sanitizeMemoText(settings.headerText);
-      headerHtml = `
-        <div style="width:100%;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding-bottom:1.4mm;margin-bottom:2.5mm;border-bottom:1.2px solid ${theme.accentColor}35;color:#0f172a;box-sizing:border-box;">
-          <div style="display:flex;align-items:center;gap:2mm;max-width:68%;">
-            <span style="font-size:7.5pt;font-weight:800;background:${theme.drPillBg};color:${theme.drPillColor};padding:0.3mm 1.8mm;border-radius:1mm;border:${theme.drPillBorder};white-space:nowrap;">
-              ${settings.templateStyle === "exam" ? "امتحان" : "مذكرة"}
-            </span>
-            <span style="font-size:8.5pt;font-weight:800;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Cairo',sans-serif;">
-              ${cleanTitle}
-            </span>
-          </div>
-          <div style="display:flex;align-items:center;gap:1.5mm;">
-            <span style="font-size:8pt;font-weight:800;color:${theme.drTextColor};font-family:'Cairo',sans-serif;">
-              د. محمود المهدي
-            </span>
-            <span style="font-size:6.5pt;color:#64748b;font-weight:700;">
-              • Dr / Elmahdy
-            </span>
-          </div>
-        </div>
-      `;
-    }
-
-    // Student strip
-    const studentHtml = (isFirstPage && settings.studentFields) ? `
-      <div style="width:100%;flex-shrink:0;margin-bottom:${densityGap}mm;box-sizing:border-box;">
-        ${studentStripHtml}
-      </div>
-    ` : "";
-
-    // Questions
-    const questionsHtml = `
-      <div style="display:flex;flex-direction:column;gap:${densityGap}mm;width:100%;box-sizing:border-box;flex:1;min-height:0;">
-        ${pageItems.map((item) => item.html).join("")}
-      </div>
-    `;
-
-    // Top offset
-    const topOffset = isFirstPage
-      ? (settings.headerEnabled ? 7.5 : (settings.topMm || 12))
-      : (settings.continuationHeader === "minimal"
-        ? 5.5
-        : settings.continuationHeader === "none"
-          ? (settings.topMm || 7.5)
-          : 7.5);
-
-    // Footer
-    const footerHtml = `
-      <div style="position:absolute;bottom:0;left:0;right:0;height:${settings.bottomMm}mm;display:flex;align-items:center;justify-content:space-between;padding:0 ${region.left}mm;box-sizing:border-box;border-top:1px solid #f1f5f9;font-size:7.5pt;color:#64748b;font-family:'Cairo',sans-serif;z-index:2;background:#ffffff;">
-        <span style="background:${theme.pageNumberBg};color:${theme.pageNumberColor};border:${theme.pageNumberBorder};padding:0.4mm 2.2mm;border-radius:1.2mm;font-weight:bold;font-size:7.5pt;">
-          ${settings.pageStart + pageIdx} ${settings.showTotalPages ? ` / ${totalPages}` : ""}
-        </span>
-        <span style="font-weight:bold;color:#475569;">
-          ${sanitizeMemoText(settings.footerText || "د. محمود المهدي | الحاسب الآلي والذكاء الاصطناعي")}
-        </span>
-      </div>
-    `;
-
-    return `
-      <div class="print-page-shell" style="width:210mm;height:297mm;min-height:297mm;max-height:297mm;page-break-after:${pageIdx < totalPages - 1 ? "always" : "auto"};break-after:${pageIdx < totalPages - 1 ? "page" : "auto"};position:relative;overflow:hidden;background:#ffffff;box-sizing:border-box;margin:0;padding:0;">
-        <div class="memo-sheet" style="position:relative;width:210mm;height:297mm;min-height:297mm;max-height:297mm;box-sizing:border-box;overflow:hidden;background:#ffffff;font-family:${settings.fontSelect};font-size:${settings.fontSize}pt;line-height:${settings.lineHeight};direction:${settings.contentDir};">
-          ${decoratorsHtml}
-          ${watermarkHtml}
-          <div style="position:absolute;top:${topOffset}mm;bottom:${settings.bottomMm}mm;right:${region.right}mm;left:${region.left}mm;width:calc(210mm - ${region.left + region.right}mm);box-sizing:border-box;display:flex;flex-direction:column;z-index:1;overflow:hidden;">
-            ${headerHtml}
-            ${studentHtml}
-            ${questionsHtml}
-          </div>
-          ${footerHtml}
-        </div>
-      </div>
-    `;
-  };
-
-  // Pristine isolated iframe print execution - zero dashboard leak, 100% in-memory pristine generation
+  // Print via iframe
   const executeIframePrint = () => {
     if (!pages || pages.length === 0) {
       toast({ variant: "destructive", description: "لا توجد صفحات جاهزة للطباعة." });
       return;
     }
 
-    // Remove any stale iframe
     const oldIframe = document.getElementById("memo-print-iframe");
     if (oldIframe && document.body.contains(oldIframe)) {
       document.body.removeChild(oldIframe);
@@ -1709,125 +1154,125 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     iframe.style.bottom = "0";
     iframe.style.width = "0";
     iframe.style.height = "0";
-    iframe.style.border = "none";
-    iframe.style.zIndex = "-99999";
+    iframe.style.border = "0";
     document.body.appendChild(iframe);
 
     const doc = iframe.contentWindow?.document;
     if (!doc) {
-      toast({ variant: "destructive", description: "تعذر فتح نافذة الطباعة المنعزلة." });
+      toast({ variant: "destructive", description: "تعذر فتح نافذة الطباعة." });
       return;
     }
 
-    let sheetsHtml = "";
-    pages.forEach((pageItems, idx) => {
-      sheetsHtml += generateSheetHtml(pageItems, idx, pages.length);
-    });
+    const cleanTitle = sanitizeMemoText(settings.headerText) || "مذكرة تدريبات وبنك أسئلة A4";
+    const cleanSub = sanitizeMemoText(settings.subHeaderText) || "";
+    const theme = getThemeConfig(settings.templateStyle);
+    const badgeText =
+      settings.templateStyle === "exam"
+        ? "ورقة اختبار رسمي معتمد"
+        : settings.templateStyle === "tech"
+          ? "بنك الأسئلة والتقييمات"
+          : settings.templateStyle === "emerald"
+            ? "التقييم الشامل والتدريبات"
+            : "مذكرة تدريبات وبنك أسئلة";
 
-    const isRtl = settings.contentDir === "rtl";
-    const title = sanitizeMemoText(settings.headerText) || "مذكرة A4 - د. محمود المهدي";
+    let htmlPages = "";
+    pages.forEach((pageItems, pageIdx) => {
+      const isP1 = pageIdx === 0;
+      const topPaddingMm = isP1
+        ? settings.headerEnabled
+          ? 7.5
+          : settings.topMm || 12
+        : settings.continuationHeader === "minimal"
+          ? 5.5
+          : settings.continuationHeader === "none"
+            ? settings.topMm || 7.5
+            : settings.topMm || 12;
+
+      let pHeader = "";
+      if (isP1 && settings.headerEnabled) {
+        pHeader = `
+          <div style="width:100%;margin-bottom:2.5mm;color:#0f172a;box-sizing:border-box;">
+            <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:2mm;">
+              <div style="display:flex;align-items:center;gap:2.5mm;background:${theme.sealBg};border:1.2px solid ${theme.sealBorder};border-radius:2.5mm;padding:1.2mm 3.2mm;">
+                <div style="width:7.5mm;height:7.5mm;border-radius:50%;background:${theme.crestBg};border:${theme.crestBorder};color:${theme.crestColor};display:grid;place-items:center;font-weight:900;font-size:7pt;">M</div>
+                <div style="display:flex;flex-direction:column;">
+                  <span style="font-size:9.5pt;font-weight:900;color:${theme.drTextColor};">د. محمود المهدي Dr / Elmahdy</span>
+                  <span style="font-size:6.8pt;font-weight:700;color:${theme.drSubTextColor};">الحاسب الآلي والذكاء الاصطناعي</span>
+                </div>
+              </div>
+              <div><span style="background:${theme.badgeBg};color:${theme.badgeColor};border:${theme.badgeBorder};padding:1.2mm 3.5mm;border-radius:1.5mm;font-size:8pt;font-weight:800;">${badgeText}</span></div>
+            </div>
+            <div style="width:100%;padding:0 0.5mm;">
+              <div style="font-size:11pt;font-weight:900;line-height:1.35;word-break:normal;overflow-wrap:anywhere;">${cleanTitle}</div>
+              ${cleanSub ? `<div style="font-size:7.8pt;font-weight:600;margin-top:1.2mm;color:#475569;line-height:1.4;word-break:normal;overflow-wrap:anywhere;">${cleanSub}</div>` : ""}
+            </div>
+          </div>
+        `;
+      } else if (!isP1 && settings.continuationHeader === "minimal") {
+        pHeader = `
+          <div style="width:100%;display:flex;align-items:center;justify-content:space-between;padding-bottom:1.4mm;margin-bottom:2.5mm;border-bottom:1.2px solid #000;box-sizing:border-box;">
+            <span style="font-size:8.5pt;font-weight:800;">${cleanTitle}</span>
+            <span style="font-size:8pt;font-weight:800;">د. محمود المهدي • Dr / Elmahdy</span>
+          </div>
+        `;
+      }
+
+      const pStudent = isP1 && settings.studentFields ? studentStripHtml : "";
+      const questionsBody = pageItems.map((item) => item.html).join("");
+      const pageNumStr = settings.showTotalPages
+        ? `صفحة ${pageIdx + 1} من ${pages.length}`
+        : `صفحة ${pageIdx + 1}`;
+
+      htmlPages += `
+        <div class="print-page" style="box-sizing:border-box;width:210mm;height:297mm;position:relative;page-break-after:always;padding:${topPaddingMm}mm ${settings.rightMm}mm ${settings.bottomMm}mm ${settings.leftMm}mm;overflow:hidden;background:#ffffff;">
+          ${pHeader}
+          ${pStudent}
+          <div style="width:100%;box-sizing:border-box;">
+            ${questionsBody}
+          </div>
+          <div style="position:absolute;bottom:3.5mm;left:${settings.leftMm}mm;right:${settings.rightMm}mm;display:flex;justify-content:space-between;align-items:center;font-size:7.5pt;font-weight:bold;color:#64748b;border-top:1px solid #cbd5e1;padding-top:1.2mm;">
+            <span>${sanitizeMemoText(settings.footerText || "د. محمود المهدي | الحاسب الآلي والذكاء الاصطناعي")}</span>
+            <span style="background:${theme.pageNumberBg};color:${theme.pageNumberColor};padding:0.8mm 2.2mm;border-radius:1mm;">${pageNumStr}</span>
+          </div>
+        </div>
+      `;
+    });
 
     doc.open();
     doc.write(`
       <!DOCTYPE html>
-      <html dir="${isRtl ? "rtl" : "ltr"}" lang="${isRtl ? "ar" : "en"}">
-        <head>
-          <meta charset="utf-8">
-          <title>${title}</title>
-          <link rel="preconnect" href="https://fonts.googleapis.com">
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-          <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Almarai:wght@400;700;800&family=Amiri:wght@400;700&family=Tajawal:wght@400;700;800&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
-          <style>
-            @page {
-              size: A4 portrait;
-              margin: 0mm !important;
-            }
-            * {
-              box-sizing: border-box !important;
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-            html, body {
-              margin: 0 !important;
-              padding: 0 !important;
-              width: 210mm !important;
-              background: #ffffff !important;
-              font-family: ${settings.fontSelect || "'Cairo', sans-serif"} !important;
-              direction: ${isRtl ? "rtl" : "ltr"} !important;
-            }
-            .print-page-shell {
-              width: 210mm !important;
-              height: 297mm !important;
-              min-height: 297mm !important;
-              max-height: 297mm !important;
-              position: relative !important;
-              overflow: hidden !important;
-              background: #ffffff !important;
-              box-sizing: border-box !important;
-              page-break-inside: avoid !important;
-              break-inside: avoid !important;
-            }
-            .memo-sheet {
-              width: 210mm !important;
-              height: 297mm !important;
-              min-height: 297mm !important;
-              max-height: 297mm !important;
-              transform: none !important;
-              position: relative !important;
-              overflow: hidden !important;
-              background: #ffffff !important;
-              box-sizing: border-box !important;
-            }
-            .no-print {
-              display: none !important;
-            }
-          </style>
-        </head>
-        <body>
-          ${sheetsHtml}
-        </body>
+      <html dir="${settings.contentDir}">
+      <head>
+        <title>${cleanTitle}</title>
+        <style>
+          @page { size: A4 portrait; margin: 0; }
+          * { box-sizing: border-box; }
+          body { margin: 0; padding: 0; font-family: ${settings.fontSelect}; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .print-page { page-break-after: always; break-after: page; }
+          .print-page:last-child { page-break-after: avoid; break-after: avoid; }
+        </style>
+      </head>
+      <body>
+        ${htmlPages}
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.focus();
+              window.print();
+            }, 300);
+          };
+        </script>
+      </body>
       </html>
     `);
     doc.close();
-
-    setTimeout(() => {
-      try {
-        iframe.contentWindow?.focus();
-        iframe.contentWindow?.print();
-      } catch (e) {
-        console.error("Print error:", e);
-      } finally {
-        setTimeout(() => {
-          if (document.body.contains(iframe)) {
-            document.body.removeChild(iframe);
-          }
-        }, 5000);
-      }
-    }, 400);
   };
 
-  // Print execution: Pristine, isolated iframe print with zero dashboard leak
   const handlePrint = () => {
-    if (!pages || pages.length === 0 || questions.length === 0) {
-      toast({ variant: "destructive", description: "لا توجد أسئلة أو صفحات لطباعتها." });
-      return;
-    }
     executeIframePrint();
   };
 
-  // Keyboard shortcut Ctrl+P / Cmd+P listener
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p") {
-        e.preventDefault();
-        handlePrint();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handlePrint]);
-
-  // Export Questions to Microsoft Word (.doc format with RTL, tables & styles)
+  // Export to Microsoft Word (.doc)
   const handleExportWord = () => {
     if (questions.length === 0) {
       toast({ variant: "destructive", description: "لا توجد أسئلة لتصديرها إلى ملف Word" });
@@ -1842,15 +1287,6 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
       <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
       <head>
         <meta charset='utf-8'>
-        <!--[if gte mso 9]>
-        <xml>
-          <w:WordDocument>
-            <w:View>Print</w:View>
-            <w:Zoom>100</w:Zoom>
-            <w:DoNotOptimizeForBrowser/>
-          </w:WordDocument>
-        </xml>
-        <![endif]-->
         <style>
           @page Section1 {
             size: 21.0cm 29.7cm;
@@ -1953,6 +1389,11 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
             color: #475569;
             border-radius: 4px;
           }
+          .ruled-line {
+            border-bottom: 1px dotted #94a3b8;
+            height: 22px;
+            margin-bottom: 8px;
+          }
         </style>
       </head>
       <body>
@@ -1974,8 +1415,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
           <div class="doc-title">${title}</div>
           ${subTitle ? `<div class="doc-subtitle">${subTitle}</div>` : ""}
 
-          ${settings.studentFields
-        ? `
+          ${settings.studentFields ? `
             <table class="student-box" dir="${isRtl ? "rtl" : "ltr"}">
               <tr>
                 <td style="width: 50%;"><strong>اسم الطالب:</strong> ................................................................</td>
@@ -1983,9 +1423,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 <td style="width: 25%;"><strong>رقم الهاتف:</strong> ............................</td>
               </tr>
             </table>
-          `
-        : ""
-      }
+          ` : ""}
 
           <div class="questions-list">
     `;
@@ -2002,44 +1440,35 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
 
       if (q.options && q.options.length > 0) {
         wordContent += `<table class="options-table" dir="${isRtl ? "rtl" : "ltr"}">`;
-        const useTwoCols = q.options.length >= 2;
-        if (useTwoCols) {
-          for (let i = 0; i < q.options.length; i += 2) {
-            const letter1 = isRtl ? (ARABIC_LETTERS[i] ?? i + 1) : (ENGLISH_LETTERS[i] ?? String.fromCharCode(65 + i));
-            const letter2 = isRtl ? (ARABIC_LETTERS[i + 1] ?? i + 2) : (ENGLISH_LETTERS[i + 1] ?? String.fromCharCode(65 + i + 1));
-            wordContent += `<tr>`;
-            wordContent += `<td style="width: 50%;"><span class="opt-badge">(${letter1})</span> ${q.options[i].text || ""}</td>`;
-            if (q.options[i + 1]) {
-              wordContent += `<td style="width: 50%;"><span class="opt-badge">(${letter2})</span> ${q.options[i + 1].text || ""}</td>`;
-            } else {
-              wordContent += `<td></td>`;
-            }
-            wordContent += `</tr>`;
+        for (let i = 0; i < q.options.length; i += 2) {
+          const letter1 = isRtl ? (ARABIC_LETTERS[i] ?? i + 1) : (ENGLISH_LETTERS[i] ?? String.fromCharCode(65 + i));
+          const letter2 = isRtl ? (ARABIC_LETTERS[i + 1] ?? i + 2) : (ENGLISH_LETTERS[i + 1] ?? String.fromCharCode(65 + i + 1));
+          wordContent += `<tr>`;
+          wordContent += `<td style="width: 50%;"><span class="opt-badge">(${letter1})</span> ${q.options[i].text || ""}</td>`;
+          if (q.options[i + 1]) {
+            wordContent += `<td style="width: 50%;"><span class="opt-badge">(${letter2})</span> ${q.options[i + 1].text || ""}</td>`;
+          } else {
+            wordContent += `<td></td>`;
           }
-        } else {
-          q.options.forEach((opt, oIdx) => {
-            const letter = isRtl ? (ARABIC_LETTERS[oIdx] ?? oIdx + 1) : (ENGLISH_LETTERS[oIdx] ?? String.fromCharCode(65 + oIdx));
-            wordContent += `<tr><td><span class="opt-badge">(${letter})</span> ${opt.text || ""}</td></tr>`;
-          });
+          wordContent += `</tr>`;
         }
         wordContent += `</table>`;
       }
 
-      const effectiveAns = q.answer || q.modelAnswer || q.correctAnswer;
-      if (settings.showAnswers && effectiveAns) {
-        wordContent += `
-          <div class="answer-box">
-            <strong>${isRtl ? "الإجابة النموذجية:" : "Model Answer:"}</strong> ${effectiveAns}
-          </div>
-        `;
+      if (q.type === "ESSAY" && !settings.showAnswers && (settings.essayLines ?? 3) > 0) {
+        wordContent += `<div style="margin-top: 8px; margin-bottom: 10px; padding-right: 20px;">`;
+        for (let l = 0; l < (settings.essayLines ?? 3); l++) {
+          wordContent += `<div class="ruled-line"></div>`;
+        }
+        wordContent += `</div>`;
+      }
+
+      if (settings.showAnswers && q.answer) {
+        wordContent += `<div class="answer-box"><strong>الإجابة النموذجية:</strong> ${q.answer}</div>`;
       }
 
       if (settings.showExplain && q.explanation) {
-        wordContent += `
-          <div class="explanation-box">
-            <strong>${isRtl ? "التفسير والتعليل:" : "Explanation:"}</strong> ${q.explanation}
-          </div>
-        `;
+        wordContent += `<div class="explanation-box"><strong>التفسير والتعليل:</strong> ${q.explanation}</div>`;
       }
 
       wordContent += `</div>`;
@@ -2047,7 +1476,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
 
     wordContent += `
           </div>
-          <div style="text-align: center; margin-top: 24px; padding-top: 10px; border-top: 1px solid #cbd5e1; font-size: 9pt; color: #64748b;">
+          <div style="margin-top: 20px; border-top: 1px solid #cbd5e1; padding-top: 8px; font-size: 9pt; color: #64748b; text-align: center;">
             ${sanitizeMemoText(settings.footerText || "د. محمود المهدي | الحاسب الآلي والذكاء الاصطناعي")}
           </div>
         </div>
@@ -2072,12 +1501,213 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
     });
   };
 
-  // Selected stage in bank tree
-  const activeTreeStage = treeData.find((st) => st.stage === selectedStageName);
-  const stageUnits = activeTreeStage?.units || [];
+  // Step 2 Batch Handlers
+  const handleBalancedDistribution = () => {
+    if (selectedLessons.length === 0 || selectedQuestionTypes.length === 0) return;
+    const target = targetBatchCount > 0 ? targetBatchCount : 20;
+    const totalSlots = selectedLessons.length * selectedQuestionTypes.length;
+    const perSlotBase = Math.floor(target / Math.max(1, totalSlots));
+    let remainder = target % Math.max(1, totalSlots);
+
+    const nextAlloc: Record<string, { mcq: number; tf: number; essay: number }> = {};
+    selectedLessons.forEach((l) => {
+      const key = `${l.unit}:::${l.lesson}`;
+      nextAlloc[key] = { mcq: 0, tf: 0, essay: 0 };
+
+      if (selectedQuestionTypes.includes("MCQ")) {
+        const extra = remainder > 0 ? 1 : 0;
+        remainder = Math.max(0, remainder - extra);
+        nextAlloc[key].mcq = Math.min(l.mcqCount ?? l.totalQuestions ?? 0, perSlotBase + extra);
+      }
+      if (selectedQuestionTypes.includes("TRUE_FALSE")) {
+        const extra = remainder > 0 ? 1 : 0;
+        remainder = Math.max(0, remainder - extra);
+        nextAlloc[key].tf = Math.min(l.tfCount ?? 0, perSlotBase + extra);
+      }
+      if (selectedQuestionTypes.includes("ESSAY")) {
+        const extra = remainder > 0 ? 1 : 0;
+        remainder = Math.max(0, remainder - extra);
+        nextAlloc[key].essay = Math.min(l.totalEssays ?? 0, perSlotBase + extra);
+      }
+    });
+
+    setLessonAllocations(nextAlloc);
+    toast({ title: "تم التوزيع المتوازن للأسئلة بنجاح ✓" });
+  };
+
+  const handleMaximizeAll = () => {
+    if (selectedLessons.length === 0) return;
+    const nextAlloc: Record<string, { mcq: number; tf: number; essay: number }> = {};
+    selectedLessons.forEach((l) => {
+      const key = `${l.unit}:::${l.lesson}`;
+      nextAlloc[key] = {
+        mcq: selectedQuestionTypes.includes("MCQ") ? l.mcqCount ?? l.totalQuestions ?? 0 : 0,
+        tf: selectedQuestionTypes.includes("TRUE_FALSE") ? l.tfCount ?? 0 : 0,
+        essay: selectedQuestionTypes.includes("ESSAY") ? l.totalEssays ?? 0 : 0,
+      };
+    });
+    setLessonAllocations(nextAlloc);
+    toast({ title: "تم تحديد كامل الأسئلة المتوفرة في الدروس ✓" });
+  };
+
+  const handleClearAllAllocations = () => {
+    const nextAlloc: Record<string, { mcq: number; tf: number; essay: number }> = {};
+    selectedLessons.forEach((l) => {
+      const key = `${l.unit}:::${l.lesson}`;
+      nextAlloc[key] = { mcq: 0, tf: 0, essay: 0 };
+    });
+    setLessonAllocations(nextAlloc);
+  };
+
+  // Compile & Fetch Real Questions from Database based on Exact Allocations
+  const totalRequested = useMemo(() => {
+    return Object.values(lessonAllocations).reduce(
+      (sum, a) => sum + (a.mcq || 0) + (a.tf || 0) + (a.essay || 0),
+      0,
+    );
+  }, [lessonAllocations]);
+
+  const handleCompileAllocations = async () => {
+    if (selectedLessons.length === 0) {
+      toast({ variant: "destructive", description: "يرجى تحديد درس واحد على الأقل من الخطوة 1." });
+      return;
+    }
+    if (totalRequested === 0) {
+      toast({ variant: "destructive", description: "يرجى تحديد عدد الأسئلة المطلوبة (العدد الحالي 0)." });
+      return;
+    }
+
+    try {
+      setIsLoadingQuestions(true);
+      const fetchTasks: Array<{ unit: string; lesson: string; type: "MCQ" | "TRUE_FALSE" | "ESSAY"; count: number }> = [];
+
+      for (const item of selectedLessons) {
+        const key = `${item.unit}:::${item.lesson}`;
+        const alloc = lessonAllocations[key] || { mcq: 0, tf: 0, essay: 0 };
+        if (selectedQuestionTypes.includes("MCQ") && alloc.mcq > 0) {
+          fetchTasks.push({ unit: item.unit, lesson: item.lesson, type: "MCQ", count: alloc.mcq });
+        }
+        if (selectedQuestionTypes.includes("TRUE_FALSE") && alloc.tf > 0) {
+          fetchTasks.push({ unit: item.unit, lesson: item.lesson, type: "TRUE_FALSE", count: alloc.tf });
+        }
+        if (selectedQuestionTypes.includes("ESSAY") && alloc.essay > 0) {
+          fetchTasks.push({ unit: item.unit, lesson: item.lesson, type: "ESSAY", count: alloc.essay });
+        }
+      }
+
+      const fetchedQuestions: any[] = [];
+      const seenTexts = new Set<string>();
+
+      for (const task of fetchTasks) {
+        const params = new URLSearchParams({
+          stage: selectedStageName,
+          unit: task.unit,
+          lesson: task.lesson,
+          type: task.type,
+        });
+        const rows = await adminApi<any[]>(`/api/admin/learning/test-bank/questions?${params.toString()}`);
+        if (Array.isArray(rows) && rows.length > 0) {
+          const matching = rows.filter((r) => {
+            const qObj = r.question || r;
+            const detected = normalizeType(
+              qObj.type ??
+                r.type ??
+                qObj.questionType ??
+                r.questionType ??
+                (qObj.definition
+                  ? "DEFINITION"
+                  : qObj.modelAnswer || r.modelAnswer
+                    ? "ESSAY"
+                    : qObj.options?.length === 2 || r.options?.length === 2
+                      ? "TRUE_FALSE"
+                      : qObj.options?.length > 2 || r.options?.length > 2
+                        ? "MCQ"
+                        : "ESSAY"),
+            );
+            return detected === task.type;
+          });
+
+          const shuffled = [...matching].sort(() => 0.5 - Math.random()).slice(0, task.count);
+          for (const item of shuffled) {
+            const qObj = item.question || item;
+            const textKey = (
+              qObj.statement ||
+              qObj.prompt ||
+              qObj.text ||
+              item.statement ||
+              item.prompt ||
+              ""
+            ).trim();
+            if (textKey && !seenTexts.has(textKey)) {
+              seenTexts.add(textKey);
+              fetchedQuestions.push(item);
+            }
+          }
+        }
+      }
+
+      if (!fetchedQuestions.length) {
+        toast({
+          variant: "destructive",
+          description: "لم يتم العثور على أسئلة تطابق التوزيع المطلوب في بنك الأسئلة.",
+        });
+        return;
+      }
+
+      const normalized = fetchedQuestions.map((item, idx) => {
+        const qObj = item.question || item;
+        return normalizeQuestion(
+          {
+            ...item,
+            ...qObj,
+            id: item.id || `q-${idx}`,
+            statement: qObj.prompt || qObj.statement || item.prompt || "",
+            options: qObj.options || item.options || [],
+            answer: qObj.correctAnswer ?? qObj.answer ?? item.answer ?? item.modelAnswer ?? "",
+            explanation: qObj.explanation || item.explanation || "",
+            translation: qObj.translation || item.translation || "",
+            enabled: true,
+          },
+          idx,
+        );
+      });
+
+      setQuestions(normalized);
+      toast({
+        title: "تم استخراج وتجميع الأسئلة بنجاح ✨",
+        description: `تم توليد ${normalized.length} سؤال في المستند حسب التوزيع الدقيق.`,
+      });
+      setActiveStep("step4_questions");
+      setMobileWorkspaceTab("preview");
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "خطأ في التجميع",
+        description: err.message || "تعذر جلب الأسئلة حالياً.",
+      });
+    } finally {
+      setIsLoadingQuestions(false);
+    }
+  };
+
+  // Step 4 Reordering and Editing
+  const moveQuestion = (fromIdx: number, toIdx: number) => {
+    if (toIdx < 0 || toIdx >= questions.length) return;
+    setQuestions((prev) => {
+      const next = [...prev];
+      const [item] = next.splice(fromIdx, 1);
+      next.splice(toIdx, 0, item);
+      return next;
+    });
+  };
+
+  const removeQuestion = (idx: number) => {
+    setQuestions((prev) => prev.filter((_, i) => i !== idx));
+    toast({ title: "تم حذف السؤال من المذكرة" });
+  };
 
   return (
-    <div className="space-y-6" dir="rtl">
+    <div className="space-y-4" dir="rtl">
       {/* Off-screen measurement holder */}
       <div
         ref={measureRef}
@@ -2092,44 +1722,102 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
         }}
       />
 
-      {/* Top Header / Mode Switcher */}
-      <div className="no-print flex flex-col md:flex-row items-start md:items-center justify-between gap-4 rounded-2xl bg-gradient-to-l from-slate-900 via-blue-950 to-slate-900 p-5 text-white shadow-xl">
-        <div className="flex items-center gap-3.5">
-          <div className="grid h-12 w-12 place-items-center rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-inner">
-            <Printer className="h-6 w-6" />
+      {/* Slim Modern Header Bar */}
+      <header className="no-print rounded-2xl bg-gradient-to-l from-slate-900 via-slate-950 to-slate-900 border border-slate-800 p-3.5 text-white shadow-lg flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-inner">
+            <Printer className="h-5 w-5" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-black">استوديو المذكرات والطباعة الاحترافية A4</h2>
-              <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300 border border-emerald-500/30">
-                جاهز للطباعة وتصدير Word
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-base font-black truncate">استوديو المذكرات والطباعة A4</h2>
+              <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/30">
+                {questions.length} سؤال • {pages.length} صفحة A4
               </span>
             </div>
-            <p className="text-xs text-slate-300 mt-0.5">
-              صمّم ونظّم واطبع مذكرات الوحدات، أوراق العمل، والامتحانات الرسمية، أو صدّرها لـ Word بنقرة واحدة.
-            </p>
+            {/* Inline Editable Document Title */}
+            <div className="flex items-center gap-1.5 mt-0.5">
+              {isEditingDocTitle ? (
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    value={settings.headerText}
+                    onChange={(e) => setSettings((s) => ({ ...s, headerText: e.target.value }))}
+                    className="h-6 px-2 text-xs font-bold rounded border border-amber-400 bg-slate-800 text-white focus:outline-none"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingDocTitle(false)}
+                    className="p-1 rounded bg-amber-500 text-slate-950 hover:bg-amber-400 cursor-pointer"
+                  >
+                    <Check className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  className="flex items-center gap-1 cursor-pointer group"
+                  onClick={() => setIsEditingDocTitle(true)}
+                  title="انقر لتعديل اسم المستند"
+                >
+                  <span className="text-xs font-bold text-slate-300 group-hover:text-amber-300 truncate max-w-xs sm:max-w-md">
+                    {settings.headerText || "مذكرة التدريبات الشاملة"}
+                  </span>
+                  <Edit3 className="h-3 w-3 text-slate-400 group-hover:text-amber-400 opacity-60 group-hover:opacity-100" />
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
+        {/* Header Action Bar */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Mode Switcher */}
+          <div className="flex items-center p-0.5 rounded-xl bg-slate-800 border border-slate-700">
+            <button
+              type="button"
+              onClick={setStudentMode}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                !settings.showAnswers
+                  ? "bg-primary text-white shadow-xs font-black"
+                  : "text-slate-300 hover:text-white"
+              }`}
+            >
+              <User className="h-3.5 w-3.5" />
+              <span>نسخة الطالب</span>
+            </button>
+            <button
+              type="button"
+              onClick={setTeacherMode}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                settings.showAnswers
+                  ? "bg-amber-500 text-slate-950 shadow-xs font-black"
+                  : "text-slate-300 hover:text-white"
+              }`}
+            >
+              <CheckCircle className="h-3.5 w-3.5 text-slate-950" />
+              <span>نموذج المعلم</span>
+            </button>
+          </div>
+
           <Button
             type="button"
-            onClick={setStudentMode}
-            variant="outline"
-            className="border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-white text-xs font-bold flex items-center gap-1.5"
+            onClick={handleExportWord}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs flex items-center gap-1.5 h-8 px-3 cursor-pointer"
           >
-            <User className="h-3.5 w-3.5 text-slate-300" />
-            نسخة الطالب (بدون إجابات)
+            <FileText className="h-3.5 w-3.5" />
+            <span>Word (.doc)</span>
           </Button>
+
           <Button
             type="button"
-            onClick={setTeacherMode}
-            variant="outline"
-            className="border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 text-xs font-bold flex items-center gap-1.5"
+            onClick={handlePrint}
+            className="bg-primary hover:bg-primary/90 text-white font-black text-xs flex items-center gap-1.5 h-8 px-3.5 cursor-pointer shadow-md shadow-primary/20"
           >
-            <CheckCircle className="h-3.5 w-3.5 text-amber-400" />
-            نسخة المعلم (مع الإجابات)
+            <Printer className="h-3.5 w-3.5" />
+            <span>طباعة / PDF (A4)</span>
           </Button>
+
           <Button
             type="button"
             onClick={() => {
@@ -2139,17 +1827,19 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
               }
               const quizPayload = {
                 title: settings.headerText || "اختبار جديد من استوديو المذكرات",
-                questions: questions.filter(q => q.enabled).map(q => {
-                  const isEssay = q.type === "ESSAY" || (!q.options || q.options.length === 0);
-                  const isTrueFalse = q.type === "TRUE_FALSE";
-                  return {
-                    prompt: q.statement || q.prompt || "",
-                    options: isEssay ? [] : (q.options?.map(o => o.text) || []),
-                    correctIndex: isEssay ? -1 : Math.max(0, q.options?.findIndex(o => o.isCorrect) ?? 0),
-                    explanation: q.explanation || "",
-                    questionType: isEssay ? "essay" : isTrueFalse ? "true_false" : "mcq",
-                  };
-                }),
+                questions: questions
+                  .filter((q) => q.enabled)
+                  .map((q) => {
+                    const isEssay = q.type === "ESSAY" || (!q.options || q.options.length === 0);
+                    const isTrueFalse = q.type === "TRUE_FALSE";
+                    return {
+                      prompt: q.statement || q.prompt || "",
+                      options: isEssay ? [] : q.options?.map((o) => o.text) || [],
+                      correctIndex: isEssay ? -1 : Math.max(0, q.options?.findIndex((o) => o.isCorrect) ?? 0),
+                      explanation: q.explanation || "",
+                      questionType: isEssay ? "essay" : isTrueFalse ? "true_false" : "mcq",
+                    };
+                  }),
               };
               sessionStorage.setItem("exam_wizard_import_payload", JSON.stringify(quizPayload));
               if (onNavigateToQuizzes) {
@@ -2158,2167 +1848,1540 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 window.location.href = "/admin/quizzes";
               }
             }}
-            className="bg-violet-600 hover:bg-violet-700 text-white font-extrabold text-xs flex items-center gap-2 px-4 py-2.5 shadow-lg shadow-violet-600/25 cursor-pointer"
-            title="نشر هذا الاختبار إلكترونياً للطلاب على المنصة"
+            className="bg-violet-600 hover:bg-violet-700 text-white font-black text-xs flex items-center gap-1.5 h-8 px-3 cursor-pointer"
+            title="نشر هذا المحتوى كاختبار إلكتروني للطلاب على المنصة"
           >
-            <Sparkles className="h-4 w-4" />
-            نشر إلكترونياً للطلاب 🚀
-          </Button>
-          <Button
-            type="button"
-            onClick={handleExportWord}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center gap-2 px-4 py-2.5 shadow-lg shadow-emerald-600/25"
-          >
-            <FileText className="h-4 w-4" />
-            تصدير Word (.doc)
-          </Button>
-          <Button
-            type="button"
-            onClick={handlePrint}
-            className="bg-primary hover:bg-primary/90 text-white font-extrabold text-xs flex items-center gap-2 px-5 py-2.5 shadow-lg shadow-primary/20"
-          >
-            <Printer className="h-4 w-4" />
-            طباعة / تصدير PDF
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>نشر إلكتروني 🚀</span>
           </Button>
         </div>
+      </header>
+
+      {/* Mobile/Tablet Segment Switcher */}
+      <div className="lg:hidden flex rounded-xl bg-slate-200/80 dark:bg-slate-800 p-1">
+        <button
+          type="button"
+          onClick={() => setMobileWorkspaceTab("config")}
+          className={`flex-1 py-2 text-xs font-black rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer ${
+            mobileWorkspaceTab === "config"
+              ? "bg-white dark:bg-slate-900 text-primary shadow-xs font-black"
+              : "text-muted-foreground"
+          }`}
+        >
+          <SettingsIcon className="h-3.5 w-3.5" />
+          <span>إعدادات وتوزيع الأسئلة</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileWorkspaceTab("preview")}
+          className={`flex-1 py-2 text-xs font-black rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer ${
+            mobileWorkspaceTab === "preview"
+              ? "bg-white dark:bg-slate-900 text-primary shadow-xs font-black"
+              : "text-muted-foreground"
+          }`}
+        >
+          <Eye className="h-3.5 w-3.5 text-emerald-600" />
+          <span>معاينة المستند A4 ({pages.length} صفحة)</span>
+        </button>
       </div>
 
-      {/* Main Studio Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Config & Content Picker (5 cols) */}
-        <div className="no-print lg:col-span-5 xl:col-span-5 space-y-4">
-          {/* Main Studio Navigation Tabs */}
-          <div className="grid grid-cols-3 gap-1 rounded-xl bg-slate-200/80 p-1 dark:bg-slate-800">
+      {/* Main Two-Panel Layout */}
+      <div className="flex flex-col lg:flex-row gap-5 items-start">
+        {/* RIGHT PANEL: Configuration Workspace (~34% width on desktop) */}
+        <aside
+          className={`no-print w-full lg:w-[36%] xl:w-[34%] shrink-0 space-y-4 ${
+            mobileWorkspaceTab === "preview" ? "hidden lg:block" : ""
+          }`}
+        >
+          {/* 4 Steps Stepper */}
+          <div className="grid grid-cols-4 gap-1 p-1 rounded-xl bg-slate-200/80 dark:bg-slate-800 border border-slate-300/60 dark:border-slate-700/60">
             <button
               type="button"
-              onClick={() => setActiveStep("content")}
-              className={`rounded-lg py-2.5 text-xs font-black transition-all flex items-center justify-center gap-1.5 ${activeStep === "content"
-                ? "bg-white text-slate-900 shadow-xs dark:bg-slate-900 dark:text-white"
-                : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                }`}
+              onClick={() => setActiveStep("step1_source")}
+              className={`py-2 px-1 text-[11px] font-black rounded-lg transition flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
+                activeStep === "step1_source"
+                  ? "bg-white dark:bg-slate-900 text-primary shadow-xs font-black"
+                  : "text-slate-600 dark:text-slate-400 hover:text-foreground"
+              }`}
             >
-              <BookOpen className="h-3.5 w-3.5" />
-              ١. مصدر الأسئلة
+              <BookOpen className="h-3.5 w-3.5 shrink-0" />
+              <span>١. المنهج</span>
             </button>
             <button
               type="button"
-              onClick={() => setActiveStep("design")}
-              className={`rounded-lg py-2.5 text-xs font-black transition-all flex items-center justify-center gap-1.5 ${activeStep === "design"
-                ? "bg-white text-slate-900 shadow-xs dark:bg-slate-900 dark:text-white"
-                : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                }`}
+              onClick={() => setActiveStep("step2_distribute")}
+              className={`py-2 px-1 text-[11px] font-black rounded-lg transition flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
+                activeStep === "step2_distribute"
+                  ? "bg-white dark:bg-slate-900 text-primary shadow-xs font-black"
+                  : "text-slate-600 dark:text-slate-400 hover:text-foreground"
+              }`}
             >
-              <Palette className="h-3.5 w-3.5" />
-              ٢. القالب والشكل
+              <Shuffle className="h-3.5 w-3.5 shrink-0" />
+              <span>٢. التوزيع</span>
             </button>
             <button
               type="button"
-              onClick={() => setActiveStep("export")}
-              className={`rounded-lg py-2.5 text-xs font-black transition-all flex items-center justify-center gap-1.5 ${activeStep === "export"
-                ? "bg-white text-slate-900 shadow-xs dark:bg-slate-900 dark:text-white"
-                : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                }`}
+              onClick={() => setActiveStep("step3_design")}
+              className={`py-2 px-1 text-[11px] font-black rounded-lg transition flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
+                activeStep === "step3_design"
+                  ? "bg-white dark:bg-slate-900 text-primary shadow-xs font-black"
+                  : "text-slate-600 dark:text-slate-400 hover:text-foreground"
+              }`}
             >
-              <Sliders className="h-3.5 w-3.5" />
-              ٣. الخط والترقيم
+              <Palette className="h-3.5 w-3.5 shrink-0" />
+              <span>٣. التنسيق</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveStep("step4_questions")}
+              className={`py-2 px-1 text-[11px] font-black rounded-lg transition flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
+                activeStep === "step4_questions"
+                  ? "bg-white dark:bg-slate-900 text-primary shadow-xs font-black"
+                  : "text-slate-600 dark:text-slate-400 hover:text-foreground"
+              }`}
+            >
+              <ListOrdered className="h-3.5 w-3.5 shrink-0" />
+              <span>٤. المراجعة ({questions.length})</span>
             </button>
           </div>
 
-          {/* STEP 1: CONTENT SOURCE */}
-          {activeStep === "content" && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-5 dark:border-slate-800 dark:bg-slate-900">
-              {/* Content Sub-tabs */}
-              <div className="flex border-b border-slate-200 dark:border-slate-800 pb-2 gap-2">
+          {/* STEP 1: SOURCE AND CURRICULUM */}
+          {activeStep === "step1_source" && (
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-xs space-y-4">
+              {/* Source Tabs */}
+              <div className="flex border-b border-border pb-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setContentSourceTab("curriculum")}
-                  className={`text-xs font-bold pb-1.5 px-2.5 border-b-2 transition flex items-center gap-1.5 ${contentSourceTab === "curriculum"
-                    ? "border-primary text-primary"
-                    : "border-transparent text-slate-500 hover:text-slate-800"
-                    }`}
+                  className={`text-xs font-bold pb-1 px-2 border-b-2 transition flex items-center gap-1.5 cursor-pointer ${
+                    contentSourceTab === "curriculum"
+                      ? "border-primary text-primary font-black"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
                 >
                   <BookOpen className="h-3.5 w-3.5" />
-                  بنك أسئلة المنهج
+                  <span>بنك المنهج</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setContentSourceTab("quizzes")}
-                  className={`text-xs font-bold pb-1.5 px-2.5 border-b-2 transition flex items-center gap-1.5 ${contentSourceTab === "quizzes"
-                    ? "border-primary text-primary"
-                    : "border-transparent text-slate-500 hover:text-slate-800"
-                    }`}
+                  className={`text-xs font-bold pb-1 px-2 border-b-2 transition flex items-center gap-1.5 cursor-pointer ${
+                    contentSourceTab === "quizzes"
+                      ? "border-primary text-primary font-black"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
                 >
                   <FileText className="h-3.5 w-3.5" />
-                  اختبارات المنصة ({quizzes.length})
+                  <span>اختبارات المنصة ({quizzes.length})</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setContentSourceTab("external")}
-                  className={`text-xs font-bold pb-1.5 px-2.5 border-b-2 transition flex items-center gap-1.5 ${contentSourceTab === "external"
-                    ? "border-primary text-primary"
-                    : "border-transparent text-slate-500 hover:text-slate-800"
-                    }`}
+                  className={`text-xs font-bold pb-1 px-2 border-b-2 transition flex items-center gap-1.5 cursor-pointer ${
+                    contentSourceTab === "external"
+                      ? "border-primary text-primary font-black"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
                 >
                   <Upload className="h-3.5 w-3.5" />
-                  استيراد ملف (JSON)
+                  <span>استيراد JSON</span>
                 </button>
               </div>
 
-              {/* Source A: CURRICULUM BANK */}
+              {/* Source A: CURRICULUM QUESTION BANK */}
               {contentSourceTab === "curriculum" && (
-                <div className="space-y-4">
-                  {/* Stage Selector Cards */}
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-                      اختر المرحلة / المسار الدراسي:
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {treeData.map((st) => {
-                        const isSelected = selectedStageName === st.stage;
-                        const isLanguages = st.stage.toLowerCase().includes("لغات") || st.stage.toLowerCase().includes("languages");
-                        return (
-                          <button
-                            key={st.stage}
-                            type="button"
-                            onClick={() => {
-                              setSelectedStageName(st.stage);
-                              setSelectedUnitName("");
-                              setSelectedLessonName("");
-                              setSelectedLessons([]);
-                            }}
-                            className={`rounded-xl border p-3 text-right transition-all cursor-pointer ${isSelected
-                              ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs"
-                              : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800/40 dark:text-slate-200"
-                              }`}
-                          >
-                            <div className="flex items-center justify-between gap-1 mb-1">
-                              <span className="text-xs font-extrabold truncate">
-                                {isLanguages ? "لغات (English)" : "عام (عربي)"}
-                              </span>
-                              <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
-                                {st.totalQuestions} سؤال
-                              </span>
-                            </div>
-                            <span className="block text-xs font-bold text-foreground line-clamp-1">
-                              {st.stage}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Units of selected stage */}
-                  {selectedStageName && (
-                    <div className="space-y-3 pt-2">
-                      {/* Multi-lesson sticky selection summary bar */}
-                      {selectedLessons.length > 0 && (
-                        <div className="sticky top-0 z-20 p-2.5 rounded-xl bg-slate-900 text-white shadow-xl flex flex-wrap items-center justify-between gap-2 border border-slate-700">
-                          <div className="flex items-center gap-2">
-                            <CheckSquare className="h-4 w-4 text-emerald-400 shrink-0" />
-                            <span className="text-xs font-bold">
-                              تم تحديد <strong>{selectedLessons.length}</strong> دروس (
-                              {selectedLessons.reduce((acc, l) => acc + getLessonCountForType(l), 0)} سؤال {
-                                bankTypeFilter === "TRUE_FALSE" ? "صواب وخطأ" :
-                                bankTypeFilter === "MCQ" ? "اختيار من متعدد" :
-                                bankTypeFilter === "ESSAY" ? "مقالي ✍️" : ""
-                              })
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <Button
-                              type="button"
-                              size="sm"
-                              disabled={isLoadingQuestions || selectedLessons.reduce((acc, l) => acc + getLessonCountForType(l), 0) === 0}
-                              onClick={() => handleLoadFromSelectedLessons()}
-                              className="h-7 px-2.5 text-[11px] font-bold bg-primary hover:bg-primary/90 text-white cursor-pointer"
-                            >
-                              جلب وتجميع ({selectedLessons.reduce((acc, l) => acc + getLessonCountForType(l), 0)})
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              disabled={isLoadingQuestions || selectedLessons.reduce((acc, l) => acc + getLessonCountForType(l), 0) === 0}
-                              onClick={() => handleLoadFromSelectedLessons(randomCount)}
-                              className="h-7 px-2.5 text-[11px] font-bold bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-1 cursor-pointer"
-                            >
-                              <Shuffle className="h-3 w-3" />
-                              {randomCount} عشوائي
-                            </Button>
-                            <button
-                              type="button"
-                              onClick={() => setSelectedLessons([])}
-                              className="text-[11px] text-slate-300 hover:text-white underline px-1 cursor-pointer"
-                            >
-                              إلغاء التحديد
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700">
-                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                          <span>نوع الأسئلة:</span>
-                          <select
-                            value={bankTypeFilter}
-                            onChange={(e) => setBankTypeFilter(e.target.value)}
-                            className="rounded-md border border-slate-300 bg-white px-2 py-0.5 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
-                          >
-                            <option value="ALL">جميع الأنواع</option>
-                            <option value="MCQ">اختيار من متعدد (MCQ)</option>
-                            <option value="TRUE_FALSE">صواب وخطأ</option>
-                            <option value="ESSAY">أسئلة مقالية</option>
-                            <option value="DEFINITION">تعريفات ومصطلحات</option>
-                          </select>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
-                          <span>توليد عشوائي:</span>
-                          <input
-                            type="number"
-                            min="5"
-                            max="100"
-                            value={randomCount}
-                            onChange={(e) => setRandomCount(Number(e.target.value))}
-                            className="w-12 rounded border border-slate-300 px-1.5 py-0.5 text-center font-mono text-xs dark:bg-slate-800 dark:border-slate-700"
-                          />
-                          <span>سؤال</span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
-                        {stageUnits.map((u: any) => {
-                          const isUnitActive = selectedUnitName === u.unit;
-                          const allUnitLessonsSelected =
-                            u.lessons &&
-                            u.lessons.length > 0 &&
-                            u.lessons.every((les: any) =>
-                              selectedLessons.some((x) => x.unit === u.unit && x.lesson === les.lesson),
-                            );
-
-                          const toggleAllUnitLessons = () => {
-                            if (!u.lessons) return;
-                            if (allUnitLessonsSelected) {
-                              setSelectedLessons((prev) =>
-                                prev.filter((x) => x.unit !== u.unit),
-                              );
-                            } else {
-                              const newToAdd = u.lessons
-                                .filter(
-                                  (les: any) =>
-                                    !selectedLessons.some(
-                                      (x) => x.unit === u.unit && x.lesson === les.lesson,
-                                    ),
-                                )
-                                .map((les: any) => ({
-                                  unit: u.unit,
-                                  lesson: les.lesson,
-                                  totalQuestions: les.totalQuestions,
-                                  mcqCount: les.mcqCount ?? les.totalQuestions,
-                                  tfCount: les.tfCount ?? 0,
-                                  totalEssays: les.totalEssays ?? 0,
-                                }));
-                              setSelectedLessons((prev) => [...prev, ...newToAdd]);
-                            }
-                          };
-
-                          return (
-                            <div
-                              key={u.unit}
-                              className={`rounded-xl border transition-all ${isUnitActive
-                                ? "border-primary/50 bg-primary/5 shadow-xs"
-                                : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/40"
-                                }`}
-                            >
-                              <div className="p-3">
-                                <div className="flex items-start justify-between gap-2">
-                                  <div>
-                                    <h5 className="text-xs font-extrabold text-slate-900 dark:text-white">
-                                      {u.unit}
-                                    </h5>
-                                    <p className="text-[11px] text-slate-500 mt-0.5">
-                                      {getUnitCountForType(u)} سؤال متاح · {u.lessons?.length || 0} دروس
-                                    </p>
-                                  </div>
-                                  <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
-                                    {u.lessons && u.lessons.length > 1 && (
-                                      <button
-                                        type="button"
-                                        onClick={toggleAllUnitLessons}
-                                        className={`h-7 px-2 text-[11px] font-bold rounded-md border transition flex items-center gap-1 ${allUnitLessonsSelected
-                                          ? "border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
-                                          : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
-                                          }`}
-                                      >
-                                        <CheckSquare className="h-3 w-3" />
-                                        {allUnitLessonsSelected ? "إلغاء دروس الوحدة" : "تحديد كل دروس الوحدة"}
-                                      </button>
-                                    )}
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      disabled={isLoadingQuestions || getUnitCountForType(u) === 0}
-                                      onClick={() => handleLoadFromBank(u.unit, undefined, randomCount)}
-                                      className="h-7 px-2.5 text-[11px] font-bold bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-1"
-                                      title={`اختيار ${randomCount} سؤال عشوائي من الوحدة`}
-                                    >
-                                      <Shuffle className="h-3 w-3" />
-                                      {randomCount} عشوائي
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      disabled={isLoadingQuestions || getUnitCountForType(u) === 0}
-                                      onClick={() => handleLoadFromBank(u.unit)}
-                                      className="h-7 px-2.5 text-[11px] font-bold bg-primary hover:bg-primary/90 text-white"
-                                    >
-                                      الوحدة كاملة ({getUnitCountForType(u)})
-                                    </Button>
-                                  </div>
-                                </div>
-
-                                {/* Lessons pills inside unit with multi-selection checkboxes */}
-                                {u.lessons && u.lessons.length > 0 && (
-                                  <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-700/60 flex flex-wrap gap-1.5">
-                                    <span className="text-[10px] font-bold text-slate-400 self-center">الدروس:</span>
-                                    {u.lessons.map((les: any) => {
-                                      const isSelected = selectedLessons.some(
-                                        (x) => x.unit === u.unit && x.lesson === les.lesson,
-                                      );
-                                      return (
-                                        <button
-                                          key={les.lesson}
-                                          type="button"
-                                          disabled={isLoadingQuestions}
-                                          onClick={() => {
-                                            setSelectedLessons((prev) => {
-                                              const exists = prev.some(
-                                                (x) => x.unit === u.unit && x.lesson === les.lesson,
-                                              );
-                                              if (exists) {
-                                                return prev.filter(
-                                                  (x) => !(x.unit === u.unit && x.lesson === les.lesson),
-                                                );
-                                              } else {
-                                                return [
-                                                  ...prev,
-                                                  {
-                                                    unit: u.unit,
-                                                    lesson: les.lesson,
-                                                    totalQuestions: les.totalQuestions,
-                                                    mcqCount: les.mcqCount ?? les.totalQuestions,
-                                                    tfCount: les.tfCount ?? 0,
-                                                    totalEssays: les.totalEssays ?? 0,
-                                                  },
-                                                ];
-                                              }
-                                            });
-                                          }}
-                                          className={`rounded-md border px-2 py-0.5 text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${isSelected
-                                            ? "border-primary bg-primary text-white shadow-xs"
-                                            : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-primary/10 hover:border-primary/40 hover:text-primary dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
-                                            }`}
-                                          title="انقر لتحديد أو إلغاء تحديد هذا الدرس ضمن مجموعة الدروس"
-                                        >
-                                          <span className="font-mono">{isSelected ? "✓" : "+"}</span>
-                                          <span>{les.lesson}</span>
-                                          <span className={`text-[9px] px-1 rounded ${isSelected ? "bg-white/20" : "bg-slate-200 dark:bg-slate-700"}`}>
-                                            {getLessonCountForType(les)}
-                                          </span>
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Source B: PLATFORM QUIZZES */}
-              {contentSourceTab === "quizzes" && (
-                <div className="space-y-3">
-                  <p className="text-xs text-slate-500">اختر امتحاناً منشورا لتحويله فوراً لورقة امتحان رسمية A4 جاهزة للطباعة:</p>
-                  <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
-                    {quizzes.map((q) => (
-                      <div
-                        key={q.id}
-                        onClick={() => handleLoadFromQuiz(q)}
-                        className="rounded-xl border border-slate-200 p-3 hover:border-primary/40 hover:bg-primary/5 transition cursor-pointer flex items-center justify-between dark:border-slate-700"
-                      >
-                        <div>
-                          <strong className="block text-xs font-bold text-foreground">{q.title}</strong>
-                          <span className="text-[11px] text-muted-foreground">
-                            {q.category || "عام"} · {q.questions?.length || 0} أسئلة
-                          </span>
-                        </div>
-                        <Button size="sm" variant="outline" className="h-7 text-xs font-bold">
-                          تحويل لامتحان ورقي ←
-                        </Button>
-                      </div>
-                    ))}
-                    {quizzes.length === 0 && (
-                      <p className="p-4 text-center text-xs text-slate-400">لا توجد اختبارات مسجلة حالياً.</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Source C: EXTERNAL JSON */}
-              {contentSourceTab === "external" && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-slate-500">الصق محتوى JSON أو ارفع ملف أسئلة من جهازك:</p>
-                    <label className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 cursor-pointer hover:bg-slate-100 transition">
-                      <Upload className="h-3.5 w-3.5 text-primary" />
-                      <span>رفع ملف JSON</span>
-                      <input
-                        type="file"
-                        accept=".json,application/json"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          const reader = new FileReader();
-                          reader.onload = () => {
-                            const text = reader.result as string;
-                            setJsonInput(text);
-                            handleImportJson(text);
-                          };
-                          reader.readAsText(file);
-                        }}
-                      />
-                    </label>
-                  </div>
-                  <textarea
-                    rows={5}
-                    value={jsonInput}
-                    onChange={(e) => setJsonInput(e.target.value)}
-                    dir="ltr"
-                    placeholder='[{"statement": "سؤال...", "options": ["أ", "ب"], "answer": "أ"}]'
-                    className="w-full rounded-lg border border-slate-300 p-2 text-[11px] font-mono focus:outline-none focus:ring-1 focus:ring-primary dark:bg-slate-900 dark:border-slate-700"
-                  />
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={() => handleImportJson(jsonInput)}
-                      className="text-xs font-bold"
-                    >
-                      فحص واستيراد JSON
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const s = JSON.stringify(SAMPLE_QUESTIONS, null, 2);
-                        setJsonInput(s);
-                        handleImportJson(s);
-                      }}
-                      className="text-xs font-bold"
-                    >
-                      تحميل نموذج تجريبي
-                    </Button>
-                  </div>
-
-                  {/* Multi-level JSON detected sections picker */}
-                  {showJsonSectionPicker && detectedJsonSections.length > 0 && (
-                    <div className="rounded-xl border border-primary/40 bg-primary/5 p-3 space-y-3 mt-2">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h5 className="text-xs font-extrabold text-primary flex items-center gap-1.5">
-                            <Layers className="h-4 w-4" />
-                            ملف متعدد المستويات ({detectedJsonSections.length} أقسام · {detectedJsonSections.reduce((acc, s) => acc + s.count, 0)} سؤال)
-                          </h5>
-                          <p className="text-[10.5px] text-slate-500 mt-0.5">
-                            حدد الأقسام المراد إدراجها ونوع الأسئلة:
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-1 text-[11px]">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedSectionIds(detectedJsonSections.map((s) => s.id))}
-                            className="font-bold text-primary hover:underline px-1"
-                          >
-                            تحديد الكل
-                          </button>
-                          <span>·</span>
-                          <button
-                            type="button"
-                            onClick={() => setSelectedSectionIds([])}
-                            className="font-bold text-slate-500 hover:underline px-1"
-                          >
-                            إلغاء التحديد
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Question Type Filter during JSON import */}
-                      <div className="flex items-center justify-between gap-2 text-xs pt-1 border-t border-primary/10">
-                        <span className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">
-                          تصفية نوع الأسئلة:
-                        </span>
-                        <select
-                          value={jsonTypeFilter}
-                          onChange={(e) => setJsonTypeFilter(e.target.value)}
-                          className="rounded-md border border-slate-300 bg-white px-2 py-0.5 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
-                        >
-                          <option value="ALL">جميع الأنواع (كل الأسئلة)</option>
-                          <option value="MCQ">اختيار من متعدد (MCQ فقط)</option>
-                          <option value="TRUE_FALSE">صواب وخطأ فقط</option>
-                          <option value="ESSAY">أسئلة مقالية فقط</option>
-                          <option value="DEFINITION">تعريفات فقط</option>
-                        </select>
-                      </div>
-
-                      {/* Sections List */}
-                      <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
-                        {detectedJsonSections.map((sec) => {
-                          const isChecked = selectedSectionIds.includes(sec.id);
-                          return (
-                            <label
-                              key={sec.id}
-                              className={`flex items-center justify-between p-2 rounded-lg border text-xs cursor-pointer transition ${isChecked
-                                ? "bg-white border-primary/40 text-slate-900 shadow-2xs dark:bg-slate-850 dark:text-white"
-                                : "bg-slate-50/70 border-slate-200 text-slate-500 dark:bg-slate-900 dark:border-slate-800"
-                                }`}
-                            >
-                              <div className="flex items-center gap-2 min-w-0">
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  onChange={() => {
-                                    setSelectedSectionIds((prev) =>
-                                      prev.includes(sec.id)
-                                        ? prev.filter((id) => id !== sec.id)
-                                        : [...prev, sec.id],
-                                    );
-                                  }}
-                                  className="h-3.5 w-3.5 rounded accent-primary"
-                                />
-                                <span className="font-bold truncate text-[11.5px]">{sec.path || sec.title}</span>
-                              </div>
-                              <span className="font-mono text-[10.5px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600 shrink-0 dark:bg-slate-800 dark:text-slate-300">
-                                {sec.count} سؤال
-                              </span>
-                            </label>
-                          );
-                        })}
-                      </div>
-
-                      {/* Confirm Button */}
-                      <Button
-                        type="button"
-                        size="sm"
-                        disabled={selectedSectionIds.length === 0}
-                        onClick={() => {
-                          const chosen = detectedJsonSections.filter((s) => selectedSectionIds.includes(s.id));
-                          applyQuestionsFromSections(chosen, jsonTypeFilter);
-                        }}
-                        className="w-full text-xs font-black bg-primary hover:bg-primary/90 text-white py-2"
-                      >
-                        إدراج أسئلة الأقسام المحددة ({detectedJsonSections.filter((s) => selectedSectionIds.includes(s.id)).reduce((acc, s) => acc + s.count, 0)} سؤال) ←
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* General Content Toggles */}
-              <div className="space-y-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
-                <h5 className="text-xs font-bold text-slate-900 dark:text-white">خيارات العرض السريعة:</h5>
-                <label className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
-                  <span>إظهار الإجابة النموذجية (Answer Box)</span>
-                  <input
-                    type="checkbox"
-                    checked={settings.showAnswers}
-                    onChange={(e) => setSettings({ ...settings, showAnswers: e.target.checked })}
-                    className="h-4 w-4 rounded accent-primary"
-                  />
-                </label>
-                <label className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
-                  <span>إظهار التفسير وسبب الإجابة (Explanation)</span>
-                  <input
-                    type="checkbox"
-                    checked={settings.showExplain}
-                    onChange={(e) => setSettings({ ...settings, showExplain: e.target.checked })}
-                    className="h-4 w-4 rounded accent-primary"
-                  />
-                </label>
-                <label className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
-                  <span>إظهار الترجمة (عند توفرها بالأسئلة الإنجليزية)</span>
-                  <input
-                    type="checkbox"
-                    checked={settings.showTranslations}
-                    onChange={(e) => setSettings({ ...settings, showTranslations: e.target.checked })}
-                    className="h-4 w-4 rounded accent-primary"
-                  />
-                </label>
-                <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
-                  <span className="font-bold">توزيع اختيارات MCQ:</span>
-                  <select
-                    value={settings.optionLayout}
-                    onChange={(e) => setSettings({ ...settings, optionLayout: e.target.value as any })}
-                    className="rounded-md border border-slate-300 px-2 py-1 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
-                  >
-                    <option value="auto">توزيع تلقائي ذكي (4 خيارات للقصيرة / 2 للمتوسطة / 1 للطويلة)</option>
-                    <option value="four">أربعة خيارات في سطر واحد (مساحة قصوى)</option>
-                    <option value="two">عمودين (مدمج ومتوازن)</option>
-                    <option value="one">خيار تلو الآخر (رأسي)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 2: DESIGN & TEMPLATES */}
-          {activeStep === "design" && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-5 dark:border-slate-800 dark:bg-slate-900">
-              <div>
-                <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  <Palette className="h-4 w-4 text-primary" />
-                  قالب الورقة وشكل الترويسة المدمج
-                </h4>
-                <p className="text-xs text-slate-500 mt-0.5">اختر ستايل الترويسة الرسمي أو ارفع إطارك الخاص.</p>
-              </div>
-
-              {/* Preset Template Styles */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {[
-                  { id: "royal", title: "الملكي الكحلي والذهبي", desc: "كحلي فاخر وذهبي عنبري للدروس والمذكرات" },
-                  { id: "exam", title: "ورقة اختبار رسمي معتمد", desc: "جدول درجات، رقم جلوس وتوقيع المصحح" },
-                  { id: "tech", title: "تكنولوجيا وذكاء اصطناعي", desc: "أزرق نيون وكحلي سيبراني لمناهج الـ AI" },
-                  { id: "emerald", title: "النمط الزمردي الراقي", desc: "أخضر زمردي أنيق للمدارس واللغات" },
-                  { id: "minimal", title: "النمط الاقتصادي للتصوير", desc: "أبيض وأسود عالي التباين موفر للحبر" },
-                  { id: "custom", title: "خلفية خاصة مخصصة", desc: "رفع صورة A4 من جهازك" },
-                ].map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => setSettings({ ...settings, templateStyle: t.id as any })}
-                    className={`rounded-xl border p-3 text-right transition cursor-pointer ${settings.templateStyle === t.id
-                      ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs font-bold"
-                      : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800/40"
-                      }`}
-                  >
-                    <strong className="block text-xs font-bold">{t.title}</strong>
-                    <span className="text-[10px] text-muted-foreground mt-0.5 block leading-tight">{t.desc}</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Question & Card Style */}
-              <div className="space-y-2 pt-3 border-t border-slate-200 dark:border-slate-800">
-                <label className="block text-xs font-black text-slate-900 dark:text-white">
-                  شكل وتصميم السؤال (إلغاء الكروت الضخمة):
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { id: "lines", title: "فواصل خطية مبسطة", desc: "خفيف موفر للورق (الموصى به)" },
-                    { id: "cards", title: "بطاقات بإطار محدد", desc: "إطار كلاسيكي كامل" },
-                    { id: "dashed", title: "فواصل منقطة ناعمة", desc: "حدود ناعمة وبسيطة" },
-                  ].map((cs) => (
-                    <button
-                      key={cs.id}
-                      type="button"
-                      onClick={() => setSettings({ ...settings, cardStyle: cs.id as any })}
-                      className={`rounded-xl border p-2.5 text-right transition cursor-pointer ${settings.cardStyle === cs.id
-                        ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs font-bold"
-                        : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800/40"
-                        }`}
-                    >
-                      <strong className="block text-xs">{cs.title}</strong>
-                      <span className="text-[9.5px] text-muted-foreground mt-0.5 block leading-tight">{cs.desc}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Page Density */}
-              <div className="space-y-2 pt-3 border-t border-slate-200 dark:border-slate-800">
-                <label className="block text-xs font-black text-slate-900 dark:text-white">
-                  كثافة وتوزيع المحتوى على ورقة A4:
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { id: "compact", title: "مكثف موفر للورق", desc: "أقصى توفير لصفحات الطباعة" },
-                    { id: "balanced", title: "متوازن ومريح للقراءة", desc: "قراءة مثالية ومساحة مريحة" },
-                    { id: "comfortable", title: "مريح ومتباعد", desc: "فواصل وهوامش واسعة" },
-                  ].map((ds) => (
-                    <button
-                      key={ds.id}
-                      type="button"
-                      onClick={() => setSettings({ ...settings, density: ds.id as any })}
-                      className={`rounded-xl border p-2.5 text-right transition cursor-pointer ${settings.density === ds.id
-                        ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs font-bold"
-                        : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800/40"
-                        }`}
-                    >
-                      <strong className="block text-xs">{ds.title}</strong>
-                      <span className="text-[9.5px] text-muted-foreground mt-0.5 block leading-tight">{ds.desc}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Custom Image Upload if custom selected */}
-              {settings.templateStyle === "custom" && (
-                <div className="space-y-2 pt-2 border-t border-slate-100">
-                  <label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/70 p-4 text-center cursor-pointer hover:bg-slate-100 transition-colors dark:border-slate-700 dark:bg-slate-800/40">
-                    <Upload className="h-6 w-6 text-slate-400 mb-1" />
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                      {bgFileName || "ارفع تصميم الخلفية / الإطار (A4)"}
-                    </span>
-                    <span className="text-[10px] text-slate-400 mt-0.5">PNG, JPG, WebP أو SVG</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        setBgFileName(file.name);
-                        const reader = new FileReader();
-                        reader.onload = () => setBackgroundImg(reader.result as string);
-                        reader.readAsDataURL(file);
-                      }}
-                    />
-                  </label>
-                  {backgroundImg && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setBackgroundImg("");
-                        setBgFileName("");
-                      }}
-                      className="w-full text-xs text-rose-600 border-rose-200 hover:bg-rose-50"
-                    >
-                      إزالة صورة الخلفية
-                    </Button>
-                  )}
-                </div>
-              )}
-
-              {/* Header Configuration: First Page vs Continuation Pages */}
-              <div className="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-black text-slate-900 dark:text-white">
-                    ترويسة الصفحة الأولى (الهيدر الرئيسي والشعار):
-                  </label>
-                  <input
-                    type="checkbox"
-                    checked={settings.headerEnabled}
-                    onChange={(e) => setSettings({ ...settings, headerEnabled: e.target.checked })}
-                    className="h-4 w-4 rounded accent-primary cursor-pointer"
-                  />
-                </div>
-                {settings.headerEnabled && (
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      value={settings.headerText}
-                      onChange={(e) => setSettings({ ...settings, headerText: e.target.value })}
-                      placeholder="عنوان المذكرة الرئيسي"
-                      className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
-                    />
-                    <input
-                      type="text"
-                      value={settings.subHeaderText}
-                      onChange={(e) => setSettings({ ...settings, subHeaderText: e.target.value })}
-                      placeholder="العنوان الفرعي أو التخصص"
-                      className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs text-slate-600 dark:bg-slate-800 dark:border-slate-700"
-                    />
-                  </div>
-                )}
-
-                {/* Continuation Page Header (Page 2+) */}
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <label className="block text-xs font-black text-slate-900 dark:text-white mb-1.5">
-                    شريط ترويسة الصفحات التالية (Page 2+):
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { id: "minimal", title: "شريط مصغر", desc: "اسم الدرس ومعلومات المذكرة (موصى به)" },
-                      { id: "none", title: "بدون شريط ترويسة", desc: "مساحة قصوى للأسئلة" },
-                      { id: "full", title: "ترويسة كاملة", desc: "تكرار هيدر الصفحة الأولى" },
-                    ].map((ch) => (
-                      <button
-                        key={ch.id}
-                        type="button"
-                        onClick={() => setSettings({ ...settings, continuationHeader: ch.id as any })}
-                        className={`rounded-xl border p-2 text-right transition cursor-pointer ${settings.continuationHeader === ch.id
-                          ? "border-primary bg-primary/5 text-primary ring-2 ring-primary/20 shadow-xs font-bold"
-                          : "border-slate-200 bg-slate-50/50 hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800/40"
+                <div className="space-y-3.5">
+                  {/* Compact Hierarchical Filter Controls */}
+                  <div className="space-y-2 p-3 bg-muted/40 rounded-xl border border-border">
+                    {/* Grade Selector */}
+                    <div>
+                      <label className="text-[11px] font-black text-foreground mb-1 block">
+                        الصف الدراسي (البكالوريا):
+                      </label>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setStageGradeFilter("2nd")}
+                          className={`py-1.5 px-2 rounded-lg text-xs font-bold transition cursor-pointer text-center ${
+                            stageGradeFilter === "2nd"
+                              ? "bg-primary text-white font-black shadow-xs"
+                              : "bg-background border border-border text-muted-foreground hover:text-foreground"
                           }`}
-                      >
-                        <strong className="block text-xs">{ch.title}</strong>
-                        <span className="text-[9.5px] text-muted-foreground mt-0.5 block leading-tight">{ch.desc}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
+                        >
+                          تانية بكالوريا (الصف 2)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setStageGradeFilter("1st")}
+                          className={`py-1.5 px-2 rounded-lg text-xs font-bold transition cursor-pointer text-center ${
+                            stageGradeFilter === "1st"
+                              ? "bg-primary text-white font-black shadow-xs"
+                              : "bg-background border border-border text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          أولى بكالوريا (الصف 1)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setStageGradeFilter("other")}
+                          className={`py-1.5 px-2 rounded-lg text-xs font-bold transition cursor-pointer text-center ${
+                            stageGradeFilter === "other"
+                              ? "bg-primary text-white font-black shadow-xs"
+                              : "bg-background border border-border text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          مراحل أخرى
+                        </button>
+                      </div>
+                    </div>
 
-              {/* Margins in mm */}
-              <div className="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-black text-slate-900 dark:text-white">
-                    هوامش الكتابة بالمليمتر (A4):
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setSettings({ ...settings, guideView: !settings.guideView })}
-                    className={`text-[11px] font-bold px-2 py-0.5 rounded-md border ${settings.guideView
-                      ? "bg-amber-100 text-amber-800 border-amber-300"
-                      : "bg-slate-100 text-slate-600 border-slate-200"
-                      }`}
-                  >
-                    {settings.guideView ? "إخفاء الخطوط الإرشادية" : "إظهار حدود الكتابة"}
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[10.5px] font-bold text-slate-600 mb-0.5">أعلى الصفحة الأولى (mm)</label>
-                    <input
-                      type="number"
-                      min="20"
-                      max="80"
-                      value={settings.topMm}
-                      onChange={(e) => setSettings({ ...settings, topMm: Number(e.target.value) })}
-                      className="w-full rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10.5px] font-bold text-slate-600 mb-0.5">أعلى باقي الصفحات (mm)</label>
-                    <input
-                      type="number"
-                      min="8"
-                      max="50"
-                      value={settings.continuationTopMm}
-                      onChange={(e) => setSettings({ ...settings, continuationTopMm: Number(e.target.value) })}
-                      className="w-full rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10.5px] font-bold text-slate-600 mb-0.5">من الأسفل (mm)</label>
-                    <input
-                      type="number"
-                      min="8"
-                      max="60"
-                      value={settings.bottomMm}
-                      onChange={(e) => setSettings({ ...settings, bottomMm: Number(e.target.value) })}
-                      className="w-full rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10.5px] font-bold text-slate-600 mb-0.5">الهوامش الجانبية (mm)</label>
-                    <input
-                      type="number"
-                      min="6"
-                      max="40"
-                      value={settings.rightMm}
-                      onChange={(e) => setSettings({ ...settings, rightMm: Number(e.target.value), leftMm: Number(e.target.value) })}
-                      className="w-full rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
-                    />
-                  </div>
-                </div>
-              </div>
+                    {/* Track Selector (Arabic vs Languages - completely isolated) */}
+                    <div>
+                      <label className="text-[11px] font-black text-foreground mb-1 block">
+                        المسار التعليمي (عربي / لغات):
+                      </label>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setStageTrackFilter("ar")}
+                          className={`py-1.5 px-2 rounded-lg text-xs font-bold transition cursor-pointer text-center ${
+                            stageTrackFilter === "ar"
+                              ? "bg-amber-600 text-white font-black shadow-xs"
+                              : "bg-background border border-border text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          مدارس عربي (عام)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setStageTrackFilter("en")}
+                          className={`py-1.5 px-2 rounded-lg text-xs font-bold transition cursor-pointer text-center ${
+                            stageTrackFilter === "en"
+                              ? "bg-blue-600 text-white font-black shadow-xs"
+                              : "bg-background border border-border text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          مدارس لغات (English)
+                        </button>
+                      </div>
+                    </div>
 
-              {/* Academic Watermark Protection */}
-              <div className="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="text-xs font-black text-slate-900 dark:text-white block">
-                      العلامة المائية المخصصة (Watermark):
-                    </label>
-                    <span className="text-[10px] text-slate-500">حماية وتوثيق ملكية المذكرة عند التصوير والطباعة.</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={settings.showWatermark}
-                    onChange={(e) => setSettings({ ...settings, showWatermark: e.target.checked })}
-                    className="h-4 w-4 rounded accent-primary cursor-pointer"
-                  />
-                </div>
-                {settings.showWatermark && (
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      value={settings.watermarkText}
-                      onChange={(e) => setSettings({ ...settings, watermarkText: e.target.value })}
-                      placeholder="نص العلامة المائية"
-                      className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
-                    />
-                    <div className="flex items-center gap-3">
-                      <label className="text-[11px] text-slate-600 font-bold whitespace-nowrap">درجة الوضوح:</label>
-                      <input
-                        type="range"
-                        min="2"
-                        max="15"
-                        value={Math.round((settings.watermarkOpacity || 0.05) * 100)}
-                        onChange={(e) => setSettings({ ...settings, watermarkOpacity: Number(e.target.value) / 100 })}
-                        className="flex-1 accent-primary"
-                      />
-                      <span className="text-[11px] font-bold text-slate-500 w-8 text-left">
-                        {Math.round((settings.watermarkOpacity || 0.05) * 100)}%
+                    {/* Stage Name Summary Badge */}
+                    <div className="flex items-center justify-between pt-1 border-t border-border/60 text-[11px]">
+                      <span className="font-bold text-muted-foreground">المرحلة المحددة:</span>
+                      <span className="font-extrabold text-primary truncate max-w-[200px]">
+                        {selectedStageName || "جاري التحميل..."}
                       </span>
                     </div>
                   </div>
-                )}
-              </div>
-            </div>
-          )}
 
-          {/* STEP 3: TYPOGRAPHY & NUMBERING */}
-          {activeStep === "export" && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-5 dark:border-slate-800 dark:bg-slate-900">
-              <div>
-                <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  <Sliders className="h-4 w-4 text-primary" />
-                  إعدادات الخط والترقيم والطباعة
-                </h4>
-                <p className="text-xs text-slate-500 mt-0.5">اضبط أبعاد الخط وترقيم الصفحات قبل الطباعة.</p>
-              </div>
-
-              {/* Font Select */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  نوع الخط المعتمد للطباعة:
-                </label>
-                <select
-                  value={settings.fontSelect}
-                  onChange={(e) => setSettings({ ...settings, fontSelect: e.target.value })}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
-                >
-                  <option value="'Cairo', sans-serif">Cairo (كايرو - الافتراضي للمنصة)</option>
-                  <option value="'Tajawal', sans-serif">Tajawal (تجوال)</option>
-                  <option value="'Almarai', sans-serif">Almarai (المراعي)</option>
-                  <option value="'Noto Naskh Arabic', serif">Noto Naskh Arabic (نسخ كلاسيكي فاخر)</option>
-                  <option value="'Amiri', serif">Amiri (أميري للمطبوعات الفاخرة)</option>
-                  <option value="'IBM Plex Sans Arabic', sans-serif">IBM Plex Sans Arabic (عصري تقني)</option>
-                  <option value="'Inter', sans-serif">Inter (ممتاز للغات والإنجليزية)</option>
-                  <option value="Arial, sans-serif">Arial (كلاسيكي نظامي)</option>
-                </select>
-              </div>
-
-              {/* Font size & line height */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <div className="flex justify-between text-[11px] font-bold text-slate-600 mb-1">
-                    <span>حجم الخط:</span>
-                    <span className="font-mono">{settings.fontSize} pt</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="10"
-                    max="16"
-                    step="0.5"
-                    value={settings.fontSize}
-                    onChange={(e) => setSettings({ ...settings, fontSize: Number(e.target.value) })}
-                    className="w-full accent-primary"
-                  />
-                </div>
-                <div>
-                  <div className="flex justify-between text-[11px] font-bold text-slate-600 mb-1">
-                    <span>تباعد الأسطر:</span>
-                    <span className="font-mono">{settings.lineHeight}</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="1.3"
-                    max="1.9"
-                    step="0.05"
-                    value={settings.lineHeight}
-                    onChange={(e) => setSettings({ ...settings, lineHeight: Number(e.target.value) })}
-                    className="w-full accent-primary"
-                  />
-                </div>
-              </div>
-
-              {/* Content Direction */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  اتجاه النص واللغة:
-                </label>
-                <select
-                  value={settings.contentDir}
-                  onChange={(e) => setSettings({ ...settings, contentDir: e.target.value as "rtl" | "ltr" })}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
-                >
-                  <option value="rtl">عربي (من اليمين لليسار RTL)</option>
-                  <option value="ltr">لغات / Languages (من اليسار لليمين LTR)</option>
-                </select>
-              </div>
-
-              {/* Numbering */}
-              <div className="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-medium text-slate-500 mb-0.5">أول رقم سؤال</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={settings.questionStart}
-                      onChange={(e) => setSettings({ ...settings, questionStart: Number(e.target.value) })}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-medium text-slate-500 mb-0.5">أول رقم صفحة</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={settings.pageStart}
-                      onChange={(e) => setSettings({ ...settings, pageStart: Number(e.target.value) })}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-medium text-slate-500 mb-0.5">موضع رقم الصفحة:</label>
-                    <select
-                      value={settings.numPosition}
-                      onChange={(e) => setSettings({ ...settings, numPosition: e.target.value as any })}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
-                    >
-                      <option value="left">يسار (Left)</option>
-                      <option value="center">وسط (Center)</option>
-                      <option value="right">يمين (Right)</option>
-                    </select>
-                  </div>
-                  <div className="flex items-center pt-4">
-                    <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={settings.showTotalPages}
-                        onChange={(e) => setSettings({ ...settings, showTotalPages: e.target.checked })}
-                        className="h-4 w-4 rounded accent-primary"
-                      />
-                      <span>إظهار إجمالي الصفحات (1 / {pages.length})</span>
-                    </label>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-medium text-slate-500 mb-0.5">تذييل الصفحة الثابت (Footer):</label>
-                  <input
-                    type="text"
-                    value={settings.footerText}
-                    onChange={(e) => setSettings({ ...settings, footerText: e.target.value })}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
-                  />
-                </div>
-
-                <label className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300 cursor-pointer pt-2">
-                  <span>شريط بيانات الطالب في أول صفحة (الاسم / السنتر / الهاتف)</span>
-                  <input
-                    type="checkbox"
-                    checked={settings.studentFields}
-                    onChange={(e) => setSettings({ ...settings, studentFields: e.target.checked })}
-                    className="h-4 w-4 rounded accent-primary"
-                  />
-                </label>
-              </div>
-
-              {/* Print & Word Export Buttons */}
-              <div className="space-y-2 pt-2">
-                <Button
-                  type="button"
-                  onClick={handlePrint}
-                  className="w-full bg-primary hover:bg-primary/90 text-white font-black py-3 text-sm shadow-md flex items-center justify-center gap-2"
-                >
-                  <Printer className="h-4 w-4" />
-                  طباعة / تصدير PDF مباشر (A4)
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleExportWord}
-                  variant="outline"
-                  className="w-full border-emerald-600 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 font-bold py-2.5 text-xs flex items-center justify-center gap-2"
-                >
-                  <FileText className="h-4 w-4 text-emerald-600" />
-                  تصدير الأسئلة إلى مستند Word (.doc)
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Warnings box if any */}
-          {warnings.length > 0 && (
-            <div className="rounded-xl border border-amber-300 bg-amber-50 p-3.5 text-xs text-amber-900 space-y-1">
-              <div className="font-bold flex items-center gap-1.5 text-amber-800">
-                <AlertTriangle className="h-4 w-4 shrink-0" />
-                <span>ملاحظات التقسيم ({warnings.length}):</span>
-              </div>
-              <ul className="list-disc pr-4 space-y-1 text-[11px]">
-                {warnings.map((w, idx) => (
-                  <li key={idx}>{w}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-
-        {/* Right Column: Live A4 Workspace & Question Manager (7 cols) */}
-        <div className="lg:col-span-7 xl:col-span-7 space-y-4">
-          {/* Workspace Stats & Controls */}
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex items-center gap-4 text-xs font-bold text-slate-700 dark:text-slate-300">
-              <span className="flex items-center gap-1.5">
-                <FileText className="h-4 w-4 text-primary" />
-                <span>الصفحات A4: <strong className="font-mono text-foreground">{pages.length}</strong></span>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                <span>الأسئلة النشطة: <strong className="font-mono text-foreground">{activeQuestions.length}</strong> / {questions.length}</span>
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="flex rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setPreviewTab("preview")}
-                  className={`rounded-md px-3 py-1 text-xs font-bold transition flex items-center gap-1.5 ${previewTab === "preview"
-                    ? "bg-white text-primary shadow-xs dark:bg-slate-900"
-                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                    }`}
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                  المعاينة الحية
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPreviewTab("questions_list")}
-                  className={`rounded-md px-3 py-1 text-xs font-bold transition flex items-center gap-1.5 ${previewTab === "questions_list"
-                    ? "bg-white text-primary shadow-xs dark:bg-slate-900"
-                    : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
-                    }`}
-                >
-                  <ListOrdered className="h-3.5 w-3.5" />
-                  إدارة وتعديل الأسئلة ({questions.length})
-                </button>
-              </div>
-
-              {previewTab === "preview" && (
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setShowAllPages(true)}
-                    className={`rounded-md px-2.5 py-1 text-xs font-bold transition ${showAllPages
-                      ? "bg-primary text-white"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800"
-                      }`}
-                  >
-                    كل الصفحات
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowAllPages(false)}
-                    className={`rounded-md px-2.5 py-1 text-xs font-bold transition ${!showAllPages
-                      ? "bg-primary text-white"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800"
-                      }`}
-                  >
-                    صفحة واحدة
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Question Type Filter Bar & Zoom Controls */}
-          <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-2xl bg-white border border-slate-200 p-3 shadow-xs dark:bg-slate-900 dark:border-slate-800">
-            {/* Filter by Question Type */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[11px] font-extrabold text-slate-500 ml-1">تصفية نوع الأسئلة:</span>
-              <button
-                type="button"
-                onClick={() => setSelectedTypeFilter("ALL")}
-                className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${selectedTypeFilter === "ALL"
-                  ? "bg-primary text-white shadow-xs"
-                  : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
-                  }`}
-              >
-                الكل ({typeCounts.ALL})
-              </button>
-              {typeCounts.MCQ > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setSelectedTypeFilter("MCQ")}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${selectedTypeFilter === "MCQ"
-                    ? "bg-primary text-white shadow-xs"
-                    : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
-                    }`}
-                >
-                  اختيار من متعدد ({typeCounts.MCQ})
-                </button>
-              )}
-              {typeCounts.TRUE_FALSE > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setSelectedTypeFilter("TRUE_FALSE")}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${selectedTypeFilter === "TRUE_FALSE"
-                    ? "bg-primary text-white shadow-xs"
-                    : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
-                    }`}
-                >
-                  صواب وخطأ ({typeCounts.TRUE_FALSE})
-                </button>
-              )}
-              {typeCounts.ESSAY > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setSelectedTypeFilter("ESSAY")}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${selectedTypeFilter === "ESSAY"
-                    ? "bg-primary text-white shadow-xs"
-                    : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
-                    }`}
-                >
-                  أسئلة مقالية ({typeCounts.ESSAY})
-                </button>
-              )}
-              {typeCounts.DEFINITION > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setSelectedTypeFilter("DEFINITION")}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${selectedTypeFilter === "DEFINITION"
-                    ? "bg-primary text-white shadow-xs"
-                    : "bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
-                    }`}
-                >
-                  تعريفات ومصطلحات ({typeCounts.DEFINITION})
-                </button>
-              )}
-            </div>
-
-            {/* Zoom Controls */}
-            {previewTab === "preview" && (
-              <div className="flex items-center gap-1.5 self-center">
-                <span className="text-[11px] font-bold text-slate-400">الزوم:</span>
-                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAutoScale(false);
-                      setScale((prev) => Math.max(0.4, Number((prev - 0.08).toFixed(2))));
-                    }}
-                    className="h-6 w-6 rounded flex items-center justify-center text-xs font-black text-slate-700 hover:bg-white dark:text-slate-200"
-                    title="تصغير العرض"
-                  >
-                    -
-                  </button>
-                  <span className="text-[11px] font-mono font-bold px-1 min-w-[36px] text-center">
-                    {Math.round(scale * 100)}%
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAutoScale(false);
-                      setScale((prev) => Math.min(1.2, Number((prev + 0.08).toFixed(2))));
-                    }}
-                    className="h-6 w-6 rounded flex items-center justify-center text-xs font-black text-slate-700 hover:bg-white dark:text-slate-200"
-                    title="تكبير العرض"
-                  >
-                    +
-                  </button>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAutoScale(true);
-                    if (paperAreaRef.current) {
-                      const containerW = paperAreaRef.current.clientWidth;
-                      const a4WidthPx = (210 * 96) / 25.4;
-                      setScale(Number(Math.max(0.35, Math.min(0.85, (containerW - 48) / a4WidthPx)).toFixed(2)));
-                    }
-                  }}
-                  className={`rounded-md px-2 py-1 text-[11px] font-bold transition border ${autoScale
-                    ? "bg-slate-200 text-slate-800 border-slate-300 dark:bg-slate-700 dark:text-white"
-                    : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300"
-                    }`}
-                  title="ملاءمة تلقائية مع عرض الشاشة"
-                >
-                  تلقائي
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAutoScale(false);
-                    setScale(1.0);
-                  }}
-                  className={`rounded-md px-2 py-1 text-[11px] font-bold transition border ${scale === 1.0
-                    ? "bg-primary text-white border-primary"
-                    : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300"
-                    }`}
-                  title="عرض بالحجم الحقيقي 100%"
-                >
-                  100%
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* QUESTIONS LIST MANAGER VIEW */}
-          {previewTab === "questions_list" && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3 dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-                <div>
-                  <h4 className="text-xs font-extrabold text-slate-900 dark:text-white">
-                    الأسئلة المحملة داخل المذكرة ({questions.length})
-                  </h4>
-                  <p className="text-[11px] text-slate-500">يمكنك تعديل أي سؤال، استبعاده، أو إضافة أسئلة جديدة بنقرة واحدة.</p>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Button
-                    size="sm"
-                    onClick={() => setShowAddQuestionModal(true)}
-                    className="h-7 text-xs font-bold bg-primary hover:bg-primary/90 text-white flex items-center gap-1"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    إضافة سؤال جديد
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setQuestions((prev) => prev.map((q) => ({ ...q, enabled: true })))}
-                    className="h-7 text-xs font-bold"
-                  >
-                    تحديد الكل
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setQuestions((prev) => prev.filter((q) => q.enabled))}
-                    className="h-7 text-xs font-bold text-rose-600 hover:bg-rose-50"
-                  >
-                    حذف المستبعد
-                  </Button>
-                </div>
-              </div>
-
-              {selectedTypeFilter !== "ALL" && (
-                <div className="flex items-center justify-between text-xs font-bold px-3 py-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 rounded-lg border border-amber-200 dark:border-amber-800">
-                  <span>يتم حالياً تصفية العرض بنوع: <strong>{selectedTypeFilter}</strong> ({activeQuestions.length} سؤال نشط).</span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedTypeFilter("ALL")}
-                    className="text-primary hover:underline text-[11px] font-extrabold"
-                  >
-                    إلغاء التصفية وعرض الكل
-                  </button>
-                </div>
-              )}
-
-              <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
-                {questions
-                  .map((q, originalIdx) => ({ q, originalIdx }))
-                  .filter(({ q }) => selectedTypeFilter === "ALL" || q.type === selectedTypeFilter)
-                  .map(({ q, originalIdx }) => (
-                    <div
-                      key={q.id || originalIdx}
-                      className={`rounded-xl border p-3 transition flex items-start gap-3 ${q.enabled
-                        ? "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
-                        : "border-slate-200/50 bg-slate-50 opacity-50 dark:bg-slate-800/40"
-                        }`}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => toggleQuestionEnabled(originalIdx)}
-                        className="mt-0.5 text-primary cursor-pointer"
-                        title={q.enabled ? "استبعاد السؤال من الطباعة" : "تضمين السؤال في الطباعة"}
-                      >
-                        {q.enabled ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4 text-slate-400" />}
-                      </button>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-mono text-xs font-black text-slate-700 dark:text-slate-300">
-                            #{originalIdx + 1}
-                          </span>
-                          <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-800">
-                            {q.type}
-                          </span>
-                        </div>
-                        <p className="text-xs font-medium text-slate-800 line-clamp-2 dark:text-slate-200">
-                          {q.statement}
-                        </p>
+                  {/* Units and Lessons Compact Accordions */}
+                  <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
+                    {loadingTree && (
+                      <div className="text-center py-6 text-xs text-muted-foreground">
+                        جاري تحميل وحدات ودروس بنك الأسئلة...
                       </div>
-
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => setEditingQuestion({ index: originalIdx, data: { ...q, options: q.options ? [...q.options.map(o => ({ ...o }))] : [] } })}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition"
-                          title="تعديل نص السؤال والخيارات والحل"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => removeQuestion(originalIdx)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
-                          title="حذف هذا السؤال"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                    )}
+                    {!loadingTree && stageUnits.length === 0 && (
+                      <div className="text-center py-6 text-xs text-muted-foreground bg-muted/20 rounded-xl">
+                        لا توجد وحدات متوفرة لهذه المرحلة حالياً.
                       </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          )}
+                    )}
+                    {stageUnits.map((u: any) => {
+                      const isExpanded = Boolean(expandedUnits[u.unit]);
+                      const allLessonsSelected =
+                        u.lessons &&
+                        u.lessons.length > 0 &&
+                        u.lessons.every((les: any) =>
+                          selectedLessons.some((x) => x.unit === u.unit && x.lesson === les.lesson),
+                        );
 
-          {/* LIVE PREVIEW VIEW */}
-          {previewTab === "preview" && (
-            <>
-              {/* Single page stepper */}
-              {!showAllPages && pages.length > 1 && (
-                <div className="flex items-center justify-center gap-4 bg-white rounded-full border border-slate-200 p-2 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setPageIndex((prev) => Math.max(0, prev - 1))}
-                    disabled={pageIndex === 0}
-                    className="h-8 w-8 rounded-full p-0"
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </Button>
-                  <span className="text-xs font-bold font-mono">
-                    صفحة {pageIndex + 1} من {pages.length}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setPageIndex((prev) => Math.min(pages.length - 1, prev + 1))}
-                    disabled={pageIndex === pages.length - 1}
-                    className="h-8 w-8 rounded-full p-0"
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </Button>
-                </div>
-              )}
+                      const toggleAllUnitLessons = () => {
+                        if (!u.lessons) return;
+                        if (allLessonsSelected) {
+                          setSelectedLessons((prev) => prev.filter((x) => x.unit !== u.unit));
+                        } else {
+                          const newToAdd = u.lessons
+                            .filter(
+                              (les: any) =>
+                                !selectedLessons.some(
+                                  (x) => x.unit === u.unit && x.lesson === les.lesson,
+                                ),
+                            )
+                            .map((les: any) => ({
+                              unit: u.unit,
+                              lesson: les.lesson,
+                              totalQuestions: les.totalQuestions,
+                              mcqCount: les.mcqCount ?? les.totalQuestions,
+                              tfCount: les.tfCount ?? 0,
+                              totalEssays: les.totalEssays ?? 0,
+                            }));
+                          setSelectedLessons((prev) => [...prev, ...newToAdd]);
+                        }
+                      };
 
-              {/* Sheets Render Container */}
-              <div
-                ref={paperAreaRef}
-                className="memo-print-root flex flex-col items-center gap-8 p-4 md:p-6 bg-slate-100/90 rounded-2xl border border-slate-200/90 min-h-[620px] overflow-x-auto overflow-y-auto dark:bg-slate-950/50 dark:border-slate-800"
-              >
-                {(showAllPages ? pages : [pages[pageIndex] || []]).map((pageItems, idx) => {
-                  const actualPageIdx = showAllPages ? idx : pageIndex;
-                  const isFirstPage = actualPageIdx === 0;
-                  const pageNumber = settings.pageStart + actualPageIdx;
-                  const isRtl = settings.contentDir === "rtl";
-                  const theme = getThemeConfig(settings.templateStyle);
-
-                  const contentTopMm = isFirstPage
-                    ? (settings.headerEnabled ? Math.max(36, settings.topMm) : settings.topMm)
-                    : (settings.continuationHeader === "minimal"
-                      ? Math.max(15, settings.continuationTopMm || 16)
-                      : settings.continuationHeader === "full"
-                        ? (settings.headerEnabled ? Math.max(36, settings.topMm) : settings.topMm)
-                        : Math.max(10, settings.continuationTopMm ? Math.min(settings.continuationTopMm, 12) : 11));
-
-                  const densityGap = {
-                    compact: 2.4,
-                    balanced: 3.5,
-                    comfortable: 5.0,
-                  }[settings.density || "balanced"];
-
-                  return (
-                    <div key={actualPageIdx} className="flex flex-col items-center gap-2 max-w-full">
-                      <div className="no-print memo-preview-page-label text-[11px] font-bold text-slate-400">
-                        ورقة A4 — صفحة {pageNumber} من {pages.length}
-                      </div>
-
-                      {/* Outer Scaled Shell for Screen Preview (Direction strictly LTR so CSS transforms scale exactly without RTL skew) */}
-                      <div
-                        className="memo-page-shell shadow-2xl rounded-sm transition-all"
-                        style={{
-                          width: `${Math.round(((210 * 96) / 25.4) * scale)}px`,
-                          height: `${Math.round(((297 * 96) / 25.4) * scale)}px`,
-                          overflow: "hidden",
-                          position: "relative",
-                          direction: "ltr",
-                          margin: "0 auto",
-                          backgroundColor: "#ffffff",
-                          boxSizing: "border-box",
-                        }}
-                      >
-                        {/* Inner Exact 210mm x 297mm A4 Sheet */}
+                      return (
                         <div
-                          className="memo-sheet"
-                          dir={settings.contentDir}
-                          style={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            width: "210mm",
-                            height: "297mm",
-                            transform: `scale(${scale})`,
-                            transformOrigin: "0 0",
-                            fontFamily: settings.fontSelect,
-                            fontSize: `${settings.fontSize}pt`,
-                            lineHeight: settings.lineHeight,
-                            color: "#0f172a",
-                            backgroundColor: "#ffffff",
-                            boxSizing: "border-box",
-                            overflow: "hidden",
-                          }}
+                          key={u.unit}
+                          className="rounded-xl border border-border bg-card overflow-hidden transition"
                         >
-                          {/* Template Styling Decorators */}
-                          {settings.templateStyle === "royal" && (
-                            <>
-                              {/* Royal Top Border & Accents */}
-                              <div
-                                style={{
-                                  position: "absolute",
-                                  top: 0,
-                                  left: 0,
-                                  right: 0,
-                                  height: "4mm",
-                                  backgroundColor: "#0f172a",
-                                  borderBottom: "1.5mm solid #d97706",
-                                  zIndex: 2,
-                                }}
-                              />
-                              <div
-                                style={{
-                                  position: "absolute",
-                                  inset: "5mm",
-                                  border: "1px solid rgba(217, 119, 6, 0.3)",
-                                  pointerEvents: "none",
-                                  zIndex: 0,
-                                }}
-                              />
-                            </>
-                          )}
-
-                          {settings.templateStyle === "exam" && (
-                            <div
-                              style={{
-                                position: "absolute",
-                                inset: "6mm",
-                                border: "1.5px solid #0f172a",
-                                pointerEvents: "none",
-                                zIndex: 0,
-                              }}
-                            />
-                          )}
-
-                          {settings.templateStyle === "tech" && (
-                            <>
-                              <div
-                                style={{
-                                  position: "absolute",
-                                  top: 0,
-                                  left: 0,
-                                  right: 0,
-                                  height: "3.5mm",
-                                  background: "linear-gradient(90deg, #0369a1 0%, #0284c7 50%, #38bdf8 100%)",
-                                  zIndex: 2,
-                                }}
-                              />
-                              <div
-                                style={{
-                                  position: "absolute",
-                                  inset: "6mm",
-                                  border: "1px solid rgba(2, 132, 199, 0.25)",
-                                  pointerEvents: "none",
-                                  zIndex: 0,
-                                }}
-                              />
-                            </>
-                          )}
-
-                          {settings.templateStyle === "emerald" && (
-                            <>
-                              <div
-                                style={{
-                                  position: "absolute",
-                                  top: 0,
-                                  left: 0,
-                                  right: 0,
-                                  height: "3.5mm",
-                                  backgroundColor: "#064e3b",
-                                  borderBottom: "1.2mm solid #059669",
-                                  zIndex: 2,
-                                }}
-                              />
-                              <div
-                                style={{
-                                  position: "absolute",
-                                  inset: "6mm",
-                                  border: "1px solid rgba(5, 150, 105, 0.25)",
-                                  pointerEvents: "none",
-                                  zIndex: 0,
-                                }}
-                              />
-                            </>
-                          )}
-
-                          {settings.templateStyle === "minimal" && (
-                            <div
-                              style={{
-                                position: "absolute",
-                                inset: "6mm",
-                                border: "1px solid #cbd5e1",
-                                pointerEvents: "none",
-                                zIndex: 0,
-                              }}
-                            />
-                          )}
-
-                          {/* Custom background image if present */}
-                          {settings.templateStyle === "custom" && backgroundImg && (
-                            <img
-                              src={backgroundImg}
-                              alt=""
-                              style={{
-                                position: "absolute",
-                                inset: 0,
-                                width: "100%",
-                                height: "100%",
-                                objectFit: settings.fitMode,
-                                zIndex: 0,
-                              }}
-                            />
-                          )}
-
-                          {/* Watermark Protection */}
-                          {settings.showWatermark && (
-                            <div
-                              style={{
-                                position: "absolute",
-                                inset: 0,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                pointerEvents: "none",
-                                zIndex: 0,
-                                overflow: "hidden",
-                              }}
+                          <div className="p-2.5 flex items-center justify-between gap-2 bg-muted/30">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setExpandedUnits((prev) => ({ ...prev, [u.unit]: !prev[u.unit] }))
+                              }
+                              className="flex items-center gap-2 min-w-0 flex-1 text-right cursor-pointer"
                             >
-                              <div
-                                style={{
-                                  transform: "rotate(-32deg)",
-                                  fontSize: "24pt",
-                                  fontWeight: 900,
-                                  color: `rgba(15, 23, 42, ${settings.watermarkOpacity ?? 0.05})`,
-                                  whiteSpace: "nowrap",
-                                  letterSpacing: "2.5px",
-                                  fontFamily: "'Cairo', sans-serif",
-                                  userSelect: "none",
-                                }}
-                              >
-                                {sanitizeMemoText(settings.watermarkText || "د. محمود المهدي — الحاسب الآلي والذكاء الاصطناعي")}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Unified Printable Page Container (Header -> Student Strip -> Questions) in Natural Flow */}
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: isFirstPage
-                                ? (settings.headerEnabled ? "7.5mm" : `${settings.topMm}mm`)
-                                : (settings.continuationHeader === "minimal"
-                                  ? "5.5mm"
-                                  : settings.continuationHeader === "none"
-                                    ? `${settings.topMm || 7.5}mm`
-                                    : "7.5mm"),
-                              bottom: `${settings.bottomMm}mm`,
-                              right: `${region.right}mm`,
-                              left: `${region.left}mm`,
-                              width: `calc(210mm - ${region.left + region.right}mm)`,
-                              boxSizing: "border-box",
-                              display: "flex",
-                              flexDirection: "column",
-                              zIndex: 1,
-                              overflow: "hidden",
-                            }}
-                          >
-                            {/* Visual guide outline when activated */}
-                            {settings.guideView && (
-                              <div
-                                style={{
-                                  position: "absolute",
-                                  inset: 0,
-                                  border: "1px dashed #b9a05d",
-                                  backgroundColor: "rgba(224,196,113,0.03)",
-                                  pointerEvents: "none",
-                                  zIndex: 0,
-                                }}
-                              >
-                                <span
-                                  style={{
-                                    position: "absolute",
-                                    top: 0,
-                                    right: 0,
-                                    background: "#eed9a5",
-                                    color: "#624b1d",
-                                    fontSize: "9px",
-                                    padding: "1px 4px",
-                                  }}
-                                >
-                                  مساحة المحتوى
-                                </span>
-                              </div>
-                            )}
-
-                            {/* 1. First Page Full Header */}
-                            {isFirstPage && settings.headerEnabled && (
-                              <div
-                                style={{
-                                  width: "100%",
-                                  flexShrink: 0,
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  gap: "1.5mm",
-                                  marginBottom: "2.5mm",
-                                  color: "#0f172a",
-                                  boxSizing: "border-box",
-                                }}
-                              >
-                                {/* Tier 1: Dr. Mahmoud Elmahdy Luxury Branding + Document Type Badge */}
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    width: "100%",
-                                    boxSizing: "border-box",
-                                  }}
-                                >
-                                  {/* Dr / Elmahdy Distinctive Seal & Signature */}
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: "2.5mm",
-                                      background: theme.sealBg,
-                                      border: theme.sealBorder,
-                                      borderRadius: "3mm",
-                                      padding: "1.2mm 3.2mm",
-                                      boxShadow: theme.sealShadow,
-                                    }}
-                                  >
-                                    {/* Crest */}
-                                    <div
-                                      style={{
-                                        width: "7.5mm",
-                                        height: "7.5mm",
-                                        borderRadius: "50%",
-                                        background: theme.crestBg,
-                                        border: theme.crestBorder,
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        color: theme.crestColor,
-                                        fontWeight: 900,
-                                        fontSize: "4pt",
-                                        lineHeight: 1.1,
-                                        flexShrink: 0,
-                                      }}
-                                    >
-                                      <span style={{ fontSize: "5pt" }}>★</span>
-                                      <span>DR</span>
-                                    </div>
-
-                                    {/* Text */}
-                                    <div style={{ display: "flex", flexDirection: "column" }}>
-                                      <div style={{ display: "flex", alignItems: "center", gap: "1.5mm" }}>
-                                        <span
-                                          style={{
-                                            fontSize: "9.5pt",
-                                            fontWeight: 900,
-                                            color: theme.drTextColor,
-                                            fontFamily: "'Cairo', sans-serif",
-                                            lineHeight: 1.2,
-                                          }}
-                                        >
-                                          د. محمود المهدي
-                                        </span>
-                                        <span
-                                          style={{
-                                            fontSize: "6.5pt",
-                                            fontWeight: 800,
-                                            background: theme.drPillBg,
-                                            color: theme.drPillColor,
-                                            padding: "0.4mm 2.2mm",
-                                            borderRadius: "1.2mm",
-                                            border: theme.drPillBorder,
-                                            letterSpacing: "0.5px",
-                                            lineHeight: 1.2,
-                                          }}
-                                        >
-                                          Dr / Elmahdy
-                                        </span>
-                                      </div>
-                                      <span
-                                        style={{
-                                          fontSize: "6.8pt",
-                                          fontWeight: 700,
-                                          color: theme.drSubTextColor,
-                                          fontFamily: "'Cairo', sans-serif",
-                                          lineHeight: 1.2,
-                                        }}
-                                      >
-                                        الحاسب الآلي والذكاء الاصطناعي
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  {/* Document Type Badge */}
-                                  <div style={{ textAlign: isRtl ? "left" : "right" }}>
-                                    <span
-                                      style={{
-                                        display: "inline-block",
-                                        padding: "1.2mm 3.5mm",
-                                        borderRadius: "1.8mm",
-                                        backgroundColor: theme.badgeBg,
-                                        color: theme.badgeColor,
-                                        fontSize: "8pt",
-                                        fontWeight: 800,
-                                        border: theme.badgeBorder,
-                                        fontFamily: "'Cairo', sans-serif",
-                                        letterSpacing: "0.3px",
-                                      }}
-                                    >
-                                      {settings.templateStyle === "exam"
-                                        ? "ورقة اختبار رسمي معتمد"
-                                        : settings.templateStyle === "tech"
-                                          ? "بنك الأسئلة والتقييمات"
-                                          : settings.templateStyle === "emerald"
-                                            ? "التقييم الشامل والتدريبات"
-                                            : "مذكرة تدريبات وبنك أسئلة"}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {/* Tier 2: Dynamic Titles (Full wrap, never cut off!) */}
-                                <div style={{ width: "100%", boxSizing: "border-box", padding: "0 0.5mm" }}>
-                                  <div
-                                    style={{
-                                      fontSize: "11pt",
-                                      fontWeight: 900,
-                                      color: "#0f172a",
-                                      lineHeight: 1.35,
-                                      wordBreak: "normal",
-                                      overflowWrap: "anywhere",
-                                      fontFamily: "'Cairo', sans-serif",
-                                    }}
-                                  >
-                                    {sanitizeMemoText(settings.headerText)}
-                                  </div>
-                                  {settings.subHeaderText && (
-                                    <div
-                                      style={{
-                                        fontSize: "7.8pt",
-                                        color: "#64748b",
-                                        fontWeight: 600,
-                                        marginTop: "1.2mm",
-                                        lineHeight: 1.4,
-                                        wordBreak: "normal",
-                                        overflowWrap: "anywhere",
-                                        fontFamily: "'Cairo', sans-serif",
-                                      }}
-                                    >
-                                      {sanitizeMemoText(settings.subHeaderText)}
-                                    </div>
-                                  )}
-                                </div>
-
-                                {/* Tier 3: Decorative Divider Line placed strictly BELOW all titles */}
-                                <div
-                                  style={{
-                                    width: "100%",
-                                    marginTop: "2mm",
-                                    borderBottom: theme.headerBorder,
-                                  }}
-                                />
-                              </div>
-                            )}
-
-                            {/* 2. Continuation Running Header (Page 2+) */}
-                            {!isFirstPage && settings.continuationHeader === "minimal" && (
-                              <div
-                                style={{
-                                  width: "100%",
-                                  flexShrink: 0,
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "space-between",
-                                  paddingBottom: "1.4mm",
-                                  marginBottom: "2.5mm",
-                                  borderBottom: `1.2px solid ${theme.accentColor}35`,
-                                  color: "#0f172a",
-                                  boxSizing: "border-box",
-                                }}
-                              >
-                                <div style={{ display: "flex", alignItems: "center", gap: "2mm", maxWidth: "68%" }}>
-                                  <span
-                                    style={{
-                                      fontSize: "7.5pt",
-                                      fontWeight: 800,
-                                      background: theme.drPillBg,
-                                      color: theme.drPillColor,
-                                      padding: "0.3mm 1.8mm",
-                                      borderRadius: "1mm",
-                                      border: theme.drPillBorder,
-                                      whiteSpace: "nowrap",
-                                    }}
-                                  >
-                                    {settings.templateStyle === "exam" ? "امتحان" : "مذكرة"}
-                                  </span>
-                                  <span
-                                    style={{
-                                      fontSize: "8.5pt",
-                                      fontWeight: 800,
-                                      color: "#1e293b",
-                                      overflow: "hidden",
-                                      textOverflow: "ellipsis",
-                                      whiteSpace: "nowrap",
-                                      fontFamily: "'Cairo', sans-serif",
-                                    }}
-                                  >
-                                    {sanitizeMemoText(settings.headerText)}
-                                  </span>
-                                </div>
-                                <div style={{ display: "flex", alignItems: "center", gap: "1.5mm" }}>
-                                  <span style={{ fontSize: "8pt", fontWeight: 800, color: theme.drTextColor, fontFamily: "'Cairo', sans-serif" }}>
-                                    د. محمود المهدي
-                                  </span>
-                                  <span style={{ fontSize: "6.5pt", color: "#64748b", fontWeight: 700 }}>
-                                    • Dr / Elmahdy
-                                  </span>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* 3. Student Fields Strip (Page 1 only) */}
-                            {actualPageIdx === 0 && settings.studentFields && (
-                              <div
-                                dangerouslySetInnerHTML={{ __html: studentStripHtml }}
-                                style={{ width: "100%", flexShrink: 0, marginBottom: `${densityGap}mm`, boxSizing: "border-box" }}
+                              <ChevronDown
+                                className={`h-4 w-4 text-muted-foreground transition-transform shrink-0 ${
+                                  isExpanded ? "rotate-180" : ""
+                                }`}
                               />
-                            )}
+                              <span className="text-xs font-black text-foreground truncate">
+                                {u.unit}
+                              </span>
+                              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-muted text-muted-foreground shrink-0">
+                                {u.totalQuestions || 0} سؤال
+                              </span>
+                            </button>
 
-                            {/* 4. Questions List */}
-                            <div
-                              style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: `${densityGap}mm`,
-                                width: "100%",
-                                boxSizing: "border-box",
-                                flex: 1,
-                                minHeight: 0,
-                              }}
+                            <button
+                              type="button"
+                              onClick={toggleAllUnitLessons}
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded transition cursor-pointer shrink-0 ${
+                                allLessonsSelected
+                                  ? "bg-primary text-white"
+                                  : "bg-background border border-border text-foreground hover:bg-muted"
+                              }`}
                             >
-                              {pageItems.map((item, itemIdx) => {
-                                const rawQ = item.rawQuestion;
-                                const qIdx = rawQ
-                                  ? questions.findIndex(
-                                    (q) => q === rawQ || (rawQ.id && q.id === rawQ.id) || q.statement === rawQ.statement
-                                  )
-                                  : questions.findIndex(
-                                    (q) => q.statement === activeQuestions[item.qNumber - settings.questionStart]?.statement
-                                  );
-                                const targetIdx = qIdx !== -1 ? qIdx : item.qNumber - settings.questionStart;
-                                const currentQ = questions[targetIdx];
+                              {allLessonsSelected ? "إلغاء الوحدة" : "تحديد الوحدة"}
+                            </button>
+                          </div>
+
+                          {isExpanded && (
+                            <div className="p-2 space-y-1.5 bg-background border-t border-border">
+                              {u.lessons?.map((les: any) => {
+                                const isLessonSelected = selectedLessons.some(
+                                  (x) => x.unit === u.unit && x.lesson === les.lesson,
+                                );
+
+                                const toggleLesson = () => {
+                                  if (isLessonSelected) {
+                                    setSelectedLessons((prev) =>
+                                      prev.filter(
+                                        (x) => !(x.unit === u.unit && x.lesson === les.lesson),
+                                      ),
+                                    );
+                                  } else {
+                                    setSelectedLessons((prev) => [
+                                      ...prev,
+                                      {
+                                        unit: u.unit,
+                                        lesson: les.lesson,
+                                        totalQuestions: les.totalQuestions,
+                                        mcqCount: les.mcqCount ?? les.totalQuestions,
+                                        tfCount: les.tfCount ?? 0,
+                                        totalEssays: les.totalEssays ?? 0,
+                                      },
+                                    ]);
+                                  }
+                                };
 
                                 return (
                                   <div
-                                    key={itemIdx}
-                                    className="group relative"
-                                    style={{ width: "100%", boxSizing: "border-box" }}
+                                    key={les.lesson}
+                                    onClick={toggleLesson}
+                                    className={`p-2 rounded-lg border text-xs flex items-center justify-between gap-2 cursor-pointer transition ${
+                                      isLessonSelected
+                                        ? "bg-primary/10 border-primary/40 text-primary font-bold"
+                                        : "bg-muted/10 border-border hover:bg-muted/40 text-foreground"
+                                    }`}
                                   >
-                                    <div dangerouslySetInnerHTML={{ __html: item.html }} style={{ width: "100%", boxSizing: "border-box" }} />
-
-                                    {/* Action toolbar on question hover */}
-                                    <div className="no-print absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 z-10">
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          if (currentQ) {
-                                            setEditingQuestion({
-                                              index: targetIdx,
-                                              data: {
-                                                ...currentQ,
-                                                options: currentQ.options
-                                                  ? [...currentQ.options.map((o) => ({ ...o }))]
-                                                  : [],
-                                              },
-                                            });
-                                          }
-                                        }}
-                                        className="bg-white/95 dark:bg-slate-800/95 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:text-primary hover:border-primary shadow-xs rounded px-2 py-0.5 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
-                                        title="تعديل هذا السؤال مباشرة"
-                                      >
-                                        <Edit3 className="h-3 w-3 text-primary" />
-                                        تعديل
-                                      </button>
-
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          if (window.confirm("هل تريد حذف هذا السؤال من المذكرة الحالية؟")) {
-                                            setQuestions((prev) =>
-                                              prev.filter((q, idx) => {
-                                                if (currentQ && q === currentQ) return false;
-                                                if (currentQ?.id && q.id === currentQ.id) return false;
-                                                if (rawQ?.id && q.id === rawQ.id) return false;
-                                                if (rawQ?.statement && q.statement === rawQ.statement) return false;
-                                                return idx !== targetIdx;
-                                              })
-                                            );
-                                            toast({ title: "تم حذف السؤال من المذكرة بنجاح" });
-                                          }
-                                        }}
-                                        className="bg-white/95 dark:bg-slate-800/95 border border-rose-300 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 shadow-xs rounded px-2 py-0.5 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
-                                        title="حذف هذا السؤال من المذكرة / الطباعة"
-                                      >
-                                        <Trash2 className="h-3 w-3 text-rose-600" />
-                                        حذف من المذكرة
-                                      </button>
-
-                                      {currentQ?.id && (
-                                        <button
-                                          type="button"
-                                          onClick={async () => {
-                                            if (
-                                              window.confirm(
-                                                `هل تريد بالتأكيد حذف هذا السؤال نهائياً من بنك الأسئلة الرئيسي في قاعدة البيانات؟ (رقم السؤال: ${currentQ.id})`
-                                              )
-                                            ) {
-                                              try {
-                                                await adminApi(`/api/admin/learning/question-bank/${currentQ.id}`, { method: "DELETE" });
-                                                setQuestions((prev) =>
-                                                  prev.filter((q, idx) => {
-                                                    if (currentQ && q === currentQ) return false;
-                                                    if (currentQ?.id && q.id === currentQ.id) return false;
-                                                    if (rawQ?.id && q.id === rawQ.id) return false;
-                                                    if (rawQ?.statement && q.statement === rawQ.statement) return false;
-                                                    return idx !== targetIdx;
-                                                  })
-                                                );
-                                                toast({ title: "تم حذف السؤال نهائياً من بنك الأسئلة" });
-                                              } catch (err: any) {
-                                                toast({ variant: "destructive", description: err.message || "تعذر حذف السؤال من بنك الأسئلة" });
-                                              }
-                                            }
-                                          }}
-                                          className="bg-rose-600 text-white hover:bg-rose-700 shadow-xs rounded px-1.5 py-0.5 text-[9.5px] font-bold flex items-center gap-0.5 cursor-pointer"
-                                          title="حذف نهائي من قاعدة بيانات بنك الأسئلة"
-                                        >
-                                          <Trash2 className="h-2.5 w-2.5" />
-                                          حذف من البنك
-                                        </button>
-                                      )}
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <input
+                                        type="checkbox"
+                                        checked={isLessonSelected}
+                                        readOnly
+                                        className="h-3.5 w-3.5 accent-primary pointer-events-none rounded"
+                                      />
+                                      <span className="truncate">{les.lesson}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1 shrink-0 text-[10px] font-mono">
+                                      <span className="px-1 py-0.2 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200" title="اختيار من متعدد">
+                                        MCQ:{les.mcqCount || 0}
+                                      </span>
+                                      <span className="px-1 py-0.2 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200" title="صواب وخطأ">
+                                        T/F:{les.tfCount || 0}
+                                      </span>
+                                      <span className="px-1 py-0.2 rounded bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200" title="أسئلة مقالية">
+                                        مقالي:{les.totalEssays || 0}
+                                      </span>
                                     </div>
                                   </div>
                                 );
                               })}
                             </div>
-                          </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
 
-                          {/* Footer text */}
-                          {settings.footerText && (
-                            <div
-                              style={{
-                                position: "absolute",
-                                bottom: "4.5mm",
-                                left: `${region.left}mm`,
-                                right: `${region.right}mm`,
-                                width: `calc(210mm - ${region.left + region.right}mm)`,
-                                boxSizing: "border-box",
-                                height: "6.5mm",
-                                borderTop: `1px solid ${theme.cardBorderColor}`,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                font: "bold 8pt Arial, sans-serif",
-                                color: "#475569",
-                                zIndex: 1,
-                              }}
-                            >
-                              {sanitizeMemoText(settings.footerText)}
+                  {/* Step 1 Sticky Bottom Bar */}
+                  <div className="p-2.5 rounded-xl bg-slate-900 text-white flex items-center justify-between gap-2">
+                    <span className="text-xs font-bold">
+                      تم تحديد <strong>{selectedLessons.length}</strong> دروس
+                    </span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={selectedLessons.length === 0}
+                      onClick={() => setActiveStep("step2_distribute")}
+                      className="bg-primary hover:bg-primary/90 text-white font-black text-xs h-7 px-3 cursor-pointer"
+                    >
+                      <span>الانتقال لتوزيع الأسئلة ⬅</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Source B: PLATFORM QUIZZES */}
+              {contentSourceTab === "quizzes" && (
+                <div className="space-y-2 max-h-[380px] overflow-y-auto">
+                  {quizzes.length === 0 ? (
+                    <div className="text-center py-8 text-xs text-muted-foreground">
+                      لا توجد اختبارات منشأة مسبقاً على المنصة.
+                    </div>
+                  ) : (
+                    quizzes.map((qz) => (
+                      <div
+                        key={qz.id}
+                        className="p-2.5 rounded-xl border border-border bg-card flex items-center justify-between gap-2"
+                      >
+                        <div className="min-w-0">
+                          <h5 className="text-xs font-black text-foreground truncate">{qz.title}</h5>
+                          <span className="text-[10px] text-muted-foreground">
+                            {qz.questions?.length || 0} سؤال • {qz.stage || "عام"}
+                          </span>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => {
+                            if (!qz.questions || !qz.questions.length) {
+                              toast({ variant: "destructive", description: "هذا الاختبار لا يحتوي على أسئلة." });
+                              return;
+                            }
+                            const mapped = qz.questions.map(normalizeQuestion);
+                            setQuestions(mapped);
+                            setSettings((s) => ({ ...s, headerText: qz.title }));
+                            toast({ title: `تم تحميل ${mapped.length} سؤال من اختبار (${qz.title})` });
+                            setActiveStep("step4_questions");
+                          }}
+                          className="h-7 text-xs font-bold cursor-pointer"
+                        >
+                          تحميل
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {/* Source C: EXTERNAL JSON IMPORT */}
+              {contentSourceTab === "external" && (
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    الصق مصفوفة JSON تحتوي على أسئلة (MCQ أو صواب وخطأ أو مقالي):
+                  </p>
+                  <textarea
+                    rows={6}
+                    value={jsonInput}
+                    onChange={(e) => setJsonInput(e.target.value)}
+                    placeholder="[ { statement: '...', options: [...], answer: '...' } ]"
+                    className="w-full p-2.5 rounded-xl border border-border bg-background font-mono text-xs text-foreground focus:outline-none"
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      try {
+                        const parsed = JSON.parse(jsonInput);
+                        const sections = parseJsonSections(parsed);
+                        if (sections.length > 0) {
+                          setDetectedJsonSections(sections);
+                          setSelectedSectionIds(sections.map((s) => s.id));
+                          setShowJsonSectionPicker(true);
+                        } else if (Array.isArray(parsed)) {
+                          const mapped = parsed.map(normalizeQuestion);
+                          setQuestions(mapped);
+                          toast({ title: `تم استيراد ${mapped.length} سؤال بنجاح` });
+                          setActiveStep("step4_questions");
+                        } else {
+                          toast({ variant: "destructive", description: "تنسيق JSON غير مدعوم." });
+                        }
+                      } catch (err: any) {
+                        toast({ variant: "destructive", title: "خطأ JSON", description: err.message });
+                      }
+                    }}
+                    className="w-full text-xs font-bold cursor-pointer"
+                  >
+                    معالجة واستيراد الأسئلة
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* STEP 2: MULTI-TYPE SELECTION AND CUSTOM DISTRIBUTION [CRITICAL REQUIREMENT] */}
+          {activeStep === "step2_distribute" && (
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-xs space-y-4">
+              <div>
+                <h4 className="text-xs font-black text-foreground flex items-center gap-1.5">
+                  <Target className="h-4 w-4 text-primary" />
+                  <span>أنواع الأسئلة وتوزيعها الدقيق على الدروس</span>
+                </h4>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  حدد أنواع الأسئلة المطلوبة بالتزامن (MCQ + صواب وخطأ + مقالي)، وحدد الكميات لكل درس:
+                </p>
+              </div>
+
+              {/* Independent Multi-Select Question Types Checkboxes */}
+              <div className="p-3 bg-muted/40 rounded-xl border border-border space-y-2">
+                <label className="text-[11px] font-black text-foreground block">
+                  الأنواع المطلوبة في المستند (يمكن اختيار أكثر من نوع معاً):
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <label
+                    className={`flex items-center gap-2 p-2 rounded-lg border text-xs font-bold cursor-pointer transition ${
+                      selectedQuestionTypes.includes("MCQ")
+                        ? "bg-blue-500/10 border-blue-500 text-blue-700 dark:text-blue-300"
+                        : "bg-background border-border text-muted-foreground"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedQuestionTypes.includes("MCQ")}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedQuestionTypes((prev) => [...prev, "MCQ"]);
+                        } else {
+                          setSelectedQuestionTypes((prev) => prev.filter((t) => t !== "MCQ"));
+                        }
+                      }}
+                      className="h-3.5 w-3.5 accent-blue-600 rounded"
+                    />
+                    <span>اختيار من متعدد</span>
+                  </label>
+
+                  <label
+                    className={`flex items-center gap-2 p-2 rounded-lg border text-xs font-bold cursor-pointer transition ${
+                      selectedQuestionTypes.includes("TRUE_FALSE")
+                        ? "bg-amber-500/10 border-amber-500 text-amber-700 dark:text-amber-300"
+                        : "bg-background border-border text-muted-foreground"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedQuestionTypes.includes("TRUE_FALSE")}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedQuestionTypes((prev) => [...prev, "TRUE_FALSE"]);
+                        } else {
+                          setSelectedQuestionTypes((prev) => prev.filter((t) => t !== "TRUE_FALSE"));
+                        }
+                      }}
+                      className="h-3.5 w-3.5 accent-amber-600 rounded"
+                    />
+                    <span>صواب أم خطأ</span>
+                  </label>
+
+                  <label
+                    className={`flex items-center gap-2 p-2 rounded-lg border text-xs font-bold cursor-pointer transition ${
+                      selectedQuestionTypes.includes("ESSAY")
+                        ? "bg-violet-500/10 border-violet-500 text-violet-700 dark:text-violet-300"
+                        : "bg-background border-border text-muted-foreground"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedQuestionTypes.includes("ESSAY")}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedQuestionTypes((prev) => [...prev, "ESSAY"]);
+                        } else {
+                          setSelectedQuestionTypes((prev) => prev.filter((t) => t !== "ESSAY"));
+                        }
+                      }}
+                      className="h-3.5 w-3.5 accent-violet-600 rounded"
+                    />
+                    <span>أسئلة مقالية ✍️</span>
+                  </label>
+                </div>
+
+                {/* Pool Availability Summary */}
+                <div className="flex items-center justify-between text-[11px] font-bold text-muted-foreground pt-1 border-t border-border/60 flex-wrap gap-1">
+                  <span>المتوفر في الدروس المحددة:</span>
+                  <div className="flex items-center gap-2 font-mono">
+                    {selectedQuestionTypes.includes("MCQ") && (
+                      <span className="text-blue-600 dark:text-blue-400">
+                        MCQ: {selectedLessons.reduce((s, l) => s + (l.mcqCount ?? l.totalQuestions ?? 0), 0)}
+                      </span>
+                    )}
+                    {selectedQuestionTypes.includes("TRUE_FALSE") && (
+                      <span className="text-amber-600 dark:text-amber-400">
+                        صواب/خطأ: {selectedLessons.reduce((s, l) => s + (l.tfCount ?? 0), 0)}
+                      </span>
+                    )}
+                    {selectedQuestionTypes.includes("ESSAY") && (
+                      <span className="text-violet-600 dark:text-violet-400">
+                        مقالي: {selectedLessons.reduce((s, l) => s + (l.totalEssays ?? 0), 0)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Batch Distribution Bar */}
+              <div className="flex items-center justify-between gap-2 p-2.5 bg-muted/20 rounded-xl border border-border flex-wrap">
+                <div className="flex items-center gap-1.5 text-xs font-bold">
+                  <span>العدد المستهدف:</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={150}
+                    value={targetBatchCount}
+                    onChange={(e) => setTargetBatchCount(Number(e.target.value))}
+                    className="w-14 h-7 text-center rounded border border-border bg-background font-mono text-xs font-bold"
+                  />
+                  <span>سؤال</span>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleBalancedDistribution}
+                    className="h-7 text-[11px] font-bold cursor-pointer"
+                  >
+                    توزيع متوازن
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleMaximizeAll}
+                    className="h-7 text-[11px] font-bold cursor-pointer"
+                  >
+                    سحب كل المتاح
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={handleClearAllAllocations}
+                    className="text-[11px] text-muted-foreground hover:text-foreground underline px-1 cursor-pointer"
+                  >
+                    تصفير
+                  </button>
+                </div>
+              </div>
+
+              {/* Per-Lesson Custom Allocation List */}
+              {selectedLessons.length === 0 ? (
+                <div className="text-center py-6 text-xs text-muted-foreground border border-dashed rounded-xl p-4">
+                  لم تقم بتحديد أي دروس بعد.
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setActiveStep("step1_source")}
+                    className="mt-2 block mx-auto text-xs font-bold cursor-pointer"
+                  >
+                    الرجوع لتحديد الدروس من المنهج
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+                  {selectedLessons.map((les) => {
+                    const key = `${les.unit}:::${les.lesson}`;
+                    const alloc = lessonAllocations[key] || { mcq: 0, tf: 0, essay: 0 };
+                    const lesTotal = alloc.mcq + alloc.tf + alloc.essay;
+
+                    const updateAlloc = (type: "mcq" | "tf" | "essay", val: number) => {
+                      const cleanVal = Math.max(0, val);
+                      setLessonAllocations((prev) => ({
+                        ...prev,
+                        [key]: {
+                          ...alloc,
+                          [type]: cleanVal,
+                        },
+                      }));
+                    };
+
+                    return (
+                      <div
+                        key={key}
+                        className="p-2.5 rounded-xl border border-border bg-card space-y-2"
+                      >
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-xs font-black text-foreground truncate max-w-[200px]">
+                            {les.lesson}
+                          </span>
+                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-primary/10 text-primary">
+                            مجموع الدرس: {lesTotal} س
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2 text-[11px]">
+                          {selectedQuestionTypes.includes("MCQ") && (
+                            <div className="space-y-0.5">
+                              <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
+                                <span>MCQ</span>
+                                <span>(متاح:{les.mcqCount || 0})</span>
+                              </div>
+                              <input
+                                type="number"
+                                min={0}
+                                max={les.mcqCount || 0}
+                                value={alloc.mcq}
+                                onChange={(e) => updateAlloc("mcq", Number(e.target.value))}
+                                className={`w-full h-7 text-center rounded border font-mono text-xs font-bold ${
+                                  alloc.mcq > (les.mcqCount || 0)
+                                    ? "border-rose-500 bg-rose-50 text-rose-700"
+                                    : "border-border bg-background"
+                                }`}
+                              />
                             </div>
                           )}
 
-                          {/* Page number */}
+                          {selectedQuestionTypes.includes("TRUE_FALSE") && (
+                            <div className="space-y-0.5">
+                              <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
+                                <span>صواب/خطأ</span>
+                                <span>(متاح:{les.tfCount || 0})</span>
+                              </div>
+                              <input
+                                type="number"
+                                min={0}
+                                max={les.tfCount || 0}
+                                value={alloc.tf}
+                                onChange={(e) => updateAlloc("tf", Number(e.target.value))}
+                                className={`w-full h-7 text-center rounded border font-mono text-xs font-bold ${
+                                  alloc.tf > (les.tfCount || 0)
+                                    ? "border-rose-500 bg-rose-50 text-rose-700"
+                                    : "border-border bg-background"
+                                }`}
+                              />
+                            </div>
+                          )}
+
+                          {selectedQuestionTypes.includes("ESSAY") && (
+                            <div className="space-y-0.5">
+                              <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
+                                <span>مقالي</span>
+                                <span>(متاح:{les.totalEssays || 0})</span>
+                              </div>
+                              <input
+                                type="number"
+                                min={0}
+                                max={les.totalEssays || 0}
+                                value={alloc.essay}
+                                onChange={(e) => updateAlloc("essay", Number(e.target.value))}
+                                className={`w-full h-7 text-center rounded border font-mono text-xs font-bold ${
+                                  alloc.essay > (les.totalEssays || 0)
+                                    ? "border-rose-500 bg-rose-50 text-rose-700"
+                                    : "border-border bg-background"
+                                }`}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Step 2 Execution Button */}
+              <div className="pt-2 border-t border-border">
+                <Button
+                  type="button"
+                  disabled={isLoadingQuestions || totalRequested === 0}
+                  onClick={handleCompileAllocations}
+                  className="w-full bg-primary hover:bg-primary/90 text-white font-black text-xs py-2.5 flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-primary/20"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span>توليد وتجميع الأسئلة في المستند ({totalRequested} سؤال) ✨</span>
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: DESIGN AND FORMATTING */}
+          {activeStep === "step3_design" && (
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-xs space-y-4">
+              <div>
+                <h4 className="text-xs font-black text-foreground flex items-center gap-1.5">
+                  <Palette className="h-4 w-4 text-primary" />
+                  <span>تنسيق المستند وهوامش الطباعة</span>
+                </h4>
+              </div>
+
+              {/* Template Style */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-foreground">قالب وشكل الورقة:</label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {(
+                    [
+                      { id: "royal", label: "ملكي راقي" },
+                      { id: "exam", label: "اختبار رسمي" },
+                      { id: "tech", label: "تقني وعصري" },
+                      { id: "emerald", label: "زمردي" },
+                      { id: "minimal", label: "بسيط وأنيق" },
+                    ] as const
+                  ).map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setSettings((s) => ({ ...s, templateStyle: t.id }))}
+                      className={`py-1.5 px-2 rounded-lg text-xs font-bold transition cursor-pointer text-center ${
+                        settings.templateStyle === t.id
+                          ? "bg-primary text-white font-black shadow-xs"
+                          : "bg-muted/40 border border-border text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Question Presentation Settings */}
+              <div className="space-y-2 p-3 bg-muted/30 rounded-xl border border-border">
+                <label className="text-[11px] font-black text-foreground block">
+                  خيارات عرض الأسئلة والخيارات:
+                </label>
+
+                {/* Numbering Style */}
+                <div className="flex items-center justify-between text-xs">
+                  <span>نمط ترقيم الأسئلة:</span>
+                  <select
+                    value={settings.numberingStyle || "continuous"}
+                    onChange={(e) =>
+                      setSettings((s) => ({ ...s, numberingStyle: e.target.value as any }))
+                    }
+                    className="h-7 px-2 rounded border border-border bg-background text-xs font-bold cursor-pointer"
+                  >
+                    <option value="continuous">ترقيم مستمر (1..N)</option>
+                    <option value="per_type">ترقيم مستقل لكل نوع</option>
+                  </select>
+                </div>
+
+                {/* MCQ Columns */}
+                <div className="flex items-center justify-between text-xs">
+                  <span>توزيع خيارات MCQ:</span>
+                  <select
+                    value={settings.optionLayout}
+                    onChange={(e) =>
+                      setSettings((s) => ({ ...s, optionLayout: e.target.value as any }))
+                    }
+                    className="h-7 px-2 rounded border border-border bg-background text-xs font-bold cursor-pointer"
+                  >
+                    <option value="auto">توزيع تلقائي ذكي</option>
+                    <option value="two">عمودين متجاورين</option>
+                    <option value="four">4 أعمدة أفقية</option>
+                    <option value="one">كل خيار في سطر مستقل</option>
+                  </select>
+                </div>
+
+                {/* Essay Ruled Lines */}
+                <div className="flex items-center justify-between text-xs">
+                  <span>أسطر إجابة الأسئلة المقالية:</span>
+                  <select
+                    value={settings.essayLines ?? 3}
+                    onChange={(e) =>
+                      setSettings((s) => ({ ...s, essayLines: Number(e.target.value) }))
+                    }
+                    className="h-7 px-2 rounded border border-border bg-background text-xs font-bold cursor-pointer"
+                  >
+                    <option value="0">بدون أسطر (نصي فقط)</option>
+                    <option value="2">سطرين مسطرين</option>
+                    <option value="3">3 أسطر مسطرة (موصى به)</option>
+                    <option value="4">4 أسطر مسطرة</option>
+                    <option value="5">5 أسطر مسطرة</option>
+                  </select>
+                </div>
+
+                {/* Density */}
+                <div className="flex items-center justify-between text-xs">
+                  <span>كثافة الأسطر والتباعد:</span>
+                  <select
+                    value={settings.density}
+                    onChange={(e) =>
+                      setSettings((s) => ({ ...s, density: e.target.value as any }))
+                    }
+                    className="h-7 px-2 rounded border border-border bg-background text-xs font-bold cursor-pointer"
+                  >
+                    <option value="compact">مضغوط (أقصى استيعاب)</option>
+                    <option value="balanced">متوازن (الافتراضي الموصى به)</option>
+                    <option value="comfortable">مريح ومتباعد</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Margins */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-foreground">
+                  هوامش الصفحة (بالمليمتر):
+                </label>
+                <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                  <div>
+                    <span className="text-[10px] text-muted-foreground block">أعلى</span>
+                    <input
+                      type="number"
+                      min={10}
+                      max={80}
+                      value={settings.topMm}
+                      onChange={(e) => setSettings((s) => ({ ...s, topMm: Number(e.target.value) }))}
+                      className="w-full h-7 text-center rounded border border-border bg-background font-mono font-bold"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-muted-foreground block">أسفل</span>
+                    <input
+                      type="number"
+                      min={6}
+                      max={50}
+                      value={settings.bottomMm}
+                      onChange={(e) =>
+                        setSettings((s) => ({ ...s, bottomMm: Number(e.target.value) }))
+                      }
+                      className="w-full h-7 text-center rounded border border-border bg-background font-mono font-bold"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-muted-foreground block">يمين</span>
+                    <input
+                      type="number"
+                      min={6}
+                      max={40}
+                      value={settings.rightMm}
+                      onChange={(e) =>
+                        setSettings((s) => ({ ...s, rightMm: Number(e.target.value) }))
+                      }
+                      className="w-full h-7 text-center rounded border border-border bg-background font-mono font-bold"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-muted-foreground block">يسار</span>
+                    <input
+                      type="number"
+                      min={6}
+                      max={40}
+                      value={settings.leftMm}
+                      onChange={(e) =>
+                        setSettings((s) => ({ ...s, leftMm: Number(e.target.value) }))
+                      }
+                      className="w-full h-7 text-center rounded border border-border bg-background font-mono font-bold"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Toggles */}
+              <div className="space-y-2 pt-2 border-t border-border">
+                <label className="flex items-center justify-between text-xs cursor-pointer">
+                  <span>شريط بيانات الطالب في أول صفحة:</span>
+                  <input
+                    type="checkbox"
+                    checked={settings.studentFields}
+                    onChange={(e) =>
+                      setSettings((s) => ({ ...s, studentFields: e.target.checked }))
+                    }
+                    className="h-4 w-4 accent-primary rounded cursor-pointer"
+                  />
+                </label>
+                <label className="flex items-center justify-between text-xs cursor-pointer">
+                  <span>إظهار التفسير وسبب الإجابة:</span>
+                  <input
+                    type="checkbox"
+                    checked={settings.showExplain}
+                    onChange={(e) =>
+                      setSettings((s) => ({ ...s, showExplain: e.target.checked }))
+                    }
+                    className="h-4 w-4 accent-primary rounded cursor-pointer"
+                  />
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4: QUESTIONS MANAGEMENT AND REORDERING */}
+          {activeStep === "step4_questions" && (
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-black text-foreground">
+                    إدارة وترتيب الأسئلة ({questions.length})
+                  </h4>
+                  <span className="text-[11px] text-muted-foreground">
+                    الأسئلة النشطة في الطباعة: {activeQuestions.length}
+                  </span>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setShowAddQuestionModal(true)}
+                  className="h-7 text-xs font-bold bg-primary hover:bg-primary/90 text-white flex items-center gap-1 cursor-pointer"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>إضافة سؤال</span>
+                </Button>
+              </div>
+
+              {/* Bulk actions */}
+              <div className="flex items-center justify-between gap-2 text-xs border-b border-border pb-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setQuestions((prev) => prev.map((q) => ({ ...q, enabled: true })))}
+                    className="text-primary hover:underline font-bold cursor-pointer"
+                  >
+                    تفعيل الكل
+                  </button>
+                  <span>•</span>
+                  <button
+                    type="button"
+                    onClick={() => setQuestions((prev) => prev.map((q) => ({ ...q, enabled: false })))}
+                    className="text-muted-foreground hover:underline cursor-pointer"
+                  >
+                    تعطيل الكل
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm("هل أنت متأكد من مسح جميع الأسئلة؟")) {
+                      setQuestions([]);
+                    }
+                  }}
+                  className="text-rose-600 hover:underline cursor-pointer"
+                >
+                  مسح الكل
+                </button>
+              </div>
+
+              {/* Questions List */}
+              <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
+                {questions.length === 0 ? (
+                  <div className="text-center py-8 text-xs text-muted-foreground">
+                    لا توجد أسئلة حالياً. استخدم الخطوة 1 و 2 لإضافة أسئلة.
+                  </div>
+                ) : (
+                  questions.map((q, idx) => (
+                    <div
+                      key={q.id || idx}
+                      className={`p-2.5 rounded-xl border text-xs space-y-1.5 transition ${
+                        q.enabled
+                          ? "bg-card border-border"
+                          : "bg-muted/40 border-dashed border-border opacity-60"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <input
+                            type="checkbox"
+                            checked={q.enabled}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setQuestions((prev) =>
+                                prev.map((x, i) => (i === idx ? { ...x, enabled: checked } : x)),
+                              );
+                            }}
+                            className="h-3.5 w-3.5 accent-primary rounded cursor-pointer"
+                          />
+                          <span className="font-bold text-foreground">#{idx + 1}</span>
+                          <span
+                            className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
+                              q.type === "MCQ"
+                                ? "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200"
+                                : q.type === "TRUE_FALSE"
+                                  ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"
+                                  : "bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-200"
+                            }`}
+                          >
+                            {q.type === "MCQ" ? "MCQ" : q.type === "TRUE_FALSE" ? "صواب/خطأ" : "مقالي"}
+                          </span>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            disabled={idx === 0}
+                            onClick={() => moveQuestion(idx, idx - 1)}
+                            className="p-1 rounded hover:bg-muted text-muted-foreground disabled:opacity-30 cursor-pointer"
+                            title="تقديم"
+                          >
+                            <MoveUp className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={idx === questions.length - 1}
+                            onClick={() => moveQuestion(idx, idx + 1)}
+                            className="p-1 rounded hover:bg-muted text-muted-foreground disabled:opacity-30 cursor-pointer"
+                            title="تأخير"
+                          >
+                            <MoveDown className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setEditingQuestion({
+                                index: idx,
+                                data: {
+                                  ...q,
+                                  options: q.options ? [...q.options.map((o) => ({ ...o }))] : [],
+                                },
+                              })
+                            }
+                            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-primary cursor-pointer"
+                            title="تعديل السؤال"
+                          >
+                            <Edit3 className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeQuestion(idx)}
+                            className="p-1 rounded hover:bg-rose-100 text-muted-foreground hover:text-rose-600 cursor-pointer"
+                            title="حذف"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <p className="text-foreground line-clamp-2 leading-relaxed">
+                        {q.statement}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Warnings box */}
+          {warnings.length > 0 && (
+            <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 space-y-1">
+              <div className="font-bold flex items-center gap-1 text-amber-800">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                <span>ملاحظات التقسيم الذاتي:</span>
+              </div>
+              <ul className="list-disc pr-4 space-y-0.5 text-[11px]">
+                {warnings.map((w, i) => (
+                  <li key={i}>{w}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </aside>
+
+        {/* LEFT PANEL: Live Document Preview (~66% width on desktop) */}
+        <main
+          className={`flex-1 min-w-0 w-full space-y-4 ${
+            mobileWorkspaceTab === "config" ? "hidden lg:block" : ""
+          }`}
+        >
+          {/* Live Preview Control Toolbar */}
+          <div className="no-print flex flex-wrap items-center justify-between gap-2 p-3 rounded-2xl border border-border bg-card shadow-xs">
+            <div className="flex items-center gap-3 text-xs font-bold text-foreground">
+              <span className="flex items-center gap-1.5">
+                <FileText className="h-4 w-4 text-primary" />
+                <span>
+                  الصفحات: <strong className="font-mono">{pages.length}</strong>
+                </span>
+              </span>
+              <span className="text-muted-foreground">•</span>
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                <span>
+                  الأسئلة المعروضة: <strong className="font-mono">{activeQuestions.length}</strong>
+                </span>
+              </span>
+            </div>
+
+            {/* Pagination & Zoom Controls */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Page Navigator */}
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setShowAllPages(true)}
+                  className={`px-2.5 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
+                    showAllPages
+                      ? "bg-primary text-white"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  عرض الكل متتالي
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAllPages(false)}
+                  className={`px-2.5 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
+                    !showAllPages
+                      ? "bg-primary text-white"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  صفحة صفحة
+                </button>
+              </div>
+
+              {!showAllPages && pages.length > 1 && (
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    disabled={pageIndex === 0}
+                    onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
+                    className="p-1 rounded bg-muted hover:bg-muted/80 disabled:opacity-30 cursor-pointer"
+                  >
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
+                  <span className="text-xs font-mono font-bold px-1.5">
+                    {pageIndex + 1} / {pages.length}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={pageIndex >= pages.length - 1}
+                    onClick={() => setPageIndex((p) => Math.min(pages.length - 1, p + 1))}
+                    className="p-1 rounded bg-muted hover:bg-muted/80 disabled:opacity-30 cursor-pointer"
+                  >
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
+
+              {/* Zoom Controls */}
+              <div className="flex items-center gap-1.5 pl-2 border-r border-border mr-1">
+                <input
+                  type="range"
+                  min="0.45"
+                  max="1.2"
+                  step="0.05"
+                  value={scale}
+                  onChange={(e) => {
+                    setAutoScale(false);
+                    setScale(parseFloat(e.target.value));
+                  }}
+                  className="w-16 h-1 accent-primary cursor-pointer"
+                  title="التحكم في تكبير المعاينة"
+                />
+                <span className="text-[11px] font-mono text-muted-foreground min-w-[32px]">
+                  {Math.round(scale * 100)}%
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAutoScale(true);
+                  }}
+                  className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted hover:text-primary cursor-pointer"
+                  title="ملاءمة تلقائية لعرض الشاشة"
+                >
+                  ملاءمة
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Rendered Scaled A4 Document Canvas */}
+          <div
+            ref={paperAreaRef}
+            className="w-full bg-slate-100 dark:bg-slate-950 p-4 sm:p-6 rounded-2xl flex flex-col items-center justify-start overflow-auto border border-border min-h-[600px]"
+          >
+            {pages.length === 0 ? (
+              <div className="text-center py-24 text-slate-400">
+                <FileQuestion className="h-12 w-12 mx-auto mb-2 opacity-40" />
+                <p className="text-sm font-bold">لا توجد أسئلة معروضة في المستند حالياً.</p>
+              </div>
+            ) : (
+              (showAllPages ? pages : [pages[pageIndex] || []]).map((pageItems, pageOffset) => {
+                const actualPageIdx = showAllPages ? pageOffset : pageIndex;
+                const pageNumber = actualPageIdx + 1;
+                const isP1 = actualPageIdx === 0;
+                const theme = getThemeConfig(settings.templateStyle);
+                const badgeText =
+                  settings.templateStyle === "exam"
+                    ? "ورقة اختبار رسمي معتمد"
+                    : settings.templateStyle === "tech"
+                      ? "بنك الأسئلة والتقييمات"
+                      : settings.templateStyle === "emerald"
+                        ? "التقييم الشامل والتدريبات"
+                        : "مذكرة تدريبات وبنك أسئلة";
+
+                const topPaddingMm = isP1
+                  ? settings.headerEnabled
+                    ? 7.5
+                    : settings.topMm || 12
+                  : settings.continuationHeader === "minimal"
+                    ? 5.5
+                    : settings.continuationHeader === "none"
+                      ? settings.topMm || 7.5
+                      : settings.topMm || 12;
+
+                const a4PixelW = Math.round((210 * 96) / 25.4);
+                const a4PixelH = Math.round((297 * 96) / 25.4);
+
+                return (
+                  <div key={actualPageIdx} className="flex flex-col items-center gap-2 mb-8 last:mb-0">
+                    <div className="no-print text-[11px] font-bold text-slate-400">
+                      ورقة A4 — صفحة {pageNumber} من {pages.length}
+                    </div>
+
+                    {/* Scaled Wrapper */}
+                    <div
+                      className="shadow-2xl rounded-sm transition-all overflow-hidden"
+                      style={{
+                        width: `${Math.round(a4PixelW * scale)}px`,
+                        height: `${Math.round(a4PixelH * scale)}px`,
+                        direction: "ltr",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "210mm",
+                          height: "297mm",
+                          transform: `scale(${scale})`,
+                          transformOrigin: "top left",
+                          direction: settings.contentDir,
+                          boxSizing: "border-box",
+                          backgroundColor: "#ffffff",
+                          color: "#0f172a",
+                          fontFamily: settings.fontSelect,
+                          fontSize: `${settings.fontSize}pt`,
+                          lineHeight: `${settings.lineHeight}`,
+                          padding: `${topPaddingMm}mm ${settings.rightMm}mm ${settings.bottomMm}mm ${settings.leftMm}mm`,
+                          position: "relative",
+                        }}
+                      >
+                        {/* Page 1 Header */}
+                        {isP1 && settings.headerEnabled && (
                           <div
                             style={{
-                              position: "absolute",
-                              bottom: "4.5mm",
-                              ...(settings.numPosition === "center"
-                                ? { left: "50%", transform: "translateX(-50%)" }
-                                : settings.numPosition === "right"
-                                  ? { right: `${region.right}mm` }
-                                  : { left: `${region.left}mm` }),
-                              minWidth: "12mm",
-                              height: "6.5mm",
-                              padding: "0 2.5mm",
-                              backgroundColor: theme.pageNumberBg,
-                              border: theme.pageNumberBorder,
-                              borderRadius: "1.5mm",
-                              textAlign: "center",
-                              font: "bold 8pt Arial, sans-serif",
-                              lineHeight: "6.5mm",
-                              color: theme.pageNumberColor,
-                              zIndex: 1,
-                              whiteSpace: "nowrap",
+                              width: "100%",
+                              marginBottom: "2.5mm",
+                              boxSizing: "border-box",
+                              color: "#0f172a",
                             }}
                           >
-                            {settings.showTotalPages ? `${pageNumber} / ${pages.length}` : `${pageNumber}`}
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                width: "100%",
+                                marginBottom: "2mm",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "2.5mm",
+                                  background: theme.sealBg,
+                                  border: `1.2px solid ${theme.sealBorder}`,
+                                  borderRadius: "2.5mm",
+                                  padding: "1.2mm 3.2mm",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    width: "7.5mm",
+                                    height: "7.5mm",
+                                    borderRadius: "50%",
+                                    background: theme.crestBg,
+                                    border: theme.crestBorder,
+                                    color: theme.crestColor,
+                                    display: "grid",
+                                    placeItems: "center",
+                                    fontWeight: 900,
+                                    fontSize: "7pt",
+                                  }}
+                                >
+                                  M
+                                </div>
+                                <div style={{ display: "flex", flexDirection: "column" }}>
+                                  <span
+                                    style={{
+                                      fontSize: "9.5pt",
+                                      fontWeight: 900,
+                                      color: theme.drTextColor,
+                                    }}
+                                  >
+                                    د. محمود المهدي Dr / Elmahdy
+                                  </span>
+                                  <span
+                                    style={{
+                                      fontSize: "6.8pt",
+                                      fontWeight: 700,
+                                      color: theme.drSubTextColor,
+                                    }}
+                                  >
+                                    الحاسب الآلي والذكاء الاصطناعي
+                                  </span>
+                                </div>
+                              </div>
+                              <div>
+                                <span
+                                  style={{
+                                    background: theme.badgeBg,
+                                    color: theme.badgeColor,
+                                    border: theme.badgeBorder,
+                                    padding: "1.2mm 3.5mm",
+                                    borderRadius: "1.5mm",
+                                    fontSize: "8pt",
+                                    fontWeight: 800,
+                                  }}
+                                >
+                                  {badgeText}
+                                </span>
+                              </div>
+                            </div>
+                            <div style={{ width: "100%", padding: "0 0.5mm" }}>
+                              <div
+                                style={{
+                                  fontSize: "11pt",
+                                  fontWeight: 900,
+                                  lineHeight: 1.35,
+                                  wordBreak: "normal",
+                                  overflowWrap: "anywhere",
+                                }}
+                              >
+                                {sanitizeMemoText(settings.headerText)}
+                              </div>
+                              {settings.subHeaderText && (
+                                <div
+                                  style={{
+                                    fontSize: "7.8pt",
+                                    fontWeight: 600,
+                                    marginTop: "1.2mm",
+                                    color: "#475569",
+                                    lineHeight: 1.4,
+                                    wordBreak: "normal",
+                                    overflowWrap: "anywhere",
+                                  }}
+                                >
+                                  {sanitizeMemoText(settings.subHeaderText)}
+                                </div>
+                              )}
+                            </div>
                           </div>
+                        )}
+
+                        {/* Continuation Header */}
+                        {!isP1 && settings.continuationHeader === "minimal" && (
+                          <div
+                            style={{
+                              width: "100%",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              paddingBottom: "1.4mm",
+                              marginBottom: "2.5mm",
+                              borderBottom: "1.2px solid #000",
+                              boxSizing: "border-box",
+                            }}
+                          >
+                            <span style={{ fontSize: "8.5pt", fontWeight: 800 }}>
+                              {sanitizeMemoText(settings.headerText)}
+                            </span>
+                            <span style={{ fontSize: "8pt", fontWeight: 800 }}>
+                              د. محمود المهدي • Dr / Elmahdy
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Student Strip */}
+                        {isP1 && settings.studentFields && (
+                          <div dangerouslySetInnerHTML={{ __html: studentStripHtml }} />
+                        )}
+
+                        {/* Questions List on this page */}
+                        <div style={{ width: "100%", boxSizing: "border-box" }}>
+                          {pageItems.map((item, itemIdx) => (
+                            <div
+                              key={itemIdx}
+                              dangerouslySetInnerHTML={{ __html: item.html }}
+                              style={{ width: "100%", boxSizing: "border-box" }}
+                            />
+                          ))}
+                        </div>
+
+                        {/* Page Footer */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            bottom: "3.5mm",
+                            left: `${settings.leftMm}mm`,
+                            right: `${settings.rightMm}mm`,
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            fontSize: "7.5pt",
+                            fontWeight: "bold",
+                            color: "#64748b",
+                            borderTop: "1px solid #cbd5e1",
+                            paddingTop: "1.2mm",
+                          }}
+                        >
+                          <span>
+                            {sanitizeMemoText(
+                              settings.footerText ||
+                                "د. محمود المهدي | الحاسب الآلي والذكاء الاصطناعي",
+                            )}
+                          </span>
+                          <span
+                            style={{
+                              background: theme.pageNumberBg,
+                              color: theme.pageNumberColor,
+                              padding: "0.8mm 2.2mm",
+                              borderRadius: "1mm",
+                            }}
+                          >
+                            صفحة {pageNumber} من {pages.length}
+                          </span>
                         </div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </main>
       </div>
 
-      {/* Interactive Edit Question Modal */}
+      {/* MODAL: Question Editor */}
       {editingQuestion && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto" dir="rtl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
-              <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Edit3 className="h-5 w-5 text-primary" />
-                تعديل السؤال #{editingQuestion.index + 1}
+          <div className="bg-card text-foreground rounded-2xl max-w-xl w-full p-5 shadow-2xl border border-border space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
+              <h3 className="text-sm font-black flex items-center gap-2">
+                <Edit3 className="h-4 w-4 text-primary" />
+                <span>تعديل السؤال #{editingQuestion.index + 1}</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setEditingQuestion(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="p-1 rounded-lg text-muted-foreground hover:bg-muted cursor-pointer"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  نوع السؤال:
-                </label>
+                <label className="block text-xs font-bold mb-1">نوع السؤال:</label>
                 <select
                   value={editingQuestion.data.type}
                   onChange={(e) =>
@@ -4327,20 +3390,18 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                       data: { ...editingQuestion.data, type: e.target.value as any },
                     })
                   }
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
+                  className="w-full h-8 px-2 rounded-lg border border-border bg-background text-xs font-bold cursor-pointer"
                 >
                   <option value="MCQ">اختيار من متعدد (MCQ)</option>
-                  <option value="TRUE_FALSE">صواب وخطأ</option>
-                  <option value="ESSAY">سؤال مقالي</option>
+                  <option value="TRUE_FALSE">صواب أم خطأ (True/False)</option>
+                  <option value="ESSAY">سؤال مقالي (Essay)</option>
                   <option value="DEFINITION">تعريف ومصطلح</option>
-                  <option value="TEXT">ملاحظة / نص توضيحي</option>
+                  <option value="TEXT">ملاحظة / نص حر</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  نص السؤال (Statement):
-                </label>
+                <label className="block text-xs font-bold mb-1">نص السؤال / المطلوب:</label>
                 <textarea
                   rows={3}
                   value={editingQuestion.data.statement}
@@ -4350,114 +3411,105 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                       data: { ...editingQuestion.data, statement: e.target.value },
                     })
                   }
-                  className="w-full rounded-lg border border-slate-300 p-2.5 text-xs font-medium dark:bg-slate-800 dark:border-slate-700"
+                  className="w-full p-2.5 rounded-lg border border-border bg-background text-xs font-bold focus:outline-none"
                 />
               </div>
 
               {/* Options for MCQ */}
               {editingQuestion.data.type === "MCQ" && (
-                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      خيارات الإجابة:
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const opts = editingQuestion.data.options || [];
-                        setEditingQuestion({
-                          ...editingQuestion,
-                          data: {
-                            ...editingQuestion.data,
-                            options: [...opts, { text: `خيار ${opts.length + 1}`, isCorrect: false }],
-                          },
-                        });
-                      }}
-                      className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1"
-                    >
-                      <Plus className="h-3 w-3" />
-                      إضافة خيار
-                    </button>
-                  </div>
-
-                  <div className="space-y-2">
-                    {(editingQuestion.data.options || []).map((opt, optIdx) => (
-                      <div key={optIdx} className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-400 font-mono w-4">
-                          {optIdx + 1}.
-                        </span>
-                        <input
-                          type="text"
-                          value={opt.text}
-                          onChange={(e) => {
-                            const nextOpts = [...(editingQuestion.data.options || [])];
-                            nextOpts[optIdx] = { ...nextOpts[optIdx], text: e.target.value };
-                            setEditingQuestion({
-                              ...editingQuestion,
-                              data: { ...editingQuestion.data, options: nextOpts },
-                            });
-                          }}
-                          className="flex-1 rounded-lg border border-slate-300 px-2.5 py-1 text-xs dark:bg-slate-800 dark:border-slate-700"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const nextOpts = (editingQuestion.data.options || []).filter((_, i) => i !== optIdx);
-                            setEditingQuestion({
-                              ...editingQuestion,
-                              data: { ...editingQuestion.data, options: nextOpts },
-                            });
-                          }}
-                          className="p-1 text-slate-400 hover:text-rose-600 rounded"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold">خيارات الإجابة:</label>
+                  {(editingQuestion.data.options || []).map((opt, optIdx) => (
+                    <div key={optIdx} className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-bold text-muted-foreground w-6 text-center">
+                        {ARABIC_LETTERS[optIdx] ?? optIdx + 1}
+                      </span>
+                      <input
+                        type="text"
+                        value={opt.text}
+                        onChange={(e) => {
+                          const nextOpts = [...(editingQuestion.data.options || [])];
+                          nextOpts[optIdx] = { ...opt, text: e.target.value };
+                          setEditingQuestion({
+                            ...editingQuestion,
+                            data: { ...editingQuestion.data, options: nextOpts },
+                          });
+                        }}
+                        className="flex-1 h-8 px-2 rounded border border-border bg-background text-xs"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nextOpts = (editingQuestion.data.options || []).filter(
+                            (_, i) => i !== optIdx,
+                          );
+                          setEditingQuestion({
+                            ...editingQuestion,
+                            data: { ...editingQuestion.data, options: nextOpts },
+                          });
+                        }}
+                        className="p-1 text-rose-500 hover:bg-rose-50 rounded cursor-pointer"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextOpts = [
+                        ...(editingQuestion.data.options || []),
+                        { text: "", isCorrect: false, id: Date.now() },
+                      ];
+                      setEditingQuestion({
+                        ...editingQuestion,
+                        data: { ...editingQuestion.data, options: nextOpts },
+                      });
+                    }}
+                    className="text-xs font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="h-3 w-3" />
+                    <span>إضافة خيار إضافي</span>
+                  </button>
                 </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-                <div>
-                  <label className="block text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-1">
-                    الإجابة النموذجية (Model Answer):
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={editingQuestion.data.answer}
-                    onChange={(e) =>
-                      setEditingQuestion({
-                        ...editingQuestion,
-                        data: { ...editingQuestion.data, answer: e.target.value },
-                      })
-                    }
-                    className="w-full rounded-lg border border-slate-300 p-2 text-xs dark:bg-slate-800 dark:border-slate-700"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-amber-700 dark:text-amber-400 mb-1">
-                    التفسير وسبب الحل (Explanation):
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={editingQuestion.data.explanation}
-                    onChange={(e) =>
-                      setEditingQuestion({
-                        ...editingQuestion,
-                        data: { ...editingQuestion.data, explanation: e.target.value },
-                      })
-                    }
-                    className="w-full rounded-lg border border-slate-300 p-2 text-xs dark:bg-slate-800 dark:border-slate-700"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-bold mb-1">
+                  {editingQuestion.data.type === "ESSAY"
+                    ? "الإجابة النموذجية المقالية:"
+                    : "الإجابة الصحيحة:"}
+                </label>
+                <textarea
+                  rows={2}
+                  value={editingQuestion.data.answer}
+                  onChange={(e) =>
+                    setEditingQuestion({
+                      ...editingQuestion,
+                      data: { ...editingQuestion.data, answer: e.target.value },
+                    })
+                  }
+                  className="w-full p-2 rounded-lg border border-border bg-background text-xs"
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  الترجمة الإنجليزية / الملاحظة (Translation):
-                </label>
+                <label className="block text-xs font-bold mb-1">التفسير والتعليل العلمي:</label>
+                <textarea
+                  rows={2}
+                  value={editingQuestion.data.explanation}
+                  onChange={(e) =>
+                    setEditingQuestion({
+                      ...editingQuestion,
+                      data: { ...editingQuestion.data, explanation: e.target.value },
+                    })
+                  }
+                  className="w-full p-2 rounded-lg border border-border bg-background text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold mb-1">الترجمة الإنجليزية (إن وجدت):</label>
                 <input
                   type="text"
                   value={editingQuestion.data.translation}
@@ -4467,22 +3519,24 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                       data: { ...editingQuestion.data, translation: e.target.value },
                     })
                   }
-                  className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs dark:bg-slate-800 dark:border-slate-700"
+                  className="w-full h-8 px-2 rounded-lg border border-border bg-background text-xs font-sans"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 onClick={() => setEditingQuestion(null)}
-                className="text-xs font-bold"
+                className="cursor-pointer"
               >
                 إلغاء
               </Button>
               <Button
                 type="button"
+                size="sm"
                 onClick={() => {
                   const idx = editingQuestion.index;
                   setQuestions((prev) => {
@@ -4491,32 +3545,32 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                     return next;
                   });
                   setEditingQuestion(null);
-                  toast({ title: "تم حفظ تعديلات السؤال بنجاح" });
+                  toast({ title: "تم حفظ تعديلات السؤال بنجاح ✓" });
                 }}
-                className="text-xs font-bold bg-primary hover:bg-primary/90 text-white"
+                className="cursor-pointer"
               >
-                حفظ التعديل
+                حفظ التعديلات
               </Button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Interactive Add Question Modal */}
+      {/* MODAL: Add New Custom Question */}
       {showAddQuestionModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[90vh] overflow-y-auto" dir="rtl">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
-              <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Plus className="h-5 w-5 text-primary" />
-                إضافة سؤال جديد للمذكرة
+          <div className="bg-card text-foreground rounded-2xl max-w-lg w-full p-5 shadow-2xl border border-border space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
+              <h3 className="text-sm font-black flex items-center gap-2">
+                <Plus className="h-4 w-4 text-primary" />
+                <span>إضافة سؤال جديد للمذكرة</span>
               </h3>
               <button
                 type="button"
                 onClick={() => setShowAddQuestionModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="p-1 rounded text-muted-foreground hover:bg-muted cursor-pointer"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
 
@@ -4524,151 +3578,129 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
               onSubmit={(e) => {
                 e.preventDefault();
                 const form = e.target as any;
-                const statement = form.stmt.value.trim();
-                if (!statement) {
-                  toast({ variant: "destructive", description: "يرجى كتابة نص السؤال." });
-                  return;
+                const qType = form.qtype.value as any;
+                const statement = form.statement.value.trim();
+                const answer = form.answer.value.trim();
+                const explanation = form.explanation.value.trim();
+
+                let options: any[] = [];
+                if (qType === "MCQ") {
+                  options = [
+                    { text: form.opt1?.value?.trim() || "", isCorrect: true },
+                    { text: form.opt2?.value?.trim() || "", isCorrect: false },
+                    { text: form.opt3?.value?.trim() || "", isCorrect: false },
+                    { text: form.opt4?.value?.trim() || "", isCorrect: false },
+                  ].filter((o) => o.text);
+                } else if (qType === "TRUE_FALSE") {
+                  options = [
+                    { text: "صواب", isCorrect: answer.includes("صواب") },
+                    { text: "خطأ", isCorrect: answer.includes("خطأ") },
+                  ];
                 }
-                const type = form.qtype.value;
-                const opt1 = form.opt1?.value?.trim();
-                const opt2 = form.opt2?.value?.trim();
-                const opt3 = form.opt3?.value?.trim();
-                const opt4 = form.opt4?.value?.trim();
-                const opts = [opt1, opt2, opt3, opt4].filter(Boolean).map((t, i) => ({ text: t, isCorrect: i === 0 }));
-                const answer = form.ans.value.trim();
-                const explanation = form.exp.value.trim();
-                const translation = form.trans.value.trim();
 
                 const newQ: NormalizedQuestion = {
                   id: `custom-${Date.now()}`,
-                  type,
+                  type: qType,
                   statement,
-                  options: opts,
-                  answer,
+                  options,
+                  answer: answer || (options[0]?.text ?? ""),
                   explanation,
-                  translation,
+                  translation: "",
                   enabled: true,
                 };
+
                 setQuestions((prev) => [...prev, newQ]);
                 setShowAddQuestionModal(false);
-                toast({ title: "تمت إضافة السؤال الجديد للمذكرة بنجاح" });
+                toast({ title: "تمت إضافة السؤال بنجاح ✓" });
               }}
               className="space-y-3"
             >
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  نوع السؤال:
-                </label>
+                <label className="block text-xs font-bold mb-1">نوع السؤال:</label>
                 <select
                   name="qtype"
                   defaultValue="MCQ"
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold dark:bg-slate-800 dark:border-slate-700"
+                  className="w-full h-8 px-2 rounded-lg border border-border bg-background text-xs font-bold cursor-pointer"
                 >
                   <option value="MCQ">اختيار من متعدد (MCQ)</option>
-                  <option value="TRUE_FALSE">صواب وخطأ</option>
-                  <option value="ESSAY">سؤال مقالي</option>
-                  <option value="DEFINITION">تعريف ومصطلح</option>
-                  <option value="TEXT">ملاحظة / نص توضيحي</option>
+                  <option value="TRUE_FALSE">صواب أم خطأ (True/False)</option>
+                  <option value="ESSAY">سؤال مقالي (Essay ✍️)</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  نص السؤال (Statement):
-                </label>
+                <label className="block text-xs font-bold mb-1">نص السؤال *:</label>
                 <textarea
-                  name="stmt"
+                  name="statement"
                   required
                   rows={3}
-                  placeholder="اكتب نص السؤال هنا..."
-                  className="w-full rounded-lg border border-slate-300 p-2.5 text-xs font-medium dark:bg-slate-800 dark:border-slate-700"
+                  className="w-full p-2 rounded-lg border border-border bg-background text-xs font-bold focus:outline-none"
+                  placeholder="اكتب صيغة السؤال هنا..."
                 />
               </div>
 
-              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                  خيارات الإجابة (لأسئلة الاختيار من متعدد):
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs font-bold mb-1">خيارات الاختيار من متعدد (إن وجد):</label>
+                <div className="grid grid-cols-2 gap-2">
                   <input
+                    type="text"
                     name="opt1"
-                    type="text"
-                    placeholder="الخيار الأول (الإجابة الصحيحة)"
-                    className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs dark:bg-slate-800 dark:border-slate-700"
+                    placeholder="الخيار الصحيح (أ)"
+                    className="h-8 px-2 rounded border border-border bg-background text-xs"
                   />
                   <input
+                    type="text"
                     name="opt2"
-                    type="text"
-                    placeholder="الخيار الثاني"
-                    className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs dark:bg-slate-800 dark:border-slate-700"
+                    placeholder="الخيار الثاني (ب)"
+                    className="h-8 px-2 rounded border border-border bg-background text-xs"
                   />
                   <input
+                    type="text"
                     name="opt3"
-                    type="text"
-                    placeholder="الخيار الثالث (اختياري)"
-                    className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs dark:bg-slate-800 dark:border-slate-700"
+                    placeholder="الخيار الثالث (ج)"
+                    className="h-8 px-2 rounded border border-border bg-background text-xs"
                   />
                   <input
-                    name="opt4"
                     type="text"
-                    placeholder="الخيار الرابع (اختياري)"
-                    className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs dark:bg-slate-800 dark:border-slate-700"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-                <div>
-                  <label className="block text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-1">
-                    الإجابة النموذجية (Model Answer):
-                  </label>
-                  <textarea
-                    name="ans"
-                    rows={2}
-                    placeholder="الحل النموذجي..."
-                    className="w-full rounded-lg border border-slate-300 p-2 text-xs dark:bg-slate-800 dark:border-slate-700"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-amber-700 dark:text-amber-400 mb-1">
-                    التفسير والتعليل (Explanation):
-                  </label>
-                  <textarea
-                    name="exp"
-                    rows={2}
-                    placeholder="تفسير سبب الإجابة..."
-                    className="w-full rounded-lg border border-slate-300 p-2 text-xs dark:bg-slate-800 dark:border-slate-700"
+                    name="opt4"
+                    placeholder="الخيار الرابع (د)"
+                    className="h-8 px-2 rounded border border-border bg-background text-xs"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
-                  الترجمة الإنجليزية (Translation):
-                </label>
+                <label className="block text-xs font-bold mb-1">الإجابة النموذجية:</label>
                 <input
-                  name="trans"
                   type="text"
-                  placeholder="الترجمة الإنجليزية إن وجدت..."
-                  className="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-xs dark:bg-slate-800 dark:border-slate-700"
+                  name="answer"
+                  placeholder="نص الإجابة النموذجية..."
+                  className="w-full h-8 px-2 rounded border border-border bg-background text-xs"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+              <div>
+                <label className="block text-xs font-bold mb-1">التفسير أو التعليل العلمي:</label>
+                <textarea
+                  name="explanation"
+                  rows={2}
+                  placeholder="سبب صحة الإجابة..."
+                  className="w-full p-2 rounded border border-border bg-background text-xs"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
                   onClick={() => setShowAddQuestionModal(false)}
-                  className="text-xs font-bold"
+                  className="cursor-pointer"
                 >
                   إلغاء
                 </Button>
-                <Button
-                  type="submit"
-                  className="text-xs font-bold bg-primary hover:bg-primary/90 text-white"
-                >
-                  إضافة السؤال للمذكرة
+                <Button type="submit" size="sm" className="bg-primary text-white cursor-pointer">
+                  إضافة السؤال للمستند
                 </Button>
               </div>
             </form>
@@ -4676,84 +3708,14 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
         </div>
       )}
 
-      {/* Scoped Media Print Styling */}
+      {/* Custom Styles */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Almarai:wght@400;700;800&family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@400;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Inter:wght@400;600;700;800&family=Noto+Naskh+Arabic:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap');
-
         @media print {
-          @page {
-            size: A4 portrait;
-            margin: 0mm !important;
-          }
-          html, body {
-            background: #ffffff !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 210mm !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          /* Strictly hide everything in the document by default to eliminate any dashboard or outer layout leakage */
           body * {
-            visibility: hidden !important;
+            visibility: hidden;
           }
-          /* Expose only the memo print container and its descendants */
-          .memo-print-root,
-          .memo-print-root * {
-            visibility: visible !important;
-          }
-          .memo-print-root {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 210mm !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            border: none !important;
-            background: #ffffff !important;
-            box-shadow: none !important;
-            display: block !important;
-            overflow: visible !important;
-            z-index: 999999 !important;
-          }
-          .no-print,
-          .no-print *,
-          .memo-preview-page-label,
-          header, nav, aside, .topbar, button, input, select, textarea,
-          [role="tablist"], [data-radix-portal] {
+          .no-print {
             display: none !important;
-            visibility: hidden !important;
-          }
-          .memo-page-shell {
-            width: 210mm !important;
-            height: 297mm !important;
-            min-height: 297mm !important;
-            max-height: 297mm !important;
-            page-break-after: always !important;
-            break-after: page !important;
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
-            box-shadow: none !important;
-            border: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: hidden !important;
-            box-sizing: border-box !important;
-          }
-          .memo-sheet {
-            transform: none !important;
-            position: relative !important;
-            width: 210mm !important;
-            height: 297mm !important;
-            min-height: 297mm !important;
-            max-height: 297mm !important;
-            box-shadow: none !important;
-            border: none !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-            overflow: hidden !important;
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
           }
         }
       `}</style>
