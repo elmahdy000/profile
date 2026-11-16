@@ -428,7 +428,13 @@ function normalizeQuestion(raw: any, i: number): NormalizedQuestion {
   }
 
   // Detect type intelligently
-  const explicitType = raw.type ?? raw.question_type ?? raw.category;
+  const explicitType =
+    raw.questionType ??
+    raw.question?.questionType ??
+    raw.type ??
+    raw.question?.type ??
+    raw.question_type ??
+    raw.category;
   let type: "MCQ" | "TRUE_FALSE" | "ESSAY" | "DEFINITION" | "TEXT";
 
   if (explicitType) {
@@ -439,11 +445,7 @@ function normalizeQuestion(raw: any, i: number): NormalizedQuestion {
     type = "ESSAY";
   } else if (opt && opt.length > 0) {
     type =
-      opt.length === 2 &&
-        opt.some(
-          (o: any) =>
-            textValue(o).includes("صواب") || textValue(o).includes("صح") || textValue(o) === "True",
-        )
+      opt.length === 2
         ? "TRUE_FALSE"
         : "MCQ";
   } else {
@@ -730,9 +732,35 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
   const [selectedStageName, setSelectedStageName] = useState<string>("");
   const [selectedUnitName, setSelectedUnitName] = useState<string>("");
   const [selectedLessonName, setSelectedLessonName] = useState<string>("");
-  const [selectedLessons, setSelectedLessons] = useState<Array<{ unit: string; lesson: string; totalQuestions?: number }>>([]);
+  const [selectedLessons, setSelectedLessons] = useState<Array<{
+    unit: string;
+    lesson: string;
+    totalQuestions?: number;
+    mcqCount?: number;
+    tfCount?: number;
+    totalEssays?: number;
+  }>>([]);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
   const [randomCount, setRandomCount] = useState<number>(20);
+
+  // Helper to get questions count per type (MCQ, True/False, Essay, etc.)
+  const getLessonCountForType = (les: any, filterType: string = bankTypeFilter) => {
+    if (!les) return 0;
+    if (filterType === "TRUE_FALSE") return les.tfCount ?? 0;
+    if (filterType === "MCQ") return les.mcqCount ?? les.totalQuestions ?? 0;
+    if (filterType === "ESSAY") return les.totalEssays ?? 0;
+    if (filterType === "DEFINITION") return 0;
+    return (les.totalQuestions || 0) + (les.totalEssays || 0);
+  };
+
+  const getUnitCountForType = (u: any, filterType: string = bankTypeFilter) => {
+    if (!u) return 0;
+    if (filterType === "TRUE_FALSE") return u.tfCount ?? 0;
+    if (filterType === "MCQ") return u.mcqCount ?? u.totalQuestions ?? 0;
+    if (filterType === "ESSAY") return u.totalEssays ?? 0;
+    if (filterType === "DEFINITION") return 0;
+    return (u.totalQuestions || 0) + (u.totalEssays || 0);
+  };
 
   // Question editing modal & creation
   const [editingQuestion, setEditingQuestion] = useState<{
@@ -1286,8 +1314,10 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
           const t = normalizeType(
             qObj.type ??
             item.type ??
+            qObj.questionType ??
+            item.questionType ??
             qObj.question_type ??
-            (qObj.definition ? "DEFINITION" : qObj.modelAnswer || item.modelAnswer ? "ESSAY" : qObj.options || qObj.choices ? "MCQ" : "ESSAY"),
+            (qObj.definition ? "DEFINITION" : (qObj.modelAnswer || item.modelAnswer) ? "ESSAY" : (qObj.options?.length === 2 || item.options?.length === 2) ? "TRUE_FALSE" : (qObj.options?.length > 2 || item.options?.length > 2) ? "MCQ" : "ESSAY"),
           );
           return t === effectiveType;
         });
@@ -1385,12 +1415,36 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
         }
       }
 
-      if (!combined.length) {
-        toast({ variant: "destructive", description: "لم يتم العثور على أسئلة للدروس المحددة." });
+      let filteredCombined = combined;
+      if (bankTypeFilter && bankTypeFilter !== "ALL") {
+        filteredCombined = combined.filter((item) => {
+          const qObj = item.question || item;
+          const detected = normalizeType(
+            qObj.type ??
+            item.type ??
+            qObj.questionType ??
+            item.questionType ??
+            qObj.question_type ??
+            (qObj.definition ? "DEFINITION" : (qObj.modelAnswer || item.modelAnswer) ? "ESSAY" : (qObj.options?.length === 2 || item.options?.length === 2) ? "TRUE_FALSE" : (qObj.options?.length > 2 || item.options?.length > 2) ? "MCQ" : "ESSAY")
+          );
+          return detected === bankTypeFilter;
+        });
+      }
+
+      if (!filteredCombined.length) {
+        toast({
+          variant: "destructive",
+          description: `لم يتم العثور على أسئلة من نوع (${
+            bankTypeFilter === "TRUE_FALSE" ? "صواب وخطأ" :
+            bankTypeFilter === "MCQ" ? "اختيار من متعدد" :
+            bankTypeFilter === "ESSAY" ? "أسئلة مقالية" :
+            bankTypeFilter
+          }) للدروس المحددة.`
+        });
         return;
       }
 
-      let finalRows = combined;
+      let finalRows = filteredCombined;
       if (countLimit && countLimit > 0 && finalRows.length > countLimit) {
         finalRows = [...finalRows].sort(() => 0.5 - Math.random()).slice(0, countLimit);
       }
@@ -2264,25 +2318,29 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                             <CheckSquare className="h-4 w-4 text-emerald-400 shrink-0" />
                             <span className="text-xs font-bold">
                               تم تحديد <strong>{selectedLessons.length}</strong> دروس (
-                              {selectedLessons.reduce((acc, l) => acc + (l.totalQuestions || 0), 0)} سؤال)
+                              {selectedLessons.reduce((acc, l) => acc + getLessonCountForType(l), 0)} سؤال {
+                                bankTypeFilter === "TRUE_FALSE" ? "صواب وخطأ" :
+                                bankTypeFilter === "MCQ" ? "اختيار من متعدد" :
+                                bankTypeFilter === "ESSAY" ? "مقالي ✍️" : ""
+                              })
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <Button
                               type="button"
                               size="sm"
-                              disabled={isLoadingQuestions}
+                              disabled={isLoadingQuestions || selectedLessons.reduce((acc, l) => acc + getLessonCountForType(l), 0) === 0}
                               onClick={() => handleLoadFromSelectedLessons()}
-                              className="h-7 px-2.5 text-[11px] font-bold bg-primary hover:bg-primary/90 text-white"
+                              className="h-7 px-2.5 text-[11px] font-bold bg-primary hover:bg-primary/90 text-white cursor-pointer"
                             >
-                              جلب وتجميع ({selectedLessons.reduce((acc, l) => acc + (l.totalQuestions || 0), 0)})
+                              جلب وتجميع ({selectedLessons.reduce((acc, l) => acc + getLessonCountForType(l), 0)})
                             </Button>
                             <Button
                               type="button"
                               size="sm"
-                              disabled={isLoadingQuestions}
+                              disabled={isLoadingQuestions || selectedLessons.reduce((acc, l) => acc + getLessonCountForType(l), 0) === 0}
                               onClick={() => handleLoadFromSelectedLessons(randomCount)}
-                              className="h-7 px-2.5 text-[11px] font-bold bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-1"
+                              className="h-7 px-2.5 text-[11px] font-bold bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-1 cursor-pointer"
                             >
                               <Shuffle className="h-3 w-3" />
                               {randomCount} عشوائي
@@ -2290,7 +2348,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                             <button
                               type="button"
                               onClick={() => setSelectedLessons([])}
-                              className="text-[11px] text-slate-300 hover:text-white underline px-1"
+                              className="text-[11px] text-slate-300 hover:text-white underline px-1 cursor-pointer"
                             >
                               إلغاء التحديد
                             </button>
@@ -2355,6 +2413,9 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                   unit: u.unit,
                                   lesson: les.lesson,
                                   totalQuestions: les.totalQuestions,
+                                  mcqCount: les.mcqCount ?? les.totalQuestions,
+                                  tfCount: les.tfCount ?? 0,
+                                  totalEssays: les.totalEssays ?? 0,
                                 }));
                               setSelectedLessons((prev) => [...prev, ...newToAdd]);
                             }
@@ -2375,7 +2436,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                       {u.unit}
                                     </h5>
                                     <p className="text-[11px] text-slate-500 mt-0.5">
-                                      {u.totalQuestions} سؤال متاح · {u.lessons?.length || 0} دروس
+                                      {getUnitCountForType(u)} سؤال متاح · {u.lessons?.length || 0} دروس
                                     </p>
                                   </div>
                                   <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
@@ -2395,7 +2456,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                     <Button
                                       type="button"
                                       size="sm"
-                                      disabled={isLoadingQuestions}
+                                      disabled={isLoadingQuestions || getUnitCountForType(u) === 0}
                                       onClick={() => handleLoadFromBank(u.unit, undefined, randomCount)}
                                       className="h-7 px-2.5 text-[11px] font-bold bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-1"
                                       title={`اختيار ${randomCount} سؤال عشوائي من الوحدة`}
@@ -2406,11 +2467,11 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                     <Button
                                       type="button"
                                       size="sm"
-                                      disabled={isLoadingQuestions}
+                                      disabled={isLoadingQuestions || getUnitCountForType(u) === 0}
                                       onClick={() => handleLoadFromBank(u.unit)}
                                       className="h-7 px-2.5 text-[11px] font-bold bg-primary hover:bg-primary/90 text-white"
                                     >
-                                      الوحدة كاملة ({u.totalQuestions})
+                                      الوحدة كاملة ({getUnitCountForType(u)})
                                     </Button>
                                   </div>
                                 </div>
@@ -2444,6 +2505,9 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                                     unit: u.unit,
                                                     lesson: les.lesson,
                                                     totalQuestions: les.totalQuestions,
+                                                    mcqCount: les.mcqCount ?? les.totalQuestions,
+                                                    tfCount: les.tfCount ?? 0,
+                                                    totalEssays: les.totalEssays ?? 0,
                                                   },
                                                 ];
                                               }
@@ -2458,7 +2522,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                                           <span className="font-mono">{isSelected ? "✓" : "+"}</span>
                                           <span>{les.lesson}</span>
                                           <span className={`text-[9px] px-1 rounded ${isSelected ? "bg-white/20" : "bg-slate-200 dark:bg-slate-700"}`}>
-                                            {les.totalQuestions}
+                                            {getLessonCountForType(les)}
                                           </span>
                                         </button>
                                       );

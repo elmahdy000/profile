@@ -749,8 +749,12 @@ router.get("/admin/learning/test-bank/questions", requireAdmin, async (req, res,
     const search = req.query.search ? String(req.query.search).trim().toLowerCase() : undefined;
     const type = req.query.type ? String(req.query.type).trim().toUpperCase() : undefined;
 
-    const shouldFetchMcq = !type || type === "ALL" || type === "MCQ" || type === "TRUE_FALSE";
-    const shouldFetchEssay = !type || type === "ALL" || type === "ESSAY";
+    const isTrueFalse = type === "TRUE_FALSE" || type === "TF" || type === "TRUEFALSE";
+    const isMcq = type === "MCQ" || type === "MULTIPLE_CHOICE";
+    const isEssay = type === "ESSAY" || type === "ESSAYS";
+
+    const shouldFetchMcq = !type || type === "ALL" || isMcq || isTrueFalse;
+    const shouldFetchEssay = !type || type === "ALL" || isEssay;
 
     const fetchTasks: Promise<any[]>[] = [];
 
@@ -761,6 +765,12 @@ router.get("/admin/learning/test-bank/questions", requireAdmin, async (req, res,
       if (unit && unit !== "all") mcqConds.push(eq(questionBankTable.unit, unit));
       if (lesson && lesson !== "all") mcqConds.push(eq(questionBankTable.lesson, lesson));
       if (difficulty && difficulty !== "all") mcqConds.push(eq(questionBankTable.difficulty, difficulty));
+
+      if (isTrueFalse) {
+        mcqConds.push(sql`COALESCE(${questionBankTable.question}->>'questionType', 'mcq') = 'true_false'`);
+      } else if (isMcq) {
+        mcqConds.push(sql`COALESCE(${questionBankTable.question}->>'questionType', 'mcq') <> 'true_false'`);
+      }
 
       let q = db.select().from(questionBankTable);
       fetchTasks.push((mcqConds.length ? q.where(and(...mcqConds)) : q).orderBy(desc(questionBankTable.id)));
