@@ -2146,6 +2146,7 @@ export function StudentPlatform() {
                   const isCorrect = detail ? detail.isCorrect : Boolean(quizResult && correctOptionIndex !== undefined && quizAnswers[qi] === correctOptionIndex);
                   const isWrong = quizResult && isSelected && !isCorrect;
                   const isEng = isEnglishQuestion(q.prompt, q.options);
+                  const isEssay = q.questionType === "essay" || (!q.options || q.options.length === 0);
 
                   return (
                     <div
