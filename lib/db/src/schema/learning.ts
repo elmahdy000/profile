@@ -171,6 +171,19 @@ export const quizAttemptsTable = pgTable("quiz_attempts", {
   studentIndex: index("quiz_attempts_student_idx").on(table.studentId),
 }));
 
+export const quizViewsTable = pgTable("quiz_views", {
+  id: serial("id").primaryKey(),
+  quizId: integer("quiz_id").notNull().references(() => quizzesTable.id, { onDelete: "cascade" }),
+  studentId: integer("student_id").notNull().references(() => studentsTable.id, { onDelete: "cascade" }),
+  firstViewedAt: timestamp("first_viewed_at", { withTimezone: true }).defaultNow(),
+  lastViewedAt: timestamp("last_viewed_at", { withTimezone: true }).defaultNow(),
+  viewCount: integer("view_count").default(1),
+}, (table) => ({
+  quizIdx: index("idx_quiz_views_quiz_id").on(table.quizId),
+  studentIdx: index("idx_quiz_views_student_id").on(table.studentId),
+  uniqueQuizStudent: uniqueIndex("idx_quiz_views_unique_quiz_student").on(table.quizId, table.studentId),
+}));
+
 export const quizExtraAttemptsTable = pgTable("quiz_extra_attempts", {
   id: serial("id").primaryKey(),
   quizId: integer("quiz_id").notNull().references(() => quizzesTable.id, { onDelete: "cascade" }),

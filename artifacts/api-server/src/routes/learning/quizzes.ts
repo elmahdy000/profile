@@ -4,6 +4,7 @@ import {
   db,
   quizzesTable,
   quizAttemptsTable,
+  quizViewsTable,
   quizExtraAttemptsTable,
   studentsTable,
   studentNotificationsTable,
@@ -657,6 +658,16 @@ router.get("/admin/learning/quizzes", requireAdmin, async (_req, res, next) => {
       .from(quizAttemptsTable)
       .groupBy(quizAttemptsTable.quizId);
 
+    // Aggregate views count and distinct students who opened the quiz/homework
+    const viewStats = await db
+      .select({
+        quizId: quizViewsTable.quizId,
+        totalOpens: sql<number>`COALESCE(sum(${quizViewsTable.viewCount}), 0)::int`,
+        openedStudents: sql<number>`count(distinct ${quizViewsTable.studentId})::int`,
+      })
+      .from(quizViewsTable)
+      .groupBy(quizViewsTable.quizId);
+
     const statsMap = new Map<number, { totalAttempts: number; uniqueStudents: number }>(
       attemptStats.map((s) => [
         s.quizId,
@@ -667,16 +678,79 @@ router.get("/admin/learning/quizzes", requireAdmin, async (_req, res, next) => {
       ]),
     );
 
+    const viewsMap = new Map<number, { totalOpens: number; openedStudents: number }>(
+      viewStats.map((v) => [
+        v.quizId,
+        {
+          totalOpens: Number(v.totalOpens) || 0,
+          openedStudents: Number(v.openedStudents) || 0,
+        },
+      ]),
+    );
+
     const enriched = quizzes.map((q) => {
       const stats = statsMap.get(q.id);
+      const vStats = viewsMap.get(q.id);
       return {
         ...q,
         attemptsCount: stats?.totalAttempts ?? 0,
         uniqueStudentsCount: stats?.uniqueStudents ?? 0,
+        openedStudentsCount: vStats?.openedStudents ?? 0,
+        totalOpensCount: vStats?.totalOpens ?? 0,
       };
     });
 
     res.json(enriched);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/admin/learning/quizzes/:id/views - Get list of students who opened this homework or quiz
+router.get("/admin/learning/quizzes/:id/views", requireAdmin, async (req, res, next) => {
+  try {
+    const quizId = Number(req.params.id);
+    if (!Number.isInteger(quizId) || quizId <= 0) {
+      res.status(400).json({ error: "معرف الاختبار غير صالح" });
+      return;
+    }
+
+    const [quiz] = await db
+      .select({ id: quizzesTable.id, title: quizzesTable.title, scope: quizzesTable.scope, category: quizzesTable.category })
+      .from(quizzesTable)
+      .where(eq(quizzesTable.id, quizId))
+      .limit(1);
+
+    if (!quiz) {
+      res.status(404).json({ error: "الواجب أو الاختبار غير موجود" });
+      return;
+    }
+
+    const views = await db
+      .select({
+        id: quizViewsTable.id,
+        quizId: quizViewsTable.quizId,
+        studentId: quizViewsTable.studentId,
+        studentName: studentsTable.name,
+        studentPhone: studentsTable.phone,
+        studentGrade: studentsTable.grade,
+        studentStage: studentsTable.academicTrack,
+        parentPhone: studentsTable.parentPhone,
+        firstViewedAt: quizViewsTable.firstViewedAt,
+        lastViewedAt: quizViewsTable.lastViewedAt,
+        viewCount: quizViewsTable.viewCount,
+      })
+      .from(quizViewsTable)
+      .innerJoin(studentsTable, eq(quizViewsTable.studentId, studentsTable.id))
+      .where(eq(quizViewsTable.quizId, quizId))
+      .orderBy(desc(quizViewsTable.lastViewedAt));
+
+    res.json({
+      quiz,
+      totalStudents: views.length,
+      totalViews: views.reduce((sum, v) => sum + (v.viewCount || 1), 0),
+      students: views,
+    });
   } catch (error) {
     next(error);
   }
@@ -1394,6 +1468,55 @@ router.get("/learning/quizzes/:id/review", requireStudent, async (req, res, next
       attemptsUsed: 1,
       details,
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/learning/quizzes/:id/view - Log that student opened the homework or quiz
+router.post("/learning/quizzes/:id/view", requireStudent, async (req, res, next) => {
+  try {
+    const student = res.locals.student as typeof studentsTable.$inferSelect;
+    const quizId = Number(req.params.id);
+    if (!Number.isInteger(quizId) || quizId <= 0) {
+      res.status(400).json({ error: "معرف الواجب أو الاختبار غير صالح" });
+      return;
+    }
+
+    const [quiz] = await db
+      .select()
+      .from(quizzesTable)
+      .where(eq(quizzesTable.id, quizId))
+      .limit(1);
+
+    if (!quiz) {
+      res.status(404).json({ error: "الواجب أو الاختبار غير موجود" });
+      return;
+    }
+
+    if (!canStudentAccessContent(student, quiz.category, quiz.stage, quiz.stages, quiz.courseId)) {
+      res.status(403).json({ error: "غير مصرح لك بالوصول لهذا الواجب" });
+      return;
+    }
+
+    await db
+      .insert(quizViewsTable)
+      .values({
+        quizId,
+        studentId: student.id,
+        firstViewedAt: new Date(),
+        lastViewedAt: new Date(),
+        viewCount: 1,
+      })
+      .onConflictDoUpdate({
+        target: [quizViewsTable.quizId, quizViewsTable.studentId],
+        set: {
+          lastViewedAt: new Date(),
+          viewCount: sql`${quizViewsTable.viewCount} + 1`,
+        },
+      });
+
+    res.json({ success: true, quizId, studentId: student.id });
   } catch (error) {
     next(error);
   }

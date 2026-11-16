@@ -10,6 +10,7 @@ import {
   videosTable,
   quizzesTable,
   quizAttemptsTable,
+  quizViewsTable,
   studentsTable,
   studentNotificationsTable,
   type QuizQuestion,
@@ -586,7 +587,46 @@ router.get("/admin/learning/curriculum/quizzes", requireAdmin, async (req, res, 
         (q.description && q.description.includes(lesson))
       );
     }
-    res.json(allQuizzes);
+    // Aggregate attempts count and distinct students count per quiz
+    const attemptStats = await db
+      .select({
+        quizId: quizAttemptsTable.quizId,
+        totalAttempts: sql<number>`count(${quizAttemptsTable.id})::int`,
+        uniqueStudents: sql<number>`count(distinct ${quizAttemptsTable.studentId})::int`,
+      })
+      .from(quizAttemptsTable)
+      .groupBy(quizAttemptsTable.quizId);
+
+    // Aggregate views count and distinct students who opened the quiz/homework
+    const viewStats = await db
+      .select({
+        quizId: quizViewsTable.quizId,
+        totalOpens: sql<number>`COALESCE(sum(${quizViewsTable.viewCount}), 0)::int`,
+        openedStudents: sql<number>`count(distinct ${quizViewsTable.studentId})::int`,
+      })
+      .from(quizViewsTable)
+      .groupBy(quizViewsTable.quizId);
+
+    const statsMap = new Map<number, { totalAttempts: number; uniqueStudents: number }>(
+      attemptStats.map((s) => [s.quizId, { totalAttempts: Number(s.totalAttempts) || 0, uniqueStudents: Number(s.uniqueStudents) || 0 }])
+    );
+    const viewsMap = new Map<number, { totalOpens: number; openedStudents: number }>(
+      viewStats.map((v) => [v.quizId, { totalOpens: Number(v.totalOpens) || 0, openedStudents: Number(v.openedStudents) || 0 }])
+    );
+
+    const enriched = allQuizzes.map((q) => {
+      const stats = statsMap.get(q.id);
+      const vStats = viewsMap.get(q.id);
+      return {
+        ...q,
+        attemptsCount: stats?.totalAttempts ?? 0,
+        uniqueStudentsCount: stats?.uniqueStudents ?? 0,
+        openedStudentsCount: vStats?.openedStudents ?? 0,
+        totalOpensCount: vStats?.totalOpens ?? 0,
+      };
+    });
+
+    res.json(enriched);
   } catch (error) {
     next(error);
   }

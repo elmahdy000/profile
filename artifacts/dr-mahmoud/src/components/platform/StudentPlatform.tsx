@@ -657,6 +657,10 @@ export function StudentPlatform() {
 
     // _originalTotal is carried on every question so submitQuiz can build the right-sized array
     setActiveQuiz({ ...quiz, questions: mappedQuestions });
+    // Track that the student opened this quiz or homework
+    if (quiz.id) {
+      void api(`/api/learning/quizzes/${quiz.id}/view`, { method: "POST" }).catch(() => {});
+    }
     setQuizAnswers(initialAnswers);
     setEssayTextAnswers({});
     setQuizResult(null);

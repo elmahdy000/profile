@@ -19,9 +19,11 @@ import {
   FileCheck2,
   BookOpen,
   Layers,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { QuizViewsModal } from "../QuizViewsModal";
 
 interface CurriculumExamsViewProps {
   stage: string;
@@ -48,6 +50,7 @@ export function CurriculumExamsView({
   // Review modal state
   const [selectedQuizForReview, setSelectedQuizForReview] = useState<any | null>(null);
   const [showAnswers, setShowAnswers] = useState<boolean>(true);
+  const [viewingQuizStats, setViewingQuizStats] = useState<any | null>(null);
 
   const loadQuizzes = async () => {
     if (!stage || !unit) return;
@@ -241,6 +244,59 @@ export function CurriculumExamsView({
                       <RefreshCw className="h-3 w-3 text-blue-500" /> {quiz.maxAttempts ? `${quiz.maxAttempts} محاولات` : "بلا حدود"}
                     </span>
                   </div>
+
+                  {/* Students Opened / Tested Stats Banner */}
+                  {isHomework ? (
+                    <button
+                      type="button"
+                      onClick={() => setViewingQuizStats(quiz)}
+                      className="w-full text-right p-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-900 dark:text-amber-200 transition-all flex items-center justify-between gap-2 cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="h-7 w-7 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                          <Eye className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-black truncate">
+                            {quiz.openedStudentsCount > 0
+                              ? `فتح الواجب: ${quiz.openedStudentsCount} طلاب (${quiz.totalOpensCount || quiz.openedStudentsCount} مرة) 👁️`
+                              : "لم يقم أي طالب بفتح الواجب بعد"}
+                          </div>
+                          <span className="text-[10px] text-amber-700/80 dark:text-amber-300/80 block truncate">
+                            اضغط لعرض أسماء وتفاصيل الطلاب وأوقات الفتح ↗
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-xs font-black bg-amber-600 text-white px-2 py-0.5 rounded-lg shrink-0 shadow-2xs">
+                        {quiz.openedStudentsCount || 0} طالب
+                      </span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setViewingQuizStats(quiz)}
+                      className="w-full text-right p-2.5 rounded-xl border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 text-violet-900 dark:text-violet-200 transition-all flex items-center justify-between gap-2 cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="h-7 w-7 rounded-lg bg-violet-500/20 text-violet-700 dark:text-violet-300 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                          <Users className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-black truncate">
+                            {quiz.uniqueStudentsCount > 0 || quiz.openedStudentsCount > 0
+                              ? `اختبر: ${quiz.uniqueStudentsCount || 0} طالب | فتح: ${quiz.openedStudentsCount || 0}`
+                              : "لم يختبره أو يفتحه طلاب بعد"}
+                          </div>
+                          <span className="text-[10px] text-violet-700/80 dark:text-violet-300/80 block truncate">
+                            اضغط لعرض كشف أسماء الطلاب ومحاولاتهم ↗
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-xs font-black bg-violet-600 text-white px-2 py-0.5 rounded-lg shrink-0 shadow-2xs">
+                        {quiz.openedStudentsCount || quiz.uniqueStudentsCount || 0} طالب
+                      </span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Actions: Direct Button to Show Answers & Review */}
@@ -464,6 +520,18 @@ export function CurriculumExamsView({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Quiz / Homework Views Modal */}
+      {viewingQuizStats && (
+        <QuizViewsModal
+          isOpen={Boolean(viewingQuizStats)}
+          onClose={() => setViewingQuizStats(null)}
+          quizId={viewingQuizStats.id}
+          quizTitle={viewingQuizStats.title}
+          isHomework={viewingQuizStats.scope === "homework" || viewingQuizStats.category === "واجب"}
+          adminApi={adminApi}
+        />
       )}
     </div>
   );

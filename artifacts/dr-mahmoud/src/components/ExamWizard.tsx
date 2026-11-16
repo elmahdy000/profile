@@ -39,6 +39,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ACADEMIC_TRACKS, getStagesForTrack, getTrack } from "@/data/academic";
 import { isEnglishQuestion, getOptionLabel } from "./admin/learning/TestBankTab";
 import { GlobalExamsMasterToggle } from "./admin/learning/GlobalExamsMasterToggle";
+import { QuizViewsModal } from "./admin/learning/QuizViewsModal";
 
 export type Question = {
   prompt: string;
@@ -91,6 +92,8 @@ export type QuizItem = {
   createdAt?: string;
   attemptsCount?: number;
   uniqueStudentsCount?: number;
+  openedStudentsCount?: number;
+  totalOpensCount?: number;
 };
 
 type ExamWizardProps = {
@@ -258,6 +261,7 @@ export function ExamWizard({
   const [resultsSearchQuery, setResultsSearchQuery] = useState("");
   const [resultsStatusFilter, setResultsStatusFilter] = useState<"all" | "passed" | "failed">("all");
   const [grantingStudentId, setGrantingStudentId] = useState<number | null>(null);
+  const [viewingHomeworkViews, setViewingHomeworkViews] = useState<QuizItem | null>(null);
 
   const openQuizResults = async (quiz: QuizItem) => {
     setResultsModalQuiz(quiz);
@@ -1684,6 +1688,7 @@ export function ExamWizard({
               const stagesLabel = quizStages.join(" · ") || "بدون مرحلة محددة";
               const uniqueTested = q.uniqueStudentsCount || 0;
               const totalAttempts = q.attemptsCount || uniqueTested;
+              const isHomework = q.scope === "homework" || q.category === "واجب";
 
               return (
                 <article
@@ -1705,20 +1710,27 @@ export function ExamWizard({
                         <span className="truncate">{stagesLabel}</span>
                       </span>
 
-                      <span
-                        className={`text-[10px] font-black px-2.5 py-1 rounded-full shrink-0 flex items-center gap-1.5 ${
-                          q.isPublished
-                            ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                            : "bg-slate-200 text-slate-700 border border-slate-300"
-                        }`}
-                      >
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {isHomework && (
+                          <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                            واجب منزلي 📚
+                          </span>
+                        )}
                         <span
-                          className={`h-1.5 w-1.5 rounded-full ${
-                            q.isPublished ? "bg-emerald-500 animate-pulse" : "bg-slate-500"
+                          className={`text-[10px] font-black px-2.5 py-1 rounded-full shrink-0 flex items-center gap-1.5 ${
+                            q.isPublished
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                              : "bg-slate-200 text-slate-700 border border-slate-300"
                           }`}
-                        />
-                        {q.isPublished ? "منشور للطلاب" : "مسودة مؤقتة"}
-                      </span>
+                        >
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${
+                              q.isPublished ? "bg-emerald-500 animate-pulse" : "bg-slate-500"
+                            }`}
+                          />
+                          {q.isPublished ? "منشور للطلاب" : "مسودة مؤقتة"}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Quiz Title & Scope */}
@@ -1731,7 +1743,7 @@ export function ExamWizard({
                       </h4>
                       <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500">
                         <span className="font-bold text-slate-600">
-                          {q.scope === "lesson" ? "اختبار درس" : "اختبار كورس / شامل"}
+                          {isHomework ? "واجب منزلي (تسليم ورقي)" : q.scope === "lesson" ? "اختبار درس" : "اختبار كورس / شامل"}
                         </span>
                         {q.category && (
                           <>
@@ -1743,7 +1755,41 @@ export function ExamWizard({
                     </div>
 
                     {/* Prominent Student Tester Count Badge (بشكل مميز) */}
-                    {uniqueTested > 0 ? (
+                    {isHomework ? (
+                      <div
+                        onClick={() => setViewingHomeworkViews(q)}
+                        role="button"
+                        tabIndex={0}
+                        title="اضغط لعرض قائمة وتفاصيل الطلاب الذين فتحوا هذا الواجب وأوقات الفتح"
+                        className="flex items-center justify-between bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white p-2.5 rounded-xl shadow-xs border border-amber-400/40 cursor-pointer hover:shadow-md hover:scale-[1.01] active:scale-[0.99] transition-all group"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="h-7 w-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0 group-hover:bg-white/30 transition-colors">
+                            <Eye className="h-4 w-4 text-white" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-black tracking-tight flex items-center gap-1.5">
+                              <span>
+                                {q.openedStudentsCount && q.openedStudentsCount > 0
+                                  ? `${q.openedStudentsCount} طلاب فتحوا الواجب`
+                                  : "فتح الواجب: 0 طلاب"}
+                              </span>
+                              <span className="text-[10px] font-normal underline opacity-80 group-hover:opacity-100">
+                                عرض السجل ↗
+                              </span>
+                            </div>
+                            <div className="text-[10px] text-amber-100 font-medium truncate">
+                              {q.totalOpensCount && q.totalOpensCount > 0
+                                ? `تم استعراضه ${q.totalOpensCount} مرات • تسليم ورقي بالحصة`
+                                : "لم يقم أي طالب بفتحه بعد • تسليم ورقي"}
+                            </div>
+                          </div>
+                        </div>
+                        <span className="text-xs font-black bg-white text-amber-700 px-2.5 py-1 rounded-lg shadow-2xs group-hover:bg-amber-50 transition-colors shrink-0">
+                          {q.openedStudentsCount || 0}
+                        </span>
+                      </div>
+                    ) : uniqueTested > 0 ? (
                       <div
                         onClick={() => openQuizResults(q)}
                         role="button"
@@ -1751,11 +1797,11 @@ export function ExamWizard({
                         title="اضغط لعرض قائمة ودرجات الطلاب الذين اختبروا هذا الاختبار"
                         className="flex items-center justify-between bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 text-white p-2.5 rounded-xl shadow-xs border border-violet-400/40 cursor-pointer hover:shadow-md hover:scale-[1.01] active:scale-[0.99] transition-all group"
                       >
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
                           <div className="h-7 w-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0 group-hover:bg-white/30 transition-colors">
                             <Users className="h-4 w-4 text-white" />
                           </div>
-                          <div>
+                          <div className="min-w-0">
                             <div className="text-xs font-black tracking-tight flex items-center gap-1.5">
                               <span>
                                 {uniqueTested} {uniqueTested === 1 ? "طالب اختبر" : "طلاب اختبروا"}
@@ -1764,23 +1810,34 @@ export function ExamWizard({
                                 عرض النتائج ↗
                               </span>
                             </div>
-                            <div className="text-[10px] text-violet-100 font-medium">
+                            <div className="text-[10px] text-violet-100 font-medium truncate">
                               تم خوض الاختبار {totalAttempts} {totalAttempts === 1 ? "مرة" : "مرات"}
+                              {q.openedStudentsCount ? ` • فتح: ${q.openedStudentsCount}` : ""}
                             </div>
                           </div>
                         </div>
-                        <span className="text-xs font-black bg-white text-indigo-700 px-2.5 py-1 rounded-lg shadow-2xs group-hover:bg-violet-50 transition-colors">
+                        <span className="text-xs font-black bg-white text-indigo-700 px-2.5 py-1 rounded-lg shadow-2xs group-hover:bg-violet-50 transition-colors shrink-0">
                           {uniqueTested}
                         </span>
                       </div>
                     ) : (
-                      <div className="flex items-center justify-between bg-slate-100/90 text-slate-500 px-3 py-2 rounded-xl border border-slate-200/80">
+                      <div
+                        onClick={() => setViewingHomeworkViews(q)}
+                        role="button"
+                        tabIndex={0}
+                        className="flex items-center justify-between bg-slate-100/90 text-slate-500 px-3 py-2 rounded-xl border border-slate-200/80 cursor-pointer hover:bg-slate-200/70 transition-all"
+                        title="اضغط لعرض سجل الفتح"
+                      >
                         <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-slate-400" />
-                          <span className="text-xs font-semibold">لم يختبره طلاب بعد</span>
+                          <Eye className="h-4 w-4 text-slate-400" />
+                          <span className="text-xs font-semibold">
+                            {q.openedStudentsCount && q.openedStudentsCount > 0
+                              ? `فتح الاختبار: ${q.openedStudentsCount} طلاب`
+                              : "لم يختبره أو يفتحه طلاب بعد"}
+                          </span>
                         </div>
-                        <span className="text-[10px] bg-white px-2 py-0.5 rounded-md text-slate-400 font-bold border border-slate-200">
-                          0 مختبر
+                        <span className="text-[10px] bg-white px-2 py-0.5 rounded-md text-slate-500 font-bold border border-slate-200">
+                          {q.openedStudentsCount || 0} فتح
                         </span>
                       </div>
                     )}
@@ -2365,6 +2422,18 @@ export function ExamWizard({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Quiz / Homework Views Modal */}
+      {viewingHomeworkViews && (
+        <QuizViewsModal
+          isOpen={Boolean(viewingHomeworkViews)}
+          onClose={() => setViewingHomeworkViews(null)}
+          quizId={viewingHomeworkViews.id}
+          quizTitle={viewingHomeworkViews.title}
+          isHomework={viewingHomeworkViews.scope === "homework" || viewingHomeworkViews.category === "واجب"}
+          adminApi={adminApi}
+        />
       )}
     </div>
   );
