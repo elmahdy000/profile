@@ -80,12 +80,18 @@ type LessonNode = {
   lessonId?: number | null;
   courseId?: number | null;
   totalQuestions: number;
+  mcqCount?: number;
+  tfCount?: number;
+  totalEssays?: number;
   difficulty: { easy: number; medium: number; hard: number };
 };
 
 type UnitNode = {
   unit: string;
   totalQuestions: number;
+  mcqCount?: number;
+  tfCount?: number;
+  totalEssays?: number;
   difficulty: { easy: number; medium: number; hard: number };
   lessons: LessonNode[];
 };
@@ -93,6 +99,9 @@ type UnitNode = {
 type StageNode = {
   stage: string;
   totalQuestions: number;
+  mcqCount?: number;
+  tfCount?: number;
+  totalEssays?: number;
   units: UnitNode[];
 };
 
@@ -5053,6 +5062,9 @@ export function TestBankTab({
           currentStageNode?.units.find((u) => u.unit === selectedUnit)?.lessons.map((l) => ({
             lesson: l.lesson,
             totalQuestions: l.totalQuestions,
+            mcqCount: l.mcqCount ?? l.totalQuestions,
+            tfCount: l.tfCount ?? 0,
+            totalEssays: l.totalEssays ?? 0,
           })) || []
         }
         adminApi={adminApi}

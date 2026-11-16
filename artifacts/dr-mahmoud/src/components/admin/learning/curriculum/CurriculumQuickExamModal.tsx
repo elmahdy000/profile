@@ -31,7 +31,13 @@ interface CurriculumQuickExamModalProps {
   unit: string;
   lesson: string;
   totalAvailableQuestions: number;
-  availableUnitLessons?: Array<{ lesson: string; totalQuestions: number }>;
+  availableUnitLessons?: Array<{
+    lesson: string;
+    totalQuestions: number;
+    mcqCount?: number;
+    tfCount?: number;
+    totalEssays?: number;
+  }>;
   adminApi: <T>(url: string, options?: RequestInit) => Promise<T>;
   onSuccess: (quiz: any) => void;
   initialMode?: "exam" | "homework";
@@ -72,29 +78,10 @@ export function CurriculumQuickExamModal({
   const unitLessonsList = useMemo(() => {
     if (availableUnitLessons.length > 0) return availableUnitLessons;
     if (lesson && lesson !== "all") {
-      return [{ lesson, totalQuestions: totalAvailableQuestions }];
+      return [{ lesson, totalQuestions: totalAvailableQuestions, totalEssays: 0, mcqCount: totalAvailableQuestions, tfCount: 0 }];
     }
     return [];
   }, [availableUnitLessons, lesson, totalAvailableQuestions]);
-
-  // Compute available questions count based on chosen scope
-  const activeAvailableCount = useMemo(() => {
-    if (examScope === "single") {
-      if (unitLessonsList.length > 0) {
-        const found = unitLessonsList.find((l) => l.lesson === lesson);
-        return found ? found.totalQuestions : totalAvailableQuestions;
-      }
-      return totalAvailableQuestions;
-    }
-    if (examScope === "multi") {
-      const selectedSet = new Set(selectedMultiLessons);
-      return unitLessonsList
-        .filter((l) => selectedSet.has(l.lesson))
-        .reduce((sum, l) => sum + (l.totalQuestions || 0), 0);
-    }
-    // Unit scope
-    return unitLessonsList.reduce((sum, l) => sum + (l.totalQuestions || 0), totalAvailableQuestions);
-  }, [examScope, lesson, selectedMultiLessons, unitLessonsList, totalAvailableQuestions]);
 
   const [title, setTitle] = useState("");
   const [questionsCount, setQuestionsCount] = useState<number>(10);
@@ -104,6 +91,43 @@ export function CurriculumQuickExamModal({
   const [maxAttempts, setMaxAttempts] = useState<number>(3);
   const [shuffleQuestions, setShuffleQuestions] = useState<boolean>(true);
   const [isPublished, setIsPublished] = useState<boolean>(true);
+
+  // Helper to extract question count per type for any lesson
+  const getLessonCountByType = (l: {
+    totalQuestions: number;
+    mcqCount?: number;
+    tfCount?: number;
+    totalEssays?: number;
+  } | undefined) => {
+    if (!l) return 0;
+    if (questionType === "essay") return l.totalEssays ?? 0;
+    if (questionType === "mcq") return l.mcqCount ?? l.totalQuestions;
+    if (questionType === "true_false") return l.tfCount ?? 0;
+    // "all" = MCQ/TF + Essays
+    return (l.totalQuestions || 0) + (l.totalEssays || 0);
+  };
+
+  // Compute available questions count based on chosen scope AND selected question type
+  const activeAvailableCount = useMemo(() => {
+    if (examScope === "single") {
+      if (unitLessonsList.length > 0) {
+        const found = unitLessonsList.find((l) => l.lesson === lesson);
+        if (found) return getLessonCountByType(found);
+      }
+      return questionType === "essay" ? 0 : totalAvailableQuestions;
+    }
+    if (examScope === "multi") {
+      const selectedSet = new Set(selectedMultiLessons);
+      return unitLessonsList
+        .filter((l) => selectedSet.has(l.lesson))
+        .reduce((sum, l) => sum + getLessonCountByType(l), 0);
+    }
+    // Unit scope
+    if (unitLessonsList.length > 0) {
+      return unitLessonsList.reduce((sum, l) => sum + getLessonCountByType(l), 0);
+    }
+    return questionType === "essay" ? 0 : totalAvailableQuestions;
+  }, [examScope, lesson, selectedMultiLessons, unitLessonsList, totalAvailableQuestions, questionType]);
 
   // Loading states
   const [loadingPreview, setLoadingPreview] = useState<boolean>(false);
@@ -152,6 +176,15 @@ export function CurriculumQuickExamModal({
       setReviewedQuestions([]);
     }
   }, [isOpen, unit, lesson, totalAvailableQuestions, isInitialWholeUnit, initialMode]);
+
+  // Auto-adjust questions count when available pool changes based on questionType / scope
+  useEffect(() => {
+    if (activeAvailableCount > 0) {
+      if (questionsCount > activeAvailableCount || questionsCount === 0) {
+        setQuestionsCount(Math.min(10, activeAvailableCount));
+      }
+    }
+  }, [activeAvailableCount]);
 
   // Adjust title when mode, scope, or selected multi lessons change
   const handleModeChange = (newMode: "exam" | "homework") => {
@@ -495,7 +528,7 @@ export function CurriculumQuickExamModal({
                               <span className="truncate text-[11px]">{lesItem.lesson}</span>
                             </div>
                             <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${isChecked ? "bg-violet-600 text-white" : "bg-muted text-muted-foreground"}`}>
-                              {lesItem.totalQuestions} س
+                              {getLessonCountByType(lesItem)} س
                             </span>
                           </div>
                         );
@@ -505,7 +538,10 @@ export function CurriculumQuickExamModal({
 
                   <div className="text-[11px] font-bold text-violet-700 dark:text-violet-300 flex items-center justify-between pt-1 border-t border-violet-500/20">
                     <span>تم اختيار: {selectedMultiLessons.length} دروس</span>
-                    <span>إجمالي الأسئلة المتاحة: {activeAvailableCount} سؤال</span>
+                    <span>
+                      إجمالي الأسئلة المتاحة: {activeAvailableCount}{" "}
+                      {questionType === "essay" ? "سؤال مقالي ✍️" : "سؤال"}
+                    </span>
                   </div>
                 </div>
               )}
@@ -542,23 +578,34 @@ export function CurriculumQuickExamModal({
                 />
               </div>
 
-              {/* Grid Settings: Count and Question Types (MCQ + True/False) */}
+              {/* Grid Settings: Count and Question Types */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-foreground">عدد الأسئلة المطلوب:</label>
-                    <span className="text-[11px] font-black text-violet-600">
-                      (المتاح: {activeAvailableCount})
+                    <span className={`text-[11px] font-black ${activeAvailableCount === 0 ? "text-rose-500 font-extrabold" : "text-violet-600 dark:text-violet-400"}`}>
+                      (المتاح: {activeAvailableCount} {
+                        questionType === "essay" ? "سؤال مقالي ✍️" :
+                        questionType === "mcq" ? "سؤال MCQ" :
+                        questionType === "true_false" ? "صواب وخطأ" :
+                        "سؤال كلي"
+                      })
                     </span>
                   </div>
                   <input
                     type="number"
-                    min={1}
+                    min={activeAvailableCount > 0 ? 1 : 0}
                     max={Math.max(1, activeAvailableCount)}
                     value={questionsCount}
                     onChange={(e) => setQuestionsCount(Number(e.target.value))}
-                    className="w-full h-9 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none"
+                    disabled={activeAvailableCount === 0}
+                    className="w-full h-9 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-violet-500/40 disabled:opacity-50"
                   />
+                  {activeAvailableCount === 0 && (
+                    <p className="text-[10px] text-rose-500 font-bold mt-1">
+                      ⚠️ لا تتوفر أسئلة من هذا النوع في النطاق المحدد
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-1">
@@ -566,7 +613,7 @@ export function CurriculumQuickExamModal({
                   <select
                     value={questionType}
                     onChange={(e) => setQuestionType(e.target.value as any)}
-                    className="w-full h-9 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none cursor-pointer"
+                    className="w-full h-9 px-3 rounded-xl border border-border bg-background text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-violet-500/40 cursor-pointer font-bold"
                   >
                     <option value="all">مزيج شامل لجميع الأسئلة (اختيار من متعدد + صح وغلط + مقالي)</option>
                     <option value="essay">أسئلة مقالية فقط (Essay Questions ✍️)</option>
