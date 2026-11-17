@@ -1098,9 +1098,9 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
   // Clean Header Text
   const cleanHeaderText = (text: string) => {
     return (text || "")
-      .replace(/(\s*\[\s*(نموذج الإجابة|نسخة المعلم|نسخة الطالب|Model Answer|Teacher Copy|Student Copy)\s*\])+/gi, "")
-      .replace(/(\s*\(\s*(نموذج الإجابة|نسخة المعلم|نسخة الطالب|Model Answer|Teacher Copy|Student Copy)\s*\))+/gi, "")
-      .replace(/(\s*(نموذج الإجابة|نسخة المعلم|نسخة الطالب))+/gi, "")
+      .replace(/(\s*\[\s*(نموذج الإجابة للمعلم|نموذج الإجابة|نسخة المعلم|نسخة الطالب|للمعلم|للطالب|معلم|طالب|Model Answer|Teacher Copy|Student Copy)\s*\])+/gi, "")
+      .replace(/(\s*\(\s*(نموذج الإجابة للمعلم|نموذج الإجابة|نسخة المعلم|نسخة الطالب|للمعلم|للطالب|معلم|طالب|Model Answer|Teacher Copy|Student Copy)\s*\))+/gi, "")
+      .replace(/(\s*(نموذج الإجابة للمعلم|نموذج الإجابة|نسخة المعلم|نسخة الطالب|للمعلم|للطالب))+/gi, "")
       .replace(/أكاديمية\s*/g, "")
       .trim();
   };
@@ -1120,18 +1120,15 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
   };
 
   const setTeacherMode = () => {
-    setSettings((prev) => {
-      const base = cleanHeaderText(prev.headerText);
-      return {
-        ...prev,
-        showAnswers: true,
-        showExplain: true,
-        headerText: `${base} [نموذج الإجابة للمعلم]`,
-      };
-    });
+    setSettings((prev) => ({
+      ...prev,
+      showAnswers: true,
+      showExplain: true,
+      headerText: cleanHeaderText(prev.headerText),
+    }));
     toast({
       title: "تم تفعيل نسخة المعلم 👨‍🏫",
-      description: "المستند يحتوي الآن على الإجابات النموذجية وسبب وتفسير كل حل.",
+      description: "المستند يحتوي الآن على الإجابات النموذجية والشرح، مع الحفاظ الكامل على عنوانك كما كتبته.",
     });
   };
 
@@ -1200,7 +1197,7 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                   <span style="font-size:6.8pt;font-weight:700;color:${theme.drSubTextColor};">الحاسب الآلي والذكاء الاصطناعي</span>
                 </div>
               </div>
-              <div><span style="background:${theme.badgeBg};color:${theme.badgeColor};border:${theme.badgeBorder};padding:1.2mm 3.5mm;border-radius:1.5mm;font-size:8pt;font-weight:800;">${badgeText}</span></div>
+              <div><span style="background:${settings.showAnswers ? "#FEF3C7" : theme.badgeBg};color:${settings.showAnswers ? "#92400E" : theme.badgeColor};border:${settings.showAnswers ? "1px solid #FCD34D" : theme.badgeBorder};padding:1.2mm 3.5mm;border-radius:1.5mm;font-size:8pt;font-weight:800;">${settings.showAnswers ? "نموذج إجابة المعلم" : badgeText}</span></div>
             </div>
             <div style="width:100%;padding:0 0.5mm;">
               <div style="font-size:11pt;font-weight:900;line-height:1.35;word-break:normal;overflow-wrap:anywhere;">${cleanTitle}</div>
@@ -1735,37 +1732,17 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                 {questions.length} سؤال • {pages.length} صفحة A4
               </span>
             </div>
-            {/* Inline Editable Document Title */}
-            <div className="flex items-center gap-1.5 mt-0.5">
-              {isEditingDocTitle ? (
-                <div className="flex items-center gap-1">
-                  <input
-                    type="text"
-                    value={settings.headerText}
-                    onChange={(e) => setSettings((s) => ({ ...s, headerText: e.target.value }))}
-                    className="h-6 px-2 text-xs font-bold rounded border border-amber-400 bg-slate-800 text-white focus:outline-none"
-                    autoFocus
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingDocTitle(false)}
-                    className="p-1 rounded bg-amber-500 text-slate-950 hover:bg-amber-400 cursor-pointer"
-                  >
-                    <Check className="h-3 w-3" />
-                  </button>
-                </div>
-              ) : (
-                <div
-                  className="flex items-center gap-1 cursor-pointer group"
-                  onClick={() => setIsEditingDocTitle(true)}
-                  title="انقر لتعديل اسم المستند"
-                >
-                  <span className="text-xs font-bold text-slate-300 group-hover:text-amber-300 truncate max-w-xs sm:max-w-md">
-                    {settings.headerText || "مذكرة التدريبات الشاملة"}
-                  </span>
-                  <Edit3 className="h-3 w-3 text-slate-400 group-hover:text-amber-400 opacity-60 group-hover:opacity-100" />
-                </div>
-              )}
+            {/* Direct Editable Document Title */}
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="text-[10px] font-bold text-slate-400 shrink-0">عنوان الورقة:</span>
+              <input
+                type="text"
+                value={settings.headerText}
+                onChange={(e) => setSettings((s) => ({ ...s, headerText: e.target.value }))}
+                placeholder="اكتب عنوان ورقة الامتحان / المذكرة بحرية هنا..."
+                className="h-6 px-2 text-xs font-black rounded border border-slate-700 bg-slate-900/90 text-amber-300 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 w-full min-w-[180px] max-w-xs sm:max-w-md transition-all"
+                title="اكتب أو عدل اسم المستند بحرية تامة"
+              />
             </div>
           </div>
         </div>
@@ -2622,8 +2599,69 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
               <div>
                 <h4 className="text-xs font-black text-foreground flex items-center gap-1.5">
                   <Palette className="h-4 w-4 text-primary" />
-                  <span>تنسيق المستند وهوامش الطباعة</span>
+                  <span>تنسيق المستند وعناوين وهوامش الطباعة</span>
                 </h4>
+              </div>
+
+              {/* Document Header & Custom Titles */}
+              <div className="space-y-3 p-3.5 bg-blue-50/60 dark:bg-blue-950/20 rounded-xl border border-blue-200 dark:border-blue-900/40">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
+                    <FileText className="h-4 w-4 text-blue-600" />
+                    <span>عنوان وترويسة المستند المطبوع:</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setSettings((s) => ({ ...s, headerText: "" }))}
+                    className="text-[10px] text-muted-foreground hover:text-rose-600 font-bold cursor-pointer"
+                  >
+                    تفريغ العنوان ✕
+                  </button>
+                </div>
+
+                <div>
+                  <span className="text-[11px] font-bold text-foreground block mb-1">
+                    العنوان الرئيسي للورقة (اكتب ماتريده بحرية تامة):
+                  </span>
+                  <input
+                    type="text"
+                    value={settings.headerText}
+                    onChange={(e) => setSettings((s) => ({ ...s, headerText: e.target.value }))}
+                    placeholder="اكتب العنوان المخصص هنا مثلاً: واجب منزلي شامل أو اختبار شهر نوفمبر..."
+                    className="w-full h-8.5 px-3 rounded-lg border border-border bg-background text-xs font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                  <div className="flex flex-wrap gap-1 mt-1.5 items-center">
+                    <span className="text-[10px] text-muted-foreground font-medium">اقتراحات سريعة:</span>
+                    {[
+                      "واجب منزلي",
+                      "اختبار تقييمي دوري",
+                      "ورقة تدريبات وبنك أسئلة",
+                      "مراجعة ليلة الامتحان",
+                    ].map((sug) => (
+                      <button
+                        key={sug}
+                        type="button"
+                        onClick={() => setSettings((s) => ({ ...s, headerText: sug }))}
+                        className="text-[10px] px-2 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-primary hover:text-white font-bold cursor-pointer transition shadow-2xs"
+                      >
+                        {sug}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-[11px] font-bold text-foreground block mb-1">
+                    العنوان الفرعي وتفاصيل المنهج:
+                  </span>
+                  <input
+                    type="text"
+                    value={settings.subHeaderText}
+                    onChange={(e) => setSettings((s) => ({ ...s, subHeaderText: e.target.value }))}
+                    placeholder="مثال: د. محمود المهدي | الحاسب الآلي والذكاء الاصطناعي"
+                    className="w-full h-8.5 px-3 rounded-lg border border-border bg-background text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
               </div>
 
               {/* Template Style */}
@@ -3234,28 +3272,38 @@ export const MemoStudioTab: React.FC<MemoStudioTabProps> = ({
                               <div>
                                 <span
                                   style={{
-                                    background: theme.badgeBg,
-                                    color: theme.badgeColor,
-                                    border: theme.badgeBorder,
+                                    background: settings.showAnswers ? "#FEF3C7" : theme.badgeBg,
+                                    color: settings.showAnswers ? "#92400E" : theme.badgeColor,
+                                    border: settings.showAnswers ? "1px solid #FCD34D" : theme.badgeBorder,
                                     padding: "1.2mm 3.5mm",
                                     borderRadius: "1.5mm",
                                     fontSize: "8pt",
                                     fontWeight: 800,
                                   }}
                                 >
-                                  {badgeText}
+                                  {settings.showAnswers ? "نموذج إجابة المعلم 👨‍🏫" : badgeText}
                                 </span>
                               </div>
                             </div>
                             <div style={{ width: "100%", padding: "0 0.5mm" }}>
                               <div
+                                contentEditable
+                                suppressContentEditableWarning
+                                onBlur={(e) => {
+                                  const text = e.currentTarget.textContent || "";
+                                  setSettings((s) => ({ ...s, headerText: text }));
+                                }}
+                                title="انقر هنا للكتابة وتعديل العنوان مباشرة على الورقة"
                                 style={{
                                   fontSize: "11pt",
                                   fontWeight: 900,
                                   lineHeight: 1.35,
                                   wordBreak: "normal",
                                   overflowWrap: "anywhere",
+                                  cursor: "text",
+                                  outline: "none",
                                 }}
+                                className="hover:bg-amber-500/10 focus:bg-amber-500/10 rounded px-1 -mx-1 transition-colors"
                               >
                                 {sanitizeMemoText(settings.headerText)}
                               </div>
