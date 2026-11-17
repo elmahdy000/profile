@@ -17,6 +17,7 @@ import {
   Printer,
   X,
   FileCheck2,
+  FileText,
   BookOpen,
   Layers,
   Users,
