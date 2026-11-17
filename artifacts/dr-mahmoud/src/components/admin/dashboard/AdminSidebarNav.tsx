@@ -74,60 +74,22 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const navGroups = [
+    // -------------------------------------------------------------
+    // PILLAR 1: شؤون الطلاب والسناتر (Students & Centers Hub)
+    // -------------------------------------------------------------
     {
-      title: "بوابة التحكم الرئيسية",
+      title: "👥 شؤون الطلاب والسناتر",
       items: [
         {
-          id: "launchpad-hub",
-          label: "لوحة البطاقات السريعة 🚀",
-          icon: LayoutGrid,
-          onClick: () => {
-            setActiveTab("hub");
-          },
-          active: activeTab === "hub",
-          badge: "الرئيسية ⭐",
-          badgeColor: "bg-emerald-600 text-white font-black",
-        },
-      ],
-    },
-    {
-      title: "غرفة العمليات والمتابعة",
-      items: [
-        {
-          id: "learning-overview",
-          label: "اللوحة التشغيلية العامة",
-          icon: LayoutDashboard,
+          id: "students",
+          label: "إدارة جميع الطلاب",
+          icon: Users,
           onClick: () => {
             setActiveTab("learning");
-            setLearningSubTab("overview" as any);
+            setLearningSubTab("students");
           },
-          active: activeTab === "learning" && (learningSubTab as string) === "overview",
+          active: activeTab === "learning" && learningSubTab === "students",
         },
-        {
-          id: "notifications",
-          label: "إرسال الإشعارات والرسائل",
-          icon: Bell,
-          onClick: () => {
-            setActiveTab("learning");
-            setLearningSubTab("notifications");
-          },
-          active: activeTab === "learning" && learningSubTab === "notifications",
-        },
-        {
-          id: "reports",
-          label: "التقارير الشاملة",
-          icon: FileText,
-          onClick: () => {
-            setActiveTab("learning");
-            setLearningSubTab("reports");
-          },
-          active: activeTab === "learning" && learningSubTab === "reports",
-        },
-      ],
-    },
-    {
-      title: "شؤون الطلاب والسناتر",
-      items: [
         {
           id: "attendance",
           label: "سجل وحضور السناتر (QR) 📷",
@@ -139,18 +101,8 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           active: activeTab === "learning" && learningSubTab === "attendance",
         },
         {
-          id: "students",
-          label: "إدارة جميع الطلاب 👥",
-          icon: Users,
-          onClick: () => {
-            setActiveTab("learning");
-            setLearningSubTab("students");
-          },
-          active: activeTab === "learning" && learningSubTab === "students",
-        },
-        {
           id: "center-bookings",
-          label: "جدول حجوزات السناتر 📍",
+          label: "جدول ومواعيد السناتر 📍",
           icon: MapPin,
           onClick: () => {
             setActiveTab("learning");
@@ -166,20 +118,27 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           active: activeTab === "parents",
         },
         {
-          id: "student-analytics",
-          label: "تحليلات الأداء والمشاهدات 📈",
-          icon: BarChart3,
-          onClick: () => setActiveTab("student-analytics"),
-          active: activeTab === "student-analytics",
+          id: "summaries",
+          label: "تدقيق كشكول التلخيصات 📓",
+          icon: FileEdit,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("summaries" as any);
+          },
+          active: activeTab === "learning" && (learningSubTab as string) === "summaries",
         },
       ],
     },
+
+    // -------------------------------------------------------------
+    // PILLAR 2: بنك الأسئلة والتقييم (Assessment & Exam Studio)
+    // -------------------------------------------------------------
     {
-      title: "مركز التقييم والامتحانات",
+      title: "📝 بنك الأسئلة والتقييم",
       items: [
         {
           id: "testbank",
-          label: "بنك الأسئلة ومولد الامتحانات 🚀",
+          label: "بنك الأسئلة والمولد الذكي 🚀",
           icon: BookOpen,
           onClick: () => {
             if (typeof window !== "undefined") {
@@ -197,7 +156,7 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
         {
           id: "quizzes",
-          label: "إدارة ونشر الاختبارات 📋",
+          label: "إدارة ونشر الاختبارات والواجبات 📋",
           icon: ClipboardCheck,
           onClick: () => {
             if (typeof window !== "undefined") {
@@ -212,9 +171,19 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           active: activeTab === "learning" && learningSubTab === "quizzes",
         },
         {
+          id: "memo-studio",
+          label: "استوديو المذكرات وطباعة A4 🖨️",
+          icon: Printer,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("memo-studio");
+          },
+          active: activeTab === "learning" && learningSubTab === "memo-studio",
+        },
+        {
           id: "essay-exams",
           label: "تصحيح المقالي واستلام الإجابات ✍️",
-          icon: FileEdit,
+          icon: FileText,
           onClick: () => {
             setActiveTab("learning");
             setLearningSubTab("essay-exams");
@@ -233,29 +202,50 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
       ],
     },
+
+    // -------------------------------------------------------------
+    // PILLAR 3: المحتوى والمناهج التعليمية (Content & Curriculum Hub)
+    // -------------------------------------------------------------
     {
-      title: "المحتوى والمناهج التعليمية",
+      title: "📚 المحتوى والمناهج التعليمية",
       items: [
+        ...(adminRole === "superadmin"
+          ? [
+              {
+                id: "curriculums",
+                label: "المناهج التعليمية 🏛️",
+                icon: Library,
+                onClick: () => setActiveTab("curriculums"),
+                active: activeTab === "curriculums",
+                badge: curriculumsCount ? curriculumsCount : undefined,
+              },
+              {
+                id: "courses",
+                label: "الكورسات التدريبية 📖",
+                icon: BookOpen,
+                onClick: () => setActiveTab("courses"),
+                active: activeTab === "courses",
+                badge: coursesCount ? coursesCount : undefined,
+              },
+              {
+                id: "videos",
+                label: "مكتبة الفيديوهات والشروحات 🎥",
+                icon: VideoIcon,
+                onClick: () => setActiveTab("videos"),
+                active: activeTab === "videos",
+                badge: videosCount ? videosCount : undefined,
+              },
+            ]
+          : []),
         {
-          id: "courses",
-          label: "الكورسات التدريبية 📖",
-          icon: BookOpen,
-          onClick: () => setActiveTab("courses"),
-          active: activeTab === "courses",
-        },
-        {
-          id: "curriculums",
-          label: "المناهج التعليمية 🏛️",
-          icon: Library,
-          onClick: () => setActiveTab("curriculums"),
-          active: activeTab === "curriculums",
-        },
-        {
-          id: "videos",
-          label: "مكتبة الفيديوهات 🎥",
-          icon: VideoIcon,
-          onClick: () => setActiveTab("videos"),
-          active: activeTab === "videos",
+          id: "files",
+          label: "المذكرات والملفات التعليمية PDF 📁",
+          icon: FileDown,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("files");
+          },
+          active: activeTab === "learning" && learningSubTab === "files",
         },
         {
           id: "kholasa",
@@ -267,30 +257,26 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
           },
           active: activeTab === "learning" && learningSubTab === "kholasa",
         },
-        {
-          id: "memo-studio",
-          label: "استوديو المذكرات والطباعة 🖨️",
-          icon: Printer,
-          onClick: () => {
-            setActiveTab("learning");
-            setLearningSubTab("memo-studio");
-          },
-          active: activeTab === "learning" && learningSubTab === "memo-studio",
-        },
-        {
-          id: "files",
-          label: "المذكرات والملفات التعليمية 📁",
-          icon: FileDown,
-          onClick: () => {
-            setActiveTab("learning");
-            setLearningSubTab("files");
-          },
-          active: activeTab === "learning" && learningSubTab === "files",
-        },
+        ...(adminRole === "superadmin"
+          ? [
+              {
+                id: "podcasts",
+                label: "البودكاست الصوتي 🎙️",
+                icon: Mic,
+                onClick: () => setActiveTab("podcasts"),
+                active: activeTab === "podcasts",
+                badge: podcastsCount ? podcastsCount : undefined,
+              },
+            ]
+          : []),
       ],
     },
+
+    // -------------------------------------------------------------
+    // PILLAR 4: المعاملات المالية والاشتراكات (Finance & Subscriptions)
+    // -------------------------------------------------------------
     {
-      title: "المعاملات المالية والاشتراكات",
+      title: "💳 المالية والاشتراكات",
       items: [
         {
           id: "payments",
@@ -326,23 +312,61 @@ export const AdminSidebarNav: React.FC<AdminSidebarNavProps> = ({
         },
       ],
     },
+
+    // -------------------------------------------------------------
+    // PILLAR 5: غرفة العمليات والإعدادات (Operations & Settings)
+    // -------------------------------------------------------------
     {
-      title: "التواصل والإعدادات العامة",
+      title: "⚙️ غرفة العمليات والإعدادات",
       items: [
         {
-          id: "podcasts",
-          label: "البودكاست الصوتي 🎙️",
-          icon: Mic,
-          onClick: () => setActiveTab("podcasts"),
-          active: activeTab === "podcasts",
+          id: "launchpad-hub",
+          label: "لوحة البطاقات السريعة 🚀",
+          icon: LayoutGrid,
+          onClick: () => setActiveTab("hub"),
+          active: activeTab === "hub",
         },
         {
-          id: "settings",
-          label: "إعدادات النظام ⚙️",
-          icon: Settings,
-          onClick: () => setActiveTab("settings"),
-          active: activeTab === "settings",
+          id: "learning-overview",
+          label: "اللوحة التشغيلية العامة 📊",
+          icon: LayoutDashboard,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("overview" as any);
+          },
+          active: activeTab === "learning" && (learningSubTab as string) === "overview",
         },
+        {
+          id: "notifications",
+          label: "إرسال الإشعارات والرسائل 🔔",
+          icon: Bell,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("notifications");
+          },
+          active: activeTab === "learning" && learningSubTab === "notifications",
+        },
+        {
+          id: "reports",
+          label: "التقارير الشاملة والتحليلات 📈",
+          icon: BarChart3,
+          onClick: () => {
+            setActiveTab("learning");
+            setLearningSubTab("reports");
+          },
+          active: activeTab === "learning" && learningSubTab === "reports",
+        },
+        ...(adminRole === "superadmin"
+          ? [
+              {
+                id: "settings",
+                label: "إعدادات المنصة والبوتات ⚙️",
+                icon: Settings,
+                onClick: () => setActiveTab("settings"),
+                active: activeTab === "settings",
+              },
+            ]
+          : []),
       ],
     },
   ];
